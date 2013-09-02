@@ -1,0 +1,1 @@
+N_1(x) & N_2(y) & N_3(z) & ADD_4(x,y,w) & ADD_5(y,z,a) & ADD_6(w,z,b) |- ADD_1(x,a,b)

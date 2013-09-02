@@ -1,0 +1,13 @@
+fields: next;
+judgement: 
+ls_1(x,w') * ls_2(y,nil) * w'->i' * ls_3(i',w') \/
+ls_2(j',nil) * w'->j' * ls_3(x,w') * ls_1(y,w') \/
+ls_2(x,nil) * ls_1(y,w') * w'->k' * ls_3(k',w') |-_1 !
+0: y := nil;
+1: if x=nil goto 7;
+2: z := x;
+3: x := x->next;
+4: z->next := y;
+5: y := z;
+6: goto 1;
+7: stop

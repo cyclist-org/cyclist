@@ -1,0 +1,89 @@
+RList { 
+	x->y => RList(x,y) | 
+	RList(x,x') * x'->y => RList(x,y) 
+} ;
+
+List { 
+	x->y => List(x,y) | 
+	x->x' * List(x',y) => List(x,y) 
+} ;
+
+ListO { 
+	x->y => ListO(x,y) | 
+	x->x' * ListE(x',y) => ListO(x,y) 
+} ; 
+
+ListE { 
+	x->x' * ListO(x',y) => ListE(x,y) 
+} ; 
+
+PeList { 
+	x=y => PeList(x,y) | 
+	x->x' * PeList(x',y) => PeList(x,y) 
+} ;
+
+DLL { 
+	x=y * z=w => DLL(x,y,z,w) | 
+	x->z',w * DLL(z',y,z,x) => DLL(x,y,z,w) 
+} ;
+
+SLL { 
+	x=y => SLL(x,y) | 
+	x->x',y' * SLL(x',y) => SLL(x,y) 
+} ;
+
+BSLL { 
+	x=y => BSLL(x,y) | 
+	BSLL(x,x') * x'->y',y => BSLL(x,y) 
+} ;
+
+BinTree { 
+	emp => BinTree(x) | 
+	x->y',x' * BinTree(y') * BinTree(x') => BinTree(x) 
+} ;
+
+BinTreeSeg {
+	x=y => BinTreeSeg(x,y) |
+	x->x',y' * BinTreeSeg(x',y) * BinTree(y') => BinTreeSeg(x,y) | 
+	x->x',y' * BinTree(x') * BinTreeSeg(y',y) => BinTreeSeg(x,y)
+} ;
+
+BinListFirst { 
+	emp => BinListFirst(x) | 
+	x->y',x' * BinListFirst(y') => BinListFirst(x) 
+} ;
+
+BinListSecond { 
+	emp => BinListSecond(x) | 
+	x->y',x' * BinListSecond(x') => BinListSecond(x) 
+} ;
+
+BinPath {
+	x=y => BinPath(x,y) |
+	x->x',y' * BinPath(x',y) => BinPath(x,y) |
+	x->x',y' * BinPath(y',y) => BinPath(x,y)
+} ;
+
+ls { 
+    x=y => ls(x,y) | 
+    x!=y * x->x' * ls(x',y) => ls(x,y) 
+} ;
+
+bt {
+	x=nil => bt(x) |
+	x->y',x' * bt(y') * bt(x') => bt(x)
+} ;
+
+cls {
+        x->y' * ls(y',x) => cls(x) 
+} ;
+
+dls { 
+        x=y => dls(x,y) | 
+        x!=y * x-> y',x' * dls(x',y) => dls(x,y) 
+} ;
+
+lsls {
+  x=nil => lsls(x) |
+  x->y',x' * lsls(y') * dls(x',nil) => lsls(x)
+} 

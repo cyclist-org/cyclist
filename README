@@ -1,0 +1,39 @@
+CONTACT:
+For help to get things working: nikos.gorogiannis (at) gmail (dot) com
+Software and PDF copies of papers: http://www0.cs.ucl.ac.uk/staff/ngorogia/  
+
+
+QUICKSTART:
+The executables in the tar file have been linked in such a way that they should
+work without any non-standard dependencies on an x86_64 Linux system.
+
+The tools are:
+
+fomain.native  : first-order prover.
+slmain.native  : separation logic entailment prover.
+prmain.native  : program termination prover. 
+abdmain.native : inductive precondition abducer
+ccmain.native  : separation logic consistency checker for inductive definitions.
+
+Running an executable without arguments will print out instructions for use. 
+Running "make all-tests" will run a test suite for the first three provers.
+Running "make abd-tests" will run a test suite for the abduction prover.
+
+The theory behind the first three is described in   
+
+  James Brotherston, Nikos Gorogiannis, and Rasmus L. Petersen. 
+  A generic cyclic theorem prover, accepted for publication in APLAS, 2012.
+
+
+COMPILING:
+To compile things from scratch you will need to cd into the directory c_cyclist 
+and follow the README included there.
+
+In addition, you will need:
+ocaml (tested with 3.12.1, with native compilers), menhir, ocamllex, ocamlbuild
+and ocaml-melt.  
+
+In non-standard installations you may need to change the paths in the Makefile.
+
+Then, just run "make" and hopefully it should work :) 
+

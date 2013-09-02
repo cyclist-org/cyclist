@@ -1,0 +1,4 @@
+fields: next;
+judgement: emp ||-_0 <>x=nil
+0: x := nil;
+1: stop

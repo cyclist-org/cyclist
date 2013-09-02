@@ -1,0 +1,9 @@
+Q { 
+nil=y * nil!=x * x->d',c' * P(d') => Q(x,y) | 
+nil!=y * y->d',c' * Q(x,c') => Q(x,y)
+} ; 
+
+P { 
+nil=x => P(x) | 
+nil!=x * Q(x,x) => P(x)
+}

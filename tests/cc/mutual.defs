@@ -1,0 +1,9 @@
+P {
+  x = nil => P(x) |
+  x != nil * Q(x,x) => P(x)
+} ;
+
+Q {
+  y = nil * x != nil * x->d,c * P(d) => Q(x,y) |
+  y != nil * y->d,c * Q(x,c) => Q(x,y)
+}

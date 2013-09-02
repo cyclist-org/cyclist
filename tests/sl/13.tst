@@ -1,0 +1,1 @@
+BinListFirst(x) |- BinTree(x)              

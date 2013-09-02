@@ -1,0 +1,12 @@
+fields: a, b, c;
+judgement: tt(x) |-_ 0 !
+0: if x=nil goto 9;
+1: if * goto 7;
+2: if * goto 5;
+3: x := x->a;
+4: goto 0;
+5: x := x->b;
+6: goto 0;
+7: x := x->c;
+8: goto 0;
+9: stop

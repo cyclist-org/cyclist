@@ -1,0 +1,14 @@
+fields: next;
+judgement: y!=nil * ls(x,nil) * ls(y,nil) |-_ 0 !
+0: if x=nil goto 10;
+1: z := y->next;
+2: if z!=nil goto 8;
+3: y->next := x;
+4: x := x->next;
+5: y := y->next;
+6: y->next := nil;
+7: goto 0;
+8: y := y->next;
+9: goto 0;
+10: stop
+ 

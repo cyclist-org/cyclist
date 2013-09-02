@@ -1,0 +1,16 @@
+zero {
+  x=nil => zero(x)
+} ;
+
+one {
+  x!=nil => one(x)
+} ;
+
+bool {
+  zero(x) => bool(x) |
+  one(x) => bool(x)
+} ;
+
+bitvector {
+  bool(x1) => bitvector(x1)
+}

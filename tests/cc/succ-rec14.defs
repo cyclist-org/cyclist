@@ -1,0 +1,85 @@
+zero {
+  x=nil => zero(x)
+} ;
+
+one {
+  x!=nil => one(x)
+} ;
+
+succ14rec {
+  x2=y2 * x3=y3 * x4=y4 * x5=y5 * x6=y6 * x7=y7 * x8=y8 * x9=y9 * x10=y10 * x11=y11 * x12=y12 * x13=y13 * x14=y14 * zero(x1) * one(y1) => succ14rec(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14) |
+  succ13rec(x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14) * one(x1) * zero(y1) => succ14rec(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14)
+} ;
+
+succ13rec {
+  x2=y2 * x3=y3 * x4=y4 * x5=y5 * x6=y6 * x7=y7 * x8=y8 * x9=y9 * x10=y10 * x11=y11 * x12=y12 * x13=y13 * zero(x1) * one(y1) => succ13rec(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13) |
+  succ12rec(x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13) * one(x1) * zero(y1) => succ13rec(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13)
+} ;
+
+succ12rec {
+  x2=y2 * x3=y3 * x4=y4 * x5=y5 * x6=y6 * x7=y7 * x8=y8 * x9=y9 * x10=y10 * x11=y11 * x12=y12 * zero(x1) * one(y1) => succ12rec(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12) |
+  succ11rec(x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12) * one(x1) * zero(y1) => succ12rec(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12)
+} ;
+
+succ11rec {
+  x2=y2 * x3=y3 * x4=y4 * x5=y5 * x6=y6 * x7=y7 * x8=y8 * x9=y9 * x10=y10 * x11=y11 * zero(x1) * one(y1) => succ11rec(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11) |
+  succ10rec(x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11) * one(x1) * zero(y1) => succ11rec(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11)
+} ;
+
+succ10rec {
+  x2=y2 * x3=y3 * x4=y4 * x5=y5 * x6=y6 * x7=y7 * x8=y8 * x9=y9 * x10=y10 * zero(x1) * one(y1) => succ10rec(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10) |
+  succ9rec(x2,x3,x4,x5,x6,x7,x8,x9,x10,y2,y3,y4,y5,y6,y7,y8,y9,y10) * one(x1) * zero(y1) => succ10rec(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10)
+} ;
+
+succ9rec {
+  x2=y2 * x3=y3 * x4=y4 * x5=y5 * x6=y6 * x7=y7 * x8=y8 * x9=y9 * zero(x1) * one(y1) => succ9rec(x1,x2,x3,x4,x5,x6,x7,x8,x9,y1,y2,y3,y4,y5,y6,y7,y8,y9) |
+  succ8rec(x2,x3,x4,x5,x6,x7,x8,x9,y2,y3,y4,y5,y6,y7,y8,y9) * one(x1) * zero(y1) => succ9rec(x1,x2,x3,x4,x5,x6,x7,x8,x9,y1,y2,y3,y4,y5,y6,y7,y8,y9)
+} ;
+
+succ8rec {
+  x2=y2 * x3=y3 * x4=y4 * x5=y5 * x6=y6 * x7=y7 * x8=y8 * zero(x1) * one(y1) => succ8rec(x1,x2,x3,x4,x5,x6,x7,x8,y1,y2,y3,y4,y5,y6,y7,y8) |
+  succ7rec(x2,x3,x4,x5,x6,x7,x8,y2,y3,y4,y5,y6,y7,y8) * one(x1) * zero(y1) => succ8rec(x1,x2,x3,x4,x5,x6,x7,x8,y1,y2,y3,y4,y5,y6,y7,y8)
+} ;
+
+succ7rec {
+  x2=y2 * x3=y3 * x4=y4 * x5=y5 * x6=y6 * x7=y7 * zero(x1) * one(y1) => succ7rec(x1,x2,x3,x4,x5,x6,x7,y1,y2,y3,y4,y5,y6,y7) |
+  succ6rec(x2,x3,x4,x5,x6,x7,y2,y3,y4,y5,y6,y7) * one(x1) * zero(y1) => succ7rec(x1,x2,x3,x4,x5,x6,x7,y1,y2,y3,y4,y5,y6,y7)
+} ;
+
+succ6rec {
+  x2=y2 * x3=y3 * x4=y4 * x5=y5 * x6=y6 * zero(x1) * one(y1) => succ6rec(x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6) |
+  succ5rec(x2,x3,x4,x5,x6,y2,y3,y4,y5,y6) * one(x1) * zero(y1) => succ6rec(x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6)
+} ;
+
+succ5rec {
+  x2=y2 * x3=y3 * x4=y4 * x5=y5 * zero(x1) * one(y1) => succ5rec(x1,x2,x3,x4,x5,y1,y2,y3,y4,y5) |
+  succ4rec(x2,x3,x4,x5,y2,y3,y4,y5) * one(x1) * zero(y1) => succ5rec(x1,x2,x3,x4,x5,y1,y2,y3,y4,y5)
+} ;
+
+succ4rec {
+  x2=y2 * x3=y3 * x4=y4 * zero(x1) * one(y1) => succ4rec(x1,x2,x3,x4,y1,y2,y3,y4) |
+  succ3rec(x2,x3,x4,y2,y3,y4) * one(x1) * zero(y1) => succ4rec(x1,x2,x3,x4,y1,y2,y3,y4)
+} ;
+
+succ3rec {
+  x2=y2 * x3=y3 * zero(x1) * one(y1) => succ3rec(x1,x2,x3,y1,y2,y3) |
+  succ2rec(x2,x3,y2,y3) * one(x1) * zero(y1) => succ3rec(x1,x2,x3,y1,y2,y3)
+} ;
+
+succ2rec {
+  x2=y2 * zero(x1) * one(y1) => succ2rec(x1,x2,y1,y2) |
+  succ1rec(x2,y2) * one(x1) * zero(y1) => succ2rec(x1,x2,y1,y2)
+} ;
+
+succ1rec {
+  zero(x1) * one(y1) => succ1rec(x1,y1)
+} ;
+
+P {
+  one(x1) * one(x2) * one(x3) * one(x4) * one(x5) * one(x6) * one(x7) * one(x8) * one(x9) * one(x10) * one(x11) * one(x12) * one(x13) * one(x14) * Q(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14) => P(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14)
+} ;
+
+Q {
+  zero(y1) * zero(y2) * zero(y3) * zero(y4) * zero(y5) * zero(y6) * zero(y7) * zero(y8) * zero(y9) * zero(y10) * zero(y11) * zero(y12) * zero(y13) * zero(y14) => Q(y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14) |
+  succ14rec(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14) * Q(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14) => Q(y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14)
+}

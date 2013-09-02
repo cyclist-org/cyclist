@@ -1,0 +1,45 @@
+zero {
+  x=nil => zero(x)
+} ;
+
+one {
+  x!=nil => one(x)
+} ;
+
+succ6rec {
+  x2=y2 * x3=y3 * x4=y4 * x5=y5 * x6=y6 * zero(x1) * one(y1) => succ6rec(x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6) |
+  succ5rec(x2,x3,x4,x5,x6,y2,y3,y4,y5,y6) * one(x1) * zero(y1) => succ6rec(x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6)
+} ;
+
+succ5rec {
+  x2=y2 * x3=y3 * x4=y4 * x5=y5 * zero(x1) * one(y1) => succ5rec(x1,x2,x3,x4,x5,y1,y2,y3,y4,y5) |
+  succ4rec(x2,x3,x4,x5,y2,y3,y4,y5) * one(x1) * zero(y1) => succ5rec(x1,x2,x3,x4,x5,y1,y2,y3,y4,y5)
+} ;
+
+succ4rec {
+  x2=y2 * x3=y3 * x4=y4 * zero(x1) * one(y1) => succ4rec(x1,x2,x3,x4,y1,y2,y3,y4) |
+  succ3rec(x2,x3,x4,y2,y3,y4) * one(x1) * zero(y1) => succ4rec(x1,x2,x3,x4,y1,y2,y3,y4)
+} ;
+
+succ3rec {
+  x2=y2 * x3=y3 * zero(x1) * one(y1) => succ3rec(x1,x2,x3,y1,y2,y3) |
+  succ2rec(x2,x3,y2,y3) * one(x1) * zero(y1) => succ3rec(x1,x2,x3,y1,y2,y3)
+} ;
+
+succ2rec {
+  x2=y2 * zero(x1) * one(y1) => succ2rec(x1,x2,y1,y2) |
+  succ1rec(x2,y2) * one(x1) * zero(y1) => succ2rec(x1,x2,y1,y2)
+} ;
+
+succ1rec {
+  zero(x1) * one(y1) => succ1rec(x1,y1)
+} ;
+
+P {
+  one(x1) * one(x2) * one(x3) * one(x4) * one(x5) * one(x6) * Q(x1,x2,x3,x4,x5,x6) => P(x1,x2,x3,x4,x5,x6)
+} ;
+
+Q {
+  zero(y1) * zero(y2) * zero(y3) * zero(y4) * zero(y5) * zero(y6) => Q(y1,y2,y3,y4,y5,y6) |
+  succ6rec(x1,x2,x3,x4,x5,x6,y1,y2,y3,y4,y5,y6) * Q(x1,x2,x3,x4,x5,x6) => Q(y1,y2,y3,y4,y5,y6)
+}

@@ -1,0 +1,6 @@
+fields: next;
+judgement: ls(x,nil) |-_ 0 !
+0: if x=nil goto 3;
+1: x := x->next;
+2: goto 0;
+3: stop
