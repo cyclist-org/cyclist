@@ -2,7 +2,7 @@
 #define TRACE_HH_
 
 #include <tuple>
-#include <spot/tgba/public.hh>
+#include <spot/tgba/tgba.hh>
 
 #include "proof.hpp"
 

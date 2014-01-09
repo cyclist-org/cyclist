@@ -5,7 +5,7 @@ SPOT_DIR := /usr/local
 OCAML_LIB := /usr/lib/ocaml/caml/
 
 # Where the static version of the stdc++ library is located 
-STDCPP := /usr/lib/gcc/x86_64-linux-gnu/4.7.3/libstdc++.a 
+STDCPP := /usr/lib/gcc/x86_64-linux-gnu/4.8/libstdc++.a 
 
 
 

@@ -1,7 +1,7 @@
 #ifndef PROOF_AUTOMATON_HH_
 #define PROOF_AUTOMATON_HH_
 
-#include <spot/tgba/public.hh>
+#include <spot/tgba/tgba.hh>
 
 #include "proof.hpp"
 
