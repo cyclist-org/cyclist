@@ -125,16 +125,14 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
 
         let abstract prf =
           let do_node n = match n.node with
-            | OpenNode | AxiomNode _ ->
-              Cchecker.LeafNode(Seq.tags n.seq)
+            | OpenNode | AxiomNode _ -> (Seq.tags n.seq, [], [], [])
             | InfNode(subg, tvs, tps, _, _) ->
-              Cchecker.InternalNode(Seq.tags n.seq, subg, tvs, tps)
+                (Seq.tags n.seq, subg, tvs, tps)
             | BackNode(child, tv, _) ->
-              Cchecker.InternalNode(Seq.tags n.seq, [child], [tv], [TagPairs.empty])
+                (Seq.tags n.seq, [child], [tv], [TagPairs.empty])
             | AbdNode(child, _) ->
               (* FIXME this demands tag globality *)
               let tags = Seq.tags n.seq in
-              Cchecker.InternalNode
                 (tags, [child], [TagPairs.mk tags], [TagPairs.empty]) in
           map do_node prf
 

@@ -8,7 +8,7 @@ ORIGDIR:=$(PWD)
 CYCDIR:=$(TMPDIR)/cyclist
 
 TLMAIN:=./src/temporal/tlmain.native
-FOMAIN:=./src/firstorder/fomain.native
+FOMAIN:=fomain.native
 SLMAIN:=./src/seplog/slmain.native
 PRMAIN:=./src/termination/prmain.native
 ABDMAIN:=./src/termination/abdmain.native
