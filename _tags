@@ -1,6 +1,4 @@
-true: debug,use_menhir,explain
-<*.native> or <*.top> or <*.byte>: use_unix
-<*.byte>: custom
-<c_cyclist/*>: not_hygienic
-"c_cyclist" or "generic" or "seplog" or "termination": include
-"firstorder" or "while": include
+true: debug,use_menhir,explain,use_unix,use_str,use_latex
+<**/*.byte>: custom
+<src/soundness/*>: not_hygienic
+<src/*>: include
