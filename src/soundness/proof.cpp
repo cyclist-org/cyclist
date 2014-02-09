@@ -96,6 +96,8 @@ void Proof::set_trace_pair(const Vertex & v1, const Vertex & v2,
 		const Tag & t1, const Tag & t2) {
 	assert( vertices.find(v1) != vertices.end() );
 	assert( vertices.find(v2) != vertices.end() );
+	assert( tag_map[v1].find(t1) != tag_map[v1].end() );
+	assert( tag_map[v2].find(t2) != tag_map[v2].end() );
 	trace_pairs.insert( Quad(v1, v2, t1, t2) );
 }
 //------------------------------------------------------------------
@@ -103,6 +105,8 @@ void Proof::set_progress_pair(const Vertex & v1, const Vertex & v2,
 		const Tag & t1, const Tag & t2) {
 	assert( vertices.find(v1) != vertices.end() );
 	assert( vertices.find(v2) != vertices.end() );
+	assert( tag_map[v1].find(t1) != tag_map[v1].end() );
+	assert( tag_map[v2].find(t2) != tag_map[v2].end() );
 	progress_pairs.insert( Quad(v1, v2, t1, t2) );
 }
 //------------------------------------------------------------------
