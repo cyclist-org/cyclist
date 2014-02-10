@@ -125,15 +125,17 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
 
         let abstract prf =
           let do_node n = match n.node with
-            | OpenNode | AxiomNode _ -> (Seq.tags n.seq, [], [], [])
+            | OpenNode | AxiomNode _ -> 
+              Cchecker.mk_abs_node (Seq.tags n.seq) [] [] []
             | InfNode(subg, tvs, tps, _, _) ->
-                (Seq.tags n.seq, subg, tvs, tps)
+              Cchecker.mk_abs_node (Seq.tags n.seq) subg tvs tps
             | BackNode(child, tv, _) ->
-                (Seq.tags n.seq, [child], [tv], [TagPairs.empty])
+              Cchecker.mk_abs_node (Seq.tags n.seq) [child] [tv] [TagPairs.empty]
             | AbdNode(child, _) ->
               (* FIXME this demands tag globality *)
               let tags = Seq.tags n.seq in
-                (tags, [child], [TagPairs.mk tags], [TagPairs.empty]) in
+                Cchecker.mk_abs_node 
+                  tags [child] [TagPairs.mk tags] [TagPairs.empty] in
           map do_node prf
 
         let check p = Cchecker.check_proof (abstract p)

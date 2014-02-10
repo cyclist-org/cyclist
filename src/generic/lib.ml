@@ -176,6 +176,12 @@ let unzip3 l =
     | (e1, e2, e3)::tail -> unzip3acc (e1::a1) (e2::a2) (e3::a3) tail
   in unzip3acc [] [] [] l
 
+let rec zip3 xs ys zs = 
+  match (xs, ys, zs) with
+    | ([], [], []) -> []
+    | (b::bs, c::cs, d::ds) -> (b,c,d)::(zip3 bs cs ds)  
+    | _ -> invalid_arg "zip3"
+
 let surround l s r = l ^ s ^ r
 let bracket s = surround "(" s ")"
 let sqbracket s = surround "[" s "]"

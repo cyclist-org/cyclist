@@ -12,39 +12,42 @@ external check_soundness : unit -> bool = "check_soundness" ;;
 external set_initial_vertex : int -> unit = "set_initial_vertex" ;;
 
 type abstract_proof_node =
-  Util.Tags.t * int list * Util.TagPairs.t list * Util.TagPairs.t list
-type abstract_proof_t = abstract_proof_node Int.Map.t
+  Util.Tags.t * ((int * Util.TagPairs.t * Util.TagPairs.t) list)
+type t = abstract_proof_node Int.Map.t
 
+let get_tags n = fst n
+let get_subg n = snd n
 
-let is_leaf (_, sub, _, _) = sub=[]
-let in_children child (_,subg,_,_) = Blist.exists (fun i -> i=child) subg
+let is_leaf n = (get_subg n)=[]
+let in_children child n = Blist.exists (fun (i,_,_) -> i=child) (get_subg n)
+let index_of_child child (_,subg) = index (fun (i,_,_) -> i=child) subg
+
+let mk_abs_node tags subg tvs tps = (tags, zip3 subg tvs tps)
+
 
 (* has one child and is not a self loop *)
-let is_single_node idx (_, subg, _, _) = 
-  match subg with
-    | [idx'] -> idx'<>idx
+let is_single_node idx n = 
+  match get_subg n with
+    | [(idx',_,_)] -> idx'<>idx
     | _ -> false
 
-let get_tvs (_ ,_,tvs,_) = tvs
-let get_tps (_,_,_,tps) = tps
-let get_subg (_,subg,_,_) = subg
-let get_tags (t, _, _, _) = t
-
-let fathers_grandchild prf idx node =
-  let grandchild = Blist.hd (get_subg node) in
-  Int.Map.exists
-      (fun idx' par_node -> in_children idx par_node && in_children grandchild par_node)
+let fathers_grandchild prf idx n = 
+  match get_subg n with
+    | [(grandchild,_,_)] ->
+      if idx=grandchild then invalid_arg "fathers_grandchild1" else  
+      Int.Map.exists
+        (fun idx' par_node -> 
+          in_children idx par_node && in_children grandchild par_node)
         prf
+    | _ -> invalid_arg "fathers_grandchild2"
 
 let pp_int fmt i = Format.fprintf fmt "@[%i@]" i
 
 let pp_proof_node fmt n =
-  let aux fmt m =
-    if is_leaf m then 
-      Format.pp_print_string fmt "leaf"
-    else
-      let (_, subg, _, _) = m in pp_list pp_comma pp_int fmt subg
-    in
+  let aux fmt (_, subg) =
+    match subg with 
+      | [] -> Format.pp_print_string fmt "leaf"
+      | _ -> let (idxs,_,_) = unzip3 subg in pp_list pp_comma pp_int fmt idxs in
   Format.fprintf fmt "@[%a@]" aux n
 
 let pp fmt prf =
@@ -59,11 +62,10 @@ let remove_dead_nodes prf' =
   let process_node child par_idx n =
 		if not (in_children child n) then () else
     let newparent = 
-      let (tags, subg, tvs, tps) = n in
+      let (tags, subg) = n in
 				begin match subg with
-  				| [_] -> (tags, [], [], [])
-  				| _ -> let pos = index (fun i -> i=child) subg in
-  				  (tags, remove_nth pos subg, remove_nth pos tvs, remove_nth pos tps)
+  				| [_] -> (tags, [])
+  				| _ -> (tags, remove_nth (index_of_child child n) subg)
 				end in
     prf := Int.Map.add par_idx newparent !prf in
   let remove_dead_node idx n =
@@ -90,27 +92,26 @@ let fuse_single_nodes prf' =
   let prf = ref prf' in
   let process_node child grand_child tv tp par_idx n =
 		if not (in_children child n) then () else
-    let (par_tags, par_subg, par_tvs, par_tps) = n in
-    let pos = index (fun i -> i=child) par_subg in
-    let par_tv = Blist.nth par_tvs pos in
-    let par_tp = Blist.nth par_tps pos in
-    let newsubg = replace_nth grand_child pos par_subg in
-    let newtvs = replace_nth (compose_tag_pairs par_tv tv) pos par_tvs in
-    let newtps =
-      replace_nth (
+    let (par_tags, par_subg) = n in
+    let pos = index_of_child child n in
+    let (_, par_tv, par_tp) = List.nth par_subg pos in
+    let newsubg = 
+      replace_nth 
+        (grand_child, 
+        compose_tag_pairs par_tv tv,
         TagPairs.union_of_list
-        [compose_tag_pairs par_tp tp;
-        compose_tag_pairs par_tv tp;
-        compose_tag_pairs par_tp tv]
-      ) pos par_tps in
+          [compose_tag_pairs par_tp tp;
+          compose_tag_pairs par_tv tp;
+          compose_tag_pairs par_tp tv]
+        )
+        pos par_subg in
     prf :=
-      Int.Map.add par_idx (par_tags, newsubg, newtvs, newtps) !prf in
-  let fuse_node idx (tags, subg, tvs, tps) =
-    let child = Blist.hd subg in
-    let tv = Blist.hd tvs in
-    let tp = Blist.hd tps in
-    Int.Map.iter (fun p n -> process_node idx child tv tp p n) !prf ;
-    prf := Int.Map.remove idx !prf in
+      Int.Map.add par_idx (par_tags, newsubg) !prf in
+  let fuse_node idx = function 
+    | (tags, [(child, tv, tp)]) ->
+      Int.Map.iter (fun p n -> process_node idx child tv tp p n) !prf ;
+      prf := Int.Map.remove idx !prf  
+    | _ -> invalid_arg "fuse_node" in
   let cont = ref true in
   (* if a parent points to the child of the node to be fused then *)
   (* we would run into difficulties when updating that parent to point *)
@@ -132,15 +133,12 @@ let check_proof p =
   Stats.MC.call ();
   let create_tags i n =
     Tags.iter (tag_vertex i) (get_tags n) in
-  let create_succs i (_, l, _, _) = Blist.iter (fun j -> set_successor i j) l in
-  let create_valid_tag_transitions i (_, l, vs, _) =
-    let do_tag_transitions j tps =
-      TagPairs.iter (fun (k,m) -> set_trace_pair i j k m) tps in
-    Blist.iter2 do_tag_transitions l vs in
-  let create_prog_tag_transitions i (_, l, _, ps) =
-    let do_tag_transitions j tps =
+  let create_succs i (_, l) = Blist.iter (fun (j,_,_) -> set_successor i j) l in
+  let create_trace_pairs i (_, l) =
+    let do_tag_transitions (j,tvs,tps) =
+      TagPairs.iter (fun (k,m) -> set_trace_pair i j k m) tvs ;
       TagPairs.iter (fun (k,m) -> set_progress_pair i j k m) tps in
-    Blist.iter2 do_tag_transitions l ps in
+    Blist.iter do_tag_transitions l in
   let size = Int.Map.cardinal p in
   let log2size = 1 + int_of_float (ceil ((log (float_of_int size)) /. (log 2.0))) in
   debug (fun () -> "Checking soundness starts...") ;
@@ -149,8 +147,7 @@ let check_proof p =
   Int.Map.iter create_tags p ;
   Int.Map.iter create_succs p ;
   set_initial_vertex 0 ;
-  Int.Map.iter create_valid_tag_transitions p ;
-  Int.Map.iter create_prog_tag_transitions p ;
+  Int.Map.iter create_trace_pairs p ;
   let retval = check_soundness () in
   destroy_aut () ;
   if retval then Stats.MC.accept () else Stats.MC.reject () ;
