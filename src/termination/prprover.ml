@@ -320,7 +320,7 @@ let setup defs seq_to_prove =
   ] @ luf 
 
 let coverage prf = 
-  let get_line n = snd (n.PRP.seq) in
+  let get_line n = snd (PRP.get_seq n) in
   let lines = 
     Blist.fold_left 
       (fun s (_,n) -> Int.Set.add (get_line n) s) 

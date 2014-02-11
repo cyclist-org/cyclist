@@ -41,20 +41,23 @@ sig
   val descr_rule : proof_rule -> string
 
   (* type proof *)
-  type proof_subnode =
-    | OpenNode
-    | AxiomNode of axiom
-    | InfNode of
-      int list * Util.TagPairs.t list * Util.TagPairs.t list * proof_rule * bool
-    | BackNode of int * Util.TagPairs.t * proof_rule
-    | AbdNode of int * proof_rule
-  type proof_node =
-    {
-      seq: sequent;
-      parent: int;
-      node: proof_subnode;
-    }
+  (* type proof_subnode =                                                       *)
+  (*   | OpenNode                                                               *)
+  (*   | AxiomNode of axiom                                                     *)
+  (*   | InfNode of                                                             *)
+  (*     int list * Util.TagPairs.t list * Util.TagPairs.t list * string * bool *)
+  (*   | BackNode of int * Util.TagPairs.t * string                             *)
+  (*   | AbdNode of int * string                                                *)
+  (* type proof_node =                                                          *)
+  (*   {                                                                        *)
+  (*     seq: sequent;                                                          *)
+  (*     parent: int;                                                           *)
+  (*     node: proof_subnode;                                                   *)
+  (*   }                                                                        *)
+  type proof_node
   type proof = proof_node Util.Int.Map.t
+  
+  val get_seq : proof_node -> sequent
 
   val idfs : sequent -> proof option
 

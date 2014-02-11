@@ -2,17 +2,6 @@ open Lib
 
 let genhash h v = h lxor (v + (h lsl 5) + (h lsr 2))
 
-module Pair =
-  struct
-    let map f p = (f (fst p), f (snd p))
-    let apply f p = f (fst p) (snd p)
-    let conj p = apply (&&) p
-    let disj p = apply (||) p
-    let swap (x,y) = (y,x)
-    let perm f p = apply f p || apply f (swap p)
-		let fold f (x,y) a = f y (f x a)
-  end
-
 module type BasicType =
   sig
     type t
@@ -402,36 +391,12 @@ module ContaineriseType(T: BasicType) : CTsig
     module FList = MakeFList(T)
   end
 
-module type CartSig =
-  sig
-    module TSet : OrderedContainer
-    module USet : OrderedContainer
-    module TUSet : OrderedContainer
-    val product : TSet.t -> USet.t -> TUSet.t
-  end
-
-(* module MakeCartesian(T: BasicType)(U: BasicType) : CartSig         *)
-(*   with type TSet.elt = T.t                                         *)
-(*   with type USet.elt = U.t                                         *)
-(*   with type TUSet.elt = T.t * U.t                                  *)
-(*   =                                                                *)
-(*   struct                                                           *)
-(*     module TSet = MakeSet(T)                                       *)
-(*     module USet = MakeSet(U)                                       *)
-(*     module TUSet = MakeSet(PairTypes(T)(U))                        *)
-
-(*     let product tset uset =                                        *)
-(*       let f x p = USet.map_to TUSet.add p (fun y -> (x,y)) uset in *)
-(*       TSet.fold f tset TUSet.empty                                 *)
-(*   end                                                              *)
-
 module type MCTsig =
   sig
     include BasicType
     module T : BasicType
     include CTsig
-    module Pair : CTsig
-    (* module Cartesian : CartSig *)
+    module Pairing : CTsig
   end
 
 module MakeComplexType(T: BasicType) : MCTsig
@@ -442,21 +407,17 @@ module MakeComplexType(T: BasicType) : MCTsig
   with type Hashmap.key=T.t
   with type MSet.elt=T.t
   with type FList.t=T.t list
-  with type Pair.Set.elt=T.t * T.t
-  with type Pair.Map.key=T.t * T.t
-  with type Pair.Hashmap.key=T.t * T.t
-  with type Pair.MSet.elt=T.t * T.t
-  with type Pair.FList.t=(T.t * T.t) list
-  (* with type Cartesian.TSet.elt = T.t        *)
-  (* with type Cartesian.USet.elt = T.t        *)
-  (* with type Cartesian.TUSet.elt = T.t * T.t *)
+  with type Pairing.Set.elt=T.t * T.t
+  with type Pairing.Map.key=T.t * T.t
+  with type Pairing.Hashmap.key=T.t * T.t
+  with type Pairing.MSet.elt=T.t * T.t
+  with type Pairing.FList.t=(T.t * T.t) list
   =
   struct
     include T
     module T = T
     include ContaineriseType(T)
-    module Pair = ContaineriseType(PairTypes(T)(T))
-    (* module Cartesian = MakeCartesian(T)(T) *)
+    module Pairing = ContaineriseType(PairTypes(T)(T))
   end
 
 module Int = MakeComplexType
@@ -488,7 +449,7 @@ module Tags =
 
 module TagPairs =
   struct
-    include Int.Pair.Set
+    include Int.Pairing.Set
     let mk s = Tags.fold (fun i p -> add (i,i) p) s empty
   end
 

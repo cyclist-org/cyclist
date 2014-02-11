@@ -69,7 +69,7 @@ module Term =
     let unify_pairs theta p p' =
       Option.list_get [
         unify_ordered_pairs theta p p';
-        unify_ordered_pairs theta p (Util.Pair.swap p')
+        unify_ordered_pairs theta p (Pair.swap p')
       ]
 
     let to_string v = if v=nil then keyw_nil.str else Var.to_string v
@@ -84,8 +84,7 @@ module Term =
     let avoid_theta vars subvars =
       let allvars = Set.union vars subvars in
       let (exist_vars, univ_vars) =
-        Util.Pair.map
-          Set.elements (Set.partition is_exist_var subvars) in
+        Pair.map Set.elements (Set.partition is_exist_var subvars) in
       let fresh_u_vars = fresh_uvars allvars (Blist.length univ_vars) in
       let fresh_e_vars = fresh_evars allvars (Blist.length exist_vars) in
       let theta = Map.of_list
@@ -202,7 +201,7 @@ module UF =
 
 module Deqs =
   struct
-    include Term.Pair.Set
+    include Term.Pairing.Set
     (* if a pair contains an exist. variable then *)
     (* the first comp of the pair is an exist. var *)
     let add p deqs = add (norm_pair p) deqs

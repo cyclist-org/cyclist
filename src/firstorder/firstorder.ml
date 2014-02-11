@@ -158,7 +158,7 @@ module Term =
     let unify_pairs theta p p' =
       Option.list_get [
         unify_ordered_pairs theta p p';
-        unify_ordered_pairs theta p (Util.Pair.swap p')
+        unify_ordered_pairs theta p (Pair.swap p')
       ]
 
     (* unifies two terms, computing a substitution s  such that s(t1) = t2 and *)
@@ -312,9 +312,9 @@ module Atom =
 
     let to_melt = function
       | Eq eq ->
-        let (sx,sy) = Util.Pair.map Term.to_melt eq in
+        let (sx,sy) = Pair.map Term.to_melt eq in
         ltx_mk_math (Latex.concat [sx; symb_eq.melt; sy])
-      | Deq eq -> let (sx,sy) = Util.Pair.map Term.to_melt eq in
+      | Deq eq -> let (sx,sy) = Pair.map Term.to_melt eq in
         Latex.concat [sx; symb_deq.melt; sy]
       | IndPred(t,(ident,tl)) ->
         ltx_mk_math
@@ -332,13 +332,12 @@ module Atom =
       | _ -> invalid_arg "Atom.strip_tags"
 
     let subst theta = function
-      | Eq p -> Eq (Util.Pair.map (fun t -> Term.subst theta t) p)
-      | Deq p -> Deq (Util.Pair.map (fun t -> Term.subst theta t) p)
+      | Eq p -> Eq (Pair.map (fun t -> Term.subst theta t) p)
+      | Deq p -> Deq (Pair.map (fun t -> Term.subst theta t) p)
       | IndPred(t, (ident, tl)) -> IndPred(t, (ident, Term.subst_list theta tl))
 
     let unify_ipreds theta a a' =
-      let ((_, ident, args),(_, ident', args')) =
-        Util.Pair.map dest_pred (a,a') in
+      let ((_, ident, args),(_, ident', args')) = Pair.map dest_pred (a,a') in
       if
         not (Strng.equal ident ident') ||
         Blist.length args <> Blist.length args'
@@ -348,10 +347,10 @@ module Atom =
         Term.unify_list theta args args'
 
     let unify_deqs theta a a' =
-      let (p,p') = Util.Pair.map dest_deq (a,a') in Term.unify_pairs theta p p'
+      let (p,p') = Pair.map dest_deq (a,a') in Term.unify_pairs theta p p'
 
     let unify_eqs theta a a' =
-      let (p,p') = Util.Pair.map dest_eq (a,a') in Term.unify_pairs theta p p'
+      let (p,p') = Pair.map dest_eq (a,a') in Term.unify_pairs theta p p'
 
   end
 

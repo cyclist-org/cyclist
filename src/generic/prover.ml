@@ -20,29 +20,181 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
     type abd_match_fun = Seq.t -> Seq.t -> ind_def_set -> ind_def_set list
     type gen_fun = Seq.t -> ind_def_set -> (rule_app * ind_def_set) list
 
+      
+    let descr_axiom ax = snd ax
+    let ltx_axiom ax = ltx_paren (ltx_text (descr_axiom ax))
+    let ltx_rule r = ltx_paren (ltx_text r)
+
+    module Node =
+      struct
+        type proof_subnode =
+          | OpenNode
+          | AxiomNode of axiom
+          | InfNode of
+            int list * TagPairs.t list * TagPairs.t list * string * bool
+          | BackNode of int * TagPairs.t * string
+          | AbdNode of int * string
+    
+    
+        type proof_node =
+          {
+            seq: Seq.t;
+            parent: int;
+            node: proof_subnode;
+          }
+        type t = proof_node
+        
+        let get_seq n = n.seq
+        let get_par n = n.parent
+        let dest n = (n.seq, n.parent)
+
+        let is_open n = match n.node with
+          | OpenNode -> true
+          | _ -> false
+                (* FIXME remove/redesign "backlinkable" *)
+        let is_backlinkable n = match n.node with
+          | OpenNode -> true
+          | AbdNode _ | AxiomNode _ | BackNode _ -> false
+          | InfNode (_, _, _, _, b) -> true
+        let is_backlink n = match n.node with
+          | BackNode _ -> true
+          | _ -> false
+
+        let mk_open seq par_idx = 
+          {
+            seq=seq;
+            parent=par_idx;
+            node=OpenNode
+          }
+
+        let mk_axiom seq par_idx ax = 
+          {
+            seq=seq;
+            parent=par_idx;
+            node=AxiomNode(ax)
+          }
+        
+        let mk_inf seq par_idx children tvs tps rdesc backt = 
+          {
+            seq=seq;
+            parent=par_idx;
+            node=InfNode(children,tvs,tps,rdesc,backt)
+          }
+        
+        let mk_back seq par_idx child tvs rdesc = 
+          {
+            seq=seq;
+            parent=par_idx;
+            node=BackNode(child,tvs,rdesc)
+          }
+
+        let mk_abd seq par_idx child rdesc = 
+          {
+            seq=seq;
+            parent=par_idx;
+            node=AbdNode(child,rdesc)
+          }
+          
+        let to_abstract_node n = match n.node with
+          | OpenNode | AxiomNode _ -> 
+            Cchecker.mk_abs_node (Seq.tags n.seq) [] [] []
+          | InfNode(subg, tvs, tps, _, _) ->
+            Cchecker.mk_abs_node (Seq.tags n.seq) subg tvs tps
+          | BackNode(child, tv, _) ->
+            Cchecker.mk_abs_node (Seq.tags n.seq) [child] [tv] [TagPairs.empty]
+          | AbdNode(child, _) ->
+            (* FIXME this demands tag globality *)
+            let tags = Seq.tags n.seq in
+              Cchecker.mk_abs_node 
+                tags [child] [TagPairs.mk tags] [TagPairs.empty]
+
+        let pp fmt id n cont =
+          match n.node with
+            | OpenNode ->
+              Format.fprintf fmt "@[%i: %a (Open)@]"
+                id Seq.pp n.seq
+            | AxiomNode(ax) ->
+              Format.fprintf fmt "@[%i: %a (%s)@]"
+                id Seq.pp n.seq (descr_axiom ax)
+            | BackNode(i, _, r) ->
+              Format.fprintf fmt "@[%i: %a (%s) [%i]@]"
+                id Seq.pp n.seq r i
+            | InfNode(p, _, _, r, _) ->
+              Format.fprintf fmt "@[<v 2>%i: %a (%s) [%a]@,%a@]"
+                id
+                Seq.pp n.seq
+                r
+                (Blist.pp pp_comma Format.pp_print_int) p
+                (Blist.pp (fun fmt' () -> Format.fprintf fmt "@\n") cont) p
+            | AbdNode(child, rl) ->
+              Format.fprintf fmt "@[<v 2>%i: %a (%s) [%i]@,%a@]"
+                id
+                Seq.pp n.seq
+                rl
+                child
+                cont child
+
+        let justify = Latex.text "\n\\justifies\n\\thickness=0.1em\n"
+        let using = Latex.text "\\using"
+        let prooftree first seq m =
+          let comment = Latex.text ("% " ^ (Seq.to_string seq) ^ "\n") in
+          if first then
+            Latex.environment
+              "prooftree" (Latex.M, (Latex.concat [comment; m])) Latex.M
+          else
+            Latex.concat [ Latex.text "\\[ "; comment; m; Latex.text "\n\\]\n" ]
+        let prefix id s =
+          Latex.concat
+            [ Latex.text ((string_of_int id) ^ " : "); Seq.to_melt s]
+        let justifies id s = Latex.concat [ justify; prefix id s; ltx_newl ]
+        
+        let to_melt first id n cont =          
+          match n.node with
+            | OpenNode ->
+              ltx_mk_math
+                (Latex.concat [ prefix id n.seq;  ltx_text "(Open)";  ltx_newl ])
+            | AxiomNode(ax) ->
+              prooftree first n.seq
+                (Latex.concat [ ltx_axiom ax; justifies id n.seq ])
+            | InfNode(p, _, _, r, _) ->
+              prooftree first n.seq
+                (Latex.concat
+                  ((Blist.map (cont false) p) @
+                  [ justifies id n.seq; using; ltx_rule r; ltx_newl ]))
+            | BackNode(i, _, r) ->
+              prooftree first n.seq
+                (Latex.concat
+                  [ Latex.text ("\\to " ^ (string_of_int i));
+                    ltx_rule r; justifies id n.seq ])
+            | AbdNode(child, r) ->
+              prooftree first n.seq
+                (Latex.concat
+                  [ cont false child ;
+                    justifies id n.seq; using; ltx_rule r; ltx_newl ])
+      
+          let is_closed_at_helper back n cont =
+            match n.node with
+              | AxiomNode _ -> true
+              | OpenNode -> false
+              | BackNode _ -> not back
+              | AbdNode(child, _) -> cont child
+              | InfNode(p, _, _, _, _) -> Blist.for_all cont p
+
+      
+      end
+
+    type proof_node = Node.t    
+    type proof = Node.t Int.Map.t
+    
     type proof_transformer =
       ?backlinkable:bool -> proof -> int -> (proof * int list) Zlist.t
-    and abd_proof_transformer =
+    type abd_proof_transformer =
       ?backlinkable:bool ->
         proof -> int -> ind_def_set -> (proof * int list * ind_def_set) Zlist.t
-    and gen_proof_transformer =
+    type gen_proof_transformer =
       | InfRule of proof_transformer
       | AbdRule of abd_proof_transformer
-    and proof_rule = gen_proof_transformer * string
-    and proof_subnode =
-      | OpenNode
-      | AxiomNode of axiom
-      | InfNode of
-        int list * TagPairs.t list * TagPairs.t list * proof_rule * bool
-      | BackNode of int * TagPairs.t * proof_rule
-      | AbdNode of int * proof_rule
-    and proof_node =
-      {
-        seq: Seq.t;
-        parent: int;
-        node: proof_subnode;
-      }
-    and proof = proof_node Int.Map.t
+    type proof_rule = gen_proof_transformer * string
 
     let step = ref 0
     let axiomset = ref ([] : axiom list)
@@ -61,46 +213,24 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
     (* auxiliary functions and constructors *)
     let mk_axiom axf descr = (axf, descr)
     let dest_axiom ax = ax
-    let descr_axiom ax = snd ax
-
-    let ltx_axiom ax = ltx_paren (ltx_text (descr_axiom ax))
-
-    module Node =
-      struct
-        type t = proof_node
-
-        let is_open n = match n.node with
-          | OpenNode -> true
-          | _ -> false
-				(* FIXME remove/redesign "backlinkable" *)
-        let is_backlinkable n = match n.node with
-          | OpenNode -> true
-          | AbdNode _ | AxiomNode _ | BackNode _ -> false
-          | InfNode (_, _, _, _, b) -> true
-        let is_backlink n = match n.node with
-          | BackNode _ -> true
-          | _ -> false
-
-        (* makes a proof node that is an axiom node if an axiom exists for it *)
-        (* or an open node if no axiom applies *)
-        let mk par_idx seq =
-          let f ax = Option.pred (fun ax' -> (fst (dest_axiom ax')) seq) ax in
-          {
-            seq=seq;
-            parent=par_idx;
-            node=
-             match Blist.find_first f !axiomset with
-               | None -> OpenNode
-               | Some ax -> AxiomNode(ax)
-          }
-      end
 
     let descr_rule (_, d) = d
     let bracket_rule r = bracket (descr_rule r)
     let bracket_axiom x = bracket (descr_axiom x)
     let latex_bracket_rule r = latex_bracket (descr_rule r)
     let latex_bracket_axiom x = latex_bracket (descr_axiom x)
-    let ltx_rule r = ltx_paren (ltx_text (descr_rule r))
+
+
+      
+    let get_seq n = Node.get_seq n
+    
+    (* makes a proof node that is an axiom node if an axiom exists for it *)
+    (* or an open node if no axiom applies *)
+    let mk_node par_idx seq =
+      let f ax = Option.pred (fun ax' -> (fst (dest_axiom ax')) seq) ax in
+      match Blist.find_first f !axiomset with
+        | None -> Node.mk_open seq par_idx
+        | Some ax -> Node.mk_axiom seq par_idx ax 
 
     module Proof =
       struct
@@ -118,55 +248,19 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
 
         let get_ancestry idx prf =
           let rec aux acc idx n =
-            let parent = find n.parent prf in
-            let acc = add n.parent parent acc in
-            if n.parent=idx then acc else aux acc n.parent parent in
+            let par_idx = Node.get_par n in
+            let parent = find par_idx prf in
+            let acc = add par_idx parent acc in
+            if par_idx=idx then acc else aux acc par_idx parent in
           aux empty idx (find idx prf)
 
-        let abstract prf =
-          let do_node n = match n.node with
-            | OpenNode | AxiomNode _ -> 
-              Cchecker.mk_abs_node (Seq.tags n.seq) [] [] []
-            | InfNode(subg, tvs, tps, _, _) ->
-              Cchecker.mk_abs_node (Seq.tags n.seq) subg tvs tps
-            | BackNode(child, tv, _) ->
-              Cchecker.mk_abs_node (Seq.tags n.seq) [child] [tv] [TagPairs.empty]
-            | AbdNode(child, _) ->
-              (* FIXME this demands tag globality *)
-              let tags = Seq.tags n.seq in
-                Cchecker.mk_abs_node 
-                  tags [child] [TagPairs.mk tags] [TagPairs.empty] in
-          map do_node prf
+        let abstract prf = map Node.to_abstract_node prf
 
         let check p = Cchecker.check_proof (abstract p)
 
-        let pp fmt (prf:t) =
+        let pp fmt prf =
           let rec pp_proof_node fmt id =
-            let n = find id prf in
-            match n.node with
-              | OpenNode ->
-                Format.fprintf fmt "@[%i: %a (Open)@]"
-                  id Seq.pp n.seq
-              | AxiomNode(ax) ->
-                Format.fprintf fmt "@[%i: %a (%s)@]"
-                  id Seq.pp n.seq (descr_axiom ax)
-              | BackNode(i, _, r) ->
-                Format.fprintf fmt "@[%i: %a (%s) [%i]@]"
-                  id Seq.pp n.seq (descr_rule r) i
-              | InfNode(p, _, _, r, _) ->
-                Format.fprintf fmt "@[<v 2>%i: %a (%s) [%a]@,%a@]"
-                  id
-                  Seq.pp n.seq
-                  (descr_rule r)
-                  (Blist.pp pp_comma Format.pp_print_int) p
-                  (Blist.pp (fun fmt' () -> Format.fprintf fmt "@\n") pp_proof_node) p
-              | AbdNode(child, rl) ->
-                Format.fprintf fmt "@[<v 2>%i: %a (%s) [%i]@,%a@]"
-                  id
-                  Seq.pp n.seq
-                  (descr_rule rl)
-                  child
-                  pp_proof_node child in
+            Node.pp fmt id (find id prf) pp_proof_node in
           Format.fprintf fmt "@[%a@]@\n" pp_proof_node 0
 
         let to_string prf =
@@ -176,85 +270,11 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
           Format.flush_str_formatter ()
 
         let to_melt proof =
-          let justify = Latex.text "\n\\justifies\n\\thickness=0.1em\n" in
-          let using = Latex.text "\\using" in
-          let prooftree first seq m =
-            let comment = Latex.text ("% " ^ (Seq.to_string seq) ^ "\n") in
-            if first then
-              Latex.environment
-                "prooftree" (Latex.M, (Latex.concat [comment; m])) Latex.M
-            else
-              Latex.concat [ Latex.text "\\[ "; comment; m; Latex.text "\n\\]\n" ] in
-          let prefix id s =
-            Latex.concat
-              [ Latex.text ((string_of_int id) ^ " : "); Seq.to_melt s] in
-          let justifies id s = Latex.concat [ justify; prefix id s; ltx_newl ] in
-          let rec melt_proof_node ?(first=false) id =
-            let n = find id proof in
-            match n.node with
-            | OpenNode ->
-              ltx_mk_math
-                (Latex.concat [ prefix id n.seq;  ltx_text "(Open)";  ltx_newl ])
-            | AxiomNode(ax) ->
-              prooftree first n.seq
-                (Latex.concat [ ltx_axiom ax; justifies id n.seq ])
-            | InfNode(p, _, _, r, _) ->
-              prooftree first n.seq
-                (Latex.concat
-                  ((Blist.map (melt_proof_node ~first:false) p) @
-                  [ justifies id n.seq; using; ltx_rule r; ltx_newl ]))
-            | BackNode(i, _, r) ->
-              prooftree first n.seq
-                (Latex.concat
-                  [ Latex.text ("\\to " ^ (string_of_int i));
-                    ltx_rule r; justifies id n.seq ])
-            | AbdNode(child, r) ->
-              prooftree first n.seq
-                (Latex.concat
-                  [ melt_proof_node child ;
-                    justifies id n.seq; using; ltx_rule r; ltx_newl ])
-            in
-          melt_proof_node ~first:true 0
+          let rec melt_proof_node first id =
+            Node.to_melt first id (find id proof) melt_proof_node in
+          melt_proof_node true 0
        
-        
-      (* its a tree growing up, so parents are children *)
-    (*  let pgf_proof ch proof =                                         *)
-    (*    let write = output_string ch in                                *)
-    (*    let write_id id = write ("(" ^ (string_of_int id) ^ ")") in    *)
-    (*    let write_node style id content =                              *)
-    (*      write ("node [" ^ style ^ "] ");                             *)
-    (*      write_id id;                                                 *)
-    (*      write (" {" ^ content ^ "}") in                              *)
-    (*    let edges = ref [] in                                          *)
-    (*    let add_edge (i, j) = edges := (i, j) :: !edges in             *)
-    (*    let los s = "\n\\[\n" ^ (Seq.latex_of_sequent s) ^ "\n\\]\n" in*)
-    (*    let rec pgf_proof_node id = match (Proof.find id proof) with  *)
-    (*      | OpenNode(s, _) -> write_node "open" id (los s)             *)
-    (*      | InfNode(s, p, _, _, r, _, _) ->                            *)
-    (*        write_node ("inference=" ^ (descr_rule r)) id (los s);     *)
-    (*    let write_parent c =                                           *)
-    (*      write "\nchild [parent] {\n";                                *)
-    (*      pgf_proof_node c;                                            *)
-    (*      write "\n}" in                                               *)
-    (*    Blist.iter write_parent p;                                      *)
-    (*        | BackNode(s, i, _, r, _) ->                               *)
-    (*    write_node ("backlink=" ^ (descr_rule r)) id (los s);          *)
-    (*    add_edge (id, i) in                                            *)
-    (*    let write_edge style (i, j) =                                  *)
-    (*      write_id i;                                                  *)
-    (*      write (" edge [" ^ style ^ "] ");                            *)
-    (*      write_id j in                                                *)
-    (*    write "\\path [prooftree]\n";                                  *)
-    (*    pgf_proof_node 0;                                              *)
-    (*    write ";\n";                                                   *)
-    (*    write "\\draw [link]\n";                                       *)
-    (*    Blist.iter (write_edge "->, out=-30, in=30") !edges;            *)
-    (*    write ";"                                                      *)
-
-      (* FIXME *)
-      (* check local soundness of proof *)
-
-    (* FIXME lazy soundness checking de-implemented *)
+    (* FIXME lazy soundness checking de-implemented *) 
         let is_closed prf =
           Int.Map.for_all (fun _ n -> not (Node.is_open n)) prf
 
@@ -263,14 +283,10 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
         (* is non-backtrackable, i.e. contains no backlinks if *)
         (* backtrackable_backlinks is set to true *)
         let rec is_closed_at idx prf =
-          match (find idx prf).node with
-            | AxiomNode _ -> true
-            | OpenNode -> false
-            | BackNode _ -> not (!backtrackable_backlinks)
-            | AbdNode(child, _) -> is_closed_at child prf
-            | InfNode(p, _, _, _, _) ->
-              Blist.for_all (fun i -> is_closed_at i prf) p
-
+          let aux idx' = 
+            Node.is_closed_at_helper (!backtrackable_backlinks) (find idx' prf) (fun idx'' -> is_closed_at idx'' prf) in
+          aux idx
+          
         let no_of_backlinks p =
           size (Int.Map.filter (fun _ n -> Node.is_backlink n) p)
 
@@ -291,26 +307,26 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
          " and " ^ (string_of_int links) ^ " back-links.")
 
     let add_to_graph par_idx prf' seq' idx'=
-      Proof.add idx' (Node.mk par_idx seq') prf'
+      Proof.add idx' (mk_node par_idx seq') prf'
 
     (* this is the user-visible constructor *)
     let mk_inf_rule rl d =
       let rec transf ?(backlinkable=true) prf idx =
         let n = Proof.find idx prf in
-        let apps = rl n.seq in
+        let seq = Node.get_seq n in
+        let par_idx = Node.get_par n in
+        let apps = rl seq in
         if apps=[] then Zlist.empty else
         let fresh_idx = Proof.fresh_idx prf in
         let apply l =
           let (premises, tvs, tps) = Blist.unzip3 l in
 					let () = debug (fun () -> "InfRule(" ^ d ^ ")\n  " ^
-					  (Seq.to_string n.seq) ^ "\n>>>\n  " ^
+					  (Seq.to_string seq) ^ "\n>>>\n  " ^
 						(Blist.to_string "; " Seq.to_string premises) ^ "\n") in
           let prem_idxs = Blist.range fresh_idx premises in
           let prf = Blist.fold_left2 (add_to_graph idx) prf premises prem_idxs in
-          let prf =
-            Proof.add idx
-              { n with node=InfNode(prem_idxs, tvs, tps, rule, backlinkable) }
-              prf in
+          let n' = Node.mk_inf seq par_idx prem_idxs tvs tps d backlinkable in
+          let prf = Proof.add idx n' prf in
           let prem_idxs =
             Blist.filter (fun i -> Node.is_open (Proof.find i prf)) prem_idxs in
           (prf, prem_idxs) in
@@ -321,24 +337,26 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
     let mk_back_rule matches d =
       let rec transf ?backlinkable:bool prf idx =
         let n = Proof.find idx prf in
+        let par_idx = Node.get_par n in 
+        let seq = Node.get_seq n in
         let m = if !ancestral_links_only then Proof.get_ancestry idx prf else prf in
         let l = Zlist.of_list (Int.Map.bindings m) in
         (* optimization: remove self before trying anything *)
         let l = Zlist.filter (fun (idx',n') -> idx<>idx' && Node.is_backlinkable n') l in
-        let l = Zlist.map (fun (i,n') -> (i, n', matches n.seq n'.seq)) l in
+        let l = Zlist.map (fun (i,n') -> (i, n', matches seq (Node.get_seq n'))) l in
         let l = Zlist.filter (fun (_, _, b) -> Option.is_some b) l in
         let l =
           Zlist.map
             begin fun (j, n', tvs) ->
               (n', Proof.add idx
-                { n with node=BackNode(j, Option.get tvs, rule) } prf)
+                (Node.mk_back seq par_idx j (Option.get tvs) d) prf)
             end
             l in
         let l = Zlist.filter (fun (_,p) -> Proof.check p) l in
 				let l = Zlist.map
 				  begin fun (n',p) ->
 						let () = debug (fun () -> "BackRule("^d^")\n  " ^
-						  (Seq.to_string n.seq) ^ "\n>>>\n  " ^ (Seq.to_string n'.seq) ^ "\n")
+						  (Seq.to_string seq) ^ "\n>>>\n  " ^ (Seq.to_string (Node.get_seq n')) ^ "\n")
 						in (p,[])
 					end
 					l in
@@ -355,15 +373,16 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
     let mk_abd_inf_rule rl d =
       let rec transf ?backlinkable:bool prf idx defs =
         let n = Proof.find idx prf in
-        let apps = rl n.seq defs in
+        let (seq,parent) = Node.dest n in 
+        let apps = rl seq defs in
         if apps=[] then Zlist.empty else
         let fresh_idx = Proof.fresh_idx prf in
-        let prf = add_to_graph idx prf n.seq fresh_idx in
-        let prf = Proof.add idx { n with node=AbdNode(fresh_idx, rule) } prf in
+        let prf = add_to_graph idx prf seq fresh_idx in
+        let prf = Proof.add idx (Node.mk_abd seq parent fresh_idx d) prf in
         Zlist.map
 				  begin fun newdefs ->
 						let () = debug (fun () -> "AbdInf(" ^ d ^")\n  " ^
-						  (Seq.to_string n.seq) ^ "\n") in
+						  (Seq.to_string seq) ^ "\n") in
 						(prf,[fresh_idx],newdefs)
 					end
 					(Zlist.of_list apps)
@@ -373,15 +392,16 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
     let mk_abd_back_rule rl d =
       let rec transf ?backlinkable:bool prf idx defs =
         let n = Proof.find idx prf in
+        let (seq,parent) = Node.dest n in 
         let fresh_idx = Proof.fresh_idx prf in
-        let prf = Proof.add fresh_idx (Node.mk idx n.seq) prf in
-        let prf = Proof.add idx { n with node=AbdNode(fresh_idx, rule) } prf in
+        let prf = Proof.add fresh_idx (mk_node idx seq) prf in
+        let prf = Proof.add idx (Node.mk_abd seq parent fresh_idx d) prf in
         let m = if !ancestral_links_only then Proof.get_ancestry idx prf else prf in
         let l = Zlist.of_list (Int.Map.bindings m) in
         (* optimization: remove self before trying anything *)
         let l = Zlist.filter
 				  (fun (idx',n) -> idx<>idx' && fresh_idx<>idx' && Node.is_backlinkable n) l in
-        let l = Zlist.map (fun (_,m) -> Zlist.of_list (rl n.seq m.seq defs)) l in
+        let l = Zlist.map (fun (_,m) -> Zlist.of_list (rl seq (Node.get_seq m) defs)) l in
         let l = Zlist.flatten l in
         Zlist.map (fun newdefs -> (prf, [fresh_idx], newdefs)) l
       and rule = (AbdRule(transf), d) in
@@ -390,19 +410,18 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
     let mk_gen_rule rl d =
       let rec transf ?(backlinkable=true) prf idx defs =
         let n = Proof.find idx prf in
-        let apps = rl n.seq defs in
+        let (seq,parent) = Node.dest n in 
+        let apps = rl seq defs in
         if apps=[] then Zlist.empty else
         let add_to_graph prf seq idx' =
-          Proof.add idx' (Node.mk idx seq) prf in
+          Proof.add idx' (mk_node idx seq) prf in
         let fresh_idx = Proof.fresh_idx prf in
         let apply (l,defs') =
           let (premises, tvs, tps) = Blist.unzip3 l in
           let prem_idxs = Blist.range fresh_idx premises in
           let prf = Blist.fold_left2 add_to_graph prf premises prem_idxs in
-          let prf =
-            Proof.add idx
-              { n with node=InfNode(prem_idxs, tvs, tps, rule, backlinkable) }
-              prf in
+          let n' = Node.mk_inf seq parent prem_idxs tvs tps d backlinkable in
+          let prf = Proof.add idx n' prf in
           let prem_idxs =
             Blist.filter (fun i -> Node.is_open (Proof.find i prf)) prem_idxs in
           (prf, prem_idxs,defs') in
@@ -450,7 +469,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
 
     let idfs seq =
       let bound = ref !minbound in
-      let start = Int.Map.singleton 0 (Node.mk 0 seq) in
+      let start = Int.Map.singleton 0 (mk_node 0 seq) in
       if Proof.is_closed start then (last_search_depth := 0 ; Some start) else
       let stack = ref [expand_proof_state start 0 [(0,0)]] in
       let found = ref None in
@@ -516,7 +535,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
                   begin fun i n ->
                     not (Proof.mem i p') ||
                     not (Node.is_open (Proof.find i p')) ||
-                    not (Seq.equal n.seq (Proof.find i p').seq)
+                    not (Seq.equal (Node.get_seq n) (Node.get_seq (Proof.find i p')))
                   end
                   ancestry in
               stack := Blist.filter keep !stack ;
@@ -879,7 +898,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
 
     let abduce seq initial_defs mk_rules acceptable =
       let bound = ref !minbound in
-      let start = Int.Map.singleton 0 (Node.mk 0 seq) in
+      let start = Int.Map.singleton 0 (mk_node 0 seq) in
       if Proof.is_closed start then (last_search_depth := 0 ; Some (start, initial_defs)) else
       let stack = ref [abd_expand_proof_state 0 (mk_app start 0 [(0,0)] initial_defs) mk_rules] in
       let found = ref None in

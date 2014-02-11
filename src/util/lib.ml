@@ -10,9 +10,8 @@ let pp_semicolonsp fmt () =
 let pp_commasp fmt () =
   pp_comma fmt () ; Format.pp_print_space fmt ()
 
-let surround l s r = l ^ s ^ r
-let bracket s = surround "(" s ")"
-let sqbracket s = surround "[" s "]"
+let bracket s = "(" ^ s ^ ")"
+let sqbracket s = "[" ^ s ^ "]"
 let latex_bracket = bracket
 let latex_sqbracket = sqbracket
 
