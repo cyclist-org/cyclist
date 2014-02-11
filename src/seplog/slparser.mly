@@ -124,7 +124,7 @@ lcommand: p = separated_pair(NUM, COLON, command) { p }
 lcommands: lcmds = separated_nonempty_list(SEMICOLON, lcommand) { lcmds }
 
 fields: FIELDS; COLON; ils = separated_nonempty_list(COMMA, IDENT); SEMICOLON 
-	{ List.rev (List.combine ils (range 0 ils)) }
+	{ Blist.rev (Blist.combine ils (Blist.range 0 ils)) }
 
 judgement: JUDGEMENT; COLON; f = formula_; TURNSTILE_; n = NUM; BANG { (f, n) }  
 

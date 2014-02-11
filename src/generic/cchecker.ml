@@ -20,9 +20,10 @@ let get_subg n = snd n
 
 let is_leaf n = (get_subg n)=[]
 let in_children child n = Blist.exists (fun (i,_,_) -> i=child) (get_subg n)
-let index_of_child child (_,subg) = index (fun (i,_,_) -> i=child) subg
+let index_of_child child (_,subg) = 
+  Blist.find_index (fun (i,_,_) -> i=child) subg
 
-let mk_abs_node tags subg tvs tps = (tags, zip3 subg tvs tps)
+let mk_abs_node tags subg tvs tps = (tags, Blist.zip3 subg tvs tps)
 
 
 (* has one child and is not a self loop *)
@@ -47,7 +48,7 @@ let pp_proof_node fmt n =
   let aux fmt (_, subg) =
     match subg with 
       | [] -> Format.pp_print_string fmt "leaf"
-      | _ -> let (idxs,_,_) = unzip3 subg in pp_list pp_comma pp_int fmt idxs in
+      | _ -> let (idxs,_,_) = Blist.unzip3 subg in Blist.pp pp_comma pp_int fmt idxs in
   Format.fprintf fmt "@[%a@]" aux n
 
 let pp fmt prf =
@@ -65,7 +66,7 @@ let remove_dead_nodes prf' =
       let (tags, subg) = n in
 				begin match subg with
   				| [_] -> (tags, [])
-  				| _ -> (tags, remove_nth (index_of_child child n) subg)
+  				| _ -> (tags, Blist.remove_nth (index_of_child child n) subg)
 				end in
     prf := Int.Map.add par_idx newparent !prf in
   let remove_dead_node idx n =
@@ -81,7 +82,7 @@ let remove_dead_nodes prf' =
 
 let compose_tag_pairs t1 t2 =
   let compose_tag_pair ((i:Tags.elt),j) (l: (Tags.elt * Tags.elt) list) =
-		let l = rev_filter (fun (k,_) -> k=j) l in
+		let l = Blist.rev_filter (fun (k,_) -> k=j) l in
 		Blist.rev_map (fun (_,l) -> (i,l)) l in
   let xs = TagPairs.to_list t1 in
 	let ys = TagPairs.to_list t2 in
@@ -96,7 +97,7 @@ let fuse_single_nodes prf' =
     let pos = index_of_child child n in
     let (_, par_tv, par_tp) = List.nth par_subg pos in
     let newsubg = 
-      replace_nth 
+      Blist.replace_nth 
         (grand_child, 
         compose_tag_pairs par_tv tv,
         TagPairs.union_of_list

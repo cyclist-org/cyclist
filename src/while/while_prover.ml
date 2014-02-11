@@ -146,7 +146,7 @@ let symex_store_rule_f, symex_store_rule =
       let (f,cmd) = dest_sh_seq seq in
       let (x,s,e) = Cmd.dest_store cmd in
       let ((x',ys) as pto) = find_pto_on f x in
-      let pto' = (x', replace_nth e (Field.get_index s) ys) in
+      let pto' = (x', Blist.replace_nth e (Field.get_index s) ys) in
       [[ { f with ptos=Ptos.add pto' (Ptos.remove pto f.ptos) } ]]
     with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl "Store"
@@ -255,8 +255,8 @@ let gen_fold_rules (def, ident) =
           let l2' = Heap.star l2' f' in
           let s2' = ([l2'],cmd2) in
           matches_fun s1 s2' in
-        find_first do_case def in 
-      find_first fold_match (Inds.elements preds)
+        Blist.find_first do_case def in 
+      Blist.find_first fold_match (Inds.elements preds)
     with Not_symheap -> None in
   SP.mk_back_rule fold_rule (ident ^ " Fold/Backl")
 

@@ -28,7 +28,7 @@ let ex_subst_defs defs =
       Heap.subst (Term.Map.of_list ex_eqs) { h with eqs=UF.of_list non_ex_eqs } in
   let ex_subst_case c =
     let (p,h) = Case.dest c in
-    let p' = fixpoint Heap.equal ex_subst_heap p in
+    let p' = Heap.fixpoint ex_subst_heap p in
     Case.mk p' h in
   Blist.map (fun (l,i) -> (Blist.map ex_subst_case l, i)) defs
 
@@ -50,7 +50,7 @@ let inline defs =
           let idents =
             Inds.map_to Strng.Set.add Strng.Set.empty (fun (_,(id,_)) -> id) f.inds in
           not (Strng.Set.mem h idents)
-        end (but_last defs) in
+        end (Blist.but_last defs) in
     let defs = Blist.filter ((!=)q) defs in
     let unf = While_prover.gen_left_rules_f (p,h) in
     let f orig =
@@ -61,7 +61,7 @@ let inline defs =
           let ((f',_), _, _) = Blist.hd (Blist.hd apps) in
           Blist.hd f' in
           (* print_endline (Heap.to_string f'') ; f'' in             *)
-      let p'' = fixpoint Heap.equal first_unfold p' in
+      let p'' = Heap.fixpoint first_unfold p' in
       Case.mk p'' h' in
     Blist.map (fun (l,i) -> (Blist.map f l, i)) defs
   with Not_found -> defs
@@ -76,7 +76,7 @@ let used_only_recursively (heap, (ident, params)) pos =
       if ident<>ident' then
         Blist.for_all (fun var' -> not (Term.equal var var')) params'
       else
-        Blist.for_all2 (fun var' pos' -> pos=pos' || not (Term.equal var var')) params' (indices params')
+        Blist.for_all2 (fun var' pos' -> pos=pos' || not (Term.equal var var')) params' (Blist.indices params')
     end
     heap.inds
 
@@ -100,11 +100,11 @@ let find_unused_arg defs =
         Some (ident, pos)
       else
         None in
-    find_first check_pos (range 0 (snd (snd (Case.dest (Blist.hd clauses))))) in
+    Blist.find_first check_pos (Blist.range 0 (snd (snd (Case.dest (Blist.hd clauses))))) in
   if Blist.length defs=1 then
     None
   else
-    find_first check_def (but_last defs)
+    Blist.find_first check_def (Blist.but_last defs)
 
 let eliminate (ident, pos) defs =
   let elim_clause case =
@@ -113,14 +113,14 @@ let eliminate (ident, pos) defs =
       { heap with
           inds = Inds.endomap
             begin fun (t, (ident'', params')) ->
-              (t, (ident'', if ident=ident'' then remove_nth pos params' else params'))
+              (t, (ident'', if ident=ident'' then Blist.remove_nth pos params' else params'))
             end
             heap.inds
       } in
     if ident<>ident' then
       Case.mk (elim_pred heap) (ident', params)
     else
-      Case.mk (elim_pred heap) (ident', remove_nth pos params) in
+      Case.mk (elim_pred heap) (ident', Blist.remove_nth pos params) in
   Blist.map (fun (cl, ident') -> (Blist.map elim_clause cl, ident')) defs
 
 let elim_dead_vars defs =
@@ -129,7 +129,7 @@ let elim_dead_vars defs =
     | Some (ident, pos) -> eliminate (ident, pos) defs
 
 let simplify_defs defs =
-  fixpoint (Defs.equal)
+  Defs.fixpoint
     (fun d -> elim_dead_vars (inline (ex_subst_defs d)))
     (empify defs)
 
@@ -342,7 +342,9 @@ let abd_deref =
         let pto_params =
           fresh_evars (Term.Set.of_list newparams) (Field.get_no_fields ()) in
         let newxs =
-					Blist.map (Blist.nth newparams) (indexes (Heap.equates f x) params) in
+					Blist.map 
+            (Blist.nth newparams) 
+            (Blist.find_indexes (Heap.equates f x) params) in
         Blist.map
 				  begin fun newx ->
 						let clause =
@@ -383,11 +385,11 @@ let abd_det_guard =
         let head = (ident, newparams) in
 				let matches nil_const z =
           if nil_const && Term.is_nil z then [Term.nil] else
-          	Blist.map (Blist.nth newparams) (indexes (Heap.equates f z) params) in
+          	Blist.map (Blist.nth newparams) (Blist.find_indexes (Heap.equates f z) params) in
 				let occurrences =
-					cartesian_product (matches false x) (matches false y) @
+					Blist.cartesian_product (matches false x) (matches false y) @
 					(if with_nil then
-					  cartesian_product (matches true x) (matches true y)
+					  Blist.cartesian_product (matches true x) (matches true y)
 					else
 						[]
 					)
@@ -435,7 +437,7 @@ let abd_back_rule =
       (* for each candidate there must exist one in s2 which *)
       (* if it replaces the candidate in s1, makes inds2 a subset of inds1 *)
       (* this is to overapproximate subsumption *)
-      let cp = cartesian_product (Inds.to_list candidates) (Inds.to_list l2.inds) in
+      let cp = Blist.cartesian_product (Inds.to_list candidates) (Inds.to_list l2.inds) in
       let cp = Blist.filter
         (fun ((_,(c,_)),(_,(c',_))) ->
           Strng.MSet.subset inds2 (Strng.MSet.add c' (Strng.MSet.remove c inds1)))
@@ -447,9 +449,9 @@ let abd_back_rule =
 				(* does this need generalising like det_guard? *)
 				let matches z =
           if Term.is_var z then
-          	Blist.map (Blist.nth newparams) (indexes (Heap.equates l1 z) params)
+          	Blist.map (Blist.nth newparams) (Blist.find_indexes (Heap.equates l1 z) params)
           else [Term.nil] in
-				let combinations = choose (Blist.map matches params') in
+				let combinations = Blist.choose (Blist.map matches params') in
 				Blist.map
           (fun perm ->
 						let cl =
@@ -501,7 +503,7 @@ let matches = mk_back_rule While_prover.matches_fun "Backl"
 (*       let (fresh_ident) = get_fresh_ident () in                                             *)
 (*       let f ((_,(ident, params)) as i) =                                                    *)
 (*         let newparams = fresh_uvars Term.Set.empty (Blist.length params) in                  *)
-(* 				let xi = index (fun x -> Term.Set.mem x xs) params in                               *)
+(* 				let xi = Blist.find_index (fun x -> Term.Set.mem x xs) params in                               *)
 (*         let x = Blist.nth newparams xi in                                                    *)
 (* 				let head = (ident, newparams) in                                                    *)
 (* 				let newpred = (1, (fresh_ident, newparams @ [x])) in                                *)
@@ -510,7 +512,7 @@ let matches = mk_back_rule While_prover.matches_fun "Backl"
 (*         let new_defs = ( [Case.mk clause head], ident )::defs in                            *)
 (* 				let h' = { h' with inds=Inds.filter ((!=)i) h'.inds } in                            *)
 (* 				let newpred = (1, (fresh_ident, params @ [y])) in                                   *)
-(* 				let newpred' = (1, (fresh_ident, replace_nth y xi params @ [Term.nil])) in          *)
+(* 				let newpred' = (1, (fresh_ident, Blist.replace_nth y xi params @ [Term.nil])) in          *)
 (* 				let h' = { h' with inds=Inds.union h'.inds (Inds.of_list [newpred;newpred']) } in   *)
 (* 				let () = debug (fun () -> "Heap: " ^ (Heap.to_string h')) in                        *)
 (* 				let () = debug (fun () -> "Clause: " ^ (Heap.to_string clause)) in                  *)
@@ -537,13 +539,13 @@ let matches = mk_back_rule While_prover.matches_fun "Backl"
 (* 			if Defs.mem id1 defs then [] else                                          *)
 (* 			let f i h = Inds.filter (fun (_,(i',_)) -> i=i') h.inds in                 *)
 (* 			let (inds1,inds2) = (f id1 l1, f id2 l2) in                                *)
-(*       let cp = cartesian_product (Inds.to_list inds1) (Inds.to_list inds2) in    *)
+(*       let cp = Blist.cartesian_product (Inds.to_list inds1) (Inds.to_list inds2) in    *)
 (*       let g ((_,(_,params)),(_,(_,params'))) =                                   *)
 (*         let newparams = fresh_uvars Term.Set.empty (Blist.length params) in       *)
 (*   			(* does this need generalising like det_guard? *)                        *)
 (*   			let matches z =                                                          *)
 (*           (* if Term.is_var z then *)                                            *)
-(*           	List.map (Blist.nth newparams) (indexes (Heap.equates l1 z) params)   *)
+(*           	List.map (Blist.nth newparams) (Blist.find_indexes (Heap.equates l1 z) params)   *)
 (*           (* else [Term.nil]  *)                                                 *)
 (*   				in                                                                     *)
 (*   			let combinations = choose (Blist.map matches params') in                  *)

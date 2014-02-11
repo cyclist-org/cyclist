@@ -31,7 +31,7 @@ let ex_subst_defs defs =
       Heap.subst (Term.Map.of_list ex_eqs) { h with eqs=UF.of_list non_ex_eqs } in
   let ex_subst_case c = 
     let (p,h) = Case.dest c in
-    let p' = fixpoint Heap.equal ex_subst_heap p in
+    let p' = Heap.fixpoint ex_subst_heap p in
     Case.mk p' h in
   Blist.map (fun (l,i) -> (Blist.map ex_subst_case l, i)) defs
   
@@ -53,7 +53,7 @@ let inline defs =
           let idents = 
             Inds.map_to Strng.Set.add Strng.Set.empty (fun (_,(id,_)) -> id) f.inds in
           not (Strng.Set.mem h idents)
-        end (but_last defs) in
+        end (Blist.but_last defs) in
     let defs = Blist.filter ((!=)q) defs in
     let unf = Prprover.gen_left_rules_f (p,h) in
     let f orig =
@@ -64,7 +64,7 @@ let inline defs =
           let ((f',_), _, _) = Blist.hd (Blist.hd apps) in 
           Blist.hd f' in
           (* print_endline (Heap.to_string f'') ; f'' in             *)
-      let p'' = fixpoint Heap.equal first_unfold p' in
+      let p'' = Heap.fixpoint first_unfold p' in
       Case.mk p'' h' in
     Blist.map (fun (l,i) -> (Blist.map f l, i)) defs
   with Not_found -> defs
@@ -79,7 +79,7 @@ let used_only_recursively (heap, (ident, params)) pos =
       if ident<>ident' then 
         Blist.for_all (fun var' -> not (Term.equal var var')) params'
       else
-        Blist.for_all2 (fun var' pos' -> pos=pos' || not (Term.equal var var')) params' (indices params')
+        Blist.for_all2 (fun var' pos' -> pos=pos' || not (Term.equal var var')) params' (Blist.indices params')
     end 
     heap.inds  
 
@@ -103,11 +103,11 @@ let find_unused_arg defs =
         Some (ident, pos) 
       else 
         None in
-    find_first check_pos (range 0 (snd (snd (Case.dest (Blist.hd clauses))))) in
+    Blist.find_first check_pos (Blist.range 0 (snd (snd (Case.dest (Blist.hd clauses))))) in
   if Blist.length defs=1 then 
     None 
   else 
-    find_first check_def (but_last defs)
+    Blist.find_first check_def (Blist.but_last defs)
 
 let eliminate (ident, pos) defs =
   let elim_clause case =
@@ -116,14 +116,14 @@ let eliminate (ident, pos) defs =
       { heap with 
           inds = Inds.endomap 
             begin fun (t, (ident'', params')) ->
-              (t, (ident'', if ident=ident'' then remove_nth pos params' else params')) 
+              (t, (ident'', if ident=ident'' then Blist.remove_nth pos params' else params')) 
             end 
             heap.inds
       } in
     if ident<>ident' then 
       Case.mk (elim_pred heap) (ident', params)
     else
-      Case.mk (elim_pred heap) (ident', remove_nth pos params) in 
+      Case.mk (elim_pred heap) (ident', Blist.remove_nth pos params) in 
   Blist.map (fun (cl, ident') -> (Blist.map elim_clause cl, ident')) defs      
 
 let elim_dead_vars defs = 
@@ -151,7 +151,7 @@ let elim_inconsistency defs =
   Blist.map elim_inconsistent_cases defs
 
 let simplify_defs defs =
-  fixpoint (=) 
+  Defs.fixpoint  
     begin fun d -> 
       let d = elim_inconsistency d in
       let d = ex_subst_defs d in
@@ -354,7 +354,7 @@ let abd_assign =
         let newparams = outerparams @ [ x' ] in
         let head = (ident, outerparams) in
         let e' = if Term.equal e Term.nil then e else 
-          Blist.nth newparams (index (fun t -> Heap.equates f e t) params) in
+          Blist.nth newparams (Blist.find_index (fun t -> Heap.equates f e t) params) in
         (* let x' = Blist.nth newparams ((Blist.length newparams)-1) in *)
         let clause =
           { Heap.empty with
@@ -393,7 +393,7 @@ let abd_deref =
             (Term.Set.of_list newparams) 
             (Blist.length (fst !Program.program)) in
         let newy = 
-          Blist.nth newparams (index (fun t -> Heap.equates f y t) params) in
+          Blist.nth newparams (Blist.find_index (fun t -> Heap.equates f y t) params) in
         let clause =  
           { 
             eqs=UF.empty; 
@@ -441,7 +441,7 @@ let abd_det_if =
         let (newx, newy) = Pair.map  
           (fun z -> 
             if Term.is_var z then 
-              Blist.nth newparams (index (fun t -> Heap.equates f z t) params) 
+              Blist.nth newparams (Blist.find_index (fun t -> Heap.equates f z t) params) 
             else z) 
           (x,y) in
         let clause_eq = 
@@ -487,7 +487,7 @@ let abd_back_rule =
       (* for each candidate there must exists one in s2 which *)
       (* if it replaces the candidate in s1, makes inds2 a subset of inds1 *)
       (* this is to overapproximate subsumption *)
-      let cp = cartesian_product (Strng.Set.elements candidates) (Strng.Set.elements inds2) in
+      let cp = Blist.cartesian_product (Strng.Set.elements candidates) (Strng.Set.elements inds2) in
       let cp = Blist.filter 
         (fun (c,c') -> Strng.Set.subset inds2 (Strng.Set.add c' (Strng.Set.remove c inds1))) 
         cp in
@@ -507,7 +507,8 @@ let abd_back_rule =
           let base_clause =  
             { base_clause with inds=Inds.singleton (0, (fresh_ident, newparams)) } in
             (* FIXME why choose and not unify *)
-          let combinations = choose (repeat newparams (Blist.length params')) in
+          let combinations = 
+            Blist.choose (Blist.repeat newparams (Blist.length params')) in
           let head = (c, newparams) in
           Blist.map 
             (fun comb ->

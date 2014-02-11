@@ -3,7 +3,7 @@ open Util
 open Symbols
 
   (* a proof is a map from int to proof_nodes, and proof_nodes have edges  *)
-  (* to other proof_nodes by indicating the index of the child proof_node  *)
+  (* to other proof_nodes by indicating the Blist.find_index of the child proof_node  *)
   (* in the map this will simplify dumping the proof to the model checker  *)
 
 module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
@@ -89,7 +89,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
             seq=seq;
             parent=par_idx;
             node=
-             match find_first f !axiomset with
+             match Blist.find_first f !axiomset with
                | None -> OpenNode
                | Some ax -> AxiomNode(ax)
           }
@@ -158,8 +158,8 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
                   id
                   Seq.pp n.seq
                   (descr_rule r)
-                  (pp_list pp_comma Format.pp_print_int) p
-                  (pp_list (fun fmt' () -> Format.fprintf fmt "@\n") pp_proof_node) p
+                  (Blist.pp pp_comma Format.pp_print_int) p
+                  (Blist.pp (fun fmt' () -> Format.fprintf fmt "@\n") pp_proof_node) p
               | AbdNode(child, rl) ->
                 Format.fprintf fmt "@[<v 2>%i: %a (%s) [%i]@,%a@]"
                   id
@@ -301,11 +301,11 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
         if apps=[] then Zlist.empty else
         let fresh_idx = Proof.fresh_idx prf in
         let apply l =
-          let (premises, tvs, tps) = unzip3 l in
+          let (premises, tvs, tps) = Blist.unzip3 l in
 					let () = debug (fun () -> "InfRule(" ^ d ^ ")\n  " ^
 					  (Seq.to_string n.seq) ^ "\n>>>\n  " ^
-						(string_of_list "; " Seq.to_string premises) ^ "\n") in
-          let prem_idxs = range fresh_idx premises in
+						(Blist.to_string "; " Seq.to_string premises) ^ "\n") in
+          let prem_idxs = Blist.range fresh_idx premises in
           let prf = Blist.fold_left2 (add_to_graph idx) prf premises prem_idxs in
           let prf =
             Proof.add idx
@@ -396,8 +396,8 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
           Proof.add idx' (Node.mk idx seq) prf in
         let fresh_idx = Proof.fresh_idx prf in
         let apply (l,defs') =
-          let (premises, tvs, tps) = unzip3 l in
-          let prem_idxs = range fresh_idx premises in
+          let (premises, tvs, tps) = Blist.unzip3 l in
+          let prem_idxs = Blist.range fresh_idx premises in
           let prf = Blist.fold_left2 add_to_graph prf premises prem_idxs in
           let prf =
             Proof.add idx
@@ -428,7 +428,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
     let expand_proof_state prf prf_depth goals =
       (* let () = assert (not (Proof.is_closed prf) && goals<>[]) in *)
       (* idx is the goal being closed and goal_depth is its depth *)
-      let ((idx,goal_depth), goals) = decons goals in
+      let ((idx,goal_depth), goals) = Blist.decons goals in
       (* let () = assert (Node.is_open (Proof.find idx prf) && prf_depth >= goal_depth) in *)
       let new_goal_depth = goal_depth+1 in
       let new_prf_depth = max prf_depth new_goal_depth in
@@ -460,7 +460,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
         try
           if !stack=[] then
             begin
-              (* finished current depth, increase and repeat *)
+              (* finished current depth, increase and Blist.repeat *)
               bound := 1 + !bound;
               stack := Blist.rev !frontier;
               frontier := [];
@@ -557,7 +557,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
 
         let apply_rule_on_application r2 subgoals =
           let apps = Blist.map (fun a -> apply_rule_to_subgoal r2 a) subgoals in
-          Blist.map Blist.flatten (choose apps)
+          Blist.map Blist.flatten (Blist.choose apps)
 
         let then_tac (r1:rule_fun) r2 seq =
           Blist.flatten
@@ -716,7 +716,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
               Zlist.flatten
                 (Zlist.map
                   (fun f -> f ?backlinkable prf idx) (Zlist.of_list rl)) in
-            (InfRule(g), "Ang. Or " ^ (string_of_list ", " bracket dl))
+            (InfRule(g), "Ang. Or " ^ (Blist.to_string ", " bracket dl))
           end
           else
           begin
@@ -726,7 +726,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
               Zlist.flatten
                 (Zlist.map
                   (fun f -> f ?backlinkable prf idx defs) (Zlist.of_list rl)) in
-            (AbdRule(g), "Ang. Or " ^ (string_of_list ", " bracket dl))
+            (AbdRule(g), "Ang. Or " ^ (Blist.to_string ", " bracket dl))
           end
 
         let first l =
@@ -740,7 +740,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
               match Zlist.find_first (fun apps -> not (Zlist.is_empty apps)) l with
 							  | None -> Zlist.empty
 								| Some apps -> apps in
-            (InfRule(g), "Or " ^ (string_of_list ", " bracket dl))
+            (InfRule(g), "Or " ^ (Blist.to_string ", " bracket dl))
           end
           else
           begin
@@ -752,7 +752,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
               match Zlist.find_first (fun apps -> not (Zlist.is_empty apps)) l with
 							  | None -> Zlist.empty
 								| Some apps -> apps in
-            (AbdRule(g), "Or " ^ (string_of_list ", " bracket dl))
+            (AbdRule(g), "Or " ^ (Blist.to_string ", " bracket dl))
           end
 
 
@@ -847,7 +847,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
     let abd_expand_proof_state par_seq_no app mk_rules =
       let () = assert (not (Proof.is_closed app.prf) && app.goals<>[]) in
       (* idx is the goal being closed and goal_depth is its depth *)
-      let ((idx,goal_depth), goals) = decons app.goals in
+      let ((idx,goal_depth), goals) = Blist.decons app.goals in
       let () = assert (Node.is_open (Proof.find idx app.prf) && app.depth >= goal_depth) in
       let new_goal_depth = goal_depth+1 in
       let new_prf_depth = max app.depth new_goal_depth in
@@ -889,7 +889,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
         try
           if !stack=[] then
             begin
-              (* finished current depth, increase and repeat *)
+              (* finished current depth, increase and Blist.repeat *)
               incr bound;
               stack := Blist.rev !frontier;
               frontier := [];

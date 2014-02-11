@@ -39,6 +39,7 @@ module type OrderedContainer =
     val to_string : t -> string
     val hash : t -> int
 		val subsets : t -> t list
+    val fixpoint : (t -> t) -> t -> t
   end
 
 module type OrderedMap =
@@ -49,8 +50,15 @@ module type OrderedMap =
     val endomap : ((key * 'a) -> (key * 'a)) -> 'a t -> 'a t
     val union : 'a t -> 'a t -> 'a t
 		val find_some : (key -> 'a -> bool) -> 'a t -> (key * 'a) option
+    val fixpoint : ('a -> 'a -> bool) -> ('a t -> 'a t) -> 'a t -> 'a t
 (*    val map_to : ('b -> 'c -> 'c) -> 'c -> (key -> 'v -> 'b) -> 'v t -> 'c *)
 (*    val map_to_list : (key -> 'b -> 'a) -> 'b t -> 'a list                 *)
+  end
+
+module Fixpoint(T: sig type t val equal : t -> t -> bool end) =
+  struct
+    let rec fixpoint f x =
+      let y = f x in if T.equal x y then x else fixpoint f y
   end
 
 module MakeFList(T: BasicType) : BasicType with type t = T.t list =
@@ -73,7 +81,7 @@ module MakeFList(T: BasicType) : BasicType with type t = T.t list =
     let hash = Hashtbl.hash
     let to_string (l:t) = String.concat ", " (Blist.map T.to_string l)
     let pp fmt l =
-      Format.fprintf fmt "@[[%a]@]" (pp_list pp_semicolonsp T.pp) l
+      Format.fprintf fmt "@[[%a]@]" (Blist.pp pp_semicolonsp T.pp) l
   end
 
 module MakeListMultiset(T: BasicType) =
@@ -187,11 +195,13 @@ module MakeListMultiset(T: BasicType) =
 module MakeMultiset(T: BasicType) : OrderedContainer with type elt = T.t =
 	struct
 		include MakeListMultiset(T)
+    include Fixpoint(MakeListMultiset(T))
 	end
 
 module MakeListSet(T: BasicType) : OrderedContainer with type elt = T.t =
   struct
 		include MakeListMultiset(T)
+    include Fixpoint(MakeListMultiset(T))
 
 		let rec uniq = function
 			| [] | [_] as l -> l
@@ -257,6 +267,7 @@ module MakeListSet(T: BasicType) : OrderedContainer with type elt = T.t =
 module MakeTreeSet(T: BasicType) : OrderedContainer with type elt = T.t =
   struct
     include Set.Make(T)
+    include Fixpoint(Set.Make(T))
 
     let of_list l =
       Blist.fold_left (fun a b -> add b a) empty l
@@ -265,7 +276,7 @@ module MakeTreeSet(T: BasicType) : OrderedContainer with type elt = T.t =
       fold (fun el s' -> oadd (f el) s') s oempty
 
     let map_to_list f s =
-      Blist.rev (map_to cons [] f s)
+      Blist.rev (map_to Blist.cons [] f s)
 
     let endomap f s =
       map_to add empty f s
@@ -297,9 +308,9 @@ module MakeTreeSet(T: BasicType) : OrderedContainer with type elt = T.t =
     let to_list = elements
 
     let pp fmt s =
-      Format.fprintf fmt "@[{%a}@]" (pp_list pp_commasp T.pp) (to_list s)
+      Format.fprintf fmt "@[{%a}@]" (Blist.pp pp_commasp T.pp) (to_list s)
 
-    let to_string s = "{" ^ (string_of_list ", " T.to_string (to_list s)) ^ "}"
+    let to_string s = "{" ^ (Blist.to_string ", " T.to_string (to_list s)) ^ "}"
 
     let hash = Hashtbl.hash
 
@@ -316,6 +327,9 @@ module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
   struct
     include Map.Make(T)
 
+    let rec fixpoint eq f x =
+      let y = f x in if equal eq x y then x else fixpoint eq f y
+
     let endomap f m =
       fold (fun k v m' -> let (k', v') = f (k,v) in add k' v' m') m empty
 
@@ -326,14 +340,6 @@ module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
       Blist.fold_left (fun m (k,v) -> add k v m) empty l
 
     let to_list = bindings
-
-		(* let find_some f m =                               *)
-		(* 	fold                                            *)
-		(* 	  begin fun k v o -> match o with               *)
-		(* 		  | Some _ -> o                               *)
-		(* 		  | None -> if f k v then Some(k,v) else None *)
-		(* 		end                                           *)
-		(* 		m None                                        *)
 
 		exception Found
 		let find_some f (m : 'a t) =
@@ -346,7 +352,7 @@ module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
 (*      fold (fun k v m' -> oadd (f k v) m') m oempty*)
 (*                                                   *)
 (*    let map_to_list f m =                          *)
-(*      Blist.rev (map_to cons [] f m)                *)
+(*      Blist.rev (map_to Blist.cons [] f m)                *)
   end
 
 module PairTypes(T: BasicType) (S: BasicType) :

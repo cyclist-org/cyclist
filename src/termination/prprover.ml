@@ -147,7 +147,7 @@ let symex_store_rule_f, symex_store_rule =
         Ptos.find (fun (v,_) -> Heap.equates f v x) f.ptos in
       let newptos = Ptos.remove pto f.ptos in
       let pto' = 
-        try (x, replace_nth e (get_sel_index s) ys) 
+        try (x, Blist.replace_nth e (get_sel_index s) ys) 
         with Invalid_argument msg ->
           print_endline ("seq= " ^ (Seq.to_string seq) ^ "   x=" ^ (Term.to_string x) ^ " s=" ^ s ^ " e=" ^ (Term.to_string e)) ;
           assert false
@@ -292,8 +292,8 @@ let gen_fold_rules (def, ident) =
               (* the following fixes the bug wrt to the binary tree search example *)
               let ts = TagPairs.filter (fun (a,b) -> a<>id && b<>id) ts in
               if TagPairs.is_empty ts then None else Some ts in
-        find_first do_case def in 
-      find_first fold_match (Inds.elements preds)
+        Blist.find_first do_case def in 
+      Blist.find_first fold_match (Inds.elements preds)
     with Not_symheap -> None in
   PRP.mk_back_rule fold_rule (ident ^ " Fold/Backl")
 

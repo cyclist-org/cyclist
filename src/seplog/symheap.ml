@@ -73,11 +73,11 @@ module Term =
       ]
 
     let to_string v = if v=nil then keyw_nil.str else Var.to_string v
-    let list_to_string l = string_of_list symb_comma.str to_string l
+    let list_to_string l = Blist.to_string symb_comma.str to_string l
     let to_melt v =
       ltx_mk_math (if v=nil then keyw_nil.melt else Latex.text (Var.to_string v))
     let pp fmt trm = Format.fprintf fmt "@[<h>%s@]" (to_string trm)
-    let pp_list fmt l = pp_list pp_comma pp fmt l
+    let pp_list fmt l = Blist.pp pp_comma pp fmt l
 
     (* return a substitution that takes all vars in subvars to new variables *)
     (* that are outside vars U subvars, respecting exist/univ *)
@@ -164,12 +164,12 @@ module UF =
       let p = Term.Map.remove k p in
       let to_match = Term.Map.bindings p' in
       let g theta' = uni_subsumption left hook theta' p p' in
-      let f a' = find_first g (direct Term.unify_pairs theta a a') in
-      find_first f to_match
+      let f a' = Blist.find_first g (direct Term.unify_pairs theta a a') in
+      Blist.find_first f to_match
 
     let to_string_list v = Blist.map (pair_to_string symb_eq.str) (bindings v)
     let to_string v =
-      string_of_list symb_star.sep (pair_to_string symb_eq.str) (bindings v)
+      Blist.to_string symb_star.sep (pair_to_string symb_eq.str) (bindings v)
 
     let to_melt v =
       ltx_star (Blist.map (pair_to_melt symb_eq.melt) (bindings v))
@@ -225,12 +225,12 @@ module Deqs =
       let p = remove a p in
       let to_match = elements p' in
       let g theta' = uni_subsumption left hook theta' p p' in
-      let f a' = find_first g (direct Term.unify_pairs theta a a') in
-      find_first f to_match
+      let f a' = Blist.find_first g (direct Term.unify_pairs theta a a') in
+      Blist.find_first f to_match
 
     let to_string_list v = Blist.map (pair_to_string symb_deq.str) (elements v)
     let to_string v =
-      string_of_list symb_star.sep (pair_to_string symb_deq.str) (elements v)
+      Blist.to_string symb_star.sep (pair_to_string symb_deq.str) (elements v)
     let to_melt v =
       ltx_star (Blist.map (pair_to_melt symb_deq.melt) (elements v))
 
@@ -275,7 +275,7 @@ module Ptos =
         | Some theta' ->
           let p' = remove a' p' in
           aux_subsumption left spw hook theta' p p' in
-      find_first f to_match
+      Blist.find_first f to_match
 
     let uni_subsumption left hook theta p p' =
       aux_subsumption left false hook theta p p'
@@ -292,7 +292,7 @@ module Ptos =
 
     let to_string_list v = Blist.map elem_to_string (elements v)
     let to_string v =
-      string_of_list symb_star.sep elem_to_string (elements v)
+      Blist.to_string symb_star.sep elem_to_string (elements v)
     let to_melt v =
       ltx_star (Blist.map elem_to_melt (elements v))
 
@@ -346,7 +346,7 @@ module Inds =
         | Some theta' ->
           let p' = remove a' p' in
           aux_subsumption left spw hook theta' p p' in
-      find_first f to_match
+      Blist.find_first f to_match
 
     let uni_subsumption left hook theta p p' =
       aux_subsumption left false hook theta p p'
@@ -384,7 +384,7 @@ module Inds =
 
     let to_string_list v = Blist.map elem_to_string (elements v)
     let to_string v =
-      string_of_list symb_star.sep elem_to_string (elements v)
+      Blist.to_string symb_star.sep elem_to_string (elements v)
     let to_melt v =
       ltx_star (Blist.map elem_to_melt (elements v))
 
@@ -472,7 +472,7 @@ module Heap =
         ((UF.to_string_list h.eqs) @ (Deqs.to_string_list h.deqs) @
         (Ptos.to_string_list h.ptos) @ (Inds.to_string_list h.inds)) in
       if l<>[] then
-        Format.fprintf fmt "@[%a@]" (pp_list pp_star Format.pp_print_string) l
+        Format.fprintf fmt "@[%a@]" (Blist.pp pp_star Format.pp_print_string) l
       else
         Format.fprintf fmt "@[true@]"
 
@@ -480,7 +480,7 @@ module Heap =
     let star f g =
       (* computes all deqs due to a list of ptos - no normalization *)
       let explode_deqs (ptos : Pto.t list) =
-        let cp = cartesian_hemi_square ptos in
+        let cp = Blist.cartesian_hemi_square ptos in
         let s1 =
 	        (Blist.fold_left (fun s p -> Deqs.add (fst p, Term.nil) s) Deqs.empty ptos) in
  					(Blist.fold_left (fun s (p,q) -> Deqs.add (fst p, fst q) s) s1 cp) in
@@ -539,6 +539,8 @@ module Heap =
       Ptos.equal h.ptos h'.ptos &&
       Inds.equal h.inds h'.inds
 
+    include Fixpoint(struct type t = symheap let equal = equal end)
+    
     let compare f g =
       match UF.compare f.eqs g.eqs with
         | n when n<>0 -> n
@@ -583,7 +585,7 @@ module Heap =
         (* this maintains universal vars *)
         let h'' = { h' with eqs=UF.of_list non_ex_eqs } in
         subst (Term.Map.of_list ex_eqs) h'' in
-      fixpoint equal aux h
+      fixpoint aux h
 
     let is_fresh_in x h = not (Term.Set.mem x (vars h))
 
@@ -597,7 +599,7 @@ module Heap =
       let pair_nin_lst (x,y) = trm_nin_lst x || trm_nin_lst y in
       let rec proj_eqs h =
         let orig_eqs = UF.bindings h.eqs in
-				let p = find_some pair_nin_lst orig_eqs in
+				let p = Blist.find_some pair_nin_lst orig_eqs in
 				if Option.is_none p then h else
         let (x,y) = Option.get p in
         (* let new_eqs =                                                        *)
@@ -626,12 +628,12 @@ module Form =
       | _ -> raise Not_symheap
 
     let star f g =
-      Blist.map (fun (f',g') -> Heap.star f' g') (cartesian_product f g)
+      Blist.map (fun (f',g') -> Heap.star f' g') (Blist.cartesian_product f g)
 
     let disj f g : t = f @ g
     let terms d = Term.Set.union_of_list (Blist.map Heap.terms d)
     let vars d = Term.filter_vars (terms d)
-    let to_string d = string_of_list symb_or.sep Heap.to_string d
+    let to_string d = Blist.to_string symb_or.sep Heap.to_string d
     let to_melt d =
       ltx_mk_math
         (if d=[] then symb_false.melt else
@@ -648,7 +650,7 @@ module Form =
       let pp_or fmt () =
         Format.fprintf fmt " %s@ " symb_or.str in
       if f<>[] then
-        Format.fprintf fmt "@[%a@]" (pp_list pp_or Heap.pp) f
+        Format.fprintf fmt "@[%a@]" (Blist.pp pp_or Heap.pp) f
       else
         Format.fprintf fmt "@[F@]"
 
@@ -674,7 +676,7 @@ module Form =
       let hook' theta' =
         aux_subsumption left spw fhook theta' f f' in
       let g p = Heap.aux_subsumption left spw hook' theta p p' in
-      find_first g f
+      Blist.find_first g f
 
     let uni_subsumption left fhook theta f f' =
       aux_subsumption left false fhook theta f f'
@@ -755,7 +757,7 @@ module Case =
 
     let to_string (f,(ident,vs)) =
       (Heap.to_string f) ^ symb_ind_implies.sep ^
-      ident ^ symb_lp.str ^ (string_of_list symb_comma.str Term.to_string vs) ^
+      ident ^ symb_lp.str ^ (Blist.to_string symb_comma.str Term.to_string vs) ^
       symb_rp.str
 
     let pp fmt (f,(ident,vs)) =
@@ -764,7 +766,7 @@ module Case =
         symb_ind_implies.sep
         ident
         symb_lp.str
-        (string_of_list "," Term.to_string vs)
+        (Blist.to_string "," Term.to_string vs)
         symb_rp.str
 
   end
@@ -774,21 +776,22 @@ module Defs =
 		module CaseList = MakeFList(Case)
 		module DefPair = PairTypes(CaseList)(Strng)
     include MakeFList(DefPair)
+    include Fixpoint(struct type t = DefPair.t list let equal = equal end)
 
     (* type t = ((Case.t list) * ind_identifier) list *)
     let empty = []
     let add_case a l = failwith "not implemented"
     let string_of_clause (f, (ident, params)) =
       (Heap.to_string f) ^ symb_ind_implies.sep ^ ident ^
-      (bracket (string_of_list symb_comma.str Term.to_string params))
+      (bracket (Blist.to_string symb_comma.str Term.to_string params))
 
     let string_of_case (cls, ident) =
       ident ^ symb_lb.sep ^ "\n" ^
-      (string_of_list ((symb_ind_sep.sep) ^ "\n") string_of_clause cls)
+      (Blist.to_string ((symb_ind_sep.sep) ^ "\n") string_of_clause cls)
       ^ "\n" ^ symb_rb.str
 
     let to_string defs =
-      string_of_list (symb_semicolon.sep ^ "\n\n") string_of_case defs
+      Blist.to_string (symb_semicolon.sep ^ "\n\n") string_of_case defs
 
     let to_melt d = ltx_text (to_string d)
     
@@ -807,7 +810,7 @@ module Defs =
 				let to_string (v,g) =
 					"(" ^
 					  "{" ^
-						  (string_of_list "," Term.to_string (Term.Set.to_list v)) ^
+						  (Blist.to_string "," Term.to_string (Term.Set.to_list v)) ^
 						"}, " ^
 						(Heap.to_string g) ^
 					")"
@@ -840,7 +843,7 @@ module Defs =
           let (v',g') = subst theta (v',g') in
           let h' = { h with inds=Inds.remove ind h.inds } in
           let h' = Heap.star h' g' in
-          let cv = cartesian_product (Term.Set.to_list v) (Term.Set.to_list v') in
+          let cv = Blist.cartesian_product (Term.Set.to_list v) (Term.Set.to_list v') in
           let h' = { h' with deqs=Deqs.union h'.deqs (Deqs.of_list cv) } in
           let v = Term.Set.union v v' in
           (v,h')
@@ -858,7 +861,7 @@ module Defs =
           let (v,h) = unfold_all case cbps in
           if Heap.inconsistent h then None else
           let l = Blist.rev_append (Term.Set.to_list (Heap.vars h)) args in
-    			let l = rev_filter
+    			let l = Blist.rev_filter
             (fun u -> Term.Set.exists (fun z -> Heap.equates h u z) v) l in
           let v = Term.Set.of_list l in
           Some (project (v,h) case)
@@ -873,7 +876,7 @@ module Defs =
     (*     let to_list h = fold (fun x _ l -> x::l) h []           *)
     (*     let to_string h =                                       *)
     (*       "{" ^                                                 *)
-    (*       (string_of_list "," BasePair.to_string (to_list h)) ^ *)
+    (*       (Blist.to_string "," BasePair.to_string (to_list h)) ^ *)
     (*       "}"                                                   *)
     (*   end                                                       *)
 
@@ -884,7 +887,7 @@ module Defs =
 					let aux (c,s) =
 						(Case.to_string c) ^ "\nBase pairs: " ^
 						(BasePairSet.to_string s) ^ "\n" in
-          string_of_list "\n" aux (to_list cmap)
+          Blist.to_string "\n" aux (to_list cmap)
 			end
 
     let get_bps cmap (_,(ident,_)) =
@@ -903,7 +906,7 @@ module Defs =
       let candidates =
 				Blist.map (fun i -> get_bps cmap i) (Inds.to_list h.inds) in
       (* let () = prerr_endline "+" in *)
-      let l = (choose candidates) in
+      let l = Blist.choose candidates in
       (* let () = prerr_endline "-" in *)
       let poss_bps =
 				Blist.rev_map (fun cbps -> BasePair.gen case cbps) l in
@@ -926,7 +929,7 @@ module Defs =
           cmap in
 				let () = debug (fun () -> "=======\n" ^ (CaseMap.to_string r) ^ "\n") in
 				r in
-      fixpoint (fun m -> CaseMap.equal BasePairSet.equal m) onestep cmap
+      CaseMap.fixpoint BasePairSet.equal onestep cmap
 
     let consistent defs =
       Stats.CC.call () ;
@@ -950,7 +953,7 @@ module Defs =
       let res = gen_all_pairs defs in
       let element_conv = (fun (c,s) ->
            ((Case.to_string c) ^ " has base " ^ (BasePairSet.to_string s))) in
-      let case_to_base_string = Lib.string_of_list "\n" element_conv (CaseMap.to_list res) in
+      let case_to_base_string = Blist.to_string "\n" element_conv (CaseMap.to_list res) in
       let retval = CaseMap.for_all (fun _ s -> not (BasePairSet.is_empty s)) res in
       if retval then Stats.CC.accept () else Stats.CC.reject () ;
       (retval, case_to_base_string)

@@ -153,12 +153,12 @@ module rec Form :
       | Diamond(f,_) -> "<>" ^ (_to_string f)
       | Box(tag, f, _) -> "[" ^ (string_of_int tag) ^ "]" ^ (_to_string f)
       | And(fs,_) -> 
-        string_of_list 
+        Blist.to_string 
           " & " 
           (fun g -> (if is_or g then bracket else id) (to_string g)) 
           (FormSet.to_list fs)
       | Or(fs,_) -> 
-        string_of_list " | " to_string (FormSet.to_list fs)
+        Blist.to_string " | " to_string (FormSet.to_list fs)
 
     let pp fmt f = Format.fprintf fmt "@[%s@]" (to_string f)
         

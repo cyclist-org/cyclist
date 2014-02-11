@@ -194,7 +194,7 @@ let rhs_conj_to_atoms =
       let ex_vars_ls = 
         Blist.map 
           (fun a -> Term.Set.filter Term.is_exist_var (Atom.vars a)) rp in
-      let chs = cartesian_hemi_square ex_vars_ls in
+      let chs = Blist.cartesian_hemi_square ex_vars_ls in
       if Blist.exists 
         (fun (l1,l2) -> not (Term.Set.is_empty (Term.Set.inter l1 l2))) chs
       then [] else
@@ -217,7 +217,7 @@ let instantiate_ex =
       Pair.map 
         Term.Set.elements 
           (Term.Set.partition Term.is_univ_var (Seq.vars seq)) in
-    let cp = cartesian_product exvars uvars in
+    let cp = Blist.cartesian_product exvars uvars in
     let t = Seq.tag_pairs seq in
     Blist.map 
       (fun (exv,trm) -> 

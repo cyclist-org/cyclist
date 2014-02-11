@@ -102,7 +102,7 @@ let pred_intro_rule seq =
   try
     let (l,r) = Seq.dest seq in
     let (linds,rinds) = Pair.map Inds.elements (l.inds,r.inds) in
-    let cp = cartesian_product linds rinds in
+    let cp = Blist.cartesian_product linds rinds in
     let (p,q) =
       Blist.find
         (fun ((_,(id,vs)),(_,(id',vs'))) ->
@@ -185,7 +185,7 @@ let instantiate_pto =
         try
 					Blist.exists2 (fun x y -> Heap.equates l x y) xs ys
 				with Invalid_argument _ -> false in
-      let cp = cartesian_product eptos lptos in
+      let cp = Blist.cartesian_product eptos lptos in
       let cp = Blist.filter (fun ((_,ys),(_,zs)) -> match_ls ys zs) cp in
       let do_instantiation (((x,ys) as p), ((w,zs) as q)) =
         let l' = { l with ptos=Ptos.remove q (Ptos.of_list lptos) } in

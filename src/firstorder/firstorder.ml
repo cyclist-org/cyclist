@@ -34,7 +34,7 @@ module rec TermT : BasicType with type t = term =
       | Const(i) -> Format.fprintf fmt "@[%i@]" i
       | Var(v) -> Format.fprintf fmt "@[%s@]" (Var.to_string v)
       | Fun(f, args) ->
-        Format.fprintf fmt "@[%s(%a)@]" f (pp_list pp_comma pp) args
+        Format.fprintf fmt "@[%s(%a)@]" f (Blist.pp pp_comma pp) args
   end
 
 module Term =
@@ -263,7 +263,7 @@ module AtomT =
       | Deq(x,y) -> Format.fprintf fmt "@[%a!=%a@]" Term.pp x Term.pp y
       | IndPred(t,(ident,args)) ->
         Format.fprintf fmt "@[%s_%i(%a)@]"
-          ident t (pp_list pp_comma Term.pp) args
+          ident t (Blist.pp pp_comma Term.pp) args
 
   end
 
@@ -368,7 +368,7 @@ module Prod =
 
     let to_string f =
       if is_empty f then "T" else
-        string_of_list " & " Atom.to_string (elements f)
+        Blist.to_string " & " Atom.to_string (elements f)
 
     let to_melt f =
       ltx_mk_math
@@ -383,7 +383,7 @@ module Prod =
       if is_empty p then
         Format.fprintf fmt "@[T@]"
       else
-        Format.fprintf fmt "@[%a@]" (pp_list pp_conj Atom.pp) (elements p)
+        Format.fprintf fmt "@[%a@]" (Blist.pp pp_conj Atom.pp) (elements p)
 
     let terms f = map_to Term.Set.union Term.Set.empty Atom.terms f
     let vars p = Term.filter_vars (terms p)
@@ -432,13 +432,13 @@ module Prod =
       let to_match = elements (filter_by_kind a p') in
       let g theta' = uni_subsumption left hook theta' p p' in
       let f a' = match a with
-        | Eq _ -> find_first g (direct Atom.unify_eqs theta a a')
-        | Deq _ -> find_first g (direct Atom.unify_deqs theta a a')
+        | Eq _ -> Blist.find_first g (direct Atom.unify_eqs theta a a')
+        | Deq _ -> Blist.find_first g (direct Atom.unify_deqs theta a a')
         | IndPred _ ->
           match direct Atom.unify_ipreds theta a a' with
             | None -> None
             | Some theta' -> g theta' in
-      find_first f to_match
+      Blist.find_first f to_match
 
     let left_subsumption hook theta p p' = uni_subsumption true hook theta p p'
 
@@ -465,7 +465,7 @@ module Form =
     let tags f = Tags.union_of_list (Blist.map Prod.tags (elements f))
     let to_string d =
       if is_empty d then "F" else
-        string_of_list " \\/ " Prod.to_string (elements d)
+        Blist.to_string " \\/ " Prod.to_string (elements d)
 
     let to_melt d =
       ltx_mk_math
@@ -479,7 +479,7 @@ module Form =
       if is_empty f then
         Format.fprintf fmt "@[F@]"
       else
-        Format.fprintf fmt "@[%a@]" (pp_list pp_disj Prod.pp) (elements f)
+        Format.fprintf fmt "@[%a@]" (Blist.pp pp_disj Prod.pp) (elements f)
 
     let terms f = map_to Term.Set.union Term.Set.empty Prod.terms f
     let tag_pairs f = TagPairs.mk (tags f)
@@ -497,7 +497,7 @@ module Form =
       let hook' theta' =
         uni_subsumption left fhook theta' f f' in
       let g p = Prod.uni_subsumption left hook' theta p p' in
-      find_first g (elements f)
+      Blist.find_first g (elements f)
 
     let left_subsumption fhook theta f f' =
       uni_subsumption true fhook theta f f'
@@ -589,9 +589,9 @@ module Defs =
       let string_of_case (ident, cls) =
         let string_of_clause (f, params) =
           (Prod.to_string f) ^ " => " ^ ident ^
-          (bracket (string_of_list "," Term.to_string params)) in
-        ident ^ " {\n" ^ (string_of_list " |\n" string_of_clause cls) ^ "\n}" in
-      string_of_list " ;\n\n" string_of_case (bindings defs)
+          (bracket (Blist.to_string "," Term.to_string params)) in
+        ident ^ " {\n" ^ (Blist.to_string " |\n" string_of_clause cls) ^ "\n}" in
+      Blist.to_string " ;\n\n" string_of_case (bindings defs)
 
     let to_melt d = ltx_text (to_string d) 
     let pp fmt d = Format.fprintf fmt "%s" (to_string d)

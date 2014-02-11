@@ -101,6 +101,7 @@ sig
   val inconsistent : t -> bool
   val subst_existentials : t -> t
   val is_fresh_in : Term.t -> t -> bool
+  val fixpoint : (t -> t) -> t -> t
 end
 
 module Form :
@@ -168,6 +169,7 @@ module Defs :
 sig
   type t = (Case.t list * ind_identifier) list
 	val equal : t -> t -> bool
+  val fixpoint: (t -> t) -> t -> t
 	
   val to_string : t -> string
   val to_melt : t -> Latex.t
