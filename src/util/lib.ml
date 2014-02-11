@@ -10,29 +10,6 @@ let pp_semicolonsp fmt () =
 let pp_commasp fmt () =
   pp_comma fmt () ; Format.pp_print_space fmt ()
 
-(* let rec fixpoint eq f x =                              *)
-(*   let y = f x in if eq x y then x else fixpoint eq f y *)
-
-
-module Option =
-  struct
-    let is_none = function None -> true | Some _ -> false
-    let is_some = function Some _ -> true | None -> false
-
-    let pred p x =
-      if p x then Some x else None
-
-    let get = function
-      | Some(x) -> x
-      | None -> invalid_arg "Option.get"
-
-    let map f = function
-      | None -> None
-      | Some x -> f x
-
-    let list_get l = Blist.rev_map get (Blist.rev_filter is_some l)
-  end
-
 let surround l s r = l ^ s ^ r
 let bracket s = surround "(" s ")"
 let sqbracket s = surround "[" s "]"
@@ -139,14 +116,3 @@ let w_timeout f timeout =
     let res = f () in reset_sigalrm () ; Some res
   with Timeout -> (reset_sigalrm () ; None)
 
-module Fun =
-	struct
-		let neg f x = not (f x)
-		let conj f g x = (f x) && (g x)
-		let disj f g x = (f x) || (g x)
-
-		let id x = x
-		let uncurry f x y = f (x,y)
-		let curry f (x,y) = f x y
-		let swap f x y = f y x
-  end
