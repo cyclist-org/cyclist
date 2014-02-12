@@ -57,6 +57,7 @@ sig
   type proof_node
   type proof = proof_node Util.Int.Map.t
   
+  (* needed only by coverage metric *)
   val get_seq : proof_node -> sequent
 
   val idfs : sequent -> proof option
