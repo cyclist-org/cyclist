@@ -7,6 +7,16 @@ TMPDIR:=$(shell mktemp -d -u)
 ORIGDIR:=$(PWD)
 CYCDIR:=$(TMPDIR)/cyclist
 
+TLMAIN:=./src/temporal/tlmain.native
+FOMAIN:=./src/firstorder/fomain.native
+SLMAIN:=./src/seplog/slmain.native
+PRMAIN:=./src/termination/prmain.native
+ABDMAIN:=./src/termination/abdmain.native
+PR2MAIN:=./src/while/pr2main.native
+ABD2MAIN:=./src/while/abd2main.native
+CCMAIN:=./src/slconsistency/ccmain.native
+EXPGENMAIN:=./src/slconsistency/expgen.native
+
 all:
 	$(OCB) all.otarget
 
