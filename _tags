@@ -1,4 +1,4 @@
-true: debug,use_menhir,explain,use_unix,use_str,use_latex
+true: debug,use_menhir,explain,use_unix,use_str,use_latex,use_soundness
 <**/*.byte>: custom
 <src/soundness/*>: not_hygienic
 <src/*>: include

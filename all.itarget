@@ -1,0 +1,8 @@
+src/seplog/slmain.native
+src/termination/prmain.native  
+src/termination/abdmain.native  
+src/firstorder/fomain.native  
+src/slsat/ccmain.native  
+src/slsat/expgen.native
+src/while/pr2main.native  
+src/while/abd2main.native  

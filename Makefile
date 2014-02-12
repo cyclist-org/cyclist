@@ -1,4 +1,4 @@
-LFLAGS := -lflags ../src/soundness/soundness.a,-I,/usr/lib/ocaml/melt 
+LFLAGS := -lflags ../src/soundness/soundness.a
 #OCB := ocamlbuild -ocamlopt "ocamlopt.opt -S" -ocamlmktop "ocamlmktop -custom" $(LFLAGS) -j 8 
 OCB := ocamlbuild $(LFLAGS) -j 8 
 
@@ -7,18 +7,8 @@ TMPDIR:=$(shell mktemp -d -u)
 ORIGDIR:=$(PWD)
 CYCDIR:=$(TMPDIR)/cyclist
 
-TLMAIN:=./src/temporal/tlmain.native
-FOMAIN:=./src/firstorder/fomain.native
-SLMAIN:=./src/seplog/slmain.native
-PRMAIN:=./src/termination/prmain.native
-ABDMAIN:=./src/termination/abdmain.native
-PR2MAIN:=./src/while/pr2main.native
-ABD2MAIN:=./src/while/abd2main.native
-CCMAIN:=./src/slconsistency/ccmain.native
-EXPGENMAIN:=./src/slconsistency/expgen.native
-
 all:
-	$(OCB) $(FOMAIN) $(SLMAIN) $(PRMAIN) $(ABDMAIN) $(ABD2MAIN) $(CCMAIN) $(EXPGENMAIN) 
+	$(OCB) all.otarget
 
 %.native: 
 	$(OCB) "$@"
