@@ -460,6 +460,9 @@ module TagPairs =
       let ys = to_list t2 in
       of_list (Blist.flatten (Blist.map (fun p -> compose_tag_pair p ys) xs))
 
+    let projectl tp = map_to Tags.add Tags.empty fst tp
+    let projectr tp = map_to Tags.add Tags.empty snd tp
+    
   end
 
 

@@ -42,13 +42,20 @@ let fathers_grandchild prf idx n =
         prf
     | _ -> invalid_arg "fathers_grandchild2"
 
-let pp_int fmt i = Format.fprintf fmt "@[%i@]" i
-
 let pp_proof_node fmt n =
-  let aux fmt (_, subg) =
-    match subg with 
-      | [] -> Format.pp_print_string fmt "leaf"
-      | _ -> let (idxs,_,_) = Blist.unzip3 subg in Blist.pp pp_comma pp_int fmt idxs in
+  let aux fmt (tags, subg) =
+    Format.printf "tags=%a " Tags.pp tags ; 
+    if subg=[] then Format.pp_print_string fmt "leaf" else
+    Blist.pp pp_semicolonsp 
+      (fun fmt (i,tv,tp) ->
+        Format.printf 
+          "(goal=%a, valid=%a, prog=%a)"
+          Format.pp_print_int i
+          TagPairs.pp tv
+          TagPairs.pp tp
+      ) 
+      fmt
+      subg in      
   Format.fprintf fmt "@[%a@]" aux n
 
 let pp fmt prf =
@@ -150,6 +157,18 @@ let check_proof p =
   retval
 
 
+let valid prf = 
+  Int.Map.for_all 
+    (fun _ n -> 
+      Blist.for_all (fun (i,tv,tp) -> 
+        Int.Map.mem i prf &&
+        Tags.subset (TagPairs.projectl tv) (get_tags n) &&
+        Tags.subset (TagPairs.projectl tp) (get_tags n) &&
+        Tags.subset (TagPairs.projectr tv) (get_tags (Int.Map.find i prf)) &&
+        Tags.subset (TagPairs.projectr tp) (get_tags (Int.Map.find i prf))) 
+     (get_subg n))
+    prf
+
 module CheckCache = Hashtbl
 
 let check_proof =
@@ -157,8 +176,13 @@ let check_proof =
   (* let limit = ref 1 in  *)
   let f prf =
 		let () = Stats.MCCache.call () in
-    (* let () = assert (valid prf) in *)
+    let () = if not (valid prf) then
+      begin
+        pp Format.std_formatter prf ;
+        assert false
+      end in
     let aprf = minimize_abs_proof prf in
+    
     (* let () = if not (valid aprf) then  *)
     (*   begin                            *)
     (*     pp Format.std_formatter prf ;  *)

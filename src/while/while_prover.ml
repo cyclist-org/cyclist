@@ -4,10 +4,10 @@ open Symheap
 open While_program
 
 let tagpairs s =
-	(* if !termination then *)
+	if !termination then
 		TagPairs.mk (Seq.tags s)
-	(* else                 *)
-	(* 	Seq.tagpairs_one	 *)
+	else
+		Seq.tagpairs_one
 
 (* following is for symex only *)
 let progpairs () = 
@@ -83,11 +83,8 @@ let gen_left_rules_f (def, ident) seq =
         let l' = Heap.star l' f' in
         ( 
 					([l'],cmd), 
-					TagPairs.mk ts, 
-					if !termination then
-						TagPairs.singleton (id,id) 
-					else
-						TagPairs.empty
+					(if !termination then TagPairs.mk ts else Seq.tagpairs_one), 
+					(if !termination then TagPairs.singleton (id,id) else TagPairs.empty)
 				) in
       Blist.map do_case def in
     Inds.map_to_list left_unfold preds
