@@ -1,0 +1,1 @@
+proof_aut.o proof.o soundness.o trace.o

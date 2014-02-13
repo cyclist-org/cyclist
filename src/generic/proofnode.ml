@@ -12,7 +12,7 @@ struct
   type proof_subnode =
     | OpenNode
     | AxiomNode
-    | InfNode of int list * TagPairs.t list * TagPairs.t list * bool
+    | InfNode of (int * TagPairs.t * TagPairs.t) list * bool
     | BackNode of int * TagPairs.t
     | AbdNode of int 
   
@@ -35,7 +35,7 @@ struct
   let is_backlinkable n = match n.node with
     | OpenNode -> true
     | AbdNode _ | AxiomNode | BackNode _ -> false
-    | InfNode (_, _, _, b) -> true
+    | InfNode (_, b) -> true
   let is_backlink n = match n.node with
     | BackNode _ -> true
     | _ -> false
@@ -60,7 +60,7 @@ struct
     {
       seq = seq;
       parent = par_idx;
-      node = InfNode(children, tvs, tps, backt);
+      node = InfNode(Blist.zip3 children tvs tps, backt);
       descr = rdesc
     }
   
@@ -82,16 +82,15 @@ struct
   
   let to_abstract_node n = match n.node with
     | OpenNode | AxiomNode ->
-        Cchecker.mk_abs_node (Seq.tags n.seq) [] [] []
-    | InfNode(subg, tvs, tps, _) ->
-        Cchecker.mk_abs_node (Seq.tags n.seq) subg tvs tps
+        Cchecker.mk_abs_node (Seq.tags n.seq) []
+    | InfNode(subg, _) ->
+        Cchecker.mk_abs_node (Seq.tags n.seq) subg
     | BackNode(child, tv) ->
-        Cchecker.mk_abs_node (Seq.tags n.seq) [child] [tv] [TagPairs.empty]
+        Cchecker.mk_abs_node (Seq.tags n.seq) [(child, tv, TagPairs.empty)]
     | AbdNode(child) ->
     (* FIXME this demands tag globality *)
         let tags = Seq.tags n.seq in
-        Cchecker.mk_abs_node
-          tags [child] [TagPairs.mk tags] [TagPairs.empty]
+        Cchecker.mk_abs_node tags [(child, TagPairs.mk tags, TagPairs.empty)]
   
   let pp fmt id n cont = match n.node with
     | OpenNode ->
@@ -103,13 +102,13 @@ struct
     | BackNode(i, _) ->
         Format.fprintf fmt "@[%i: %a (%s) [%i]@]"
           id Seq.pp n.seq n.descr i
-    | InfNode(p, _, _, _) ->
+    | InfNode(p, _) ->
         Format.fprintf fmt "@[<v 2>%i: %a (%s) [%a]@,%a@]"
           id
           Seq.pp n.seq
           n.descr
-          (Blist.pp pp_comma Format.pp_print_int) p
-          (Blist.pp (fun fmt' () -> Format.fprintf fmt "@\n") cont) p
+          (Blist.pp pp_comma (fun fmt (i,_,_) -> Format.pp_print_int fmt i)) p
+          (Blist.pp Format.pp_print_newline (fun fmt' (i,_,_) -> cont fmt i)) p
     | AbdNode(child) ->
         Format.fprintf fmt "@[<v 2>%i: %a (%s) [%i]@,%a@]"
           id
@@ -139,10 +138,10 @@ struct
     | AxiomNode ->
         prooftree first n.seq
           (Latex.concat [ ltx_axiom n.descr; justifies id n.seq ])
-    | InfNode(p, _, _, _) ->
+    | InfNode(p, _) ->
         prooftree first n.seq
           (Latex.concat
-              ((Blist.map (cont false) p) @
+              ((Blist.map (fun (i,_,_) -> cont false i) p) @
                 [ justifies id n.seq; using; ltx_rule n.descr; ltx_newl ]))
     | BackNode(i, _) ->
         prooftree first n.seq
@@ -160,6 +159,6 @@ struct
     | OpenNode -> false
     | BackNode _ -> not back
     | AbdNode(child) -> cont child
-    | InfNode(p, _, _, _) -> Blist.for_all cont p
+    | InfNode(p, _) -> Blist.for_all (fun (i,_,_) -> cont i) p
   
 end

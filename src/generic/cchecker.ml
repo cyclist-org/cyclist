@@ -23,7 +23,7 @@ let in_children child n = Blist.exists (fun (i,_,_) -> i=child) (get_subg n)
 let index_of_child child (_,subg) = 
   Blist.find_index (fun (i,_,_) -> i=child) subg
 
-let mk_abs_node tags subg tvs tps = (tags, Blist.zip3 subg tvs tps)
+let mk_abs_node tags subg = (tags, subg)
 
 
 (* has one child and is not a self loop *)
@@ -80,15 +80,6 @@ let remove_dead_nodes prf' =
   done ;
   !prf
 
-let compose_tag_pairs t1 t2 =
-  let compose_tag_pair ((i:Tags.elt),j) (l: (Tags.elt * Tags.elt) list) =
-		let l = Blist.rev_filter (fun (k,_) -> k=j) l in
-		Blist.rev_map (fun (_,l) -> (i,l)) l in
-  let xs = TagPairs.to_list t1 in
-	let ys = TagPairs.to_list t2 in
-	TagPairs.of_list (Blist.flatten (Blist.map (fun p -> compose_tag_pair p ys) xs))
-
-
 let fuse_single_nodes prf' =
   let prf = ref prf' in
   let process_node child grand_child tv tp par_idx n =
@@ -99,11 +90,11 @@ let fuse_single_nodes prf' =
     let newsubg = 
       Blist.replace_nth 
         (grand_child, 
-        compose_tag_pairs par_tv tv,
+        TagPairs.compose par_tv tv,
         TagPairs.union_of_list
-          [compose_tag_pairs par_tp tp;
-          compose_tag_pairs par_tv tp;
-          compose_tag_pairs par_tp tv]
+          [TagPairs.compose par_tp tp;
+          TagPairs.compose par_tv tp;
+          TagPairs.compose par_tp tv]
         )
         pos par_subg in
     prf :=
@@ -134,7 +125,8 @@ let check_proof p =
   Stats.MC.call ();
   let create_tags i n =
     Tags.iter (tag_vertex i) (get_tags n) in
-  let create_succs i (_, l) = Blist.iter (fun (j,_,_) -> set_successor i j) l in
+  let create_succs i (_, l) = 
+    Blist.iter (fun (j,_,_) -> set_successor i j) l in
   let create_trace_pairs i (_, l) =
     let do_tag_transitions (j,tvs,tps) =
       TagPairs.iter (fun (k,m) -> set_trace_pair i j k m) tvs ;
