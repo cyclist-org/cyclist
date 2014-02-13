@@ -1,4 +1,5 @@
-true: debug,use_menhir,explain,use_unix,use_str,use_latex,use_soundness
+true: debug,use_menhir,explain
+<**/*.native>: use_libsoundness, use_spot
+<**/*.native> or <**/*.ml> or <**/*.mli>:use_unix,use_str,use_latex
 <**/*.byte>: custom
-<src/soundness/*>: not_hygienic
 <src/*>: include

@@ -451,6 +451,15 @@ module TagPairs =
   struct
     include Int.Pairing.Set
     let mk s = Tags.fold (fun i p -> add (i,i) p) s empty
+    
+    let compose t1 t2 =
+      let compose_tag_pair ((i: Tags.elt), j) (l: (Tags.elt * Tags.elt) list) =
+        let l = Blist.rev_filter (fun (k, _) -> k = j) l in
+        Blist.rev_map (fun (_, l) -> (i, l)) l in
+      let xs = to_list t1 in
+      let ys = to_list t2 in
+      of_list (Blist.flatten (Blist.map (fun p -> compose_tag_pair p ys) xs))
+
   end
 
 

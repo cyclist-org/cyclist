@@ -1,6 +1,5 @@
-LFLAGS := -lflags ../src/soundness/soundness.a
-#OCB := ocamlbuild -ocamlopt "ocamlopt.opt -S" -ocamlmktop "ocamlmktop -custom" $(LFLAGS) -j 8 
-OCB := ocamlbuild $(LFLAGS) -j 8 
+#OCB := ocamlbuild -ocamlopt "ocamlopt.opt -S" -ocamlmktop "ocamlmktop -custom" -j 8 
+OCB := ocamlbuild -j 8 
 
 TARBALL:=cyclist.tar.gz
 TMPDIR:=$(shell mktemp -d -u)

@@ -406,12 +406,12 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
         let apply_rule_to_subgoal (rule:rule_fun) (seq,tv,tp) =
           let fix_subgoal (seq', tv', tp') =
             (seq',
-            Cchecker.compose_tag_pairs tv tv',
+            TagPairs.compose tv tv',
             TagPairs.union_of_list
               [
-                Cchecker.compose_tag_pairs tp tp';
-                Cchecker.compose_tag_pairs tv tp';
-                Cchecker.compose_tag_pairs tp tv'
+                TagPairs.compose tp tp';
+                TagPairs.compose tv tp';
+                TagPairs.compose tp tv'
               ]
             ) in
           Blist.map (fun l -> Blist.map fix_subgoal l) (rule seq)
