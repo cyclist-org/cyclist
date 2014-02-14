@@ -1,6 +1,6 @@
 open Lib
 
-module Make(Prover: Sigs.P)(Seq: Sigs.S with type t = Prover.sequent) = 
+module Make(Prover: Sigs.PROVER)(Seq: Sigs.SEQUENT with type t = Prover.sequent) = 
   struct
     let show_proof = ref false 
     let latex_path = ref ""

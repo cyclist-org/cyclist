@@ -319,13 +319,14 @@ let setup defs seq_to_prove =
     symex_non_det_if_rule
   ] @ luf 
 
+
 let coverage prf = 
   let get_line n = snd (PRP.get_seq n) in
   let lines = 
     Blist.fold_left 
       (fun s (_,n) -> Int.Set.add (get_line n) s) 
       Int.Set.empty 
-      (Int.Map.to_list prf) in
+      (PRP.Proof.to_list prf) in
   let no_lines = Int.Set.cardinal lines in
   let prog_lines = Program.get_no_lines () in
   int_of_float (100. *. (float_of_int no_lines) /. (float_of_int prog_lines))

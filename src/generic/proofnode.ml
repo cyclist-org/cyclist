@@ -5,7 +5,7 @@ open Symbols
 let ltx_axiom ax = ltx_paren (ltx_text ax)
 let ltx_rule r = ltx_paren (ltx_text r)
   
-module Make(Seq: Sigs.S) =
+module Make(Seq: Sigs.SEQUENT) =
 struct
   type seq_t = Seq.t
   

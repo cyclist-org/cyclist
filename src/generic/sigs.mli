@@ -1,6 +1,6 @@
 (** Core module signatures used in Cyclist. *)
 
-module type S = 
+module type SEQUENT = 
 sig
   type t
   (** The sequent type. *)
@@ -19,7 +19,7 @@ sig
 end
 (** Sequent signature used as input to most functors in Cyclist.*)
 
-module type D =
+module type DEFINITIONS =
 sig
   type t
   val to_string : t -> string
@@ -28,7 +28,7 @@ sig
 end
 (** Inductive definitions signature. *)
 
-module type N = 
+module type NODE = 
 sig
   type t
   (** Proof node type. *)
@@ -48,7 +48,7 @@ sig
   val mk_abd : seq_t -> int -> int -> string -> t
   (** [mk_abd seq parent child descr] creates an abduction proof node labelled by 
       sequent [seq], parent index [parent], successor index [child] 
-      and description [descr].*) 
+      and description [descr]. NB this will probably be removed. *) 
   
   val mk_backlink : seq_t -> int -> int -> Util.TagPairs.t -> string -> t
   (** [mk_backlink seq parent target vtts descr] creates a back-link proof node labelled by 
@@ -111,11 +111,46 @@ sig
 end 
 (** Proof node signature. *)
 
-module type P =
+
+module type PROOF = 
+sig
+  type seq_t
+  type node_t
+  type t 
+  
+  module Node : NODE
+  
+  val find : int -> t -> node_t
+  val add : int -> node_t -> t -> t
+  val fresh_idx : t -> int
+  val empty : t
+  val map : (node_t -> node_t) -> t -> t
+  val filter : (int -> node_t -> bool) -> t -> t
+  val for_all : (int -> node_t -> bool) -> t -> bool
+  val size : t -> int
+  val mem : int -> t -> bool
+  val is_empty : t -> bool
+  val get_ancestry : int -> t -> t
+  val abstract : t -> Soundcheck.t
+  val check : t -> bool
+  val pp : Format.formatter -> t -> unit
+  val to_string : t -> string
+  val to_melt : t -> Latex.t
+  val is_closed : t -> bool
+  val no_of_backlinks : t -> int
+  val to_list : t -> (int * node_t) list
+  val singleton : int -> node_t -> t
+end
+
+
+module type PROVER =
 sig
   type sequent
   type ind_def_set
 
+  module Node : NODE
+  module Proof : PROOF
+  
   type axiom_fun = sequent -> bool
   type rule_app = (sequent * Util.TagPairs.t * Util.TagPairs.t) list
   type rule_fun = sequent -> rule_app list
@@ -136,7 +171,7 @@ sig
   val descr_rule : proof_rule -> string
 
   type proof_node
-  type proof = proof_node Util.Int.Map.t
+  type proof
   
   (* needed only by coverage metric *)
   val get_seq : proof_node -> sequent

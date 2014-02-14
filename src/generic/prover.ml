@@ -6,7 +6,7 @@ open Symbols
   (* to other proof_nodes by indicating the Blist.find_index of the child proof_node  *)
   (* in the map this will simplify dumping the proof to the model checker  *)
 
-module Make(Seq: Sigs.S)(Defs: Sigs.D) =
+module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
   struct
     type sequent = Seq.t
     type ind_def_set = Defs.t
@@ -24,16 +24,11 @@ module Make(Seq: Sigs.S)(Defs: Sigs.D) =
     let descr_axiom ax = snd ax
 
     module Node = Proofnode.Make(Seq)
-
-    (* FIXME remove/redesign "backlinkable" *)
-    let is_backlinkable n =
-      Node.is_open n ||
-      (Node.is_inf n (* && let (_,_,_,_,b) = Node.dest_inf n in b *))
-    
-
     type proof_node = Node.t    
-    type proof = Node.t Int.Map.t
-    
+
+    module Proof = Proof.Make(Proofnode.Make(Seq))
+    type proof = Proof.t
+            
     type proof_transformer =
       ?backlinkable:bool -> proof -> int -> (proof * int list) Zlist.t
     type abd_proof_transformer =
@@ -53,6 +48,11 @@ module Make(Seq: Sigs.S)(Defs: Sigs.D) =
     let lazy_soundness_check = ref false
     let backtrackable_backlinks = ref false
     let expand_proof = ref false
+
+    (* FIXME remove/redesign "backlinkable" *)
+    let is_backlinkable n =
+      Node.is_open n ||
+      (Node.is_inf n (* && let (_,_,_,_,b) = Node.dest_inf n in b *))
 
     (* due to divergence between proof tree depth and search depth *)
     (* remember last successful search depth *)
@@ -80,69 +80,6 @@ module Make(Seq: Sigs.S)(Defs: Sigs.D) =
         | None -> Node.mk_open seq par_idx
         | Some ax -> Node.mk_axiom seq par_idx (descr_axiom ax) 
 
-    module Proof =
-      struct
-        type t = proof
-        let find idx (prf:t) = Int.Map.find idx prf
-        let add pidx (nd:Node.t) (prf:t) = Int.Map.add pidx nd prf
-        let fresh_idx (prf:t) = 1 + (fst (Int.Map.max_binding prf))
-        let empty:t = Int.Map.empty
-        let map f (prf:t) = Int.Map.map f prf
-        let filter f (prf:t) = Int.Map.filter f prf
-        let for_all f (prf:t) = Int.Map.for_all f prf
-        let size = Int.Map.cardinal
-        let mem i (p:t) = Int.Map.mem i p
-        let is_empty (p:t) = Int.Map.is_empty p
-
-        let get_ancestry idx prf =
-          let rec aux acc idx n =
-            let par_idx = Node.get_par n in
-            let parent = find par_idx prf in
-            let acc = add par_idx parent acc in
-            if par_idx=idx then acc else aux acc par_idx parent in
-          aux empty idx (find idx prf)
-
-        let abstract prf = map Node.to_abstract_node prf
-
-        let check p = Soundcheck.check_proof (abstract p)
-
-        let pp fmt prf =
-          let rec pp_proof_node fmt id =
-            Node.pp fmt id (find id prf) pp_proof_node in
-          Format.fprintf fmt "@[%a@]@\n" pp_proof_node 0
-
-        let to_string prf =
-          ignore (Format.flush_str_formatter ());
-          Format.pp_set_margin Format.str_formatter 300;
-          Format.fprintf Format.str_formatter "@[%a@]" pp prf ;
-          Format.flush_str_formatter ()
-
-        let to_melt proof =
-          let rec melt_proof_node first id =
-            Node.to_melt first id (find id proof) melt_proof_node in
-          melt_proof_node true 0
-       
-    (* FIXME lazy soundness checking de-implemented *) 
-        let is_closed prf =
-          Int.Map.for_all (fun _ n -> not (Node.is_open n)) prf
-
-        (* check whether the subtree rooted at idx is closed *)
-        (* i.e. contains no Open nodes *and* *)
-        (* is non-backtrackable, i.e. contains no backlinks if *)
-        (* backtrackable_backlinks is set to true *)
-        let is_closed_at idx prf =
-          let rec aux idx' =
-            let n = find idx' prf in
-            if Node.is_axiom n then true else
-            if Node.is_open n then false else
-            if Node.is_backlink n then not (!backtrackable_backlinks) else
-            Blist.for_all aux (Node.get_succs n) in 
-          aux idx
-          
-        let no_of_backlinks p =
-          size (Int.Map.filter (fun _ n -> Node.is_backlink n) p)
-
-      end
 
     let pp_proof = Proof.pp
     let print_proof proof = print_endline (Proof.to_string proof)
@@ -192,7 +129,7 @@ module Make(Seq: Sigs.S)(Defs: Sigs.D) =
         let par_idx = Node.get_par n in 
         let seq = Node.get_seq n in
         let m = if !ancestral_links_only then Proof.get_ancestry idx prf else prf in
-        let l = Zlist.of_list (Int.Map.bindings m) in
+        let l = Zlist.of_list (Proof.to_list m) in
         (* optimization: remove self before trying anything *)
         let l = Zlist.filter (fun (idx',n') -> idx<>idx' && is_backlinkable n') l in
         let l = Zlist.map (fun (i,n') -> (i, n', matches seq (Node.get_seq n'))) l in
@@ -249,7 +186,7 @@ module Make(Seq: Sigs.S)(Defs: Sigs.D) =
         let prf = Proof.add fresh_idx (mk_node idx seq) prf in
         let prf = Proof.add idx (Node.mk_abd seq parent fresh_idx d) prf in
         let m = if !ancestral_links_only then Proof.get_ancestry idx prf else prf in
-        let l = Zlist.of_list (Int.Map.bindings m) in
+        let l = Zlist.of_list (Proof.to_list m) in
         (* optimization: remove self before trying anything *)
         let l = Zlist.filter
 				  (fun (idx',n) -> idx<>idx' && fresh_idx<>idx' && is_backlinkable n) l in
@@ -281,6 +218,19 @@ module Make(Seq: Sigs.S)(Defs: Sigs.D) =
       and rule = (AbdRule(transf), d) in
       rule
 
+    (* check whether the subtree rooted at idx is closed *)
+    (* i.e. contains no Open nodes *and* *)
+    (* is non-backtrackable, i.e. contains no backlinks if *)
+    (* backtrackable_backlinks is set to true *)
+    let is_closed_at idx prf =
+      let rec aux idx' =
+        let n = Proof.find idx' prf in
+        if Node.is_axiom n then true else
+        if Node.is_open n then false else
+        if Node.is_backlink n then not (!backtrackable_backlinks) else
+        Blist.for_all aux (Node.get_succs n) in 
+      aux idx
+    
     (* this is for internal use only *)
     (* NB: this is not the inverse of mk_inf_rule *)
     let dest_rule (tr, d) = match tr with
@@ -321,7 +271,7 @@ module Make(Seq: Sigs.S)(Defs: Sigs.D) =
 
     let idfs seq =
       let bound = ref !minbound in
-      let start = Int.Map.singleton 0 (mk_node 0 seq) in
+      let start = Proof.singleton 0 (mk_node 0 seq) in
       if Proof.is_closed start then (last_search_depth := 0 ; Some start) else
       let stack = ref [expand_proof_state start 0 [(0,0)]] in
       let found = ref None in
@@ -369,7 +319,7 @@ module Make(Seq: Sigs.S)(Defs: Sigs.D) =
               frontier := (expand_proof_state p d g) :: !frontier ;
               raise Continue
             end ;
-          if Proof.is_closed_at idx p then
+          if is_closed_at idx p then
             begin
               (* last application resulted in no new open subgoals *)
               (* thus we will pop all generators of applications *)
@@ -380,7 +330,7 @@ module Make(Seq: Sigs.S)(Defs: Sigs.D) =
               let ancestry = Proof.get_ancestry idx p in
               let ancestry = Proof.add idx (Proof.find idx p) ancestry in
               let ancestry =
-                Proof.filter (fun i _ -> Proof.is_closed_at i p) ancestry in
+                Proof.filter (fun i _ -> is_closed_at i p) ancestry in
               (* FIXME make this depend on proper parenthood *)
               let keep ((p',_),_) =
                 Proof.for_all
@@ -750,7 +700,7 @@ module Make(Seq: Sigs.S)(Defs: Sigs.D) =
 
     let abduce seq initial_defs mk_rules acceptable =
       let bound = ref !minbound in
-      let start = Int.Map.singleton 0 (mk_node 0 seq) in
+      let start = Proof.singleton 0 (mk_node 0 seq) in
       if Proof.is_closed start then (last_search_depth := 0 ; Some (start, initial_defs)) else
       let stack = ref [abd_expand_proof_state 0 (mk_app start 0 [(0,0)] initial_defs) mk_rules] in
       let found = ref None in
@@ -799,7 +749,7 @@ module Make(Seq: Sigs.S)(Defs: Sigs.D) =
               frontier := (abd_expand_proof_state proof_state.seq_no app mk_rules) :: !frontier ;
               raise Continue
             end ;
-          if Proof.is_closed_at proof_state.idx app.prf then
+          if is_closed_at proof_state.idx app.prf then
             begin
               (* last application resulted in no new open subgoals *)
               (* thus we will pop all generators of applications *)
