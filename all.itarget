@@ -6,3 +6,4 @@ src/slsat/ccmain.native
 src/slsat/expgen.native
 src/while/pr2main.native  
 src/while/abd2main.native  
+cyclist.docdir/index.html
