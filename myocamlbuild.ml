@@ -27,9 +27,16 @@ let _ = dispatch begin function
   | After_rules ->
     ocaml_lib ~extern:true ~dir:ocaml_melt_lib_path "latex";
 
-    flag ["link"; "ocaml"; "use_libsoundness"]
-          (S[A"-ccopt"; A"-Lsrc/soundness"; A"-cclib"; A"-lsoundness"]);
+    (* how to compile "c" files, really C++ *)
+    dep  ["compile"; "c"] headers;
+    flag ["c"; "compile"]  
+      (S[
+        A"-ccopt"; A"-xc++"; A"-ccopt"; A"-std=c++11"; 
+        A"-ccopt"; A("-I" ^ ocaml_headers_path);
+        A"-ccopt"; A("-I" ^ spot_include_path)]);
     
+    
+    (* how to link everything together *)
     flag ["link"; "ocaml"; "use_spot"]
           (S[
             A"-ccopt"; A("-L" ^ spot_lib_path); 
@@ -37,16 +44,11 @@ let _ = dispatch begin function
             A"-cclib"; A"-lspot";
             A"-cclib"; A"-lstdc++"
             ]);
-    
+
     (* the path to the .a file is necessary *)
     dep ["link"; "ocaml"; "use_libsoundness"] ["src/soundness/libsoundness.a"];
+    flag ["link"; "ocaml"; "use_libsoundness"]
+          (S[A"-ccopt"; A"-Lsrc/soundness"; A"-cclib"; A"-lsoundness"]);
     
-    flag ["c"; "compile"]  
-      (S[
-        A"-ccopt"; A"-xc++"; A"-ccopt"; A"-std=c++11"; 
-        A"-ccopt"; A("-I" ^ ocaml_headers_path);
-        A"-ccopt"; A("-I" ^ spot_include_path)]);
-    
-    dep  ["compile"; "c"] headers;
   | _ -> ()
 end

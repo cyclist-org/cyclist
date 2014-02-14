@@ -11,9 +11,9 @@ external set_progress_pair : int -> int -> int -> int -> unit = "set_progress_pa
 external check_soundness : unit -> bool = "check_soundness" ;;
 external set_initial_vertex : int -> unit = "set_initial_vertex" ;;
 
-type abstract_proof_node =
+type abstract_node =
   Util.Tags.t * ((int * Util.TagPairs.t * Util.TagPairs.t) list)
-type t = abstract_proof_node Int.Map.t
+type t = abstract_node Int.Map.t
 
 let get_tags n = fst n
 let get_subg n = snd n
@@ -158,10 +158,12 @@ let check_proof p =
 
 
 let valid prf = 
+  Int.Map.mem 0 prf &&
   Int.Map.for_all 
     (fun _ n -> 
       Blist.for_all (fun (i,tv,tp) -> 
         Int.Map.mem i prf &&
+        TagPairs.subset tp tv &&
         Tags.subset (TagPairs.projectl tv) (get_tags n) &&
         Tags.subset (TagPairs.projectl tp) (get_tags n) &&
         Tags.subset (TagPairs.projectr tv) (get_tags (Int.Map.find i prf)) &&
@@ -183,12 +185,11 @@ let check_proof =
       end in
     let aprf = minimize_abs_proof prf in
     
-    (* let () = if not (valid aprf) then  *)
-    (*   begin                            *)
-    (*     pp Format.std_formatter prf ;  *)
-    (*     pp Format.std_formatter aprf ; *)
-    (*     assert false                   *)
-    (*   end in                           *)
+    let () = if not (valid aprf) then
+      begin
+        pp Format.std_formatter aprf ;
+        assert false
+      end in
     try
       let r = CheckCache.find ccache aprf in
 			Stats.MCCache.accept () ; r

@@ -6,7 +6,7 @@ open Symbols
   (* to other proof_nodes by indicating the Blist.find_index of the child proof_node  *)
   (* in the map this will simplify dumping the proof to the model checker  *)
 
-module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
+module Make(Seq: Sigs.S)(Defs: Sigs.D) =
   struct
     type sequent = Seq.t
     type ind_def_set = Defs.t
@@ -24,6 +24,12 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
     let descr_axiom ax = snd ax
 
     module Node = Proofnode.Make(Seq)
+
+    (* FIXME remove/redesign "backlinkable" *)
+    let is_backlinkable n =
+      Node.is_open n ||
+      (Node.is_inf n (* && let (_,_,_,_,b) = Node.dest_inf n in b *))
+    
 
     type proof_node = Node.t    
     type proof = Node.t Int.Map.t
@@ -98,7 +104,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
 
         let abstract prf = map Node.to_abstract_node prf
 
-        let check p = Cchecker.check_proof (abstract p)
+        let check p = Soundcheck.check_proof (abstract p)
 
         let pp fmt prf =
           let rec pp_proof_node fmt id =
@@ -124,9 +130,13 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
         (* i.e. contains no Open nodes *and* *)
         (* is non-backtrackable, i.e. contains no backlinks if *)
         (* backtrackable_backlinks is set to true *)
-        let rec is_closed_at idx prf =
-          let aux idx' = 
-            Node.is_closed_at_helper (!backtrackable_backlinks) (find idx' prf) (fun idx'' -> is_closed_at idx'' prf) in
+        let is_closed_at idx prf =
+          let rec aux idx' =
+            let n = find idx' prf in
+            if Node.is_axiom n then true else
+            if Node.is_open n then false else
+            if Node.is_backlink n then not (!backtrackable_backlinks) else
+            Blist.for_all aux (Node.get_succs n) in 
           aux idx
           
         let no_of_backlinks p =
@@ -167,7 +177,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
 						(Blist.to_string "; " Seq.to_string premises) ^ "\n") in
           let prem_idxs = Blist.range fresh_idx premises in
           let prf = Blist.fold_left2 (add_to_graph idx) prf premises prem_idxs in
-          let n' = Node.mk_inf seq par_idx prem_idxs tvs tps d backlinkable in
+          let n' = Node.mk_inf seq par_idx (Blist.zip3 prem_idxs tvs tps) d backlinkable in
           let prf = Proof.add idx n' prf in
           let prem_idxs =
             Blist.filter (fun i -> Node.is_open (Proof.find i prf)) prem_idxs in
@@ -184,14 +194,14 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
         let m = if !ancestral_links_only then Proof.get_ancestry idx prf else prf in
         let l = Zlist.of_list (Int.Map.bindings m) in
         (* optimization: remove self before trying anything *)
-        let l = Zlist.filter (fun (idx',n') -> idx<>idx' && Node.is_backlinkable n') l in
+        let l = Zlist.filter (fun (idx',n') -> idx<>idx' && is_backlinkable n') l in
         let l = Zlist.map (fun (i,n') -> (i, n', matches seq (Node.get_seq n'))) l in
         let l = Zlist.filter (fun (_, _, b) -> Option.is_some b) l in
         let l =
           Zlist.map
             begin fun (j, n', tvs) ->
               (n', Proof.add idx
-                (Node.mk_back seq par_idx j (Option.get tvs) d) prf)
+                (Node.mk_backlink seq par_idx j (Option.get tvs) d) prf)
             end
             l in
         let l = Zlist.filter (fun (_,p) -> Proof.check p) l in
@@ -215,7 +225,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
     let mk_abd_inf_rule rl d =
       let rec transf ?backlinkable:bool prf idx defs =
         let n = Proof.find idx prf in
-        let (seq,parent) = Node.dest n in 
+        let (seq,parent,_) = Node.dest n in 
         let apps = rl seq defs in
         if apps=[] then Zlist.empty else
         let fresh_idx = Proof.fresh_idx prf in
@@ -234,7 +244,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
     let mk_abd_back_rule rl d =
       let rec transf ?backlinkable:bool prf idx defs =
         let n = Proof.find idx prf in
-        let (seq,parent) = Node.dest n in 
+        let (seq,parent,_) = Node.dest n in 
         let fresh_idx = Proof.fresh_idx prf in
         let prf = Proof.add fresh_idx (mk_node idx seq) prf in
         let prf = Proof.add idx (Node.mk_abd seq parent fresh_idx d) prf in
@@ -242,7 +252,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
         let l = Zlist.of_list (Int.Map.bindings m) in
         (* optimization: remove self before trying anything *)
         let l = Zlist.filter
-				  (fun (idx',n) -> idx<>idx' && fresh_idx<>idx' && Node.is_backlinkable n) l in
+				  (fun (idx',n) -> idx<>idx' && fresh_idx<>idx' && is_backlinkable n) l in
         let l = Zlist.map (fun (_,m) -> Zlist.of_list (rl seq (Node.get_seq m) defs)) l in
         let l = Zlist.flatten l in
         Zlist.map (fun newdefs -> (prf, [fresh_idx], newdefs)) l
@@ -252,7 +262,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
     let mk_gen_rule rl d =
       let rec transf ?(backlinkable=true) prf idx defs =
         let n = Proof.find idx prf in
-        let (seq,parent) = Node.dest n in 
+        let (seq,parent,_) = Node.dest n in 
         let apps = rl seq defs in
         if apps=[] then Zlist.empty else
         let add_to_graph prf seq idx' =
@@ -262,7 +272,7 @@ module Make(Seq: Cycprover.S)(Defs: Cycprover.D) =
           let (premises, tvs, tps) = Blist.unzip3 l in
           let prem_idxs = Blist.range fresh_idx premises in
           let prf = Blist.fold_left2 add_to_graph prf premises prem_idxs in
-          let n' = Node.mk_inf seq parent prem_idxs tvs tps d backlinkable in
+          let n' = Node.mk_inf seq parent (Blist.zip3 prem_idxs tvs tps) d backlinkable in
           let prf = Proof.add idx n' prf in
           let prem_idxs =
             Blist.filter (fun i -> Node.is_open (Proof.find i prf)) prem_idxs in

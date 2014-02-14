@@ -5,9 +5,9 @@ open Symbols
 let ltx_axiom ax = ltx_paren (ltx_text ax)
 let ltx_rule r = ltx_paren (ltx_text r)
   
-module Make(Seq: Cycprover.S) =
+module Make(Seq: Sigs.S) =
 struct
-  type sequent = Seq.t
+  type seq_t = Seq.t
   
   type proof_subnode =
     | OpenNode
@@ -26,71 +26,70 @@ struct
   
   let get_seq n = n.seq
   let get_par n = n.parent
-  let dest n = (n.seq, n.parent)
+  let get_succs n = match n.node with
+    | AxiomNode | OpenNode -> []
+    | BackNode (s, _) | AbdNode(s) -> [s]
+    | InfNode(ss, _) -> let (ss',_,_) = Blist.unzip3 ss in ss'
+  
+  let dest n = (n.seq, n.parent, n.descr)
+  let dest_abd n = match n.node with
+    | AbdNode(child) -> (n.seq, n.parent, n.descr, child)
+    | _ -> invalid_arg "dest_abd"
+  let dest_backlink n = match n.node with
+    | BackNode(child, vtts) -> (n.seq, n.parent, n.descr, child, vtts)
+    | _ -> invalid_arg "dest_backlink"
+  let dest_inf n = match n.node with
+    | InfNode(subgs, b) -> (n.seq, n.parent, n.descr, subgs, b)
+    | _ -> invalid_arg "dest_inf"
+  
   
   let is_open n = match n.node with
     | OpenNode -> true
     | _ -> false
-  (* FIXME remove/redesign "backlinkable" *)
-  let is_backlinkable n = match n.node with
-    | OpenNode -> true
-    | AbdNode _ | AxiomNode | BackNode _ -> false
-    | InfNode (_, b) -> true
   let is_backlink n = match n.node with
     | BackNode _ -> true
     | _ -> false
-  
-  let mk_open seq par_idx =
+  let is_axiom n = match n.node with
+    | AxiomNode -> true
+    | _ -> false
+  let is_abd n = match n.node with
+    | AbdNode _ -> true
+    | _ -> false
+  let is_inf n = match n.node with
+    | InfNode _ -> true
+    | _ -> false
+
+
+  let mk seq parent node descr =
     {
       seq = seq;
-      parent = par_idx;
-      node = OpenNode;
-      descr = "(Open)"
+      parent = parent;
+      node = node;
+      descr = descr
     }
-  
-  let mk_axiom seq par_idx ax =
-    {
-      seq = seq;
-      parent = par_idx;
-      node = AxiomNode;
-      descr = ax
-    }
-  
-  let mk_inf seq par_idx children tvs tps rdesc backt =
-    {
-      seq = seq;
-      parent = par_idx;
-      node = InfNode(Blist.zip3 children tvs tps, backt);
-      descr = rdesc
-    }
-  
-  let mk_back seq par_idx child tvs rdesc =
-    {
-      seq = seq;
-      parent = par_idx;
-      node = BackNode(child, tvs);
-      descr = rdesc
-    }
-  
-  let mk_abd seq par_idx child rdesc =
-    {
-      seq = seq;
-      parent = par_idx;
-      node = AbdNode(child);
-      descr = rdesc      
-    }
+    
+  let mk_open seq parent = 
+    mk seq parent OpenNode "(Open)"
+  let mk_axiom seq parent descr = 
+    mk seq parent AxiomNode descr
+  let mk_abd seq parent child descr = 
+    mk seq parent (AbdNode(child)) descr
+  let mk_backlink seq parent child vtts descr =
+    mk seq parent (BackNode(child, vtts)) descr
+  let mk_inf seq parent subgoals descr backt =
+    mk seq parent (InfNode(subgoals, backt)) descr
   
   let to_abstract_node n = match n.node with
     | OpenNode | AxiomNode ->
-        Cchecker.mk_abs_node (Seq.tags n.seq) []
+        Soundcheck.mk_abs_node (Seq.tags n.seq) []
     | InfNode(subg, _) ->
-        Cchecker.mk_abs_node (Seq.tags n.seq) subg
+        Soundcheck.mk_abs_node (Seq.tags n.seq) subg
     | BackNode(child, tv) ->
-        Cchecker.mk_abs_node (Seq.tags n.seq) [(child, tv, TagPairs.empty)]
+        Soundcheck.mk_abs_node (Seq.tags n.seq) [(child, tv, TagPairs.empty)]
     | AbdNode(child) ->
     (* FIXME this demands tag globality *)
         let tags = Seq.tags n.seq in
-        Cchecker.mk_abs_node tags [(child, TagPairs.mk tags, TagPairs.empty)]
+        Soundcheck.mk_abs_node tags [(child, TagPairs.mk tags, TagPairs.empty)]
   
   let pp fmt id n cont = match n.node with
     | OpenNode ->
@@ -153,12 +152,5 @@ struct
           (Latex.concat
               [ cont false child ;
               justifies id n.seq; using; ltx_rule n.descr; ltx_newl ])
-  
-  let is_closed_at_helper back n cont = match n.node with
-    | AxiomNode -> true
-    | OpenNode -> false
-    | BackNode _ -> not back
-    | AbdNode(child) -> cont child
-    | InfNode(p, _) -> Blist.for_all (fun (i,_,_) -> cont i) p
   
 end
