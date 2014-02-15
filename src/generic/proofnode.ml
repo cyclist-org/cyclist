@@ -7,7 +7,7 @@ let ltx_rule r = ltx_paren (ltx_text r)
   
 module Make(Seq: Sigs.SEQUENT) =
 struct
-  type seq_t = Seq.t
+  module Seq = Seq
   
   type proof_subnode =
     | OpenNode

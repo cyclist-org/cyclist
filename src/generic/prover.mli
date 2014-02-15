@@ -4,4 +4,3 @@ module Make (Seq: Sigs.SEQUENT) (Defs: Sigs.DEFINITIONS) : Sigs.PROVER
   with module Node = Proofnode.Make(Seq)
   with module Proof = Proof.Make(Proofnode.Make(Seq))
   with type proof = Proof.Make(Proofnode.Make(Seq)).t
-  with type proof_node = Proofnode.Make(Seq).t

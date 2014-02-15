@@ -32,31 +32,32 @@ module type NODE =
 sig
   type t
   (** Proof node type. *)
-  type seq_t
-  (** Sequent type used for building proof nodes. *)
+
+  module Seq : SEQUENT
+  (** Sequent module used for building proof nodes. *)
       
   (** Constructors. *)
       
-  val mk_open : seq_t -> int -> t
+  val mk_open : Seq.t -> int -> t
   (** [mk_open seq parent] creates an open proof node labelled by [seq] with
       parent index set to [parent]. *) 
 
-  val mk_axiom : seq_t -> int -> string -> t
+  val mk_axiom : Seq.t -> int -> string -> t
   (** [mk_axiom seq parent descr] creates an axiom proof node labelled by 
       sequent [seq], parent index [parent] and description [descr].*) 
   
-  val mk_abd : seq_t -> int -> int -> string -> t
+  val mk_abd : Seq.t -> int -> int -> string -> t
   (** [mk_abd seq parent child descr] creates an abduction proof node labelled by 
       sequent [seq], parent index [parent], successor index [child] 
       and description [descr]. NB this will probably be removed. *) 
   
-  val mk_backlink : seq_t -> int -> int -> Util.TagPairs.t -> string -> t
+  val mk_backlink : Seq.t -> int -> int -> Util.TagPairs.t -> string -> t
   (** [mk_backlink seq parent target vtts descr] creates a back-link proof node labelled by 
       sequent [seq], parent index [parent], target index [target], set of 
       valid tag transitions (as pairs) [vtts] and description [descr].*) 
   
   val mk_inf :
-    seq_t -> int ->
+    Seq.t -> int ->
     (int * Util.TagPairs.t * Util.TagPairs.t) list -> 
     string -> bool -> t
   (** [mk_inf seq parent subgoals descr] creates an inference proof node labelled by 
@@ -66,18 +67,18 @@ sig
   
   (** Destructors. *)
   
-  val dest : t -> seq_t * int * string
+  val dest : t -> Seq.t * int * string
   (** [dest n] returns the triple (sequent, parent index, description).
       This works with all proof nodes. *)
    
-  val dest_abd : t -> seq_t * int * string * int
+  val dest_abd : t -> Seq.t * int * string * int
   (** [dest_abd n] destroys an abduction node [n], otherwise raises [Invalid_arg].*)
   
-  val dest_backlink : t -> seq_t * int * string * int * Util.TagPairs.t
+  val dest_backlink : t -> Seq.t * int * string * int * Util.TagPairs.t
   (** [dest_backlink n] destroys a back-link node [n], otherwise raises [Invalid_arg].*)
 
   val dest_inf : t -> 
-    seq_t * int * string * 
+    Seq.t * int * string * 
     (int * Util.TagPairs.t * Util.TagPairs.t) list * bool
   (** [dest_inf n] destroys an inference node [n], otherwise raises [Invalid_arg].*)
 
@@ -91,7 +92,7 @@ sig
   
   (** Auxiliary functions for getting information from all proof nodes. *)
   
-  val get_seq : t -> seq_t
+  val get_seq : t -> Seq.t
   (** Get sequent labelling the node. *)
   val get_par : t -> int
   (** Get the parent node index of this node. *)
@@ -114,33 +115,48 @@ end
 
 module type PROOF = 
 sig
-  type seq_t
-  type node_t
   type t 
+  (** Proof type. *)
   
   module Node : NODE
+  (** Proof node module underlying proof. *)
   
-  val find : int -> t -> node_t
-  val add : int -> node_t -> t -> t
-  val fresh_idx : t -> int
-  val empty : t
-  val map : (node_t -> node_t) -> t -> t
-  val filter : (int -> node_t -> bool) -> t -> t
-  val for_all : (int -> node_t -> bool) -> t -> bool
+  val mk : Node.t -> t
+  (** Constructor.  Takes an open or axiom node and creates a proof
+      with that node at the root (0).  The parent field of the node
+      must be 0. *)
+  
+  (** Other constructors. Many possible checks are performed
+      and raise exceptions upon failing. *)
+ 
+  val add_backlink : int -> Node.t -> t -> t
+  val add_abd : int -> Node.t -> (int * Node.t) -> t -> t 
+  val add_inf : int -> Node.t -> (int * Node.t) list -> t -> t
+
+  (** Accessor functions. *)
+  
+  val find : int -> t -> Node.t
   val size : t -> int
   val mem : int -> t -> bool
-  val is_empty : t -> bool
-  val get_ancestry : int -> t -> t
-  val abstract : t -> Soundcheck.t
+  val fresh_idx : t -> int
+  val fresh_idxs : 'a list -> t -> int list
+  
   val check : t -> bool
+  (** Check soundness. Proof does not need to be closed. *)
+  
+  val is_closed : t -> bool
+  (** Are all nodes not open? *)
+  
+  val no_of_backlinks : t -> int
+  val to_list : t -> (int * Node.t) list
+
+  (** Output functions. *)
+  
   val pp : Format.formatter -> t -> unit
   val to_string : t -> string
   val to_melt : t -> Latex.t
-  val is_closed : t -> bool
-  val no_of_backlinks : t -> int
-  val to_list : t -> (int * node_t) list
-  val singleton : int -> node_t -> t
 end
+(** Proof signature. *)
 
 
 module type PROVER =
@@ -170,12 +186,8 @@ sig
 
   val descr_rule : proof_rule -> string
 
-  type proof_node
   type proof
   
-  (* needed only by coverage metric *)
-  val get_seq : proof_node -> sequent
-
   val idfs : sequent -> proof option
 
   val abduce :

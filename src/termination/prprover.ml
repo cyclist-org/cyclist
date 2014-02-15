@@ -321,7 +321,7 @@ let setup defs seq_to_prove =
 
 
 let coverage prf = 
-  let get_line n = snd (PRP.get_seq n) in
+  let get_line n = snd (PRP.Proof.Node.get_seq n) in
   let lines = 
     Blist.fold_left 
       (fun s (_,n) -> Int.Set.add (get_line n) s) 
