@@ -79,7 +79,10 @@ let used_only_recursively (heap, (ident, params)) pos =
       if ident<>ident' then 
         Blist.for_all (fun var' -> not (Term.equal var var')) params'
       else
-        Blist.for_all2 (fun var' pos' -> pos=pos' || not (Term.equal var var')) params' (Blist.indices params')
+        Blist.for_all2 
+          (fun var' pos' -> pos=pos' || not (Term.equal var var')) 
+          params' 
+          (Blist.indexes params')
     end 
     heap.inds  
 

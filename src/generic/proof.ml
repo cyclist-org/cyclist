@@ -84,14 +84,11 @@ struct
     ensure (Node.is_inf n);
     ensure (Int.FList.equal (Node.get_succs n) (fst (Blist.split subgoals)));
     ensure (Blist.for_all (fun i' -> not (mem i' prf)) (Node.get_succs n));
-    Blist.iter 
-      (fun (ci,cn) -> 
-        ensure (Node.is_open cn || Node.is_axiom cn);
-        ensure (not (mem ci prf))
-      )
-      subgoals;
     Blist.foldl 
-      (fun p' (i',n') -> Int.Map.add i' (idx,n') p') 
+      (fun prf' (ci,cn) -> 
+        ensure (Node.is_open cn || Node.is_axiom cn);
+        ensure (not (mem ci prf));
+        Int.Map.add ci (idx,cn) prf') 
       (replace idx n prf) 
       subgoals 
 

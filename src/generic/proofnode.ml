@@ -12,7 +12,7 @@ struct
   type proof_subnode =
     | OpenNode
     | AxiomNode
-    | InfNode of (int * TagPairs.t * TagPairs.t) list * bool
+    | InfNode of (int * TagPairs.t * TagPairs.t) list
     | BackNode of int * TagPairs.t
     | AbdNode of int 
   
@@ -27,7 +27,7 @@ struct
   let get_succs n = match n.node with
     | AxiomNode | OpenNode -> []
     | BackNode (s, _) | AbdNode(s) -> [s]
-    | InfNode(ss, _) -> let (ss',_,_) = Blist.unzip3 ss in ss'
+    | InfNode(ss) -> let (ss',_,_) = Blist.unzip3 ss in ss'
   
   let dest n = (n.seq, n.descr)
   let dest_abd n = match n.node with
@@ -37,7 +37,7 @@ struct
     | BackNode(child, vtts) -> (n.seq, n.descr, child, vtts)
     | _ -> invalid_arg "dest_backlink"
   let dest_inf n = match n.node with
-    | InfNode(subgs, b) -> (n.seq, n.descr, subgs, b)
+    | InfNode(subgs) -> (n.seq, n.descr, subgs)
     | _ -> invalid_arg "dest_inf"
   
   
@@ -67,14 +67,14 @@ struct
     
   let mk_open seq = mk seq OpenNode "(Open)"
   let mk_axiom seq descr = mk seq AxiomNode descr
-  let mk_abd seq child descr = mk seq (AbdNode(child)) descr
-  let mk_backlink seq child vtts descr = mk seq (BackNode(child, vtts)) descr
-  let mk_inf seq subgoals descr backt = mk seq (InfNode(subgoals, backt)) descr
+  let mk_abd seq descr child = mk seq (AbdNode(child)) descr
+  let mk_inf seq descr subgoals = mk seq (InfNode(subgoals)) descr
+  let mk_backlink seq descr child vtts = mk seq (BackNode(child, vtts)) descr
   
   let to_abstract_node n = match n.node with
     | OpenNode | AxiomNode ->
         Soundcheck.mk_abs_node (Seq.tags n.seq) []
-    | InfNode(subg, _) ->
+    | InfNode(subg) ->
         Soundcheck.mk_abs_node (Seq.tags n.seq) subg
     | BackNode(child, tv) ->
         Soundcheck.mk_abs_node (Seq.tags n.seq) [(child, tv, TagPairs.empty)]
@@ -93,7 +93,7 @@ struct
     | BackNode(i, _) ->
         Format.fprintf fmt "@[%i: %a (%s) [%i]@]"
           id Seq.pp n.seq n.descr i
-    | InfNode(p, _) ->
+    | InfNode(p) ->
         Format.fprintf fmt "@[<v 2>%i: %a (%s) [%a]@,%a@]"
           id
           Seq.pp n.seq
@@ -129,7 +129,7 @@ struct
     | AxiomNode ->
         prooftree first n.seq
           (Latex.concat [ ltx_axiom n.descr; justifies id n.seq ])
-    | InfNode(p, _) ->
+    | InfNode(p) ->
         prooftree first n.seq
           (Latex.concat
               ((Blist.map (fun (i,_,_) -> cont false i) p) @

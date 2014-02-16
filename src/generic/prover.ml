@@ -26,11 +26,9 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
     module Proof = Proof.Make(Proofnode.Make(Seq))
     module Node = Proof.Node
             
-    type proof_transformer =
-      ?backlinkable:bool -> Proof.t -> int -> (Proof.t * int list) Zlist.t
+    type proof_transformer = Proof.t -> int -> (Proof.t * int list) Zlist.t
     type abd_proof_transformer =
-      ?backlinkable:bool ->
-        Proof.t -> int -> ind_def_set -> (Proof.t * int list * ind_def_set) Zlist.t
+      Proof.t -> int -> ind_def_set -> (Proof.t * int list * ind_def_set) Zlist.t
     type gen_proof_transformer =
       | InfRule of proof_transformer
       | AbdRule of abd_proof_transformer
@@ -47,9 +45,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
     let expand_proof = ref false
 
     (* FIXME remove/redesign "backlinkable" *)
-    let is_backlinkable n =
-      Node.is_open n ||
-      (Node.is_inf n (* && let (_,_,_,_,b) = Node.dest_inf n in b *))
+    let is_backlinkable n = Node.is_open n || Node.is_inf n
 
     (* due to divergence between Proof.t tree depth and search depth *)
     (* remember last successful search depth *)
@@ -65,7 +61,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
     let latex_bracket_rule r = latex_bracket (descr_rule r)
     let latex_bracket_axiom x = latex_bracket (descr_axiom x)
 
-    (* makes a Proof.t node that is an axiom node if an axiom exists for it *)
+    (* makes a node that is an axiom node if an axiom exists for it *)
     (* or an open node if no axiom applies *)
     let mk_node seq =
       let f ax = Option.pred (fun ax' -> (fst (dest_axiom ax')) seq) ax in
@@ -76,7 +72,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 
     let melt_proof ch p = 
       ignore (Latex.to_channel ~mode:Latex.M ch (Proof.to_melt p))
-    (* print Proof.t stats on stdout *)
+    (* print stats on stdout *)
     let print_proof_stats proof =
       let size = Proof.size proof in
       (* let depth = depth_of_proof Proof.t in *)
@@ -88,7 +84,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 
     (* this is the user-visible constructor *)
     let mk_inf_rule rl d =
-      let rec transf ?(backlinkable=true) prf idx =
+      let rec transf prf idx =
         let n = Proof.find idx prf in
         let seq = Node.get_seq n in
         let apps = rl seq in
@@ -101,7 +97,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 						(Blist.to_string "; " Seq.to_string premises) ^ "\n") in
           let prem_idxs = Blist.range fresh_idx premises in
           let prem_ns = Blist.map mk_node premises in
-          let n' = Node.mk_inf seq (Blist.zip3 prem_idxs tvs tps) d backlinkable in
+          let n' = Node.mk_inf seq d (Blist.zip3 prem_idxs tvs tps) in
           let prf = Proof.add_inf idx n' (Blist.combine prem_idxs prem_ns) prf in
           let prem_idxs =
             Blist.filter (fun i -> Node.is_open (Proof.find i prf)) prem_idxs in
@@ -110,7 +106,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
       (InfRule(transf), d)
 
     let mk_back_rule matches d =
-      let rec transf ?backlinkable:bool prf idx =
+      let rec transf prf idx =
         let n = Proof.find idx prf in
         let seq = Node.get_seq n in
         let m = if !ancestral_links_only then 
@@ -126,7 +122,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
           Zlist.map
             begin fun (j, n', tvs) ->
               (n', Proof.add_backlink idx
-                (Node.mk_backlink seq j (Option.get tvs) d) prf)
+                (Node.mk_backlink seq d j (Option.get tvs)) prf)
             end
             l in
         let l = Zlist.filter (fun (_,p) -> Proof.check p) l in
@@ -148,14 +144,14 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
       rule
 
     let mk_abd_inf_rule rl d =
-      let rec transf ?backlinkable:bool prf idx defs =
+      let rec transf prf idx defs =
         let n = Proof.find idx prf in
         let seq = Node.get_seq n in 
         let apps = rl seq defs in
         if apps=[] then Zlist.empty else
         let fresh_idx = Proof.fresh_idx prf in
         let prf = 
-          Proof.add_abd idx (Node.mk_abd seq fresh_idx d) 
+          Proof.add_abd idx (Node.mk_abd seq d fresh_idx) 
             (fresh_idx, mk_node seq)
             prf in
         Zlist.map
@@ -169,12 +165,12 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
       rule
 
     let mk_abd_back_rule rl d =
-      let rec transf ?backlinkable:bool prf idx defs =
+      let rec transf prf idx defs =
         let n = Proof.find idx prf in
         let seq = Node.get_seq n in 
         let fresh_idx = Proof.fresh_idx prf in
         let prf = 
-          Proof.add_abd idx (Node.mk_abd seq fresh_idx d) 
+          Proof.add_abd idx (Node.mk_abd seq d fresh_idx) 
             (fresh_idx, mk_node seq)
             prf in
         let m = if !ancestral_links_only then 
@@ -192,7 +188,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
       rule
 
     let mk_gen_rule rl d =
-      let rec transf ?(backlinkable=true) prf idx defs =
+      let rec transf prf idx defs =
         let n = Proof.find idx prf in
         let seq = Node.get_seq n in 
         let apps = rl seq defs in
@@ -202,7 +198,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
           let (premises, tvs, tps) = Blist.unzip3 l in
           let prem_idxs = Blist.range fresh_idx premises in
           let prem_ns = Blist.map mk_node premises in
-          let n' = Node.mk_inf seq (Blist.zip3 prem_idxs tvs tps) d backlinkable in
+          let n' = Node.mk_inf seq d (Blist.zip3 prem_idxs tvs tps) in
           let prf = Proof.add_inf idx n' (Blist.combine prem_idxs prem_ns) prf in
           let prem_idxs =
             Blist.filter (fun i -> Node.is_open (Proof.find i prf)) prem_idxs in
@@ -413,9 +409,8 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
     module Proof_tacs =
       struct
         let lift (f:proof_transformer) =
-          fun ?backlinkable prf idx (defs:Defs.t) ->
-            Zlist.map
-              (fun (prf,i) -> (prf,i,defs)) (f ?backlinkable prf idx)
+          fun prf idx (defs:Defs.t) ->
+            Zlist.map (fun (prf,i) -> (prf,i,defs)) (f prf idx)
 
         let gen_lift ((rl, d): proof_rule) =
           let new_rl = match rl with
@@ -426,16 +421,16 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
         let try_tac (rl, d) =
           let new_rl = match rl with
             | InfRule(rf) -> InfRule(
-                fun ?backlinkable prf idx -> lazy (
-                  let r = rf ?backlinkable prf idx in
+                fun prf idx -> lazy (
+                  let r = rf prf idx in
                   Lazy.force
                     (if Zlist.is_empty r then
 											Zlist.of_list [ (prf, [idx]) ]
 										else
 											r)))
             | AbdRule(rf) -> AbdRule(
-                fun ?backlinkable prf idx defs -> lazy (
-                  let r = rf ?backlinkable prf idx defs in
+                fun prf idx defs -> lazy (
+                  let r = rf prf idx defs in
                   Lazy.force (
                     if Zlist.is_empty r then
 											Zlist.of_list [(prf,[idx],defs)]
@@ -446,13 +441,13 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 				let opt (rl, d) =
           let new_rl = match rl with
             | InfRule(rf) -> InfRule(
-                fun ?backlinkable prf idx ->
+                fun prf idx ->
 									lazy (Lazy.force
-                    (Zlist.cons (prf, [idx]) (rf ?backlinkable prf idx))))
+                    (Zlist.cons (prf, [idx]) (rf prf idx))))
             | AbdRule(rf) -> AbdRule(
-                fun ?backlinkable prf idx defs ->
+                fun prf idx defs ->
 									lazy (Lazy.force
-                    (Zlist.cons (prf, [idx], defs) (rf ?backlinkable prf idx defs)))) in
+                    (Zlist.cons (prf, [idx], defs) (rf prf idx defs)))) in
           (new_rl, "Try " ^ (bracket d))
 
         let apply_to_subgoals (rl:proof_transformer) (prf, subgoals) =
@@ -466,7 +461,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
                     (* add new subgoals to the list of opened ones *)
                     Blist.map
                       (fun (newprf, newsubgoals) -> (newprf, newsubgoals::opened))
-                      (Zlist.to_list (rl ~backlinkable:false oldprf idx)))
+                      (Zlist.to_list (rl oldprf idx)))
                 apps))
             [ (prf, []) ]
             subgoals in
@@ -486,7 +481,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
                     Blist.map
                       (fun (newprf, newsubgoals, newdefs) ->
                         (newprf, newsubgoals::opened, newdefs))
-                      (Zlist.to_list (rl ~backlinkable:false oldprf idx olddefs)))
+                      (Zlist.to_list (rl oldprf idx olddefs)))
                 apps))
             [ (prf, [], defs) ]
             subgoals in
@@ -498,48 +493,47 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
           let d'' = (bracket d) ^ " Then " ^ (bracket d') in
           match (rl,rl') with
             | (InfRule(rf), InfRule(rf')) ->
-              let rf'' ?backlinkable prf idx =
-                let first = rf ?backlinkable prf idx in
+              let rf'' prf idx =
+                let first = rf prf idx in
                 Zlist.flatten (Zlist.map (fun a -> apply_to_subgoals rf' a) first) in
               (InfRule(rf''), d'')
             | (InfRule(rf), AbdRule(arf')) ->
-              let rf'' ?backlinkable prf idx defs =
-                let first = (lift rf) ?backlinkable prf idx defs in
+              let rf'' prf idx defs =
+                let first = (lift rf) prf idx defs in
                 Zlist.flatten (Zlist.map (fun a -> abd_apply_to_subgoals arf' a) first) in
               (AbdRule(rf''), d'')
             | (AbdRule(arf), InfRule(rf')) ->
-              let rf'' ?backlinkable prf idx defs =
-                let first = arf ?backlinkable prf idx defs in
+              let rf'' prf idx defs =
+                let first = arf prf idx defs in
                 Zlist.flatten (Zlist.map (fun a -> abd_apply_to_subgoals (lift rf') a) first) in
               (AbdRule(rf''), d'')
             | (AbdRule(arf), AbdRule(arf')) ->
-              let rf'' ?backlinkable prf idx defs =
-                let first = arf ?backlinkable prf idx defs in
+              let rf'' prf idx defs =
+                let first = arf prf idx defs in
                 Zlist.flatten (Zlist.map (fun a -> abd_apply_to_subgoals arf' a) first) in
               (AbdRule(rf''), d'')
 
-        let always_fail =
-          (InfRule(fun ?(backlinkable=true) _ _ -> Zlist.empty), "")
+        let always_fail = (InfRule(fun _ _ -> Zlist.empty), "")
 
         let angelic_or_tac l =
           if l=[] then always_fail else
           if Blist.for_all is_infrule l then
           begin
             let (rl, dl) = Blist.split (Blist.map dest_rule l) in
-            let g ?backlinkable prf idx =
+            let g prf idx =
               Zlist.flatten
                 (Zlist.map
-                  (fun f -> f ?backlinkable prf idx) (Zlist.of_list rl)) in
+                  (fun f -> f prf idx) (Zlist.of_list rl)) in
             (InfRule(g), "Ang. Or " ^ (Blist.to_string ", " bracket dl))
           end
           else
           begin
             let (rl, dl) =
               Blist.split (Blist.map dest_abdrule (Blist.map gen_lift l)) in
-            let g ?backlinkable prf idx defs =
+            let g prf idx defs =
               Zlist.flatten
                 (Zlist.map
-                  (fun f -> f ?backlinkable prf idx defs) (Zlist.of_list rl)) in
+                  (fun f -> f prf idx defs) (Zlist.of_list rl)) in
             (AbdRule(g), "Ang. Or " ^ (Blist.to_string ", " bracket dl))
           end
 
@@ -548,9 +542,9 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
           if Blist.for_all is_infrule l then
           begin
             let (rl, dl) = Blist.split (Blist.map dest_rule l) in
-            let g ?backlinkable prf idx =
+            let g prf idx =
               let l =
-                Zlist.map (fun f -> f ?backlinkable prf idx) (Zlist.of_list rl) in
+                Zlist.map (fun f -> f prf idx) (Zlist.of_list rl) in
               match Zlist.find_first (fun apps -> not (Zlist.is_empty apps)) l with
 							  | None -> Zlist.empty
 								| Some apps -> apps in
@@ -560,9 +554,9 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
           begin
             let (rl, dl) =
               Blist.split (Blist.map dest_abdrule (Blist.map gen_lift l)) in
-            let g ?backlinkable prf idx defs =
+            let g prf idx defs =
               let l =
-                Zlist.map (fun f -> f ?backlinkable prf idx defs) (Zlist.of_list rl) in
+                Zlist.map (fun f -> f prf idx defs) (Zlist.of_list rl) in
               match Zlist.find_first (fun apps -> not (Zlist.is_empty apps)) l with
 							  | None -> Zlist.empty
 								| Some apps -> apps in
@@ -573,8 +567,8 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
         let repeat_tac (rl,d) = match rl with
 					| InfRule(rf) ->
 						begin
-              let rf' ?backlinkable prf idx =
-                let state = ref (rf ?backlinkable prf idx) in
+              let rf' prf idx =
+                let state = ref (rf prf idx) in
                 let progress = ref true in
                 let apply ((prf',subgoals) as p) =
                   lazy ( Lazy.force (
@@ -594,8 +588,8 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 						end
 					| AbdRule(rf) ->
 						begin
-              let rf' ?backlinkable prf idx defs =
-                let state = ref (rf ?backlinkable prf idx defs) in
+              let rf' prf idx defs =
+                let state = ref (rf prf idx defs) in
                 let progress = ref true in
                 let apply ((prf',subgoals,_) as p) =
                   lazy ( Lazy.force (
@@ -675,7 +669,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 								(Blist.rev_append (Blist.rev_map (fun j -> (j,new_goal_depth)) g') goals)
 								app.defs
             end
-            (r ~backlinkable:true app.prf idx)
+            (r app.prf idx)
         | AbdRule(r) ->
           Zlist.map
             begin fun (p',g',defs') ->
@@ -685,7 +679,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 								(Blist.rev_append (Blist.rev_map (fun j -> (j,new_goal_depth)) g') goals)
 								defs'
             end
-            (r ~backlinkable:true app.prf idx app.defs) in
+            (r app.prf idx app.defs) in
       mk_state
 			  par_seq_no
 				idx

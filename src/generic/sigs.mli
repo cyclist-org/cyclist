@@ -34,7 +34,7 @@ sig
   (** Proof node type. *)
 
   module Seq : SEQUENT
-  (** Sequent module used for building Proof.t nodes. *)
+  (** Sequent module used for building proof nodes. *)
       
   (** Constructors. *)
       
@@ -45,24 +45,22 @@ sig
   (** [mk_axiom seq descr] creates an axiom node labelled by 
       sequent [seq] and description [descr].*) 
   
-  val mk_abd : Seq.t -> int -> string -> t
-  (** [mk_abd seq child descr] creates an abduction node labelled by 
-      sequent [seq], successor index [child] 
-      and description [descr]. NB this will probably be removed. *) 
+  val mk_abd : Seq.t -> string -> int -> t
+  (** [mk_abd seq descr child] creates an abduction node labelled by 
+      sequent [seq], description [descr] and successor index [child]. 
+      NB this will probably be removed. *) 
   
-  val mk_backlink : Seq.t -> int -> Util.TagPairs.t -> string -> t
-  (** [mk_backlink seq target vtts descr] creates a back-link node labelled by 
-      sequent [seq], target index [target], set of 
-      valid tag transitions (as pairs) [vtts] and description [descr].*) 
+  val mk_backlink : Seq.t -> string -> int -> Util.TagPairs.t -> t
+  (** [mk_backlink seq descr target vtts] creates a back-link node labelled by 
+      sequent [seq], description [descr], target index [target] and set of 
+      valid tag transitions (as pairs) [vtts].*) 
   
   val mk_inf :
-    Seq.t -> (int * Util.TagPairs.t * Util.TagPairs.t) list -> 
-      string -> bool -> t
-  (** [mk_inf seq subgoals back descr] creates an inference node labelled by 
-      sequent [seq], a list of triples consisting of
+    Seq.t -> string -> (int * Util.TagPairs.t * Util.TagPairs.t) list -> t
+  (** [mk_inf seq descr subgoals back] creates an inference node labelled by 
+      sequent [seq], description [descr], a list of triples consisting of
       subgoal index, valid tag transitions and progressing tag transitions 
-      [subgoals], a boolean indicating whether the node is back-linkable
-      (NB this may/should be removed), and description [descr].*) 
+      [subgoals].*) 
   
   (** Destructors. *)
   
@@ -76,7 +74,7 @@ sig
   (** [dest_backlink n] destroys a back-link node [n], otherwise raises [Invalid_arg].*)
 
   val dest_inf : t -> 
-    Seq.t * string * (int * Util.TagPairs.t * Util.TagPairs.t) list * bool
+    Seq.t * string * (int * Util.TagPairs.t * Util.TagPairs.t) list
   (** [dest_inf n] destroys an inference node [n], otherwise raises [Invalid_arg].*)
 
   (** Functions for checking the sort of a Proof.t node. *)
@@ -104,6 +102,7 @@ sig
     int -> t -> (Format.formatter -> int -> unit) -> unit
   val to_melt :
     bool -> int -> t -> (bool -> int -> Latex.t) -> Latex.t
+  (** Convert to Latex.  The first parameter is true when the node is the root. *)
 end 
 (** Proof node signature. *)
 
@@ -128,7 +127,6 @@ sig
   (** Other constructors. Checks are made to ensure that
       - Only open nodes are closed.
       - Open nodes are closed (replaced) by nodes with the same sequent.
-      - Parent indices are correct.
       - Back-link targets are existing nodes. 
       - Existing closed nodes are never hidden. 
       - [FIXME] Should back-links should have equal sequents to their targets?
