@@ -70,7 +70,7 @@ let prove_prog seq =
     (print_endline ("NOT proved: " ^ (Seq.to_string seq)) ; 1) else
   let (proof, defs) = Option.get res in
   if !show_proof then
-    Abdprover.print_proof proof
+    print_endline (Abdprover.Proof.to_string proof)
   else
     print_endline ("Proved: " ^ (Program.Seq.to_string seq)) ;
   if !show_defs then  

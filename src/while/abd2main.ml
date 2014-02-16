@@ -64,7 +64,7 @@ let prove_prog seq =
   let (proof, defs) = Option.get res in
   if !Stats.do_statistics then While_abdprover.print_proof_stats proof ;
   if !show_proof then
-    While_abdprover.print_proof proof
+    print_endline (While_abdprover.Proof.to_string proof)
   else
     print_endline ("Proved: " ^ (While_program.Seq.to_string seq)) ;
   if !show_defs || !simpl_defs then  

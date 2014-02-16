@@ -51,7 +51,7 @@ module Make(Prover: Sigs.PROVER)(Seq: Sigs.SEQUENT with type t = Prover.sequent)
         (print_endline ("NOT proved: " ^ (Seq.to_string seq)) ; 1) else
       let proof = Option.get res in 
       if !show_proof then 
-        Prover.pp_proof Format.std_formatter proof
+        Prover.Proof.pp Format.std_formatter proof
       else
         print_endline ("Proved: " ^ (Seq.to_string seq)) ;
       if !Stats.do_statistics then 

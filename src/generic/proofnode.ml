@@ -19,27 +19,25 @@ struct
   type t =
     {
       seq: Seq.t;
-      parent: int;
       descr : string;
       node: proof_subnode;
     }
   
   let get_seq n = n.seq
-  let get_par n = n.parent
   let get_succs n = match n.node with
     | AxiomNode | OpenNode -> []
     | BackNode (s, _) | AbdNode(s) -> [s]
     | InfNode(ss, _) -> let (ss',_,_) = Blist.unzip3 ss in ss'
   
-  let dest n = (n.seq, n.parent, n.descr)
+  let dest n = (n.seq, n.descr)
   let dest_abd n = match n.node with
-    | AbdNode(child) -> (n.seq, n.parent, n.descr, child)
+    | AbdNode(child) -> (n.seq, n.descr, child)
     | _ -> invalid_arg "dest_abd"
   let dest_backlink n = match n.node with
-    | BackNode(child, vtts) -> (n.seq, n.parent, n.descr, child, vtts)
+    | BackNode(child, vtts) -> (n.seq, n.descr, child, vtts)
     | _ -> invalid_arg "dest_backlink"
   let dest_inf n = match n.node with
-    | InfNode(subgs, b) -> (n.seq, n.parent, n.descr, subgs, b)
+    | InfNode(subgs, b) -> (n.seq, n.descr, subgs, b)
     | _ -> invalid_arg "dest_inf"
   
   
@@ -60,24 +58,18 @@ struct
     | _ -> false
 
 
-  let mk seq parent node descr =
+  let mk seq node descr =
     {
       seq = seq;
-      parent = parent;
       node = node;
       descr = descr
     }
     
-  let mk_open seq parent = 
-    mk seq parent OpenNode "(Open)"
-  let mk_axiom seq parent descr = 
-    mk seq parent AxiomNode descr
-  let mk_abd seq parent child descr = 
-    mk seq parent (AbdNode(child)) descr
-  let mk_backlink seq parent child vtts descr =
-    mk seq parent (BackNode(child, vtts)) descr
-  let mk_inf seq parent subgoals descr backt =
-    mk seq parent (InfNode(subgoals, backt)) descr
+  let mk_open seq = mk seq OpenNode "(Open)"
+  let mk_axiom seq descr = mk seq AxiomNode descr
+  let mk_abd seq child descr = mk seq (AbdNode(child)) descr
+  let mk_backlink seq child vtts descr = mk seq (BackNode(child, vtts)) descr
+  let mk_inf seq subgoals descr backt = mk seq (InfNode(subgoals, backt)) descr
   
   let to_abstract_node n = match n.node with
     | OpenNode | AxiomNode ->

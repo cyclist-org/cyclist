@@ -4,9 +4,10 @@ module Make(Node: Sigs.NODE) =
 struct
   module Node = Node
   
-  type t = Node.t Int.Map.t
+  type t = (int * Node.t) Int.Map.t
   
-  let find idx prf = Int.Map.find idx prf
+  let get idx prf = Int.Map.find idx prf
+  let find idx prf = snd (get idx prf)
   let fresh_idx prf = 1 + (fst (Int.Map.max_binding prf))
   let fresh_idxs xs prf = Blist.range (fresh_idx prf) xs 
   
@@ -31,29 +32,31 @@ struct
     melt_proof_node true 0
  
   let is_closed prf =
-    Int.Map.for_all (fun _ n -> not (Node.is_open n)) prf
+    Int.Map.for_all (fun _ (_,n) -> not (Node.is_open n)) prf
 
   let check p = 
-    Soundcheck.check_proof (Int.Map.map Node.to_abstract_node p)
+    Soundcheck.check_proof 
+      (Int.Map.map (fun (_,n) -> Node.to_abstract_node n) p)
 
   let no_of_backlinks p =
-    size (Int.Map.filter (fun _ n -> Node.is_backlink n) p)
+    size (Int.Map.filter (fun _ (_,n) -> Node.is_backlink n) p)
 
-  let to_list m = Int.Map.bindings m
+  let to_list m = Blist.map (fun (i,(_,n)) -> (i,n)) (Int.Map.bindings m)
 
   let ensure msg f = if (not f) then invalid_arg msg else () 
   
   let mk n =
     let ensure = ensure "Proof.mk" in
     ensure (Node.is_open n || Node.is_axiom n);
-    ensure (Node.get_par n == 0);
-    Int.Map.add 0 n empty
+    Int.Map.add 0 (0,n) empty
+  
+  let replace idx n prf = 
+    Int.Map.add idx (fst (get idx prf),n) prf
 
   let ensure_add fn idx n prf =
     let n' = find idx prf in
     let ensure = ensure fn in
     ensure (Node.is_open n'); 
-    ensure (Node.get_par n == Node.get_par n');
     ensure (Node.Seq.equal (Node.get_seq n) (Node.get_seq n'))
     
   let add_backlink idx n prf =
@@ -62,7 +65,7 @@ struct
     ensure_add fn idx n prf;
     ensure (Node.is_backlink n);
     ensure (mem (Blist.hd (Node.get_succs n)) prf);
-    Int.Map.add idx n prf
+    replace idx n prf
 
   let add_abd idx n (child_idx, child_n) prf =
     let fn = "Proof.add_backlink" in
@@ -72,7 +75,7 @@ struct
     ensure ((Blist.hd (Node.get_succs n)) == child_idx);
     ensure (not (mem child_idx prf));
     ensure (Node.is_open child_n || Node.is_axiom child_n);    
-    Int.Map.add child_idx child_n (Int.Map.add idx n prf)
+    Int.Map.add child_idx (idx,child_n) (replace idx n prf)
     
   let add_inf idx n subgoals prf = 
     let fn = "Proof.add_inf" in
@@ -84,13 +87,20 @@ struct
     Blist.iter 
       (fun (ci,cn) -> 
         ensure (Node.is_open cn || Node.is_axiom cn);
-        ensure (not (mem ci prf));
-        ensure (Node.get_par cn == idx);
+        ensure (not (mem ci prf))
       )
       subgoals;
     Blist.foldl 
-      (fun p' (i',n') -> Int.Map.add i' n' p') 
-      prf 
-      ((idx,n)::subgoals) 
+      (fun p' (i',n') -> Int.Map.add i' (idx,n') p') 
+      (replace idx n prf) 
+      subgoals 
+
+  let get_ancestry idx prf =
+    let rec aux acc idx (par_idx, n) =
+      let parent = get par_idx prf in
+      let acc = (par_idx, n)::acc in
+      if par_idx=idx then acc else aux acc par_idx parent in
+    aux [] idx (get idx prf)
     
+        
 end

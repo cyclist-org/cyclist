@@ -2,9 +2,9 @@ open Lib
 open Util
 open Symbols
 
-  (* a proof is a map from int to proof_nodes, and proof_nodes have edges  *)
+  (* a Proof.t is a map from int to proof_nodes, and proof_nodes have edges  *)
   (* to other proof_nodes by indicating the Blist.find_index of the child proof_node  *)
-  (* in the map this will simplify dumping the proof to the model checker  *)
+  (* in the map this will simplify dumping the Proof.t to the model checker  *)
 
 module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
   struct
@@ -23,16 +23,14 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
       
     let descr_axiom ax = snd ax
 
-    module Node = Proofnode.Make(Seq)
-
     module Proof = Proof.Make(Proofnode.Make(Seq))
-    type proof = Proof.t
+    module Node = Proof.Node
             
     type proof_transformer =
-      ?backlinkable:bool -> proof -> int -> (proof * int list) Zlist.t
+      ?backlinkable:bool -> Proof.t -> int -> (Proof.t * int list) Zlist.t
     type abd_proof_transformer =
       ?backlinkable:bool ->
-        proof -> int -> ind_def_set -> (proof * int list * ind_def_set) Zlist.t
+        Proof.t -> int -> ind_def_set -> (Proof.t * int list * ind_def_set) Zlist.t
     type gen_proof_transformer =
       | InfRule of proof_transformer
       | AbdRule of abd_proof_transformer
@@ -53,7 +51,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
       Node.is_open n ||
       (Node.is_inf n (* && let (_,_,_,_,b) = Node.dest_inf n in b *))
 
-    (* due to divergence between proof tree depth and search depth *)
+    (* due to divergence between Proof.t tree depth and search depth *)
     (* remember last successful search depth *)
     let last_search_depth = ref 0
 
@@ -67,46 +65,32 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
     let latex_bracket_rule r = latex_bracket (descr_rule r)
     let latex_bracket_axiom x = latex_bracket (descr_axiom x)
 
-    let get_ancestry idx prf =
-      let rec aux acc idx n =
-        let par_idx = Node.get_par n in
-        let parent = Proof.find par_idx prf in
-        let acc = (par_idx, parent)::acc in
-        if par_idx=idx then acc else aux acc par_idx parent in
-      aux [] idx (Proof.find idx prf)
-    
-    (* makes a proof node that is an axiom node if an axiom exists for it *)
+    (* makes a Proof.t node that is an axiom node if an axiom exists for it *)
     (* or an open node if no axiom applies *)
-    let mk_node par_idx seq =
+    let mk_node seq =
       let f ax = Option.pred (fun ax' -> (fst (dest_axiom ax')) seq) ax in
       match Blist.find_first f !axiomset with
-        | None -> Node.mk_open seq par_idx
-        | Some ax -> Node.mk_axiom seq par_idx (descr_axiom ax) 
+        | None -> Node.mk_open seq 
+        | Some ax -> Node.mk_axiom seq (descr_axiom ax) 
 
 
-    let pp_proof = Proof.pp
-    let print_proof proof = print_endline (Proof.to_string proof)
-    let to_melt = Proof.to_melt
-    let melt_proof ch p = ignore (Latex.to_channel ~mode:Latex.M ch (to_melt p))
-    (* print proof stats on stdout *)
+    let melt_proof ch p = 
+      ignore (Latex.to_channel ~mode:Latex.M ch (Proof.to_melt p))
+    (* print Proof.t stats on stdout *)
     let print_proof_stats proof =
       let size = Proof.size proof in
-      (* let depth = depth_of_proof proof in *)
+      (* let depth = depth_of_proof Proof.t in *)
       let links = Proof.no_of_backlinks proof in
       print_endline
         ("Proof has " ^ (string_of_int size) ^
          " nodes and a depth of " ^ (string_of_int !last_search_depth) ^
          " and " ^ (string_of_int links) ^ " back-links.")
 
-    (* let add_to_graph par_idx prf' seq' idx'=     *)
-    (*   Proof.add idx' (mk_node par_idx seq') prf' *)
-
     (* this is the user-visible constructor *)
     let mk_inf_rule rl d =
       let rec transf ?(backlinkable=true) prf idx =
         let n = Proof.find idx prf in
         let seq = Node.get_seq n in
-        let par_idx = Node.get_par n in
         let apps = rl seq in
         if apps=[] then Zlist.empty else
         let fresh_idx = Proof.fresh_idx prf in
@@ -116,8 +100,8 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 					  (Seq.to_string seq) ^ "\n>>>\n  " ^
 						(Blist.to_string "; " Seq.to_string premises) ^ "\n") in
           let prem_idxs = Blist.range fresh_idx premises in
-          let prem_ns = Blist.map (fun seq' -> mk_node idx seq') premises in
-          let n' = Node.mk_inf seq par_idx (Blist.zip3 prem_idxs tvs tps) d backlinkable in
+          let prem_ns = Blist.map mk_node premises in
+          let n' = Node.mk_inf seq (Blist.zip3 prem_idxs tvs tps) d backlinkable in
           let prf = Proof.add_inf idx n' (Blist.combine prem_idxs prem_ns) prf in
           let prem_idxs =
             Blist.filter (fun i -> Node.is_open (Proof.find i prf)) prem_idxs in
@@ -128,10 +112,9 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
     let mk_back_rule matches d =
       let rec transf ?backlinkable:bool prf idx =
         let n = Proof.find idx prf in
-        let par_idx = Node.get_par n in 
         let seq = Node.get_seq n in
         let m = if !ancestral_links_only then 
-            get_ancestry idx prf 
+            Proof.get_ancestry idx prf 
           else 
             Proof.to_list prf in
         let l = Zlist.of_list  m in
@@ -143,7 +126,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
           Zlist.map
             begin fun (j, n', tvs) ->
               (n', Proof.add_backlink idx
-                (Node.mk_backlink seq par_idx j (Option.get tvs) d) prf)
+                (Node.mk_backlink seq j (Option.get tvs) d) prf)
             end
             l in
         let l = Zlist.filter (fun (_,p) -> Proof.check p) l in
@@ -167,13 +150,13 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
     let mk_abd_inf_rule rl d =
       let rec transf ?backlinkable:bool prf idx defs =
         let n = Proof.find idx prf in
-        let (seq,parent,_) = Node.dest n in 
+        let seq = Node.get_seq n in 
         let apps = rl seq defs in
         if apps=[] then Zlist.empty else
         let fresh_idx = Proof.fresh_idx prf in
         let prf = 
-          Proof.add_abd idx (Node.mk_abd seq parent fresh_idx d) 
-            (fresh_idx, mk_node idx seq)
+          Proof.add_abd idx (Node.mk_abd seq fresh_idx d) 
+            (fresh_idx, mk_node seq)
             prf in
         Zlist.map
 				  begin fun newdefs ->
@@ -188,14 +171,14 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
     let mk_abd_back_rule rl d =
       let rec transf ?backlinkable:bool prf idx defs =
         let n = Proof.find idx prf in
-        let (seq,parent,_) = Node.dest n in 
+        let seq = Node.get_seq n in 
         let fresh_idx = Proof.fresh_idx prf in
         let prf = 
-          Proof.add_abd idx (Node.mk_abd seq parent fresh_idx d) 
-            (fresh_idx, mk_node idx seq)
+          Proof.add_abd idx (Node.mk_abd seq fresh_idx d) 
+            (fresh_idx, mk_node seq)
             prf in
         let m = if !ancestral_links_only then 
-            get_ancestry idx prf 
+            Proof.get_ancestry idx prf 
           else 
             Proof.to_list prf in
         let l = Zlist.of_list m in
@@ -211,15 +194,15 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
     let mk_gen_rule rl d =
       let rec transf ?(backlinkable=true) prf idx defs =
         let n = Proof.find idx prf in
-        let (seq,parent,_) = Node.dest n in 
+        let seq = Node.get_seq n in 
         let apps = rl seq defs in
         if apps=[] then Zlist.empty else
         let fresh_idx = Proof.fresh_idx prf in
         let apply (l,defs') =
           let (premises, tvs, tps) = Blist.unzip3 l in
           let prem_idxs = Blist.range fresh_idx premises in
-          let prem_ns = Blist.map (fun seq' -> mk_node idx seq') premises in
-          let n' = Node.mk_inf seq parent (Blist.zip3 prem_idxs tvs tps) d backlinkable in
+          let prem_ns = Blist.map mk_node premises in
+          let n' = Node.mk_inf seq (Blist.zip3 prem_idxs tvs tps) d backlinkable in
           let prf = Proof.add_inf idx n' (Blist.combine prem_idxs prem_ns) prf in
           let prem_idxs =
             Blist.filter (fun i -> Node.is_open (Proof.find i prf)) prem_idxs in
@@ -281,7 +264,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 
     let idfs seq =
       let bound = ref !minbound in
-      let start = Proof.mk (mk_node 0 seq) in
+      let start = Proof.mk (mk_node seq) in
       if Proof.is_closed start then (last_search_depth := 0 ; Some start) else
       let stack = ref [expand_proof_state start 0 [(0,0)]] in
       let found = ref None in
@@ -311,7 +294,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
           let () = stack := (par, Zlist.tl next) :: !stack in
           if g=[] then
             begin
-              (* no subgoals left, so it must be a closed proof *)
+              (* no subgoals left, so it must be a closed Proof.t *)
               (* assert (Proof.is_closed p) ; *)
               found := Some (p,d);
               raise Continue
@@ -320,7 +303,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
           let () = if !do_debug then
             begin
               print_endline ("Expanding node: " ^ (string_of_int (fst (Blist.hd g)))) ;
-              print_proof p
+              print_endline (Proof.to_string p)
             end in
           if Blist.exists (fun (_,gd) -> gd = !bound) g then
             begin
@@ -337,7 +320,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
               (* and whose current goal is open *)
               (* this is equivalent to a prolog cut over the other possible *)
               (* closed proofs of these goals *)
-              let ancestry = get_ancestry idx p in
+              let ancestry = Proof.get_ancestry idx p in
               let ancestry = (idx, (Proof.find idx p))::ancestry in
               let ancestry =
                 Blist.filter (fun (i,_) -> is_closed_at i p) ancestry in
@@ -642,7 +625,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 		(* FIXME sync other prover with abductive one *)
 		type app_state =
 			{
-				prf : proof;
+				prf : Proof.t;
 				depth : int;
 				goals : (int * int) list;
 				defs : Defs.t
@@ -710,7 +693,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 
     let abduce seq initial_defs mk_rules acceptable =
       let bound = ref !minbound in
-      let start = Proof.mk (mk_node 0 seq) in
+      let start = Proof.mk (mk_node seq) in
       if Proof.is_closed start then (last_search_depth := 0 ; Some (start, initial_defs)) else
       let stack = ref [abd_expand_proof_state 0 (mk_app start 0 [(0,0)] initial_defs) mk_rules] in
       let found = ref None in
@@ -740,7 +723,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
           let () = stack := {proof_state with apps=Zlist.tl proof_state.apps} :: !stack in
           if app.goals=[] then
             begin
-              (* no subgoals left, so it must be a closed proof *)
+              (* no subgoals left, so it must be a closed Proof.t *)
               assert (Proof.is_closed app.prf) ;
               if acceptable app.defs then found := Some (app.prf,app.depth,app.defs);
 							(* NOTE: in case not acceptable we do not pop parents as we may need to backtrack *)
@@ -750,7 +733,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
           let () = if !do_debug then
             begin
               print_endline ("Expanding node: " ^ (string_of_int (fst (Blist.hd app.goals)))) ;
-              print_proof app.prf
+              print_endline (Proof.to_string app.prf)
             end in
           if Blist.exists (fun (_,gd) -> gd = !bound) app.goals then
             begin
