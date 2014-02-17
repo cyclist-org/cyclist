@@ -61,14 +61,16 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
     let latex_bracket_rule r = latex_bracket (descr_rule r)
     let latex_bracket_axiom x = latex_bracket (descr_axiom x)
 
-    (* makes a node that is an axiom node if an axiom exists for it *)
-    (* or an open node if no axiom applies *)
-    let mk_node seq =
-      let f ax = Option.pred (fun ax' -> (fst (dest_axiom ax')) seq) ax in
-      match Blist.find_first f !axiomset with
-        | None -> Node.mk_open seq 
-        | Some ax -> Node.mk_axiom seq (descr_axiom ax) 
-
+    let rec try_axioms idxs prf = 
+      let f seq ax = Option.pred (fun ax' -> (fst (dest_axiom ax')) seq) ax in
+      match idxs with
+        | [] -> (prf, [])
+        | i::is -> 
+          let (prf',is') = try_axioms is prf in 
+          let seq = Node.get_seq (Proof.find i prf') in
+          match Blist.find_first (f seq) !axiomset with
+            | None -> (prf', i::is')
+            | Some ax -> (Proof.add_axiom i (descr_axiom ax) prf', is') 
 
     let melt_proof ch p = 
       ignore (Latex.to_channel ~mode:Latex.M ch (Proof.to_melt p))
@@ -89,19 +91,9 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
         let seq = Node.get_seq n in
         let apps = rl seq in
         if apps=[] then Zlist.empty else
-        let fresh_idx = Proof.fresh_idx prf in
         let apply l =
-          let (premises, tvs, tps) = Blist.unzip3 l in
-					let () = debug (fun () -> "InfRule(" ^ d ^ ")\n  " ^
-					  (Seq.to_string seq) ^ "\n>>>\n  " ^
-						(Blist.to_string "; " Seq.to_string premises) ^ "\n") in
-          let prem_idxs = Blist.range fresh_idx premises in
-          let prem_ns = Blist.map mk_node premises in
-          let n' = Node.mk_inf seq d (Blist.zip3 prem_idxs tvs tps) in
-          let prf = Proof.add_inf idx n' (Blist.combine prem_idxs prem_ns) prf in
-          let prem_idxs =
-            Blist.filter (fun i -> Node.is_open (Proof.find i prf)) prem_idxs in
-          (prf, prem_idxs) in
+          let (prf, prem_idxs) = Proof.add_inf idx d l prf in
+          try_axioms prem_idxs prf in
         Zlist.map apply (Zlist.of_list apps) in
       (InfRule(transf), d)
 
@@ -121,8 +113,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
         let l =
           Zlist.map
             begin fun (j, n', tvs) ->
-              (n', Proof.add_backlink idx
-                (Node.mk_backlink seq d j (Option.get tvs)) prf)
+              (n', Proof.add_backlink idx d j (Option.get tvs) prf)
             end
             l in
         let l = Zlist.filter (fun (_,p) -> Proof.check p) l in
@@ -149,11 +140,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
         let seq = Node.get_seq n in 
         let apps = rl seq defs in
         if apps=[] then Zlist.empty else
-        let fresh_idx = Proof.fresh_idx prf in
-        let prf = 
-          Proof.add_abd idx (Node.mk_abd seq d fresh_idx) 
-            (fresh_idx, mk_node seq)
-            prf in
+        let (prf,fresh_idx) = Proof.add_abd idx d prf in 
         Zlist.map
 				  begin fun newdefs ->
 						let () = debug (fun () -> "AbdInf(" ^ d ^")\n  " ^
@@ -166,13 +153,8 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 
     let mk_abd_back_rule rl d =
       let rec transf prf idx defs =
-        let n = Proof.find idx prf in
-        let seq = Node.get_seq n in 
-        let fresh_idx = Proof.fresh_idx prf in
-        let prf = 
-          Proof.add_abd idx (Node.mk_abd seq d fresh_idx) 
-            (fresh_idx, mk_node seq)
-            prf in
+        let seq = Node.get_seq (Proof.find idx prf) in 
+        let (prf,fresh_idx) = Proof.add_abd idx d prf in
         let m = if !ancestral_links_only then 
             Proof.get_ancestry idx prf 
           else 
@@ -193,16 +175,10 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
         let seq = Node.get_seq n in 
         let apps = rl seq defs in
         if apps=[] then Zlist.empty else
-        let fresh_idx = Proof.fresh_idx prf in
         let apply (l,defs') =
-          let (premises, tvs, tps) = Blist.unzip3 l in
-          let prem_idxs = Blist.range fresh_idx premises in
-          let prem_ns = Blist.map mk_node premises in
-          let n' = Node.mk_inf seq d (Blist.zip3 prem_idxs tvs tps) in
-          let prf = Proof.add_inf idx n' (Blist.combine prem_idxs prem_ns) prf in
-          let prem_idxs =
-            Blist.filter (fun i -> Node.is_open (Proof.find i prf)) prem_idxs in
-          (prf, prem_idxs,defs') in
+          let (prf, prem_idxs) = Proof.add_inf idx d l prf in
+          let (prf, prem_idxs) = try_axioms prem_idxs prf in
+          (prf, prem_idxs, defs') in
         Zlist.map apply (Zlist.of_list apps)
       and rule = (AbdRule(transf), d) in
       rule
@@ -260,7 +236,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 
     let idfs seq =
       let bound = ref !minbound in
-      let start = Proof.mk (mk_node seq) in
+      let (start,_) = try_axioms [0] (Proof.mk (Node.mk_open seq)) in
       if Proof.is_closed start then (last_search_depth := 0 ; Some start) else
       let stack = ref [expand_proof_state start 0 [(0,0)]] in
       let found = ref None in
@@ -687,7 +663,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 
     let abduce seq initial_defs mk_rules acceptable =
       let bound = ref !minbound in
-      let start = Proof.mk (mk_node seq) in
+      let (start,_) = try_axioms [0] (Proof.mk (Node.mk_open seq)) in
       if Proof.is_closed start then (last_search_depth := 0 ; Some (start, initial_defs)) else
       let stack = ref [abd_expand_proof_state 0 (mk_app start 0 [(0,0)] initial_defs) mk_rules] in
       let found = ref None in

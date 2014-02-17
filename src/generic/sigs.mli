@@ -77,7 +77,7 @@ sig
     Seq.t * string * (int * Util.TagPairs.t * Util.TagPairs.t) list
   (** [dest_inf n] destroys an inference node [n], otherwise raises [Invalid_arg].*)
 
-  (** Functions for checking the sort of a Proof.t node. *)
+  (** Functions for checking the sort of a node. *)
   
   val is_open : t -> bool
   val is_axiom : t -> bool
@@ -85,14 +85,14 @@ sig
   val is_backlink : t -> bool
   val is_inf : t -> bool
   
-  (** Auxiliary functions for getting information from all Proof.t nodes. *)
+  (** Auxiliary functions for getting information from all nodes. *)
   
   val get_seq : t -> Seq.t
   (** Get sequent labelling the node. *)
   val get_succs : t -> int list
   (** Get the successor node indices of this node. *)
 
-  (** Convert Proof.t node to abstract node as in {!Soundcheck} *)
+  (** Convert Proof.t node to abstract node as in {!Soundcheck}. *)
   val to_abstract_node : t -> Soundcheck.abstract_node
       
   (** Pretty printing and Latex conversion. *)
@@ -121,8 +121,7 @@ sig
   
   val mk : Node.t -> t
   (** Constructor.  Takes an open or axiom node and creates a proof
-      with that node at the root (0).  The parent field of the node
-      must be 0. *)
+      with that node at the root (0).*)
   
   (** Other constructors. Checks are made to ensure that
       - Only open nodes are closed.
@@ -131,10 +130,14 @@ sig
       - Existing closed nodes are never hidden. 
       - [FIXME] Should back-links should have equal sequents to their targets?
       *)
- 
-  val add_backlink : int -> Node.t -> t -> t
-  val add_abd : int -> Node.t -> (int * Node.t) -> t -> t 
-  val add_inf : int -> Node.t -> (int * Node.t) list -> t -> t
+
+  val add_axiom : int -> string -> t -> t
+  val add_backlink : int -> string -> int -> Util.TagPairs.t -> t -> t
+  val add_abd : int -> string -> t -> (t * int) 
+  val add_inf : 
+    int -> string -> 
+    (Node.Seq.t * Util.TagPairs.t * Util.TagPairs.t) list -> t -> 
+    (t * int list)
 
   (** Accessor functions. *)
   

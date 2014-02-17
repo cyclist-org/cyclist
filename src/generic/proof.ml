@@ -46,51 +46,53 @@ struct
   let ensure msg f = if (not f) then invalid_arg msg else () 
   
   let mk n =
-    let ensure = ensure "Proof.mk" in
-    ensure (Node.is_open n || Node.is_axiom n);
+    ensure "Proof.mk" (Node.is_open n || Node.is_axiom n);
     Int.Map.add 0 (0,n) empty
   
   let replace idx n prf = 
+    ensure "Proof.replace" (mem idx prf);
     Int.Map.add idx (fst (get idx prf),n) prf
 
   let ensure_add fn idx n prf =
     let n' = find idx prf in
-    let ensure = ensure fn in
-    ensure (Node.is_open n'); 
-    ensure (Node.Seq.equal (Node.get_seq n) (Node.get_seq n'))
+    ensure (fn^"0") (Node.is_open n'); 
+    ensure (fn^"1") (Node.Seq.equal (Node.get_seq n) (Node.get_seq n'))
     
-  let add_backlink idx n prf =
+  let add_axiom idx descr prf =
+    let n = Node.mk_axiom (Node.get_seq (find idx prf)) descr in
+    ensure_add "Proof.add_axiom" idx n prf;
+    replace idx n prf    
+      
+  let add_backlink idx descr target vtts prf =
     let fn = "Proof.add_backlink" in
-    let ensure = ensure fn in
+    let n = Node.mk_backlink (Node.get_seq (find idx prf)) descr target vtts in
     ensure_add fn idx n prf;
-    ensure (Node.is_backlink n);
-    ensure (mem (Blist.hd (Node.get_succs n)) prf);
+    ensure fn (mem target prf);
     replace idx n prf
-
-  let add_abd idx n (child_idx, child_n) prf =
-    let fn = "Proof.add_backlink" in
-    let ensure = ensure fn in
-    ensure_add fn idx n prf;
-    ensure (Node.is_abd n);
-    ensure ((Blist.hd (Node.get_succs n)) == child_idx);
-    ensure (not (mem child_idx prf));
-    ensure (Node.is_open child_n || Node.is_axiom child_n);    
-    Int.Map.add child_idx (idx,child_n) (replace idx n prf)
-    
-  let add_inf idx n subgoals prf = 
+  
+  let add_abd idx descr prf =
+    let cidx = fresh_idx prf in
+    let seq = Node.get_seq (find idx prf) in
+    let n = Node.mk_abd seq descr cidx in
+    ensure_add "Proof.add_abd" idx n prf;
+    (Int.Map.add cidx (idx, Node.mk_open seq) (replace idx n prf), cidx)
+        
+   let add_inf idx descr subgoals prf =
     let fn = "Proof.add_inf" in
-    let ensure = ensure fn in
+    let subidxs = Blist.range (fresh_idx prf) subgoals in
+    let subnodes = 
+      Blist.map2 (fun i (seq,_,_) -> (i, Node.mk_open seq)) subidxs subgoals in
+    let subidxs_plus_tags = 
+      Blist.map2 (fun i (_,vtts,ptts) -> (i,vtts,ptts)) subidxs subgoals in
+    let n = Node.mk_inf (Node.get_seq (find idx prf)) descr subidxs_plus_tags in
     ensure_add fn idx n prf;
-    ensure (Node.is_inf n);
-    ensure (Int.FList.equal (Node.get_succs n) (fst (Blist.split subgoals)));
-    ensure (Blist.for_all (fun i' -> not (mem i' prf)) (Node.get_succs n));
-    Blist.foldl 
-      (fun prf' (ci,cn) -> 
-        ensure (Node.is_open cn || Node.is_axiom cn);
-        ensure (not (mem ci prf));
-        Int.Map.add ci (idx,cn) prf') 
-      (replace idx n prf) 
-      subgoals 
+    let prf' = 
+      Blist.foldl 
+        (fun prf' (ci,cn) -> Int.Map.add ci (idx,cn) prf') 
+        (replace idx n prf) 
+        subnodes in 
+    (prf', subidxs)
+     
 
   let get_ancestry idx prf =
     let rec aux acc idx (par_idx, n) =
