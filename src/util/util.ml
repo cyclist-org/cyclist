@@ -279,17 +279,17 @@ module MakeTreeSet(T: BasicType) : OrderedContainer with type elt = T.t =
         iter (fun x -> if f x then raise (Found(x))) s ; raise Not_found
       with Found(x) -> x
 
+    exception FoundMap
     let find_map f s =
       let elem = ref None in
-      iter
-        begin fun e ->
-          if Option.is_none !elem then
-            let r = f e in
-            if Option.is_some r then
-              elem := r
-        end
-        s ;
-        !elem
+      try 
+        iter
+          (fun e -> match f e with
+            | None -> ()
+            | Some _ as r -> elem := r ; raise FoundMap)
+          s ;
+          None
+      with FoundMap -> !elem 
 
     let find_opt f s =
       find_map (fun e -> if f e then Some e else None) s
@@ -452,13 +452,11 @@ module TagPairs =
     include Int.Pairing.Set
     let mk s = Tags.fold (fun i p -> add (i,i) p) s empty
     
-    let compose t1 t2 =
-      let compose_tag_pair ((i: Tags.elt), j) (l: (Tags.elt * Tags.elt) list) =
-        let l = Blist.rev_filter (fun (k, _) -> k = j) l in
-        Blist.rev_map (fun (_, l) -> (i, l)) l in
-      let xs = to_list t1 in
-      let ys = to_list t2 in
-      of_list (Blist.flatten (Blist.map (fun p -> compose_tag_pair p ys) xs))
+    let compose t1 t2 : t = 
+      fold 
+        (fun (x,y) a -> 
+          fold (fun (w,z) b -> if y=w then add (x,z) b else b) t2 a)
+        t1 empty
 
     let projectl tp = map_to Tags.add Tags.empty fst tp
     let projectr tp = map_to Tags.add Tags.empty snd tp

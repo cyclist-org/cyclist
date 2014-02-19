@@ -119,16 +119,18 @@ sig
   module Node : NODE
   (** Proof node module underlying proof. *)
   
-  val mk : Node.t -> t
-  (** Constructor.  Takes an open or axiom node and creates a proof
-      with that node at the root (0).*)
+  val mk : Node.Seq.t -> t
+  (** Constructor.  Takes a sequent and makes an open node at the root (0).*)
   
-  (** Other constructors. Checks are made to ensure that
-      - Only open nodes are closed.
-      - Open nodes are closed (replaced) by nodes with the same sequent.
-      - Back-link targets are existing nodes. 
-      - Existing closed nodes are never hidden. 
-      - [FIXME] Should back-links should have equal sequents to their targets?
+  (** Other constructors, which return the proof and the indices of new
+      subgoals, if any, which are new, open nodes.
+      
+      All of these take an index to an open node, and a description plus
+      more arguments appropriate to the type of constructor.  The open
+      node will be replaced by another node with the same index, and its
+      description set to the parameter value.      
+      
+      [FIXME] Should back-links should have equal sequents to their targets?
       *)
 
   val add_axiom : int -> string -> t -> t

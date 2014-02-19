@@ -11,7 +11,6 @@ struct
   let fresh_idx prf = 1 + (fst (Int.Map.max_binding prf))
   let fresh_idxs xs prf = Blist.range (fresh_idx prf) xs 
   
-  let empty = Int.Map.empty
   let size prf = Int.Map.cardinal prf
   let mem i p = Int.Map.mem i p
 
@@ -45,18 +44,14 @@ struct
 
   let ensure msg f = if (not f) then invalid_arg msg else () 
   
-  let mk n =
-    ensure "Proof.mk" (Node.is_open n || Node.is_axiom n);
-    Int.Map.add 0 (0,n) empty
+  let mk seq = Int.Map.add 0 (0,Node.mk_open seq) Int.Map.empty
   
-  let replace idx n prf = 
-    ensure "Proof.replace" (mem idx prf);
-    Int.Map.add idx (fst (get idx prf),n) prf
+  let replace idx n prf = Int.Map.add idx (fst (get idx prf),n) prf
 
   let ensure_add fn idx n prf =
     let n' = find idx prf in
-    ensure (fn^"0") (Node.is_open n'); 
-    ensure (fn^"1") (Node.Seq.equal (Node.get_seq n) (Node.get_seq n'))
+    ensure fn (Node.is_open n'); 
+    ensure fn (Node.Seq.equal (Node.get_seq n) (Node.get_seq n'))
     
   let add_axiom idx descr prf =
     let n = Node.mk_axiom (Node.get_seq (find idx prf)) descr in
@@ -92,7 +87,6 @@ struct
         (replace idx n prf) 
         subnodes in 
     (prf', subidxs)
-     
 
   let get_ancestry idx prf =
     let rec aux acc idx (par_idx, n) =
