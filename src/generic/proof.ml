@@ -8,6 +8,7 @@ struct
   
   let get idx prf = Int.Map.find idx prf
   let find idx prf = snd (get idx prf)
+  let get_seq idx prf = Node.get_seq (find idx prf)
   let fresh_idx prf = 1 + (fst (Int.Map.max_binding prf))
   let fresh_idxs xs prf = Blist.range (fresh_idx prf) xs 
   
@@ -54,20 +55,20 @@ struct
     ensure fn (Node.Seq.equal (Node.get_seq n) (Node.get_seq n'))
     
   let add_axiom idx descr prf =
-    let n = Node.mk_axiom (Node.get_seq (find idx prf)) descr in
+    let n = Node.mk_axiom (get_seq idx prf) descr in
     ensure_add "Proof.add_axiom" idx n prf;
     replace idx n prf    
       
   let add_backlink idx descr target vtts prf =
     let fn = "Proof.add_backlink" in
-    let n = Node.mk_backlink (Node.get_seq (find idx prf)) descr target vtts in
+    let n = Node.mk_backlink (get_seq idx prf) descr target vtts in
     ensure_add fn idx n prf;
     ensure fn (mem target prf);
     replace idx n prf
   
   let add_abd idx descr prf =
     let cidx = fresh_idx prf in
-    let seq = Node.get_seq (find idx prf) in
+    let seq = get_seq idx prf in
     let n = Node.mk_abd seq descr cidx in
     ensure_add "Proof.add_abd" idx n prf;
     (Int.Map.add cidx (idx, Node.mk_open seq) (replace idx n prf), cidx)
@@ -79,7 +80,7 @@ struct
       Blist.map2 (fun i (seq,_,_) -> (i, Node.mk_open seq)) subidxs subgoals in
     let subidxs_plus_tags = 
       Blist.map2 (fun i (_,vtts,ptts) -> (i,vtts,ptts)) subidxs subgoals in
-    let n = Node.mk_inf (Node.get_seq (find idx prf)) descr subidxs_plus_tags in
+    let n = Node.mk_inf (get_seq idx prf) descr subidxs_plus_tags in
     ensure_add fn idx n prf;
     let prf' = 
       Blist.foldl 

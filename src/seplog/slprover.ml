@@ -265,8 +265,8 @@ let matches s1 s2 =
 let brl_matches = mk_back_rule matches "Backl"
 
 let setup defs =
-  let ruf = Proof_tacs.angelic_or_tac (mk_ruf defs) in
-  let luf = Proof_tacs.angelic_or_tac (Blist.map gen_left_rules defs) in
+  let ruf = Proof_tacs.or_tac (mk_ruf defs) in
+  let luf = Proof_tacs.or_tac (Blist.map gen_left_rules defs) in
   axiomset := [ ex_falso_axiom; id_axiom ] ;
   ruleset := [
     lhs_disj_to_symheaps;
@@ -281,8 +281,8 @@ let setup defs =
   ]
 
 (* let setup defs =                                                        *)
-(*   let ruf = Proof_tacs.angelic_or_tac (mk_ruf defs) in                  *)
-(*   let luf = Proof_tacs.angelic_or_tac (Blist.map gen_left_rules defs) in *)
+(*   let ruf = Proof_tacs.or_tac (mk_ruf defs) in                  *)
+(*   let luf = Proof_tacs.or_tac (Blist.map gen_left_rules defs) in *)
 (*   axiomset := [ ex_falso_axiom; id_axiom ] ;                            *)
 (*   ruleset := [                                                          *)
 (*     lhs_disj_to_symheaps;                                               *)

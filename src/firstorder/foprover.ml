@@ -376,12 +376,12 @@ let fold (ident,defs) =
 (*     | 0 -> acc                                                        *)
 (*     | n -> aux (rl'::acc) (FOP.Proof_tacs.then_tac rl' rl) (n-1) in   *)
 (*   FOP.rename_rule                                                     *)
-(*     (FOP.Proof_tacs.angelic_or_tac (aux [] rl m))                     *)
+(*     (FOP.Proof_tacs.or_tac (aux [] rl m))                     *)
 (*     ("Up-to-" ^ (string_of_int m) ^ " " ^ (FOP.descr_rule rl) )       *)
 let setup defs = 
   let ruf = Blist.flatten (Blist.map gen_right_rules (Defs.bindings defs)) in
   let luf = Blist.map gen_left_rules (Defs.bindings defs) in
-  let ruf_or = FOP.Proof_tacs.angelic_or_tac ruf in
+  let ruf_or = FOP.Proof_tacs.or_tac ruf in
   let folds = 
     Blist.map 
       (* (fun c -> FOP.Proof_tacs.then_tac (up_to_n 1 (fold c)) matches) *)

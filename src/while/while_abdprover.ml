@@ -601,7 +601,7 @@ let matches = mk_back_rule While_prover.matches_fun "Backl"
 let unfold =
   let gen_left_rule_fun seq defs =
     let rls = Blist.map While_prover.gen_left_rules_f defs in
-    let rl = Seq_tacs.angelic_or_tac rls in
+    let rl = Seq_tacs.or_tac rls in
     let apps = rl seq in
     Blist.map (fun app -> (app,defs)) apps in
   mk_gen_rule gen_left_rule_fun "unfold"
@@ -609,7 +609,7 @@ let unfold =
 let unfold2 =
   let gen_left_rule_fun seq defs =
     let rls = Blist.map While_prover.gen_left_rules_f defs in
-    let rl = Seq_tacs.angelic_or_tac rls in
+    let rl = Seq_tacs.or_tac rls in
     let apps = rl seq in
     Blist.map (fun app -> (app,defs)) apps in
   mk_gen_rule gen_left_rule_fun "UNFOLD"
@@ -653,7 +653,7 @@ let mk_rules _ =
 
 		(* Proof_tacs.then_tac                                           *)
 		(*   abd_segment                                                 *)
-		(* 	(Proof_tacs.angelic_or_tac [ifwhile_tac; gen_ifwhile_tac]); *)
+		(* 	(Proof_tacs.or_tac [ifwhile_tac; gen_ifwhile_tac]); *)
 
 		(* cut_backlink_tac                                               *)
     unfold2;

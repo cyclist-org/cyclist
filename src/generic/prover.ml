@@ -25,6 +25,9 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 
     module Proof = Proof.Make(Proofnode.Make(Seq))
     module Node = Proof.Node
+    module R = Rules.Make(Proof)
+    module S = Seqtactics.Make(Seq)
+    module PT = Prooftactics.Make(Proof)
             
     type proof_transformer = Proof.t -> int -> (Proof.t * int list) Zlist.t
     type abd_proof_transformer =
@@ -342,7 +345,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
             | [] -> first t seq
             | apps -> apps
 
-        let angelic_or_tac (l:rule_fun list) seq =
+        let or_tac (l:rule_fun list) seq =
 					Blist.flatten (Blist.map (fun rl -> rl seq) l)
 
         let repeat_tac rl seq =
@@ -358,7 +361,6 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
                   if res=[] then [app] else (cont := true ; res))
                 !apps)
           done in
-          (* this check is important for performance *)
           !apps
 
         let rec seq = function
@@ -478,7 +480,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 
         let always_fail = (InfRule(fun _ _ -> Zlist.empty), "")
 
-        let angelic_or_tac l =
+        let or_tac l =
           if l=[] then always_fail else
           if Blist.for_all is_infrule l then
           begin

@@ -144,6 +144,7 @@ sig
   (** Accessor functions. *)
   
   val find : int -> t -> Node.t
+  val get_seq : int -> t -> Node.Seq.t
   val size : t -> int
   val mem : int -> t -> bool
   val fresh_idx : t -> int
@@ -168,6 +169,48 @@ sig
   val to_melt : t -> Latex.t
 end
 (** Proof signature. *)
+
+module type SEQTACTICS =
+sig
+  module Seq : SEQUENT
+
+  type ruleapp_t = (Seq.t * Util.TagPairs.t * Util.TagPairs.t) list * string
+  type rule_t = Seq.t -> ruleapp_t list
+  
+  val attempt : rule_t -> rule_t
+  val compose : rule_t -> rule_t -> rule_t
+  val first : rule_t list -> rule_t
+  val repeat : rule_t -> rule_t
+end
+
+module type RULES =
+sig
+  module Proof : PROOF
+  
+  type axiom_f = Proof.Node.Seq.t -> string option
+  type infrule_app = (Proof.Node.Seq.t * Util.TagPairs.t * Util.TagPairs.t) list * string
+  type infrule_f = Proof.Node.Seq.t -> infrule_app list
+  type infrule = int -> Proof.t -> (Proof.t * int list) list
+  type backrule_f = 
+    Proof.Node.Seq.t -> Proof.Node.Seq.t -> (Util.TagPairs.t * string) list
+  type select_f = int -> Proof.t -> int list
+      
+  val mk_axiom : axiom_f -> infrule
+  val mk_infrule : infrule_f -> infrule
+  val mk_backrule : select_f -> backrule_f -> infrule
+  
+  val all_nodes : select_f
+  val ancestor_nodes : select_f
+end
+
+module type PROOFTACTICS =
+sig
+  module Proof : PROOF
+  
+  type infrule = int -> Proof.t -> (Proof.t * int list) list
+  
+  val compose : infrule -> infrule -> infrule 
+end
 
 
 module type PROVER =
@@ -215,7 +258,7 @@ sig
       val repeat_tac : rule_fun -> rule_fun
       val first : rule_fun list -> rule_fun
       val seq : rule_fun list -> rule_fun
-      val angelic_or_tac : rule_fun list -> rule_fun
+      val or_tac : rule_fun list -> rule_fun
 			val opt : rule_fun -> rule_fun
     end
 
@@ -225,7 +268,7 @@ sig
       val then_tac : proof_rule -> proof_rule -> proof_rule
       val first : proof_rule list -> proof_rule
       val seq : proof_rule list -> proof_rule
-      val angelic_or_tac : proof_rule list -> proof_rule
+      val or_tac : proof_rule list -> proof_rule
       val repeat_tac : proof_rule -> proof_rule
 			val opt : proof_rule -> proof_rule
     end

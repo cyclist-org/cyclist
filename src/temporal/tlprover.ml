@@ -200,7 +200,7 @@ let setup defs =
         symex_non_det_if
       ] in
   Slprover.setup defs ;
-  let luf = Proof_tacs.angelic_or_tac (Blist.map gen_left_rules defs) in
+  let luf = Proof_tacs.or_tac (Blist.map gen_left_rules defs) in
   (* let cutm = Blist.map gen_fold_rules defs in *)
   TLP.axiomset := [ ex_falso_axiom ; pure_axiom ] ;
   TLP.ruleset := 

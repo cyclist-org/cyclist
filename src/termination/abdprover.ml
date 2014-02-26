@@ -534,7 +534,7 @@ let deref_tac = Apr.Proof_tacs.first [symex_load_rule; symex_store_rule; symex_f
 
 let gen_left_rule_fun seq defs =
   let rls = Blist.map Prprover.gen_left_rules_f defs in
-  let rl = Apr.Seq_tacs.angelic_or_tac rls in
+  let rl = Apr.Seq_tacs.or_tac rls in
   let apps = rl seq in
   Blist.map (fun app -> (app,defs)) apps
 

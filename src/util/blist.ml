@@ -105,15 +105,12 @@ let cartesian_hemi_square xs =
       chs (fold_left (fun acc' el' -> (el,el')::acc') acc tl) tl
   in chs [] xs
 
-(* this should be tail recursive *)
-let choose lol =
-  let _,lol =
-    foldl
-      (fun (r,a) l -> not r, (if r then rev l else l)::a)
-      (true,[]) lol in
-  foldl
-    (fun ll -> foldl (fun tl e -> foldl (fun t l -> (e::l)::t) tl ll) [])
-    [[]] lol
+let rec choose = function
+  | [] -> [[]]
+  | xs::ys -> 
+    let choices = choose ys in
+    flatten (map (fun x -> map (cons x) choices) xs) 
+
 
 (* tail rec versions, generally slower *)
 
@@ -145,3 +142,11 @@ let choose lol =
 (*       | (b::bs, c::cs, d::ds) -> aux ((b,c,d)::acc) bs cs ds   *)
 (*       | _ -> invalid_arg "zip3" in                             *)
 (*   rev (aux [] xs' ys' zs')                                     *)
+(* let choose lol =                                                          *)
+(*   let _,lol =                                                             *)
+(*     foldl                                                                 *)
+(*       (fun (r,a) l -> not r, (if r then rev l else l)::a)                 *)
+(*       (true,[]) lol in                                                    *)
+(*   foldl                                                                   *)
+(*     (fun ll -> foldl (fun tl e -> foldl (fun t l -> (e::l)::t) tl ll) []) *)
+(*     [[]] lol                                                              *)
