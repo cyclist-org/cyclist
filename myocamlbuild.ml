@@ -31,7 +31,7 @@ let _ = dispatch begin function
     dep  ["compile"; "c"] headers;
     flag ["c"; "compile"]  
       (S[
-        A"-ccopt"; A"-xc++"; A"-ccopt"; A"-std=c++11"; 
+        A"-ccopt"; A"-xc++"; A"-ccopt"; A"-std=c++0x"; 
         A"-ccopt"; A("-I" ^ ocaml_headers_path);
         A"-ccopt"; A("-I" ^ spot_include_path)]);
     
@@ -40,6 +40,9 @@ let _ = dispatch begin function
     flag ["link"; "ocaml"; "use_spot"]
           (S[
             A"-ccopt"; A("-L" ^ spot_lib_path); 
+            (* following option is a workaround for a bug in ocaml/ocamlbuild 3.x *)
+            (* that reorders linker arguments *)
+            A"-cclib"; A"-Wl,--no-as-needed";
             A"-cclib"; A"-lbdd";
             A"-cclib"; A"-lspot";
             A"-cclib"; A"-lstdc++"
