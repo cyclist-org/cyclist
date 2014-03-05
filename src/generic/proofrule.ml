@@ -1,20 +1,20 @@
 open Util
 
-module Make(Proof: Sigs.PROOF) =
+module Make(Seq : Sigs.SEQUENT) =
 struct
-  module Proof = Proof
-  module Node = Proof.Node
-  module Seq = Node.Seq
+  type seq_t = Seq.t
+  module Proof = Proof.Make(Seq)
+  type proof_t = Proof.t
 
-  type axiom_f = Seq.t -> string option
+  type axiom_f = seq_t -> string option
   
   let mk_axiom ax_f idx prf =
     match ax_f (Proof.get_seq idx prf) with
     | None -> []
     | Some descr -> [([], Proof.add_axiom idx descr prf)]  
 
-  type infrule_app = (Seq.t * Util.TagPairs.t * Util.TagPairs.t) list * string
-  type infrule_f = Seq.t -> infrule_app list
+  type infrule_app = (seq_t * Util.TagPairs.t * Util.TagPairs.t) list * string
+  type infrule_f = seq_t -> infrule_app list
   type t = int -> Proof.t -> (int list * Proof.t) list
   
   let mk_infrule r_f idx prf =
@@ -22,7 +22,7 @@ struct
     let mk (l,d) = Proof.add_inf idx d l prf in
     Blist.map mk (r_f seq)
 
-  type backrule_f = Seq.t -> Seq.t -> (Util.TagPairs.t * string) list
+  type backrule_f = seq_t -> seq_t -> (Util.TagPairs.t * string) list
   type select_f = int -> Proof.t -> int list
         
   let mk_backrule greedy sel_f br_f srcidx prf =
@@ -52,4 +52,29 @@ struct
     Blist.filter (fun idx -> idx<>srcidx) (Blist.map fst (Proof.to_list prf))
   let ancestor_nodes srcidx prf = Blist.map fst (Proof.get_ancestry srcidx prf)
 
+  let fail _ _ = []
+
+    let apply_to_subgoals r (subgoals, prf) =
+    Blist.fold_left
+      (* close one subgoal each time *)
+      (fun apps idx ->
+        Blist.flatten
+          (* actually apply the rule *)
+          (Blist.map
+            (fun (opened, oldprf) ->
+              (* add new subgoals to the list of opened ones *)
+              Blist.map
+                (fun (newsubgoals, newprf) -> (opened @ newsubgoals, newprf))
+                (r idx oldprf))
+          apps))
+      [ ([], prf) ]
+      subgoals
+
+  let compose r r' idx prf =
+    Blist.flatten (Blist.map (apply_to_subgoals r') (r idx prf))
+
+  let choice rl idx prf =
+    Blist.flatten (Blist.map (fun f -> f idx prf) rl) 
+      
+  
 end

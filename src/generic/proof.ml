@@ -1,10 +1,12 @@
 open Util
 
-module Make(Node: Sigs.NODE) =
+module Make(Seq : Sigs.SEQUENT) =
 struct
-  module Node = Node
+  module Node = Proofnode.Make(Seq)
   
   type t = (int * Node.t) Int.Map.t
+  type seq_t = Seq.t
+  type node_t = Node.t
   
   let get idx prf = Int.Map.find idx prf
   let find idx prf = snd (get idx prf)
@@ -52,7 +54,7 @@ struct
   let ensure_add fn idx n prf =
     let n' = find idx prf in
     ensure fn (Node.is_open n'); 
-    ensure fn (Node.Seq.equal (Node.get_seq n) (Node.get_seq n'))
+    ensure fn (Seq.equal (Node.get_seq n) (Node.get_seq n'))
     
   let add_axiom idx descr prf =
     let n = Node.mk_axiom (get_seq idx prf) descr in

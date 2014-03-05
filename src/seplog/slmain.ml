@@ -5,8 +5,8 @@ let defs_path = ref "examples/sl.defs"
 
 module Parser = Slparser
 module Lexer = Sllexer
-module Prover = Slprover
-module F = Frontend.Make(Prover)(Symheap.Seq)
+module Prover = Slprover.SLP
+module F = Frontend2.Make(Prover)
 
 let sequent_of_string s =
   let lexbuf = Lexing.from_string s in
@@ -44,8 +44,8 @@ let () =
   Arg.parse !F.speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) !F.usage ;
   if !cl_sequent="" then F.die "-S must be specified." ;
   let seq = sequent_of_string !cl_sequent in
-  Prover.setup (defs_of_channel (open_in !defs_path)) ;
-  exit (F.prove_seq seq)
+  Slprover.setup (defs_of_channel (open_in !defs_path)) ;
+  exit (F.prove_seq !Slprover.ruleset seq)
     
 
 

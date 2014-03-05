@@ -3,33 +3,38 @@ open Util
 open Symheap
 
 
-module P = Prover2.Make(Symheap.Seq)(Symheap.Defs)
-  
-module SLP = Prover.Make(Symheap.Seq)(Symheap.Defs)
-include SLP
+module SLP = Prover2.Make(Seq)
+module Rule = Proofrule.Make(Seq)
+module Seqtactics = SLP.Seqtactics
 
 let id_axiom =
-  let ax (l,r) = Form.subsumed_wrt_tags Tags.empty r l in
-  mk_axiom ax "Id"
+  Rule.mk_axiom 
+    (fun (l,r) -> 
+      if Form.subsumed_wrt_tags Tags.empty r l then Some "Id" else None)
+
 
 let ex_falso_axiom =
-  let ax (l,_) = Form.inconsistent l in
-  mk_axiom ax "Ex Falso"
-
+  Rule.mk_axiom
+    (fun (l,_) -> if Form.inconsistent l then Some "Ex Falso" else None)
 
 (* break LHS disjunctions *)
 let lhs_disj_to_symheaps =
-  let rl (l,r) =
-    if Blist.length l < 2 then [] else
-    [ Blist.map (fun h -> (([h],r), Heap.tag_pairs h, TagPairs.empty)) l ] in
-  mk_inf_rule rl "L. Or"
+  Rule.mk_infrule 
+    (fun (l,r) -> if Blist.length l < 2 then [] else
+      [ 
+        Blist.map (fun h -> (([h],r), Heap.tag_pairs h, TagPairs.empty)) l,
+         "L. Or" 
+      ]
+    )
+    
 
 (* break RHS disjunctions *)
 let rhs_disj_to_symheaps =
-  let rl (l,r) =
-    if Blist.length r < 2 || Blist.length l <> 1 then [] else
-    Blist.map (fun s -> [ ((l,[s]), Form.tag_pairs l, TagPairs.empty) ]) r in
-  mk_inf_rule rl "R. Or"
+  Rule.mk_infrule 
+    (fun (l,r) -> if Blist.length r < 2 || Blist.length l <> 1 then [] else
+      Blist.map 
+        (fun s -> [ ((l,[s]), Form.tag_pairs l, TagPairs.empty) ], "R. Or") 
+        r)
 
 (* simplification rules *)
 
@@ -47,7 +52,7 @@ let eq_subst_rule seq =
 		let (x,y) = if Term.is_var x then p else (y,x) in
 		let theta = Term.singleton_subst x y in
     let (l',r') = Pair.map (fun z -> Heap.subst theta z) (l,r) in
-    [ [ (([l'], [r']), Heap.tag_pairs l, TagPairs.empty) ] ]
+    [ [ (([l'], [r']), Heap.tag_pairs l, TagPairs.empty) ], "" ]
   with Not_symheap | Not_found -> []
 
 
@@ -61,7 +66,7 @@ let eq_ex_subst_rule seq =
     let r = { r with eqs=UF.of_list reqs } in
 		let (x,y) = if Term.is_var x then p else (y,x) in
     let r' = Heap.subst (Term.singleton_subst x y) r in
-    [ [ (([l], [r']), Heap.tag_pairs l, TagPairs.empty) ] ]
+    [ [ (([l], [r']), Heap.tag_pairs l, TagPairs.empty) ], "" ]
   with Not_symheap | Not_found -> []
 
 (* remove all RHS eqs that can be discharged *)
@@ -71,7 +76,7 @@ let eq_simplify seq =
     let (disch, reqs) =
 			Blist.partition (fun (x,y) -> Heap.equates l x y) (UF.bindings r.eqs) in
     if disch=[] then [] else
-    [ [ (([l], [ { r with eqs=UF.of_list reqs } ] ), Heap.tag_pairs l, TagPairs.empty) ] ]
+    [ [ (([l], [ { r with eqs=UF.of_list reqs } ] ), Heap.tag_pairs l, TagPairs.empty) ], "" ]
   with Not_symheap -> []
 
 (* remove all RHS deqs that can be discharged *)
@@ -81,7 +86,7 @@ let deq_simplify seq =
     let (disch, rdeqs) =
 			Deqs.partition (fun (x,y) -> Heap.disequates l x y) r.deqs in
     if Deqs.is_empty disch then [] else
-    [ [ (([l], [ { r with deqs=rdeqs } ] ), Heap.tag_pairs l, TagPairs.empty) ] ]
+    [ [ (([l], [ { r with deqs=rdeqs } ] ), Heap.tag_pairs l, TagPairs.empty) ], "" ]
   with Not_symheap -> []
 
 (* do the following transformation for the first x such that *)
@@ -96,7 +101,7 @@ let pto_intro_rule seq =
     let l' = { l with ptos=Ptos.filter (fun q -> q!=p') l.ptos } in
     let r' = { r with ptos=Ptos.filter (fun q -> q!=p) r.ptos } in
     let r' = { r' with eqs=UF.union r'.eqs (UF.of_list (Blist.combine rys lys)) } in
-    [ [ ( ([l'], [r']), Heap.tag_pairs l, TagPairs.empty ) ] ]
+    [ [ ( ([l'], [r']), Heap.tag_pairs l, TagPairs.empty ) ], "Pto Intro" ]
   with Not_symheap | Not_found -> []
 
 (* do the following transformation for the first i,j such that *)
@@ -113,13 +118,13 @@ let pred_intro_rule seq =
 					Blist.for_all2 (fun x y -> Heap.equates l x y) vs vs') cp in
     let l' = { l with inds=Inds.remove p (Inds.of_list linds) } in
     let r' = { r with inds=Inds.remove q (Inds.of_list rinds) } in
-    [ [ ( ([l'], [r']), Heap.tag_pairs l', TagPairs.empty ) ] ]
+    [ [ ( ([l'], [r']), Heap.tag_pairs l', TagPairs.empty ) ], "Pred Intro" ]
   with Not_symheap | Not_found -> []
 
 let norm s =
   let s' = Seq.norm s in
   if Seq.equal s s' then [] else
-  [ [( s', Seq.tag_pairs s', TagPairs.empty )] ]
+  [ [( s', Seq.tag_pairs s', TagPairs.empty )], "" ]
 
 let simpl_deqs seq =
   try
@@ -131,49 +136,26 @@ let simpl_deqs seq =
     let f p = Pair.conj (Pair.map (fun t -> Term.Set.mem t non_deq_vars) p) in
     let l' = { l with deqs=Deqs.filter f l.deqs } in
     if Heap.equal l l' then [] else
-    [ [ (([l'], [r]), Heap.tag_pairs l', TagPairs.empty) ] ]
+    [ [ (([l'], [r]), Heap.tag_pairs l', TagPairs.empty) ], "" ]
   with Not_symheap -> []
 
 let simplify_rules = [
-  (* (norm, "norm") ; *)
-  (eq_subst_rule, "= subst") ;
-  (eq_ex_subst_rule, "= ex subst") ;
-  (eq_simplify, "= simpl R") ;
-  (deq_simplify, "!= simpl R") ;
-	(* (simpl_deqs, "!= simpl L") ; *)
-  (* (pto_intro_rule, "-> intro");    *)
-  (* (pred_intro_rule, "pred intro")  *)
+  (* norm ; *)
+  eq_subst_rule ;
+  eq_ex_subst_rule ;
+  eq_simplify ;
+  deq_simplify ;
+	(* simpl_deqs *)
+  (* pto_intro_rule *)
+  (* pred_intro_rule  *)
 ]
 
-let simplify_seq_rl =
-  Seq_tacs.repeat_tac (Seq_tacs.first (Blist.map fst simplify_rules))
+let simplify_seq = Seqtactics.repeat (Seqtactics.first simplify_rules) 
 
-let simplify_proof_rl =
-  Proof_tacs.repeat_tac
-    (Proof_tacs.first
-      (Blist.map (fun (r,d) -> mk_inf_rule r d) simplify_rules))
+let simplify = Rule.mk_infrule simplify_seq
 
-let simplify =
-  if !expand_proof then
-    simplify_proof_rl
-  else
-    mk_inf_rule simplify_seq_rl "Simpl"
-
-let simplify =
-  let or_rules =
-    Proof_tacs.first
-      (Blist.map (fun (r,d) -> mk_inf_rule r d) simplify_rules) in
-  Proof_tacs.repeat_tac or_rules
-
-let wrap r d =
-  if !expand_proof then
-    Proof_tacs.then_tac
-      (mk_inf_rule r d)
-      (Proof_tacs.try_tac simplify_proof_rl)
-  else
-    mk_inf_rule
-      (Seq_tacs.then_tac r (Seq_tacs.try_tac simplify_seq_rl))
-      d
+let wrap r =
+  Rule.mk_infrule (Seqtactics.compose r (Seqtactics.attempt simplify_seq))
 
 (* x->ys * A |- e->zs * B if  A |- ys=zs * B[x/e] where e existential *)
 (* and at least one var in ys,zs is the same *)
@@ -195,10 +177,10 @@ let instantiate_pto =
         let r' = { r with ptos=Ptos.remove p (Ptos.of_list rptos) } in
         let r' =
           { r' with eqs=UF.union r'.eqs (UF.of_list ((x,w)::(Blist.combine ys zs))) } in
-        [ ( ([l'], [r']), Heap.tag_pairs l, TagPairs.empty ) ]
+        [ ( ([l'], [r']), Heap.tag_pairs l, TagPairs.empty ) ], "Inst ->"
       in Blist.map do_instantiation cp
     with Not_symheap -> [] in
-  wrap rl "Inst ->"
+  wrap rl 
 
 let mk_ruf defs =
   let gen_right_rules (def,_) =
@@ -215,10 +197,11 @@ let mk_ruf defs =
             (* NB assumes distinct vars in ind pred def *)
             let theta = Term.Map.of_list (Blist.combine vs vs') in
             let f' = Heap.subst theta f in
-            [ (([l], [Heap.star r' f']), Heap.tag_pairs l, TagPairs.empty) ] in
+            [ (([l], [Heap.star r' f']), Heap.tag_pairs l, TagPairs.empty) ],
+            (ident ^ " R.Unf.") in
           Inds.map_to_list right_unfold preds
         with Not_symheap -> [] in
-      wrap right_rule (ident ^ " R.Unf.")  in
+      wrap right_rule in
     Blist.map gen_rule def in
   Blist.flatten (Blist.map gen_right_rules defs)
 
@@ -240,10 +223,10 @@ let gen_left_rules (def, ident) =
 					let l' = Heap.univ (Heap.vars r) l' in
           let ts = Tags.inter (Heap.tags l') (Heap.tags l) in
           (([l'], [r]), TagPairs.mk ts, TagPairs.singleton (id, id)) in
-        Blist.map do_case def in
+        Blist.map do_case def, (ident ^ " L.Unf.") in
       Inds.map_to_list left_unfold preds
     with Not_symheap -> [] in
-  wrap left_rule  (ident ^ " L.Unf.")
+  wrap left_rule  
 
 (* s2 *)
 (* -- *)
@@ -252,9 +235,9 @@ let is_subsumed s1 s2 = Seq.subsumed_wrt_tags Tags.empty s1 s2
 
 let matches s1 s2 =
   let tags = Tags.inter (Seq.tags s1) (Seq.tags s2) in
-  if Tags.is_empty tags then None else
+  if Tags.is_empty tags then [] else
   let res = Seq.uni_subsumption s1 s2 in
-  if Option.is_none res then None else
+  if Option.is_none res then [] else
   let theta = Option.get res in
   let s2' = Seq.subst theta s2 in
   let tags' = Tags.fold
@@ -263,38 +246,25 @@ let matches s1 s2 =
       if Seq.subsumed_wrt_tags new_acc s1 s2' then new_acc else acc
     ) tags Tags.empty in
   let () = assert (not (Tags.is_empty tags')) in
-  Some (TagPairs.mk tags')
+  [ TagPairs.mk tags',  "Backl" ]
 
-let brl_matches = mk_back_rule matches "Backl"
+let brl_matches = Rule.mk_backrule true Rule.all_nodes matches
+
+let ruleset = ref Rule.fail
 
 let setup defs =
-  let ruf = Proof_tacs.or_tac (mk_ruf defs) in
-  let luf = Proof_tacs.or_tac (Blist.map gen_left_rules defs) in
-  axiomset := [ ex_falso_axiom; id_axiom ] ;
-  ruleset := [
+  let ruf = Rule.choice (mk_ruf defs) in
+  let luf = Rule.choice (Blist.map gen_left_rules defs) in
+  ruleset := Rule.choice 
+  [
+    ex_falso_axiom; id_axiom ;
     lhs_disj_to_symheaps;
     rhs_disj_to_symheaps;
     simplify;
     brl_matches;
-		wrap pto_intro_rule "Pto Intro";
-		wrap pred_intro_rule "Pred Intro";
+		wrap pto_intro_rule;
+		wrap pred_intro_rule;
     instantiate_pto;
 		ruf ;
 		luf ;
   ]
-
-(* let setup defs =                                                        *)
-(*   let ruf = Proof_tacs.or_tac (mk_ruf defs) in                  *)
-(*   let luf = Proof_tacs.or_tac (Blist.map gen_left_rules defs) in *)
-(*   axiomset := [ ex_falso_axiom; id_axiom ] ;                            *)
-(*   ruleset := [                                                          *)
-(*     lhs_disj_to_symheaps;                                               *)
-(*     rhs_disj_to_symheaps;                                               *)
-(*     (* simplify; *)                                                     *)
-(*     brl_matches;                                                        *)
-(* 		luf ;                                                               *)
-(* 		ruf ;                                                               *)
-(* 		wrap pto_intro_rule "Pto Intro";                                    *)
-(* 		wrap pred_intro_rule "Pred Intro";                                  *)
-(*     instantiate_pto;                                                    *)
-(*   ]                                                                     *)

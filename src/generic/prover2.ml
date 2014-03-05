@@ -2,18 +2,21 @@ open Lib
 open Util
 open Symbols
 
-module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
+module Make(Seq: Sigs.SEQUENT) =
   struct
-    type sequent = Seq.t
-    type ind_def_set = Defs.t
-    
-    module Proof = Proof.Make(Proofnode.Make(Seq))
-    module Node = Proof.Node
-    module Rules = Rules.Make(Proof)
+    module Proof = Proof.Make(Seq)
+    (* module Rules = Proofrules.Make(Seq) *)
     module Seqtactics = Seqtactics.Make(Seq)
-    module Prooftactics = Prooftactics.Make(Proof)
+    
+    type proof_t = Proof.t
+    type rule_t = Proofrule.Make(Seq).t
 
+    module Seq = Seq    
             
+    (* due to divergence between Proof.t tree depth and search depth *)
+    (* remember last successful search depth *)
+    let last_search_depth = ref 0
+
     let rec dfs bound r idx prf =
       if bound<0 then None else
       let apps = r idx prf in
@@ -34,7 +37,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
       if bound>maxbound then None else
       match dfs bound r 0 (Proof.mk seq) with
       | None -> idfs (bound+1) maxbound r seq
-      | res -> res
+      | res -> last_search_depth := bound ; res
           
     (* type proof_transformer = Proof.t -> int -> (Proof.t * int list) Zlist.t                                      *)
     (* type abd_proof_transformer =                                                                                 *)
@@ -57,10 +60,6 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
     (* (* FIXME remove/redesign "backlinkable" *)                                                                   *)
     (* let is_backlinkable n = Node.is_open n || Node.is_inf n                                                      *)
 
-    (* (* due to divergence between Proof.t tree depth and search depth *)                                          *)
-    (* (* remember last successful search depth *)                                                                  *)
-    (* let last_search_depth = ref 0                                                                                *)
-
     (* (* auxiliary functions and constructors *)                                                                   *)
     (* let mk_axiom axf descr = (axf, descr)                                                                        *)
     (* let dest_axiom ax = ax                                                                                       *)
@@ -71,17 +70,17 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
     (* let latex_bracket_rule r = latex_bracket (descr_rule r)                                                      *)
     (* let latex_bracket_axiom x = latex_bracket (descr_axiom x)                                                    *)
 
-    (* let melt_proof ch p =                                                                                        *)
-    (*   ignore (Latex.to_channel ~mode:Latex.M ch (Proof.to_melt p))                                               *)
-    (* (* print stats on stdout *)                                                                                  *)
-    (* let print_proof_stats proof =                                                                                *)
-    (*   let size = Proof.size proof in                                                                             *)
-    (*   (* let depth = depth_of_proof Proof.t in *)                                                                *)
-    (*   let links = Proof.no_of_backlinks proof in                                                                 *)
-    (*   print_endline                                                                                              *)
-    (*     ("Proof has " ^ (string_of_int size) ^                                                                   *)
-    (*      " nodes and a depth of " ^ (string_of_int !last_search_depth) ^                                         *)
-    (*      " and " ^ (string_of_int links) ^ " back-links.")                                                       *)
+    let melt_proof ch p =
+      ignore (Latex.to_channel ~mode:Latex.M ch (Proof.to_melt p))
+    (* print stats on stdout *)
+    let print_proof_stats proof =
+      let size = Proof.size proof in
+      (* let depth = depth_of_proof Proof.t in *)
+      let links = Proof.no_of_backlinks proof in
+      print_endline
+        ("Proof has " ^ (string_of_int size) ^
+         " nodes and a depth of " ^ (string_of_int !last_search_depth) ^
+         " and " ^ (string_of_int links) ^ " back-links.")
 
     (* (* this is the user-visible constructor *)                                                                   *)
     (* let mk_inf_rule rl d =                                                                                       *)

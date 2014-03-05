@@ -1,3 +1,4 @@
-module Make (Node : Sigs.NODE) : Sigs.PROOF 
-  with module Node = Node
+module Make (Seq: Sigs.SEQUENT) : Sigs.PROOF 
+  with type seq_t = Seq.t
+  with type node_t = Proofnode.Make(Seq).t 
    

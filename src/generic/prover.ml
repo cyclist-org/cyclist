@@ -23,11 +23,8 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
       
     let descr_axiom ax = snd ax
 
-    module Proof = Proof.Make(Proofnode.Make(Seq))
-    module Node = Proof.Node
-    module R = Rules.Make(Proof)
-    module S = Seqtactics.Make(Seq)
-    module PT = Prooftactics.Make(Proof)
+    module Proof = Proof.Make(Seq)
+    module Node = Proofnode.Make(Seq)
             
     type proof_transformer = Proof.t -> int -> (Proof.t * int list) Zlist.t
     type abd_proof_transformer =

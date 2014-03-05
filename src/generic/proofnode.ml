@@ -9,6 +9,8 @@ module Make(Seq: Sigs.SEQUENT) =
 struct
   module Seq = Seq
   
+  type seq_t = Seq.t
+  
   type proof_subnode =
     | OpenNode
     | AxiomNode

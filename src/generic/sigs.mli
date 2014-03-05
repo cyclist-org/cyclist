@@ -3,16 +3,11 @@
 module type SEQUENT = 
 sig
   type t
-  (** The sequent type. *)
-  
   val equal : t -> t -> bool
-  (** Equality for sequents. *)
   
   val tags : t -> Util.Tags.t
   (** Returns set of tags in sequent. *)
 
-  (** Pretty printing, conversions to Latex and string. *)
-  
   val to_string : t -> string
   val to_melt: t -> Latex.t
   val pp : Format.formatter -> t -> unit
@@ -31,32 +26,31 @@ end
 module type NODE = 
 sig
   type t
-  (** Proof node type. *)
 
-  module Seq : SEQUENT
-  (** Sequent module used for building proof nodes. *)
+  type seq_t
+  (** Sequent type used for building proof nodes. *)
       
   (** Constructors. *)
       
-  val mk_open : Seq.t -> t
+  val mk_open : seq_t -> t
   (** [mk_open seq] creates an open Proof.t node labelled by [seq]. *) 
 
-  val mk_axiom : Seq.t -> string -> t
+  val mk_axiom : seq_t -> string -> t
   (** [mk_axiom seq descr] creates an axiom node labelled by 
       sequent [seq] and description [descr].*) 
   
-  val mk_abd : Seq.t -> string -> int -> t
+  val mk_abd : seq_t -> string -> int -> t
   (** [mk_abd seq descr child] creates an abduction node labelled by 
       sequent [seq], description [descr] and successor index [child]. 
       NB this will probably be removed. *) 
   
-  val mk_backlink : Seq.t -> string -> int -> Util.TagPairs.t -> t
+  val mk_backlink : seq_t -> string -> int -> Util.TagPairs.t -> t
   (** [mk_backlink seq descr target vtts] creates a back-link node labelled by 
       sequent [seq], description [descr], target index [target] and set of 
       valid tag transitions (as pairs) [vtts].*) 
   
   val mk_inf :
-    Seq.t -> string -> (int * Util.TagPairs.t * Util.TagPairs.t) list -> t
+    seq_t -> string -> (int * Util.TagPairs.t * Util.TagPairs.t) list -> t
   (** [mk_inf seq descr subgoals back] creates an inference node labelled by 
       sequent [seq], description [descr], a list of triples consisting of
       subgoal index, valid tag transitions and progressing tag transitions 
@@ -64,17 +58,17 @@ sig
   
   (** Destructors. *)
   
-  val dest : t -> Seq.t * string
+  val dest : t -> seq_t * string
   (** [dest n] returns (sequent, description). This works with all Proof.t nodes. *)
    
-  val dest_abd : t -> Seq.t * string * int
+  val dest_abd : t -> seq_t * string * int
   (** [dest_abd n] destroys an abduction node [n], otherwise raises [Invalid_arg].*)
   
-  val dest_backlink : t -> Seq.t * string * int * Util.TagPairs.t
+  val dest_backlink : t -> seq_t * string * int * Util.TagPairs.t
   (** [dest_backlink n] destroys a back-link node [n], otherwise raises [Invalid_arg].*)
 
   val dest_inf : t -> 
-    Seq.t * string * (int * Util.TagPairs.t * Util.TagPairs.t) list
+    seq_t * string * (int * Util.TagPairs.t * Util.TagPairs.t) list
   (** [dest_inf n] destroys an inference node [n], otherwise raises [Invalid_arg].*)
 
   (** Functions for checking the sort of a node. *)
@@ -87,7 +81,7 @@ sig
   
   (** Auxiliary functions for getting information from all nodes. *)
   
-  val get_seq : t -> Seq.t
+  val get_seq : t -> seq_t
   (** Get sequent labelling the node. *)
   val get_succs : t -> int list
   (** Get the successor node indices of this node. *)
@@ -116,10 +110,10 @@ sig
       - Rooted at 0. 
       - Connected. *)
   
-  module Node : NODE
-  (** Proof node module underlying proof. *)
+  type seq_t
+  type node_t
   
-  val mk : Node.Seq.t -> t
+  val mk : seq_t -> t
   (** Constructor.  Takes a sequent and makes an open node at the root (0).*)
   
   (** Other constructors, which return the indices of new
@@ -138,19 +132,19 @@ sig
   val add_abd : int -> string -> t -> (t * int) 
   val add_inf : 
     int -> string -> 
-    (Node.Seq.t * Util.TagPairs.t * Util.TagPairs.t) list -> t -> 
+    (seq_t * Util.TagPairs.t * Util.TagPairs.t) list -> t -> 
     (int list * t)
 
   (** Accessor functions. *)
   
-  val find : int -> t -> Node.t
-  val get_seq : int -> t -> Node.Seq.t
+  val find : int -> t -> node_t
+  val get_seq : int -> t -> seq_t
   val size : t -> int
   val mem : int -> t -> bool
   val fresh_idx : t -> int
   val fresh_idxs : 'a list -> t -> int list
   
-  val get_ancestry : int -> t -> (int * Node.t) list
+  val get_ancestry : int -> t -> (int * node_t) list
 
   
   val check : t -> bool
@@ -160,7 +154,7 @@ sig
   (** Are all nodes not open? *)
   
   val no_of_backlinks : t -> int
-  val to_list : t -> (int * Node.t) list
+  val to_list : t -> (int * node_t) list
 
   (** Output functions. *)
   
@@ -172,28 +166,29 @@ end
 
 module type SEQTACTICS =
 sig
-  module Seq : SEQUENT
+  type seq_t
 
-  type ruleapp_t = (Seq.t * Util.TagPairs.t * Util.TagPairs.t) list * string
-  type rule_t = Seq.t -> ruleapp_t list
+  type ruleapp_t = (seq_t * Util.TagPairs.t * Util.TagPairs.t) list * string
+  type rule_t = seq_t -> ruleapp_t list
   
+  val relabel : string -> rule_t -> rule_t
   val attempt : rule_t -> rule_t
   val compose : rule_t -> rule_t -> rule_t
   val first : rule_t list -> rule_t
   val repeat : rule_t -> rule_t
 end
 
-module type RULES =
+module type PROOFRULES =
 sig
-  module Proof : PROOF
+  type seq_t
+  type proof_t
   
-  type axiom_f = Proof.Node.Seq.t -> string option
-  type infrule_app = (Proof.Node.Seq.t * Util.TagPairs.t * Util.TagPairs.t) list * string
-  type infrule_f = Proof.Node.Seq.t -> infrule_app list
-  type t = int -> Proof.t -> (int list * Proof.t) list
-  type backrule_f = 
-    Proof.Node.Seq.t -> Proof.Node.Seq.t -> (Util.TagPairs.t * string) list
-  type select_f = int -> Proof.t -> int list
+  type axiom_f = seq_t -> string option
+  type infrule_app = (seq_t * Util.TagPairs.t * Util.TagPairs.t) list * string
+  type infrule_f = seq_t -> infrule_app list
+  type t = int -> proof_t -> (int list * proof_t) list
+  type backrule_f = seq_t -> seq_t -> (Util.TagPairs.t * string) list
+  type select_f = int -> proof_t -> int list
       
   val mk_axiom : axiom_f -> t
   val mk_infrule : infrule_f -> t
@@ -201,27 +196,23 @@ sig
   
   val all_nodes : select_f
   val ancestor_nodes : select_f
-end
-
-module type PROOFTACTICS =
-sig
-  module Proof : PROOF
   
-  type infrule = int -> Proof.t -> (int list * Proof.t) list
-  
-  val compose : infrule -> infrule -> infrule 
+  val fail : t
+  val compose : t -> t -> t 
+  val choice : t list -> t
 end
-
 
 module type PROVER2 =
 sig
-  type sequent
-  type ind_def_set
+  type rule_t
   
+  module Seq : SEQUENT
   module Proof : PROOF
-  module Rules : RULES
+  module Seqtactics : SEQTACTICS
 
-  val idfs : int -> int -> Rules.t -> sequent -> Proof.t option  
+  val idfs : int -> int -> rule_t -> Seq.t -> Proof.t option  
+  val print_proof_stats : Proof.t -> unit
+  val melt_proof: out_channel -> Proof.t -> unit 
    
 end
 

@@ -1,2 +1,2 @@
 module Make (Seq : Sigs.SEQUENT) : Sigs.NODE 
-  with module Seq = Seq 
+  with type seq_t = Seq.t 

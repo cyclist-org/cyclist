@@ -1,7 +1,9 @@
 open Lib
 
-module Make(Prover: Sigs.PROVER)(Seq: Sigs.SEQUENT with type t = Prover.sequent) = 
+module Make(Prover : Sigs.PROVER2) = 
   struct
+    module Seq = Prover.Seq
+    
     let show_proof = ref false 
     let latex_path = ref ""
     let timeout = ref 30
@@ -36,36 +38,36 @@ module Make(Prover: Sigs.PROVER)(Seq: Sigs.SEQUENT with type t = Prover.sequent)
       print_endline (Arg.usage_string !speclist !usage) ;
       exit 1
 
-    let prove_seq seq =
-      (* Format.set_margin (Sys.command "exit $(tput cols)") ;                            *)
-      (* Stats.reset () ;                                                                 *)
-      (* Stats.Gen.call () ;                                                              *)
-      let call () = Prover.idfs !minbound !maxbound !ruleset seq in
+    let prove_seq r seq =
+      Format.set_margin (Sys.command "exit $(tput cols)") ;
+      Stats.reset () ;
+      Stats.Gen.call () ;
+      let call () = Prover.idfs !minbound !maxbound r seq in
       let res = if !timeout<>0 then
 				w_timeout call  !timeout
 			else
 				Some (call ()) in
-      (* Stats.Gen.end_call () ;                                                          *)
-      (* if Option.is_none res then                                                       *)
-      (*   (print_endline ("NOT proved: " ^ (Seq.to_string seq) ^ " [TIMEOUT]") ; 2) else *)
-      (* let res = Option.get res in                                                      *)
-      (* if Option.is_none res then                                                       *)
-      (*   (print_endline ("NOT proved: " ^ (Seq.to_string seq)) ; 1) else                *)
-      (* let proof = Option.get res in                                                    *)
-      (* if !show_proof then                                                              *)
-      (*   Prover.Proof.pp Format.std_formatter proof                                     *)
-      (* else                                                                             *)
-      (*   print_endline ("Proved: " ^ (Seq.to_string seq)) ;                             *)
-      (* if !Stats.do_statistics then                                                     *)
-      (* begin                                                                            *)
-      (*   Stats.gen_print ();                                                            *)
-      (*   Prover.print_proof_stats proof                                                 *)
-      (* end ;                                                                            *)
-      (* if !latex_path<>"" then                                                          *)
-      (* begin                                                                            *)
-      (*   let ch =                                                                       *)
-      (*     open_out_gen [Open_creat; Open_wronly; Open_trunc] 402 !latex_path in        *)
-      (*   Prover.melt_proof ch proof ; close_out ch                                      *)
-      (* end ;                                                                            *)
+      Stats.Gen.end_call () ;
+      if Option.is_none res then
+        (print_endline ("NOT proved: " ^ (Seq.to_string seq) ^ " [TIMEOUT]") ; 2) else
+      let res = Option.get res in
+      if Option.is_none res then
+        (print_endline ("NOT proved: " ^ (Seq.to_string seq)) ; 1) else
+      let proof = Option.get res in
+      if !show_proof then
+        Prover.Proof.pp Format.std_formatter proof
+      else
+        print_endline ("Proved: " ^ (Seq.to_string seq)) ;
+      if !Stats.do_statistics then
+      begin
+        Stats.gen_print ();
+        Prover.print_proof_stats proof
+      end ;
+      if !latex_path<>"" then
+      begin
+        let ch =
+          open_out_gen [Open_creat; Open_wronly; Open_trunc] 402 !latex_path in
+        Prover.melt_proof ch proof ; close_out ch
+      end ;
       0
   end

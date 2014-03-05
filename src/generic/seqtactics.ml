@@ -2,15 +2,17 @@ open Util
 
 module Make(Seq: Sigs.SEQUENT) =
 struct
-  type ruleapp_t = (Seq.t * Util.TagPairs.t * Util.TagPairs.t) list * string
-  type rule_t = Seq.t -> ruleapp_t list
+  type seq_t = Seq.t
+  type ruleapp_t = (seq_t * Util.TagPairs.t * Util.TagPairs.t) list * string
+  type rule_t = seq_t -> ruleapp_t list
   
-  module Seq = Seq
+  let relabel descr rl seq = 
+    Blist.map (fun (app,_) -> (app,descr)) (rl seq)
   
   let attempt rl seq =
     match rl seq with
     | [] ->
-      [ ([(seq, TagPairs.mk (Seq.tags seq), TagPairs.empty)], "Try") ]
+      [ ([(seq, TagPairs.mk (Seq.tags seq), TagPairs.empty)], "") ]
     | apps -> apps
         
   let apply_to_subgoal r (seq,tv,tp) =
@@ -26,14 +28,16 @@ struct
       ) in
     Blist.map (fun (l,d) -> (Blist.map fix_subgoal l, d)) (r seq)
 
-  let apply_to_application r' (subgoals,d) =
-    let apps =
-      Blist.map (apply_to_subgoal r') subgoals in
+  let filt_emp ss = Blist.filter (fun s -> String.length s <> 0) ss
+  
+  let apply_to_application r (subgoals,d) =
+    let apps = Blist.map (apply_to_subgoal r) subgoals in
     let choices = Blist.choose apps in
     Blist.map
       (fun l ->
         let (xs,ds) = Blist.split l in
-        (Blist.flatten xs, d ^ "/" ^ (String.concat "," ds)))
+        (Blist.flatten xs, 
+        String.concat "/" (filt_emp [d; String.concat "," (filt_emp ds)])))
       choices
         
   let compose r r' seq =
@@ -46,11 +50,11 @@ struct
       | apps -> apps
  
   let sequence = function
-    | [] -> invalid_arg "seq"
+    | [] -> invalid_arg "sequence"
     | r::rs -> Blist.foldr compose rs r
 
-  let disjunction rs seq =
-    Blist.flatten (Blist.map (fun r -> r seq) rs)
+  (* let choice rs seq =                             *)
+  (*   Blist.flatten (Blist.map (fun r -> r seq) rs) *)
 
   let repeat r seq = 
     let rec aux app =
@@ -58,7 +62,4 @@ struct
       | [] -> [app]
       | apps -> Blist.flatten (Blist.map aux apps) in
     Blist.flatten (Blist.map aux (r seq)) 
-       
-
-
 end
