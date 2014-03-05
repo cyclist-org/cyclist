@@ -64,16 +64,16 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
     let latex_bracket_rule r = latex_bracket (descr_rule r)
     let latex_bracket_axiom x = latex_bracket (descr_axiom x)
 
-    let rec try_axioms (prf,idxs) = 
+    let rec try_axioms (idxs, prf) = 
       let f seq ax = Option.pred (fun ax' -> (fst (dest_axiom ax')) seq) ax in
       match idxs with
-        | [] -> (prf, [])
+        | [] -> ([], prf)
         | i::is -> 
-          let (prf',is') = try_axioms (prf,is) in 
+          let (is', prf') = try_axioms (is, prf) in 
           let seq = Node.get_seq (Proof.find i prf') in
           match Blist.find_first (f seq) !axiomset with
-            | None -> (prf', i::is')
-            | Some ax -> (Proof.add_axiom i (descr_axiom ax) prf', is') 
+            | None -> (i::is', prf')
+            | Some ax -> (is', Proof.add_axiom i (descr_axiom ax) prf') 
 
     let melt_proof ch p = 
       ignore (Latex.to_channel ~mode:Latex.M ch (Proof.to_melt p))
@@ -91,7 +91,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
     let mk_inf_rule rl d =
       let transf prf idx =
         let seq = Node.get_seq (Proof.find idx prf) in
-        let apply l = try_axioms (Proof.add_inf idx d l prf) in
+        let apply l = Pair.swap (try_axioms (Proof.add_inf idx d l prf)) in
         Zlist.map apply (Zlist.of_list (rl seq)) in
       (InfRule(transf), d)
 
@@ -168,7 +168,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
         let apps = rl seq defs in
         if apps=[] then Zlist.empty else
         let apply (l,defs') =
-          let (prf, prem_idxs) = try_axioms (Proof.add_inf idx d l prf) in
+          let (prf, prem_idxs) = Pair.swap (try_axioms (Proof.add_inf idx d l prf)) in
           (prf, prem_idxs, defs') in
         Zlist.map apply (Zlist.of_list apps) in
       (AbdRule(transf), d)
@@ -226,7 +226,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 
     let idfs seq =
       let bound = ref !minbound in
-      let (start,_) = try_axioms (Proof.mk seq, [0]) in
+      let (start,_) = Pair.swap (try_axioms ([0], Proof.mk seq)) in
       if Proof.is_closed start then (last_search_depth := 0 ; Some start) else
       let stack = ref [expand_proof_state start 0 [(0,0)]] in
       let found = ref None in
@@ -652,7 +652,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 
     let abduce seq initial_defs mk_rules acceptable =
       let bound = ref !minbound in
-      let (start,_) = try_axioms (Proof.mk seq, [0]) in
+      let (start,_) = Pair.swap (try_axioms ([0], Proof.mk seq)) in
       if Proof.is_closed start then (last_search_depth := 0 ; Some (start, initial_defs)) else
       let stack = ref [abd_expand_proof_state 0 (mk_app start 0 [(0,0)] initial_defs) mk_rules] in
       let found = ref None in

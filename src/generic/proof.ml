@@ -87,7 +87,7 @@ struct
         (fun prf' (ci,cn) -> Int.Map.add ci (idx,cn) prf') 
         (replace idx n prf) 
         subnodes in 
-    (prf', subidxs)
+    (subidxs, prf')
 
   let get_ancestry idx prf =
     let rec aux acc idx (par_idx, n) =

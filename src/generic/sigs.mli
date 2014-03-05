@@ -122,8 +122,8 @@ sig
   val mk : Node.Seq.t -> t
   (** Constructor.  Takes a sequent and makes an open node at the root (0).*)
   
-  (** Other constructors, which return the proof and the indices of new
-      subgoals, if any, which are new, open nodes.
+  (** Other constructors, which return the indices of new
+      subgoals, if any, which are new, open nodes, and the new proof.
       
       All of these take an index to an open node, and a description plus
       more arguments appropriate to the type of constructor.  The open
@@ -139,7 +139,7 @@ sig
   val add_inf : 
     int -> string -> 
     (Node.Seq.t * Util.TagPairs.t * Util.TagPairs.t) list -> t -> 
-    (t * int list)
+    (int list * t)
 
   (** Accessor functions. *)
   
@@ -190,14 +190,14 @@ sig
   type axiom_f = Proof.Node.Seq.t -> string option
   type infrule_app = (Proof.Node.Seq.t * Util.TagPairs.t * Util.TagPairs.t) list * string
   type infrule_f = Proof.Node.Seq.t -> infrule_app list
-  type infrule = int -> Proof.t -> (Proof.t * int list) list
+  type t = int -> Proof.t -> (int list * Proof.t) list
   type backrule_f = 
     Proof.Node.Seq.t -> Proof.Node.Seq.t -> (Util.TagPairs.t * string) list
   type select_f = int -> Proof.t -> int list
       
-  val mk_axiom : axiom_f -> infrule
-  val mk_infrule : infrule_f -> infrule
-  val mk_backrule : select_f -> backrule_f -> infrule
+  val mk_axiom : axiom_f -> t
+  val mk_infrule : infrule_f -> t
+  val mk_backrule : bool -> select_f -> backrule_f -> t
   
   val all_nodes : select_f
   val ancestor_nodes : select_f
@@ -207,11 +207,23 @@ module type PROOFTACTICS =
 sig
   module Proof : PROOF
   
-  type infrule = int -> Proof.t -> (Proof.t * int list) list
+  type infrule = int -> Proof.t -> (int list * Proof.t) list
   
   val compose : infrule -> infrule -> infrule 
 end
 
+
+module type PROVER2 =
+sig
+  type sequent
+  type ind_def_set
+  
+  module Proof : PROOF
+  module Rules : RULES
+
+  val idfs : int -> int -> Rules.t -> sequent -> Proof.t option  
+   
+end
 
 module type PROVER =
 sig

@@ -2,6 +2,9 @@ open Lib
 open Util
 open Symheap
 
+
+module P = Prover2.Make(Symheap.Seq)(Symheap.Defs)
+  
 module SLP = Prover.Make(Symheap.Seq)(Symheap.Defs)
 include SLP
 

@@ -13,3 +13,10 @@ let map f = function
   | Some x -> f x
 
 let list_get l = Blist.rev_map get (Blist.rev_filter is_some l)
+
+let some x = Some x
+
+let dest none some = function
+  | None -> none
+  | Some x -> some x
+
