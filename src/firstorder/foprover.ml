@@ -3,33 +3,39 @@ open Util
 open Firstorder
 
 module FO = Firstorder 
-module FOP = Prover.Make(FO.Seq)(FO.Defs)
-include FOP
+module FOP = Prover2.Make(FO.Seq)
+module Rule = Proofrule.Make(FO.Seq)
+module Seqtactics = FOP.Seqtactics
 
 let product_subsumed_modulo_tags p1 p2 =
   Prod.subsumed_wrt_tags Tags.empty p1 p2
 
 (* axioms *)
 let ex_falso_axiom =
-  let ax seq =
-    Form.for_all 
-      begin fun p ->
-        Blist.exists (fun (x,y) -> Term.equal x y) (Prod.get_deqs p)  
-        ||
-        Blist.exists
-          (Pair.perm
-            (fun x y -> 
-              Term.equal Term.zero x && (Term.is_succ y || Term.is_cons y)))
-            (Prod.get_eqs p)
-      end
-      (fst seq) in
-  FOP.mk_axiom ax "Ex Falso"
+  Rule.mk_axiom
+    begin fun seq ->
+      if Form.for_all 
+        begin fun p ->
+          Blist.exists (fun (x,y) -> Term.equal x y) (Prod.get_deqs p)  
+          ||
+          Blist.exists
+            (Pair.perm
+              (fun x y -> 
+                Term.equal Term.zero x && (Term.is_succ y || Term.is_cons y)))
+              (Prod.get_eqs p)
+        end
+        (fst seq)
+      then Some "Ex Falso" else None
+    end
 
 let id_axiom =
-  let ax (l,r) =
-    Form.for_all (fun p -> Form.exists (product_subsumed_modulo_tags p) l) r ||
-    Form.mem Prod.empty r in
-  FOP.mk_axiom ax "Id"
+  Rule.mk_axiom
+    begin fun (l,r) ->
+      if 
+        Form.for_all (fun p -> Form.exists (product_subsumed_modulo_tags p) l) r ||
+        Form.mem Prod.empty r
+      then Some "Id" else None
+    end
 
 (* inference rules *)
 
@@ -46,7 +52,7 @@ let eq_subst_rule seq =
         not (Term.equal x' y') && ((Term.is_var x') || (Term.is_var y'))) eqs in
     let (x,y) = if Term.is_var y then (x,y) else (y,x) in
     let theta = Term.singleton_subst y x in 
-    [ [ ((Seq.subst theta seq), Seq.tag_pairs seq, TagPairs.empty) ] ]
+    [ [ ((Seq.subst theta seq), Seq.tag_pairs seq, TagPairs.empty) ], "" ]
   with Not_product | Not_found -> [] 
 
 let simplify_eqs seq =
@@ -59,7 +65,7 @@ let simplify_eqs seq =
   let seq' = Pair.map (Form.endomap (Prod.filter non_triv_eq)) seq in
   debug (fun () -> "simpl_eqs done") ;
   if not !progress then [] else
-  [ [ (seq', Seq.tag_pairs seq, TagPairs.empty) ] ] 
+  [ [ (seq', Seq.tag_pairs seq, TagPairs.empty) ], "" ] 
 
 let bijections = Strng.Set.of_list ["s"; "cons"]
 
@@ -80,7 +86,7 @@ let bij_eqs (l,r) =
   let g p = Prod.find_map (f p) p in
   match Form.find_map g l with
     | None -> []
-    | Some l' -> [ [ ((l', r), Form.tag_pairs l, TagPairs.empty) ] ] 
+    | Some l' -> [ [ ((l', r), Form.tag_pairs l, TagPairs.empty) ], "" ] 
 
 (* cut using x=y |- f(x)=f(y) on the rhs *)
 let func_eqs (l,r) = 
@@ -99,7 +105,7 @@ let func_eqs (l,r) =
   let g p = Prod.find_map (f p) p in
   match Form.find_map g r with
     | None -> [] 
-    | Some r' -> [ [ ((l, r'), Form.tag_pairs l, TagPairs.empty) ] ] 
+    | Some r' -> [ [ ((l, r'), Form.tag_pairs l, TagPairs.empty) ], "" ] 
 
 (* substitute one equality between an exist var and a term in RHS *)
 let eq_ex_subst_rule (l,r) =
@@ -117,7 +123,7 @@ let eq_ex_subst_rule (l,r) =
     with Not_found -> None in
   match Form.find_map eq_ex_subst_product r with
     | None -> []
-    | Some r' -> [ [ ((l, r'), Form.tag_pairs l, TagPairs.empty) ] ] 
+    | Some r' -> [ [ ((l, r'), Form.tag_pairs l, TagPairs.empty) ], "" ] 
   
 (* remove all RHS atoms that can be discharged *)
 let simpl_rhs (l,r) =
@@ -137,7 +143,7 @@ let simpl_rhs (l,r) =
             if not res then prog := true ; res  
           )) r in
     if not !prog then [] else 
-    [ [ ((l, r'), Prod.tag_pairs lp, TagPairs.empty) ] ]
+    [ [ ((l, r'), Prod.tag_pairs lp, TagPairs.empty) ], "" ]
   with Not_product -> [] 
 
 let simplify_rules = [ 
@@ -149,70 +155,58 @@ let simplify_rules = [
   func_eqs ;
   ]
 
-let simplify_seq_rl = 
-  FOP.Seq_tacs.repeat_tac (FOP.Seq_tacs.first simplify_rules)
+let simplify_seq = 
+  Seqtactics.repeat (Seqtactics.first simplify_rules)
 
-let simplify_proof_rl =                                                                          
-  FOP.Proof_tacs.repeat_tac                                                                
-    (FOP.Proof_tacs.first 
-      (Blist.map (fun r -> FOP.mk_inf_rule r "Simpl") simplify_rules)) 
+let simplify = Rule.mk_infrule simplify_seq
 
-let simplify = 
-  if !FOP.expand_proof then 
-    simplify_proof_rl                                         
-  else
-    FOP.mk_inf_rule simplify_seq_rl "Simpl"
-
-let wrap r d =
-  if !FOP.expand_proof then                                                                              
-    FOP.Proof_tacs.then_tac                                                                  
-      (FOP.mk_inf_rule r d)                                                                  
-      (FOP.Proof_tacs.try_tac simplify_proof_rl)                                                   
-  else
-    FOP.mk_inf_rule
-      (FOP.Seq_tacs.then_tac r (FOP.Seq_tacs.try_tac simplify_seq_rl))
-      d
+let wrap r =
+  Rule.mk_infrule (Seqtactics.compose r (Seqtactics.attempt simplify_seq))
 
 (* break LHS disjunctions *)
 let lhs_disj_to_products =
-  let rl (l,r) =  
-    if Form.cardinal l < 2 then [] else 
-      [ Form.map_to_list 
-        (fun p -> 
-          ( (Form.singleton p, r), TagPairs.mk (Prod.tags p), TagPairs.empty) ) 
-        l 
-      ] in
-  wrap rl "L.Or" 
+  wrap
+    begin fun (l,r) ->  
+      if Form.cardinal l < 2 then [] else 
+        [ Form.map_to_list 
+          (fun p -> 
+            ( (Form.singleton p, r), TagPairs.mk (Prod.tags p), TagPairs.empty) ) 
+          l,
+          "L.Or" 
+        ]
+    end
 
 (* break RHS conjunction *)
 let rhs_conj_to_atoms =
-  let rl (l,r) =
-    try
-      let rp = Form.dest r in
-      if Prod.cardinal rp < 2 then [] else
-      let rp = Prod.elements rp in
-      let ex_vars_ls = 
-        Blist.map 
-          (fun a -> Term.Set.filter Term.is_exist_var (Atom.vars a)) rp in
-      let chs = Blist.cartesian_hemi_square ex_vars_ls in
-      if Blist.exists 
-        (fun (l1,l2) -> not (Term.Set.is_empty (Term.Set.inter l1 l2))) chs
-      then [] else
-      let t = Form.tag_pairs l in
-      [ Blist.map 
-        (fun at -> 
-          ( (l, Form.singleton (Prod.singleton at)), t, TagPairs.empty ) ) rp 
-      ] 
-    with Not_product -> [] in
-  wrap rl "R.And"
-
+  wrap
+    begin fun (l,r) ->
+      try
+        let rp = Form.dest r in
+        if Prod.cardinal rp < 2 then [] else
+        let rp = Prod.elements rp in
+        let ex_vars_ls = 
+          Blist.map 
+            (fun a -> Term.Set.filter Term.is_exist_var (Atom.vars a)) rp in
+        let chs = Blist.cartesian_hemi_square ex_vars_ls in
+        if Blist.exists 
+          (fun (l1,l2) -> not (Term.Set.is_empty (Term.Set.inter l1 l2))) chs
+        then [] else
+        let t = Form.tag_pairs l in
+        [ Blist.map 
+          (fun at -> 
+            ( (l, Form.singleton (Prod.singleton at)), t, TagPairs.empty ) ) rp,
+          "R.And" 
+        ] 
+      with Not_product -> []
+    end
 
 
 (* remove existential vars by instantiating them *)
 (* to some universal variable. Clearly, this could extend to arbitrary terms *)
 (* but is not for performance reasons. *)
 let instantiate_ex = 
-  let rl seq =
+  wrap
+    begin fun seq ->
     let (uvars, exvars) = 
       Pair.map 
         Term.Set.elements 
@@ -221,9 +215,10 @@ let instantiate_ex =
     let t = Seq.tag_pairs seq in
     Blist.map 
       (fun (exv,trm) -> 
-        [ (Seq.subst (Term.singleton_subst exv trm) seq, t, TagPairs.empty) ]
-      ) cp in
-  wrap rl "Inst. ex"
+        [ (Seq.subst (Term.singleton_subst exv trm) seq, t, TagPairs.empty) ], 
+        "Inst. ex"
+      ) cp
+    end
 
 
 let matches_ident ident a = 
@@ -267,16 +262,14 @@ let gen_right_rules (ident,def) =
     Blist.flatten 
       (Blist.map (ruf_prod_in_formula uni case seq) (Form.elements r)) in
   let right_rule case =
-    let rl ((l,r) as seq) =
+    begin fun ((l,r) as seq) ->
       let case = Case.freshen (Seq.vars seq) case in
       let tag_pairs = Seq.tag_pairs seq in
-      let res = 
         Blist.map 
-          (fun r' -> [ ((l,r'), tag_pairs, TagPairs.empty) ]) 
-          ( (ruf_formula true (Case.dest case) seq) (*@ (ruf_formula true case seq)*) ) in
-      res in
-    wrap rl (ident ^ " R.Unf.") in
-  Blist.map right_rule def
+          (fun r' -> [ ((l,r'), tag_pairs, TagPairs.empty) ], (ident ^ " R.Unf.") ) 
+          ( (ruf_formula true (Case.dest case) seq) (*@ (ruf_formula true case seq)*) )
+      end in
+  Blist.map wrap (Blist.map right_rule def)
         
 
  
@@ -311,19 +304,19 @@ let gen_left_rules (ident, def) =
           ((Form.singleton l'', r), 
             (if contr then (TagPairs.add (id,new_tag) tag_pairs) else tag_pairs), 
             TagPairs.singleton (id, id))
-        in Blist.map do_case def 
+        in Blist.map do_case def, (ident ^ " L.Unf.") 
       in (*(Blist.map (left_unfold false) (Prod.elements preds)) 
           @ *)
           (Blist.map (left_unfold true) (Prod.elements preds))
     with Not_product -> [] in
-  wrap left_rule (ident ^ " L.Unf.")
+  wrap left_rule 
 
 
 let matches_fun s1 s2 =
   let tags = Tags.inter (Seq.tags s1) (Seq.tags s2) in
-  if Tags.is_empty tags then None else
+  if Tags.is_empty tags then [] else
   let res = Seq.uni_subsumption s1 s2 in
-  if Option.is_none res then None else
+  if Option.is_none res then [] else
   let theta = Option.get res in
   let s2' = Seq.subst theta s2 in
   let tags' = Tags.fold
@@ -332,9 +325,9 @@ let matches_fun s1 s2 =
       if Seq.subsumed_wrt_tags new_acc s1 s2' then new_acc else acc
     ) tags Tags.empty in
   let () = assert (not (Tags.is_empty tags')) in
-  Some (TagPairs.mk tags')
+  [ (TagPairs.mk tags', "Backl") ]
 
-let matches = FOP.mk_back_rule matches_fun "Backl"
+let matches = Rule.mk_backrule true Rule.all_nodes matches_fun
 
 let fold (ident,defs) =
   let fold_rl ((l,r) as seq) = 
@@ -365,11 +358,11 @@ let fold (ident,defs) =
               seq', 
               TagPairs.mk (Tags.inter tags (Seq.tags seq')), 
               TagPairs.empty 
-            )] in
+            )], (ident ^ " Fold")  in
         Blist.map process_sub !results in
       Blist.flatten (Blist.map do_case defs)
     with Not_product -> [] in
-  FOP.mk_inf_rule fold_rl (ident ^ " Fold") 
+  Rule.mk_infrule fold_rl 
 
 (* let up_to_n m rl =                                                    *)
 (*   let rec aux acc rl' = function                                      *)
@@ -378,24 +371,28 @@ let fold (ident,defs) =
 (*   FOP.rename_rule                                                     *)
 (*     (FOP.Proof_tacs.or_tac (aux [] rl m))                     *)
 (*     ("Up-to-" ^ (string_of_int m) ^ " " ^ (FOP.descr_rule rl) )       *)
+
+
+let ruleset = ref Rule.fail
+
 let setup defs = 
   let ruf = Blist.flatten (Blist.map gen_right_rules (Defs.bindings defs)) in
   let luf = Blist.map gen_left_rules (Defs.bindings defs) in
-  let ruf_or = FOP.Proof_tacs.or_tac ruf in
+  let ruf_or = Rule.choice ruf in
   let folds = 
     Blist.map 
       (* (fun c -> FOP.Proof_tacs.then_tac (up_to_n 1 (fold c)) matches) *)
-      (fun c -> FOP.Proof_tacs.then_tac (fold c) matches)
+      (fun c -> Rule.compose (fold c) matches)
       (* fold *)
       (Defs.bindings defs) in
-  let clever = Blist.map (fun l -> FOP.Proof_tacs.then_tac l ruf_or) luf in
-  FOP.axiomset := [ ex_falso_axiom ; id_axiom ] ;
-  FOP.ruleset := 
-    [ 
+  let clever = Blist.map (fun l -> Rule.compose l ruf_or) luf in
+  ruleset := Rule.choice
+    ([ 
+      ex_falso_axiom ; id_axiom ;
       simplify ;
       matches ;
       lhs_disj_to_products ;
       instantiate_ex ;
       rhs_conj_to_atoms
-    ] @ ruf @ clever @ luf @ folds 
+    ] @ ruf @ clever @ luf @ folds) 
 

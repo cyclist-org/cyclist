@@ -68,7 +68,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
         | i::is -> 
           let (is', prf') = try_axioms (is, prf) in 
           let seq = Node.get_seq (Proof.find i prf') in
-          match Blist.find_first (f seq) !axiomset with
+          match Blist.find_some (f seq) !axiomset with
             | None -> (i::is', prf')
             | Some ax -> (is', Proof.add_axiom i (descr_axiom ax) prf') 
 

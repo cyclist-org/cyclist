@@ -21,6 +21,8 @@ let tl l = match Lazy.force l with
 
 let cons z zs = Lazy.lazy_from_val (Node(z, zs))
 
+let singleton x = Lazy.lazy_from_val (Node(x, empty))
+
 let rec of_list l = lazy (
   match l with
     | [] -> Empty
@@ -77,11 +79,6 @@ let rec flatten (l : 'a t t) : 'a t = lazy (
         Node(y, flatten (Lazy.lazy_from_val (Node(ys,xs))))
 )
 
-(* let choose = function                                                  *)
-(*   | [] -> [[]]                                                         *)
-(*   | hd::tl -> let c = choose tl in                                     *)
-(*     Blist.flatten (Blist.map (fun el -> Blist.map (fun l -> el::l) c) hd) *)
-
 let rec choose (l : 'a t t) : 'a t t = lazy (
   match Lazy.force l with
     | Empty -> Node(empty, empty)
@@ -96,24 +93,7 @@ let rec fold f ys a = match Lazy.force ys with
   | Empty -> a
   | Node(x, xs) -> fold f xs (f a x)
 
+let fold_left f a ys = fold f ys a
+
 let get_opt l = map Option.get (filter Option.is_some l)
 
-(* module Zlist =                          *)
-(*   struct                                *)
-(*     include Blist                        *)
-(*     type 'a t = 'a list                 *)
-(*     let empty = []                      *)
-(*     let of_list l = l                   *)
-(*     let to_list l = l                   *)
-(*     let is_empty l = (l=[])             *)
-(*     let rec Blist.find_some f = function      *)
-(*       | [] -> None                      *)
-(*       | hd::tl -> match f hd with       *)
-(*         | None -> Blist.find_some f tl        *)
-(*         | x -> x                        *)
-(*     let Blist.find_first p l = Blist.find_first p l *)
-(*     let from_hd = function              *)
-(*       | [] -> []                        *)
-(*       | hd::_ -> [hd]                   *)
-(*     let from_fun f = f ()               *)
-(*   end                                   *)

@@ -186,7 +186,7 @@ sig
   type axiom_f = seq_t -> string option
   type infrule_app = (seq_t * Util.TagPairs.t * Util.TagPairs.t) list * string
   type infrule_f = seq_t -> infrule_app list
-  type t = int -> proof_t -> (int list * proof_t) list
+  type t = int -> proof_t -> (int list * proof_t) Zlist.t
   type backrule_f = seq_t -> seq_t -> (Util.TagPairs.t * string) list
   type select_f = int -> proof_t -> int list
       

@@ -1,8 +1,14 @@
 include List
 
+type 'a t = 'a list
+
 let foldl = fold_left
 let foldr = fold_right
 
+let empty = []
+let of_list l = l
+let to_list l = l
+let singleton x = [x]
 
 let count_foldl f a xs = 
   let rec aux n acc = function
@@ -64,15 +70,13 @@ let replace_nth z n xs =
 
 let indexes xs = range 0 xs
 
-let rec find_first f = function
+let rec find_some f = function
   | [] -> None
   | x::xs -> match f x with
-    | None -> find_first f xs
+    | None -> find_some f xs
     | y -> y
 
-let rec find_some p = function
-  | [] -> None
-  | x::xs -> if p x then Some x else find_some p xs
+let find_first p l = find_some (fun x -> if p x then Some x else None) l
 
 let find_index p l =
   let rec aux p n = function

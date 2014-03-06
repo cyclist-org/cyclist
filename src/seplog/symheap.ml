@@ -163,8 +163,8 @@ module UF =
       let p = Term.Map.remove k p in
       let to_match = Term.Map.bindings p' in
       let g theta' = uni_subsumption left hook theta' p p' in
-      let f a' = Blist.find_first g (direct Term.unify_pairs theta a a') in
-      Blist.find_first f to_match
+      let f a' = Blist.find_some g (direct Term.unify_pairs theta a a') in
+      Blist.find_some f to_match
 
     let to_string_list v = Blist.map (pair_to_string symb_eq.str) (bindings v)
     let to_string v =
@@ -224,8 +224,8 @@ module Deqs =
       let p = remove a p in
       let to_match = elements p' in
       let g theta' = uni_subsumption left hook theta' p p' in
-      let f a' = Blist.find_first g (direct Term.unify_pairs theta a a') in
-      Blist.find_first f to_match
+      let f a' = Blist.find_some g (direct Term.unify_pairs theta a a') in
+      Blist.find_some f to_match
 
     let to_string_list v = Blist.map (pair_to_string symb_deq.str) (elements v)
     let to_string v =
@@ -274,7 +274,7 @@ module Ptos =
         | Some theta' ->
           let p' = remove a' p' in
           aux_subsumption left spw hook theta' p p' in
-      Blist.find_first f to_match
+      Blist.find_some f to_match
 
     let uni_subsumption left hook theta p p' =
       aux_subsumption left false hook theta p p'
@@ -345,7 +345,7 @@ module Inds =
         | Some theta' ->
           let p' = remove a' p' in
           aux_subsumption left spw hook theta' p p' in
-      Blist.find_first f to_match
+      Blist.find_some f to_match
 
     let uni_subsumption left hook theta p p' =
       aux_subsumption left false hook theta p p'
@@ -598,7 +598,7 @@ module Heap =
       let pair_nin_lst (x,y) = trm_nin_lst x || trm_nin_lst y in
       let rec proj_eqs h =
         let orig_eqs = UF.bindings h.eqs in
-				let p = Blist.find_some pair_nin_lst orig_eqs in
+				let p = Blist.find_first pair_nin_lst orig_eqs in
 				if Option.is_none p then h else
         let (x,y) = Option.get p in
         (* let new_eqs =                                                        *)
@@ -675,7 +675,7 @@ module Form =
       let hook' theta' =
         aux_subsumption left spw fhook theta' f f' in
       let g p = Heap.aux_subsumption left spw hook' theta p p' in
-      Blist.find_first g f
+      Blist.find_some g f
 
     let uni_subsumption left fhook theta f f' =
       aux_subsumption left false fhook theta f f'

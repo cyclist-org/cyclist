@@ -2,6 +2,8 @@ open Lib
 open Util
 open Symbols
 
+module L = Zlist
+
 module Make(Seq: Sigs.SEQUENT) =
   struct
     module Proof = Proof.Make(Seq)
@@ -21,11 +23,11 @@ module Make(Seq: Sigs.SEQUENT) =
       if bound<0 then None else
       let apps = r idx prf in
       let res = 
-        Blist.find_first 
+        L.find_some 
           (fun (ss', prf') -> if ss'=[] then Some prf' else None) 
           apps in
       if Option.is_some res then res else
-      Blist.find_first
+      L.find_some
         (fun (subgoals', prf') -> 
           Blist.fold_left
             (fun optprf idx' -> Option.map (dfs (bound-1) r idx') optprf)

@@ -292,8 +292,8 @@ let gen_fold_rules (def, ident) =
               (* the following fixes the bug wrt to the binary tree search example *)
               let ts = TagPairs.filter (fun (a,b) -> a<>id && b<>id) ts in
               if TagPairs.is_empty ts then None else Some ts in
-        Blist.find_first do_case def in 
-      Blist.find_first fold_match (Inds.elements preds)
+        Blist.find_some do_case def in 
+      Blist.find_some fold_match (Inds.elements preds)
     with Not_symheap -> None in
   PRP.mk_back_rule fold_rule (ident ^ " Fold/Backl")
 

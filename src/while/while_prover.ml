@@ -252,8 +252,8 @@ let gen_fold_rules (def, ident) =
           let l2' = Heap.star l2' f' in
           let s2' = ([l2'],cmd2) in
           matches_fun s1 s2' in
-        Blist.find_first do_case def in 
-      Blist.find_first fold_match (Inds.elements preds)
+        Blist.find_some do_case def in 
+      Blist.find_some fold_match (Inds.elements preds)
     with Not_symheap -> None in
   SP.mk_back_rule fold_rule (ident ^ " Fold/Backl")
 
