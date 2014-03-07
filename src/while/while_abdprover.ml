@@ -357,7 +357,7 @@ let abd_deref =
         	( [Case.mk clause head], ident )::defs
 				  end
 					newxs in
-      Blist.flatten (Blist.map f inds)
+      Blist.bind f inds
     with Not_symheap | WrongCmd -> [] in
   mk_abd_inf_rule rl "Abd. deref"
 
@@ -410,7 +410,7 @@ let abd_det_guard =
             } in
           ( [Case.mk clause_eq head; Case.mk clause_deq head], ident )::defs in
 			  Blist.map g occurrences in
-      Blist.flatten (Blist.map f inds)
+      Blist.bind f inds
     with Not_symheap -> [] in
   mk_abd_inf_rule rl "Abd. det guard"
 
@@ -463,7 +463,7 @@ let abd_back_rule =
               } in
             (( [Case.mk cl (c, newparams)], c )::defs))
 				  combinations in
-      Blist.flatten (Blist.map f cp)
+      Blist.bind f cp
     with Not_symheap -> [] in
   mk_abd_back_rule rl "Abd. backlink"
 
@@ -557,7 +557,7 @@ let matches = mk_back_rule While_prover.matches_fun "Backl"
 (*   					let cl = { Heap.empty with inds=Inds.singleton (1,(id2,perm)) } in   *)
 (*             (( [Case.mk cl (id1, newparams)], id1 )::defs))                      *)
 (*   			  combinations in                                                        *)
-(*       Blist.flatten (Blist.map g cp)                                               *)
+(*       Blist.bind g cp                                               *)
 (*     with Not_symheap | WrongCmd -> [] in                                         *)
 (*   mk_abd_back_rule rl "Abd. Cut backlink"                                        *)
 

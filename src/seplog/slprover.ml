@@ -9,13 +9,10 @@ module Seqtactics = SLP.Seqtactics
 
 let id_axiom =
   Rule.mk_axiom 
-    (fun (l,r) -> 
-      if Form.subsumed_wrt_tags Tags.empty r l then Some "Id" else None)
-
+    (fun (l,r) -> Option.mk (Form.subsumed_wrt_tags Tags.empty r l) "Id")
 
 let ex_falso_axiom =
-  Rule.mk_axiom
-    (fun (l,_) -> if Form.inconsistent l then Some "Ex Falso" else None)
+  Rule.mk_axiom (fun (l,_) -> Option.mk (Form.inconsistent l) "Ex Falso")
 
 (* break LHS disjunctions *)
 let lhs_disj_to_symheaps =
@@ -203,7 +200,7 @@ let mk_ruf defs =
         with Not_symheap -> [] in
       wrap right_rule in
     Blist.map gen_rule def in
-  Blist.flatten (Blist.map gen_right_rules defs)
+  Blist.bind gen_right_rules defs
 
 let gen_left_rules (def, ident) =
   let left_rule seq =

@@ -40,8 +40,7 @@ struct
         String.concat "/" (filt_emp [d; String.concat "," (filt_emp ds)])))
       choices
         
-  let compose r r' seq =
-    Blist.flatten (Blist.map (apply_to_application r') (r seq))
+  let compose r r' seq = Blist.bind (apply_to_application r') (r seq)
         
   let rec first lr seq = match lr with
     | [] -> []
@@ -53,13 +52,12 @@ struct
     | [] -> invalid_arg "sequence"
     | r::rs -> Blist.foldr compose rs r
 
-  (* let choice rs seq =                             *)
-  (*   Blist.flatten (Blist.map (fun r -> r seq) rs) *)
+  (* let choice rs seq = Blist.bind (fun r -> r seq) rs *)
 
   let repeat r seq = 
     let rec aux app =
       match apply_to_application r app with
       | [] -> [app]
-      | apps -> Blist.flatten (Blist.map aux apps) in
-    Blist.flatten (Blist.map aux (r seq)) 
+      | apps -> Blist.bind aux apps in
+    Blist.bind aux (r seq) 
 end

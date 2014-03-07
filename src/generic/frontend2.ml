@@ -11,27 +11,26 @@ module Make(Prover : Sigs.PROVER2) =
     let maxbound = ref 11
 
     let speclist = ref [
-        ("-m", Arg.Set_int minbound, 
-          (": set starting depth for IDFS to <int>, default is " ^ 
-            (string_of_int !minbound)));
-        ("-M", Arg.Set_int maxbound, 
-          (": set maximum depth for IDFS to <int>, default is " ^ 
-            (string_of_int !maxbound)));
-        ("-L", Arg.Int 
-          (fun n -> minbound := n ; maxbound := n), 
-          ": set both depths to <int>.");
-        ("-p", Arg.Set show_proof,": show proof");
-        ("-d", Arg.Set do_debug,": print debug messages");
-        ("-s", Arg.Set Stats.do_statistics,": print statistics");
-        ("-l", Arg.Set_string latex_path, ": write proofs to <file>");
-        (* ("-a", Arg.Set Prover.ancestral_links_only,": only create backlinks to ancestral nodes, default is " ^ (string_of_bool !Prover.ancestral_links_only)); *)
-        ("-t", Arg.Set_int timeout, 
-          (": set timeout in seconds to <int>, 0 disables it, default is " ^ 
-            (string_of_int !timeout)));
-        (* ("-e", Arg.Set Prover.expand_proof,": expand compound proof steps, default is " ^ (string_of_bool !Prover.expand_proof)); *)
-      ]
+      ("-m", Arg.Set_int minbound, 
+        (": set starting depth for IDFS to <int>, default is " ^ 
+          (string_of_int !minbound)));
+      ("-M", Arg.Set_int maxbound, 
+        (": set maximum depth for IDFS to <int>, default is " ^ 
+          (string_of_int !maxbound)));
+      ("-L", Arg.Int 
+        (fun n -> minbound := n ; maxbound := n), 
+        ": set both depths to <int>.");
+      ("-p", Arg.Set show_proof,": show proof");
+      ("-d", Arg.Set do_debug,": print debug messages");
+      ("-s", Arg.Set Stats.do_statistics,": print statistics");
+      ("-l", Arg.Set_string latex_path, ": write proofs to <file>");
+      ("-t", Arg.Set_int timeout, 
+        (": set timeout in seconds to <int>, 0 disables it, default is " ^ 
+          (string_of_int !timeout)));
+    ]
 
-    let usage = ref ("usage: " ^ Sys.argv.(0) ^ " FIXME")
+    let usage = 
+      ref ("usage: " ^ Sys.argv.(0) ^ " [-p/d/s] [-l <file>] [-t/m/M/L <int>] <sequent>")
 
     let die msg =
       print_endline msg ;

@@ -502,7 +502,7 @@ let abd_back_rule =
           ptos=Ptos.empty; 
           inds=Inds.empty
         } in
-      let res = Blist.flatten (Blist.map
+      let res = Blist.bind
         (fun (c,c') -> 
           let (_,(_,params)) = pick_ind c l1 in
           let (_,(_,params')) = pick_ind c' l2 in
@@ -521,7 +521,7 @@ let abd_back_rule =
             ) 
             combinations
          )
-         cp) in
+         cp in
       debug (fun () -> "Abd back ends, results=" ^ (string_of_bool (res<>[]))) ; 
       res 
     with Not_symheap -> [] in

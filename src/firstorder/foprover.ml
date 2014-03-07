@@ -13,28 +13,33 @@ let product_subsumed_modulo_tags p1 p2 =
 (* axioms *)
 let ex_falso_axiom =
   Rule.mk_axiom
-    begin fun seq ->
-      if Form.for_all 
-        begin fun p ->
-          Blist.exists (fun (x,y) -> Term.equal x y) (Prod.get_deqs p)  
-          ||
-          Blist.exists
-            (Pair.perm
-              (fun x y -> 
-                Term.equal Term.zero x && (Term.is_succ y || Term.is_cons y)))
-              (Prod.get_eqs p)
-        end
-        (fst seq)
-      then Some "Ex Falso" else None
+    begin fun (l,_) ->
+      Option.mk 
+        (Form.for_all 
+          begin fun p ->
+            Blist.exists (Fun.uncurry Term.equal) (Prod.get_deqs p)  
+            ||
+            Blist.exists
+              (Pair.perm
+                (fun x y -> 
+                  Term.is_zero x && (Term.is_succ y || Term.is_cons y)))
+                (Prod.get_eqs p)
+          end
+          l
+        )
+        "Ex Falso"
     end
 
 let id_axiom =
   Rule.mk_axiom
     begin fun (l,r) ->
-      if 
-        Form.for_all (fun p -> Form.exists (product_subsumed_modulo_tags p) l) r ||
-        Form.mem Prod.empty r
-      then Some "Id" else None
+      Option.mk
+        (
+          Form.mem Prod.empty r ||
+          Form.for_all 
+            (fun p -> Form.exists (product_subsumed_modulo_tags p) l) r
+        )
+        "Id"
     end
 
 (* inference rules *)
@@ -259,8 +264,7 @@ let gen_right_rules (ident,def) =
     let r' = Form.remove rp r in
     Blist.map (fun newp -> Form.add newp r') (ruf_product uni case seq rp) in
   let ruf_formula uni case ((l,r) as seq) = 
-    Blist.flatten 
-      (Blist.map (ruf_prod_in_formula uni case seq) (Form.elements r)) in
+    Blist.bind (ruf_prod_in_formula uni case seq) (Form.elements r) in
   let right_rule case =
     begin fun ((l,r) as seq) ->
       let case = Case.freshen (Seq.vars seq) case in
@@ -360,7 +364,7 @@ let fold (ident,defs) =
               TagPairs.empty 
             )], (ident ^ " Fold")  in
         Blist.map process_sub !results in
-      Blist.flatten (Blist.map do_case defs)
+      Blist.bind do_case defs
     with Not_product -> [] in
   Rule.mk_infrule fold_rl 
 
@@ -376,7 +380,7 @@ let fold (ident,defs) =
 let ruleset = ref Rule.fail
 
 let setup defs = 
-  let ruf = Blist.flatten (Blist.map gen_right_rules (Defs.bindings defs)) in
+  let ruf = Blist.bind  gen_right_rules (Defs.bindings defs) in
   let luf = Blist.map gen_left_rules (Defs.bindings defs) in
   let ruf_or = Rule.choice ruf in
   let folds = 

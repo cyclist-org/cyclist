@@ -894,11 +894,9 @@ module Defs =
         Blist.filter
           (fun (c, _) -> Strng.equal ident (fst (snd (Case.dest c))))
           (CaseMap.to_list cmap) in
-      Blist.flatten (
-         Blist.map
-          (fun (c, s) -> Blist.map (fun bp -> (c,bp)) (BasePairSet.to_list s))
-          l
-        )
+      Blist.bind
+        (fun (c, s) -> Blist.map (fun bp -> (c,bp)) (BasePairSet.to_list s))
+        l
 
     let gen_pairs case cmap =
       let (h,_) = Case.dest case in

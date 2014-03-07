@@ -1,5 +1,6 @@
 open Util
 
+(* using L should allow switching between Blist and Zlist easily *)
 module L = Zlist
 
 module Make(Seq : Sigs.SEQUENT) =
@@ -36,15 +37,11 @@ struct
     let apply trgidx = 
       let trgseq = Proof.get_seq trgidx prf in
       L.map (mk trgidx) (L.of_list (br_f srcseq trgseq)) in
+    let apps = L.bind apply trgidxs in
     if greedy then
-      begin
-        let rsl = L.find_first check (L.flatten (L.map apply trgidxs)) in
-        match rsl with
-        | None -> L.empty
-        | Some rsl' -> L.cons rsl' L.empty
-      end
+      Option.dest L.empty L.singleton (L.find_first check apps) 
     else  
-      L.filter check (L.flatten (L.map apply trgidxs))
+      L.filter check apps
     
   
   let all_nodes srcidx prf = 
@@ -56,26 +53,22 @@ struct
   let apply_to_subgoals r (subgoals, prf) =
     L.of_list (
     Blist.fold_left
-      (* close one subgoal each time *)
+      (* close one subgoal each time by actually appling the rule *)
       (fun apps idx ->
-        Blist.flatten
-          (* actually apply the rule *)
-          (Blist.map
-            (fun (opened, oldprf) ->
-              (* add new subgoals to the list of opened ones *)
-              Blist.map
-                (fun (newsubgoals, newprf) -> (opened @ newsubgoals, newprf))
-                (L.to_list (r idx oldprf)))
-          apps))
+        Blist.bind
+          (fun (opened, oldprf) ->
+            (* add new subgoals to the list of opened ones *)
+            Blist.map
+              (fun (newsubgoals, newprf) -> (opened @ newsubgoals, newprf))
+              (L.to_list (r idx oldprf)))
+          apps)
       [ ([], prf) ]
       subgoals
     )
     
-  let compose (r:t) r' idx prf =
-    L.flatten (L.map (apply_to_subgoals r') (r idx prf))
+  let compose (r:t) r' idx prf = L.bind (apply_to_subgoals r') (r idx prf)
 
-  let choice rl idx prf =
-    L.flatten (L.map (fun f -> f idx prf) (L.of_list rl)) 
+  let choice rl idx prf = L.bind (fun f -> f idx prf) (L.of_list rl) 
       
   
 end

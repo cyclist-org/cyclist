@@ -43,6 +43,7 @@ module Term =
 
     let mk_const i = Const(i)
     let zero = mk_const 0
+    let is_zero x = equal zero x
     let mk_var i = assert (i<>0) ; Var(i)
     let mk_univ_var name = mk_var (Var.mk_univ_var name)
     let mk_exist_var name = mk_var (Var.mk_exist_var name)
@@ -207,8 +208,7 @@ module Term =
         let first = Set.choose s in
         let s = Set.remove first s in
         Set.map_to_list (fun el -> (first,el)) s in
-      let eqs =
-        Blist.flatten (Blist.map (fun (_,v) -> set_to_eqs v) (Map.bindings m)) in
+      let eqs = Blist.bind (fun (_,v) -> set_to_eqs v) (Map.bindings m) in
       Some (theta, eqs)
 
     let intset_of_varset s = Set.map_to Int.Set.add Int.Set.empty dest_var s

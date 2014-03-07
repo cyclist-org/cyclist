@@ -79,12 +79,14 @@ let rec flatten (l : 'a t t) : 'a t = lazy (
         Node(y, flatten (Lazy.lazy_from_val (Node(ys,xs))))
 )
 
+let bind f zs = flatten (map f zs)
+
 let rec choose (l : 'a t t) : 'a t t = lazy (
   match Lazy.force l with
     | Empty -> Node(empty, empty)
     | Node(x, xs) ->
       let cs = choose xs in
-      Lazy.force (flatten (map (fun y -> map (cons y) cs) x))
+      Lazy.force (bind (fun y -> map (cons y) cs) x)
   )
 
 let find_first p (l : 'a t) = find_some (Option.pred p) l
@@ -96,4 +98,5 @@ let rec fold f ys a = match Lazy.force ys with
 let fold_left f a ys = fold f ys a
 
 let get_opt l = map Option.get (filter Option.is_some l)
+
 

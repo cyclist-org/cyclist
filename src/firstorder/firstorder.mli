@@ -15,6 +15,7 @@ sig
 
   val zero : t
 
+  val is_zero : t -> bool
   val is_var : t -> bool
   val is_exist_var : t -> bool
   val is_univ_var : t -> bool

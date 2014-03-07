@@ -6,7 +6,7 @@ let prog_path = ref ""
 module Parser = Slparser
 module Lexer = Sllexer
 module Prover = Prprover
-module F = Frontend.Make(Prover)(Program.Seq)
+module F = Frontend2.Make(Prover.PRP)
 
 let sequent_of_string s =
   let lexbuf = Lexing.from_string s in
@@ -45,7 +45,7 @@ let () =
   let (seq, prog) = program_of_channel (open_in !prog_path) in
   Program.set_program prog ; 
   Prprover.setup (defs_of_channel (open_in !defs_path)) seq;
-  exit (F.prove_seq seq)
+  exit (F.prove_seq !Prover.ruleset seq)
     
 
 

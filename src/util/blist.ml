@@ -109,11 +109,13 @@ let cartesian_hemi_square xs =
       chs (fold_left (fun acc' el' -> (el,el')::acc') acc tl) tl
   in chs [] xs
 
+let bind f xs = flatten (map f xs) 
+
 let rec choose = function
   | [] -> [[]]
   | xs::ys -> 
     let choices = choose ys in
-    flatten (map (fun x -> map (cons x) choices) xs) 
+    bind (fun x -> map (cons x) choices) xs 
 
 
 (* tail rec versions, generally slower *)
@@ -154,3 +156,4 @@ let rec choose = function
 (*   foldl                                                                   *)
 (*     (fun ll -> foldl (fun tl e -> foldl (fun t l -> (e::l)::t) tl ll) []) *)
 (*     [[]] lol                                                              *)
+(* let bind f xs = rev (fold_left (fun ys x -> rev_append (f x) ys) [] xs) *)
