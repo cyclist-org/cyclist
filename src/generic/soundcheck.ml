@@ -177,7 +177,6 @@ let check_proof =
   let ccache = CheckCache.create 1000 in
   (* let limit = ref 1 in  *)
   let f prf =
-		let () = Stats.MCCache.call () in
     let () = if not (valid prf) then
       begin
         pp Format.std_formatter prf ;
@@ -191,12 +190,18 @@ let check_proof =
         assert false
       end in
     try
+      Stats.MCCache.call () ;
       let r = CheckCache.find ccache aprf in
-			Stats.MCCache.accept () ; r
+			Stats.MCCache.end_call () ;
+      Stats.MCCache.hit () ; 
+      r
     with Not_found ->
+      Stats.MCCache.end_call () ;
+      Stats.MCCache.miss () ;
       let r = check_proof aprf in
+      Stats.MCCache.call () ;
       CheckCache.add ccache aprf r ;
-			(* Stats.MCCache.end_call () ; *)
+      Stats.MCCache.end_call () ;
       (* if CheckCache.length ccache > !limit then                                          *)
       (*   begin                                                                            *)
       (*     debug (fun () -> "Soundness cache passed limit: " ^ (string_of_int !limit)) ;  *)
