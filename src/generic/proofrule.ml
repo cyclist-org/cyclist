@@ -51,24 +51,25 @@ struct
   let fail _ _ = L.empty
 
   let apply_to_subgoals r (subgoals, prf) =
-    L.of_list (
     Blist.fold_left
       (* close one subgoal each time by actually appling the rule *)
       (fun apps idx ->
-        Blist.bind
+        L.bind
           (fun (opened, oldprf) ->
             (* add new subgoals to the list of opened ones *)
-            Blist.map
+            L.map
               (fun (newsubgoals, newprf) -> (opened @ newsubgoals, newprf))
-              (L.to_list (r idx oldprf)))
+              (r idx oldprf))
           apps)
-      [ ([], prf) ]
+        (L.singleton ([], prf)) 
       subgoals
-    )
     
-  let compose (r:t) r' idx prf = L.bind (apply_to_subgoals r') (r idx prf)
+  let compose r r' idx prf = L.bind (apply_to_subgoals r') (r idx prf)
 
   let choice rl idx prf = L.bind (fun f -> f idx prf) (L.of_list rl) 
       
-  
+  let rec repeat n r = 
+    if n<=0 then invalid_arg "repeat" else
+    if n=1 then r else
+    compose r (repeat (n-1) r)  
 end

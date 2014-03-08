@@ -37,13 +37,20 @@ pr-tests:
 abd-tests: 
 	-@for TST in tests/abd/*.tc ; do ulimit -v 1048576 ; echo $$TST: ; _build/$(ABDMAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
+sf-tests:
+	-@for TST in tests/sf/*.wl ; do echo $$TST: ; _build/$(PR2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
+
 mutant-tests:
 	-@for TST in tests/mutant/*.wl ; do echo $$TST: ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
   
-whl-tests:
+whl_abd-tests:
 	-@for TST in tests/whl_abd/*.wl ; do echo $$TST ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
-all-tests: fo-tests sl-tests pr-tests whl-tests mutant-tests
+tp-tests: fo-tests sl-tests pr-tests sf-tests
+
+abd-tests: abd-tests whl_abd-tests mutant-tests 
+
+all-tests: tp-tests abd-tests
 
 tarball: 
 	@rm -f $(TARBALL)

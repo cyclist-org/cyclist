@@ -200,6 +200,7 @@ sig
   val fail : t
   val compose : t -> t -> t 
   val choice : t list -> t
+  val repeat : int -> t -> t
 end
 
 module type PROVER2 =

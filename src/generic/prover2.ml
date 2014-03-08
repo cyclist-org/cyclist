@@ -7,11 +7,11 @@ module L = Zlist
 module Make(Seq: Sigs.SEQUENT) =
   struct
     module Proof = Proof.Make(Seq)
-    (* module Rules = Proofrules.Make(Seq) *)
+    module Rule = Proofrule.Make(Seq)
     module Seqtactics = Seqtactics.Make(Seq)
     
     type proof_t = Proof.t
-    type rule_t = Proofrule.Make(Seq).t
+    type rule_t = Rule.t
 
     module Seq = Seq    
             
@@ -38,6 +38,14 @@ module Make(Seq: Sigs.SEQUENT) =
       | None -> idfs (bound+1) maxbound r seq
       | res -> last_search_depth := bound ; res
           
+    (* let rec idfs bound maxbound r seq =                      *)
+    (*   if bound>maxbound then None else                       *)
+    (*   let apps = Rule.repeat bound r 0 (Proof.mk seq) in     *)
+    (*   match L.find_first (fun (ss,_) -> ss=[]) apps with     *)
+    (*   | Some(_,prf) -> last_search_depth := bound ; Some prf *)
+    (*   | None -> idfs (bound+1) maxbound r seq                *)
+    
+
 
     let melt_proof ch p =
       ignore (Latex.to_channel ~mode:Latex.M ch (Proof.to_melt p))
