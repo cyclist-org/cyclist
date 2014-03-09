@@ -1,5 +1,6 @@
 src/seplog/slmain.native
-src/termination/prmain.native  
+src/termination/prmain.native
+src/termination/abdmain.native  
 src/firstorder/fomain.native  
 src/slsat/ccmain.native  
 src/slsat/expgen.native

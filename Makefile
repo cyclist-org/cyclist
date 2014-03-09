@@ -34,7 +34,7 @@ sl-tests:
 pr-tests:
 	-@for TST in tests/pr/*.tc ; do _build/$(PRMAIN) $(TST_OPTS) -P $$TST ; done
 
-abd-tests: 
+abdgoto-tests: 
 	-@for TST in tests/abd/*.tc ; do ulimit -v 1048576 ; echo $$TST: ; _build/$(ABDMAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
 sf-tests:
@@ -48,7 +48,7 @@ whl_abd-tests:
 
 tp-tests: fo-tests sl-tests pr-tests sf-tests
 
-abd-tests: abd-tests whl_abd-tests mutant-tests 
+abd-tests: abdgoto-tests whl_abd-tests mutant-tests 
 
 all-tests: tp-tests abd-tests
 

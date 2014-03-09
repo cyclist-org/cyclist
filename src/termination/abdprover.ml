@@ -3,8 +3,9 @@ open Util
 open Symheap
 open Program
 
-module Apr = Prover.Make(Program.Seq)(Program.Defs)
-include Apr
+module Rule = Proofrule.Make(Program.Seq)
+module Seqtactics = Seqtactics.Make(Program.Seq)
+module Abdrule = Abdrule.Make(Program.Seq)(Program.Defs)
 
 (* let latex_defs d =                 *)
 (*   let t = !split_heaps in          *)
@@ -61,7 +62,7 @@ let inline defs =
       let first_unfold f =
         let apps = unf ([f],0) in
         if apps=[] then f else 
-          let ((f',_), _, _) = Blist.hd (Blist.hd apps) in 
+          let ((f',_), _, _) = Blist.hd (fst (Blist.hd apps)) in 
           Blist.hd f' in
           (* print_endline (Heap.to_string f'') ; f'' in             *)
       let p'' = Heap.fixpoint first_unfold p' in
@@ -165,22 +166,21 @@ let simplify_defs defs =
 
 let is_base_case c = let (p,_) = Case.dest c in Inds.is_empty p.inds
 
-let is_possibly_consistent defs = 
-  Blist.exists (fun (l,_) -> Blist.exists is_base_case l) (simplify_defs defs)
+let is_possibly_consistent defs = Defs.consistent (empify defs)
 
-let ex_falso_axiom = Apr.mk_axiom Prprover.ex_falso_axiom_f "Ex Falso" 
-let lhs_disj_to_symheaps = Apr.mk_inf_rule Prprover.lhs_disj_to_symheaps_f "L.Or"
-let eq_subst_ex = Apr.mk_inf_rule Prprover.eq_subst_ex_f "= ex subst"
+let ex_falso_axiom = Abdrule.lift Prprover.ex_falso_axiom 
+let lhs_disj_to_symheaps = Abdrule.lift Prprover.lhs_disj_to_symheaps
+let eq_subst_ex = Abdrule.lift (Rule.mk_infrule Prprover.eq_subst_ex_f)
 
 (* symbolic execution rules *)
-let symex_stop_axiom = Apr.mk_axiom Prprover.symex_stop_axiom_f "Stop"
-let symex_load_rule = Apr.mk_inf_rule Prprover.symex_load_rule_f "Load"
-let symex_store_rule = Apr.mk_inf_rule Prprover.symex_store_rule_f "Store"
-let symex_free_rule = Apr.mk_inf_rule Prprover.symex_free_rule_f "Free"
-let symex_new_rule = Apr.mk_inf_rule Prprover.symex_new_rule_f "New"
-let symex_goto_rule = Apr.mk_inf_rule Prprover.symex_goto_rule_f "Goto"
-let symex_skip_rule = Apr.mk_inf_rule Prprover.symex_skip_rule_f "Skip"
-let symex_non_det_if_rule = Apr.mk_inf_rule Prprover.symex_non_det_if_rule_f "If(non-det)"
+let symex_stop_axiom = Abdrule.lift Prprover.symex_stop_axiom
+let symex_load_rule = Abdrule.lift Prprover.symex_load_rule
+let symex_store_rule = Abdrule.lift Prprover.symex_store_rule
+let symex_free_rule = Abdrule.lift Prprover.symex_free_rule
+let symex_new_rule = Abdrule.lift Prprover.symex_new_rule
+let symex_goto_rule = Abdrule.lift Prprover.symex_goto_rule
+let symex_skip_rule = Abdrule.lift Prprover.symex_skip_rule
+let symex_non_det_if_rule = Abdrule.lift Prprover.symex_non_det_if_rule
 
 
 
@@ -195,11 +195,10 @@ let symex_assign_rule_f seq =
     let f' = Heap.subst theta f in
     let e' = Term.subst theta e in
     let f' = { f' with eqs=UF.add (e',x) f'.eqs } in
-    [ [ (([f'], i+1), Heap.tag_pairs f, TagPairs.empty) ] ]
+    [ [ (([f'], i+1), Heap.tag_pairs f, TagPairs.empty) ], "Assign" ]
   with WrongCmd | Not_symheap -> []
-
   
-let symex_assign_rule = Apr.mk_inf_rule symex_assign_rule_f "Assign"
+let symex_assign_rule = Abdrule.lift (Rule.mk_infrule symex_assign_rule_f)
 
 let post_abd_assign_rule_f seq =
   try
@@ -217,12 +216,12 @@ let post_abd_assign_rule_f seq =
     let f'' = Heap.subst (Term.singleton_subst y x) 
       { f with eqs=UF.of_list neweqs } in
     [ 
-      [ (([f'], i+1), Heap.tag_pairs f, TagPairs.empty) ];
-      [ (([f''], i+1), Heap.tag_pairs f, TagPairs.empty) ]
+      [ (([f'], i+1), Heap.tag_pairs f, TagPairs.empty) ], "Post Abd Assign";
+      [ (([f''], i+1), Heap.tag_pairs f, TagPairs.empty) ], "Post Abd Assign"
     ]
   with WrongCmd | Not_symheap | Not_found -> []
  
-let post_abd_assign_rule = Apr.mk_inf_rule post_abd_assign_rule_f "Post Abd Assign"
+let post_abd_assign_rule = Abdrule.lift (Rule.mk_infrule post_abd_assign_rule_f) 
 
 (*let generalisation_f, generalisation =                                           *)
 (*  let rl (seq:Seq.t) =                                                           *)
@@ -242,9 +241,8 @@ let post_abd_assign_rule = Apr.mk_inf_rule post_abd_assign_rule_f "Post Abd Assi
 (*  rl, Apr.mk_inf_rule rl "Gen"                                                   *)
   
 let simplify =
-  let or_rules = Apr.Proof_tacs.first [ (*eq_subst_rule;*) eq_subst_ex ] in
-  Apr.Proof_tacs.repeat_tac or_rules
-let wrap r = Apr.Proof_tacs.then_tac r (Apr.Proof_tacs.try_tac simplify)
+  Abdrule.lift (Rule.mk_infrule (Seqtactics.first [ Prprover.eq_subst_ex_f ]))
+let wrap r = Abdrule.compose r (Abdrule.attempt simplify)
 
 
 (*let symex_assign_rule_f, symex_assign_rule =                  *)
@@ -273,28 +271,28 @@ let symex_det_if_rule =
       match (Cmd.is_deq c, Heap.equates f x y) with
         | (false , true) ->
           (* cmd wants equality and formula provides it so take the branch *) 
-          [ [ (([f], j), t, TagPairs.empty) ] ]
+          [ [ (([f], j), t, TagPairs.empty) ], "If(det)" ]
         | (false, false) -> 
           (* cmd wants equality *)
           if Heap.disequates f x y then
             (* and formula forbids it so take other branch *) 
-            [ [ (([f], i+1), t, TagPairs.empty) ] ] 
+            [ [ (([f], i+1), t, TagPairs.empty) ], "If(det)" ] 
           else 
             (* formula allows either fact so fail *) 
             []
         | (true, true) ->
           (* cmd wants disequality and formula forbids it so take other branch *) 
-          [ [ (([f], i+1), t, TagPairs.empty) ] ]
+          [ [ (([f], i+1), t, TagPairs.empty) ], "If(det)" ]
         | (true, false) -> 
           (* cmd wants disequality *)
           if Heap.disequates f x y then
             (* formula provides it so take branch *) 
-            [ [ (([f], j), t, TagPairs.empty) ] ] 
+            [ [ (([f], j), t, TagPairs.empty) ], "If(det)" ] 
           else 
             (* otherwise don't know so fail *)
             []
     with Not_symheap | WrongCmd -> [] in
-  Apr.mk_inf_rule rl "If(det)"
+  Abdrule.lift (Rule.mk_infrule rl) 
 
 let standard_rules = 
   [  
@@ -368,7 +366,7 @@ let abd_assign =
       let res = Blist.map f inds in
       debug (fun () -> "Abd assign " ^ (if res=[] then "fails." else "succeeds.")) ; res
     with Not_symheap | WrongCmd -> [] in
-  Apr.mk_abd_inf_rule rl "Abd. assign"
+  Abdrule.mk_abdinfrule rl
  
 let abd_deref =
   let rl seq defs =
@@ -407,7 +405,7 @@ let abd_deref =
         ( [Case.mk clause head], ident )::defs in 
       Blist.map f inds
     with Not_symheap | WrongCmd -> [] in
-  Apr.mk_abd_inf_rule rl "Abd. deref"
+  Abdrule.mk_abdinfrule rl
 
       
 let abd_det_if =
@@ -461,7 +459,7 @@ let abd_det_if =
         ( [Case.mk clause_eq head; Case.mk clause_deq head], ident )::defs in 
       Blist.map f inds
     with Not_symheap | WrongCmd -> [] in
-  Apr.mk_abd_inf_rule rl "Abd. det if"
+  Abdrule.mk_abdinfrule rl
 
 let abd_back_rule = 
   let rl s1 s2 defs = 
@@ -525,31 +523,31 @@ let abd_back_rule =
       debug (fun () -> "Abd back ends, results=" ^ (string_of_bool (res<>[]))) ; 
       res 
     with Not_symheap -> [] in
-  Apr.mk_abd_back_rule rl "Abd. backlink"
+  Abdrule.mk_abdbackrule Rule.all_nodes rl
 
 
-let matches = Apr.mk_back_rule Prprover.matches_fun "Backl"
+let matches = Abdrule.lift Prprover.matches
 
-let deref_tac = Apr.Proof_tacs.first [symex_load_rule; symex_store_rule; symex_free_rule]
+let deref_tac = 
+  Abdrule.first [symex_load_rule; symex_store_rule; symex_free_rule]
 
 let gen_left_rule_fun seq defs =
   let rls = Blist.map Prprover.gen_left_rules_f defs in
-  let rl = Apr.Seq_tacs.or_tac rls in
+  let rl = Seqtactics.choice rls in
   let apps = rl seq in
   Blist.map (fun app -> (app,defs)) apps
 
-let unfold = Apr.mk_gen_rule gen_left_rule_fun "Unfold"
+let unfold = Abdrule.mk_abdgenrule gen_left_rule_fun 
   
-let mk_rules defs = 
+let ruleset =
+  let axioms = [ ex_falso_axiom ; symex_stop_axiom ] in 
   let abdtacs = [ 
-    Apr.Proof_tacs.then_tac abd_back_rule (Apr.Proof_tacs.then_tac unfold matches);
-    Apr.Proof_tacs.then_tac abd_deref (Apr.Proof_tacs.then_tac unfold deref_tac);
-    Apr.Proof_tacs.then_tac abd_det_if (Apr.Proof_tacs.then_tac unfold symex_det_if_rule);
-    Apr.Proof_tacs.then_tac 
-        abd_assign (Apr.Proof_tacs.then_tac unfold post_abd_assign_rule);
+    Abdrule.compose abd_back_rule (Abdrule.compose unfold matches);
+    Abdrule.compose abd_deref (Abdrule.compose unfold deref_tac);
+    Abdrule.compose abd_det_if (Abdrule.compose unfold symex_det_if_rule);
+    Abdrule.compose 
+        abd_assign (Abdrule.compose unfold post_abd_assign_rule);
     wrap symex_assign_rule
   ] in
-  standard_rules @ [ unfold ] @ abdtacs 
+  Abdrule.choice (axioms @ standard_rules @ [ unfold ] @ abdtacs) 
 
-let setup () = 
-  Apr.axiomset := [ ex_falso_axiom ; symex_stop_axiom ] ;

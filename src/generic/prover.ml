@@ -6,7 +6,7 @@ open Symbols
   (* to other proof_nodes by indicating the Blist.find_index of the child proof_node  *)
   (* in the map this will simplify dumping the Proof.t to the model checker  *)
 
-module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
+module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
   struct
     type sequent = Seq.t
     type ind_def_set = Defs.t
@@ -25,6 +25,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFINITIONS) =
 
     module Proof = Proof.Make(Seq)
     module Node = Proofnode.Make(Seq)
+    module Abr = Abdrule.Make(Seq)(Defs)
             
     type proof_transformer = Proof.t -> int -> (Proof.t * int list) Zlist.t
     type abd_proof_transformer =

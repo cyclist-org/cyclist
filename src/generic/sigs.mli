@@ -14,7 +14,7 @@ sig
 end
 (** Sequent signature used as input to most functors in Cyclist.*)
 
-module type DEFINITIONS =
+module type DEFS =
 sig
   type t
   val to_string : t -> string
@@ -176,9 +176,10 @@ sig
   val compose : rule_t -> rule_t -> rule_t
   val first : rule_t list -> rule_t
   val repeat : rule_t -> rule_t
+  val choice : rule_t list -> rule_t
 end
 
-module type PROOFRULES =
+module type PROOFRULE =
 sig
   type seq_t
   type proof_t
@@ -200,7 +201,34 @@ sig
   val fail : t
   val compose : t -> t -> t 
   val choice : t list -> t
-  val repeat : int -> t -> t
+end
+
+module type ABDRULE =
+sig
+  type seq_t
+  type proof_t
+  type defs_t
+  type rule_t
+  
+  type select_f = int -> proof_t -> int list
+  type infrule_app = (seq_t * Util.TagPairs.t * Util.TagPairs.t) list * string
+  
+  type abdinfrule_f = seq_t -> defs_t -> defs_t list
+  type abdbackrule_f = seq_t -> seq_t -> defs_t -> defs_t list
+  type abdgenrule_f = seq_t -> defs_t -> (infrule_app * defs_t) list
+  
+  type t = int -> proof_t -> defs_t -> ((int list * proof_t) * defs_t) Zlist.t
+
+  val mk_abdinfrule : abdinfrule_f -> t
+  val mk_abdbackrule : select_f -> abdbackrule_f -> t
+  val mk_abdgenrule : abdgenrule_f -> t
+
+  val fail : t
+  val lift : rule_t -> t
+  val compose : t -> t -> t
+  val choice : t list -> t
+  val attempt : t -> t
+  val first : t list -> t
 end
 
 module type PROVER2 =
@@ -215,6 +243,25 @@ sig
   val print_proof_stats : Proof.t -> unit
   val melt_proof: out_channel -> Proof.t -> unit 
    
+end
+
+module type ABDUCER =
+sig
+  type seq_t
+  type abdrule_t
+  type proof_t
+  type defs_t
+
+  module Seq : SEQUENT
+  module Proof : PROOF
+  
+  val bfs : 
+    int -> int -> 
+    abdrule_t -> seq_t -> defs_t ->
+    (defs_t -> bool) -> 
+    (proof_t * defs_t) option
+  val print_proof_stats : Proof.t -> unit
+  val melt_proof: out_channel -> Proof.t -> unit 
 end
 
 module type PROVER =

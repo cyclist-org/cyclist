@@ -13,6 +13,8 @@ struct
   type infrule_app = (seq_t * Util.TagPairs.t * Util.TagPairs.t) list * string
   type infrule_f = seq_t -> infrule_app list
   type t = int -> Proof.t -> (int list * Proof.t) L.t
+  type backrule_f = seq_t -> seq_t -> (Util.TagPairs.t * string) list
+  type select_f = int -> Proof.t -> int list
   
   let mk_axiom ax_f idx prf =
     match ax_f (Proof.get_seq idx prf) with
@@ -25,9 +27,6 @@ struct
     let mk (l,d) = Proof.add_inf idx d l prf in
     L.map mk (L.of_list (r_f seq))
 
-  type backrule_f = seq_t -> seq_t -> (Util.TagPairs.t * string) list
-  type select_f = int -> Proof.t -> int list
-        
   let mk_backrule greedy sel_f br_f srcidx prf =
     let srcseq = Proof.get_seq srcidx prf in
     let trgidxs = L.of_list (sel_f srcidx prf) in
@@ -48,6 +47,7 @@ struct
     Blist.filter (fun idx -> idx<>srcidx) (Blist.map fst (Proof.to_list prf))
   let ancestor_nodes srcidx prf = Blist.map fst (Proof.get_ancestry srcidx prf)
 
+  
   let fail _ _ = L.empty
 
   let apply_to_subgoals r (subgoals, prf) =
@@ -68,8 +68,8 @@ struct
 
   let choice rl idx prf = L.bind (fun f -> f idx prf) (L.of_list rl) 
       
-  let rec repeat n r = 
-    if n<=0 then invalid_arg "repeat" else
-    if n=1 then r else
-    compose r (repeat (n-1) r)  
+  (* let rec repeat n r =                     *)
+  (*   if n<=0 then invalid_arg "repeat" else *)
+  (*   if n=1 then r else                     *)
+  (*   compose r (repeat (n-1) r)             *)
 end

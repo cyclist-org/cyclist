@@ -48,11 +48,11 @@ struct
       | [] -> first rs seq
       | apps -> apps
  
-  let sequence = function
-    | [] -> invalid_arg "sequence"
-    | r::rs -> Blist.foldr compose rs r
+  (* let sequence = function               *)
+  (*   | [] -> invalid_arg "sequence"      *)
+  (*   | r::rs -> Blist.foldr compose rs r *)
 
-  (* let choice rs seq = Blist.bind (fun r -> r seq) rs *)
+  let choice rs seq = Blist.bind (fun r -> r seq) rs
 
   let repeat r seq = 
     let rec aux app =
