@@ -3,7 +3,7 @@ open Lib
 open Symbols
  
 module S = Symheap
-module P = Program
+module P = Goto_program
 (* module TL = Tempform *)
   
 let pred_cnt = ref 0
@@ -40,7 +40,7 @@ let pred_cnt = ref 0
 %type <Symheap.Defs.t> ind_def_set
 
 %start program
-%type <Program.Seq.t * Program.program_t> program
+%type <Goto_program.Seq.t * Goto_program.program_t> program
 
 /*
 %start tl_formula

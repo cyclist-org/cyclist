@@ -1,15 +1,13 @@
 open Lib
 open Symheap
-open Ccfrontend
 
 (* goal: also allow checking consistency of a predicate given by the user  *)
 (* let cl_predicate = ref ""                                               *)
 let defs_path = ref "examples/sl.defs"
 
-module Parser = Slparser
-module Lexer = Sllexer
-module Prover = Slprover
-module F = Ccfrontend.Make
+module Parser = Sl_parser
+module Lexer = Sl_lexer
+module F = Slsat_frontend
 
 
 let defs_of_channel c =

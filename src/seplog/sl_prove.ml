@@ -3,9 +3,9 @@ open Lib
 let cl_sequent = ref ""
 let defs_path = ref "examples/sl.defs"
 
-module Parser = Slparser
-module Lexer = Sllexer
-module Prover = Slprover.SLP
+module Parser = Sl_parser
+module Lexer = Sl_lexer
+module Prover = Prover2.Make(Symheap.Seq)
 module F = Frontend2.Make(Prover)
 
 let sequent_of_string s =
@@ -44,8 +44,8 @@ let () =
   Arg.parse !F.speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) !F.usage ;
   if !cl_sequent="" then F.die "-S must be specified." ;
   let seq = sequent_of_string !cl_sequent in
-  Slprover.setup (defs_of_channel (open_in !defs_path)) ;
-  exit (F.prove_seq !Slprover.ruleset seq)
+  Sl_rules.setup (defs_of_channel (open_in !defs_path)) ;
+  exit (F.prove_seq !Sl_rules.rules seq)
     
 
 

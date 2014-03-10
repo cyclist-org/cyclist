@@ -12,7 +12,7 @@ include Apr
 (*   let res = Defs.to_latex d in     *)
 (*   split_heaps := t ; res           *)
 
-let dest_sh_seq = While_prover.dest_sh_seq
+let dest_sh_seq = While_rules.dest_sh_seq
 
 let last_pred = ref 0
 let get_fresh_ident () = Printf.sprintf "I%.3d" (incr last_pred ; !last_pred)
@@ -52,7 +52,7 @@ let inline defs =
           not (Strng.Set.mem h idents)
         end (Blist.but_last defs) in
     let defs = Blist.filter ((!=)q) defs in
-    let unf = While_prover.gen_left_rules_f (p,h) in
+    let unf = While_rules.gen_left_rules_f (p,h) in
     let f orig =
       let (p',h') = Case.dest orig in
       let first_unfold f =
@@ -139,12 +139,12 @@ let simplify_defs defs =
 
 let is_possibly_consistent defs = Defs.consistent (empify defs)
 
-let ex_falso_axiom = mk_axiom While_prover.ex_falso_axiom_f "Ex Falso"
-let symex_empty_axiom = mk_axiom While_prover.symex_empty_axiom_f "Empty"
+let ex_falso_axiom = mk_axiom While_rules.ex_falso_axiom_f "Ex Falso"
+let symex_empty_axiom = mk_axiom While_rules.symex_empty_axiom_f "Empty"
 
 
-let lhs_disj_to_symheaps = mk_inf_rule While_prover.lhs_disj_to_symheaps_f "L.Or"
-let eq_subst_ex = mk_inf_rule While_prover.eq_subst_ex_f "= ex subst"
+let lhs_disj_to_symheaps = mk_inf_rule While_rules.lhs_disj_to_symheaps_f "L.Or"
+let eq_subst_ex = mk_inf_rule While_rules.eq_subst_ex_f "= ex subst"
 
 let simpl_deqs =
   mk_inf_rule
@@ -161,7 +161,7 @@ let simpl_deqs =
         let f' = { f with deqs=newdeqs } in
         if Heap.equal f f' then [] else
 				let s = ([f'], cmd) in
-        [ [ (s, While_prover.tagpairs s, TagPairs.empty) ] ]
+        [ [ (s, While_rules.tagpairs s, TagPairs.empty) ] ]
       with Not_symheap -> []
     end
   "!= simpl"
@@ -172,7 +172,7 @@ let norm =
     let l' = Form.norm l in
     if Form.equal l l' then [] else
 		let s = (l',cmd) in
-    [[ (s, While_prover.tagpairs s, TagPairs.empty) ]] in
+    [[ (s, While_rules.tagpairs s, TagPairs.empty) ]] in
 	mk_inf_rule rl "Norm"
 
 let simplify =
@@ -183,13 +183,13 @@ let wrap r = Proof_tacs.then_tac r (Proof_tacs.try_tac simplify)
 
 
 (* symbolic execution rules *)
-let symex_stop_axiom = mk_axiom While_prover.symex_stop_axiom_f "Stop"
-let symex_load_rule = mk_inf_rule While_prover.symex_load_rule_f "Load"
-let symex_store_rule = mk_inf_rule While_prover.symex_store_rule_f "Store"
-let symex_free_rule = mk_inf_rule While_prover.symex_free_rule_f "Free"
-let symex_new_rule = mk_inf_rule While_prover.symex_new_rule_f "New"
-let symex_skip_rule = mk_inf_rule While_prover.symex_skip_rule_f "Skip"
-let symex_assign_rule = mk_inf_rule While_prover.symex_assign_rule_f "Assign"
+let symex_stop_axiom = mk_axiom While_rules.symex_stop_axiom_f "Stop"
+let symex_load_rule = mk_inf_rule While_rules.symex_load_rule_f "Load"
+let symex_store_rule = mk_inf_rule While_rules.symex_store_rule_f "Store"
+let symex_free_rule = mk_inf_rule While_rules.symex_free_rule_f "Free"
+let symex_new_rule = mk_inf_rule While_rules.symex_new_rule_f "New"
+let symex_skip_rule = mk_inf_rule While_rules.symex_skip_rule_f "Skip"
+let symex_assign_rule = mk_inf_rule While_rules.symex_assign_rule_f "Assign"
 
 let symex_det_if_rule =
   let rl seq =
@@ -199,7 +199,7 @@ let symex_det_if_rule =
       if Cond.is_non_det c then [] else
       let (x,y) = Cond.dest c in
       let cont = Cmd.get_cont cmd in
-      let mk_ret c = While_prover.fix_tps [[ ([f],c) ]] in
+      let mk_ret c = While_rules.fix_tps [[ ([f],c) ]] in
       match (Cond.is_deq c, Heap.equates f x y, Heap.disequates f x y) with
         (* cmd wants equality and formula provides it so take the branch *)
         (* cmd wants disequality and formula provides it so take branch *)
@@ -220,7 +220,7 @@ let symex_nondet_if_rule =
       let (c,cmd') = Cmd.dest_if cmd in
       if Cond.is_det c then [] else
       let cont = Cmd.get_cont cmd in
-      While_prover.fix_tps [[ ([f], Cmd.mk_seq cmd' cont); ([f], cont) ]]
+      While_rules.fix_tps [[ ([f], Cmd.mk_seq cmd' cont); ([f], cont) ]]
     with Not_symheap | WrongCmd -> [] in
   mk_inf_rule rl "If(nondet)"
 
@@ -231,7 +231,7 @@ let symex_nondet_ifelse_rule =
       let (c,cmd',cmd'') = Cmd.dest_ifelse cmd in
       if Cond.is_det c then [] else
       let cont = Cmd.get_cont cmd in
-      While_prover.fix_tps
+      While_rules.fix_tps
 			  [[ ([f], Cmd.mk_seq cmd' cont); ([f], Cmd.mk_seq cmd'' cont) ]]
     with Not_symheap | WrongCmd -> [] in
   mk_inf_rule rl "IfElse(nondet)"
@@ -243,7 +243,7 @@ let symex_nondet_while_rule =
       let (c,cmd') = Cmd.dest_while cmd in
       if Cond.is_det c then [] else
       let cont = Cmd.get_cont cmd in
-      While_prover.fix_tps [[ ([f], Cmd.mk_seq cmd' cmd); ([f], cont) ]]
+      While_rules.fix_tps [[ ([f], Cmd.mk_seq cmd' cmd); ([f], cont) ]]
     with Not_symheap | WrongCmd -> [] in
   mk_inf_rule rl "If(nondet)"
 
@@ -255,7 +255,7 @@ let symex_det_ifelse_rule =
       if Cond.is_non_det c then [] else
       let (x,y) = Cond.dest c in
       let cont = Cmd.get_cont cmd in
-      let mk_ret c = While_prover.fix_tps [[ ([f], c) ]] in
+      let mk_ret c = While_rules.fix_tps [[ ([f], c) ]] in
       match (Cond.is_deq c, Heap.equates f x y, Heap.disequates f x y) with
         (* cmd wants equality and formula provides it so take the branch *)
         (* cmd wants disequality and formula provides it so take branch *)
@@ -277,7 +277,7 @@ let symex_det_while_rule =
       if Cond.is_non_det c then [] else
       let (x,y) = Cond.dest c in
       let cont = Cmd.get_cont cmd in
-      let mk_ret c = While_prover.fix_tps [[ ([f], c) ]] in
+      let mk_ret c = While_rules.fix_tps [[ ([f], c) ]] in
       match (Cond.is_deq c, Heap.equates f x y, Heap.disequates f x y) with
         (* cmd wants equality and formula provides it so take the branch *)
         (* cmd wants disequality, formula provides it so take branch *)
@@ -320,7 +320,7 @@ let generalise_while_rule =
       		let f' = generalise m' f in
       		if Heap.equal f f' then None else
 					let s' = ([f'], cmd) in
-          Some [ (s', While_prover.tagpairs s', TagPairs.empty) ]
+          Some [ (s', While_rules.tagpairs s', TagPairs.empty) ]
 			  end
 				subs)
     with Not_symheap | WrongCmd -> [] in
@@ -468,7 +468,7 @@ let abd_back_rule =
   mk_abd_back_rule rl "Abd. backlink"
 
 
-let matches = mk_back_rule While_prover.matches_fun "Backl"
+let matches = mk_back_rule While_rules.matches_fun "Backl"
 
 (* NOT UPDATED FOR TERMINATION *)
 (* let abd_segment =                                                                           *)
@@ -519,7 +519,7 @@ let matches = mk_back_rule While_prover.matches_fun "Backl"
 (* 				let h' = { h' with inds=Inds.union h'.inds (Inds.of_list [newpred;newpred']) } in   *)
 (* 				let () = debug (fun () -> "Heap: " ^ (Heap.to_string h')) in                        *)
 (* 				let () = debug (fun () -> "Clause: " ^ (Heap.to_string clause)) in                  *)
-(*         Some ([ (([h'], cmd), While_prover.symex_tagpairs, TagPairs.empty) ], new_defs) in *)
+(*         Some ([ (([h'], cmd), While_rules.symex_tagpairs, TagPairs.empty) ], new_defs) in *)
 (*       Option.list_get (Blist.map f (Inds.to_list inds))                                      *)
 (*     with Not_symheap | WrongCmd -> [] in                                                    *)
 (*   mk_gen_rule rl "Abd. segment"                                                             *)
@@ -592,7 +592,7 @@ let matches = mk_back_rule While_prover.matches_fun "Backl"
 (*     let result = Option.is_some (Slprover.idfs (l1, l2)) in                      *)
 (*     let () = Lib.do_debug := olddebug in                                         *)
 (* 		let () = debug (fun () -> "CUTLINK3: result: " ^ (string_of_bool result)) in *)
-(* 		if result then Some While_prover.symex_tagpairs else None in                *)
+(* 		if result then Some While_rules.symex_tagpairs else None in                *)
 (*   mk_back_rule rl "Cut backlink"                                                 *)
 
 (* let cut_backlink_tac =                                                           *)
@@ -600,7 +600,7 @@ let matches = mk_back_rule While_prover.matches_fun "Backl"
 
 let unfold =
   let gen_left_rule_fun seq defs =
-    let rls = Blist.map While_prover.gen_left_rules_f defs in
+    let rls = Blist.map While_rules.gen_left_rules_f defs in
     let rl = Seq_tacs.or_tac rls in
     let apps = rl seq in
     Blist.map (fun app -> (app,defs)) apps in
@@ -608,7 +608,7 @@ let unfold =
 
 let unfold2 =
   let gen_left_rule_fun seq defs =
-    let rls = Blist.map While_prover.gen_left_rules_f defs in
+    let rls = Blist.map While_rules.gen_left_rules_f defs in
     let rl = Seq_tacs.or_tac rls in
     let apps = rl seq in
     Blist.map (fun app -> (app,defs)) apps in

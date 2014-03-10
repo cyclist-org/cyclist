@@ -3,8 +3,8 @@ open Lib
 let defs_path = ref "examples/sl.defs"
 let prog_path = ref ""
 
-module Parser = Slparser
-module Lexer = Sllexer
+module Parser = Sl_parser
+module Lexer = Sl_lexer
 module Prover = Tlprover
 module F = Frontend.Make(Prover)(Tempform.Seq)
 
@@ -18,7 +18,7 @@ let defs_of_channel c =
 
 let program_of_channel c =
   let lexbuf = Lexing.from_channel c in
-  Slparser.tl_program Sllexer.token lexbuf
+  Sl_parser.tl_program Sl_lexer.token lexbuf
 
 let () = F.usage := !F.usage ^ " [-D <file] [-P <file>]"
 

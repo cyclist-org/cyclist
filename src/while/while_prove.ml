@@ -1,13 +1,13 @@
 open Symheap
 open While_program
-open While_prover
+open While_rules
 
 let defs_path = ref "examples/sl.defs"
 let prog_path = ref ""
 
 module Parser = While_parser
 module Lexer = While_lexer
-module Prover = While_prover
+module Prover = While_rules
 module F = Frontend.Make(Prover)(While_program.Seq)
 
 
@@ -54,7 +54,7 @@ let () =
   let (seq, prog) = program_of_channel (open_in !prog_path) in
   let prog = Cmd.number prog in
   While_program.set_program prog ; 
-  While_prover.setup (defs_of_channel (open_in !defs_path)) ;
+  While_rules.setup (defs_of_channel (open_in !defs_path)) ;
   exit (F.prove_seq (seq, prog))
     
 

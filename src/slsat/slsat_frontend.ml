@@ -5,8 +5,6 @@
 open Lib
 open Symheap
 
-module Make = 
-  struct
     let show_proof = ref false
     let latex_path = ref ""
     let timeout = ref 30
@@ -77,4 +75,3 @@ module Make =
       end ;
       *)
       !exit_code
-  end

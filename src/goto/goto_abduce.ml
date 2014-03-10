@@ -11,15 +11,15 @@ let timeout = ref 30
 let minbound = ref 1
 let maxbound = ref 20
 
-module Seq = Program.Seq
-module Parser = Slparser
-module Lexer = Sllexer
-module Abducer = Abducer.Make(Program.Seq)(Program.Defs)
+module Seq = Goto_program.Seq
+module Parser = Sl_parser
+module Lexer = Sl_lexer
+module Abducer = Abducer.Make(Goto_program.Seq)(Goto_program.Defs)
 
 let program_of_channel c =
   let lexbuf = Lexing.from_channel c in
   try
-    Slparser.program Sllexer.token lexbuf
+    Sl_parser.program Sl_lexer.token lexbuf
   with
     | Lexer.Error msg -> print_endline msg ; assert false
     | Parser.Error -> 
@@ -35,8 +35,8 @@ let program_of_channel c =
 (* let seq_to_prove = ref None                                       *)
 
 (* let record_defs defs =                                                                 *)
-(*   let defs = Abdprover.simplify_defs defs in                                           *)
-(*   if not (Abdprover.is_possibly_consistent defs) then false else                       *)
+(*   let defs = Goto_abdrules.simplify_defs defs in                                           *)
+(*   if not (Goto_abdrules.is_possibly_consistent defs) then false else                       *)
 (*   let () = Prprover.setup defs (Option.get !seq_to_prove) in                           *)
 (*   let res = w_timeout (fun () -> Prprover.idfs (Option.get !seq_to_prove)) !timeout in *)
 (*   if Option.is_none res then                                                           *)
@@ -56,14 +56,14 @@ let prove_prog seq =
   let res =  
     w_timeout
       (fun () ->
-        Abducer.bfs !minbound !maxbound Abdprover.ruleset seq [] Abdprover.is_possibly_consistent) 
+        Abducer.bfs !minbound !maxbound Goto_abdrules.ruleset seq [] Goto_abdrules.is_possibly_consistent) 
       !timeout
       in
   Stats.Gen.end_call () ;
   (* Stack.iter                                                                     *)
   (*   begin fun (defs, cov) ->                                                     *)
   (*     print_endline (">>> Definitions found, coverage=" ^ (string_of_int cov)) ; *)
-  (*     print_endline (Program.Defs.to_string (Abdprover.simplify_defs defs));     *)
+  (*     print_endline (Program.Defs.to_string (Goto_abdrules.simplify_defs defs));     *)
   (*     print_endline "" ;                                                         *)
   (*   end                                                                          *)
   (*   defs_found ;                                                                 *)
@@ -76,10 +76,10 @@ let prove_prog seq =
   if !show_proof then
     print_endline (Abducer.Proof.to_string proof)
   else
-    print_endline ("Proved: " ^ (Program.Seq.to_string seq)) ;
+    print_endline ("Proved: " ^ (Goto_program.Seq.to_string seq)) ;
   if !show_defs then  
-    print_endline (Program.Defs.to_string 
-      (Abdprover.simplify_defs
+    print_endline (Goto_program.Defs.to_string 
+      (Goto_abdrules.simplify_defs
       defs
       )
       );
@@ -94,8 +94,8 @@ let prove_prog seq =
     Abducer.melt_proof ch proof ; close_out ch
   end ;
   if !latex_defs then 
-    ignore (Latex.to_channel ~mode:Latex.M stdout (Symheap.Defs.to_melt (Abdprover.simplify_defs defs)));
-  (* Prprover.setup (Abdprover.simplify_defs defs) seq;                                      *)
+    ignore (Latex.to_channel ~mode:Latex.M stdout (Symheap.Defs.to_melt (Goto_abdrules.simplify_defs defs)));
+  (* Prprover.setup (Goto_abdrules.simplify_defs defs) seq;                                      *)
   (* let res = w_timeout (fun () -> Prprover.idfs seq) !timeout in                           *)
   (* if Option.is_none res then                                                              *)
   (*   (print_endline ("NOT verified: " ^ (Seq.to_string seq) ^ " [TIMEOUT]") ; 2) else      *)
@@ -141,7 +141,7 @@ let () =
   Arg.parse speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) usage ;
   if !prog_path="" then die "-P must be specified." ;
   let (seq, prog) = program_of_channel (open_in !prog_path) in
-  Program.set_program prog ; 
+  Goto_program.set_program prog ; 
   (* Prprover.setup [] seq ;  *)
   exit (prove_prog seq)
     

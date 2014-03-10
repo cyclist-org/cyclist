@@ -3,9 +3,8 @@ open Util
 open Symheap
 
 
-module SLP = Prover2.Make(Seq)
 module Rule = Proofrule.Make(Seq)
-module Seqtactics = SLP.Seqtactics
+module Seqtactics = Seqtactics.Make(Seq)
 
 let id_axiom =
   Rule.mk_axiom 
@@ -13,6 +12,12 @@ let id_axiom =
 
 let ex_falso_axiom =
   Rule.mk_axiom (fun (l,_) -> Option.mk (Form.inconsistent l) "Ex Falso")
+
+let axioms = Rule.first [ id_axiom ; ex_falso_axiom ]
+
+(* for some unintuitive reason, wrapping rules with trying the axioms *)
+(* does not improve search times -- should investigate that more FIXME *)
+(* let a r = Rule.compose r (Rule.attempt axioms) *)
 
 (* break LHS disjunctions *)
 let lhs_disj_to_symheaps =
@@ -152,7 +157,7 @@ let simplify_seq = Seqtactics.repeat (Seqtactics.first simplify_rules)
 let simplify = Rule.mk_infrule simplify_seq
 
 let wrap r =
-  Rule.mk_infrule (Seqtactics.compose r (Seqtactics.attempt simplify_seq))
+  (Rule.mk_infrule (Seqtactics.compose r (Seqtactics.attempt simplify_seq)))
 
 (* x->ys * A |- e->zs * B if  A |- ys=zs * B[x/e] where e existential *)
 (* and at least one var in ys,zs is the same *)
@@ -228,8 +233,6 @@ let gen_left_rules (def, ident) =
 (* s2 *)
 (* -- *)
 (* s1 *)
-let is_subsumed s1 s2 = Seq.subsumed_wrt_tags Tags.empty s1 s2
-
 let matches s1 s2 =
   let tags = Tags.inter (Seq.tags s1) (Seq.tags s2) in
   if Tags.is_empty tags then [] else
@@ -247,21 +250,18 @@ let matches s1 s2 =
 
 let brl_matches = Rule.mk_backrule true Rule.all_nodes matches
 
-let ruleset = ref Rule.fail
+let rules = ref Rule.fail
 
-let setup defs =
-  let ruf = Rule.choice (mk_ruf defs) in
-  let luf = Rule.choice (Blist.map gen_left_rules defs) in
-  ruleset := Rule.choice 
-  [
-    ex_falso_axiom; id_axiom ;
-    lhs_disj_to_symheaps;
-    rhs_disj_to_symheaps;
-    simplify;
-    brl_matches;
-		wrap pto_intro_rule;
-		wrap pred_intro_rule;
-    instantiate_pto;
-		ruf ;
-		luf ;
-  ]
+let setup defs = 
+  let rs = 
+    [
+      axioms ;
+      lhs_disj_to_symheaps;
+      rhs_disj_to_symheaps;
+      simplify;
+      brl_matches;
+  		wrap pto_intro_rule;
+  		wrap pred_intro_rule;
+      instantiate_pto
+    ] @ (mk_ruf defs) @ (Blist.map gen_left_rules defs) in
+  rules := Rule.choice rs

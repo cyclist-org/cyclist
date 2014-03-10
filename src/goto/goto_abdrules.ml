@@ -1,11 +1,11 @@
 open Lib
 open Util
 open Symheap
-open Program
+open Goto_program
 
-module Rule = Proofrule.Make(Program.Seq)
-module Seqtactics = Seqtactics.Make(Program.Seq)
-module Abdrule = Abdrule.Make(Program.Seq)(Program.Defs)
+module Rule = Proofrule.Make(Goto_program.Seq)
+module Seqtactics = Seqtactics.Make(Goto_program.Seq)
+module Abdrule = Abdrule.Make(Goto_program.Seq)(Goto_program.Defs)
 
 (* let latex_defs d =                 *)
 (*   let t = !split_heaps in          *)
@@ -13,7 +13,7 @@ module Abdrule = Abdrule.Make(Program.Seq)(Program.Defs)
 (*   let res = Defs.to_latex d in     *)
 (*   split_heaps := t ; res           *)
 
-let dest_sh_seq = Prprover.dest_sh_seq
+let dest_sh_seq = Goto_rules.dest_sh_seq
 
 let last_pred = ref 0
 let get_fresh_ident () = Printf.sprintf "I%.3d" (incr last_pred ; !last_pred)
@@ -56,7 +56,7 @@ let inline defs =
           not (Strng.Set.mem h idents)
         end (Blist.but_last defs) in
     let defs = Blist.filter ((!=)q) defs in
-    let unf = Prprover.gen_left_rules_f (p,h) in
+    let unf = Goto_rules.gen_left_rules_f (p,h) in
     let f orig =
       let (p',h') = Case.dest orig in 
       let first_unfold f =
@@ -168,19 +168,19 @@ let is_base_case c = let (p,_) = Case.dest c in Inds.is_empty p.inds
 
 let is_possibly_consistent defs = Defs.consistent (empify defs)
 
-let ex_falso_axiom = Abdrule.lift Prprover.ex_falso_axiom 
-let lhs_disj_to_symheaps = Abdrule.lift Prprover.lhs_disj_to_symheaps
-let eq_subst_ex = Abdrule.lift (Rule.mk_infrule Prprover.eq_subst_ex_f)
+let ex_falso_axiom = Abdrule.lift Goto_rules.ex_falso_axiom 
+let lhs_disj_to_symheaps = Abdrule.lift Goto_rules.lhs_disj_to_symheaps
+let eq_subst_ex = Abdrule.lift (Rule.mk_infrule Goto_rules.eq_subst_ex_f)
 
 (* symbolic execution rules *)
-let symex_stop_axiom = Abdrule.lift Prprover.symex_stop_axiom
-let symex_load_rule = Abdrule.lift Prprover.symex_load_rule
-let symex_store_rule = Abdrule.lift Prprover.symex_store_rule
-let symex_free_rule = Abdrule.lift Prprover.symex_free_rule
-let symex_new_rule = Abdrule.lift Prprover.symex_new_rule
-let symex_goto_rule = Abdrule.lift Prprover.symex_goto_rule
-let symex_skip_rule = Abdrule.lift Prprover.symex_skip_rule
-let symex_non_det_if_rule = Abdrule.lift Prprover.symex_non_det_if_rule
+let symex_stop_axiom = Abdrule.lift Goto_rules.symex_stop_axiom
+let symex_load_rule = Abdrule.lift Goto_rules.symex_load_rule
+let symex_store_rule = Abdrule.lift Goto_rules.symex_store_rule
+let symex_free_rule = Abdrule.lift Goto_rules.symex_free_rule
+let symex_new_rule = Abdrule.lift Goto_rules.symex_new_rule
+let symex_goto_rule = Abdrule.lift Goto_rules.symex_goto_rule
+let symex_skip_rule = Abdrule.lift Goto_rules.symex_skip_rule
+let symex_non_det_if_rule = Abdrule.lift Goto_rules.symex_non_det_if_rule
 
 
 
@@ -241,7 +241,7 @@ let post_abd_assign_rule = Abdrule.lift (Rule.mk_infrule post_abd_assign_rule_f)
 (*  rl, Apr.mk_inf_rule rl "Gen"                                                   *)
   
 let simplify =
-  Abdrule.lift (Rule.mk_infrule (Seqtactics.first [ Prprover.eq_subst_ex_f ]))
+  Abdrule.lift (Rule.mk_infrule (Seqtactics.first [ Goto_rules.eq_subst_ex_f ]))
 let wrap r = Abdrule.compose r (Abdrule.attempt simplify)
 
 
@@ -312,16 +312,16 @@ let standard_rules =
 
 let std_funcs = 
   [
-    Prprover.lhs_disj_to_symheaps_f; 
-    Prprover.eq_subst_ex_f ;
-    Prprover.symex_load_rule_f; 
-    Prprover.symex_store_rule_f;
-    Prprover.symex_free_rule_f;
-    Prprover.symex_new_rule_f;
-    Prprover.symex_goto_rule_f ;
-    Prprover.symex_skip_rule_f ;
-    Prprover.symex_non_det_if_rule_f; 
-(*    Prprover.symex_assign_rule_f;*)
+    Goto_rules.lhs_disj_to_symheaps_f; 
+    Goto_rules.eq_subst_ex_f ;
+    Goto_rules.symex_load_rule_f; 
+    Goto_rules.symex_store_rule_f;
+    Goto_rules.symex_free_rule_f;
+    Goto_rules.symex_new_rule_f;
+    Goto_rules.symex_goto_rule_f ;
+    Goto_rules.symex_skip_rule_f ;
+    Goto_rules.symex_non_det_if_rule_f; 
+(*    Goto_rules.symex_assign_rule_f;*)
     symex_assign_rule_f
   ] 
   
@@ -392,7 +392,7 @@ let abd_deref =
         let pto_params = 
           fresh_evars 
             (Term.Set.of_list newparams) 
-            (Blist.length (fst !Program.program)) in
+            (Blist.length (fst !Goto_program.program)) in
         let newy = 
           Blist.nth newparams (Blist.find_index (fun t -> Heap.equates f y t) params) in
         let clause =  
@@ -473,7 +473,7 @@ let abd_back_rule =
         Deqs.cardinal l1.deqs < Deqs.cardinal l2.deqs ||
         Ptos.cardinal l1.ptos < Ptos.cardinal l2.ptos ||
         (* refuse if backlink applies already *)
-        Prprover.is_subsumed s1 s2
+        Goto_rules.is_subsumed s1 s2
       then 
         (debug (fun () -> "Abd back early exit.");
         []) 
@@ -526,13 +526,13 @@ let abd_back_rule =
   Abdrule.mk_abdbackrule Rule.all_nodes rl
 
 
-let matches = Abdrule.lift Prprover.matches
+let matches = Abdrule.lift Goto_rules.matches
 
 let deref_tac = 
   Abdrule.first [symex_load_rule; symex_store_rule; symex_free_rule]
 
 let gen_left_rule_fun seq defs =
-  let rls = Blist.map Prprover.gen_left_rules_f defs in
+  let rls = Blist.map Goto_rules.gen_left_rules_f defs in
   let rl = Seqtactics.choice rls in
   let apps = rl seq in
   Blist.map (fun app -> (app,defs)) apps

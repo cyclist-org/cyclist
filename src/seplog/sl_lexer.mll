@@ -1,5 +1,5 @@
 {
-open Slparser
+open Sl_parser
 open Symbols
 exception Error of string
 

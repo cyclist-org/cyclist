@@ -1,23 +1,21 @@
 open Lib
 open Util
 open Symheap
-open Program
+open Goto_program
 
-module PRP = Prover2.Make(Program.Seq)
-
-module Rule = Proofrule.Make(Program.Seq)
-module Seqtactics = PRP.Seqtactics
+module Rule = Proofrule.Make(Goto_program.Seq)
+module Seqtactics = Seqtactics.Make(Goto_program.Seq)
 
 let dest_sh_seq (l,i) = (Form.dest l, i)
 
 (* axioms *)
 
 let ex_falso_axiom_f, ex_falso_axiom = 
-  let ax ((l,_):Program.Seq.t) = Form.inconsistent l in 
+  let ax ((l,_):Seq.t) = Form.inconsistent l in 
   ax, Rule.mk_axiom (fun seq -> Option.mk (ax seq) "Ex Falso")
 
 let symex_stop_axiom_f, symex_stop_axiom = 
-  let ax ((_,i):Program.Seq.t) = Cmd.is_stop (get_cmd i) in
+  let ax ((_,i):Seq.t) = Cmd.is_stop (get_cmd i) in
   ax, Rule.mk_axiom (fun seq -> Option.mk (ax seq) "Stop")
 
 (* rules *)
@@ -45,7 +43,7 @@ let wrap r =
 
 (* break LHS disjunctions *)
 let lhs_disj_to_symheaps_f, lhs_disj_to_symheaps =
-  let rl ((l,i):Program.Seq.t) =
+  let rl ((l,i):Seq.t) =
     if (Blist.length l) < 2 then [] else
     [ Blist.map 
         (fun sh -> ( ([sh], i), Heap.tag_pairs sh, TagPairs.empty ) ) 
@@ -286,13 +284,13 @@ let gen_fold_rules (def, ident) =
     with Not_symheap -> [] in
   Rule.mk_backrule true Rule.all_nodes fold_rule 
 
-let ruleset = ref Rule.fail
+let rules = ref Rule.fail
 
 let setup defs seq_to_prove =
-  Program.set_local_vars seq_to_prove ;
+  set_local_vars seq_to_prove ;
   let luf = Blist.map gen_left_rules defs in
   let cutm = Blist.map gen_fold_rules defs in
-  ruleset := Rule.choice ([ 
+  rules := Rule.choice ([ 
     ex_falso_axiom ; symex_stop_axiom ;
     lhs_disj_to_symheaps ;
     matches ;
@@ -311,14 +309,14 @@ let setup defs seq_to_prove =
   ] @ luf)
 
 
-let coverage prf = 
-  let get_line i = snd (PRP.Proof.get_seq i prf) in
-  let lines = 
-    Blist.fold_left 
-      (fun s (i,_) -> Int.Set.add (get_line i) s) 
-      Int.Set.empty 
-      (PRP.Proof.to_list prf) in
-  let no_lines = Int.Set.cardinal lines in
-  let prog_lines = Program.get_no_lines () in
-  int_of_float (100. *. (float_of_int no_lines) /. (float_of_int prog_lines))
+(* let coverage prf =                                                            *)
+(*   let get_line i = snd (PRP.Proof.get_seq i prf) in                           *)
+(*   let lines =                                                                 *)
+(*     Blist.fold_left                                                           *)
+(*       (fun s (i,_) -> Int.Set.add (get_line i) s)                             *)
+(*       Int.Set.empty                                                           *)
+(*       (PRP.Proof.to_list prf) in                                              *)
+(*   let no_lines = Int.Set.cardinal lines in                                    *)
+(*   let prog_lines = Program.get_no_lines () in                                 *)
+(*   int_of_float (100. *. (float_of_int no_lines) /. (float_of_int prog_lines)) *)
    

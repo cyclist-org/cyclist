@@ -3,8 +3,8 @@ open Lib
 let cl_sequent = ref ""
 let defs_path = ref "examples/sl.defs"
 
-module Parser = Slparser
-module Lexer = Sllexer
+module Parser = Sl_parser
+module Lexer = Sl_lexer
 module Prover = Tlprover
 (* module F = Frontend.Make(Prover)(Symheap.Seq) *)
 

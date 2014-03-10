@@ -2,9 +2,8 @@ open Lib
 open Util
 open Firstorder
 
-module FO = Firstorder 
-module FOP = Prover2.Make(FO.Seq)
-module Rule = Proofrule.Make(FO.Seq)
+module FOP = Prover2.Make(Firstorder.Seq)
+module Rule = Proofrule.Make(Firstorder.Seq)
 module Seqtactics = FOP.Seqtactics
 
 let product_subsumed_modulo_tags p1 p2 =
@@ -41,6 +40,10 @@ let id_axiom =
         )
         "Id"
     end
+
+let axioms = Rule.first [ ex_falso_axiom ; id_axiom ]
+
+let try_axioms r = Rule.compose r (Rule.attempt axioms)
 
 (* inference rules *)
 
@@ -166,7 +169,8 @@ let simplify_seq =
 let simplify = Rule.mk_infrule simplify_seq
 
 let wrap r =
-  Rule.mk_infrule (Seqtactics.compose r (Seqtactics.attempt simplify_seq))
+  try_axioms 
+    (Rule.mk_infrule (Seqtactics.compose r (Seqtactics.attempt simplify_seq)))
 
 (* break LHS disjunctions *)
 let lhs_disj_to_products =
@@ -368,16 +372,8 @@ let fold (ident,defs) =
     with Not_product -> [] in
   Rule.mk_infrule fold_rl 
 
-(* let up_to_n m rl =                                                    *)
-(*   let rec aux acc rl' = function                                      *)
-(*     | 0 -> acc                                                        *)
-(*     | n -> aux (rl'::acc) (FOP.Proof_tacs.then_tac rl' rl) (n-1) in   *)
-(*   FOP.rename_rule                                                     *)
-(*     (FOP.Proof_tacs.or_tac (aux [] rl m))                     *)
-(*     ("Up-to-" ^ (string_of_int m) ^ " " ^ (FOP.descr_rule rl) )       *)
 
-
-let ruleset = ref Rule.fail
+let rules = ref Rule.fail
 
 let setup defs = 
   let ruf = Blist.bind  gen_right_rules (Defs.bindings defs) in
@@ -390,7 +386,7 @@ let setup defs =
       (* fold *)
       (Defs.bindings defs) in
   let clever = Blist.map (fun l -> Rule.compose l ruf_or) luf in
-  ruleset := Rule.choice
+  rules := Rule.choice
     ([ 
       ex_falso_axiom ; id_axiom ;
       simplify ;

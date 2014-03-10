@@ -201,6 +201,8 @@ sig
   val fail : t
   val compose : t -> t -> t 
   val choice : t list -> t
+  val attempt : t -> t
+  val first : t list -> t 
 end
 
 module type ABDRULE =

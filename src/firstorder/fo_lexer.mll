@@ -1,5 +1,5 @@
 {
-	open Foparser
+	open Fo_parser
   exception Error of string
 }
 

@@ -3,10 +3,10 @@ open Lib
 let defs_path = ref "examples/sl.defs"
 let prog_path = ref ""
 
-module Parser = Slparser
-module Lexer = Sllexer
-module Prover = Prprover
-module F = Frontend2.Make(Prover.PRP)
+module Parser = Sl_parser
+module Lexer = Sl_lexer
+module Prover = Prover2.Make(Goto_program.Seq)
+module F = Frontend2.Make(Prover)
 
 let sequent_of_string s =
   let lexbuf = Lexing.from_string s in
@@ -19,7 +19,7 @@ let defs_of_channel c =
 let program_of_channel c =
   let lexbuf = Lexing.from_channel c in
   try
-    Slparser.program Sllexer.token lexbuf
+    Sl_parser.program Sl_lexer.token lexbuf
   with
     | Lexer.Error msg -> print_endline msg ; assert false
     | Parser.Error -> 
@@ -43,9 +43,9 @@ let () =
   Arg.parse !F.speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) !F.usage ;
   if !prog_path="" then F.die "-P must be specified." ;
   let (seq, prog) = program_of_channel (open_in !prog_path) in
-  Program.set_program prog ; 
-  Prprover.setup (defs_of_channel (open_in !defs_path)) seq;
-  exit (F.prove_seq !Prover.ruleset seq)
+  Goto_program.set_program prog ; 
+  Goto_rules.setup (defs_of_channel (open_in !defs_path)) seq;
+  exit (F.prove_seq !Goto_rules.rules seq)
     
 
 

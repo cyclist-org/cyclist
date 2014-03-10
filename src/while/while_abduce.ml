@@ -39,7 +39,7 @@ let record_defs defs =
   let path_fn = Filename.concat !rec_defs_path (fn ^ ext) in
   let () = incr defs_count in
   let ch = open_out path_fn in
-  let () = output_string ch (While_program.Defs.to_string (While_abdprover.empify defs)) in
+  let () = output_string ch (While_program.Defs.to_string (While_abdrules.empify defs)) in
   let () = close_out ch in
 	if !defs_count>50000 then exit 0 else false 
 
@@ -50,8 +50,8 @@ let prove_prog seq =
   let res =  
     w_timeout
       (fun () ->
-        While_abdprover.abduce seq [] While_abdprover.mk_rules 
-        (if !gen_defs then record_defs else While_abdprover.is_possibly_consistent)) 
+        While_abdrules.abduce seq [] While_abdrules.mk_rules 
+        (if !gen_defs then record_defs else While_abdrules.is_possibly_consistent)) 
       !timeout
       in
   Stats.Gen.end_call () ;
@@ -62,35 +62,35 @@ let prove_prog seq =
   if Option.is_none res then
     (print_endline ("NOT proved: " ^ (Seq.to_string seq)) ; 1) else
   let (proof, defs) = Option.get res in
-  if !Stats.do_statistics then While_abdprover.print_proof_stats proof ;
+  if !Stats.do_statistics then While_abdrules.print_proof_stats proof ;
   if !show_proof then
-    print_endline (While_abdprover.Proof.to_string proof)
+    print_endline (While_abdrules.Proof.to_string proof)
   else
     print_endline ("Proved: " ^ (While_program.Seq.to_string seq)) ;
   if !show_defs || !simpl_defs then  
     print_endline (While_program.Defs.to_string  
-      (( if !simpl_defs then While_abdprover.simplify_defs else While_abdprover.empify ) defs));
+      (( if !simpl_defs then While_abdrules.simplify_defs else While_abdrules.empify ) defs));
   if !latex_path<>"" then 
   begin
     let ch = open_out_gen [Open_creat; Open_wronly; Open_trunc] 402 !latex_path in
-    While_abdprover.melt_proof ch proof ; close_out ch
+    While_abdrules.melt_proof ch proof ; close_out ch
   end ;
   if !latex_defs then 
-    ignore (Latex.to_channel ~mode:Latex.M stdout (Symheap.Defs.to_melt (While_abdprover.simplify_defs defs)));
+    ignore (Latex.to_channel ~mode:Latex.M stdout (Symheap.Defs.to_melt (While_abdrules.simplify_defs defs)));
   0
 
 
 let usage = 
   "usage: " ^ Sys.argv.(0) ^ " [-g] [-p] [-d] [-l <file>] [-P <file>]"
 
-let () = While_abdprover.maxbound := 20 
+let () = While_abdrules.maxbound := 20 
 
 let speclist = [
-    ("-m", Arg.Set_int While_abdprover.minbound, 
-      (": set starting depth for IDFS to <int>, default is " ^ (string_of_int !While_abdprover.minbound)));
-    ("-M", Arg.Set_int While_abdprover.maxbound, 
-      (": set maximum depth for IDFS/BFS to <int>, default is " ^ (string_of_int !While_abdprover.maxbound)));
-    ("-L", Arg.Int (fun n -> While_abdprover.minbound := n ; While_abdprover.maxbound := n), ": set both depths to <int>.");
+    ("-m", Arg.Set_int While_abdrules.minbound, 
+      (": set starting depth for IDFS to <int>, default is " ^ (string_of_int !While_abdrules.minbound)));
+    ("-M", Arg.Set_int While_abdrules.maxbound, 
+      (": set maximum depth for IDFS/BFS to <int>, default is " ^ (string_of_int !While_abdrules.maxbound)));
+    ("-L", Arg.Int (fun n -> While_abdrules.minbound := n ; While_abdrules.maxbound := n), ": set both depths to <int>.");
     ("-p", Arg.Set show_proof,": show proof");
     ("-pd", Arg.Set show_defs,": show abduced definitions");
     ("-sd", Arg.Set simpl_defs,": show simlpified abduced definitions");
@@ -122,7 +122,7 @@ let () =
   let ((f, cmd) as seq) = program_of_channel (open_in !prog_path) in
   While_program.set_program cmd ; 
   (* Safety_prover.setup [] ;  *)
-  While_abdprover.setup () ;
+  While_abdrules.setup () ;
   exit (prove_prog seq)
     
 

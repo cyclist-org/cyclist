@@ -19,8 +19,7 @@ struct
   let mk_axiom ax_f idx prf =
     match ax_f (Proof.get_seq idx prf) with
     | None -> L.empty
-    | Some descr -> L.cons ([], Proof.add_axiom idx descr prf) L.empty  
-
+    | Some descr -> L.singleton ([], Proof.add_axiom idx descr prf)  
   
   let mk_infrule r_f idx prf =
     let seq = Proof.get_seq idx prf in
@@ -67,7 +66,19 @@ struct
   let compose r r' idx prf = L.bind (apply_to_subgoals r') (r idx prf)
 
   let choice rl idx prf = L.bind (fun f -> f idx prf) (L.of_list rl) 
-      
+  
+  let rec first rl idx prf = 
+    match rl with
+    | [] -> L.empty
+    | r::rs -> 
+      let apps = r idx prf in
+      if not (L.is_empty apps) then apps else first rs idx prf 
+  
+  let attempt r idx prf = 
+    let apps = r idx prf in
+    if not (L.is_empty apps) then apps else
+    L.singleton ([idx],prf)
+  
   (* let rec repeat n r =                     *)
   (*   if n<=0 then invalid_arg "repeat" else *)
   (*   if n=1 then r else                     *)
