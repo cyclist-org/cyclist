@@ -46,7 +46,9 @@ whl_abd-tests:
 
 tp-tests: fo-tests sl-tests pr-tests sf-tests
 
-abd-tests: abdgoto-tests whl_abd-tests mutant-tests 
+abd2-tests: whl_abd-tests mutant-tests 
+
+abd-tests: abdgoto-tests abd2-tests
 
 all-tests: tp-tests abd-tests
 

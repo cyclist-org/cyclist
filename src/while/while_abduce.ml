@@ -11,10 +11,13 @@ let latex_defs = ref false
 let timeout = ref 30
 let rec_defs_path = ref "/tmp/recdefs/"
 let gen_defs = ref false
+let minbound = ref 1
+let maxbound = ref 20
 
 module Seq = While_program.Seq
 module Parser = While_parser
 module Lexer = While_lexer
+module Abducer = Abducer.Make(While_program.Seq)(While_program.Defs)
 
 let program_of_channel c =
   let lexbuf = Lexing.from_channel c in
@@ -50,7 +53,7 @@ let prove_prog seq =
   let res =  
     w_timeout
       (fun () ->
-        While_abdrules.abduce seq [] While_abdrules.mk_rules 
+        Abducer.bfs !minbound !maxbound While_abdrules.rules seq []  
         (if !gen_defs then record_defs else While_abdrules.is_possibly_consistent)) 
       !timeout
       in
@@ -62,9 +65,9 @@ let prove_prog seq =
   if Option.is_none res then
     (print_endline ("NOT proved: " ^ (Seq.to_string seq)) ; 1) else
   let (proof, defs) = Option.get res in
-  if !Stats.do_statistics then While_abdrules.print_proof_stats proof ;
+  if !Stats.do_statistics then Abducer.print_proof_stats proof ;
   if !show_proof then
-    print_endline (While_abdrules.Proof.to_string proof)
+    print_endline (Abducer.Proof.to_string proof)
   else
     print_endline ("Proved: " ^ (While_program.Seq.to_string seq)) ;
   if !show_defs || !simpl_defs then  
@@ -73,7 +76,7 @@ let prove_prog seq =
   if !latex_path<>"" then 
   begin
     let ch = open_out_gen [Open_creat; Open_wronly; Open_trunc] 402 !latex_path in
-    While_abdrules.melt_proof ch proof ; close_out ch
+    Abducer.melt_proof ch proof ; close_out ch
   end ;
   if !latex_defs then 
     ignore (Latex.to_channel ~mode:Latex.M stdout (Symheap.Defs.to_melt (While_abdrules.simplify_defs defs)));
@@ -83,14 +86,13 @@ let prove_prog seq =
 let usage = 
   "usage: " ^ Sys.argv.(0) ^ " [-g] [-p] [-d] [-l <file>] [-P <file>]"
 
-let () = While_abdrules.maxbound := 20 
 
 let speclist = [
-    ("-m", Arg.Set_int While_abdrules.minbound, 
-      (": set starting depth for IDFS to <int>, default is " ^ (string_of_int !While_abdrules.minbound)));
-    ("-M", Arg.Set_int While_abdrules.maxbound, 
-      (": set maximum depth for IDFS/BFS to <int>, default is " ^ (string_of_int !While_abdrules.maxbound)));
-    ("-L", Arg.Int (fun n -> While_abdrules.minbound := n ; While_abdrules.maxbound := n), ": set both depths to <int>.");
+    ("-m", Arg.Set_int minbound, 
+      (": set starting depth for IDFS to <int>, default is " ^ (string_of_int !minbound)));
+    ("-M", Arg.Set_int maxbound, 
+      (": set maximum depth for IDFS/BFS to <int>, default is " ^ (string_of_int !maxbound)));
+    ("-L", Arg.Int (fun n -> minbound := n ; maxbound := n), ": set both depths to <int>.");
     ("-p", Arg.Set show_proof,": show proof");
     ("-pd", Arg.Set show_defs,": show abduced definitions");
     ("-sd", Arg.Set simpl_defs,": show simlpified abduced definitions");
@@ -122,7 +124,6 @@ let () =
   let ((f, cmd) as seq) = program_of_channel (open_in !prog_path) in
   While_program.set_program cmd ; 
   (* Safety_prover.setup [] ;  *)
-  While_abdrules.setup () ;
   exit (prove_prog seq)
     
 
