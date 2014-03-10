@@ -7,8 +7,8 @@ let prog_path = ref ""
 
 module Parser = While_parser
 module Lexer = While_lexer
-module Prover = While_rules
-module F = Frontend.Make(Prover)(While_program.Seq)
+module Prover = Prover2.Make(While_program.Seq)
+module F = Frontend2.Make(Prover)
 
 
 let defs_of_channel c =
@@ -55,7 +55,7 @@ let () =
   let prog = Cmd.number prog in
   While_program.set_program prog ; 
   While_rules.setup (defs_of_channel (open_in !defs_path)) ;
-  exit (F.prove_seq (seq, prog))
+  exit (F.prove_seq !While_rules.rules (seq, prog))
     
 
 
