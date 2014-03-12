@@ -288,25 +288,30 @@ let rules = ref Rule.fail
 
 let setup defs seq_to_prove =
   set_local_vars seq_to_prove ;
-  let luf = Blist.map gen_left_rules defs in
-  let cutm = Blist.map gen_fold_rules defs in
-  rules := Rule.choice ([ 
+  rules := Rule.first [ 
     ex_falso_axiom ; symex_stop_axiom ;
     lhs_disj_to_symheaps ;
-    matches ;
-    simplify ]
-    @ cutm @
-    [
-    symex_skip_rule ;
-    symex_assign_rule;
-    symex_load_rule ;
-    symex_store_rule ;
-    symex_free_rule ;
-    symex_new_rule ;
-    symex_goto_rule ;
-    symex_det_if_rule ;
-    symex_non_det_if_rule
-  ] @ luf)
+    simplify;
+    
+    Rule.choice [
+      matches ;
+      Rule.choice (Blist.map gen_fold_rules defs);
+      
+      Rule.first [
+        symex_skip_rule ;
+        symex_assign_rule;
+        symex_load_rule ;
+        symex_store_rule ;
+        symex_free_rule ;
+        symex_new_rule ;
+        symex_goto_rule ;
+        symex_det_if_rule ;
+        symex_non_det_if_rule 
+      ];
+      
+      Rule.choice (Blist.map gen_left_rules defs)
+    ]
+  ]
 
 
 (* let coverage prf =                                                            *)

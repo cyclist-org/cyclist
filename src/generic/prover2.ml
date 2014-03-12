@@ -21,6 +21,10 @@ module Make(Seq: Sigs.SEQUENT) =
 
     let rec dfs bound r idx prf =
       if bound<0 then None else
+      let () = debug (fun () ->
+        "Trying to close node: " ^ (string_of_int idx) ^ "\n" ^
+        (Proof.to_string prf) ^ "\n"
+        ) in
       let apps = r idx prf in
       let res = Option.map snd (L.find_first (fun (ss', _) -> ss'=[]) apps) in
       if Option.is_some res then res else

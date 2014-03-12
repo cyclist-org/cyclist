@@ -71,8 +71,12 @@ let prove_prog seq =
   else
     print_endline ("Proved: " ^ (While_program.Seq.to_string seq)) ;
   if !show_defs || !simpl_defs then  
-    print_endline (While_program.Defs.to_string  
-      (( if !simpl_defs then While_abdrules.simplify_defs else While_abdrules.empify ) defs));
+    print_endline (While_program.Defs.to_string (( 
+      if !simpl_defs then 
+        While_abdrules.simplify_defs 
+      else 
+        While_abdrules.empify
+      ) defs));
   if !latex_path<>"" then 
   begin
     let ch = open_out_gen [Open_creat; Open_wronly; Open_trunc] 402 !latex_path in

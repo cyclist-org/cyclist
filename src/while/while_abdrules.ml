@@ -71,11 +71,11 @@ let inline defs =
 let used_only_recursively (heap, (ident, params)) pos =
   let var = Blist.nth params pos in
   let heap' = { heap with inds=Inds.empty } in
-  if Term.Set.mem var (Heap.vars heap') then false else
+  not (Term.Set.mem var (Heap.vars heap')) &&
   Inds.for_all
     begin fun (_,(ident', params')) ->
       if ident<>ident' then
-        Blist.for_all (fun var' -> not (Term.equal var var')) params'
+        not (Blist.exists (Term.equal var) params')
       else
         Blist.for_all2 
           (fun var' pos' -> pos=pos' || not (Term.equal var var')) 
@@ -187,28 +187,6 @@ let symex_new_rule = Abdrule.lift While_rules.symex_new_rule
 let symex_skip_rule = Abdrule.lift While_rules.symex_skip_rule
 let symex_assign_rule = Abdrule.lift While_rules.symex_assign_rule
 
-let symex_det_if_rule =
-  let rl seq =
-    try
-      let (f,cmd) = dest_sh_seq seq in
-      let (c,cmd') = Cmd.dest_if cmd in
-      if Cond.is_non_det c then [] else
-      let (x,y) = Cond.dest c in
-      let cont = Cmd.get_cont cmd in
-      let mk_ret c = While_rules.fix_tps [[ ([f],c) ], "If(det)"] in
-      match (Cond.is_deq c, Heap.equates f x y, Heap.disequates f x y) with
-        (* cmd wants equality and formula provides it so take the branch *)
-        (* cmd wants disequality and formula provides it so take branch *)
-        | (false, true, _) | (true, _, true) -> mk_ret (Cmd.mk_seq cmd' cont)
-        (* cmd wants equality and formula forbids it so take other branch *)
-        (* cmd wants disequality and formula forbids it so take other branch *)
-        | (false, _, true) | (true, true, _) -> mk_ret cont
-        (* formula allows either fact so fail *)
-        (* or otherwise don't know so fail *)
-        | _ -> []
-    with Not_symheap | WrongCmd -> [] in
-  Abdrule.lift (Rule.mk_infrule rl) 
-
 let symex_nondet_if_rule =
   let rl seq =
     try
@@ -228,7 +206,7 @@ let symex_nondet_ifelse_rule =
       if Cond.is_det c then [] else
       let cont = Cmd.get_cont cmd in
       While_rules.fix_tps
-			  [[ ([f], Cmd.mk_seq cmd' cont); ([f], Cmd.mk_seq cmd'' cont) ], "IfElse(nondet)"]
+        [[ ([f], Cmd.mk_seq cmd' cont); ([f], Cmd.mk_seq cmd'' cont) ], "IfElse(nondet)"]
     with Not_symheap | WrongCmd -> [] in
   Abdrule.lift (Rule.mk_infrule rl) 
 
@@ -240,6 +218,30 @@ let symex_nondet_while_rule =
       if Cond.is_det c then [] else
       let cont = Cmd.get_cont cmd in
       While_rules.fix_tps [[ ([f], Cmd.mk_seq cmd' cmd); ([f], cont) ], "If(nondet)"]
+    with Not_symheap | WrongCmd -> [] in
+  Abdrule.lift (Rule.mk_infrule rl) 
+
+
+
+let symex_det_if_rule =
+  let rl seq =
+    try
+      let (f,cmd) = dest_sh_seq seq in
+      let (c,cmd') = Cmd.dest_if cmd in
+      if Cond.is_non_det c then [] else
+      let (x,y) = Cond.dest c in
+      let cont = Cmd.get_cont cmd in
+      let mk_ret c = While_rules.fix_tps [[ ([f],c) ], "If(det)"] in
+      match (Cond.is_deq c, Heap.equates f x y, Heap.disequates f x y) with
+        (* cmd wants equality and formula provides it so take the branch *)
+        (* cmd wants disequality and formula provides it so take branch *)
+        | (false, true, _) | (true, _, true) -> mk_ret (Cmd.mk_seq cmd' cont)
+        (* cmd wants equality and formula forbids it so take other branch *)
+        (* cmd wants disequality and formula forbids it so take other branch *)
+        | (false, _, true) | (true, true, _) -> mk_ret cont
+        (* formula allows either fact so fail *)
+        (* or otherwise don't know so fail *)
+        | _ -> []
     with Not_symheap | WrongCmd -> [] in
   Abdrule.lift (Rule.mk_infrule rl) 
 
@@ -467,58 +469,58 @@ let abd_back_rule =
 let matches = Abdrule.lift While_rules.matches
 
 (* NOT UPDATED FOR TERMINATION *)
-(* let abd_segment =                                                                           *)
-(*   let rl seq defs =                                                                         *)
-(*     try                                                                                     *)
-(*       let (h,cmd) = dest_sh_seq seq in                                                      *)
-(*       let (c,cmd') = Cmd.dest_while cmd in                                                  *)
-(* 			(* only consider disequality guards *)                                                *)
-(* 			if not (Cond.is_deq c) then [] else                                                   *)
-(* 		  let guard_vars = Cond.vars c in                                                       *)
-(* 			let guard_terms = Cond.terms c in                                                     *)
-(* 			(* only consider disequalities to nil *)                                              *)
-(* 			if Term.Set.is_empty guard_terms then [] else                                         *)
-(* 			let mod_vars = Cmd.modifies cmd' in                                                   *)
-(* 			let gen_vars = Term.Set.inter guard_vars mod_vars in                                  *)
-(* 			if Term.Set.cardinal gen_vars <> 1 then [] else                                       *)
-(* 		  let y = Term.Set.choose gen_vars in                                                   *)
-(*   		let eq_y = Term.Set.filter Term.is_univ_var	(Heap.eq_class h y) in                   *)
-(* 			(* xs are prog vars equal to y now, and unmodified by the loop body *)                *)
-(* 			let xs = Term.Set.diff eq_y mod_vars in                                               *)
-(* 			(* is this always needed ? *)                                                         *)
-(* 			if Term.Set.is_empty xs then [] else                                                  *)
-(*       (* filter formula predicates by undefinedness *)                                      *)
-(*       let inds =                                                                            *)
-(* 				Inds.filter (fun pred -> not (Defs.is_defined pred defs)) h.inds in                 *)
-(*       (* further filter by having a y-equiv term in parameter list, *)                      *)
-(*       let inds =                                                                            *)
-(*         Inds.filter (fun (_,(_,params)) ->                                                  *)
-(*           Blist.exists (fun x -> Term.Set.mem x xs) params) inds in                          *)
-(* 		  if Inds.is_empty inds then [] else                                                    *)
-(* 		  (* weaken by removing y from its equivalence class *)                                 *)
-(* 			let h' = { h with eqs=UF.remove y h.eqs } in                                          *)
-(* 			(* is this always needed ? *)                                                         *)
-(* 			if Heap.equal h h' then [] else                                                       *)
-(*       let (fresh_ident) = get_fresh_ident () in                                             *)
-(*       let f ((_,(ident, params)) as i) =                                                    *)
-(*         let newparams = fresh_uvars Term.Set.empty (Blist.length params) in                  *)
-(* 				let xi = Blist.find_index (fun x -> Term.Set.mem x xs) params in                               *)
-(*         let x = Blist.nth newparams xi in                                                    *)
-(* 				let head = (ident, newparams) in                                                    *)
-(* 				let newpred = (1, (fresh_ident, newparams @ [x])) in                                *)
-(* 				let newpred' = (1, (fresh_ident, newparams @ [Term.nil])) in                        *)
-(*         let clause = { Heap.empty with inds=Inds.of_list [newpred; newpred']} in            *)
-(*         let new_defs = ( [Case.mk clause head], ident )::defs in                            *)
-(* 				let h' = { h' with inds=Inds.filter ((!=)i) h'.inds } in                            *)
-(* 				let newpred = (1, (fresh_ident, params @ [y])) in                                   *)
-(* 				let newpred' = (1, (fresh_ident, Blist.replace_nth y xi params @ [Term.nil])) in          *)
-(* 				let h' = { h' with inds=Inds.union h'.inds (Inds.of_list [newpred;newpred']) } in   *)
-(* 				let () = debug (fun () -> "Heap: " ^ (Heap.to_string h')) in                        *)
-(* 				let () = debug (fun () -> "Clause: " ^ (Heap.to_string clause)) in                  *)
+(* let abd_segment =                                                                         *)
+(*   let rl seq defs =                                                                       *)
+(*     try                                                                                   *)
+(*       let (h,cmd) = dest_sh_seq seq in                                                    *)
+(*       let (c,cmd') = Cmd.dest_while cmd in                                                *)
+(* 			(* only consider disequality guards *)                                              *)
+(* 			if not (Cond.is_deq c) then [] else                                                 *)
+(* 		  let guard_vars = Cond.vars c in                                                     *)
+(* 			let guard_terms = Cond.terms c in                                                   *)
+(* 			(* only consider disequalities to nil *)                                            *)
+(* 			if Term.Set.is_empty guard_terms then [] else                                       *)
+(* 			let mod_vars = Cmd.modifies cmd' in                                                 *)
+(* 			let gen_vars = Term.Set.inter guard_vars mod_vars in                                *)
+(* 			if Term.Set.cardinal gen_vars <> 1 then [] else                                     *)
+(* 		  let y = Term.Set.choose gen_vars in                                                 *)
+(*   		let eq_y = Term.Set.filter Term.is_univ_var	(Heap.eq_class h y) in                 *)
+(* 			(* xs are prog vars equal to y now, and unmodified by the loop body *)              *)
+(* 			let xs = Term.Set.diff eq_y mod_vars in                                             *)
+(* 			(* is this always needed ? *)                                                       *)
+(* 			if Term.Set.is_empty xs then [] else                                                *)
+(*       (* filter formula predicates by undefinedness *)                                    *)
+(*       let inds =                                                                          *)
+(* 				Inds.filter (fun pred -> not (Defs.is_defined pred defs)) h.inds in               *)
+(*       (* further filter by having a y-equiv term in parameter list, *)                    *)
+(*       let inds =                                                                          *)
+(*         Inds.filter (fun (_,(_,params)) ->                                                *)
+(*           Blist.exists (fun x -> Term.Set.mem x xs) params) inds in                       *)
+(* 		  if Inds.is_empty inds then [] else                                                  *)
+(* 		  (* weaken by removing y from its equivalence class *)                               *)
+(* 			let h' = { h with eqs=UF.remove y h.eqs } in                                        *)
+(* 			(* is this always needed ? *)                                                       *)
+(* 			if Heap.equal h h' then [] else                                                     *)
+(*       let fresh_ident = get_fresh_ident () in                                             *)
+(*       let f ((_,(ident, params)) as i) =                                                  *)
+(*         let newparams = fresh_uvars Term.Set.empty (Blist.length params) in               *)
+(* 				let xi = Blist.find_index (fun x -> Term.Set.mem x xs) params in                  *)
+(*         let x = Blist.nth newparams xi in                                                 *)
+(* 				let head = (ident, newparams) in                                                  *)
+(* 				let newpred = (1, (fresh_ident, newparams @ [x])) in                              *)
+(* 				let newpred' = (1, (fresh_ident, newparams @ [Term.nil])) in                      *)
+(*         let clause = { Heap.empty with inds=Inds.of_list [newpred; newpred']} in          *)
+(*         let new_defs = ( [Case.mk clause head], ident )::defs in                          *)
+(* 				let h' = { h' with inds=Inds.filter ((!=)i) h'.inds } in                          *)
+(* 				let newpred = (1, (fresh_ident, params @ [y])) in                                 *)
+(* 				let newpred' = (1, (fresh_ident, Blist.replace_nth y xi params @ [Term.nil])) in  *)
+(* 				let h' = { h' with inds=Inds.union h'.inds (Inds.of_list [newpred;newpred']) } in *)
+(* 				let () = debug (fun () -> "Heap: " ^ (Heap.to_string h')) in                      *)
+(* 				let () = debug (fun () -> "Clause: " ^ (Heap.to_string clause)) in                *)
 (*         Some ([ (([h'], cmd), While_rules.symex_tagpairs, TagPairs.empty) ], new_defs) in *)
-(*       Option.list_get (Blist.map f (Inds.to_list inds))                                      *)
-(*     with Not_symheap | WrongCmd -> [] in                                                    *)
-(*   mk_gen_rule rl "Abd. segment"                                                             *)
+(*       Option.list_get (Blist.map f (Inds.to_list inds))                                   *)
+(*     with Not_symheap | WrongCmd -> [] in                                                  *)
+(*   mk_gen_rule rl "Abd. segment"                                                           *)
 
 (* let abd_backlink_cut =                                                           *)
 (*   let rl s1 s2 defs =                                                            *)
@@ -601,8 +603,14 @@ let unfold =
     let apps = rl seq in
     Blist.map (fun app -> (app,defs)) apps in
   Abdrule.mk_abdgenrule gen_left_rule_fun
+  
+let unfold_last =
+  let gen_left_rule_fun seq defs =
+    let apps = While_rules.gen_left_rules_f (Blist.hd defs) seq in
+    Blist.map (fun app -> (app,defs)) apps in
+  Abdrule.mk_abdgenrule gen_left_rule_fun
 
-let u r = Abdrule.choice [ r ; Abdrule.compose unfold r ]
+(* let u r = Abdrule.choice [ r ; Abdrule.compose unfold_last r ] *)
 
 let deref_tac =
   Abdrule.first 
@@ -613,7 +621,7 @@ let det_guard_tac =
 
 
 let abd_symex abd symex =
-  Abdrule.compose abd (Abdrule.compose unfold symex)
+  Abdrule.compose abd (Abdrule.compose unfold_last symex)
 
 let ifwhile_tac =
   Abdrule.first [ det_guard_tac; abd_symex abd_det_guard det_guard_tac ]
@@ -621,34 +629,67 @@ let ifwhile_tac =
 let gen_ifwhile_tac =
 	Abdrule.compose generalise_while_rule ifwhile_tac
 
+let rec straightline =
+    Abdrule.first [
+      symex_empty_axiom ; 
+      ex_falso_axiom ; 
+      symex_stop_axiom;
+
+      Abdrule.choice [    
+        matches;
+        abd_symex abd_back_rule matches;
+        
+        Abdrule.first [
+          symex_skip_rule ;
+          symex_new_rule ;
+          symex_nondet_if_rule ;
+          symex_nondet_ifelse_rule ;
+          symex_nondet_while_rule ;
+          symex_assign_rule;
+          
+          deref_tac; 
+          abd_symex abd_deref deref_tac;
+        ];
+      ]  
+    ]
+  
+
 (* these rules can rarely create a non-symex loop in termination checking *)
 let rules =
-    Abdrule.choice
-      [
-        symex_empty_axiom ; ex_falso_axiom ; symex_stop_axiom;
+    Abdrule.first [
+      symex_empty_axiom ; 
+      ex_falso_axiom ; 
+      symex_stop_axiom;
 
-    		(* lhs_disj_to_symheaps ; *)
-        (* simplify ; *)
-            
-    		u matches;
-    		u (abd_symex abd_back_rule matches);
-        u symex_skip_rule ;
-        u symex_new_rule ;
-        u symex_nondet_if_rule ;
-        u symex_nondet_ifelse_rule ;
-        u symex_nondet_while_rule ;
-    		u symex_assign_rule ;
-    
-        u (Abdrule.first [ deref_tac; abd_symex abd_deref deref_tac ]);
-    
-    		u ifwhile_tac;
-        u gen_ifwhile_tac;
+  		(* lhs_disj_to_symheaps ; *)
+      (* simplify ; *)
+        
+      Abdrule.choice [    
+    		matches;
+    		abd_symex abd_back_rule matches;
+        
+        Abdrule.first [
+          symex_skip_rule ;
+          symex_new_rule ;
+          symex_nondet_if_rule ;
+          symex_nondet_ifelse_rule ;
+          symex_nondet_while_rule ;
+      		symex_assign_rule;
+          
+          deref_tac; 
+          abd_symex abd_deref deref_tac;
+          
+          Abdrule.choice [
+        		ifwhile_tac;
+            gen_ifwhile_tac;
+            unfold;
+          ]
+        ];
     
     		(* Proof_tacs.then_tac                                           *)
     		(*   abd_segment                                                 *)
     		(* 	(Proof_tacs.or_tac [ifwhile_tac; gen_ifwhile_tac]); *)
     
     		(* cut_backlink_tac                                               *)
-        unfold;
-      ]
-
+      ]  
+    ]

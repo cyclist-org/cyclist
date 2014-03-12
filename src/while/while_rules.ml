@@ -20,17 +20,14 @@ let dest_sh_seq (l,cmd) = (Form.dest l, cmd)
 
 
 (* axioms *)
-let ex_falso_axiom_f, ex_falso_axiom = 
-  let ax ((f,_):Seq.t) = Form.inconsistent f in 
-  ax, Rule.mk_axiom (fun seq -> Option.mk (ax seq) "Ex Falso")
+let ex_falso_axiom = 
+  Rule.mk_axiom (fun (f,_) -> Option.mk (Form.inconsistent f) "Ex Falso")
 
-let symex_stop_axiom_f, symex_stop_axiom =
-  let ax ((_,cmd):Seq.t) = Cmd.is_stop cmd in 
-  ax, Rule.mk_axiom (fun seq -> Option.mk (ax seq) "Stop")
+let symex_stop_axiom =
+  Rule.mk_axiom (fun (_,cmd) -> Option.mk (Cmd.is_stop cmd) "Stop")
 
-let symex_empty_axiom_f, symex_empty_axiom =
-  let ax ((_,cmd):Seq.t) = Cmd.is_empty cmd in
-  ax, Rule.mk_axiom (fun seq -> Option.mk (ax seq) "Empty")
+let symex_empty_axiom =
+  Rule.mk_axiom (fun (_,cmd) -> Option.mk (Cmd.is_empty cmd) "Empty")
 
 (* simplification rules *)
 let eq_subst_ex_f ((l,cmd) as s) =
@@ -101,10 +98,10 @@ let mk_symex f =
     let cont = Cmd.get_cont cmd in
     fix_tps 
 		  (Blist.map (fun (g,d) -> Blist.map (fun h' -> ([h'], cont)) g, d) (f seq)) in
-  rl, wrap rl
+  wrap rl
   
 (* symbolic execution rules *)
-let symex_assign_rule_f, symex_assign_rule =
+let symex_assign_rule =
   let rl seq =
     try
       let (f,cmd) = dest_sh_seq seq in
@@ -120,7 +117,7 @@ let symex_assign_rule_f, symex_assign_rule =
 let find_pto_on f e = 
 	Ptos.find (fun (l,_) -> Heap.equates f e l) f.ptos
 	
-let symex_load_rule_f, symex_load_rule =
+let symex_load_rule =
   let rl seq =
     try
       let (f,cmd) = dest_sh_seq seq in
@@ -135,7 +132,7 @@ let symex_load_rule_f, symex_load_rule =
     with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl
 
-let symex_store_rule_f, symex_store_rule =
+let symex_store_rule =
   let rl seq =
     try
       let (f,cmd) = dest_sh_seq seq in
@@ -146,7 +143,7 @@ let symex_store_rule_f, symex_store_rule =
     with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl
 
-let symex_free_rule_f, symex_free_rule =
+let symex_free_rule =
   let rl seq =
     try
       let (f,cmd) = dest_sh_seq seq in
@@ -156,7 +153,7 @@ let symex_free_rule_f, symex_free_rule =
     with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl
 
-let symex_new_rule_f, symex_new_rule =
+let symex_new_rule =
   let rl seq =
     try
       let (f,cmd) = dest_sh_seq seq in
@@ -169,7 +166,7 @@ let symex_new_rule_f, symex_new_rule =
     with Not_symheap | WrongCmd-> [] in
   mk_symex rl
 
-let symex_skip_rule_f, symex_skip_rule =
+let symex_skip_rule =
   let rl seq =
     try
       let (f,cmd) = dest_sh_seq seq in 
@@ -177,7 +174,7 @@ let symex_skip_rule_f, symex_skip_rule =
     with Not_symheap | WrongCmd -> [] in
   mk_symex rl
 
-let symex_if_rule_f, symex_if_rule =
+let symex_if_rule =
   let rl seq =
     try
       let (f,cmd) = dest_sh_seq seq in
@@ -186,9 +183,9 @@ let symex_if_rule_f, symex_if_rule =
       let (f',f'') = Cond.fork f c in 
       fix_tps [[ ([f'], Cmd.mk_seq cmd' cont) ; ([f''], cont) ], "If"]
     with Not_symheap | WrongCmd -> [] in
-  rl, wrap rl
+  wrap rl
 
-let symex_ifelse_rule_f, symex_ifelse_rule =
+let symex_ifelse_rule =
   let rl seq =
     try
       let (f,cmd) = dest_sh_seq seq in
@@ -200,9 +197,9 @@ let symex_ifelse_rule_f, symex_ifelse_rule =
          "IfElse"
         ]
     with Not_symheap | WrongCmd -> [] in
-  rl, wrap rl
+  wrap rl
 
-let symex_while_rule_f, symex_while_rule =
+let symex_while_rule =
   let rl seq =
     try
       let (f,cmd) = dest_sh_seq seq in
@@ -211,9 +208,9 @@ let symex_while_rule_f, symex_while_rule =
       let (f',f'') = Cond.fork f c in 
       fix_tps [[ ([f'], Cmd.mk_seq cmd' cmd) ; ([f''], cont) ], "While"]
     with Not_symheap | WrongCmd -> [] in
-  rl, wrap rl
+  wrap rl
 
-let matches_fun ((l1,cmd1) as s1) ((l2,cmd2) as s2) =
+let matches_fun lab ((l1,cmd1) as s1) ((l2,cmd2) as s2) =
   if not (Cmd.equal cmd1 cmd2) then [] else
   match Seq.uni_subsumption s1 s2 with
     | None -> []
@@ -227,12 +224,12 @@ let matches_fun ((l1,cmd1) as s1) ((l2,cmd2) as s2) =
               let new_acc = Tags.add t acc in
               if Seq.subsumed_wrt_tags new_acc s1 s2' then new_acc else acc
             ) tags Tags.empty in
-          [ (TagPairs.mk tags', "Backl") ]
+          [ (TagPairs.mk tags', lab) ]
 				end
 			else
-			  [ (Seq.tagpairs_one, "Backl") ]
+			  [ (Seq.tagpairs_one, lab) ]
 
-let matches = Rule.mk_backrule true Rule.all_nodes matches_fun
+let matches = Rule.mk_backrule true Rule.all_nodes (matches_fun "Backl")
 
 let gen_fold_rules (def, ident) =
   let fold_rule s1 s2 =
@@ -242,7 +239,7 @@ let gen_fold_rules (def, ident) =
       let preds = Inds.filter (fun (_, (ident', _)) -> ident=ident') l2.inds in
       if Inds.is_empty preds then [] else
       let fold_match ((id,(_,pvs)) as p) = 
-        let l2' = { l2 with inds=Inds.filter ((!=)p) l2.inds } in
+        let l2' = { l2 with inds=Inds.remove p l2.inds } in
         let do_case case =
           let (f', (_,vs')) = Case.dest (freshen_case_by_seq ([l2],cmd2) case) in
           let theta = Term.Map.of_list (Blist.combine vs' pvs) in
@@ -252,7 +249,7 @@ let gen_fold_rules (def, ident) =
           let f' = Heap.repl_tags fresh_tag f' in
           let l2' = Heap.star l2' f' in
           let s2' = ([l2'],cmd2) in
-          matches_fun s1 s2' in
+          matches_fun "Fold/backl" s1 s2' in
         Blist.find_first ((<>)[]) (Blist.map do_case def) in 
       Option.dest 
         []
@@ -261,23 +258,55 @@ let gen_fold_rules (def, ident) =
     with Not_symheap -> [] in
   Rule.mk_backrule true Rule.all_nodes fold_rule
 
+let generalise_while_rule =
+  let generalise m h =
+    let avoid = ref (Heap.vars h) in
+    let gen_term t =
+    if Term.Set.mem t m then
+      (let r = fresh_evar !avoid in avoid := Term.Set.add r !avoid ; r)
+    else t in
+    let gen_pto (x,args) =
+    let l = Blist.map gen_term (x::args) in (Blist.hd l, Blist.tl l) in
+      { h with
+        eqs = Term.Set.fold UF.remove m h.eqs;
+        deqs =
+          Deqs.filter
+          (fun p -> Pair.conj (Pair.map (fun z -> not (Term.Set.mem z m)) p))
+          h.deqs;
+          ptos = Ptos.endomap gen_pto h.ptos
+      } in
+    let rl seq =
+      try
+        let (f,cmd) = dest_sh_seq seq in
+        let (_,cmd') = Cmd.dest_while cmd in
+        let m = Term.Set.inter (Cmd.modifies cmd') (Heap.vars f) in
+        let subs = Term.Set.subsets m in
+        Option.list_get (Blist.map
+          begin fun m' ->
+            let f' = generalise m' f in
+            if Heap.equal f f' then None else
+            let s' = ([f'], cmd) in
+            Some ([ (s', tagpairs s', TagPairs.empty) ], "Gen.While")
+          end
+          subs)
+    with Not_symheap | WrongCmd -> [] in
+  Rule.mk_infrule rl 
 
 let rules = ref Rule.fail
 
 let setup defs =
   (* Program.set_local_vars seq_to_prove ; *)
-  let luf = Blist.map gen_left_rules defs in
-  let cutm = Blist.map gen_fold_rules defs in
-  rules := 
-    Rule.choice 
-      ([ ex_falso_axiom ; symex_stop_axiom; symex_empty_axiom ] @
-      [ 
-        lhs_disj_to_symheaps ;
-        matches ;
-        simplify 
-      ]
-      @ cutm @
-      [
+  rules := Rule.first [ 
+    ex_falso_axiom ; symex_stop_axiom; symex_empty_axiom;
+    lhs_disj_to_symheaps ;
+    simplify ;
+    
+    Rule.choice [
+      matches ;
+      
+      Rule.choice (Blist.map gen_fold_rules defs);
+      
+      Rule.first [
         symex_skip_rule ;
         symex_assign_rule;
         symex_load_rule ;
@@ -286,6 +315,11 @@ let setup defs =
         symex_new_rule ;
         symex_if_rule ;
         symex_ifelse_rule ;
-        symex_while_rule 
-      ] 
-      @ luf) 
+        symex_while_rule;
+      ] ;
+      
+      generalise_while_rule ;
+      
+      Rule.choice (Blist.map gen_left_rules defs)
+    ]
+  ]

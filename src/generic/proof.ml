@@ -68,12 +68,12 @@ struct
     ensure fn (mem target prf);
     replace idx n prf
   
-  let add_abd idx descr prf =
-    let cidx = fresh_idx prf in
-    let seq = get_seq idx prf in
-    let n = Node.mk_abd seq descr cidx in
-    ensure_add "Proof.add_abd" idx n prf;
-    (Int.Map.add cidx (idx, Node.mk_open seq) (replace idx n prf), cidx)
+  (* let add_abd idx descr prf =                                            *)
+  (*   let cidx = fresh_idx prf in                                          *)
+  (*   let seq = get_seq idx prf in                                         *)
+  (*   let n = Node.mk_abd seq descr cidx in                                *)
+  (*   ensure_add "Proof.add_abd" idx n prf;                                *)
+  (*   (Int.Map.add cidx (idx, Node.mk_open seq) (replace idx n prf), cidx) *)
         
    let add_inf idx descr subgoals prf =
     let fn = "Proof.add_inf" in

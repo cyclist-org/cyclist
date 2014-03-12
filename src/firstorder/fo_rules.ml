@@ -376,23 +376,24 @@ let fold (ident,defs) =
 let rules = ref Rule.fail
 
 let setup defs = 
-  let ruf = Blist.bind  gen_right_rules (Defs.bindings defs) in
-  let luf = Blist.map gen_left_rules (Defs.bindings defs) in
-  let ruf_or = Rule.choice ruf in
-  let folds = 
+  let ruf = Rule.choice (Blist.bind gen_right_rules (Defs.bindings defs)) in
+  let luf = Rule.choice (Blist.map gen_left_rules (Defs.bindings defs)) in
+  let folds = Rule.choice (
     Blist.map 
       (* (fun c -> FOP.Proof_tacs.then_tac (up_to_n 1 (fold c)) matches) *)
       (fun c -> Rule.compose (fold c) matches)
       (* fold *)
-      (Defs.bindings defs) in
-  let clever = Blist.map (fun l -> Rule.compose l ruf_or) luf in
-  rules := Rule.choice
-    ([ 
-      ex_falso_axiom ; id_axiom ;
-      simplify ;
+      (Defs.bindings defs)
+    ) in
+  let clever = Rule.compose luf ruf in
+  rules := Rule.first [ 
+    ex_falso_axiom ; id_axiom ; simplify ;
+    
+    Rule.choice [
       matches ;
       lhs_disj_to_products ;
       instantiate_ex ;
-      rhs_conj_to_atoms
-    ] @ ruf @ clever @ luf @ folds) 
-
+      rhs_conj_to_atoms;
+      ruf; clever; luf; folds
+    ] 
+  ]

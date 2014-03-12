@@ -13,12 +13,6 @@ let id_axiom =
 let ex_falso_axiom =
   Rule.mk_axiom (fun (l,_) -> Option.mk (Form.inconsistent l) "Ex Falso")
 
-let axioms = Rule.first [ id_axiom ; ex_falso_axiom ]
-
-(* for some unintuitive reason, wrapping rules with trying the axioms *)
-(* does not improve search times -- should investigate that more FIXME *)
-(* let a r = Rule.compose r (Rule.attempt axioms) *)
-
 (* break LHS disjunctions *)
 let lhs_disj_to_symheaps =
   Rule.mk_infrule 
@@ -253,15 +247,18 @@ let brl_matches = Rule.mk_backrule true Rule.all_nodes matches
 let rules = ref Rule.fail
 
 let setup defs = 
-  let rs = 
-    [
-      axioms ;
-      lhs_disj_to_symheaps;
-      rhs_disj_to_symheaps;
-      simplify;
+  rules := Rule.first [
+    id_axiom ; ex_falso_axiom;
+    lhs_disj_to_symheaps;
+    rhs_disj_to_symheaps;
+    simplify;
+    
+    Rule.choice [
       brl_matches;
   		wrap pto_intro_rule;
   		wrap pred_intro_rule;
-      instantiate_pto
-    ] @ (mk_ruf defs) @ (Blist.map gen_left_rules defs) in
-  rules := Rule.choice rs
+      instantiate_pto ;
+      Rule.choice (mk_ruf defs);
+      Rule.choice (Blist.map gen_left_rules defs)
+    ] 
+  ]

@@ -86,4 +86,13 @@ dls {
 lsls {
   x=nil => lsls(x) |
   x->y',x' * lsls(y') * dls(x',nil) => lsls(x)
-} 
+} ; 
+
+cbt {
+  x=y => cbt(x,y) |
+  x!=y * x!=nil * x->a',b' * cbt(a',y) * cbt(b',y) => cbt(x,y)
+} ;
+
+cbtr {
+  x!=nil * x->a',b' * cbt(a',x) * cbt(b',x) => cbtr(x)
+}

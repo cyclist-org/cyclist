@@ -1,3 +1,4 @@
+open Lib
 open Util
 
 (* using L should allow switching between Blist and Zlist easily *)
@@ -23,7 +24,9 @@ struct
   
   let mk_infrule r_f idx prf =
     let seq = Proof.get_seq idx prf in
-    let mk (l,d) = Proof.add_inf idx d l prf in
+    let mk (l,d) = 
+      debug (fun () -> "Found " ^ d ^ " app.") ;
+      Proof.add_inf idx d l prf in
     L.map mk (L.of_list (r_f seq))
 
   let mk_backrule greedy sel_f br_f srcidx prf =
