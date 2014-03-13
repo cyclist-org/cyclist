@@ -33,12 +33,12 @@ let symex_empty_axiom =
 let eq_subst_ex_f ((l,cmd) as s) =
   let l' = Form.subst_existentials l in
   if Form.equal l l' then [] else
-  [ [ ((l', cmd), tagpairs s, TagPairs.empty) ], "" ]
+  [ [ ((l', cmd), tagpairs s, TagPairs.empty) ], "Eq. subst. ex" ]
 
 let norm ((l,cmd) as s) = 
   let l' = Form.norm l in
   if Form.equal l l' then [] else
-  [ [( (l',cmd), tagpairs s, TagPairs.empty)], "" ] 
+  [ [( (l',cmd), tagpairs s, TagPairs.empty)], "Norm" ] 
 
 let simplify_rules = [ norm; eq_subst_ex_f ]
 
@@ -51,15 +51,15 @@ let wrap r =
 
 
 (* break LHS disjunctions *)
-let lhs_disj_to_symheaps_f, lhs_disj_to_symheaps =
+let lhs_disj_to_symheaps =
   let rl ((l,cmd): Seq.t) =
     if Blist.length l < 2 then [] else
     [ Blist.map 
         (fun sh -> let s' = ([sh],cmd) in (s', tagpairs s', TagPairs.empty ) ) 
         l,
-      ""
+      "L.Or"
     ] in
-  rl, Rule.mk_infrule rl
+  Rule.mk_infrule rl
 
 let gen_left_rules_f (def, ident) seq =
   try
@@ -292,12 +292,14 @@ let generalise_while_rule =
     with Not_symheap | WrongCmd -> [] in
   Rule.mk_infrule rl 
 
+let axioms = 
+  ref (Rule.first [ex_falso_axiom ; symex_stop_axiom; symex_empty_axiom])
+
 let rules = ref Rule.fail
 
 let setup defs =
   (* Program.set_local_vars seq_to_prove ; *)
   rules := Rule.first [ 
-    ex_falso_axiom ; symex_stop_axiom; symex_empty_axiom;
     lhs_disj_to_symheaps ;
     simplify ;
     

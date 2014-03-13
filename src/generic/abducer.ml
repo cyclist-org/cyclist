@@ -1,11 +1,13 @@
 open Lib
 
+module L = Blist
+
 module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
   struct
     module Abdrule = Abdrule.Make(Seq)(Defs)
     module Proof = Proof.Make(Seq)
     module Node = Proofnode.Make(Seq)
-    module Prover = Prover2.Make(Seq)
+    module Prover = Prover.Make(Seq)
     
     let melt_proof = Prover.melt_proof
     let print_proof_stats = Prover.print_proof_stats
@@ -41,7 +43,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
             seq_no : int ;
             par : int ;
             idx : int;
-            apps : app_state Zlist.t
+            apps : app_state L.t
         }
      
     let state_seq_no = ref 0
@@ -70,7 +72,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
       let new_goal_depth = goal_depth+1 in
       let new_prf_depth = max app.depth new_goal_depth in
       let newapps = 
-        Zlist.map
+        L.map
           begin fun ((g',p'),defs') ->
             mk_app
               p'
@@ -89,7 +91,8 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
     let bfs minbound maxbound rule seq initial_defs check =
       let bound = ref minbound in
       let start = Proof.mk seq in
-      let stack = ref [expand_proof_state 0 (mk_app start 0 [(0,0)] initial_defs) rule] in
+      let stack = 
+        ref [expand_proof_state 0 (mk_app start 0 [(0,0)] initial_defs) rule] in
       let found = ref None in
       let frontier = ref [] in
       while !bound <= maxbound && Option.is_none !found &&
@@ -108,16 +111,17 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
           let proof_state = Blist.hd !stack in
           let () = stack := Blist.tl !stack in
           (* if no applications left, go to next set of applications *)
-          if Zlist.is_empty proof_state.apps then raise Continue ;
+          if L.is_empty proof_state.apps then raise Continue ;
           (* next rule application *)
-          let app = Zlist.hd proof_state.apps in
+          let app = L.hd proof_state.apps in
           let () = assert (app.depth <= !bound) in
           let () = assert (Blist.for_all (fun (_,gd) -> gd <= !bound) app.goals) in
           (* push remaining applications *)
-          let () = stack := {proof_state with apps=Zlist.tl proof_state.apps} :: !stack in
+          let () = 
+            stack := {proof_state with apps=L.tl proof_state.apps} :: !stack in
           if app.goals=[] then
             begin
-              (* no subgoals left, so it must be a closed Proof.t *)
+              (* no subgoals left, so it must be a closed proof *)
               assert (Proof.is_closed app.prf) ;
               if check app.defs then found := Some (app.prf,app.depth,app.defs);
               (* NOTE: in case not acceptable we do not pop parents as we may need to backtrack *)

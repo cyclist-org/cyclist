@@ -39,11 +39,6 @@ sig
   (** [mk_axiom seq descr] creates an axiom node labelled by 
       sequent [seq] and description [descr].*) 
   
-  (* val mk_abd : seq_t -> string -> int -> t *)
-  (** [mk_abd seq descr child] creates an abduction node labelled by 
-      sequent [seq], description [descr] and successor index [child]. 
-      NB this will probably be removed. *) 
-  
   val mk_backlink : seq_t -> string -> int -> Util.TagPairs.t -> t
   (** [mk_backlink seq descr target vtts] creates a back-link node labelled by 
       sequent [seq], description [descr], target index [target] and set of 
@@ -61,9 +56,6 @@ sig
   val dest : t -> seq_t * string
   (** [dest n] returns (sequent, description). This works with all Proof.t nodes. *)
    
-  (* val dest_abd : t -> seq_t * string * int *)
-  (** [dest_abd n] destroys an abduction node [n], otherwise raises [Invalid_arg].*)
-  
   val dest_backlink : t -> seq_t * string * int * Util.TagPairs.t
   (** [dest_backlink n] destroys a back-link node [n], otherwise raises [Invalid_arg].*)
 
@@ -75,7 +67,6 @@ sig
   
   val is_open : t -> bool
   val is_axiom : t -> bool
-  (* val is_abd : t -> bool *)
   val is_backlink : t -> bool
   val is_inf : t -> bool
   
@@ -129,7 +120,6 @@ sig
 
   val add_axiom : int -> string -> t -> t
   val add_backlink : int -> string -> int -> Util.TagPairs.t -> t -> t
-  (* val add_abd : int -> string -> t -> (t * int)  *)
   val add_inf : 
     int -> string -> 
     (seq_t * Util.TagPairs.t * Util.TagPairs.t) list -> t -> 
@@ -187,7 +177,7 @@ sig
   type axiom_f = seq_t -> string option
   type infrule_app = (seq_t * Util.TagPairs.t * Util.TagPairs.t) list * string
   type infrule_f = seq_t -> infrule_app list
-  type t = int -> proof_t -> (int list * proof_t) Zlist.t
+  type t = int -> proof_t -> (int list * proof_t) Blist.t
   type backrule_f = seq_t -> seq_t -> (Util.TagPairs.t * string) list
   type select_f = int -> proof_t -> int list
       
@@ -219,7 +209,7 @@ sig
   type abdbackrule_f = seq_t -> seq_t -> defs_t -> defs_t list
   type abdgenrule_f = seq_t -> defs_t -> (infrule_app * defs_t) list
   
-  type t = int -> proof_t -> defs_t -> ((int list * proof_t) * defs_t) Zlist.t
+  type t = int -> proof_t -> defs_t -> ((int list * proof_t) * defs_t) Blist.t
 
   val mk_abdinfrule : abdinfrule_f -> t
   val mk_abdbackrule : select_f -> abdbackrule_f -> t
@@ -233,15 +223,14 @@ sig
   val first : t list -> t
 end
 
-module type PROVER2 =
+module type PROVER =
 sig
   type rule_t
   
   module Seq : SEQUENT
   module Proof : PROOF
-  module Seqtactics : SEQTACTICS
 
-  val idfs : int -> int -> rule_t -> Seq.t -> Proof.t option  
+  val idfs : int -> int -> rule_t -> rule_t -> Seq.t -> Proof.t option  
   val print_proof_stats : Proof.t -> unit
   val melt_proof: out_channel -> Proof.t -> unit 
    
@@ -265,73 +254,3 @@ sig
   val print_proof_stats : Proof.t -> unit
   val melt_proof: out_channel -> Proof.t -> unit 
 end
-
-(* module type PROVER =                                                         *)
-(* sig                                                                          *)
-(*   type sequent                                                               *)
-(*   type ind_def_set                                                           *)
-
-(*   module Proof : PROOF                                                       *)
-  
-(*   type axiom_fun = sequent -> bool                                           *)
-(*   type rule_app = (sequent * Util.TagPairs.t * Util.TagPairs.t) list         *)
-(*   type rule_fun = sequent -> rule_app list                                   *)
-(*   type match_fun = sequent -> sequent -> Util.TagPairs.t option              *)
-(*   type abd_inf_fun = sequent -> ind_def_set -> ind_def_set list              *)
-(*   type abd_match_fun = sequent -> sequent -> ind_def_set -> ind_def_set list *)
-(*   type gen_fun = sequent -> ind_def_set -> (rule_app * ind_def_set) list     *)
-(*   type axiom                                                                 *)
-(*   type proof_rule                                                            *)
-
-(*   val mk_axiom : axiom_fun -> string -> axiom                                *)
-(*   val mk_inf_rule : rule_fun -> string -> proof_rule                         *)
-(*   val mk_back_rule : match_fun -> string -> proof_rule                       *)
-(*   val mk_abd_inf_rule : abd_inf_fun -> string -> proof_rule                  *)
-(*   val mk_abd_back_rule : abd_match_fun -> string -> proof_rule               *)
-(*   val mk_gen_rule : gen_fun -> string -> proof_rule                          *)
-
-(*   val descr_rule : proof_rule -> string                                      *)
-  
-(*   val idfs : sequent -> Proof.t option                                       *)
-
-(*   val abduce :                                                               *)
-(*     sequent ->                                                               *)
-(*     ind_def_set ->                                                           *)
-(*     (ind_def_set -> proof_rule list) ->                                      *)
-(*     (ind_def_set -> bool) ->                                                 *)
-(*       (Proof.t * ind_def_set) option                                         *)
-
-(*   val print_proof_stats : Proof.t -> unit                                    *)
-(*   val melt_proof: out_channel -> Proof.t -> unit                             *)
-
-(*   module Seq_tacs :                                                          *)
-(*     sig                                                                      *)
-(*       val try_tac : rule_fun -> rule_fun                                     *)
-(*       val then_tac : rule_fun -> rule_fun -> rule_fun                        *)
-(*       val repeat_tac : rule_fun -> rule_fun                                  *)
-(*       val first : rule_fun list -> rule_fun                                  *)
-(*       val seq : rule_fun list -> rule_fun                                    *)
-(*       val or_tac : rule_fun list -> rule_fun                                 *)
-(* 			val opt : rule_fun -> rule_fun                                         *)
-(*     end                                                                      *)
-
-(*   module Proof_tacs :                                                        *)
-(*     sig                                                                      *)
-(*       val try_tac : proof_rule -> proof_rule                                 *)
-(*       val then_tac : proof_rule -> proof_rule -> proof_rule                  *)
-(*       val first : proof_rule list -> proof_rule                              *)
-(*       val seq : proof_rule list -> proof_rule                                *)
-(*       val or_tac : proof_rule list -> proof_rule                             *)
-(*       val repeat_tac : proof_rule -> proof_rule                              *)
-(* 			val opt : proof_rule -> proof_rule                                     *)
-(*     end                                                                      *)
-
-(*   val axiomset : axiom list ref                                              *)
-(*   val ruleset : proof_rule list ref                                          *)
-(*   val ancestral_links_only : bool ref                                        *)
-(*   val minbound : int ref                                                     *)
-(*   val maxbound : int ref                                                     *)
-(*   val lazy_soundness_check : bool ref                                        *)
-(*   val backtrackable_backlinks : bool ref                                     *)
-(*   val expand_proof : bool ref                                                *)
-(* end                                                                          *)

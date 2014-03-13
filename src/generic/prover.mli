@@ -1,4 +1,4 @@
-module Make (Seq: Sigs.SEQUENT) (Defs: Sigs.DEFS) : Sigs.PROVER
-  with type sequent = Seq.t 
-  with type ind_def_set=Defs.t
+module Make (Seq: Sigs.SEQUENT) : Sigs.PROVER
+  with module Seq = Seq
+  with type rule_t = Proofrule.Make(Seq).t
   with module Proof = Proof.Make(Seq)

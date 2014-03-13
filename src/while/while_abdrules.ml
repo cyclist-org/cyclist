@@ -161,7 +161,7 @@ let simpl_deqs seq =
     let f' = { f with deqs=newdeqs } in
     if Heap.equal f f' then [] else
 		let s = ([f'], cmd) in
-    [ [ (s, While_rules.tagpairs s, TagPairs.empty) ], "" ]
+    [ [ (s, While_rules.tagpairs s, TagPairs.empty) ], "Simpl Deqs" ]
   with Not_symheap -> []
 
 
@@ -170,9 +170,9 @@ let norm = While_rules.norm
 let simplify =
   Abdrule.lift 
     (Rule.mk_infrule
-      (Seqtactics.repeat
-        (Seqtactics.first [ (*norm;*) eq_subst_ex; simpl_deqs ])))
-  
+      (Seqtactics.relabel "Simplify"
+        (Seqtactics.repeat
+          (Seqtactics.first [ (*norm;*) eq_subst_ex; simpl_deqs ]))))
 
 let wrap r = Abdrule.compose r (Abdrule.attempt simplify)
 

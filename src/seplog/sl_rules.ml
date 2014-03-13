@@ -244,11 +244,12 @@ let matches s1 s2 =
 
 let brl_matches = Rule.mk_backrule true Rule.all_nodes matches
 
+let axioms = ref (Rule.first [id_axiom ; ex_falso_axiom])
+
 let rules = ref Rule.fail
 
 let setup defs = 
   rules := Rule.first [
-    id_axiom ; ex_falso_axiom;
     lhs_disj_to_symheaps;
     rhs_disj_to_symheaps;
     simplify;

@@ -2,7 +2,7 @@ open Lib
 open Util
 
 (* using L should allow switching between Blist and Zlist easily *)
-module L = Zlist
+module L = Blist
 
 module Make(Seq : Sigs.SEQUENT) =
 struct

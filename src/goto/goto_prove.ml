@@ -5,8 +5,8 @@ let prog_path = ref ""
 
 module Parser = Sl_parser
 module Lexer = Sl_lexer
-module Prover = Prover2.Make(Goto_program.Seq)
-module F = Frontend2.Make(Prover)
+module Prover = Prover.Make(Goto_program.Seq)
+module F = Frontend.Make(Prover)
 
 let sequent_of_string s =
   let lexbuf = Lexing.from_string s in
@@ -45,7 +45,7 @@ let () =
   let (seq, prog) = program_of_channel (open_in !prog_path) in
   Goto_program.set_program prog ; 
   Goto_rules.setup (defs_of_channel (open_in !defs_path)) seq;
-  exit (F.prove_seq !Goto_rules.rules seq)
+  exit (F.prove_seq !Goto_rules.axioms !Goto_rules.rules seq)
     
 
 

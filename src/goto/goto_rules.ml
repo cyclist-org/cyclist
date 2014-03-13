@@ -284,12 +284,13 @@ let gen_fold_rules (def, ident) =
     with Not_symheap -> [] in
   Rule.mk_backrule true Rule.all_nodes fold_rule 
 
+let axioms = ref (Rule.first [ex_falso_axiom ; symex_stop_axiom])
+
 let rules = ref Rule.fail
 
 let setup defs seq_to_prove =
   set_local_vars seq_to_prove ;
   rules := Rule.first [ 
-    ex_falso_axiom ; symex_stop_axiom ;
     lhs_disj_to_symheaps ;
     simplify;
     

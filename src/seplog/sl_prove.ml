@@ -5,8 +5,8 @@ let defs_path = ref "examples/sl.defs"
 
 module Parser = Sl_parser
 module Lexer = Sl_lexer
-module Prover = Prover2.Make(Symheap.Seq)
-module F = Frontend2.Make(Prover)
+module Prover = Prover.Make(Symheap.Seq)
+module F = Frontend.Make(Prover)
 
 let sequent_of_string s =
   let lexbuf = Lexing.from_string s in
@@ -45,7 +45,7 @@ let () =
   if !cl_sequent="" then F.die "-S must be specified." ;
   let seq = sequent_of_string !cl_sequent in
   Sl_rules.setup (defs_of_channel (open_in !defs_path)) ;
-  exit (F.prove_seq !Sl_rules.rules seq)
+  exit (F.prove_seq !Sl_rules.axioms !Sl_rules.rules seq)
     
 
 

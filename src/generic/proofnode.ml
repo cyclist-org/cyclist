@@ -16,7 +16,6 @@ struct
     | AxiomNode
     | InfNode of (int * TagPairs.t * TagPairs.t) list
     | BackNode of int * TagPairs.t
-    (* | AbdNode of int  *)
   
   type t =
     {
@@ -28,13 +27,10 @@ struct
   let get_seq n = n.seq
   let get_succs n = match n.node with
     | AxiomNode | OpenNode -> []
-    | BackNode (s, _) (*| AbdNode(s) *) -> [s]
+    | BackNode (s, _) -> [s]
     | InfNode(ss) -> let (ss',_,_) = Blist.unzip3 ss in ss'
   
   let dest n = (n.seq, n.descr)
-  (* let dest_abd n = match n.node with            *)
-  (*   | AbdNode(child) -> (n.seq, n.descr, child) *)
-  (*   | _ -> invalid_arg "dest_abd"               *)
   let dest_backlink n = match n.node with
     | BackNode(child, vtts) -> (n.seq, n.descr, child, vtts)
     | _ -> invalid_arg "dest_backlink"
@@ -52,9 +48,6 @@ struct
   let is_axiom n = match n.node with
     | AxiomNode -> true
     | _ -> false
-  (* let is_abd n = match n.node with *)
-  (*   | AbdNode _ -> true            *)
-  (*   | _ -> false                   *)
   let is_inf n = match n.node with
     | InfNode _ -> true
     | _ -> false
@@ -68,10 +61,15 @@ struct
     }
     
   let mk_open seq = mk seq OpenNode "(Open)"
-  let mk_axiom seq descr = mk seq AxiomNode descr
-  (* let mk_abd seq descr child = mk seq (AbdNode(child)) descr *)
-  let mk_inf seq descr subgoals = mk seq (InfNode(subgoals)) descr
-  let mk_backlink seq descr child vtts = mk seq (BackNode(child, vtts)) descr
+  let mk_axiom seq descr = 
+    if descr="" then invalid_arg "mk_axiom" else 
+    mk seq AxiomNode descr
+  let mk_inf seq descr subgoals = 
+    if descr="" then invalid_arg "mk_inf" else 
+    mk seq (InfNode(subgoals)) descr
+  let mk_backlink seq descr child vtts = 
+    if descr="" then invalid_arg "mk_backlink" else 
+    mk seq (BackNode(child, vtts)) descr
   
   let to_abstract_node n = match n.node with
     | OpenNode | AxiomNode ->

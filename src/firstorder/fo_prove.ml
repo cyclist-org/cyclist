@@ -5,8 +5,8 @@ let defs_path = ref "examples/fo.defs"
 
 module Parser = Fo_parser
 module Lexer = Fo_lexer
-module Prover = Prover2.Make(Firstorder.Seq)
-module F = Frontend2.Make(Prover)
+module Prover = Prover.Make(Firstorder.Seq)
+module F = Frontend.Make(Prover)
 
 let sequent_of_string s =
   let lexbuf = Lexing.from_string s in
@@ -29,7 +29,7 @@ let () =
   if !cl_sequent="" then F.die "-S must be specified." ;
   let seq = sequent_of_string !cl_sequent in
   Fo_rules.setup (defs_of_channel (open_in !defs_path)) ;
-  exit (F.prove_seq !Fo_rules.rules seq)
+  exit (F.prove_seq !Fo_rules.axioms !Fo_rules.rules seq)
     
 
 

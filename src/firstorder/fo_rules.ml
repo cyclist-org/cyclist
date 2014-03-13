@@ -2,9 +2,9 @@ open Lib
 open Util
 open Firstorder
 
-module FOP = Prover2.Make(Firstorder.Seq)
+module FOP = Prover.Make(Firstorder.Seq)
 module Rule = Proofrule.Make(Firstorder.Seq)
-module Seqtactics = FOP.Seqtactics
+module Seqtactics = Seqtactics.Make(Firstorder.Seq)
 
 let product_subsumed_modulo_tags p1 p2 =
   Prod.subsumed_wrt_tags Tags.empty p1 p2
@@ -41,9 +41,7 @@ let id_axiom =
         "Id"
     end
 
-let axioms = Rule.first [ ex_falso_axiom ; id_axiom ]
-
-let try_axioms r = Rule.compose r (Rule.attempt axioms)
+let axioms = ref (Rule.first [ ex_falso_axiom ; id_axiom ])
 
 (* inference rules *)
 
@@ -169,8 +167,9 @@ let simplify_seq =
 let simplify = Rule.mk_infrule simplify_seq
 
 let wrap r =
-  try_axioms 
+  Rule.compose 
     (Rule.mk_infrule (Seqtactics.compose r (Seqtactics.attempt simplify_seq)))
+    (Rule.attempt !axioms)
 
 (* break LHS disjunctions *)
 let lhs_disj_to_products =

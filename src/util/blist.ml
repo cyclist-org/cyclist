@@ -6,6 +6,9 @@ let foldl = fold_left
 let foldr = fold_right
 
 let empty = []
+let is_empty = function
+  | [] -> true
+  | _ -> false
 let of_list l = l
 let to_list l = l
 let singleton x = [x]

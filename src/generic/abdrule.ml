@@ -1,7 +1,7 @@
 open Util
 
 (* using L should allow switching between Blist and Zlist easily *)
-module L = Zlist
+module L = Blist
 
 module Make(Seq : Sigs.SEQUENT)(Defs : Sigs.DEFS) =
 struct
@@ -21,7 +21,7 @@ struct
   type abdgenrule_f = seq_t -> defs_t -> (infrule_app * defs_t) list
   
   type t = 
-    int -> proof_t -> defs_t -> ((int list * proof_t) * defs_t) Zlist.t
+    int -> proof_t -> defs_t -> ((int list * proof_t) * defs_t) L.t
   
   let mk_abdinfrule r idx prf defs =
     let seq = Proof.get_seq idx prf in 
