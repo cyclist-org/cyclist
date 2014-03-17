@@ -1,0 +1,1 @@
+ls(x,y) * y->z * ls(z,nil) |- ls(x,z) * ls(z,nil)

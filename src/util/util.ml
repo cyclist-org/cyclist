@@ -64,8 +64,8 @@ module MakeFList(T: BasicType) : BasicType with type t = T.t list =
 
     let rec equal l l' = match (l,l') with
       | ([], []) -> true
-      | ([], _) | (_, []) -> false
       | (hd::tl, hd'::tl') -> T.equal hd hd' && equal tl tl'
+      | ([], _) | (_, []) -> false
 (*    let hash l = Blist.fold_left (fun h v -> genhash h (T.hash v)) 0 l*)
     let hash = Hashtbl.hash
     let to_string (l:t) = String.concat ", " (Blist.map T.to_string l)

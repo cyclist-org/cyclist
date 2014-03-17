@@ -42,7 +42,9 @@ let norm ((l,cmd) as s) =
 
 let simplify_rules = [ norm; eq_subst_ex_f ]
 
-let simplify_seq_rl = Seqtactics.repeat (Seqtactics.first  simplify_rules)
+let simplify_seq_rl = 
+  Seqtactics.relabel "Simplify" 
+    (Seqtactics.repeat (Seqtactics.first  simplify_rules))
 let simplify = Rule.mk_infrule simplify_seq_rl  
 
 let wrap r =
@@ -292,6 +294,30 @@ let generalise_while_rule =
     with Not_symheap | WrongCmd -> [] in
   Rule.mk_infrule rl 
 
+module Slprover = Prover.Make(Symheap.Seq)
+
+let backlink_cut defs =
+  let rl s1 s2 =
+    if !termination then [] else
+    (* let () = incr step in *)
+    let ((l1,cmd1),(l2,cmd2)) = (s1,s2) in
+    if not (Cmd.is_while cmd1) then [] else
+    (* let () = debug (fun () -> "CUTLINK3: trying: " ^ (Seq.to_string s2)) in   *)
+    (* let () = debug (fun () -> "                  " ^ (Seq.to_string s1)) in   *)
+    (* let () = debug (fun () -> "CUTLINK3: step = " ^ (string_of_int !step)) in *)
+    (* if !step <> 22 then None else *)
+    if not (Cmd.equal cmd1 cmd2) then [] else
+    (* let olddebug = !Lib.do_debug in *)
+    (* let () = Lib.do_debug := true in *)
+    let () = Sl_rules.setup defs in
+    let result = 
+      Option.is_some (Slprover.idfs 1 11 !Sl_rules.axioms !Sl_rules.rules (l1, l2)) in
+    (* let () = Lib.do_debug := olddebug in *)
+    (* let () = debug (fun () -> "CUTLINK3: result: " ^ (string_of_bool result)) in *)
+    if result then [ (Seq.tagpairs_one, "Cut/Backl") ] else [] in
+  Rule.mk_backrule true Rule.all_nodes rl
+
+
 let axioms = 
   ref (Rule.first [ex_falso_axiom ; symex_stop_axiom; symex_empty_axiom])
 
@@ -321,6 +347,7 @@ let setup defs =
       ] ;
       
       generalise_while_rule ;
+      (* backlink_cut defs; *)
       
       Rule.choice (Blist.map gen_left_rules defs)
     ]

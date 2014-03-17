@@ -130,7 +130,7 @@ sig
   val find : int -> t -> node_t
   val get_seq : int -> t -> seq_t
   val size : t -> int
-  val mem : int -> t -> bool
+  (* val mem : int -> t -> bool *)
   val fresh_idx : t -> int
   val fresh_idxs : 'a list -> t -> int list
   
@@ -143,7 +143,6 @@ sig
   val is_closed : t -> bool
   (** Are all nodes not open? *)
   
-  val no_of_backlinks : t -> int
   val to_list : t -> (int * node_t) list
 
   (** Output functions. *)

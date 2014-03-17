@@ -78,10 +78,6 @@ struct
         Soundcheck.mk_abs_node (Seq.tags n.seq) subg
     | BackNode(child, tv) ->
         Soundcheck.mk_abs_node (Seq.tags n.seq) [(child, tv, TagPairs.empty)]
-    (* | AbdNode(child) ->                                                         *)
-    (* (* FIXME this demands tag globality *)                                      *)
-    (*     let tags = Seq.tags n.seq in                                            *)
-    (*     Soundcheck.mk_abs_node tags [(child, TagPairs.mk tags, TagPairs.empty)] *)
   
   let pp fmt id n cont = match n.node with
     | OpenNode ->
@@ -100,13 +96,6 @@ struct
           n.descr
           (Blist.pp pp_comma (fun fmt (i,_,_) -> Format.pp_print_int fmt i)) p
           (Blist.pp Format.pp_print_newline (fun fmt' (i,_,_) -> cont fmt i)) p
-    (* | AbdNode(child) ->                                    *)
-    (*     Format.fprintf fmt "@[<v 2>%i: %a (%s) [%i]@,%a@]" *)
-    (*       id                                               *)
-    (*       Seq.pp n.seq                                     *)
-    (*       n.descr                                          *)
-    (*       child                                            *)
-    (*       cont child                                       *)
   
   let justify = Latex.text "\n\\justifies\n\\thickness=0.1em\n"
   let using = Latex.text "\\using"
@@ -139,10 +128,5 @@ struct
           (Latex.concat
               [ Latex.text ("\\to " ^ (string_of_int i));
               ltx_rule n.descr; justifies id n.seq ])
-    (* | AbdNode(child) ->                                                *)
-    (*     prooftree first n.seq                                          *)
-    (*       (Latex.concat                                                *)
-    (*           [ cont false child ;                                     *)
-    (*           justifies id n.seq; using; ltx_rule n.descr; ltx_newl ]) *)
   
 end

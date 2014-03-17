@@ -146,7 +146,9 @@ let simplify_rules = [
   (* pred_intro_rule  *)
 ]
 
-let simplify_seq = Seqtactics.repeat (Seqtactics.first simplify_rules) 
+let simplify_seq = 
+  Seqtactics.relabel "Simplify"
+    (Seqtactics.repeat (Seqtactics.first simplify_rules)) 
 
 let simplify = Rule.mk_infrule simplify_seq
 

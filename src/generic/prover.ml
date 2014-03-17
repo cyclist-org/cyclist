@@ -8,6 +8,7 @@ module L = Blist
 module Make(Seq: Sigs.SEQUENT) =
   struct
     module Proof = Proof.Make(Seq)
+    module Node = Proofnode.Make(Seq)
     module Rule = Proofrule.Make(Seq)
     module Seqtactics = Seqtactics.Make(Seq)
     
@@ -47,7 +48,9 @@ module Make(Seq: Sigs.SEQUENT) =
       ignore (Latex.to_channel ~mode:Latex.M ch (Proof.to_melt p))
     let print_proof_stats proof =
       let size = Proof.size proof in
-      let links = Proof.no_of_backlinks proof in
+      let links = 
+        Blist.length (
+          Blist.filter (fun (_,n) -> Node.is_backlink n) (Proof.to_list proof)) in
       print_endline
         ("Proof has " ^ (string_of_int size) ^
          " nodes and a depth of " ^ (string_of_int !last_search_depth) ^
