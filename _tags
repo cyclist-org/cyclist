@@ -1,5 +1,5 @@
 true: debug,use_menhir,explain
-<**/*.native>: use_libsoundness, use_spot
+<**/*.native>: use_libsoundness
 <**/*.native> or <**/*.ml> or <**/*.mli>:use_unix,use_str,use_latex
 <**/*.byte>: custom
 <src/*>: include
