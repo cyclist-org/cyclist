@@ -184,17 +184,13 @@ module UF =
 	  let vars m = Term.filter_vars (terms m)
 
 		let remove x m =
-			let xs = Term.Set.filter (fun y -> equates m x y) (vars m) in
+			let xs = Term.Set.filter (equates m x) (vars m) in
 			let rest =
 				Term.Map.filter
 				  (fun y z -> not (Term.Set.mem y xs || Term.Set.mem z xs))
 					m in
 		  let xs' = Term.Set.to_list (Term.Set.remove x xs) in
-			let rec mk_pairs acc = function
-				| [] | [_]-> acc
-				| a::(b::tl) -> mk_pairs ((a,b)::acc) (b::tl) in
-			let new_eqs = mk_pairs [] xs' in
-			Blist.fold_left (fun m p -> add p m) rest new_eqs
+			Blist.fold_left (fun m p -> add p m) rest (Blist.pairs xs')
 
   end
 

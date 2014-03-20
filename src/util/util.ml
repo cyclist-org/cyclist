@@ -54,7 +54,9 @@ module MakeFList(T: BasicType) : BasicType with type t = T.t list =
   struct
     type t = T.t list
 
-    let rec compare l l' = match (l,l') with
+    let rec compare l l' = 
+      if l==l' then 0 else
+      match (l,l') with
       | ([], []) -> 0
       | ([], _) -> -1
       | (_, []) -> 1
@@ -62,7 +64,9 @@ module MakeFList(T: BasicType) : BasicType with type t = T.t list =
         | 0 -> compare tl tl'
         | n -> n
 
-    let rec equal l l' = match (l,l') with
+    let rec equal l l' = 
+      l==l' ||
+      match (l,l') with
       | ([], []) -> true
       | (hd::tl, hd'::tl') -> T.equal hd hd' && equal tl tl'
       | ([], _) | (_, []) -> false
@@ -220,39 +224,6 @@ module MakeListSet(T: BasicType) : OrderedContainer with type elt = T.t =
 
 	end
 
-(* module MakeHashSet(T: BasicType) : OrderedContainer with type elt = T.t = *)
-(*   struct                                                                  *)
-(*     module H = Hashtbl.Make(T)                                            *)
-
-(*     type elt = T.t                                                        *)
-(*     type t = unit H.t                                                     *)
-
-(*     let empty = H.create 11                                               *)
-(*     let cardinal h = H.length h                                           *)
-(*     let is_empty h = cardinal h = 0                                       *)
-(*     let mem x h = H.mem h x                                               *)
-(*     let add x h =                                                         *)
-(*       if mem x h then h else                                              *)
-(*       let h'=H.copy h in H.add h' x () ; h'                               *)
-(*     let singleton x = add x empty                                         *)
-(*     let remove x h = let h'=H.copy h in H.remove h' x ; h'                *)
-(*     let fold f h a = H.fold f h a                                         *)
-(*     let iter f h = H.iter f h                                             *)
-(*     let exists p h = fold (fun x _ a -> a || p x) h false                 *)
-(*     let for_all p h = fold (fun x _ a -> a && p x) h true                 *)
-(*     let elements h = fold (fun x _ l -> x::l) h []                        *)
-(*     let of_list l =                                                       *)
-(*       let h = H.copy empty in Blist.iter (fun x -> H.add h x () ) l ; h    *)
-(*     let to_list = elements                                                *)
-
-
-(*     let min_elt h = assert false                                          *)
-(*     let max_elt h = assert false                                          *)
-(*     let choose h = assert false                                           *)
-(*     let split a h = assert false                                          *)
-
-(*   end                                                                     *)
-
 module MakeTreeSet(T: BasicType) : OrderedContainer with type elt = T.t =
   struct
     include Set.Make(T)
@@ -316,6 +287,11 @@ module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
   struct
     include Map.Make(T)
 
+    let equal eq m m' = m==m' || equal eq m m'
+    
+    let compare comp m m' = 
+      if m==m' then 0 else compare comp m m'
+
     let rec fixpoint eq f x =
       let y = f x in if equal eq x y then x else fixpoint eq f y
 
@@ -337,11 +313,6 @@ module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
 				iter (fun k v -> if f k v then (found:=Some(k,v) ; raise Found)) m ; None
 			with Found -> !found
 
-(*    let map_to oadd oempty f m =                   *)
-(*      fold (fun k v m' -> oadd (f k v) m') m oempty*)
-(*                                                   *)
-(*    let map_to_list f m =                          *)
-(*      Blist.rev (map_to Blist.cons [] f m)                *)
   end
 
 module PairTypes(T: BasicType) (S: BasicType) :
@@ -350,11 +321,13 @@ module PairTypes(T: BasicType) (S: BasicType) :
     type t = T.t * S.t
 
     let compare i j =
+      if i==j then 0 else
       match T.compare (fst i) (fst j) with
         | 0 -> S.compare (snd i) (snd j)
         | n -> n
 
-    let equal i j = T.equal (fst i) (fst j) && S.equal (snd i) (snd j)
+    let equal i j = 
+      i==j || T.equal (fst i) (fst j) && S.equal (snd i) (snd j)
 
 (*    let hash (i:t) = genhash (T.hash (fst i)) (S.hash (snd i))*)
     let hash = Hashtbl.hash
@@ -433,7 +406,7 @@ module Int = MakeComplexType
 module Strng = MakeComplexType
   (struct
     type t = string
-    let compare (i:t) (j:t) = Pervasives.compare i j
+    let compare (i:t) (j:t) = String.compare i j
     let equal (i:t) (j:t) = i=j
     let hash (i:t) = Hashtbl.hash i
     let to_string (i:t) = i

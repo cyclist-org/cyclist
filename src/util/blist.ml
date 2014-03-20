@@ -120,6 +120,9 @@ let rec choose = function
     let choices = choose ys in
     bind (fun x -> map (cons x) choices) xs 
 
+let rec pairs = function
+  | [] | [_] -> []
+  | x::((x'::_) as xs) -> (x,x')::(pairs xs)
 
 (* tail rec versions, generally slower *)
 
