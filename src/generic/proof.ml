@@ -1,3 +1,4 @@
+open Lib
 open Util
 
 module Make(Seq : Sigs.SEQUENT) =
@@ -34,16 +35,18 @@ struct
   let mem i p = P.mem i p
 
   let pp fmt prf =
-    let rec pp_proof_node fmt id =
-      Node.pp fmt id (find id prf) pp_proof_node in
-    Format.fprintf fmt "@[%a@]@\n" pp_proof_node 0
+    let rec pp_aux fmt idx =
+      let n = find idx prf in
+      Format.pp_open_vbox fmt (if Node.is_inf n then 2 else 0); 
+      Format.fprintf fmt "@[%i:@ %a@]" idx Node.pp n;
+      if Node.is_inf n then
+        Format.fprintf fmt "@;%a"
+          (Blist.pp Format.pp_print_cut pp_aux) (Node.get_succs n);
+      Format.pp_close_box fmt () in
+    Format.fprintf fmt "@[%a@]@." pp_aux 0
 
-  let to_string prf =
-    ignore (Format.flush_str_formatter ());
-    Format.pp_set_margin Format.str_formatter 300;
-    Format.fprintf Format.str_formatter "@[%a@]" pp prf ;
-    Format.flush_str_formatter ()
-
+  let to_string prf = mk_to_string pp prf
+  
   let to_melt proof =
     let rec melt_proof_node first id =
       Node.to_melt first id (find id proof) melt_proof_node in
@@ -80,7 +83,7 @@ struct
     ensure_add fn idx n prf;
     ensure fn (mem target prf);
     replace idx n prf
-  
+
    let add_inf idx descr subgoals prf =
     let fn = "Proof.add_inf" in
     let subidxs = Blist.range (fresh_idx prf) subgoals in

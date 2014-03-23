@@ -78,24 +78,18 @@ struct
         Soundcheck.mk_abs_node (Seq.tags n.seq) subg
     | BackNode(child, tv) ->
         Soundcheck.mk_abs_node (Seq.tags n.seq) [(child, tv, TagPairs.empty)]
-  
-  let pp fmt id n cont = match n.node with
+    
+  let pp fmt n = match n.node with
     | OpenNode ->
-        Format.fprintf fmt "@[%i: %a (Open)@]"
-          id Seq.pp n.seq
+        Format.fprintf fmt "@[%a (Open)@]" Seq.pp n.seq
     | AxiomNode ->
-        Format.fprintf fmt "@[%i: %a (%s)@]"
-          id Seq.pp n.seq n.descr
+        Format.fprintf fmt "@[%a (%s)@]" Seq.pp n.seq n.descr
     | BackNode(i, _) ->
-        Format.fprintf fmt "@[%i: %a (%s) [%i]@]"
-          id Seq.pp n.seq n.descr i
+        Format.fprintf fmt "@[%a (%s) [%i]@]" Seq.pp n.seq n.descr i
     | InfNode(p) ->
-        Format.fprintf fmt "@[<v 2>%i: %a (%s) [%a]@,%a@]"
-          id
-          Seq.pp n.seq
-          n.descr
-          (Blist.pp pp_comma (fun fmt (i,_,_) -> Format.pp_print_int fmt i)) p
-          (Blist.pp Format.pp_print_newline (fun fmt' (i,_,_) -> cont fmt i)) p
+        Format.fprintf fmt "@[%a (%s) [%a]@]" 
+          Seq.pp n.seq n.descr
+          (Blist.pp pp_comma (fun fmt (i,_,_) -> Int.pp fmt i)) p
   
   let justify = Latex.text "\n\\justifies\n\\thickness=0.1em\n"
   let using = Latex.text "\\using"

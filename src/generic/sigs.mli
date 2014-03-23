@@ -82,9 +82,7 @@ sig
       
   (** Pretty printing and Latex conversion. *)
 
-  val pp :
-    Format.formatter ->
-    int -> t -> (Format.formatter -> int -> unit) -> unit
+  val pp : Format.formatter -> t -> unit
   val to_melt :
     bool -> int -> t -> (bool -> int -> Latex.t) -> Latex.t
   (** Convert to Latex.  The first parameter is true when the node is the root. *)

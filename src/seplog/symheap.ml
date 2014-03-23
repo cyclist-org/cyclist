@@ -25,21 +25,6 @@ module Term =
       (* above is significantly faster than exception handling *)
     let subst_list theta l = Blist.map (fun v -> subst theta v) l
 
-    (* find extension theta' of theta such that *)
-    (* t[theta'] = t' *)
-    (* let unify theta t t' =                                       *)
-    (*   if Map.mem t theta then                                    *)
-    (*     if equal (Map.find t theta) t' then Some theta else None *)
-    (*   else if equal t nil then                                   *)
-    (*     if equal t' nil then Some theta else None                *)
-    (*   else if                                                    *)
-    (*     is_exist_var t &&                                        *)
-    (*     is_exist_var t' &&                                       *)
-    (*     Map.exists (fun _ t'' -> equal t' t'') theta then        *)
-    (*       (* avoid capture *)                                    *)
-    (*       None                                                   *)
-    (*   else Some (Map.add t t' theta)                             *)
-
     let unify theta t t' =
       if Map.mem t theta then
         if equal (Map.find t theta) t' then Some theta else None
@@ -76,8 +61,9 @@ module Term =
     let list_to_string l = Blist.to_string symb_comma.str to_string l
     let to_melt v =
       ltx_mk_math (if v=nil then keyw_nil.melt else Latex.text (Var.to_string v))
-    let pp fmt trm = Format.fprintf fmt "@[<h>%s@]" (to_string trm)
+    let pp fmt trm = Format.fprintf fmt "@[%s@]" (to_string trm)
     let pp_list fmt l = Blist.pp pp_comma pp fmt l
+    let pp_subst = Map.pp pp
 
     (* return a substitution that takes all vars in subvars to new variables *)
     (* that are outside vars U subvars, respecting exist/univ *)
@@ -101,9 +87,6 @@ let pair_to_string sep p =
   let (x,y) = Pair.map Term.to_string p in x ^ sep ^ y
 let pair_to_melt sep p =
   let (x,y) = Pair.map Term.to_melt p in Latex.concat [x; sep; y]
-
-let pp_star fmt () =
-  Format.pp_print_string fmt " *" ; Format.pp_print_space fmt ()
 
 module UF =
   struct

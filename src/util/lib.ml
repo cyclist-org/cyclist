@@ -10,6 +10,14 @@ let pp_semicolonsp fmt () =
 let pp_commasp fmt () =
   pp_comma fmt () ; Format.pp_print_space fmt ()
 
+let pp_star fmt () = Format.fprintf fmt " *@ "
+
+let mk_to_string pp v =
+  ignore (Format.flush_str_formatter ());
+  Format.pp_set_margin Format.str_formatter 300;
+  pp Format.str_formatter v ;
+  Format.flush_str_formatter ()
+
 let bracket s = "(" ^ s ^ ")"
 let sqbracket s = "[" ^ s ^ "]"
 let latex_bracket = bracket

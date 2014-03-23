@@ -40,6 +40,7 @@ module type OrderedMap =
     val union : 'a t -> 'a t -> 'a t
 		val find_some : (key -> 'a -> bool) -> 'a t -> (key * 'a) option
     val fixpoint : ('a -> 'a -> bool) -> ('a t -> 'a t) -> 'a t -> 'a t
+    val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit 
 (*    val map_to : ('b -> 'c -> 'c) -> 'c -> (key -> 'v -> 'b) -> 'v t -> 'c *)
 (*    val map_to_list : (key -> 'b -> 'a) -> 'b t -> 'a list                 *)
   end
@@ -312,6 +313,13 @@ module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
 			try
 				iter (fun k v -> if f k v then (found:=Some(k,v) ; raise Found)) m ; None
 			with Found -> !found
+
+    let pp pp_val   fmt m =
+      Format.fprintf fmt "@[@ ";
+      iter 
+        (fun k v -> Format.fprintf fmt "@[(%a->%a);@]@ " T.pp k pp_val v)
+        m;
+      Format.fprintf fmt "@]";
 
   end
 

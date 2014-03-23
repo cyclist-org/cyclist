@@ -362,11 +362,8 @@ module Cmd =
           Format.fprintf fmt "%a%s@\n%a"
             (pp_lcmd ~abbr indent) hd symb_semicolon.str (pp ~abbr indent) tl
 
-    let to_string cmd =
-      ignore (Format.flush_str_formatter ()) ;
-      pp ~abbr:true 0 Format.str_formatter cmd ;
-      Format.flush_str_formatter ()
-
+    let to_string cmd = mk_to_string (pp ~abbr:true 0) cmd
+     
     let to_melt_label c = match c.label with
         | None -> Latex.empty
         | Some n -> Latex.text ((string_of_int n) ^ " : ")

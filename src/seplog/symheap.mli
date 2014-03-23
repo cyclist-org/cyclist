@@ -28,6 +28,7 @@ sig
   val empty_subst : substitution
   val singleton_subst : t -> t -> substitution
   val subst : substitution -> t -> t
+  val pp_subst : Format.formatter -> substitution -> unit
 
   val to_string : t -> string
   val to_melt : t -> Latex.t
