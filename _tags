@@ -1,5 +1,4 @@
 true: debug,use_menhir,explain
-<**/*.native>: use_libsoundness
-<**/*.native> or <**/*.ml> or <**/*.mli>:use_unix,use_str,use_latex
-<**/*.byte>: custom
+<**/*.native> or <**/*.byte> or <**/*.top>: use_libsoundness
+<**/*.native> or <**/*.top> or <**/*.ml> or <**/*.mli>:use_unix,use_str,use_latex
 <src/*>: include

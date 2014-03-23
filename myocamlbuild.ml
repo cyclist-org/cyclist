@@ -31,23 +31,33 @@ let _ = dispatch begin function
   | After_rules ->
     (* declare melt as external OCaml library *)
     ocaml_lib ~extern:true ~dir:ocaml_melt_lib_path "latex";
-
+    
     (* how to compile "c" files, really C++ *)
-    dep  ["compile"; "c"] headers;
+    dep  ["c"; "compile"] headers;
     flag ["c"; "compile"]  
       (S[
         A"-ccopt"; A"-xc++"; A"-ccopt"; A"-std=c++0x"; 
         A"-ccopt"; A("-I" ^ ocaml_headers_path);
         A"-ccopt"; A("-I" ^ spot_include_path)]);
     
-    
+    (* declare dependencies for things using libsoundness *)
+    dep ["link"; "ocaml"; "use_libsoundness"] 
+      [
+        (* the relative path to the .a file is necessary *)
+        "src/soundness/libsoundness.a";
+        "libspot.a";
+        "libbdd.a";
+      ];
     (* how to link everything together that uses libsoundness *)
     flag ["link"; "ocaml"; "use_libsoundness"]
       (S[
         (* following option is a workaround for a bug in ocaml/ocamlbuild 3.x *)
         (* that reorders linker arguments *)
         A"-cclib"; A"-Wl,--no-as-needed";
-        A"-cclib"; A"-lstdc++"
+        A"-cclib"; A"-lstdc++";
+        A"src/soundness/libsoundness.a";
+        A"libspot.a";
+        A"libbdd.a";
         ]);
 
     (* symbolically link in place the two static libraries needed for spot *)
@@ -61,17 +71,7 @@ let _ = dispatch begin function
       ~prod:"libbdd.a"
       (fun env _ -> Cmd(S[P"ln"; A"-s"; A(spot_path ^ "/lib/libbdd.a"); A"."]));
     
-    (* declare dependencies for things using libsoundness *)
-    dep ["link"; "ocaml"; "use_libsoundness"] 
-      [
-        (* the relative path to the .a file is necessary *)
-        "src/soundness/libsoundness.a";
-        "libspot.a";
-        "libbdd.a";
-      ];
-    (* 
-    flag ["link"; "ocaml"; "use_libsoundness"]
-      (S[A"-ccopt"; A"-Lsrc/soundness"; A"-cclib"; A"-lsoundness"]); *)
+    flag ["link"; "ocaml"; "byte"] (A"-custom");
     
   | _ -> ()
 end

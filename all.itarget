@@ -7,3 +7,4 @@ src/goto/goto_abduce.native
 src/while/while_prove.native  
 src/while/while_abduce.native
 cyclist.docdir/index.html
+src/seplog/sl.top
