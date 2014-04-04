@@ -78,8 +78,8 @@ let psucc_circuit_def (n : int) : string =
   let psucc_circuit_n = psucc_circuit n in
   let rec conds k =
     if k <= 1 then [pnot ^ "(x1,y1)"]
-    else if k == 2 then (conds 1) @ [pxor ^ "(x1,x2,y2)"]
-    else if k == 3 then (conds 2) @ [pand ^ "(x1,x2,z3)"; pxor ^ "(z3,x3,y3)"]
+    else if k = 2 then (conds 1) @ [pxor ^ "(x1,x2,y2)"]
+    else if k = 3 then (conds 2) @ [pand ^ "(x1,x2,z3)"; pxor ^ "(z3,x3,y3)"]
     else let kp = string_of_int (k-1) in
          let kk = string_of_int k in
          (conds (k-1)) @ [pand ^ "(z" ^ kp ^ ",x" ^ kp ^ ",z" ^ kk ^ ")";

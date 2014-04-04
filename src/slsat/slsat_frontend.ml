@@ -46,7 +46,7 @@ open Symheap
         end
         else
           let (is_consistent, bases) = Option.get res in
-          if is_consistent == false then
+          if not is_consistent then
           begin
             print_endline ("NOT proved: Some predicate has an empty base.") ;
             if !show_proof then
