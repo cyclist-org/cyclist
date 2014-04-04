@@ -219,6 +219,7 @@ module Deqs =
 			Term.Set.of_list r
 
 	  let vars d = Term.filter_vars (terms d)
+		
   end
 
 module Pto = MakeComplexType(PairTypes(Term)(Term.FList))
@@ -281,6 +282,7 @@ module Ptos =
 			Term.Set.of_list r
 
 	  let vars p = Term.filter_vars (terms p)
+
 	end
 
 type ind_identifier = Strng.t
@@ -373,6 +375,7 @@ module Inds =
 			Term.Set.of_list r
 
 	  let vars i = Term.filter_vars (terms i)
+		
 	end
 
 
@@ -406,8 +409,7 @@ module Heap =
 			}
 
     let get_idents p =
-      (* Inds.map_to Strng.MSet.add Strng.MSet.empty (fun (_,(id,_)) -> id) p.inds *)
-			Strng.MSet.of_list (Blist.rev_map (fun (_,(id,_)) -> id) (Inds.to_list p.inds))
+      Inds.map_to Strng.MSet.add Strng.MSet.empty (fun (_,(id,_)) -> id) p.inds
 
     let terms f =
       Term.Set.union_of_list
@@ -417,7 +419,6 @@ module Heap =
 
     let tags l =
       Inds.map_to Tags.add Tags.empty (fun i -> fst i) l.inds
-			(* Tags.of_list (Blist.map (fun i -> fst i) (Inds.to_list l.inds)) *)
 
     let to_string f =
       let res = String.concat symb_star.sep
@@ -512,6 +513,7 @@ module Heap =
 
 
     let equal h h' =
+      h==h' ||
       UF.equal h.eqs h'.eqs &&
       Deqs.equal h.deqs h'.deqs &&
       Ptos.equal h.ptos h'.ptos &&
@@ -520,6 +522,7 @@ module Heap =
     include Fixpoint(struct type t = symheap let equal = equal end)
     
     let compare f g =
+      if f==g then 0 else
       match UF.compare f.eqs g.eqs with
         | n when n<>0 -> n
         | _ -> match Deqs.compare f.deqs g.deqs with
@@ -903,7 +906,7 @@ module Defs =
         let r = CaseMap.endomap
           (fun (c,s) -> (c,BasePairSet.union s (gen_pairs c cmap)))
           cmap in
-				let () = debug (fun () -> "=======\n" ^ (CaseMap.to_string r) ^ "\n") in
+				let () = debug (fun () -> "\n" ^ (CaseMap.to_string r) ^ "\n") in
 				r in
       CaseMap.fixpoint BasePairSet.equal onestep cmap
 

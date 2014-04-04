@@ -76,14 +76,17 @@ struct
     | r::rs -> 
       let apps = r idx prf in
       if not (L.is_empty apps) then apps else first rs idx prf 
-  
+
+  let identity idx prf = 
+    L.singleton ([idx],prf)
+      
   let attempt r idx prf = 
     let apps = r idx prf in
     if not (L.is_empty apps) then apps else
-    L.singleton ([idx],prf)
+    identity idx prf
+
+  let rec sequence = function
+    | [] -> identity
+    | r::rs -> compose r (sequence rs)
   
-  (* let rec repeat n r =                     *)
-  (*   if n<=0 then invalid_arg "repeat" else *)
-  (*   if n=1 then r else                     *)
-  (*   compose r (repeat (n-1) r)             *)
 end

@@ -186,10 +186,14 @@ sig
   val ancestor_nodes : select_f
   
   val fail : t
-  val compose : t -> t -> t 
-  val choice : t list -> t
+  val identity : t
+  
   val attempt : t -> t
+  val compose : t -> t -> t 
+  
+  val choice : t list -> t
   val first : t list -> t 
+  val sequence : t list -> t 
 end
 
 module type ABDRULE =

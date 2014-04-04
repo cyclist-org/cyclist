@@ -2,7 +2,7 @@ open Lib
 open Util
 open Symheap
 
-
+module Proof = Proof.Make(Seq)
 module Rule = Proofrule.Make(Seq)
 module Seqtactics = Seqtactics.Make(Seq)
 
@@ -94,8 +94,8 @@ let pto_intro_rule seq =
       Ptos.find (fun (w,_) -> Option.is_some (Heap.find_lval w l)) r.ptos in
     let (lx, lys) as p' = Option.get (Heap.find_lval rx l) in
     (* take care to remove only the 1st match *)
-    let l' = { l with ptos=Ptos.filter (fun q -> q!=p') l.ptos } in
-    let r' = { r with ptos=Ptos.filter (fun q -> q!=p) r.ptos } in
+    let l' = { l with ptos=Ptos.remove p' l.ptos } in
+    let r' = { r with ptos=Ptos.remove p r.ptos } in
     let r' = { r' with eqs=UF.union r'.eqs (UF.of_list (Blist.combine rys lys)) } in
     [ [ ( ([l'], [r']), Heap.tag_pairs l, TagPairs.empty ) ], "Pto Intro" ]
   with Not_symheap | Not_found -> []
@@ -229,6 +229,8 @@ let gen_left_rules (def, ident) =
 (* s2 *)
 (* -- *)
 (* s1 *)
+(* where there exists a substitution theta such that *)
+(* s2[theta] entails s1 by classical weakening *)
 let matches s1 s2 =
   let tags = Tags.inter (Seq.tags s1) (Seq.tags s2) in
   if Tags.is_empty tags then [] else
@@ -242,9 +244,62 @@ let matches s1 s2 =
       if Seq.subsumed_wrt_tags new_acc s1 s2' then new_acc else acc
     ) tags Tags.empty in
   let () = assert (not (Tags.is_empty tags')) in
-  [ TagPairs.mk tags',  "Backl" ]
+  [ ((TagPairs.mk tags',  "Backl"), theta) ]
 
-let brl_matches = Rule.mk_backrule true Rule.all_nodes matches
+(* let brl_matches =                                                                *)
+(* 	Rule.mk_backrule true Rule.all_nodes (fun s s' -> List.map fst (matches s s')) *)
+
+(*    seq'     *)
+(* ----------  *)
+(* seq'[theta] *)
+(* where seq'[theta] = seq *)
+let subst_rule theta seq' seq = 
+  if Seq.equal (Seq.subst theta seq') seq 
+	then 
+		[ [(seq', TagPairs.mk (Seq.tags seq'), TagPairs.empty)], "Subst" ]
+	else 
+		[]
+
+(*   F |- G * Pi'  *)
+(* --------------- *)
+(*   Pi * F |- G   *)
+(* where seq' = F |- G * Pi' and seq = Pi * F |- G *)     
+let weaken seq' seq = 
+  if Seq.subsumed_wrt_tags Tags.empty seq seq' then
+    [ [(seq', TagPairs.mk (Seq.tags seq), TagPairs.empty)], "Weaken" ]
+  else
+    []
+
+(* if there is a backlink achievable through substitution and classical *)
+(* weakening then make the proof steps that achieve it explicit so that *)
+(* actual backlinking can be done on Seq.equal sequents *) 
+let dobackl idx prf =
+	let src_seq = Proof.get_seq idx prf in
+	let targets = Rule.all_nodes idx prf in
+	let apps = 
+		Blist.map (fun idx' -> matches src_seq (Proof.get_seq idx' prf)) targets in
+	let f targ_idx (p, theta) =
+		let targ_seq = Proof.get_seq targ_idx prf in
+    let subst_seq = Seq.subst theta targ_seq in
+    Rule.sequence [
+      if Seq.equal src_seq subst_seq
+        then Rule.identity
+        else Rule.mk_infrule (weaken subst_seq);
+        
+      if Term.Map.for_all Term.equal theta
+        then Rule.identity
+        else Rule.mk_infrule (subst_rule theta targ_seq);
+         
+      Rule.mk_backrule 
+        true 
+        (fun _ _ -> [targ_idx]) 
+        (fun s s' -> if Seq.equal s s' then [p] else [])
+    ] in
+	Rule.first 
+	  (Blist.map2 
+		  (fun idx' l -> Rule.first (Blist.map (f idx') l)) 
+			targets 
+			apps) idx prf
 
 let axioms = ref (Rule.first [id_axiom ; ex_falso_axiom])
 
@@ -257,7 +312,8 @@ let setup defs =
     simplify;
     
     Rule.choice [
-      brl_matches;
+      (* brl_matches; *)
+			dobackl;
   		wrap pto_intro_rule;
   		wrap pred_intro_rule;
       instantiate_pto ;

@@ -13,6 +13,10 @@ let of_list l = l
 let to_list l = l
 let singleton x = [x]
 
+let rec del_first p = function
+  | [] -> []
+  | x::xs -> if p x then xs else x::(del_first p xs)
+
 let count_foldl f a xs = 
   let rec aux n acc = function
     | [] -> acc
