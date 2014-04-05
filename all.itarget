@@ -1,9 +1,9 @@
 src/firstorder/fo_prove.native  
 src/seplog/sl_prove.native
 src/slsat/slsat_check.native  
-src/slsat/slsat_expgen.native
+#src/slsat/slsat_expgen.native
 src/goto/goto_prove.native
-src/goto/goto_abduce.native  
+#src/goto/goto_abduce.native  
 src/while/while_prove.native  
 src/while/while_abduce.native
 cyclist.docdir/index.html
