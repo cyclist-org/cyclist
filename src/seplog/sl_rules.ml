@@ -266,7 +266,7 @@ let subst_rule theta seq' seq =
 (* where seq' = F |- G * Pi' and seq = Pi * F |- G *)     
 let weaken seq' seq = 
   if Seq.subsumed_wrt_tags Tags.empty seq seq' then
-    [ [(seq', TagPairs.mk (Seq.tags seq), TagPairs.empty)], "Weaken" ]
+    [ [(seq', TagPairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')), TagPairs.empty)], "Weaken" ]
   else
     []
 
