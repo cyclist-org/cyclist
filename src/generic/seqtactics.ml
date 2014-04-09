@@ -4,7 +4,7 @@ module Make(Seq: Sigs.SEQUENT) =
 struct
   type seq_t = Seq.t
   type ruleapp_t = (seq_t * Util.TagPairs.t * Util.TagPairs.t) list * string
-  type rule_t = seq_t -> ruleapp_t list
+  type t = seq_t -> ruleapp_t list
   
   let relabel descr rl seq = 
     Blist.map (fun (app,_) -> (app,descr)) (rl seq)

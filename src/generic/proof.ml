@@ -79,9 +79,10 @@ struct
       
   let add_backlink idx descr target vtts prf =
     let fn = "Proof.add_backlink" in
-    let n = Node.mk_backlink (get_seq idx prf) descr target vtts in
+    let seq = (get_seq idx prf) in
+    let n = Node.mk_backlink seq descr target vtts in
     ensure_add fn idx n prf;
-    ensure fn (mem target prf);
+    ensure fn (Seq.equal seq (get_seq target prf));
     replace idx n prf
 
    let add_inf idx descr subgoals prf =
