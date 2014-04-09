@@ -246,9 +246,6 @@ let matches s1 s2 =
   let () = assert (not (Tags.is_empty tags')) in
   [ ((TagPairs.mk tags',  "Backl"), theta) ]
 
-(* let brl_matches =                                                                *)
-(* 	Rule.mk_backrule true Rule.all_nodes (fun s s' -> List.map fst (matches s s')) *)
-
 (*    seq'     *)
 (* ----------  *)
 (* seq'[theta] *)

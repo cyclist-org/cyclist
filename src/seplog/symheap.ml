@@ -673,6 +673,7 @@ module Form =
     let subst_existentials f = Blist.map Heap.subst_existentials f
 
     let is_fresh_in x f = Blist.for_all (Heap.is_fresh_in x) f
+    let is_heap f = Blist.length f = 1
   end
 
 module Seq =

@@ -26,9 +26,10 @@ open Symheap;;
 #install_printer Form.pp;;
 #install_printer Seq.pp;;
 #install_printer Defs.pp;;
-open Sl_rules;;
+open Goto_rules;;
 #install_printer Proof.pp;;
 
+open Lib;;
 
 let parse_seq s = 
   Sl_parser.sequent Sl_lexer.token (Lexing.from_string s);;
@@ -42,10 +43,12 @@ let parse_defs d =
 let parse_goto_program p = 
   Sl_parser.program Sl_lexer.token (Lexing.from_string p);;
   
+let defs_of_file f = parse_defs (string_of_file f)
   
-  
-let s = parse_seq "ls(x) * ls(y) |- ls(x) * ls(y)";;
-let s' = parse_seq "ls(x) |- ls(x)";;
-let f = parse_form "ls(x) * ls(y)";;
-let f' = parse_form "ls(x)";;
+let f = parse_form "w'!=nil * w'->j' * ls_1(y,w') * ls_2(j',nil) * ls_3(x,w')";;
+let f' = parse_form "y=z * nil!=z * z->w' * ls_2(w',nil) * ls_3(x,z)";;
+let defs = defs_of_file "examples/sl.defs"
+let prf = Proof.mk (f',1);;
+let apps = Rule.choice (Blist.map fold defs) 0 prf;;
+
 

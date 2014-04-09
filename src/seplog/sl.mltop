@@ -10,6 +10,7 @@ Util
 Symbols
 Pair
 Var
+Goto_rules
 Goto_program
 Proof
 Proofrule

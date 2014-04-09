@@ -136,6 +136,7 @@ sig
     Term.substitution -> t -> t -> Term.substitution option
   val subst_existentials : t -> t
   val is_fresh_in : Term.t -> t -> bool
+  val is_heap : t -> bool
 end
 exception Not_symheap
 

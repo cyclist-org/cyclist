@@ -29,6 +29,7 @@ module type OrderedContainer =
     val hash : t -> int
 		val subsets : t -> t list
     val fixpoint : (t -> t) -> t -> t
+    val del_first : (elt -> bool) -> t -> t
   end
 
 module type OrderedMap =
@@ -123,6 +124,10 @@ module MakeListMultiset(T: BasicType) =
       | [x] -> x
       | _::xs -> max_elt xs
 
+    let rec del_first p = function
+      | [] -> []
+      | y::ys -> if p y then ys else y::(del_first p ys)
+    
     (* only removes first occurence *)
     let rec remove x = function
       | [] -> []
@@ -282,6 +287,10 @@ module MakeTreeSet(T: BasicType) : OrderedContainer with type elt = T.t =
     	let xxs = subsets s in
 			xxs @ (Blist.map (add x) xxs)
 
+    let del_first p s =
+      match find_opt p s with
+      | None -> s
+      | Some x -> remove x s
   end
 
 module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
