@@ -466,7 +466,7 @@ let abd_back_rule =
   Abdrule.mk_abdbackrule Rule.all_nodes rl 
 
 
-let matches = Abdrule.lift While_rules.matches
+let matches = Abdrule.lift While_rules.dobackl
 
 (* NOT UPDATED FOR TERMINATION *)
 (* let abd_segment =                                                                         *)
