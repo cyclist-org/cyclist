@@ -87,6 +87,7 @@ sig
   val tags : t -> Util.Tags.t
   val tag_pairs : t -> Util.TagPairs.t
   val pp : Format.formatter -> t -> unit
+  val is_prod : t -> bool
 end
 
 

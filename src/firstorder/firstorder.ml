@@ -504,6 +504,8 @@ module Form =
       uni_subsumption false fhook theta f f'
 
     let subst theta f = endomap (Prod.subst theta) f
+    
+    let is_prod f = cardinal f = 1
   end
 
 
