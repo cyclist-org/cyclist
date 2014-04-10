@@ -336,7 +336,7 @@ let matches_fun s1 s2 =
       let new_acc = Tags.add t acc in
       if Seq.subsumed_wrt_tags new_acc s1 s2' then new_acc else acc
     ) tags Tags.empty in
-  let () = assert (not (Tags.is_empty tags')) in
+  let () = require (fun () -> not (Tags.is_empty tags')) in
   [ ((TagPairs.mk tags', "Backl"), theta) ]
 
 

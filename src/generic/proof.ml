@@ -61,39 +61,36 @@ struct
 
   let to_list m = Blist.map (fun (i,(_,n)) -> (i,n)) (P.bindings m)
 
-  let ensure msg f = if (not f) then invalid_arg msg else () 
-  
   let mk seq = P.add 0 (0,Node.mk_open seq) P.empty
   
   let replace idx n prf = P.add idx (fst (get idx prf),n) prf
 
-  let ensure_add fn idx n prf =
+  let ensure_add idx n prf =
     let n' = find idx prf in
-    ensure fn (Node.is_open n'); 
-    ensure fn (Seq.equal (Node.get_seq n) (Node.get_seq n'))
+    require 
+      (fun () -> 
+        Node.is_open n' && Seq.equal (Node.get_seq n) (Node.get_seq n'))
     
   let add_axiom idx descr prf =
     let n = Node.mk_axiom (get_seq idx prf) descr in
-    ensure_add "Proof.add_axiom" idx n prf;
+    ensure_add idx n prf;
     replace idx n prf    
       
   let add_backlink idx descr target vtts prf =
-    let fn = "Proof.add_backlink" in
-    let seq = (get_seq idx prf) in
+    let seq = get_seq idx prf in
     let n = Node.mk_backlink seq descr target vtts in
-    ensure_add fn idx n prf;
-    ensure fn (Seq.equal seq (get_seq target prf));
+    ensure_add idx n prf;
+    require (fun () -> Seq.equal seq (get_seq target prf));
     replace idx n prf
 
    let add_inf idx descr subgoals prf =
-    let fn = "Proof.add_inf" in
     let subidxs = Blist.range (fresh_idx prf) subgoals in
     let subnodes = 
       Blist.map2 (fun i (seq,_,_) -> (i, Node.mk_open seq)) subidxs subgoals in
     let subidxs_plus_tags = 
       Blist.map2 (fun i (_,vtts,ptts) -> (i,vtts,ptts)) subidxs subgoals in
     let n = Node.mk_inf (get_seq idx prf) descr subidxs_plus_tags in
-    ensure_add fn idx n prf;
+    ensure_add idx n prf;
     let prf' = 
       Blist.foldl 
         (fun prf' (ci,cn) -> P.add ci (idx,cn) prf') 

@@ -54,21 +54,20 @@ struct
 
 
   let mk seq node descr =
+    require (fun () -> descr<>"") ;
     {
       seq = seq;
       node = node;
       descr = descr
     }
     
-  let mk_open seq = mk seq OpenNode "(Open)"
+  let mk_open seq = 
+    mk seq OpenNode "(Open)"
   let mk_axiom seq descr = 
-    if descr="" then invalid_arg "mk_axiom" else 
     mk seq AxiomNode descr
   let mk_inf seq descr subgoals = 
-    if descr="" then invalid_arg "mk_inf" else 
     mk seq (InfNode(subgoals)) descr
   let mk_backlink seq descr child vtts = 
-    if descr="" then invalid_arg "mk_backlink" else 
     mk seq (BackNode(child, vtts)) descr
   
   let to_abstract_node n = match n.node with

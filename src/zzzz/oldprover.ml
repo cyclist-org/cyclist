@@ -200,10 +200,10 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
       | InfRule _ -> true
 
     let expand_proof_state prf prf_depth goals =
-      (* let () = assert (not (Proof.is_closed prf) && goals<>[]) in *)
+      (* let () = require (fun () -> not (Proof.is_closed prf) && goals<>[]) in *)
       (* idx is the goal being closed and goal_depth is its depth *)
       let ((idx,goal_depth), goals) = Blist.decons goals in
-      (* let () = assert (Node.is_open (Proof.find idx prf) && prf_depth >= goal_depth) in *)
+      (* let () = require (fun () -> Node.is_open (Proof.find idx prf) && prf_depth >= goal_depth) in *)
       let new_goal_depth = goal_depth+1 in
       let new_prf_depth = max prf_depth new_goal_depth in
       let f rl =
@@ -248,18 +248,18 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
               raise Continue ;
           (* next rule application *)
           let (p,d,g) = Zlist.hd next in
-          (* let () = assert (d <= !bound) in                                 *)
-          (* let () = assert (Blist.for_all (fun (_,gd) -> gd <= !bound) g) in *)
+          (* let () = require (fun () -> d <= !bound) in                                 *)
+          (* let () = require (fun () -> Blist.for_all (fun (_,gd) -> gd <= !bound) g) in *)
           (* push remaining applications *)
           let () = stack := (par, Zlist.tl next) :: !stack in
           if g=[] then
             begin
               (* no subgoals left, so it must be a closed Proof.t *)
-              (* assert (Proof.is_closed p) ; *)
+              (* require (fun () -> Proof.is_closed p) ; *)
               found := Some (p,d);
               raise Continue
             end ;
-          (* let () = assert (not (Proof.is_closed p)) in *)
+          (* let () = require (fun () -> not (Proof.is_closed p)) in *)
           let () = if !do_debug then
             begin
               print_endline ("Expanding node: " ^ (string_of_int (fst (Blist.hd g)))) ;
@@ -616,10 +616,10 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
 			loop [] sn stack
 
     let abd_expand_proof_state par_seq_no app mk_rules =
-      let () = assert (not (Proof.is_closed app.prf) && app.goals<>[]) in
+      let () = require (fun () -> not (Proof.is_closed app.prf) && app.goals<>[]) in
       (* idx is the goal being closed and goal_depth is its depth *)
       let ((idx,goal_depth), goals) = Blist.decons app.goals in
-      let () = assert (Node.is_open (Proof.find idx app.prf) && app.depth >= goal_depth) in
+      let () = require (fun () -> Node.is_open (Proof.find idx app.prf) && app.depth >= goal_depth) in
       let new_goal_depth = goal_depth+1 in
       let new_prf_depth = max app.depth new_goal_depth in
       let f rl = match (fst rl) with
@@ -674,19 +674,19 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
           if Zlist.is_empty proof_state.apps then raise Continue ;
           (* next rule application *)
           let app = Zlist.hd proof_state.apps in
-          let () = assert (app.depth <= !bound) in
-          let () = assert (Blist.for_all (fun (_,gd) -> gd <= !bound) app.goals) in
+          let () = require (fun () -> app.depth <= !bound) in
+          let () = require (fun () -> Blist.for_all (fun (_,gd) -> gd <= !bound) app.goals) in
           (* push remaining applications *)
           let () = stack := {proof_state with apps=Zlist.tl proof_state.apps} :: !stack in
           if app.goals=[] then
             begin
               (* no subgoals left, so it must be a closed Proof.t *)
-              assert (Proof.is_closed app.prf) ;
+              require (fun () -> Proof.is_closed app.prf) ;
               if acceptable app.defs then found := Some (app.prf,app.depth,app.defs);
 							(* NOTE: in case not acceptable we do not pop parents as we may need to backtrack *)
               raise Continue
             end ;
-          let () = assert (not (Proof.is_closed app.prf)) in
+          let () = require (fun () -> not (Proof.is_closed app.prf)) in
           let () = if !do_debug then
             begin
               print_endline ("Expanding node: " ^ (string_of_int (fst (Blist.hd app.goals)))) ;

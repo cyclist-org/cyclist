@@ -1,6 +1,9 @@
 let do_debug = ref false
 let debug f = if !do_debug then print_endline (f ()) else ()
 
+let skip_asserts = ref false
+let require f = if !skip_asserts then () else assert (f ()) 
+
 let pp_comma fmt () =
   Format.pp_print_char fmt ','
 

@@ -233,7 +233,7 @@ let matches_fun ((l1,i1) as s1) ((l2,i2) as s2) =
       let new_acc = Tags.add t acc in
       if Seq.subsumed_wrt_tags new_acc s1 s2' then new_acc else acc
     ) tags Tags.empty in
-  let () = assert (not (Tags.is_empty tags')) in
+  let () = require (fun () -> not (Tags.is_empty tags')) in
   [ ((TagPairs.mk tags', "Backl"), theta) ]
 
 (* let matches = Rule.mk_backrule true Rule.all_nodes (fun s s' -> List.map fst (matches_fun s s')) *)
