@@ -1,0 +1,51 @@
+OVERVIEW:
+Cyclist is a framework for cuilding cyclic theorem provers based on a sequent 
+calculus (for more info on Cyclist have a look at papers/cyclist.pdf).  
+
+Three provers built with Cyclist are described in this README as well as the 
+paper listed above.  These are (binaries end in ".native" omitted below):
+
+fo_prove:
+  An entailment prover for a fragment of first-order logic with inductive
+  definitions (definitions needed for the test cases in the paper are in 
+  examples/fo.defs).
+sl_prove: 
+  An entailment prover for a fragment of separation logic with inductive 
+  defintiions (those used in the tests are in examples/sl.defs).
+goto_prove: 
+  A termination prover for a heap-manipulating, goto-like programming language 
+  with specifications in the above fragment of separation logic.
+
+  
+THEORY:
+The theory/design behind Cyclist and the three provers above is described in   
+
+  J. Brotherston, N. Gorogiannis, and R. L. Petersen. A generic cyclic theorem
+  prover. In Proc. APLAS-10, pages 350-367. Springer, 2012.
+
+PDF version and BibTeX are in papers/cyclist.*
+
+  
+QUICKSTART:
+If you downloaded a tarball then the executables in the archive will have been 
+linked in such a way that they should work without any additional dependencies 
+on an x86_64 Linux system.
+
+Running an executable without arguments will print out instructions for use. 
+Running "make aplas-tests" will run a test suite for the three provers above 
+which is a superset of the tests used in the paper above.
+
+
+COMPILING:
+See README.compiling.
+
+
+CONTACT:
+Questions and help to get things working: 
+  nikos.gorogiannis+cyclist@gmail.com
+
+Github: 
+  https://github.com/ngorogiannis/cyclist
+
+URL (papers and software): 
+  http://www.cs.mdx.ac.uk/staffpages/nikosgkorogiannis/  

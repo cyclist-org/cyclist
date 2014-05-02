@@ -1,23 +1,14 @@
-CONTACT:
-Questions and help to get things working: nikos.gorogiannis (at) gmail (dot) com
-Software and PDF copies of papers: 
+OVERVIEW:
+Cyclist is a framework for cuilding cyclic theorem provers based on a sequent 
+calculus (for more info on Cyclist have a look at papers/cyclist.pdf).  
 
-  http://www.cs.mdx.ac.uk/staffpages/nikosgkorogiannis/  
-
-
-QUICKSTART:
-If you downloaded a tarball then the executables in the archive will have been 
-linked in such a way that they should work without any additional dependencies 
-on an x86_64 Linux system.
-
-
-The binaries are named <system>_{prove,abduce,check}.native (not all combinations
+The tools are named <system>_{prove,abduce,check}.native (not all combinations
 exist).  Systems are logical fragments equipped with inductive predicate
 definitions.  Binaries with `prove' in the name are theorem provers.  Binaries
 with `abduce' in the name are theorem provers that abduce inductive definitions
 (for now, inductively defined preconditions for programs).  
 
-The systems supported are:
+The systems currently supported are:
 
 fo: A fragment of first-order logic.
 sl: A fragment of separation logic.
@@ -30,25 +21,26 @@ slsat_check is a satisfiability checker for separation logic symbolic heaps
 with inductive definitions.   
 
 Running an executable without arguments will print out instructions for use. 
-Running "make all-tests" will run a test suite for some provers.
+Running "make all-tests" will run a test suite for several provers.
 
-The theory/design behind the first three provers is described in   
+See README.compiling for instructions on how to compile things from scratch.
 
-  J. Brotherston, N. Gorogiannis, and R. L. Petersen. A generic cyclic theorem
-  prover. In Proc. APLAS-10, pages 350-367. Springer, 2012.
+See README.APLAS12 for details on the first-order, separation logic and 
+termination for goto programs provers.
+
+See README.CSL-LICS14 for details on the satisfiability checker for separation
+logic with inductive definitions.
+
+See the subfolder papers for electronic versions of papers mentioned and 
+bibliographic information in BibTeX format.
 
 
-COMPILING:
-To compile things from scratch you will need the following:
+CONTACT:
+Questions and help to get things working: 
+  nikos.gorogiannis+cyclist@gmail.com
 
-* OCaml (tested with 4.01) [Debian packages: ocaml-nox, ocaml-native-compilers]
-* g++ and headers (tested with 4.8) [Debian packages: g++, libstdc++-4.8-dev]
-* Menhir (tested with 20130116) [Debian package: menhir] 
-* Melt (tested with 1.4.0) [Debian package: ocaml-melt]
-* Spot (tested with 1.1.4) [sources at http://spot.lip6.fr/wiki/ ]  
+Github: 
+  https://github.com/ngorogiannis/cyclist
 
-In non-standard installations you may need to change the paths in the top
-of myocamlbuild.ml.
-
-Then, just run "make" and hopefully it should work :) 
-
+URL (papers and software): 
+  http://www.cs.mdx.ac.uk/staffpages/nikosgkorogiannis/  
