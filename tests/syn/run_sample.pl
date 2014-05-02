@@ -31,7 +31,7 @@ for (1..$samples) {
 
 sub check {
   my $file = shift;
-  my $output = `ulimit -t $timeout; $time ../../ccmain.native -D $file 2>&1`;
+  my $output = `ulimit -t $timeout; $time ../../slsat_check.native -D $file 2>&1`;
   die $output if $output =~ m/error/i;
   my @clock = `cat $clock`;
   chomp @clock;

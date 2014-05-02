@@ -88,11 +88,12 @@ lsls {
   x->y',x' * lsls(y') * dls(x',nil) => lsls(x)
 } ; 
 
-cbt {
-  x=y => cbt(x,y) |
-  x!=y * x!=nil * x->a',b' * cbt(a',y) * cbt(b',y) => cbt(x,y)
+skiptwo {
+  y=z => skiptwo(y,z) |
+  y!=z * z->a,w * skiptwo(y,w) => skiptwo(y,z)
 } ;
 
-cbtr {
-  x!=nil * x->a',b' * cbt(a',x) * cbt(b',x) => cbtr(x)
+skipone {
+  x = nil => skipone(x) |
+  x->y,z * skipone(y) * skiptwo(y,z) => skiptone(x)
 }
