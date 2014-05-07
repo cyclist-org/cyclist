@@ -37,13 +37,19 @@ examples/sl.defs.  To check their satisfiability, run
 The worst-case complexity example is in tests/cc/succ-rec*.defs.  To run this test
 iterate the checker over these files, i.e.,
   
-  for F in tests/cc/succ-rec{?,??}.defs ; do ./slsat_check.native -D $F; done
+  for F in tests/cc/succ-circuit[1-7].defs ; do 
+    ./slsat_check.native -s -D $F -t 2400; 
+  done
+
+There are more than 7 tests in tests/cc but the seventh one times out.
 
 2. The benchmark with automatically abduced predicates (Sec. 5.B) is in the tar-file 
 examples/cctests.tgz.  To run the benchmark unpack this archive and iterate the
 checker over the files.  For instance the following command will do this.
 
-  for F in <path where the archive was unpacked>/*.defs; do ./slsat_check.native -D $F; done
+  for F in <path where the archive was unpacked>/*.defs; do 
+    ./slsat_check.native -s -D $F; 
+  done
 
 Bear in mind that there are almost 50k files in the test suite so unpacking and
 running the benchmark will take a long time.
