@@ -35,6 +35,22 @@ Running an executable without arguments will print out instructions for use.
 Running "make aplas-tests" will run a test suite for the three provers above 
 which is a superset of the tests used in the paper above.
 
+The grammar for SL sequents is roughly as follows.
+
+	sequent ::= form "|-" form
+	form ::= heap | heap "\/" form
+	heap ::= atomic | atomic "*" heap
+	atomic ::= "emp" | "true" | eq | deq | pointsto | pred
+	eq ::= term "=" term
+	deq ::= term "!=" term
+	pointsto ::= var "->" termlist
+	termlist ::= term | term "," termlist
+	term ::= var | "nil"
+	pred ::= identifier "(" termlist ")"
+
+where var matches any word over letters and numbers possibly postfixed by a 
+quote ', and identifier matches any word over letters and numbers.
+
 
 COMPILING:
 See README.compiling.
