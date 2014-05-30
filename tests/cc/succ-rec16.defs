@@ -1,9 +1,10 @@
-zero {
-  x=nil => zero(x)
+P {
+  one(x1) * one(x2) * one(x3) * one(x4) * one(x5) * one(x6) * one(x7) * one(x8) * one(x9) * one(x10) * one(x11) * one(x12) * one(x13) * one(x14) * one(x15) * one(x16) * Q(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16) => P(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16)
 } ;
 
-one {
-  x!=nil => one(x)
+Q {
+  zero(y1) * zero(y2) * zero(y3) * zero(y4) * zero(y5) * zero(y6) * zero(y7) * zero(y8) * zero(y9) * zero(y10) * zero(y11) * zero(y12) * zero(y13) * zero(y14) * zero(y15) * zero(y16) => Q(y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14,y15,y16) |
+  succ16rec(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14,y15,y16) * Q(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16) => Q(y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14,y15,y16)
 } ;
 
 succ16rec {
@@ -85,11 +86,10 @@ succ1rec {
   zero(x1) * one(y1) => succ1rec(x1,y1)
 } ;
 
-P {
-  one(x1) * one(x2) * one(x3) * one(x4) * one(x5) * one(x6) * one(x7) * one(x8) * one(x9) * one(x10) * one(x11) * one(x12) * one(x13) * one(x14) * one(x15) * one(x16) * Q(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16) => P(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16)
+zero {
+  x=nil => zero(x)
 } ;
 
-Q {
-  zero(y1) * zero(y2) * zero(y3) * zero(y4) * zero(y5) * zero(y6) * zero(y7) * zero(y8) * zero(y9) * zero(y10) * zero(y11) * zero(y12) * zero(y13) * zero(y14) * zero(y15) * zero(y16) => Q(y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14,y15,y16) |
-  succ16rec(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16,y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14,y15,y16) * Q(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16) => Q(y1,y2,y3,y4,y5,y6,y7,y8,y9,y10,y11,y12,y13,y14,y15,y16)
+one {
+  x!=nil => one(x)
 }

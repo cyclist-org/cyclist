@@ -1,0 +1,162 @@
+ls { 
+nil=a => ls(a) | 
+nil!=a * I001_1(a) => ls(a)
+} ;
+
+I172718 { 
+I32454_0(a,b,c,d,e,f,g,j) => I172718(a,b,c,d,e,f,g,h,i,j)
+} ; 
+
+I172662 { 
+nil!=i * i->a' * I172718_1(a,b,c,d,e,f,g,h,i,a') => I172662(a,b,c,d,e,f,g,h,i)
+} ; 
+
+I172663 { 
+I32519_0(a,b,c,d,e,f,g,i) => I172663(a,b,c,d,e,f,g,h,i)
+} ; 
+
+I172629 { 
+nil=i * I172663_1(a,b,c,d,e,f,g,h,i) => I172629(a,b,c,d,e,f,g,h,i) | 
+nil!=i * I172662_1(a,b,c,d,e,f,g,h,i) => I172629(a,b,c,d,e,f,g,h,i)
+} ; 
+
+I32518 { 
+nil!=h * h->a' * I172629_1(a,b,c,d,e,f,g,h,a') => I32518(a,b,c,d,e,f,g,h)
+} ; 
+
+I57446 { 
+I32519_0(i,b,c,d,e,f,g,h) => I57446(a,b,c,d,e,f,g,h,i)
+} ; 
+
+I32552 { 
+nil!=a * a->a' * I57446_1(a,b,c,d,e,f,g,h,a') => I32552(a,b,c,d,e,f,g,h)
+} ; 
+
+I32519 { 
+a=h => I32519(a,b,c,d,e,f,g,h) | 
+a!=h * I32552_1(a,b,c,d,e,f,g,h) => I32519(a,b,c,d,e,f,g,h)
+} ; 
+
+I32454 { 
+nil=h * I32519_1(a,b,c,d,e,f,g,h) => I32454(a,b,c,d,e,f,g,h) | 
+nil!=h * I32518_1(a,b,c,d,e,f,g,h) => I32454(a,b,c,d,e,f,g,h)
+} ; 
+
+I32327 { 
+nil!=g * g->a' * I32454_1(a,b,c,d,e,f,g,a') => I32327(a,b,c,d,e,f,g)
+} ; 
+
+I32409 { 
+I32328_0(h,b,c,d,e,f,g) => I32409(a,b,c,d,e,f,g,h)
+} ; 
+
+I32397 { 
+nil!=a * a->a' * I32409_1(a,b,c,d,e,f,g,a') => I32397(a,b,c,d,e,f,g)
+} ; 
+
+I32328 { 
+a=g => I32328(a,b,c,d,e,f,g) | 
+a!=g * I32397_1(a,b,c,d,e,f,g) => I32328(a,b,c,d,e,f,g)
+} ; 
+
+I32303 { 
+nil=g * I32328_1(a,b,c,d,e,f,g) => I32303(a,b,c,d,e,f,g) | 
+nil!=g * I32327_1(a,b,c,d,e,f,g) => I32303(a,b,c,d,e,f,g)
+} ; 
+
+I5468 { 
+nil!=f * f->a' * I32303_1(a,b,c,d,e,f,a') => I5468(a,b,c,d,e,f)
+} ; 
+
+I10900 { 
+I5469_0(a,g,c,d,e,f) => I10900(a,b,c,d,e,f,g)
+} ; 
+
+I5512 { 
+nil!=b * b->a' * I10900_1(a,b,c,d,e,f,a') => I5512(a,b,c,d,e,f)
+} ; 
+
+I5469 { 
+nil=b => I5469(a,b,c,d,e,f) | 
+nil!=b * I5512_1(a,b,c,d,e,f) => I5469(a,b,c,d,e,f)
+} ; 
+
+I5448 { 
+nil=f * I5469_1(a,b,c,d,e,f) => I5448(a,b,c,d,e,f) | 
+nil!=f * I5468_1(a,b,c,d,e,f) => I5448(a,b,c,d,e,f)
+} ; 
+
+I122 { 
+nil!=e * e->a' * I5448_1(a,b,c,d,e,a') => I122(a,b,c,d,e)
+} ; 
+
+I2134 { 
+I123_0(a,f,c,d,e) => I2134(a,b,c,d,e,f)
+} ; 
+
+I943 { 
+nil!=b * b->a' * I2134_1(a,b,c,d,e,a') => I943(a,b,c,d,e)
+} ; 
+
+I123 { 
+b=e => I123(a,b,c,d,e) | 
+b!=e * I943_1(a,b,c,d,e) => I123(a,b,c,d,e)
+} ; 
+
+I106 { 
+nil=e * I123_1(a,b,c,d,e) => I106(a,b,c,d,e) | 
+nil!=e * I122_1(a,b,c,d,e) => I106(a,b,c,d,e)
+} ; 
+
+I046 { 
+nil!=d * d->a' * I106_1(a,b,c,d,a') => I046(a,b,c,d)
+} ; 
+
+I060 { 
+I047_0(e,b,c,d) => I060(a,b,c,d,e)
+} ; 
+
+I056 { 
+nil!=a * a->a' * I060_1(a,b,c,d,a') => I056(a,b,c,d)
+} ; 
+
+I047 { 
+a=d => I047(a,b,c,d) | 
+a!=d * I056_1(a,b,c,d) => I047(a,b,c,d)
+} ; 
+
+I034 { 
+nil=d * I047_1(a,b,c,d) => I034(a,b,c,d) | 
+nil!=d * I046_1(a,b,c,d) => I034(a,b,c,d)
+} ; 
+
+I021 { 
+nil!=c * c->a' * I034_1(a,b,c,a') => I021(a,b,c)
+} ; 
+
+I022 { 
+I008_0(b,c) => I022(a,b,c)
+} ; 
+
+I013 { 
+nil=c * I022_1(a,b,c) => I013(a,b,c) | 
+nil!=c * I021_1(a,b,c) => I013(a,b,c)
+} ; 
+
+I007 { 
+nil!=b * b->a' * I013_1(a,b,a') => I007(a,b)
+} ; 
+
+I008 { 
+emp => I008(a,b)
+} ; 
+
+I003 { 
+nil=b * I008_1(a,b) => I003(a,b) | 
+nil!=b * I007_1(a,b) => I003(a,b)
+} ; 
+
+I001 { 
+nil!=a * a->a' * I003_1(a,a') => I001(a)
+} 
+

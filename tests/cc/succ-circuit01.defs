@@ -1,0 +1,38 @@
+P {
+  one(x1) * Q(x1) => P(x1)
+} ;
+
+Q {
+  zero(y1) => Q(y1) |
+  succ1circuit(x1,y1) * Q(x1) => Q(y1)
+} ;
+
+succ1circuit {
+  not(x1,y1) => succ1circuit(x1,y1)
+} ;
+
+not {
+  zero(x) * one(y) => not(x,y) |
+  one(x) * zero(y) => not(x,y)
+} ;
+
+xor {
+  zero(x) * zero(y) * zero(z) => xor(x,y,z) |
+  zero(x) * one(y) * one(z) => xor(x,y,z) |
+  one(x) * zero(y) * one(z) => xor(x,y,z) |
+  one(x) * one(y) * zero(z) => xor(x,y,z)
+} ;
+
+and {
+  zero(x) * zero(z) => and(x,y,z) |
+  zero(y) * zero(z) => and(x,y,z) |
+  one(x) * one(y) * one(z) => and(x,y,z)
+} ;
+
+one {
+  x!=nil => one(x)
+} ;
+
+zero {
+  x=nil => zero(x)
+}
