@@ -185,8 +185,7 @@ sig
   val is_defined : ind_pred -> t -> bool
   val get_def : string -> t -> (Case.t list * ind_identifier)
 
-  val consistent : t -> bool
-  val consistent_plus_output : t -> (bool * string)
+  val consistent : t -> bool -> bool -> bool
 end
 
 val has_ident : ind_identifier ->  ind_pred -> bool

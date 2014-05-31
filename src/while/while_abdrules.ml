@@ -138,7 +138,7 @@ let simplify_defs defs =
     (empify defs)
 
 
-let is_possibly_consistent defs = Defs.consistent (empify defs)
+let is_possibly_consistent defs = Defs.consistent (empify defs) false false
 
 let ex_falso_axiom = Abdrule.lift While_rules.ex_falso_axiom
 let symex_empty_axiom = Abdrule.lift While_rules.symex_empty_axiom

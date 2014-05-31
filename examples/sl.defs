@@ -86,14 +86,4 @@ dls {
 lsls {
   x=nil => lsls(x) |
   x->y',x' * lsls(y') * dls(x',nil) => lsls(x)
-} ; 
-
-skiptwo {
-  y=z => skiptwo(y,z) |
-  y!=z * z->a,w * skiptwo(y,w) => skiptwo(y,z)
-} ;
-
-skipone {
-  x = nil => skipone(x) |
-  x->y,z * skipone(y) * skiptwo(y,z) => skiptone(x)
-}
+} 

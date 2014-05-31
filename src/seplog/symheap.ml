@@ -806,7 +806,6 @@ module Defs =
           let g' = Heap.subst theta g in
           (v',g')
 
-        (* assumes phys neq distinguishes occurrences *)
         let unfold (v,h) ((_,(_,params)) as ind) (case, (v',g')) =
           (* simultaneously freshen case and (v',g') *)
           let avoidvars = Term.Set.union v (Heap.vars h) in
@@ -851,16 +850,6 @@ module Defs =
       end
 
     module BasePairSet = MakeTreeSet(BasePair)
-    (* module BasePairSet =                                        *)
-    (*   struct                                                    *)
-    (*     include Hashtbl.Make(BasePair)                          *)
-
-    (*     let to_list h = fold (fun x _ l -> x::l) h []           *)
-    (*     let to_string h =                                       *)
-    (*       "{" ^                                                 *)
-    (*       (Blist.to_string "," BasePair.to_string (to_list h)) ^ *)
-    (*       "}"                                                   *)
-    (*   end                                                       *)
 
     module CaseMap =
 			struct
@@ -885,16 +874,24 @@ module Defs =
       let (h,_) = Case.dest case in
       let candidates =
 				Blist.map (fun i -> get_bps cmap i) (Inds.to_list h.inds) in
-      (* let () = prerr_endline "+" in *)
       let l = Blist.choose candidates in
-      (* let () = prerr_endline "-" in *)
       let poss_bps =
 				Blist.rev_map (fun cbps -> BasePair.gen case cbps) l in
-      (* let () = prerr_endline "*" in *)
       let bps = Option.list_get poss_bps in
       BasePairSet.of_list bps
 
-    let gen_all_pairs defs =
+    let first_pred_not_empty defs =
+      let first_pred = snd (Blist.hd defs) in
+      fun cm ->
+      CaseMap.exists 
+        (fun k v ->
+          Strng.equal (fst (snd (Case.dest k))) first_pred &&
+          not (BasePairSet.is_empty v) 
+        ) 
+        cm
+    
+    let gen_all_pairs defs only_first =
+      let first_not_empty = first_pred_not_empty defs in
       let cmap =
         Blist.fold_left
           (fun m (cl,_) ->
@@ -909,34 +906,34 @@ module Defs =
           cmap in
 				let () = debug (fun () -> "\n" ^ (CaseMap.to_string r) ^ "\n") in
 				r in
-      CaseMap.fixpoint BasePairSet.equal onestep cmap
-
-    let consistent defs =
-      Stats.CC.call () ;
-      (* let () = print_endline "CHECK BEGINS" in *)
-      let res = gen_all_pairs defs in
-      (* let () = CaseMap.iter                                                            *)
-      (*   (fun c s ->                                                                    *)
-      (*     (* let b = not (BasePairSet.is_empty s) in *)                                *)
-      (*     (* print_endline ((if b then "O" else "X") ^ " " ^ (Case.to_string c)))   *) *)
-      (*     print_endline                                                                *)
-      (*       ((Case.to_string c) ^ " " ^                                                *)
-      (*       (BasePairSet.to_string s)))                                                *)
-        (* res in *)
-      let retval = CaseMap.for_all (fun _ s -> not (BasePairSet.is_empty s)) res in
-      if retval then Stats.CC.accept () else Stats.CC.reject () ;
-      retval
+      let rec fixp cm =
+        let cm' = onestep cm in
+        if 
+          only_first && first_not_empty cm' ||  
+          CaseMap.equal BasePairSet.equal cm cm' 
+        then
+          cm'
+        else
+          fixp cm' in
+      fixp cmap
 
 		(* NB correctness relies on rules being explicit about x->_ implying x!=nil !!! *)
-    let consistent_plus_output defs =
+    let consistent defs only_first output =
       Stats.CC.call () ;
-      let res = gen_all_pairs defs in
-      let element_conv = (fun (c,s) ->
-           ((Case.to_string c) ^ " has base " ^ (BasePairSet.to_string s))) in
-      let case_to_base_string = Blist.to_string "\n" element_conv (CaseMap.to_list res) in
-      let retval = CaseMap.for_all (fun _ s -> not (BasePairSet.is_empty s)) res in
+      let res = gen_all_pairs defs only_first in
+      if output then 
+        begin
+          let element_conv (c,s) =
+            ((Case.to_string c) ^ " has base " ^ (BasePairSet.to_string s)) in
+          print_endline 
+            (Blist.to_string "\n" element_conv (CaseMap.to_list res))
+        end ;
+      let retval = 
+        only_first && first_pred_not_empty defs res ||
+        not only_first && 
+          CaseMap.for_all (fun _ s -> not (BasePairSet.is_empty s)) res in
       if retval then Stats.CC.accept () else Stats.CC.reject () ;
-      (retval, case_to_base_string)
+      retval
 
 
   end

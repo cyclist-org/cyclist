@@ -56,7 +56,7 @@ let pnot_def =
   pzero ^ "(x) * " ^ pone ^ "(y) => " ^ pnot ^ "(x,y) |\n  " ^
 	pone ^ "(x) * " ^ pzero ^ "(y) => " ^ pnot ^ "(x,y)\n}"
 
-let circuit_def = [pzero_def; pone_def; pand_def; pxor_def; pnot_def]
+let circuit_def = Blist.rev [pzero_def; pone_def; pand_def; pxor_def; pnot_def]
 
 (* Helper: [lower..upper] in Haskell. *)
 let rec from_to lower upper =
@@ -113,10 +113,10 @@ let pq_def n psucc_name =
        "\n}"
 
 let succ_circuit_def n =
-  [psucc_circuit_def n; pp_def n; pq_def n (psucc_circuit n) ] 
+  [pp_def n; pq_def n (psucc_circuit n) ; psucc_circuit_def n ] 
 
 let overall_circuit_def n =
-  String.concat def_separator (circuit_def @ succ_circuit_def n)
+  String.concat def_separator (succ_circuit_def n @ circuit_def)
 
 
 
@@ -143,7 +143,7 @@ let rec psucc_rec_def (n : int) : string list =
     (psucc_rec_n ^ " {\n  " ^ (first_clause n) ^ " |\n  " ^ (second_clause n) ^ "\n}") :: (psucc_rec_def (n-1))
 
 let overall_rec_def n =
-  String.concat def_separator (pzero_def :: pone_def :: psucc_rec_def n @ [pp_def n; pq_def n (psucc_rec n)])
+  String.concat def_separator ( [pp_def n; pq_def n (psucc_rec n)] @ psucc_rec_def n @ [ pzero_def ; pone_def])
 
 
 let pbitvector_def (n : int) : string =
@@ -158,5 +158,5 @@ let overall_bitvector_def n =
 
 let param = Sys.argv.(1) in
 let n = Scanf.sscanf param "%d" (fun x -> x) in
-let output = (*overall_circuit_def*) (* overall_rec_def n *) overall_bitvector_def n in
+let output = (*overall_circuit_def n*) overall_rec_def n (* overall_bitvector_def n *) in
 print_endline output
