@@ -35,15 +35,16 @@ let symb_colon = make_symb ":" ":" Latex.empty
 let symb_comma = make_symb "," ","  (Latex.text ", ")
 let symb_turnstile = make_symb "|-" " \\vdash " Latex.vdash
 let symb_turnstile_underscore = make_symb "|-_" " \\vdash" Latex.empty (* FIXME *)
-let symb_dturnstile_underscore = make_symb "||-_" " \\Vdash" Latex.empty (* FIXME *)
+(* let symb_dturnstile_underscore = make_symb "||-_" " \\Vdash" Latex.empty (* FIXME *) *)
 let symb_ind_implies = make_symb "=>" " \\Rightarrow " Latex.empty
 let symb_ind_sep = make_symb "|" " \\mid "  Latex.empty
 let symb_assign = make_symb ":=" " := "  (ltx_math ":=")
 let symb_bang = make_symb "!" " \\downarrow "  Latex.empty
-let symb_underscore = make_symb "_" " " Latex.empty (* FIXME *)
-let symb_box = make_symb "[]" " \\Box" Latex.empty (* FIXME *)
-let symb_diamond = make_symb "<>" " \\Diamond " Latex.empty
-let symb_circle = make_symb "()" " \\bigcirc " Latex.empty
+let symb_caret = make_symb "^" " ^ "  Latex.empty
+(* let symb_underscore = make_symb "_" " " Latex.empty (* FIXME *) *)
+(* let symb_box = make_symb "[]" " \\Box" Latex.empty (* FIXME *) *)
+(* let symb_diamond = make_symb "<>" " \\Diamond " Latex.empty    *)
+(* let symb_circle = make_symb "()" " \\bigcirc " Latex.empty     *)
 let symb_fld_sel = make_symb "." "." (Latex.text ".")
 
 let keyw_emp = mk_keyw "emp"

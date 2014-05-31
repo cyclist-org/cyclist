@@ -1,8 +1,8 @@
 fields: next;
 precondition: 
-ls_1(x,w') * ls_2(y,nil) * w'->i' * ls_3(i',w') \/
-ls_2(j',nil) * w'->j' * ls_3(x,w') * ls_1(y,w') \/
-ls_2(x,nil) * ls_1(y,w') * w'->k' * ls_3(k',w');
+ls^1(x,w') * ls^2(y,nil) * w'->i' * ls^3(i',w') \/
+ls^2(j',nil) * w'->j' * ls^3(x,w') * ls^1(y,w') \/
+ls^2(x,nil) * ls^1(y,w') * w'->k' * ls^3(k',w');
 while x!=nil do
   z := x;
   x := x.next;

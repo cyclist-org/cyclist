@@ -43,13 +43,14 @@ let symbols =
     (symb_colon.str, COLON); 
     (symb_comma.str, COMMA); 
     (symb_turnstile.str, TURNSTILE); 
-    (symb_turnstile_underscore.str, TURNSTILE_); 
+    (symb_turnstile_underscore.str, TURNSTILE_);
     (* (symb_dturnstile_underscore.str, DTURNSTILE_);  *)
     (symb_ind_implies.str, IND_IMPLIES); 
     (symb_ind_sep.str, IND_SEP); 
     (symb_assign.str, ASSIGN); 
     (symb_bang.str, BANG); 
-    (symb_underscore.str, UNDERSCORE); 
+    (symb_caret.str, CARET); 
+    (* (symb_underscore.str, UNDERSCORE);  *)
     (* (symb_box.str, BOX);         *)
     (* (symb_diamond.str, DIAMOND); *)
     (* (symb_circle.str, CIRCLE);   *)
@@ -62,11 +63,11 @@ let parse_string lexbuf =
 
 }
 
-let ident = ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9']*'''?
-let onechar_symb = [ '*' '-' '+' '=' '!' '(' ')' '{' '}' ';' ':' ',' '|' '_' '[' ']' ]
+let ident = ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']*'''?
+let onechar_symb = [ '*' '-' '+' '=' '!' '(' ')' '{' '}' ';' ':' ',' '|' '^' '[' ']' ]
 let twochar_symb = "\\/" | "/\\" | "|-" | "=>" | ":=" | "->" | "!=" 
-let threechar_symb = "|-_" 
-let fourchar_symb = "||-_" 
+let threechar_symb = "|-_"
+(* let fourchar_symb = "||-_"  *)
  
 rule token = parse
   | [' ' '\t' ]+ { token lexbuf }
@@ -83,7 +84,7 @@ rule token = parse
   | onechar_symb { parse_string lexbuf }
   | twochar_symb { parse_string lexbuf }
   | threechar_symb { parse_string lexbuf }
-  | fourchar_symb { parse_string lexbuf }
+  (* | fourchar_symb { parse_string lexbuf }  *)
   | ['0'-'9']+ as n { NUM (int_of_string n) }
   | eof { EOF }
   | _ { lex_error lexbuf }

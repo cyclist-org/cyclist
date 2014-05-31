@@ -9,7 +9,7 @@ let pred_cnt = ref 0
   
 %}
 
-%token EMP NIL COMMA UNDERSCORE
+%token EMP NIL COMMA CARET
 %token <string> IDENT EIDENT
 %token <int> NUM
 %token LP RP LB RB
@@ -53,7 +53,7 @@ atom:
   | t1 = term; POINTS_TO; ts = terms { S.Heap.mk_pto t1 ts }
   | id = IDENT; ts = paren_terms 
     { S.Heap.mk_ind (incr pred_cnt; !pred_cnt) id ts }
-  | id = IDENT; UNDERSCORE; n = NUM; ts = paren_terms 
+  | id = IDENT; CARET; n = NUM; ts = paren_terms 
     { pred_cnt := max !pred_cnt n ; S.Heap.mk_ind n id ts }
 
 heap: ps = separated_nonempty_list(STAR, atom) 

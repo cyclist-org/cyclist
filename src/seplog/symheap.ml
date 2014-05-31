@@ -353,7 +353,7 @@ module Inds =
       aux_subsumed_wrt_tags true tags h h'
 
     let elem_to_string (t,(ident,args)) =
-      ident ^ symb_underscore.str ^
+      ident ^ symb_caret.str ^
       (string_of_int t) ^ symb_lp.str ^ (Term.list_to_string args) ^ symb_rp.str
     let elem_to_melt (t,(ident,args)) =
       Latex.concat

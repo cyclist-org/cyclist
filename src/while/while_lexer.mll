@@ -50,8 +50,7 @@ let symbols =
     (symb_ind_implies.str, IND_IMPLIES);
     (symb_ind_sep.str, IND_SEP);
     (symb_assign.str, ASSIGN);
-    (* (symb_bang.str, BANG);                *)
-    (symb_underscore.str, UNDERSCORE);
+    (symb_caret.str, CARET);
     (symb_fld_sel.str, FLD_SEL);
   ]
 
@@ -63,10 +62,9 @@ let parse_string lexbuf =
 }
 
 let ident = ['a'-'z' 'A'-'Z']+'''?
-let onechar_symb = [ '*' '-' '+' '=' '!' '(' ')' '{' '}' ';' ':' ',' '|' '_' '[' ']' '.' ]
+let onechar_symb = [ '*' '-' '+' '=' '!' '(' ')' '{' '}' ';' ':' ',' '|' '^' '[' ']' '.' ]
 let twochar_symb = "\\/" | "|-" | "=>" | ":=" | "->" | "!=" 
 let threechar_symb = "|-_" 
-let fourchar_symb = "||-_" 
  
 rule token = parse
   | [' ' '\t' ]+ { token lexbuf }
@@ -82,7 +80,6 @@ rule token = parse
   | onechar_symb { parse_string lexbuf }
   | twochar_symb { parse_string lexbuf }
   | threechar_symb { parse_string lexbuf }
-  | fourchar_symb { parse_string lexbuf }
   | ['0'-'9']+ as n { NUM (int_of_string n) }
   | eof { EOF }
   | _ { lex_error lexbuf }
