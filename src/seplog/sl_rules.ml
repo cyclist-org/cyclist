@@ -98,7 +98,7 @@ let pto_intro_rule seq =
     let r' = { r with ptos=Ptos.remove p r.ptos } in
     let r' = { r' with eqs=UF.union r'.eqs (UF.of_list (Blist.combine rys lys)) } in
     [ [ ( ([l'], [r']), Heap.tag_pairs l, TagPairs.empty ) ], "Pto Intro" ]
-  with Not_symheap | Not_found -> []
+  with Not_symheap | Not_found | Invalid_argument _ -> []
 
 (* do the following transformation for the first i,j such that *)
 (* P_i(x1,..,xn) * A |- P_j(x1,...,xn) * B     if     A |- B *)
@@ -177,7 +177,7 @@ let instantiate_pto =
           { r' with eqs=UF.union r'.eqs (UF.of_list ((x,w)::(Blist.combine ys zs))) } in
         [ ( ([l'], [r']), Heap.tag_pairs l, TagPairs.empty ) ], "Inst ->"
       in Blist.map do_instantiation cp
-    with Not_symheap -> [] in
+    with Not_symheap | Invalid_argument _ -> [] in
   wrap rl 
 
 let mk_ruf defs =
