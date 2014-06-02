@@ -118,11 +118,21 @@ let cartesian_hemi_square xs =
 
 let bind f xs = flatten (map f xs) 
 
-let rec choose = function
-  | [] -> [[]]
-  | xs::ys -> 
-    let choices = choose ys in
-    bind (fun x -> map (cons x) choices) xs 
+(* let rec choose = function                    *)
+(*   | [] -> [[]]                               *)
+(*   | xs::ys ->                                *)
+(*     let choices = choose ys in               *)
+(*     bind (fun x -> map (cons x) choices) xs  *)
+
+(* tail rec for satisfiability algo *)
+let choose lol =
+  let _,lol =
+    foldl
+      (fun (r,a) l -> not r, (if r then rev l else l)::a)
+      (true,[]) lol in
+  foldl
+    (fun ll -> foldl (fun tl e -> foldl (fun t l -> (e::l)::t) tl ll) [])
+    [[]] lol
 
 let rec pairs = function
   | [] | [_] -> []
@@ -158,12 +168,4 @@ let rec pairs = function
 (*       | (b::bs, c::cs, d::ds) -> aux ((b,c,d)::acc) bs cs ds   *)
 (*       | _ -> invalid_arg "zip3" in                             *)
 (*   rev (aux [] xs' ys' zs')                                     *)
-(* let choose lol =                                                          *)
-(*   let _,lol =                                                             *)
-(*     foldl                                                                 *)
-(*       (fun (r,a) l -> not r, (if r then rev l else l)::a)                 *)
-(*       (true,[]) lol in                                                    *)
-(*   foldl                                                                   *)
-(*     (fun ll -> foldl (fun tl e -> foldl (fun t l -> (e::l)::t) tl ll) []) *)
-(*     [[]] lol                                                              *)
 (* let bind f xs = rev (fold_left (fun ys x -> rev_append (f x) ys) [] xs) *)

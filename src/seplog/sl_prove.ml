@@ -41,6 +41,7 @@ let () = F.speclist := !F.speclist @ [
   ]
 
 let () =
+  gc_setup () ;
   Arg.parse !F.speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) !F.usage ;
   if !cl_sequent="" then F.die "-S must be specified." ;
   let seq = sequent_of_string !cl_sequent in

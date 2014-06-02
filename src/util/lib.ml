@@ -37,6 +37,16 @@ let string_of_file fn =
   with End_of_file ->
     let () = close_in cn in !a
 
+let gc_setup () =
+  let cntrl = Gc.get () in 
+  Gc.set 
+    { 
+      cntrl with 
+        Gc.minor_heap_size = 10 * cntrl.Gc.minor_heap_size ; 
+        Gc.major_heap_increment = 10 * cntrl.Gc.major_heap_increment 
+    } 
+  
+
 (*module Funq =                                                          *)
 (*  struct                                                               *)
 (*    type 'a t = 'a list * 'a list                                      *)
