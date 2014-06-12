@@ -37,6 +37,8 @@ let string_of_file fn =
   with End_of_file ->
     let () = close_in cn in !a
 
+let string_of_char c = String.make 1 c
+
 let gc_setup () =
   let cntrl = Gc.get () in 
   Gc.set 

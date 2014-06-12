@@ -48,13 +48,32 @@ let mk_exist_var name = mk_var name true
 let mk_univ_var name = mk_var name false
               
 let fresh_varname exist =
-  let name = "a"^ (if exist then "'" else "") in
-  while name_present name do
-    let c = String.get name 0 in
-    require (fun () -> c < 'z') ;
-    String.set name 0 (char_of_int (1+(int_of_char c))) 
+  let suffix = if exist then "'" else "" in
+  let idx = ref 0 in
+  let letter = ref 'a' in
+  let gen_name () = 
+    (string_of_char !letter) ^ 
+    (if !idx = 0 then "" else Printf.sprintf "%i" !idx) ^ 
+    suffix in
+  let name = ref (gen_name ()) in
+  while name_present !name && !letter < 'z' do
+    letter := char_of_int (1 + (int_of_char !letter)) ;
+    name := gen_name () 
   done ;
-  name
+  if not (name_present !name) then !name else
+  begin
+    letter := if exist then 'v' else 'u';
+    idx := 1;
+    name := gen_name () ;
+    while name_present !name do
+      incr idx ; 
+      name := gen_name () 
+    done ;
+    assert (not (name_present !name)) ; 
+    !name
+  end
+   
+  
         
 let fresh_var s exist =
   let d = get_diff exist in
@@ -80,3 +99,4 @@ let rec fresh_vars s i exist = match i with
 
 let fresh_evars s i = fresh_vars s i true
 let fresh_uvars s i = fresh_vars s i false
+
