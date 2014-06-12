@@ -4,48 +4,47 @@ let ltx_math s = ltx_mk_math (Latex.text s)
 let ltx_text s = ltx_mk_text (Latex.text s)
 let ltx_newl = Latex.text "\n"
 
-type symbol = { str: string; ltx: string; sep:string; melt:Latex.t }
+type symbol = { str: string; sep:string; melt:Latex.t }
 
 (* str fields *cannot* have whitespace *)
 (* surrounding them as this trips the lexer *)
 
-let make_symb s l m = { str=s; ltx=l; sep=" " ^ s ^ " "; melt=m }
+let make_symb s m = { str=s; sep=" " ^ s ^ " "; melt=m }
 let mk_keyw s =
   {
     str=s;
-    ltx=" \\mathtt{" ^ s ^ "} ";
     sep=" " ^ s ^ " ";
     melt=ltx_mk_math (Latex.texttt (Latex.text s))
   }
 
-let symb_false = make_symb "F" " \\bot " Latex.bot
-let symb_true = make_symb "T" " \\top " Latex.top
-let symb_or = make_symb "\\/" " \\lor " Latex.lor_
-let symb_and = make_symb "/\\" " \\land " Latex.land_
-let symb_star = make_symb "*" " * "  Latex.ast
-let symb_pointsto = make_symb "->" " \\mapsto " Latex.mapsto
-let symb_eq = make_symb "=" " = " (ltx_math " = ")
-let symb_deq = make_symb "!=" " \\neq " Latex.neq
-let symb_lp = make_symb "(" "("  (Latex.text "(")
-let symb_rp = make_symb ")" ")"  (Latex.text ")")
-let symb_lb = make_symb "{" "{"   Latex.empty
-let symb_rb = make_symb "}" "}"  Latex.empty
-let symb_semicolon = make_symb ";" ";"  (Latex.text ";")
-let symb_colon = make_symb ":" ":" Latex.empty
-let symb_comma = make_symb "," ","  (Latex.text ", ")
-let symb_turnstile = make_symb "|-" " \\vdash " Latex.vdash
-let symb_turnstile_underscore = make_symb "|-_" " \\vdash" Latex.empty (* FIXME *)
-(* let symb_dturnstile_underscore = make_symb "||-_" " \\Vdash" Latex.empty (* FIXME *) *)
-let symb_ind_implies = make_symb "=>" " \\Rightarrow " Latex.empty
-let symb_ind_sep = make_symb "|" " \\mid "  Latex.empty
-let symb_assign = make_symb ":=" " := "  (ltx_math ":=")
-let symb_bang = make_symb "!" " \\downarrow "  Latex.empty
-let symb_caret = make_symb "^" " ^ "  Latex.empty
+let symb_false = make_symb "F" Latex.bot
+let symb_true = make_symb "T" Latex.top
+let symb_or = make_symb "\\/" Latex.lor_
+let symb_and = make_symb "/\\" Latex.land_
+let symb_star = make_symb "*" Latex.ast
+let symb_pointsto = make_symb "->" Latex.mapsto
+let symb_eq = make_symb "=" (ltx_math " = ")
+let symb_deq = make_symb "!=" Latex.neq
+let symb_lp = make_symb "(" (Latex.text "(")
+let symb_rp = make_symb ")" (Latex.text ")")
+let symb_lb = make_symb "{" Latex.empty
+let symb_rb = make_symb "}" Latex.empty
+let symb_semicolon = make_symb ";" (Latex.text ";")
+let symb_colon = make_symb ":" Latex.empty
+let symb_comma = make_symb "," (Latex.text ", ")
+let symb_turnstile = make_symb "|-" Latex.vdash
+let symb_turnstile_underscore = make_symb "|-_" Latex.empty (* FIXME *)
+(* let symb_dturnstile_underscore = make_symb "||-_" Latex.empty (* FIXME *) *)
+let symb_ind_implies = make_symb "=>" Latex.empty
+let symb_ind_sep = make_symb "|" Latex.empty
+let symb_assign = make_symb ":=" (ltx_math ":=")
+let symb_bang = make_symb "!" Latex.empty
+let symb_caret = make_symb "^" Latex.empty
 (* let symb_underscore = make_symb "_" " " Latex.empty (* FIXME *) *)
 (* let symb_box = make_symb "[]" " \\Box" Latex.empty (* FIXME *) *)
 (* let symb_diamond = make_symb "<>" " \\Diamond " Latex.empty    *)
 (* let symb_circle = make_symb "()" " \\bigcirc " Latex.empty     *)
-let symb_fld_sel = make_symb "." "." (Latex.text ".")
+let symb_fld_sel = make_symb "." (Latex.text ".")
 
 let keyw_emp = mk_keyw "emp"
 let keyw_free = mk_keyw "free"
