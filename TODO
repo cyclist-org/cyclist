@@ -1,1 +1,6 @@
-* modularise and clean up parsers
+* modularise and clean up parsers; maybe drop menhir and use PCL
+* modularise/abstract variables, formulas, definitions for SL
+* drop melt as a dependency and re-do the required stuff locally
+* consider hash consing for terms formulas etc
+* consider patricia trees and maps for most uses
+* decide on symheap representation: special data structure or general formula type
