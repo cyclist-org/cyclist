@@ -3,9 +3,9 @@ To compile things from scratch you will need the following:
 
 * OCaml (tested with 4.01) [Debian packages: ocaml-nox, ocaml-native-compilers]
 * g++ and headers (tested with 4.8) [Debian packages: g++, libstdc++-4.8-dev]
-* Menhir (tested with 20130116) [Debian package: menhir] 
 * Melt (tested with 1.4.0) [Debian package: ocaml-melt]
-* Spot (tested with 1.1.4) [sources at http://spot.lip6.fr/wiki/ ]  
+* Spot (tested with 1.1.4) [sources at http://spot.lip6.fr/wiki/ ]
+* PCRE bindings for OCaml (tested with 7.0.4) [Debian package: libpcre-ocaml-dev]  
 
 In non-standard installations you may need to change the paths in the top
 of myocamlbuild.ml.

@@ -1,6 +1,4 @@
 Sl_rules
-Sl_parser
-Sl_lexer
 Symheap
 Stats
 Blist
@@ -18,4 +16,6 @@ Proofnode
 Soundcheck
 Seqtactics
 Prover
-
+MParser
+CharStream
+Fun

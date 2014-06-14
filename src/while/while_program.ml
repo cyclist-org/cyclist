@@ -2,6 +2,7 @@ open Util
 open Lib
 open Symheap
 open Symbols
+open MParser
 
 module Defs = Defs
 
@@ -34,6 +35,8 @@ module Field =
       _pam := Int.Map.empty
 
     let to_melt f = Latex.texttt (Latex.text f)
+    
+    let parse st = parse_ident st
   end
 
 exception WrongCmd
@@ -96,6 +99,11 @@ module Cond =
       let f'' = { f with deqs=Deqs.add pair f.deqs } in
       let (f',f'') = if is_deq c then (f'',f') else (f',f'') in
       (f',f'')
+    
+    let parse st =
+      ( attempt (parse_symb symb_star >>$ mk_non_det ()) <|>
+        attempt (UF.parse |>> Fun.uncurry mk_eq) <|>
+                (Deqs.parse |>> Fun.uncurry mk_deq) <?> "Cond") st
   end
 
 
@@ -157,6 +165,7 @@ module Cmd =
       | While _ -> true
       | _ -> false
 
+    let mklc c = { label=None; cmd=c }
     let mk_basic c = [ { label=None; cmd=c } ]
     let mk_assign x e = mk_basic (Assign(x,e))
     let mk_load x e s =  mk_basic (Load(x,e,s))
@@ -170,6 +179,75 @@ module Cmd =
     let mk_while cond cmd = mk_basic (While(cond, cmd))
     let mk_seq cmd cmd' = cmd @ cmd'
     let mk_from_list l = Blist.flatten l
+
+    let rec parse_cmd st = 
+  (* | STOP { P.Cmd.mk_stop }                                                                                  *)
+      ( attempt (parse_symb keyw_stop >>$ Stop)
+        <|>
+  (* | SKIP { P.Cmd.mk_skip }                                                                                  *)
+        attempt (parse_symb keyw_skip >>$ Skip)
+        <|>
+  (*   | v1 = var; ASSIGN; v2 = var; FLD_SEL; fld = IDENT                                                      *)
+        attempt (Term.parse >>= (fun v1 ->
+        parse_symb symb_assign >>
+        Term.parse >>= (fun v2 ->
+        parse_symb symb_fld_sel >>
+        parse_ident >>= (fun id ->
+        return (assert (Term.is_var v1 && Term.is_var v2) ; (Load(v1,v2,id)))))))
+        <|>
+  (*   | v = var; FLD_SEL; fld = IDENT; ASSIGN; t = term                                                       *)
+  (*   { P.Cmd.mk_store v fld t }                                                                              *)
+        attempt (Term.parse >>= (fun v ->
+        parse_symb symb_fld_sel >>
+        parse_ident >>= (fun id ->
+        parse_symb symb_assign >>
+        Term.parse >>= (fun t ->
+        return (assert (Term.is_var v) ; (Store(v,id,t)))))))
+        <|>
+  (*   | FREE; ts = paren_terms                                                     *)
+  (*   { assert (List.length ts = 1) ; P.Cmd.mk_free (List.hd ts) }                 *)
+        attempt (parse_symb keyw_free >>
+        Tokens.parens Term.parse >>= (fun v ->
+        return (assert (Term.is_var v) ; (Free v))))
+        <|>
+  (*   | v = var; ASSIGN; NEW; LP; RP { P.Cmd.mk_new v }                            *)
+        attempt (Term.parse >>= (fun v ->
+        parse_symb keyw_new >>
+        parse_symb symb_lp >>
+        parse_symb symb_rp >>
+        return (assert (Term.is_var v) ; (New v))))
+        <|>
+    (* | v = var; ASSIGN; t = term { P.Cmd.mk_assign v t } *)
+        attempt (Term.parse >>= (fun v -> 
+        parse_symb symb_assign >> 
+        Term.parse >>= (fun t -> 
+        return (assert (Term.is_var v) ; (Assign(v,t))))))
+        <|> 
+  (* | IF; cond = condition; THEN; cmd = command; FI { P.Cmd.mk_if cond cmd }                                  *)
+        attempt (parse_symb keyw_if >>
+        Cond.parse >>= (fun cond ->
+        parse_symb keyw_then >>
+        parse >>= (fun cmd ->
+        parse_symb keyw_fi >>$ (If(cond,cmd)))))
+        <|>
+  (* | IF; cond = condition; THEN; cmd1 = command; ELSE; cmd2 = command; FI { P.Cmd.mk_ifelse cond cmd1 cmd2 } *)
+        attempt (parse_symb keyw_if >>
+        Cond.parse >>= (fun cond ->
+        parse_symb keyw_then >>
+        parse >>= (fun cmd1 ->
+        parse_symb keyw_else >>
+        parse >>= (fun cmd2 ->
+        parse_symb keyw_fi >>$ (IfElse(cond,cmd1,cmd2))))))
+        <|>
+  (* | WHILE; cond = condition; DO; cmd = command; OD { P.Cmd.mk_while cond cmd }                              *)
+        (parse_symb keyw_while >>
+        Cond.parse >>= (fun cond ->
+        parse_symb keyw_do >>
+        parse >>= (fun cmd ->
+        parse_symb keyw_od >>$ (While(cond,cmd)))))
+      <?> "Cmd") st
+    and parse st = 
+      (sep_by1 parse_cmd (parse_symb symb_semicolon) |>> Blist.map mklc <?> "CmdList") st
 
     let _dest_stop = function
       | Stop -> ()
@@ -486,3 +564,28 @@ let fresh_evars s i = Term.fresh_evars (Term.Set.union !program_vars s) i
 (* again, treat prog vars as special *)
 let freshen_case_by_seq seq case =
   Case.freshen (Term.Set.union !program_vars (Seq.vars seq)) case
+
+(* fields: FIELDS; COLON; ils = separated_nonempty_list(COMMA, IDENT); SEMICOLON  *)
+(*     { List.iter P.Field.add ils }                                              *)
+let parse_fields st = 
+  ( parse_symb keyw_fields >>
+    parse_symb symb_colon >>
+    sep_by1 Field.parse (parse_symb symb_comma) >>= (fun ils ->
+    parse_symb symb_semicolon >>$ List.iter Field.add ils) <?> "Fields") st
+
+(* precondition: PRECONDITION; COLON; f = formula; SEMICOLON { f } *)
+let parse_precondition st = 
+  ( parse_symb keyw_precondition >>
+    parse_symb symb_colon >>
+    Form.parse >>= (fun f ->
+    parse_symb symb_semicolon >>$ f) <?> "Precondition") st
+
+    (* fields; p = precondition; cmd = command; EOF { (p, cmd) } *)
+let parse st = 
+  ( parse_fields >>
+    parse_precondition >>= (fun p ->
+    Cmd.parse >>= (fun cmd ->
+    eof >>$ (p,cmd))) <?> "program") st
+
+let of_channel c =
+  handle_reply (parse_channel parse c ())

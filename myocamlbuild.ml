@@ -12,6 +12,10 @@ let ocaml_headers_path = "/usr/lib/ocaml/caml"
 (* on Debian/Ubuntu this is in package ocaml-melt *)
 let ocaml_melt_lib_path = "/usr/lib/ocaml/melt"
 
+(* base path for pcre *)
+(* on Debian/Ubuntu this is in package libpcre-ocaml-dev *)
+let ocaml_pcre_lib_path = "/usr/lib/ocaml/pcre"
+
 (* base path for spot library *) 
 let spot_path = "/usr/local"
 
@@ -31,6 +35,7 @@ let _ = dispatch begin function
   | After_rules ->
     (* declare melt as external OCaml library *)
     ocaml_lib ~extern:true ~dir:ocaml_melt_lib_path "latex";
+    ocaml_lib ~extern:true ~dir:ocaml_pcre_lib_path "pcre";
     
     (* how to compile "c" files, really C++ *)
     dep  ["c"; "compile"] headers;

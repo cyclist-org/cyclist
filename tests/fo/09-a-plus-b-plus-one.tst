@@ -1,1 +1,1 @@
-N_1(x) & N_2(y) & ADD_3(x,y,z) |- ADD_1(x,s(y),s(z))
+N(x) & N(y) & ADD(x,y,z) |- ADD(x,s(y),s(z))

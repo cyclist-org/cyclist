@@ -100,3 +100,9 @@ let rec fresh_vars s i exist = match i with
 let fresh_evars s i = fresh_vars s i true
 let fresh_uvars s i = fresh_vars s i false
 
+open MParser
+let rexp = make_regexp "[a-zA-Z][_0-9a-zA-Z]*[']?"
+let parse st = 
+  (parse_ident >>= (fun name ->
+    return (mk_var name (is_exist_name name))) <?> "variable identifier") st
+

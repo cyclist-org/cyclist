@@ -34,6 +34,7 @@ sig
   val to_melt : t -> Latex.t
   val compare : t -> t -> int
   val pp : Format.formatter -> t -> unit
+  val parse : (t, 'a) MParser.parser
 end
 
 (* union-find type for equalitites *)
@@ -50,18 +51,30 @@ sig
   val bindings : t -> (Term.t * Term.t) list
   val of_list : (Term.t * Term.t) list -> t
 	val remove: Term.t -> t -> t
+  val parse : (Term.t * Term.t, 'a) MParser.parser
 end
 
 (* set-like type for disequalities *)
 (* it is guaranteed that for any pair (x,y) in the set, x<=y *)
-module Deqs : Util.OrderedContainer with type elt = Term.t * Term.t
+module Deqs : 
+sig
+  include Util.OrderedContainer with type elt = Term.t * Term.t
+  val parse : (Term.t * Term.t, 'a) MParser.parser
+end
 
-module Ptos : Util.OrderedContainer with type elt=Term.t * Term.t list
+module Ptos : 
+sig
+  include Util.OrderedContainer with type elt=Term.t * Term.t list
+  val parse : (Term.t * Term.t list, 'a) MParser.parser
+end
 
 type ind_identifier = string
 type ind_pred = int * (ind_identifier * Term.t list)
-module Inds : Util.OrderedContainer
-  with type elt=ind_pred
+module Inds : 
+sig
+  include Util.OrderedContainer with type elt=ind_pred
+  val parse : (ind_pred, 'a) MParser.parser
+end
 
 type symheap = {
   eqs : UF.t;
@@ -103,6 +116,7 @@ sig
   val subst_existentials : t -> t
   val is_fresh_in : Term.t -> t -> bool
   val fixpoint : (t -> t) -> t -> t
+  val parse : (t, 'a) MParser.t
 end
 
 module Form :
@@ -137,6 +151,7 @@ sig
   val subst_existentials : t -> t
   val is_fresh_in : Term.t -> t -> bool
   val is_heap : t -> bool
+  val parse : (t, 'a) MParser.t
 end
 exception Not_symheap
 
@@ -156,6 +171,8 @@ sig
   val norm : t -> t
   val equal : t -> t -> bool
   val pp : Format.formatter -> t -> unit
+  val parse : (t, 'a) MParser.t
+  val of_string : string -> t
 end
 
 module Case :
@@ -186,6 +203,8 @@ sig
   val get_def : string -> t -> (Case.t list * ind_identifier)
 
   val consistent : t -> bool -> bool -> bool
+  val parse : (t, 'a) MParser.t
+  val of_channel : in_channel -> t
 end
 
 val has_ident : ind_identifier ->  ind_pred -> bool

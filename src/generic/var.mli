@@ -56,3 +56,8 @@ val fresh_evars : Util.Int.Set.t -> int -> int list
 (** Return a list of universally quantified variables of the requested length
     obeying the restrictions for [fresh_*var]. *)
 val fresh_uvars : Util.Int.Set.t -> int -> int list
+
+(** Parse a variable identifier (skipping trailing whitespace) and return
+    the result of the [mk_var] call. 
+    NB will match [nil] as well, so use it after the nil parser. *)
+val parse : (int, 's) MParser.parser

@@ -1,6 +1,7 @@
 open Lib
 open Util
 open Symbols
+open MParser
 
 let split_heaps = ref true
 
@@ -77,6 +78,11 @@ module Term =
           (Blist.rev_append (Blist.combine univ_vars fresh_u_vars)
          (Blist.combine exist_vars fresh_e_vars)) in
       theta
+    
+    let parse_nil st =
+      (parse_symb keyw_nil >>$ 0 <?> "nil") st
+    let parse st = 
+      (attempt parse_nil <|> Var.parse <?> "Term") st 
   end
 
 (* we sort the terms in a pair according to Term.compare *)
@@ -175,6 +181,11 @@ module UF =
 		  let xs' = Term.Set.to_list (Term.Set.remove x xs) in
 			Blist.fold_left (fun m p -> add p m) rest (Blist.pairs xs')
 
+    let parse st =
+      (Term.parse >>= (fun x ->
+      parse_symb symb_eq >>
+      Term.parse << spaces |>> (fun y -> (x,y))) <?> "eq") st
+         
   end
 
 
@@ -220,6 +231,10 @@ module Deqs =
 
 	  let vars d = Term.filter_vars (terms d)
 		
+    let parse st =
+      (Term.parse >>= (fun x ->
+      parse_symb symb_deq >>
+      Term.parse << spaces |>> (fun y -> (x,y))) <?> "deq") st
   end
 
 module Pto = MakeComplexType(PairTypes(Term)(Term.FList))
@@ -283,6 +298,12 @@ module Ptos =
 
 	  let vars p = Term.filter_vars (terms p)
 
+    let parse st = 
+      (Term.parse >>= (fun x ->
+      parse_symb symb_pointsto >>
+      Tokens.comma_sep1 Term.parse << spaces |>> 
+      (fun l -> (x,l))) <?> "pto") st
+      
 	end
 
 type ind_identifier = Strng.t
@@ -375,6 +396,15 @@ module Inds =
 			Term.Set.of_list r
 
 	  let vars i = Term.filter_vars (terms i)
+
+    let parse st =
+      (parse_ident >>= (fun pred ->
+      option parse_tag >>= (fun opt_tag ->
+      Tokens.parens (Tokens.comma_sep1 Term.parse) << spaces >>= (fun arg_list ->
+      let tag = match opt_tag with
+      | Some tag -> upd_tag tag 
+      | None -> next_tag () in
+      return (tag, (pred, arg_list))))) <?> "ind") st
 		
 	end
 
@@ -594,6 +624,17 @@ module Heap =
         { g with deqs=Deqs.filter (fun p -> not (pair_nin_lst p)) g.deqs } in
       proj_deqs (proj_eqs f)
 
+      let parse_atom st =
+        ( attempt (parse_symb keyw_emp >>$ empty) <|>
+          attempt (Inds.parse |>> (fun (tag,(ident,vs)) -> mk_ind tag ident vs)) <|>
+          attempt (UF.parse |>> Fun.uncurry mk_eq) <|>
+          attempt (Deqs.parse |>> Fun.uncurry mk_deq) <|>
+                  (Ptos.parse |>> Fun.uncurry mk_pto) <?> "atom"
+        ) st
+      
+      let parse st =
+        (sep_by1 parse_atom (parse_symb symb_star) >>= (fun atoms ->
+        return (Blist.foldl star empty atoms)) <?> "symheap") st
   end
 
 exception Not_symheap
@@ -674,6 +715,9 @@ module Form =
 
     let is_fresh_in x f = Blist.for_all (Heap.is_fresh_in x) f
     let is_heap f = Blist.length f = 1
+  
+    let parse st =
+      (sep_by1 Heap.parse (parse_symb symb_or) <?> "formula") st
   end
 
 module Seq =
@@ -721,6 +765,15 @@ module Seq =
       Form.left_subsumption hook Term.Map.empty l' l
 
     let norm s = Pair.map Form.norm s
+    
+    let parse st = 
+      ( Form.parse >>= (fun l ->
+        parse_symb symb_turnstile >> Form.parse >>= (fun r ->
+        return (l,r))) <?> "Sequent") st   
+    
+    let of_string s = 
+      handle_reply (MParser.parse_string parse s ())
+
   end
 
 module Case =
@@ -751,6 +804,11 @@ module Case =
         (Blist.to_string "," Term.to_string vs)
         symb_rp.str
 
+    let parse st =
+      ( Heap.parse >>= (fun h ->
+        parse_symb symb_ind_implies >> 
+        Inds.parse << spaces >>= 
+        (fun (_,head) -> return (mk h head))) <?> "case") st   
   end
 
 module Defs =
@@ -778,7 +836,18 @@ module Defs =
     let to_melt d = ltx_text (to_string d)
     
     let pp fmt d = Format.fprintf fmt "%s" (to_string d)
+    
+    let parse_section st = 
+      (parse_ident >>= (fun name -> 
+      Tokens.braces (sep_by1 Case.parse (parse_symb symb_ind_sep)) <<
+      spaces >>= (fun cases -> return (cases, name))) <?> "defs section") st
+    
+    let parse st = 
+      (sep_by1 parse_section (parse_symb symb_semicolon) <?> "defs") st
 
+    let of_channel c =
+      handle_reply (MParser.parse_channel parse c ())
+  
     let mem ident (defs:t) = Blist.exists (fun (_, ident') -> Strng.equal ident ident') defs
 
     let is_defined ((_,(ident, _)):Ind.t) (defs:t) = mem ident defs

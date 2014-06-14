@@ -100,6 +100,7 @@ sig
   val to_string : t -> string
   val to_melt : t -> Latex.t
   val pp : Format.formatter -> t -> unit
+  val of_string : string -> t
 
   val tags : t -> Util.Tags.t
   val dest : t -> Prod.t * Prod.t
@@ -129,4 +130,5 @@ sig
   val pp : Format.formatter -> t -> unit
   val add : string -> Case.t -> t -> t
   val bindings : t -> (string * Case.t list) list
+  val of_channel : in_channel -> t
 end
