@@ -181,73 +181,64 @@ module Cmd =
     let mk_from_list l = Blist.flatten l
 
     let rec parse_cmd st = 
-  (* | STOP { P.Cmd.mk_stop }                                                                                  *)
-      ( attempt (parse_symb keyw_stop >>$ Stop)
-        <|>
-  (* | SKIP { P.Cmd.mk_skip }                                                                                  *)
-        attempt (parse_symb keyw_skip >>$ Skip)
-        <|>
+      (   attempt (parse_symb keyw_stop >>$ Stop)
+      <|> attempt (parse_symb keyw_skip >>$ Skip)
+  (*   v = var; ASSIGN; NEW; LP; RP { P.Cmd.mk_new v }                            *)
+      <|> attempt (Term.parse <<
+          parse_symb symb_assign <<
+          parse_symb keyw_new <<
+          parse_symb symb_lp <<
+          parse_symb symb_rp >>= (fun v ->
+          return (assert (Term.is_var v) ; (New v))))
   (*   | v1 = var; ASSIGN; v2 = var; FLD_SEL; fld = IDENT                                                      *)
-        attempt (Term.parse >>= (fun v1 ->
-        parse_symb symb_assign >>
-        Term.parse >>= (fun v2 ->
-        parse_symb symb_fld_sel >>
-        parse_ident >>= (fun id ->
-        return (assert (Term.is_var v1 && Term.is_var v2) ; (Load(v1,v2,id)))))))
-        <|>
+      <|> attempt (Term.parse >>= (fun v1 ->
+          parse_symb symb_assign >>
+          Term.parse >>= (fun v2 ->
+          parse_symb symb_fld_sel >>
+          parse_ident >>= (fun id ->
+          return (assert (Term.is_var v1 && Term.is_var v2) ; (Load(v1,v2,id)))))))
   (*   | v = var; FLD_SEL; fld = IDENT; ASSIGN; t = term                                                       *)
   (*   { P.Cmd.mk_store v fld t }                                                                              *)
-        attempt (Term.parse >>= (fun v ->
-        parse_symb symb_fld_sel >>
-        parse_ident >>= (fun id ->
-        parse_symb symb_assign >>
-        Term.parse >>= (fun t ->
-        return (assert (Term.is_var v) ; (Store(v,id,t)))))))
-        <|>
+      <|> attempt (Term.parse >>= (fun v ->
+          parse_symb symb_fld_sel >>
+          parse_ident >>= (fun id ->
+          parse_symb symb_assign >>
+          Term.parse >>= (fun t ->
+          return (assert (Term.is_var v) ; (Store(v,id,t)))))))
   (*   | FREE; ts = paren_terms                                                     *)
   (*   { assert (List.length ts = 1) ; P.Cmd.mk_free (List.hd ts) }                 *)
-        attempt (parse_symb keyw_free >>
-        Tokens.parens Term.parse >>= (fun v ->
-        return (assert (Term.is_var v) ; (Free v))))
-        <|>
-  (*   | v = var; ASSIGN; NEW; LP; RP { P.Cmd.mk_new v }                            *)
-        attempt (Term.parse >>= (fun v ->
-        parse_symb keyw_new >>
-        parse_symb symb_lp >>
-        parse_symb symb_rp >>
-        return (assert (Term.is_var v) ; (New v))))
-        <|>
+      <|> attempt (parse_symb keyw_free >>
+          Tokens.parens Term.parse >>= (fun v ->
+          return (assert (Term.is_var v) ; (Free v))))
     (* | v = var; ASSIGN; t = term { P.Cmd.mk_assign v t } *)
-        attempt (Term.parse >>= (fun v -> 
-        parse_symb symb_assign >> 
-        Term.parse >>= (fun t -> 
-        return (assert (Term.is_var v) ; (Assign(v,t))))))
-        <|> 
-  (* | IF; cond = condition; THEN; cmd = command; FI { P.Cmd.mk_if cond cmd }                                  *)
-        attempt (parse_symb keyw_if >>
-        Cond.parse >>= (fun cond ->
-        parse_symb keyw_then >>
-        parse >>= (fun cmd ->
-        parse_symb keyw_fi >>$ (If(cond,cmd)))))
-        <|>
+      <|> attempt (Term.parse >>= (fun v -> 
+          parse_symb symb_assign >> 
+          Term.parse >>= (fun t -> 
+          return (assert (Term.is_var v) ; (Assign(v,t))))))
   (* | IF; cond = condition; THEN; cmd1 = command; ELSE; cmd2 = command; FI { P.Cmd.mk_ifelse cond cmd1 cmd2 } *)
-        attempt (parse_symb keyw_if >>
-        Cond.parse >>= (fun cond ->
-        parse_symb keyw_then >>
-        parse >>= (fun cmd1 ->
-        parse_symb keyw_else >>
-        parse >>= (fun cmd2 ->
-        parse_symb keyw_fi >>$ (IfElse(cond,cmd1,cmd2))))))
-        <|>
+      <|> attempt (parse_symb keyw_if >>
+          Cond.parse >>= (fun cond ->
+          parse_symb keyw_then >>
+          parse >>= (fun cmd1 ->
+          parse_symb keyw_else >>
+          parse >>= (fun cmd2 ->
+          parse_symb keyw_fi >>$ (IfElse(cond,cmd1,cmd2))))))
+  (* | IF; cond = condition; THEN; cmd = command; FI { P.Cmd.mk_if cond cmd }                                  *)
+      <|> attempt (parse_symb keyw_if >>
+          Cond.parse >>= (fun cond ->
+          parse_symb keyw_then >>
+          parse >>= (fun cmd ->
+          parse_symb keyw_fi >>$ (If(cond,cmd)))))
   (* | WHILE; cond = condition; DO; cmd = command; OD { P.Cmd.mk_while cond cmd }                              *)
-        (parse_symb keyw_while >>
-        Cond.parse >>= (fun cond ->
-        parse_symb keyw_do >>
-        parse >>= (fun cmd ->
-        parse_symb keyw_od >>$ (While(cond,cmd)))))
+      <|> (parse_symb keyw_while >>
+          Cond.parse >>= (fun cond ->
+          parse_symb keyw_do >>
+          parse >>= (fun cmd ->
+          parse_symb keyw_od >>$ (While(cond,cmd)))))
       <?> "Cmd") st
     and parse st = 
-      (sep_by1 parse_cmd (parse_symb symb_semicolon) |>> Blist.map mklc <?> "CmdList") st
+      (sep_by1 parse_cmd (parse_symb symb_semicolon) >>= (fun cmds ->
+      return (Blist.map mklc cmds)) <?> "CmdList") st
 
     let _dest_stop = function
       | Stop -> ()
