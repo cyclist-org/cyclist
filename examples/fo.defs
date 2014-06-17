@@ -1,88 +1,88 @@
 N { 
 	true => N(0) | 
-	N_1(x) => N(s(x)) 
+	N(x) => N(s(x)) 
 } ;
 
 E {
 	true => E(0) |
-	O_1(x) => E(s(x))
+	O(x) => E(s(x))
 } ;
 
 O {
-	E_1(x) => O(s(x))
+	E(x) => O(s(x))
 } ;
 
 P {
 	true => P(0) |
-	P_1(x) & Q_2(x, s(x)) => P(s(x)) 
+	P(x) & Q(x, s(x)) => P(s(x)) 
 } ;
 
 Q {
 	true => Q(x,0) |
-	Q_1(x,y) & P_2(x) => Q(x,s(y))
+	Q(x,y) & P(x) => Q(x,s(y))
 } ;
 
 LIST {
   true => LIST(0) |
-  LIST_1(x) => LIST(cons(y,x))
+  LIST(x) => LIST(cons(y,x))
 } ;
 
 APP {
   true => APP(0,x,x) |
-  APP_1(x,y,z) => APP(cons(w,x), y, cons(w,z))
+  APP(x,y,z) => APP(cons(w,x), y, cons(w,z))
 } ;
 
 TAKE {
   true => TAKE(x, 0, 0) |
   true => TAKE(0, x, 0) |
-  TAKE_1(x,y,z) => TAKE(s(x), cons(w,y), cons(w,z))
+  TAKE(x,y,z) => TAKE(s(x), cons(w,y), cons(w,z))
 } ;
 
 DROP {
   true => DROP(x, 0, 0) |
   true => DROP(0, x, x) |
-  DROP_1(x,y,z) => DROP(s(x), cons(w,y), z)
+  DROP(x,y,z) => DROP(s(x), cons(w,y), z)
 } ;
 
 MINUS {
   true => MINUS(0,x,0) |
   true => MINUS(x,0,x) |
-  MINUS_1(x,y,z) => MINUS(s(x),s(y),z)
+  MINUS(x,y,z) => MINUS(s(x),s(y),z)
 } ;
 
 LEN {
 	true => LEN(0,0) |
-	LEN_1(x,y) => LEN(cons(z,x),s(y))
+	LEN(x,y) => LEN(cons(z,x),s(y))
 } ;
 
 PLUS {
 	true => PLUS(0,x,x) |
-	PLUS_1(x,y,z) => PLUS(s(x),y,s(z))
+	PLUS(x,y,z) => PLUS(s(x),y,s(z))
 } ;
 
 COUNT {
 	true => COUNT(x,0,0) |
-	COUNT_1(x,y,z) => COUNT(x, cons(x,y), s(z)) |
-  x!=w & COUNT_1(x,y,z) => COUNT(x, cons(w,y), z)
+	COUNT(x,y,z) => COUNT(x, cons(x,y), s(z)) |
+  x!=w & COUNT(x,y,z) => COUNT(x, cons(w,y), z)
 } ; 
 
 ADD {
-  N_1(x) => ADD(0,x,x) |
-  ADD_1(x,y,z) => ADD(s(x), y, s(z))
+  N(x) => ADD(0,x,x) |
+  ADD(x,y,z) => ADD(s(x), y, s(z))
 } ;
 
 MUL {
-  N_1(x) => MUL(0,x,0) |
-  MUL_1(x,y,z) & ADD_2(x,z,w) => MUL(s(x),y,w)
+  N(x) => MUL(0,x,0) |
+  MUL(x,y,z) & ADD_2(x,z,w) => MUL(s(x),y,w)
 } ;
 
 LEQ {
 	true => LEQ(0,x) |
-	LEQ_1(x,y) => LEQ(s(x),s(y))
+	LEQ(x,y) => LEQ(s(x),s(y))
 } ;
 
 R {
 	true => R(0,x) |
-	R_1(x,0) => R(s(x),0) |
-	R_1(s(s(x)),y) => R(s(x),s(y))
+	R(x,0) => R(s(x),0) |
+	R(s(s(x)),y) => R(s(x),s(y))
 }

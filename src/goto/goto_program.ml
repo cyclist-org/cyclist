@@ -2,6 +2,7 @@ open Util
 open Lib
 open Symheap
 open Symbols
+open MParser
 
 module Defs = Defs
 
@@ -15,6 +16,28 @@ module Cmd =
       | Eq of Term.t * Term.t
       | Deq of Term.t * Term.t
       | Non_det
+    
+    let mk_eq e1 e2 = Eq(e1,e2)
+    let mk_deq e1 e2 = Deq(e1,e2)
+    let mk_non_det () = Non_det
+
+    let is_deq = function
+      | Deq(_, _) -> true
+      | Eq _ | Non_det -> false
+    let is_non_det = function
+      | Non_det -> true
+      | Eq _ | Deq _ -> false
+    
+    let dest_cond = function
+      | Eq(e1, e2)
+      | Deq(e1, e2) -> (e1,e2)
+      | Non_det -> raise WrongCmd
+    
+    let parse_cond st =
+      ( attempt (parse_symb symb_star >>$ mk_non_det ()) <|>
+        attempt (UF.parse |>> Fun.uncurry mk_eq) <|>
+        attempt (Deqs.parse |>> Fun.uncurry mk_deq) <?> "Cond") st
+      
     type t =
       | Assign of Term.t * Term.t
       | Load of Term.t * Term.t * field_t
@@ -35,17 +58,63 @@ module Cmd =
     let mk_if c l = If(c,l)
     let mk_stop = Stop
     let mk_skip = Skip
+    
+    let parse st = 
+  (*   | STOP { P.Cmd.mk_stop }                                                     *)
+      ( attempt (parse_symb keyw_stop >>$ mk_stop)
+        <|>
+  (* | SKIP { P.Cmd.mk_skip }                                                       *)
+        attempt (parse_symb keyw_skip >>$ mk_skip)
+        <|>
+    (* | v1 = var; ASSIGN; v2 = var; POINTS_TO; id = IDENT { P.Cmd.mk_load v1 v2 id } *)
+        attempt (Term.parse >>= (fun v1 ->
+        parse_symb symb_assign >>
+        Term.parse >>= (fun v2 ->
+        parse_symb symb_pointsto >>
+        parse_ident >>= (fun id ->
+        return (assert (Term.is_var v1 && Term.is_var v2) ; mk_load v1 v2 id)))))
+        <|>
+  (*   | v = var; POINTS_TO; id = IDENT; ASSIGN; t = term { P.Cmd.mk_store v id t } *)
+        attempt (Term.parse >>= (fun v ->
+        parse_symb symb_pointsto >>
+        parse_ident >>= (fun id ->
+        parse_symb symb_assign >>
+        Term.parse >>= (fun t ->
+        return (assert (Term.is_var v) ; mk_store v id t)))))
+        <|>
+  (*   | FREE; ts = paren_terms                                                     *)
+  (*   { assert (List.length ts = 1) ; P.Cmd.mk_free (List.hd ts) }                 *)
+        attempt (parse_symb keyw_free >>
+        Tokens.parens Term.parse >>= (fun v ->
+        return (assert (Term.is_var v) ; mk_free v)))
+        <|>
+  (*   | v = var; ASSIGN; NEW; LP; RP { P.Cmd.mk_new v }                            *)
+        attempt (Term.parse >>= (fun v ->
+        parse_symb keyw_new >>
+        parse_symb symb_lp >>
+        parse_symb symb_rp >>
+        return (assert (Term.is_var v) ; mk_new v)))
+        <|>
+  (*   | GOTO; n = NUM { P.Cmd.mk_goto n }                                          *)
+        attempt (parse_symb keyw_goto >>
+        Tokens.integer >>= (fun n ->
+        return (mk_goto n)))
+        <|>
+  (*   | IF; c = condition; GOTO; n = NUM { P.Cmd.mk_if c n }                       *)
+        attempt (parse_symb keyw_if >> 
+        parse_cond >>= (fun c -> 
+        parse_symb keyw_goto >>
+        Tokens.integer >>= (fun n ->
+        return (mk_if c n))))
+        <|>
+    (* | v = var; ASSIGN; t = term { P.Cmd.mk_assign v t } *)
+        attempt (Term.parse >>= (fun v -> 
+        parse_symb symb_assign >> 
+        Term.parse >>= (fun t -> 
+        return (assert (Term.is_var v) ; mk_assign v t)))) 
+      <?> "Cmd") st
 
-    let mk_eq e1 e2 = Eq(e1,e2)
-    let mk_deq e1 e2 = Deq(e1,e2)
-    let mk_non_det () = Non_det
 
-    let is_deq = function
-      | Deq(_, _) -> true
-      | Eq _ | Non_det -> false
-    let is_non_det = function
-      | Non_det -> true
-      | Eq _ | Deq _ -> false
     let is_assign = function
       | Assign _ -> true
       | _ -> false
@@ -102,10 +171,6 @@ module Cmd =
     let dest_skip = function
       | Skip -> ()
       | _ -> raise WrongCmd
-    let dest_cond = function
-      | Eq(e1, e2)
-      | Deq(e1, e2) -> (e1,e2)
-      | Non_det -> raise WrongCmd
     let dest_deref = function
       | Load(x,e,s) -> e
       | Store(e1,s,e2) -> e1
@@ -168,6 +233,12 @@ module Seq =
       Format.fprintf fmt "@[%a |-_%i@]" Symheap.Form.pp f i
 
     let equal (f,i) (f',i') = (i=i') && Symheap.Form.equal f f'
+    
+    let parse st = 
+      ( Form.parse >>= (fun f ->
+        parse_symb symb_turnstile_underscore >>
+        Tokens.integer >>= (fun i ->
+        parse_symb symb_bang >>$ (f,i))) <?> "GotoSeq") st
   end
 
 let max_prog_var = ref Term.nil
@@ -209,3 +280,39 @@ let fresh_evars s i = Term.fresh_evars (Term.Set.add !max_prog_var s) i
 (* again, treat prog vars as special *)
 let freshen_case_by_seq seq case =
   Case.freshen (Term.Set.union (vars_of_program ()) (Seq.vars seq)) case
+
+let parse_lcmd st = 
+  ( Tokens.integer >>= (fun i ->
+    parse_symb symb_colon >>
+    Cmd.parse >>= (fun c -> return (i,c))) <?> "GotoLcmd" ) st
+    
+let parse_lcmds st =
+  ( sep_by1 parse_lcmd (parse_symb symb_semicolon) <?> "GotoLcmds" ) st
+
+let parse_fields st = 
+  ( parse_symb keyw_fields >> 
+    parse_symb symb_colon >>
+    sep_by1 parse_ident (parse_symb symb_comma) >>= (fun ils ->
+    parse_symb symb_semicolon >>
+    return (Blist.rev (Blist.combine ils (Blist.range 0 ils)))) <?> "GotoFields") st
+
+(* judgement: JUDGEMENT; COLON; f = formula_; TURNSTILE_; n = NUM; BANG { (f, n) }   *)
+
+let parse_judgment st =
+  ( parse_symb keyw_judgement >>
+    parse_symb symb_colon >>
+    Form.parse >>= (fun f ->
+    parse_symb symb_turnstile_underscore >>
+    Tokens.integer >>= (fun n ->
+    parse_symb symb_bang >>$ (f,n))) <?> "GotoJudgement" ) st
+
+    (* f = fields; j = judgement; l = lcommands; EOF { (j, (f, l)) } *)
+
+let parse st = 
+  ( parse_fields >>= (fun f ->
+    parse_judgment >>= (fun j ->
+    parse_lcmds >>= (fun l -> 
+    eof >> return (j, (f,l))))) <?> "GotoProgram") st
+
+let of_channel c =
+  handle_reply (MParser.parse_channel parse c ())

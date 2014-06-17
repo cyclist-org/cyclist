@@ -21,6 +21,7 @@ let symb_false = make_symb "F" Latex.bot
 let symb_true = make_symb "T" Latex.top
 let symb_or = make_symb "\\/" Latex.lor_
 let symb_and = make_symb "/\\" Latex.land_
+let symb_ampersand = make_symb "&" Latex.empty (* FIXME *)
 let symb_star = make_symb "*" Latex.ast
 let symb_pointsto = make_symb "->" Latex.mapsto
 let symb_eq = make_symb "=" (ltx_math " = ")
@@ -68,3 +69,16 @@ let ltx_paren l = Latex.concat [symb_lp.melt; l; symb_rp.melt]
 let ltx_comma l = Latex.concat (Latex.list_insert symb_comma.melt l)
 let ltx_star l = Latex.concat (Latex.list_insert symb_star.melt l)
 let ltx_math_space = Latex.text "\\;"
+
+open MParser
+let parse_symb s st = Tokens.skip_symbol s.str st
+
+let max_tag = ref 0
+let upd_tag tag = 
+  max_tag := max !max_tag tag ; tag
+let next_tag () =
+  incr max_tag ; !max_tag 
+
+let parse_tag st = 
+  ( parse_symb symb_caret >> 
+    Tokens.integer |>> (fun tag -> assert (tag>0) ; tag) <?> "tag") st

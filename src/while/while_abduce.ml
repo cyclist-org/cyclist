@@ -15,24 +15,7 @@ let minbound = ref 1
 let maxbound = ref 20
 
 module Seq = While_program.Seq
-module Parser = While_parser
-module Lexer = While_lexer
 module Abducer = Abducer.Make(While_program.Seq)(While_program.Defs)
-
-let program_of_channel c =
-  let lexbuf = Lexing.from_channel c in
-  try
-    Parser.program Lexer.token lexbuf
-  with
-    | Lexer.Error msg -> print_endline msg ; assert false
-    | Parser.Error ->
-      begin
-        let curr = lexbuf.Lexing.lex_curr_p in
-        let line = curr.Lexing.pos_lnum in
-        let cnum = curr.Lexing.pos_cnum - curr.Lexing.pos_bol in
-        let tok = Lexing.lexeme lexbuf in
-        Printf.fprintf stderr "Syntax error at line %d, column %d: token '%s'.\n%!" line cnum tok ; assert false
-      end
 
 let defs_count = ref 0
 
@@ -125,7 +108,7 @@ let () =
   Format.set_margin 300 ;
   Arg.parse speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) usage ;
   if !prog_path="" then die "-P must be specified." ;
-  let ((f, cmd) as seq) = program_of_channel (open_in !prog_path) in
+  let ((f, cmd) as seq) = While_program.of_channel (open_in !prog_path) in
   While_program.set_program cmd ; 
   (* Safety_prover.setup [] ;  *)
   exit (prove_prog seq)

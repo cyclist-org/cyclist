@@ -1,6 +1,7 @@
 open Lib
 open Util
 open Symbols
+open MParser
 
 type term =
   | Const of int
@@ -91,7 +92,7 @@ module Term =
 
     let latex_of_var v =
       (if Var.is_exist_var v then "e" else "a") ^
-      "_{" ^ (string_of_int (abs v)) ^ "}"
+      "^{" ^ (string_of_int (abs v)) ^ "}"
 
     let rec to_melt = function
       | Const(i) -> ltx_math (string_of_int i)
@@ -220,6 +221,17 @@ module Term =
       Blist.map mk_var (Var.fresh_uvars (intset_of_varset s) i)
     let fresh_evars s i =
       Blist.map mk_var (Var.fresh_evars (intset_of_varset s) i)
+    
+    let rec parse st =
+      ( attempt (Tokens.integer |>> mk_const)
+        <|>
+        attempt (parse_ident >>= (fun f ->
+        Tokens.parens (sep_by1 parse (parse_symb symb_comma)) >>= (fun tl ->
+        return (mk_fun f tl))))
+        <|>
+        (Var.parse |>> mk_var)
+      ) st
+      
   end
 
 type eq_atom = term * term
@@ -256,13 +268,13 @@ module AtomT =
       | Eq eq -> let (sx,sy) = Pair.map Term.to_string eq in sx ^ "=" ^ sy
       | Deq eq -> let (sx,sy) = Pair.map Term.to_string eq in sx ^ "!=" ^ sy
       | IndPred(t,(ident,tl)) ->
-        ident ^ "_" ^ (string_of_int t) ^ "(" ^ (Term.FList.to_string tl) ^ ")"
+        ident ^ "^" ^ (string_of_int t) ^ "(" ^ (Term.FList.to_string tl) ^ ")"
 
     let pp fmt = function
       | Eq(x,y) -> Format.fprintf fmt "@[%a=%a@]" Term.pp x Term.pp y
       | Deq(x,y) -> Format.fprintf fmt "@[%a!=%a@]" Term.pp x Term.pp y
       | IndPred(t,(ident,args)) ->
-        Format.fprintf fmt "@[%s_%i(%a)@]"
+        Format.fprintf fmt "@[%s^%i(%a)@]"
           ident t (Blist.pp pp_comma Term.pp) args
 
   end
@@ -275,6 +287,36 @@ module Atom =
     let mk_deq x y = Deq(x,y)
     let mk_ipred t ident tl = IndPred(t,(ident, tl))
 
+    let parse_indpred st =
+      (parse_ident >>= (fun pred ->
+      option parse_tag >>= (fun opt_tag ->
+      Tokens.parens (Tokens.comma_sep1 Term.parse) << spaces >>= (fun arg_list ->
+      let tag = match opt_tag with
+      | Some tag -> upd_tag tag 
+      | None -> next_tag () in
+      return (mk_ipred tag pred arg_list)))) <?> "ind") st
+    
+    let parse_eq st = 
+      ( Term.parse >>= (fun x ->
+        parse_symb symb_eq >>
+        Term.parse >>= (fun y ->
+        return (mk_eq x y))) <?> "Eq") st
+
+    let parse_deq st = 
+      ( Term.parse >>= (fun x ->
+        parse_symb symb_deq >>
+        Term.parse >>= (fun y ->
+        return (mk_eq x y))) <?> "Deq") st
+
+    let parse st = 
+      ( attempt parse_indpred 
+        <|>
+        attempt parse_deq
+        <|> 
+        parse_eq
+        <?> "Atom"
+      ) st
+          
     let dest_eq = function
       | Eq(x,y) -> (x,y)
       | _ -> invalid_arg "Atom.dest_eq"
@@ -374,6 +416,13 @@ module Prod =
         (if is_empty f then symb_true.melt else
           Latex.concat
             (Latex.list_insert symb_and.melt (Blist.map Atom.to_melt (elements f))))
+
+    let parse st = 
+      ( attempt (Tokens.skip_symbol "true" >>$ empty) 
+        <|>
+        (sep_by1 Atom.parse (parse_symb symb_ampersand) |>> of_list) 
+        <?> "Prod"
+      ) st
 
     let pp_conj fmt () =
       Format.pp_print_string fmt " /\\" ; Format.pp_print_space fmt ()
@@ -479,6 +528,9 @@ module Form =
         Format.fprintf fmt "@[F@]"
       else
         Format.fprintf fmt "@[%a@]" (Blist.pp pp_disj Prod.pp) (elements f)
+    
+    let parse st =
+      (sep_by1 Prod.parse (parse_symb symb_or) |>> of_list <?> "Form") st
 
     let terms f = map_to Term.Set.union Term.Set.empty Prod.terms f
     let tag_pairs f = TagPairs.mk (tags f)
@@ -521,6 +573,15 @@ module Seq =
       ltx_mk_math
         (Latex.concat [Form.to_melt l; symb_turnstile.melt; Form.to_melt r])
     let pp fmt (l,r) = Format.fprintf fmt "@[%a |-@ %a@]" Form.pp l Form.pp r
+    let parse st = 
+      ( Form.parse >>= (fun l ->
+        parse_symb symb_turnstile >>
+        Form.parse >>= (fun r ->
+        return (l,r))) <?> "Seq") st
+
+    let of_string s = 
+      handle_reply (MParser.parse_string parse s ())
+        
     let terms s = Term.Set.union (Form.terms (fst s)) (Form.terms (snd s))
     let vars s = Term.filter_vars (terms s)
     let tag_pairs f = TagPairs.mk (tags f)
@@ -561,6 +622,23 @@ module Case =
       Term.filter_vars (Term.Set.union (Term.terms_of_list vs) (Prod.terms f))
     let subst theta (f, vs) =
       (Prod.subst theta f, Term.subst_list theta vs)
+
+  (*   | prod = product; IND_IMPLIES; pred = IDENT; ts = terms  *)
+  (* { (FO.Case.mk prod ts, pred) }                             *)
+    let parse_case st =
+      ( Prod.parse >>= (fun p ->
+        parse_symb symb_ind_implies >>
+        parse_ident >>= (fun pred ->
+        Tokens.parens (sep_by1 Term.parse (parse_symb symb_comma)) << 
+        spaces >>= (fun ts ->
+        return (mk p ts, pred)))) <?> "Case") st
+    
+  (*   | LB; inds = separated_nonempty_list(IND_SEP, ind_case); RB  *)
+  (* { inds }                                                       *)
+    let parse_cases st = 
+      ( parse_symb symb_lb >>
+        sep_by1 parse_case (parse_symb symb_ind_sep) << 
+        parse_symb symb_rb <?> "Cases") st
 
     let freshen varset case =
       let casevars = vars case in
@@ -609,4 +687,31 @@ module Defs =
         defs
       else
         defs @ [ (ident, [case]) ]
+        
+(* ind_def:                                                      *)
+(*     | p = IDENT; inds = ind_cases { (inds, p) }               *)
+    let parse_def st = 
+      ( parse_ident >>= (fun p ->
+        Case.parse_cases >>= (fun inds ->
+        return (inds,p))) <?> "Def") st  
+
+(* ind_def_set:                                                  *)
+(*     | ids = separated_nonempty_list(SEMICOLON, ind_def); EOF  *)
+(*   {                                                           *)
+(*     let f defs (c,ident)= FO.Defs.add ident c defs in         *)
+(*     let g defs cases = List.fold_left f defs cases in         *)
+(*     let h defs (cases,_) = g defs cases in                    *)
+(*     List.fold_left h FO.Defs.empty ids                        *)
+(*   }                                                           *)
+    let parse st = 
+      ( sep_by1 parse_def (parse_symb symb_semicolon) >>= (fun ids ->
+        eof >>
+        let f defs (c,ident)= add ident c defs in
+        let g defs cases = Blist.fold_left f defs cases in
+        let h defs (cases,_) = g defs cases in
+        return (List.fold_left h empty ids) <?> "Defs")) st
+
+    let of_channel c =
+      handle_reply (parse_channel parse c ())
+                 
   end
