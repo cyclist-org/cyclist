@@ -15,7 +15,7 @@ let () = F.speclist := !F.speclist @ [
 let () =
   gc_setup () ;
 	Arg.parse !F.speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) !F.usage ;
-	let res = F.check_consistency (Defs.of_channel (open_in !defs_path)) in
+	let res = F.check_consistency (Sl_defs.of_channel (open_in !defs_path)) in
   let () = print_endline ("Exit code: " ^ (string_of_int res)) in 
 	exit res
 

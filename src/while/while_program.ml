@@ -4,8 +4,6 @@ open Symheap
 open Symbols
 open MParser
 
-module Defs = Defs
-
 let termination = ref false
 
 module Field =

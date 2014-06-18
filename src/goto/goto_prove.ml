@@ -19,7 +19,7 @@ let () =
   if !prog_path="" then F.die "-P must be specified." ;
   let (seq, prog) = Goto_program.of_channel (open_in !prog_path) in
   Goto_program.set_program prog ; 
-  Goto_rules.setup (Symheap.Defs.of_channel (open_in !defs_path)) seq;
+  Goto_rules.setup (Sl_defs.of_channel (open_in !defs_path)) seq;
   exit (F.prove_seq !Goto_rules.axioms !Goto_rules.rules seq)
     
 

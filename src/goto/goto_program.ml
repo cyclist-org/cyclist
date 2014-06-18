@@ -4,8 +4,6 @@ open Symheap
 open Symbols
 open MParser
 
-module Defs = Defs
-
 type field_t = string
 type label_t = int
 

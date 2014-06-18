@@ -3,9 +3,11 @@ open Util
 open Symheap
 open While_program
 
+module Defs = Sl_defs
+
 module Rule = Proofrule.Make(While_program.Seq)
 module Seqtactics = Seqtactics.Make(While_program.Seq)
-module Abdrule = Abdrule.Make(While_program.Seq)(While_program.Defs)
+module Abdrule = Abdrule.Make(While_program.Seq)(Sl_defs)
 
 (* let latex_defs d =                 *)
 (*   let t = !split_heaps in          *)
@@ -37,7 +39,7 @@ let ex_subst_defs defs =
 let empify defs =
   let empify_ c =
     let (p,h) = Case.dest c in
-    let inds = Inds.filter (fun pred -> Defs.is_defined pred defs) p.inds in
+    let inds = Inds.filter (fun pred -> Sl_defs.is_defined pred defs) p.inds in
     Case.mk {p with inds=inds} h in
   Blist.map (fun (l,i) -> (Blist.map empify_ l, i)) defs
 
@@ -138,7 +140,7 @@ let simplify_defs defs =
     (empify defs)
 
 
-let is_possibly_consistent defs = Defs.consistent (empify defs) false false
+let is_sat defs = Defs.satisfiable (empify defs) false false
 
 let ex_falso_axiom = Abdrule.lift While_rules.ex_falso_axiom
 let symex_empty_axiom = Abdrule.lift While_rules.symex_empty_axiom

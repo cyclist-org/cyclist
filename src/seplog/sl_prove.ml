@@ -19,7 +19,7 @@ let () =
   Arg.parse !F.speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) !F.usage ;
   if !cl_sequent="" then F.die "-S must be specified." ;
   let seq = Symheap.Seq.of_string !cl_sequent in
-  Sl_rules.setup (Symheap.Defs.of_channel (open_in !defs_path)) ;
+  Sl_rules.setup (Sl_defs.of_channel (open_in !defs_path)) ;
   exit (F.prove_seq !Sl_rules.axioms !Sl_rules.rules seq)
     
 

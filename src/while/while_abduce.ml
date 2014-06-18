@@ -15,7 +15,7 @@ let minbound = ref 1
 let maxbound = ref 20
 
 module Seq = While_program.Seq
-module Abducer = Abducer.Make(While_program.Seq)(While_program.Defs)
+module Abducer = Abducer.Make(While_program.Seq)(Sl_defs)
 
 let defs_count = ref 0
 
@@ -25,7 +25,7 @@ let record_defs defs =
   let path_fn = Filename.concat !rec_defs_path (fn ^ ext) in
   let () = incr defs_count in
   let ch = open_out path_fn in
-  let () = output_string ch (While_program.Defs.to_string (While_abdrules.empify defs)) in
+  let () = output_string ch (Sl_defs.to_string (While_abdrules.empify defs)) in
   let () = close_out ch in
 	if !defs_count>50000 then exit 0 else false 
 
@@ -37,7 +37,7 @@ let prove_prog seq =
     w_timeout
       (fun () ->
         Abducer.bfs !minbound !maxbound While_abdrules.rules seq []  
-        (if !gen_defs then record_defs else While_abdrules.is_possibly_consistent)) 
+        (if !gen_defs then record_defs else While_abdrules.is_sat)) 
       !timeout
       in
   Stats.Gen.end_call () ;
@@ -54,7 +54,7 @@ let prove_prog seq =
   else
     print_endline ("Proved: " ^ (While_program.Seq.to_string seq)) ;
   if !show_defs || !simpl_defs then  
-    print_endline (While_program.Defs.to_string (( 
+    print_endline (Sl_defs.to_string (( 
       if !simpl_defs then 
         While_abdrules.simplify_defs 
       else 
@@ -66,7 +66,7 @@ let prove_prog seq =
     Abducer.melt_proof ch proof ; close_out ch
   end ;
   if !latex_defs then 
-    ignore (Latex.to_channel ~mode:Latex.M stdout (Symheap.Defs.to_melt (While_abdrules.simplify_defs defs)));
+    ignore (Latex.to_channel ~mode:Latex.M stdout (Sl_defs.to_melt (While_abdrules.simplify_defs defs)));
   0
 
 

@@ -2,12 +2,11 @@ val split_heaps : bool ref
 
 module Term :
 sig
-  type t
+  include Util.BasicType 
   module Set : Util.OrderedContainer with type elt=t
   module Map : Util.OrderedMap with type key = t
 
   val nil : t
-  val equal : t -> t -> bool
   val list_equal : t list -> t list -> bool
 
   val is_nil : t -> bool
@@ -29,11 +28,9 @@ sig
   val singleton_subst : t -> t -> substitution
   val subst : substitution -> t -> t
   val pp_subst : Format.formatter -> substitution -> unit
+  val avoid_theta : Set.t -> Set.t -> substitution 
 
-  val to_string : t -> string
   val to_melt : t -> Latex.t
-  val compare : t -> t -> int
-  val pp : Format.formatter -> t -> unit
   val parse : (t, 'a) MParser.parser
 end
 
@@ -84,7 +81,7 @@ type symheap = {
 }
 module Heap :
 sig
-  type t = symheap
+  include Util.BasicType with type t = symheap
   val empty : t
 
   val get_idents : t -> Util.Strng.MSet.t
@@ -92,8 +89,6 @@ sig
   val terms : t -> Term.Set.t
   val tags : t -> Util.Tags.t
   val norm : t -> t
-  val to_string : t -> string
-  val pp : Format.formatter -> t -> unit
   val tag_pairs : t -> Util.TagPairs.t
   val star : t -> t -> t
   val univ : Term.Set.t -> t -> t
@@ -101,7 +96,6 @@ sig
   val equates : t -> Term.t -> Term.t -> bool
   val disequates : t -> Term.t -> Term.t -> bool
 	val eq_class : t -> Term.t -> Term.Set.t
-  val compare : t -> t -> int
   val mk_pto : Term.t -> Term.t list -> t
   val mk_eq : Term.t -> Term.t -> t
   val mk_deq : Term.t -> Term.t -> t
@@ -111,17 +105,17 @@ sig
     (Term.substitution -> Term.substitution option) ->
     Term.substitution -> t -> t -> Term.substitution option
   val find_lval : Term.t -> t -> (Term.t * Term.t list) option
-  val equal : t -> t -> bool
   val inconsistent : t -> bool
   val subst_existentials : t -> t
   val is_fresh_in : Term.t -> t -> bool
   val fixpoint : (t -> t) -> t -> t
   val parse : (t, 'a) MParser.t
+  val project : t -> Term.t list -> t
 end
 
 module Form :
 sig
-  type t = symheap list
+  include Util.BasicType with type t = symheap list
   val empty : t
   val dest : t -> Heap.t
 
@@ -129,9 +123,7 @@ sig
   val disj : t -> t -> t
   val to_string : t -> string
   val to_melt : t -> Latex.t
-  val pp : Format.formatter -> t -> unit
   val norm : t -> t
-  val equal : t -> t -> bool
   val terms : t -> Term.Set.t
   val vars : t -> Term.Set.t
   val tags : t -> Util.Tags.t
@@ -157,10 +149,9 @@ exception Not_symheap
 
 module Seq :
 sig
-  type t = Form.t * Form.t
+  include Util.BasicType with type t = Form.t * Form.t
 
   val dest : t -> Heap.t * Heap.t
-  val to_string : t -> string
   val to_melt : t -> Latex.t
   val vars : t -> Term.Set.t
   val tags : t -> Util.Tags.t
@@ -169,43 +160,21 @@ sig
   val subsumed_wrt_tags : Util.Tags.t -> t -> t -> bool
   val uni_subsumption : t -> t -> Term.substitution option
   val norm : t -> t
-  val equal : t -> t -> bool
-  val pp : Format.formatter -> t -> unit
   val parse : (t, 'a) MParser.t
   val of_string : string -> t
 end
 
 module Case :
 sig
-  type t
+  include Util.BasicType
   val mk : Heap.t -> ind_identifier * Term.t list -> t
   val dest: t -> Heap.t * (ind_identifier * Term.t list)
   val vars : t -> Term.Set.t
   val freshen : Term.Set.t -> t -> t
-end
-
-module Defs :
-sig
-  type t = (Case.t list * ind_identifier) list
-	val equal : t -> t -> bool
-  val fixpoint: (t -> t) -> t -> t
-	
-  val to_string : t -> string
-  val to_melt : t -> Latex.t
-  val pp : Format.formatter -> t -> unit
-
-  (* val empty : t *)
-  (* val add_case : Case.t -> t -> t *)
-  (* val predicates : t -> string list *)
-  (* val arity : string -> t -> int *)
-  val mem : string -> t -> bool
-  val is_defined : ind_pred -> t -> bool
-  val get_def : string -> t -> (Case.t list * ind_identifier)
-
-  val consistent : t -> bool -> bool -> bool
+  val subst : Term.substitution -> t -> t
   val parse : (t, 'a) MParser.t
-  val of_channel : in_channel -> t
 end
+
 
 val has_ident : ind_identifier ->  ind_pred -> bool
 
