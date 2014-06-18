@@ -603,7 +603,7 @@ module Heap =
     let hash (h:t) = Hashtbl.hash h
 
     let project f xs =
-      (* let () = require (fun () -> Inds.is_empty f.inds && Ptos.is_empty f.ptos) in *)
+      (* let () = assert (Inds.is_empty f.inds && Ptos.is_empty f.ptos) in *)
       let trm_nin_lst x =
 				not (Term.is_nil x) &&
 				not (Blist.exists (fun y -> Term.equal x y) xs) in

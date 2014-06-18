@@ -54,7 +54,7 @@ struct
 
 
   let mk seq node descr =
-    require (fun () -> descr<>"") ;
+    assert (descr<>"") ;
     {
       seq = seq;
       node = node;

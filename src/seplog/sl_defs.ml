@@ -80,9 +80,9 @@ struct
     (* (Term.Map.to_list theta)) in let substs = Term.Set.of_list    *)
     (* (Blist.map snd (Term.Map.to_list theta)) in let () = require  *)
     (* (fun () -> Term.Set.subset (Heap.vars g') formals) in let ()  *)
-    (* = require (fun () -> Term.Set.subset v' formals) in let () =  *)
-    (* require (fun () -> Term.Set.is_empty (Term.Set.inter          *)
-    (* (Heap.vars g') substs)) in let () = require (fun () ->        *)
+    (* = assert (Term.Set.subset v' formals) in let () =  *)
+    (* assert (Term.Set.is_empty (Term.Set.inter          *)
+    (* (Heap.vars g') substs)) in let () = assert (       *)
     (* Term.Set.is_empty (Term.Set.inter v' substs)) in              *)
     let (v', g') = subst theta (v', g') in
     let h' = { h with inds = Inds.remove ind h.inds } in
@@ -95,7 +95,7 @@ struct
   (* assumes case is built with Heap.star so ys are already unequal *)
   let unfold_all case cbps =
     let (h, _) = Case.dest case in
-    (* let () = require (fun () -> Inds.cardinal h.inds =            *)
+    (* let () = assert (Inds.cardinal h.inds =            *)
     (* Blist.length cbps) in                                         *)
     let ys = Term.Set.of_list (Blist.rev_map fst (Ptos.to_list h.ptos)) in
     let h = { h with ptos = Ptos.empty } in

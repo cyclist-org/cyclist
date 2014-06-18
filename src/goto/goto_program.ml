@@ -247,7 +247,7 @@ let set_local_vars seq = local_vars := Term.Set.diff !program_vars (Seq.vars seq
 let program = ref (([], []):program_t)
 
 let get_sel_index s =
-  require (fun () -> Blist.mem_assoc s (fst !program)) ;
+  assert (Blist.mem_assoc s (fst !program)) ;
   Blist.assoc s (fst !program)
 
 let get_no_fields () = Blist.length (fst !program)

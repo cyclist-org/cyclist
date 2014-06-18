@@ -67,9 +67,7 @@ struct
 
   let ensure_add idx n prf =
     let n' = find idx prf in
-    require 
-      (fun () -> 
-        Node.is_open n' && Seq.equal (Node.get_seq n) (Node.get_seq n'))
+    assert (Node.is_open n' && Seq.equal (Node.get_seq n) (Node.get_seq n'))
     
   let add_axiom idx descr prf =
     let n = Node.mk_axiom (get_seq idx prf) descr in
@@ -80,7 +78,7 @@ struct
     let seq = get_seq idx prf in
     let n = Node.mk_backlink seq descr target vtts in
     ensure_add idx n prf;
-    require (fun () -> Seq.equal seq (get_seq target prf));
+    assert (Seq.equal seq (get_seq target prf));
     replace idx n prf
 
    let add_inf idx descr subgoals prf =

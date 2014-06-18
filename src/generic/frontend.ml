@@ -27,7 +27,6 @@ module Make(Prover : Sigs.PROVER) =
       ("-t", Arg.Set_int timeout, 
         (": set timeout in seconds to <int>, 0 disables it, default is " ^ 
           (string_of_int !timeout)));
-      ("-A", Arg.Set skip_asserts, ", skip assertion checking");
     ]
 
     let usage = 
