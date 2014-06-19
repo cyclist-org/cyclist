@@ -1,6 +1,6 @@
-include Util.BasicType with type t = Symheap.symheap list
+include Util.BasicType with type t = Sl_heap.t list
 val empty : t
-val dest : t -> Symheap.Heap.t
+val dest : t -> Sl_heap.t
 
 val star : t -> t -> t
 val disj : t -> t -> t

@@ -2,7 +2,7 @@ open Lib
 open Util
 
 module Term = Symheap.Term
-module Atom = Symheap.Heap
+module Atom = Sl_heap
 
 module rec Form : 
   sig

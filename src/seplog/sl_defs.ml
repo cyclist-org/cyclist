@@ -4,6 +4,8 @@ open Symheap
 open Symbols
 open MParser
 
+module SH = Sl_heap
+
 module IndRuleList = MakeFList(Sl_indrule)
 module DefPair = PairTypes(IndRuleList)(Strng)
 include MakeFList(DefPair)
@@ -14,7 +16,7 @@ let empty = []
 let add_case a l = failwith "not implemented"
 let string_of_case c =
   let (f, (ident, params)) = Sl_indrule.dest c in
-  (Heap.to_string f) ^ symb_ind_implies.sep ^ ident ^
+  (Sl_heap.to_string f) ^ symb_ind_implies.sep ^ ident ^
   (bracket (Blist.to_string symb_comma.str Term.to_string params))
 
 let string_of_caseset (cls, ident) =
@@ -40,77 +42,75 @@ let parse st =
 let of_channel c =
   handle_reply (MParser.parse_channel parse c ())
 
-let mem ident (defs: t) = 
+let mem ident (defs: t) =
   Blist.exists (fun (_, ident') -> Strng.equal ident ident') defs
 
-let is_defined (_, (ident, _)) defs = 
+let is_defined (_, (ident, _)) defs =
   mem ident defs
 
-let get_def ident (defs: t) = 
+let get_def ident (defs: t) =
   Blist.find (fun (_, ident') -> Strng.equal ident ident') defs
 
 module BasePair =
 struct
-  include PairTypes(Term.Set)(Heap)
+  include PairTypes(Term.Set)(Sl_heap)
   
   let to_string (v, g) =
     "(" ^
     "{" ^
     (Blist.to_string "," Term.to_string (Term.Set.to_list v)) ^
     "}, " ^
-    (Heap.to_string g) ^
+    (Sl_heap.to_string g) ^
     ")"
   
   let project (v, g) case =
     let (_, (_, formals)) = Sl_indrule.dest case in
-    (Term.Set.inter v (Term.Set.of_list formals), Heap.project g formals)
+    (Term.Set.inter v (Term.Set.of_list formals), Sl_heap.project g formals)
   
   let subst theta (v, g) =
     let v' = Term.Set.endomap (fun z -> Term.subst theta z) v in
-    let g' = Heap.subst theta g in
+    let g' = Sl_heap.subst theta g in
     (v', g')
   
   let unfold (v, h) ((_, (_, params)) as ind) (case, (v', g')) =
     (* simultaneously freshen case and (v',g') *)
-    let avoidvars = Term.Set.union v (Heap.vars h) in
+    let avoidvars = Term.Set.union v (Sl_heap.vars h) in
     let theta = Term.avoid_theta avoidvars (Sl_indrule.vars case) in
     let case = Sl_indrule.subst theta case in
     let (v', g') = subst theta (v', g') in
     (* now carry on with substitution as normal *)
     let (_, (_, formals)) = Sl_indrule.dest case in
     let theta = Term.Map.of_list (Blist.combine formals params) in
-    (* let formals = Term.Set.of_list (Blist.map fst                 *)
-    (* (Term.Map.to_list theta)) in let substs = Term.Set.of_list    *)
-    (* (Blist.map snd (Term.Map.to_list theta)) in let () = require  *)
-    (* (fun () -> Term.Set.subset (Heap.vars g') formals) in let ()  *)
-    (* = assert (Term.Set.subset v' formals) in let () =  *)
-    (* assert (Term.Set.is_empty (Term.Set.inter          *)
-    (* (Heap.vars g') substs)) in let () = assert (       *)
-    (* Term.Set.is_empty (Term.Set.inter v' substs)) in              *)
+    (* let formals = Term.Set.of_list (Blist.map fst (Term.Map.to_list     *)
+    (* theta)) in let substs = Term.Set.of_list (Blist.map snd             *)
+    (* (Term.Map.to_list theta)) in let () = require (fun () ->            *)
+    (* Term.Set.subset (Sl_heap.vars g') formals) in let () = assert       *)
+    (* (Term.Set.subset v' formals) in let () = assert (Term.Set.is_empty  *)
+    (* (Term.Set.inter (Sl_heap.vars g') substs)) in let () = assert (     *)
+    (* Term.Set.is_empty (Term.Set.inter v' substs)) in                    *)
     let (v', g') = subst theta (v', g') in
-    let h' = { h with inds = Inds.remove ind h.inds } in
-    let h' = Heap.star h' g' in
+    let h' = { h with SH.inds = Inds.remove ind h.SH.inds } in
+    let h' = Sl_heap.star h' g' in
     let cv = Blist.cartesian_product (Term.Set.to_list v) (Term.Set.to_list v') in
-    let h' = { h' with deqs = Deqs.union h'.deqs (Deqs.of_list cv) } in
+    let h' = { h' with SH.deqs = Deqs.union h'.SH.deqs (Deqs.of_list cv) } in
     let v = Term.Set.union v v' in
     (v, h')
   
-  (* assumes case is built with Heap.star so ys are already unequal *)
+  (* assumes case is built with Sl_heap.star so ys are already unequal *)
   let unfold_all case cbps =
     let (h, _) = Sl_indrule.dest case in
-    (* let () = assert (Inds.cardinal h.inds =            *)
-    (* Blist.length cbps) in                                         *)
-    let ys = Term.Set.of_list (Blist.rev_map fst (Ptos.to_list h.ptos)) in
-    let h = { h with ptos = Ptos.empty } in
-    Blist.fold_left2 unfold (ys, h) (Inds.to_list h.inds) cbps
+    (* let () = assert (Inds.cardinal h.inds = Blist.length cbps) in *)
+    let ys = Term.Set.of_list (Blist.rev_map fst (Ptos.to_list h.SH.ptos)) in
+    let h = { h with SH.ptos = Ptos.empty } in
+    Blist.fold_left2 unfold (ys, h) (Inds.to_list h.SH.inds) cbps
   
   let gen case cbps =
     let (_, (_, args)) = Sl_indrule.dest case in
     let (v, h) = unfold_all case cbps in
-    if Heap.inconsistent h then None else
-      let l = Blist.rev_append (Term.Set.to_list (Heap.vars h)) args in
+    if Sl_heap.inconsistent h then None else
+      let l = Blist.rev_append (Term.Set.to_list (Sl_heap.vars h)) args in
       let l = Blist.rev_filter
-          (fun u -> Term.Set.exists (fun z -> Heap.equates h u z) v) l in
+          (fun u -> Term.Set.exists (fun z -> Sl_heap.equates h u z) v) l in
       let v = Term.Set.of_list l in
       Some (project (v, h) case)
   
@@ -140,7 +140,7 @@ let get_bps cmap (_, (ident, _)) =
 let gen_pairs case cmap =
   let (h, _) = Sl_indrule.dest case in
   let candidates =
-    Blist.map (fun i -> get_bps cmap i) (Inds.to_list h.inds) in
+    Blist.map (fun i -> get_bps cmap i) (Inds.to_list h.SH.inds) in
   let l = Blist.choose candidates in
   let poss_bps =
     Blist.rev_map (fun cbps -> BasePair.gen case cbps) l in
@@ -184,8 +184,8 @@ let gen_all_pairs defs only_first =
       fixp cm' in
   fixp cmap
 
-(* NB correctness relies on rules being explicit about x->_        *)
-(* implying x!=nil !!!                                             *)
+(* NB correctness relies on rules being explicit about x->_ implying       *)
+(* x!=nil !!!                                                              *)
 let satisfiable defs only_first output =
   Stats.CC.call () ;
   let res = gen_all_pairs defs only_first in

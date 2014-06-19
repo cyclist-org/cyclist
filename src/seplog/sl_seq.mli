@@ -1,6 +1,6 @@
 include Util.BasicType with type t = Sl_form.t * Sl_form.t
 
-val dest : t -> Symheap.Heap.t * Symheap.Heap.t
+val dest : t -> Sl_heap.t * Sl_heap.t
 val to_melt : t -> Latex.t
 val vars : t -> Symheap.Term.Set.t
 val tags : t -> Util.Tags.t

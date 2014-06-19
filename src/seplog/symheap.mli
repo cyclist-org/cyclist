@@ -40,6 +40,8 @@ module UF :
 sig
   type t
   val empty : t
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
   val is_empty : t -> bool
   val find : Term.t -> t -> Term.t
   val add : Term.t * Term.t -> t -> t
@@ -50,6 +52,16 @@ sig
   val of_list : (Term.t * Term.t) list -> t
 	val remove: Term.t -> t -> t
   val parse : (Term.t * Term.t, 'a) MParser.parser
+  val to_subst : t -> Term.substitution
+  val subst : Term.substitution -> t -> t
+  val vars : t -> Term.Set.t
+  val to_string_list : t -> string list
+  val to_melt : t -> Latex.t
+  val equates : t -> Term.t -> Term.t -> bool
+  val uni_subsumption : bool ->
+    (Term.substitution -> Term.substitution option) ->
+    Term.substitution -> t -> t -> Term.substitution option
+  val is_subsumed : t -> t -> bool
 end
 
 (* set-like type for disequalities *)
@@ -58,12 +70,26 @@ module Deqs :
 sig
   include Util.OrderedContainer with type elt = Term.t * Term.t
   val parse : (Term.t * Term.t, 'a) MParser.parser
+  val subst : Term.substitution -> t -> t
+  val vars : t -> Term.Set.t
+  val to_string_list : t -> string list
+  val to_melt : t -> Latex.t
+  val uni_subsumption : bool ->
+    (Term.substitution -> Term.substitution option) ->
+    Term.substitution -> t -> t -> Term.substitution option
 end
 
 module Ptos : 
 sig
   include Util.OrderedContainer with type elt=Term.t * Term.t list
   val parse : (Term.t * Term.t list, 'a) MParser.parser
+  val subst : Term.substitution -> t -> t
+  val vars : t -> Term.Set.t
+  val to_string_list : t -> string list
+  val to_melt : t -> Latex.t
+  val aux_subsumption : bool -> bool ->
+    (Term.substitution -> Term.substitution option) ->
+    Term.substitution -> t -> t -> Term.substitution option
 end
 
 module IndSubf : Util.MCTsig with type t = Util.Strng.t * Term.FList.t
@@ -75,52 +101,17 @@ module Inds :
 sig
   include Util.OrderedContainer with type elt=ind_pred
   val parse : (ind_pred, 'a) MParser.parser
-end
-
-type symheap = {
-  eqs : UF.t;
-  deqs : Deqs.t;
-  ptos : Ptos.t;
-  inds : Inds.t;
-}
-module Heap :
-sig
-  include Util.BasicType with type t = symheap
-  val empty : t
-
-  val get_idents : t -> Util.Strng.MSet.t
-  val vars : t -> Term.Set.t
-  val terms : t -> Term.Set.t
-  val tags : t -> Util.Tags.t
-  val norm : t -> t
-  val tag_pairs : t -> Util.TagPairs.t
-  val star : t -> t -> t
-  val univ : Term.Set.t -> t -> t
-  val repl_tags : int -> t -> t
-  val equates : t -> Term.t -> Term.t -> bool
-  val disequates : t -> Term.t -> Term.t -> bool
-	val eq_class : t -> Term.t -> Term.Set.t
-  val mk_pto : Term.t -> Term.t list -> t
-  val mk_eq : Term.t -> Term.t -> t
-  val mk_deq : Term.t -> Term.t -> t
-  val mk_ind : int -> ind_identifier -> Term.t list -> t
   val subst : Term.substitution -> t -> t
-  val aux_subsumed_wrt_tags : bool -> Util.Tags.t -> t -> t -> bool  
-  val aux_subsumption : bool -> bool -> 
-    (Term.substitution -> Term.substitution option) ->
-    Term.substitution -> t -> t -> Term.substitution option
-  val spw_left_subsumption :
-    (Term.substitution -> Term.substitution option) ->
-    Term.substitution -> t -> t -> Term.substitution option
-  val find_lval : Term.t -> t -> (Term.t * Term.t list) option
-  val inconsistent : t -> bool
-  val subst_existentials : t -> t
-  val is_fresh_in : Term.t -> t -> bool
-  val fixpoint : (t -> t) -> t -> t
-  val parse : (t, 'a) MParser.t
-  val project : t -> Term.t list -> t
+  val vars : t -> Term.Set.t
+  val to_string_list : t -> string list
   val to_melt : t -> Latex.t
+  val aux_subsumption : bool -> bool ->
+    (Term.substitution -> Term.substitution option) ->
+    Term.substitution -> t -> t -> Term.substitution option
+  val subsumed_wrt_tags : Util.Tags.t -> t -> t -> bool
+  val equal_wrt_tags : Util.Tags.t -> t -> t -> bool
 end
+
 exception Not_symheap
 
 val has_ident : ind_identifier ->  ind_pred -> bool

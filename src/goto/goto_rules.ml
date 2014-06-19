@@ -3,6 +3,8 @@ open Util
 open Symheap
 open Goto_program
 
+module SH = Sl_heap
+
 module Proof = Proof.Make(Goto_program.Seq)
 module Rule = Proofrule.Make(Goto_program.Seq)
 module Seqtactics = Seqtactics.Make(Goto_program.Seq)
@@ -47,7 +49,7 @@ let lhs_disj_to_symheaps_f, lhs_disj_to_symheaps =
   let rl ((l,i):Seq.t) =
     if (Blist.length l) < 2 then [] else
     [ Blist.map 
-        (fun sh -> ( ([sh], i), Heap.tag_pairs sh, TagPairs.empty ) ) 
+        (fun sh -> ( ([sh], i), Sl_heap.tag_pairs sh, TagPairs.empty ) ) 
         l,
       "L.Or"
     ] in
@@ -58,20 +60,20 @@ let gen_left_rules_f (def, ident) seq =
   try
     let (l,i) = dest_sh_seq seq in
     let preds = 
-      Inds.filter (fun (_,(ident',_)) -> Strng.equal ident ident') l.inds in
+      Inds.filter (fun (_,(ident',_)) -> Strng.equal ident ident') l.SH.inds in
     if Inds.is_empty preds then [] else
     let left_unfold ((id,(_,pvs)) as p) = 
-      let l' = { l with inds=Inds.remove p l.inds } in
+      let l' = { l with SH.inds=Inds.remove p l.SH.inds } in
       let do_case case =
         let (f', (_,vs')) = Sl_indrule.dest (freshen_case_by_seq seq case) in
         let theta = Term.Map.of_list (Blist.combine vs' pvs) in
-        let f' = Heap.subst theta f' in
-        (* let f' = Heap.sim_subst_ f' pvs vs' in  *)
+        let f' = Sl_heap.subst theta f' in
+        (* let f' = Sl_heap.sim_subst_ f' pvs vs' in  *)
         (* do not universalize existential vars in pred def *) 
         (* let f' = univ_form f' in*)
-        let f' = Heap.repl_tags id f' in
-        let l' = Heap.star l' f' in
-        let ts = Tags.inter (Heap.tags l') (Heap.tags l) in
+        let f' = Sl_heap.repl_tags id f' in
+        let l' = Sl_heap.star l' f' in
+        let ts = Tags.inter (Sl_heap.tags l') (Sl_heap.tags l) in
         (([l'],i), TagPairs.mk ts, TagPairs.singleton (id, id)) in
       Blist.map do_case def,
       (ident ^ " L.Unf.") in 
@@ -89,12 +91,12 @@ let symex_assign_rule_f, symex_assign_rule =
       let (f,i) = dest_sh_seq seq in
       let cmd = get_cmd i in
       let (x,e) = Cmd.dest_assign cmd in
-      let fv = fresh_evar (Heap.vars f) in
+      let fv = fresh_evar (Sl_heap.vars f) in
       let theta = Term.singleton_subst x fv in
-      let f' = Heap.subst theta f in
+      let f' = Sl_heap.subst theta f in
       let e' = Term.subst theta e in
-      let f' = { f' with eqs=UF.add (e',x) f'.eqs } in
-      [ [ (([f'], i+1), Heap.tag_pairs f, TagPairs.empty) ], "Assign" ]
+      let f' = { f' with SH.eqs=UF.add (e',x) f'.SH.eqs } in
+      [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Assign" ]
     with WrongCmd | Not_symheap -> [] in
   rl, wrap rl 
 
@@ -105,14 +107,14 @@ let symex_load_rule_f, symex_load_rule =
       let cmd = get_cmd i in
       let (x,e,s) = Cmd.dest_load cmd in
       (* now search for pto on e' *)
-      let (_,ys) = Ptos.find (fun (l,vs) -> Heap.equates f e l) f.ptos in
+      let (_,ys) = Ptos.find (fun (l,vs) -> Sl_heap.equates f e l) f.SH.ptos in
       let t = Blist.nth ys (get_sel_index s) in
-      let fv = fresh_evar (Heap.vars f) in
+      let fv = fresh_evar (Sl_heap.vars f) in
       let theta = Term.singleton_subst x fv in
-      let f' = Heap.subst theta f in
+      let f' = Sl_heap.subst theta f in
       let t' = Term.subst theta t in
-      let f' = { f' with eqs=UF.add (t',x) f'.eqs } in
-      [ [ (([f'], i+1), Heap.tag_pairs f, TagPairs.empty) ], "Load" ]
+      let f' = { f' with SH.eqs=UF.add (t',x) f'.SH.eqs } in
+      [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Load" ]
     with Not_symheap | WrongCmd | Not_found -> [] in
   rl, wrap rl 
 
@@ -123,16 +125,16 @@ let symex_store_rule_f, symex_store_rule =
       let cmd = get_cmd i in
       let (x,s,e) = Cmd.dest_store cmd in
       let ((_,ys) as pto) = 
-        Ptos.find (fun (v,_) -> Heap.equates f v x) f.ptos in
-      let newptos = Ptos.remove pto f.ptos in
+        Ptos.find (fun (v,_) -> Sl_heap.equates f v x) f.SH.ptos in
+      let newptos = Ptos.remove pto f.SH.ptos in
       let pto' = 
         try (x, Blist.replace_nth e (get_sel_index s) ys) 
         with Invalid_argument msg ->
           print_endline ("seq= " ^ (Seq.to_string seq) ^ "   x=" ^ (Term.to_string x) ^ " s=" ^ s ^ " e=" ^ (Term.to_string e)) ;
           assert false
         in
-      let f' = { f with ptos=Ptos.add pto' newptos } in
-      [ [ (([f'], i+1), Heap.tag_pairs f, TagPairs.empty) ], "Store" ]
+      let f' = { f with SH.ptos=Ptos.add pto' newptos } in
+      [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Store" ]
     with Not_symheap | WrongCmd | Not_found -> [] in
   rl, wrap rl 
 
@@ -142,10 +144,10 @@ let symex_free_rule_f, symex_free_rule =
       let (f,i) = dest_sh_seq seq in
       let cmd = get_cmd i in
       let e = Cmd.dest_free cmd in
-      let pto = Ptos.find (fun (v,_) -> Heap.equates f v e) f.ptos in
-      let newptos = Ptos.remove pto f.ptos in
-      let f' = { f with ptos=newptos } in
-      [ [ (([f'], i+1), Heap.tag_pairs f, TagPairs.empty) ], "Free" ]
+      let pto = Ptos.find (fun (v,_) -> Sl_heap.equates f v e) f.SH.ptos in
+      let newptos = Ptos.remove pto f.SH.ptos in
+      let f' = { f with SH.ptos=newptos } in
+      [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Free" ]
     with Not_symheap | WrongCmd | Not_found -> [] in
   rl, wrap rl 
 
@@ -155,11 +157,11 @@ let symex_new_rule_f, symex_new_rule =
       let (f,i) = dest_sh_seq seq in
       let cmd = get_cmd i in
       let x = Cmd.dest_new cmd in
-      let l = fresh_evars (Heap.vars f) (1 + Blist.length (fst !program)) in
+      let l = fresh_evars (Sl_heap.vars f) (1 + Blist.length (fst !program)) in
       let (fv,fvs) = (Blist.hd l, Blist.tl l) in
-      let f' = Heap.subst (Term.singleton_subst x fv) f in
-      let f' = { f' with ptos=Ptos.add (x, fvs) f'.ptos } in
-      [ [ (([f'], i+1), Heap.tag_pairs f, TagPairs.empty) ], "New" ]
+      let f' = Sl_heap.subst (Term.singleton_subst x fv) f in
+      let f' = { f' with SH.ptos=Ptos.add (x, fvs) f'.SH.ptos } in
+      [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "New" ]
     with Not_symheap | WrongCmd-> [] in
   rl, wrap rl 
 
@@ -189,10 +191,10 @@ let symex_det_if_rule_f, symex_det_if_rule =
       let (c,i') = Cmd.dest_if cmd in
       if Cmd.is_non_det c then [] else
       let pair = Cmd.dest_cond c in
-      let f' =  { f with eqs=UF.add pair f.eqs } in
-      let f'' = { f with deqs=Deqs.add pair f.deqs } in
+      let f' =  { f with SH.eqs=UF.add pair f.SH.eqs } in
+      let f'' = { f with SH.deqs=Deqs.add pair f.SH.deqs } in
       let (f',f'') = if (Cmd.is_deq c) then (f'',f') else (f',f'') in 
-      let t = Heap.tag_pairs f in
+      let t = Sl_heap.tag_pairs f in
       [ 
         [ (([f'], i'), t, TagPairs.empty) ; (([f''], i+1), t, TagPairs.empty) ],
         "If(det)" 
@@ -296,22 +298,22 @@ let dobackl idx prf =
 (*     try                                                                               *)
 (*       let ((l1,i1),(l2,i2)) = Pair.map dest_sh_seq (s1,s2) in                         *)
 (*       if i1<>i2 then [] else                                                          *)
-(*       let preds = Inds.filter (fun (_, (ident', _)) -> ident=ident') l2.inds in       *)
+(*       let preds = Inds.filter (fun (_, (ident', _)) -> ident=ident') l2.SH.inds in       *)
 (*       if Inds.is_empty preds then [] else                                             *)
 (*       let fold_match ((id,(_,pvs)) as p) =                                            *)
-(*         let l2' = { l2 with inds=Inds.remove p l2.inds } in                           *)
+(*         let l2' = { l2 with SH.inds=Inds.remove p l2.SH.inds } in                           *)
 (*         let do_case case =                                                            *)
 (*           let (f', (_,vs')) = Sl_indrule.dest (freshen_case_by_seq ([l2'],i2) case) in      *)
 (*           let theta = Term.Map.of_list (Blist.combine vs' pvs) in                     *)
-(*           let f' = Heap.subst theta f' in                                             *)
-(*           (* let f' = Heap.sim_subst f' pvs vs' in  *)                                *)
+(*           let f' = Sl_heap.subst theta f' in                                             *)
+(*           (* let f' = Sl_heap.sim_subst f' pvs vs' in  *)                                *)
 (*           (* do not universalize existential vars in pred def *)                      *)
 (*           (* use fresh tag for the ind case so that tracing cannot *)                 *)
 (*           (* follow these new tags *)                                                 *)
 (*           let alltags = Tags.union (Seq.tags s1) (Seq.tags s2) in                     *)
 (*           let fresh_tag = 1 + (try Tags.max_elt alltags with Not_found -> 0) in       *)
-(*           let f' = Heap.repl_tags fresh_tag f' in                                     *)
-(*           let l2' = Heap.star l2' f' in                                               *)
+(*           let f' = Sl_heap.repl_tags fresh_tag f' in                                     *)
+(*           let l2' = Sl_heap.star l2' f' in                                               *)
 (*           let s2' = ([l2'],i2) in                                                     *)
 (*           (* NB this enforces ind clause to be symheaps *)                            *)
 (*           let res = matches_fun s1 s2' in                                             *)
@@ -335,45 +337,45 @@ let fold (defs,ident) =
   let fold_rl seq = 
     try 
       let (l,i) = dest_sh_seq seq in
-      if Inds.is_empty l.inds then [] else
+      if Inds.is_empty l.SH.inds then [] else
       let tags = Seq.tags seq in
       let freshtag = 1 + (try Tags.max_elt tags with Not_found -> 0) in 
       let do_case case =
         let (f,(ident,vs)) = Sl_indrule.dest case in 
-        (* if Inds.is_empty f.inds then [] else *)
+        (* if Inds.is_empty f.SH.inds then [] else *)
         let results : Term.substitution list ref = ref [] in
         let hook sub = results := sub :: !results ; None in 
-        let () = ignore (Heap.spw_left_subsumption hook Term.empty_subst f l) in
+        let () = ignore (Sl_heap.spw_left_subsumption hook Term.empty_subst f l) in
         let process_sub theta = 
-          let (f, vs) = (Heap.subst theta f, Blist.map (Term.subst theta) vs) in
+          let (f, vs) = (Sl_heap.subst theta f, Blist.map (Term.subst theta) vs) in
           let l' = 
             {
               (* FIXME hacky stuff in eqs : in reality a proper way to diff *)
               (* two union-find structures is required *)
-              eqs =
+              SH.eqs =
                 UF.of_list 
                 (Deqs.to_list 
                   (Deqs.diff
-                    (Deqs.of_list (UF.bindings l.eqs))
-                    (Deqs.of_list (UF.bindings f.eqs))
+                    (Deqs.of_list (UF.bindings l.SH.eqs))
+                    (Deqs.of_list (UF.bindings f.SH.eqs))
                   ));
-              deqs = Deqs.diff l.deqs f.deqs;
-              ptos = Ptos.diff l.ptos f.ptos;
-              inds = 
+              SH.deqs = Deqs.diff l.SH.deqs f.SH.deqs;
+              SH.ptos = Ptos.diff l.SH.ptos f.SH.ptos;
+              SH.inds = 
                 Inds.fold 
                   (fun (_, (f_ident, f_vs)) a -> 
                     Inds.del_first 
                     (fun (_, (l_ident, l_vs)) -> 
                       f_ident = l_ident && Term.list_equal f_vs l_vs) a) 
-                  f.inds
-                  l.inds;
+                  f.SH.inds
+                  l.SH.inds;
             } in
           let newpred = (freshtag,(ident,vs)) in
-          let l' = { l' with inds = Inds.add newpred l'.inds } in
+          let l' = { l' with SH.inds = Inds.add newpred l'.SH.inds } in
           let seq' = ([l'],i) in
           (* let () = print_endline "Fold match:" in        *)
           (* let () = print_endline (Seq.to_string seq) in  *)
-          (* let () = print_endline (Heap.to_string f) in   *)
+          (* let () = print_endline (Sl_heap.to_string f) in   *)
           (* let () = print_endline (Seq.to_string seq') in *)
             [(
               seq', 

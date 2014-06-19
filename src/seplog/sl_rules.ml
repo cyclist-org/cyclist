@@ -2,6 +2,8 @@ open Lib
 open Util
 open Symheap
 
+module SH = Sl_heap
+
 module Proof = Proof.Make(Sl_seq)
 module Rule = Proofrule.Make(Sl_seq)
 module Seqtactics = Seqtactics.Make(Sl_seq)
@@ -18,7 +20,7 @@ let lhs_disj_to_symheaps =
   Rule.mk_infrule 
     (fun (l,r) -> if Blist.length l < 2 then [] else
       [ 
-        Blist.map (fun h -> (([h],r), Heap.tag_pairs h, TagPairs.empty)) l,
+        Blist.map (fun h -> (([h],r), Sl_heap.tag_pairs h, TagPairs.empty)) l,
          "L. Or" 
       ]
     )
@@ -40,15 +42,15 @@ let rhs_disj_to_symheaps =
 let eq_subst_rule seq =
   try
     let (l,r) = Sl_seq.dest seq in
-    if UF.is_empty l.eqs then [] else
-		let leqs = UF.bindings l.eqs in
+    if UF.is_empty l.SH.eqs then [] else
+		let leqs = UF.bindings l.SH.eqs in
 		let (x,y) as p = Blist.find (fun p' -> Pair.disj (Pair.map Term.is_var p')) leqs in
 		let leqs = Blist.filter (fun q -> q!=p) leqs in
-		let l = { l with eqs = UF.of_list leqs } in
+		let l = { l with SH.eqs = UF.of_list leqs } in
 		let (x,y) = if Term.is_var x then p else (y,x) in
 		let theta = Term.singleton_subst x y in
-    let (l',r') = Pair.map (fun z -> Heap.subst theta z) (l,r) in
-    [ [ (([l'], [r']), Heap.tag_pairs l, TagPairs.empty) ], "" ]
+    let (l',r') = Pair.map (fun z -> Sl_heap.subst theta z) (l,r) in
+    [ [ (([l'], [r']), Sl_heap.tag_pairs l, TagPairs.empty) ], "" ]
   with Not_symheap | Not_found -> []
 
 
@@ -56,13 +58,13 @@ let eq_subst_rule seq =
 let eq_ex_subst_rule seq =
   try
     let (l,r) = Sl_seq.dest seq in
-		let reqs = UF.bindings r.eqs in
+		let reqs = UF.bindings r.SH.eqs in
 		let (x,y) as p = Blist.find (fun (x,_) -> Term.is_exist_var x) reqs in
 		let reqs = Blist.filter (fun q -> q!=p) reqs in
-    let r = { r with eqs=UF.of_list reqs } in
+    let r = { r with SH.eqs=UF.of_list reqs } in
 		let (x,y) = if Term.is_var x then p else (y,x) in
-    let r' = Heap.subst (Term.singleton_subst x y) r in
-    [ [ (([l], [r']), Heap.tag_pairs l, TagPairs.empty) ], "" ]
+    let r' = Sl_heap.subst (Term.singleton_subst x y) r in
+    [ [ (([l], [r']), Sl_heap.tag_pairs l, TagPairs.empty) ], "" ]
   with Not_symheap | Not_found -> []
 
 (* remove all RHS eqs that can be discharged *)
@@ -70,19 +72,19 @@ let eq_simplify seq =
   try
     let (l,r) = Sl_seq.dest seq in
     let (disch, reqs) =
-			Blist.partition (fun (x,y) -> Heap.equates l x y) (UF.bindings r.eqs) in
+			Blist.partition (fun (x,y) -> Sl_heap.equates l x y) (UF.bindings r.SH.eqs) in
     if disch=[] then [] else
-    [ [ (([l], [ { r with eqs=UF.of_list reqs } ] ), Heap.tag_pairs l, TagPairs.empty) ], "" ]
+    [ [ (([l], [ { r with SH.eqs=UF.of_list reqs } ] ), Sl_heap.tag_pairs l, TagPairs.empty) ], "" ]
   with Not_symheap -> []
 
-(* remove all RHS deqs that can be discharged *)
+(* remove all RHS SH.deqs that can be discharged *)
 let deq_simplify seq =
   try
     let (l,r) = Sl_seq.dest seq in
     let (disch, rdeqs) =
-			Deqs.partition (fun (x,y) -> Heap.disequates l x y) r.deqs in
+			Deqs.partition (fun (x,y) -> Sl_heap.disequates l x y) r.SH.deqs in
     if Deqs.is_empty disch then [] else
-    [ [ (([l], [ { r with deqs=rdeqs } ] ), Heap.tag_pairs l, TagPairs.empty) ], "" ]
+    [ [ (([l], [ { r with SH.deqs=rdeqs } ] ), Sl_heap.tag_pairs l, TagPairs.empty) ], "" ]
   with Not_symheap -> []
 
 (* do the following transformation for the first x such that *)
@@ -91,13 +93,13 @@ let pto_intro_rule seq =
   try
     let (l,r) = Sl_seq.dest seq in
     let (rx, rys) as p =
-      Ptos.find (fun (w,_) -> Option.is_some (Heap.find_lval w l)) r.ptos in
-    let (lx, lys) as p' = Option.get (Heap.find_lval rx l) in
+      Ptos.find (fun (w,_) -> Option.is_some (Sl_heap.find_lval w l)) r.SH.ptos in
+    let (lx, lys) as p' = Option.get (Sl_heap.find_lval rx l) in
     (* take care to remove only the 1st match *)
-    let l' = { l with ptos=Ptos.remove p' l.ptos } in
-    let r' = { r with ptos=Ptos.remove p r.ptos } in
-    let r' = { r' with eqs=UF.union r'.eqs (UF.of_list (Blist.combine rys lys)) } in
-    [ [ ( ([l'], [r']), Heap.tag_pairs l, TagPairs.empty ) ], "Pto Intro" ]
+    let l' = { l with SH.ptos=Ptos.remove p' l.SH.ptos } in
+    let r' = { r with SH.ptos=Ptos.remove p r.SH.ptos } in
+    let r' = { r' with SH.eqs=UF.union r'.SH.eqs (UF.of_list (Blist.combine rys lys)) } in
+    [ [ ( ([l'], [r']), Sl_heap.tag_pairs l, TagPairs.empty ) ], "Pto Intro" ]
   with Not_symheap | Not_found | Invalid_argument _ -> []
 
 (* do the following transformation for the first i,j such that *)
@@ -105,16 +107,16 @@ let pto_intro_rule seq =
 let pred_intro_rule seq =
   try
     let (l,r) = Sl_seq.dest seq in
-    let (linds,rinds) = Pair.map Inds.elements (l.inds,r.inds) in
+    let (linds,rinds) = Pair.map Inds.elements (l.SH.inds,r.SH.inds) in
     let cp = Blist.cartesian_product linds rinds in
     let (p,q) =
       Blist.find
         (fun ((_,(id,vs)),(_,(id',vs'))) ->
           Strng.equal id id' &&
-					Blist.for_all2 (fun x y -> Heap.equates l x y) vs vs') cp in
-    let l' = { l with inds=Inds.remove p (Inds.of_list linds) } in
-    let r' = { r with inds=Inds.remove q (Inds.of_list rinds) } in
-    [ [ ( ([l'], [r']), Heap.tag_pairs l', TagPairs.empty ) ], "Pred Intro" ]
+					Blist.for_all2 (fun x y -> Sl_heap.equates l x y) vs vs') cp in
+    let l' = { l with SH.inds=Inds.remove p (Inds.of_list linds) } in
+    let r' = { r with SH.inds=Inds.remove q (Inds.of_list rinds) } in
+    [ [ ( ([l'], [r']), Sl_heap.tag_pairs l', TagPairs.empty ) ], "Pred Intro" ]
   with Not_symheap | Not_found -> []
 
 let norm s =
@@ -128,11 +130,11 @@ let simpl_deqs seq =
     let non_deq_vars =
 			Term.Set.add Term.nil
 				(Term.Set.union
-				  (Heap.vars { l with deqs=Deqs.empty }) (Heap.vars r)) in
+				  (Sl_heap.vars { l with SH.deqs=Deqs.empty }) (Sl_heap.vars r)) in
     let f p = Pair.conj (Pair.map (fun t -> Term.Set.mem t non_deq_vars) p) in
-    let l' = { l with deqs=Deqs.filter f l.deqs } in
-    if Heap.equal l l' then [] else
-    [ [ (([l'], [r]), Heap.tag_pairs l', TagPairs.empty) ], "" ]
+    let l' = { l with SH.deqs=Deqs.filter f l.SH.deqs } in
+    if Sl_heap.equal l l' then [] else
+    [ [ (([l'], [r]), Sl_heap.tag_pairs l', TagPairs.empty) ], "" ]
   with Not_symheap -> []
 
 let simplify_rules = [
@@ -162,20 +164,20 @@ let instantiate_pto =
   let rl seq =
     try
       let (l,r) = Sl_seq.dest seq in
-      let (lptos,rptos) = Pair.map Ptos.elements (l.ptos,r.ptos) in
+      let (lptos,rptos) = Pair.map Ptos.elements (l.SH.ptos,r.SH.ptos) in
       let eptos = Blist.filter (fun (x,_) -> Term.is_exist_var x) rptos in
       let match_ls xs ys =
         try
-					Blist.exists2 (fun x y -> Heap.equates l x y) xs ys
+					Blist.exists2 (fun x y -> Sl_heap.equates l x y) xs ys
 				with Invalid_argument _ -> false in
       let cp = Blist.cartesian_product eptos lptos in
       let cp = Blist.filter (fun ((_,ys),(_,zs)) -> match_ls ys zs) cp in
       let do_instantiation (((x,ys) as p), ((w,zs) as q)) =
-        let l' = { l with ptos=Ptos.remove q (Ptos.of_list lptos) } in
-        let r' = { r with ptos=Ptos.remove p (Ptos.of_list rptos) } in
+        let l' = { l with SH.ptos=Ptos.remove q (Ptos.of_list lptos) } in
+        let r' = { r with SH.ptos=Ptos.remove p (Ptos.of_list rptos) } in
         let r' =
-          { r' with eqs=UF.union r'.eqs (UF.of_list ((x,w)::(Blist.combine ys zs))) } in
-        [ ( ([l'], [r']), Heap.tag_pairs l, TagPairs.empty ) ], "Inst ->"
+          { r' with SH.eqs=UF.union r'.SH.eqs (UF.of_list ((x,w)::(Blist.combine ys zs))) } in
+        [ ( ([l'], [r']), Sl_heap.tag_pairs l, TagPairs.empty ) ], "Inst ->"
       in Blist.map do_instantiation cp
     with Not_symheap | Invalid_argument _ -> [] in
   wrap rl 
@@ -187,15 +189,15 @@ let mk_ruf defs =
       let right_rule seq =
         try
           let (l,r) = Sl_seq.dest seq in
-          let preds = Inds.filter (fun (_,(ident',_)) -> Strng.equal ident ident') r.inds in
+          let preds = Inds.filter (fun (_,(ident',_)) -> Strng.equal ident ident') r.SH.inds in
           if Inds.is_empty preds then [] else
           let (f, (ident, vs)) = Sl_indrule.dest (Sl_indrule.freshen (Sl_seq.vars seq) case) in
           let right_unfold ((_,(_,vs')) as p) =
-            let r' = { r with inds=Inds.remove p r.inds } in
+            let r' = { r with SH.inds=Inds.remove p r.SH.inds } in
             (* NB assumes distinct vars in ind pred def *)
             let theta = Term.Map.of_list (Blist.combine vs vs') in
-            let f' = Heap.subst theta f in
-            [ (([l], [Heap.star r' f']), Heap.tag_pairs l, TagPairs.empty) ],
+            let f' = Sl_heap.subst theta f in
+            [ (([l], [Sl_heap.star r' f']), Sl_heap.tag_pairs l, TagPairs.empty) ],
             (ident ^ " R.Unf.") in
           Inds.map_to_list right_unfold preds
         with Not_symheap -> [] in
@@ -207,19 +209,19 @@ let gen_left_rules (def, ident) =
   let left_rule seq =
     try
       let (l,r) = Sl_seq.dest seq in
-      let preds = Inds.filter (fun (_, (ident', _)) -> Strng.equal ident ident') l.inds in
+      let preds = Inds.filter (fun (_, (ident', _)) -> Strng.equal ident ident') l.SH.inds in
       if Inds.is_empty preds then [] else
       let left_unfold ((id,(_,pvs)) as p) =
-        let l' = { l with inds=Inds.remove p l.inds } in
+        let l' = { l with SH.inds=Inds.remove p l.SH.inds } in
         let do_case case =
           let (f', (_,vs')) = Sl_indrule.dest (Sl_indrule.freshen (Sl_seq.vars seq) case) in
           (* FIXME assumes distinct vars in ind pred def *)
           let theta = Term.Map.of_list (Blist.combine vs' pvs) in
-          let f' = Heap.subst theta f' in
-          let f' = Heap.repl_tags id f' in
-          let l' = Heap.star l' f' in
-					let l' = Heap.univ (Heap.vars r) l' in
-          let ts = Tags.inter (Heap.tags l') (Heap.tags l) in
+          let f' = Sl_heap.subst theta f' in
+          let f' = Sl_heap.repl_tags id f' in
+          let l' = Sl_heap.star l' f' in
+					let l' = Sl_heap.univ (Sl_heap.vars r) l' in
+          let ts = Tags.inter (Sl_heap.tags l') (Sl_heap.tags l) in
           (([l'], [r]), TagPairs.mk ts, TagPairs.singleton (id, id)) in
         Blist.map do_case def, (ident ^ " L.Unf.") in
       Inds.map_to_list left_unfold preds
