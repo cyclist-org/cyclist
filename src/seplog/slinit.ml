@@ -25,7 +25,7 @@ open Symheap;;
 #install_printer Term.Set.pp;;
 #install_printer Term.pp_subst;;
 #install_printer Heap.pp;;
-#install_printer Form.pp;;
+#install_printer Sl_form.pp;;
 #install_printer Sl_seq.pp;;
 #install_printer Defs.pp;;
 open Goto_rules;;

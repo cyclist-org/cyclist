@@ -7,12 +7,12 @@ module Proof = Proof.Make(Goto_program.Seq)
 module Rule = Proofrule.Make(Goto_program.Seq)
 module Seqtactics = Seqtactics.Make(Goto_program.Seq)
 
-let dest_sh_seq (l,i) = (Form.dest l, i)
+let dest_sh_seq (l,i) = (Sl_form.dest l, i)
 
 (* axioms *)
 
 let ex_falso_axiom_f, ex_falso_axiom = 
-  let ax ((l,_):Seq.t) = Form.inconsistent l in 
+  let ax ((l,_):Seq.t) = Sl_form.inconsistent l in 
   ax, Rule.mk_axiom (fun seq -> Option.mk (ax seq) "Ex Falso")
 
 let symex_stop_axiom_f, symex_stop_axiom = 
@@ -22,15 +22,15 @@ let symex_stop_axiom_f, symex_stop_axiom =
 (* rules *)
 let eq_subst_ex_f =
   let rl (l,i) =
-    let l' = Form.subst_existentials l in
-    if Form.equal l l' then [] else
-    [ [ ((l', i), Form.tag_pairs l, TagPairs.empty) ], "" ] in
+    let l' = Sl_form.subst_existentials l in
+    if Sl_form.equal l l' then [] else
+    [ [ ((l', i), Sl_form.tag_pairs l, TagPairs.empty) ], "" ] in
   rl
 
 let norm (l,i) = 
-  let l' = Form.norm l in
-  if Form.equal l l' then [] else
-  [ [( (l',i), Form.tag_pairs l', TagPairs.empty )], "" ] 
+  let l' = Sl_form.norm l in
+  if Sl_form.equal l l' then [] else
+  [ [( (l',i), Sl_form.tag_pairs l', TagPairs.empty )], "" ] 
 
 let simplify_rules = [ (* norm ; *) eq_subst_ex_f ]
 
@@ -168,7 +168,7 @@ let symex_goto_rule_f, symex_goto_rule =
     let cmd = get_cmd i in
     try
       let i' = Cmd.dest_goto cmd in
-      [ [ ((f, i'), Form.tag_pairs f, TagPairs.empty) ], "Goto" ]
+      [ [ ((f, i'), Sl_form.tag_pairs f, TagPairs.empty) ], "Goto" ]
     with WrongCmd -> [] in
   rl, wrap rl 
 
@@ -177,7 +177,7 @@ let symex_skip_rule_f, symex_skip_rule =
     let cmd = get_cmd i in
     try
       let () = Cmd.dest_skip cmd in
-      [ [ ((f, i+1), Form.tag_pairs f, TagPairs.empty) ], "Skip" ]
+      [ [ ((f, i+1), Sl_form.tag_pairs f, TagPairs.empty) ], "Skip" ]
     with WrongCmd -> [] in
   rl, wrap rl 
 
@@ -206,7 +206,7 @@ let symex_non_det_if_rule_f, symex_non_det_if_rule =
     try
       let (c,i') = Cmd.dest_if cmd in
       if not (Cmd.is_non_det c) then [] else
-      let t = Form.tag_pairs f in
+      let t = Sl_form.tag_pairs f in
       [ 
         [ ((f, i'), t, TagPairs.empty) ; ((f, i+1), t, TagPairs.empty) ], 
         "If(non-det)"
@@ -221,7 +221,7 @@ let is_subsumed s1 s2 = Seq.subsumed_wrt_tags Tags.empty s1 s2
 let matches_fun ((l1,i1) as s1) ((l2,i2) as s2) =
   (* the check that both formulas are either symheaps or disjunctions is there *)
   (*  to avoid excessive weakening through disjunction introduction *)
-  if i1<>i2 || not (Form.is_heap l1 = Form.is_heap l2) then [] else
+  if i1<>i2 || not (Sl_form.is_heap l1 = Sl_form.is_heap l2) then [] else
   let tags = Tags.inter (Seq.tags s1) (Seq.tags s2) in
   if Tags.is_empty tags then [] else
   let res = Seq.uni_subsumption s1 s2 in

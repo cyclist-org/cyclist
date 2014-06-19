@@ -1,4 +1,4 @@
-include Util.BasicType with type t = Symheap.Form.t * Symheap.Form.t
+include Util.BasicType with type t = Sl_form.t * Sl_form.t
 
 val dest : t -> Symheap.Heap.t * Symheap.Heap.t
 val to_melt : t -> Latex.t

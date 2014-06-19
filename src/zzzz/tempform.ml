@@ -41,7 +41,7 @@ module rec Form :
     val to_string : t -> string
     
     val norm : t -> t
-    val to_slformula : t -> Symheap.Form.t
+    val to_slformula : t -> Sl_form.t
     val tags : FormSet.elt -> Util.Tags.t
     val tag_pairs : t -> TagPairs.t
     val vars : t -> Term.Set.t
@@ -231,20 +231,20 @@ and FormSet : OrderedContainer with type elt=Form.t = MakeSet(Form)
 
 module Seq =
   struct
-    type t = Symheap.Form.t * int * Form.t
+    type t = Sl_form.t * int * Form.t
     
-    let vars (l,_,r) = Term.Set.union (Symheap.Form.vars l) (Form.vars r)
+    let vars (l,_,r) = Term.Set.union (Sl_form.vars l) (Form.vars r)
     
     let tags (l,_,r) =
-      Tags.union (Symheap.Form.tags l) (Form.tags r)
+      Tags.union (Sl_form.tags l) (Form.tags r)
     
     let equal ((l,i,r):t) ((l',i',r'):t) = 
-      i=i' && Symheap.Form.equal l l' && Form.equal r r'
+      i=i' && Sl_form.equal l l' && Form.equal r r'
     
     let tag_pairs s = TagPairs.mk (tags s)  
     
     let to_string (l,i,r) =
-      (Symheap.Form.to_string l) ^ " ||-_" ^ (string_of_int i) ^ " " ^
+      (Sl_form.to_string l) ^ " ||-_" ^ (string_of_int i) ^ " " ^
       (Form.to_string r)
     
     (* let is_pure (_,_,r) = Form.is_pure r *)
@@ -259,7 +259,7 @@ module Seq =
 
     let subst theta (l,i,r) =
       (* it is assumed that no program variables are substituted *) 
-      (Symheap.Form.subst theta l, i, r)
+      (Sl_form.subst theta l, i, r)
       
     (*  s' *)
     (* ___ *)
@@ -277,9 +277,9 @@ module Seq =
             if subsumed_wrt_tags new_acc s s'' then new_acc else acc
           ) commontags Tags.empty in
         if not (Tags.is_empty tags') then Some theta' else None in
-      Symheap.Form.spw_left_subsumption valid Term.empty_subst l' l
+      Sl_form.spw_left_subsumption valid Term.empty_subst l' l
         
-    let norm (l,i,r) = (Symheap.Form.norm l, i, Form.norm r)   
+    let norm (l,i,r) = (Sl_form.norm l, i, Form.norm r)   
   end
 
 module Case = Symheap.Case

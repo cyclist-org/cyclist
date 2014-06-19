@@ -17,12 +17,12 @@ let tagpairs s =
 let progpairs () = 
 	if !termination then TagPairs.empty else Seq.tagpairs_one
 
-let dest_sh_seq (l,cmd) = (Form.dest l, cmd)
+let dest_sh_seq (l,cmd) = (Sl_form.dest l, cmd)
 
 
 (* axioms *)
 let ex_falso_axiom = 
-  Rule.mk_axiom (fun (f,_) -> Option.mk (Form.inconsistent f) "Ex Falso")
+  Rule.mk_axiom (fun (f,_) -> Option.mk (Sl_form.inconsistent f) "Ex Falso")
 
 let symex_stop_axiom =
   Rule.mk_axiom (fun (_,cmd) -> Option.mk (Cmd.is_stop cmd) "Stop")
@@ -32,13 +32,13 @@ let symex_empty_axiom =
 
 (* simplification rules *)
 let eq_subst_ex_f ((l,cmd) as s) =
-  let l' = Form.subst_existentials l in
-  if Form.equal l l' then [] else
+  let l' = Sl_form.subst_existentials l in
+  if Sl_form.equal l l' then [] else
   [ [ ((l', cmd), tagpairs s, TagPairs.empty) ], "Eq. subst. ex" ]
 
 let norm ((l,cmd) as s) = 
-  let l' = Form.norm l in
-  if Form.equal l l' then [] else
+  let l' = Sl_form.norm l in
+  if Sl_form.equal l l' then [] else
   [ [( (l',cmd), tagpairs s, TagPairs.empty)], "Norm" ] 
 
 let simplify_rules = [ norm; eq_subst_ex_f ]
@@ -215,7 +215,7 @@ let symex_while_rule =
 
 let matches_fun ((l1,cmd1) as s1) ((l2,cmd2) as s2) =
   if not (Cmd.equal cmd1 cmd2)  || 
-     not (Form.is_heap l1 = Form.is_heap l2) then [] else
+     not (Sl_form.is_heap l1 = Sl_form.is_heap l2) then [] else
   match Seq.uni_subsumption s1 s2 with
     | None -> []
     | Some theta ->

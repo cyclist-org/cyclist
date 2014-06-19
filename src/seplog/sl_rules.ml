@@ -8,10 +8,10 @@ module Seqtactics = Seqtactics.Make(Sl_seq)
 
 let id_axiom =
   Rule.mk_axiom 
-    (fun (l,r) -> Option.mk (Form.subsumed_wrt_tags Tags.empty r l) "Id")
+    (fun (l,r) -> Option.mk (Sl_form.subsumed_wrt_tags Tags.empty r l) "Id")
 
 let ex_falso_axiom =
-  Rule.mk_axiom (fun (l,_) -> Option.mk (Form.inconsistent l) "Ex Falso")
+  Rule.mk_axiom (fun (l,_) -> Option.mk (Sl_form.inconsistent l) "Ex Falso")
 
 (* break LHS disjunctions *)
 let lhs_disj_to_symheaps =
@@ -29,7 +29,7 @@ let rhs_disj_to_symheaps =
   Rule.mk_infrule 
     (fun (l,r) -> if Blist.length r < 2 || Blist.length l <> 1 then [] else
       Blist.map 
-        (fun s -> [ ((l,[s]), Form.tag_pairs l, TagPairs.empty) ], "R. Or") 
+        (fun s -> [ ((l,[s]), Sl_form.tag_pairs l, TagPairs.empty) ], "R. Or") 
         r)
 
 (* simplification rules *)

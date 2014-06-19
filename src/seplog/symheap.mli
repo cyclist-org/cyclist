@@ -105,6 +105,10 @@ sig
   val mk_deq : Term.t -> Term.t -> t
   val mk_ind : int -> ind_identifier -> Term.t list -> t
   val subst : Term.substitution -> t -> t
+  val aux_subsumed_wrt_tags : bool -> Util.Tags.t -> t -> t -> bool  
+  val aux_subsumption : bool -> bool -> 
+    (Term.substitution -> Term.substitution option) ->
+    Term.substitution -> t -> t -> Term.substitution option
   val spw_left_subsumption :
     (Term.substitution -> Term.substitution option) ->
     Term.substitution -> t -> t -> Term.substitution option
@@ -115,42 +119,7 @@ sig
   val fixpoint : (t -> t) -> t -> t
   val parse : (t, 'a) MParser.t
   val project : t -> Term.t list -> t
-end
-
-module Form :
-sig
-  include Util.BasicType with type t = symheap list
-  val empty : t
-  val dest : t -> Heap.t
-
-  val star : t -> t -> t
-  val disj : t -> t -> t
-  val to_string : t -> string
   val to_melt : t -> Latex.t
-  val norm : t -> t
-  val terms : t -> Term.Set.t
-  val vars : t -> Term.Set.t
-  val tags : t -> Util.Tags.t
-  val tag_pairs : t -> Util.TagPairs.t
-  val equates : t -> Term.t -> Term.t -> bool
-  val inconsistent : t -> bool
-  val subst : Term.substitution -> t -> t
-  val subsumed_wrt_tags : Util.Tags.t -> t -> t -> bool
-  val spw_subsumed_wrt_tags : Util.Tags.t -> t -> t -> bool
-  val right_subsumption :
-    (Term.substitution -> Term.substitution option) ->
-    Term.substitution -> t -> t -> Term.substitution option
-  val left_subsumption :
-    (Term.substitution -> Term.substitution option) ->
-    Term.substitution -> t -> t -> Term.substitution option
-    (* spatial weakening version *)
-  val spw_left_subsumption :
-    (Term.substitution -> Term.substitution option) ->
-    Term.substitution -> t -> t -> Term.substitution option
-  val subst_existentials : t -> t
-  val is_fresh_in : Term.t -> t -> bool
-  val is_heap : t -> bool
-  val parse : (t, 'a) MParser.t
 end
 exception Not_symheap
 

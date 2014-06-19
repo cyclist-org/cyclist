@@ -194,20 +194,20 @@ type program_t = fields * lab_cmds
 
 module Seq =
   struct
-    type t = Form.t * int
-    let tags (f,_) = Form.tags f
-    let vars (l,_) = Form.vars l
-    let terms (l,_) = Form.terms l
-    let subst theta (l,i) = (Form.subst theta l, i)
+    type t = Sl_form.t * int
+    let tags (f,_) = Sl_form.tags f
+    let vars (l,_) = Sl_form.vars l
+    let terms (l,_) = Sl_form.terms l
+    let subst theta (l,i) = (Sl_form.subst theta l, i)
     let to_string (f,i) =
-      (Form.to_string f) ^ " |-_" ^ (string_of_int i) ^ " !"
+      (Sl_form.to_string f) ^ " |-_" ^ (string_of_int i) ^ " !"
     let to_melt (f,i) =
       Latex.concat
-      [ Form.to_melt f;
+      [ Sl_form.to_melt f;
         Latex.index symb_turnstile.melt (Latex.text (string_of_int i)) ]
 
     let subsumed_wrt_tags tags (l,i) (l',i') =
-      i = i' && Form.spw_subsumed_wrt_tags tags l' l
+      i = i' && Sl_form.spw_subsumed_wrt_tags tags l' l
     (*  s' *)
     (* ___ *)
     (*  s  *)
@@ -216,7 +216,7 @@ module Seq =
       let tags = Tags.inter (tags s) (tags s') in
       let valid theta' =
         if Term.Map.exists
-          (fun k v -> Term.is_univ_var k && not (Form.equates l k v)) theta'
+          (fun k v -> Term.is_univ_var k && not (Sl_form.equates l k v)) theta'
           then None else
         let s'' = subst theta' s' in
         let tags' = Tags.fold
@@ -225,15 +225,15 @@ module Seq =
             if subsumed_wrt_tags new_acc s s'' then new_acc else acc
           ) tags Tags.empty in
         if not (Tags.is_empty tags') then Some theta' else None in
-      Form.spw_left_subsumption valid Term.empty_subst l' l
+      Sl_form.spw_left_subsumption valid Term.empty_subst l' l
 
     let pp fmt (f,i) =
-      Format.fprintf fmt "@[%a |-_%i@]" Symheap.Form.pp f i
+      Format.fprintf fmt "@[%a |-_%i@]" Sl_form.pp f i
 
-    let equal (f,i) (f',i') = (i=i') && Symheap.Form.equal f f'
+    let equal (f,i) (f',i') = (i=i') && Sl_form.equal f f'
     
     let parse st = 
-      ( Form.parse >>= (fun f ->
+      ( Sl_form.parse >>= (fun f ->
         parse_symb symb_turnstile_underscore >>
         Tokens.integer >>= (fun i ->
         parse_symb symb_bang >>$ (f,i))) <?> "GotoSeq") st
@@ -299,7 +299,7 @@ let parse_fields st =
 let parse_judgment st =
   ( parse_symb keyw_judgement >>
     parse_symb symb_colon >>
-    Form.parse >>= (fun f ->
+    Sl_form.parse >>= (fun f ->
     parse_symb symb_turnstile_underscore >>
     Tokens.integer >>= (fun n ->
     parse_symb symb_bang >>$ (f,n))) <?> "GotoJudgement" ) st
