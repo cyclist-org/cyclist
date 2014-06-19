@@ -4,16 +4,16 @@ open Symheap
 open Symbols
 open MParser
 
-module CaseList = MakeFList(Case)
-module DefPair = PairTypes(CaseList)(Strng)
+module IndRuleList = MakeFList(Sl_indrule)
+module DefPair = PairTypes(IndRuleList)(Strng)
 include MakeFList(DefPair)
 include Fixpoint(struct type t = DefPair.t list let equal = equal end)
 
-(* type t = ((Case.t list) * ind_identifier) list *)
+(* type t = ((Sl_indrule.t list) * ind_identifier) list *)
 let empty = []
 let add_case a l = failwith "not implemented"
 let string_of_case c =
-  let (f, (ident, params)) = Case.dest c in
+  let (f, (ident, params)) = Sl_indrule.dest c in
   (Heap.to_string f) ^ symb_ind_implies.sep ^ ident ^
   (bracket (Blist.to_string symb_comma.str Term.to_string params))
 
@@ -31,7 +31,7 @@ let pp fmt d = Format.fprintf fmt "%s" (to_string d)
 
 let parse_section st =
   (parse_ident >>= (fun name ->
-          Tokens.braces (sep_by1 Case.parse (parse_symb symb_ind_sep)) <<
+          Tokens.braces (sep_by1 Sl_indrule.parse (parse_symb symb_ind_sep)) <<
           spaces >>= (fun cases -> return (cases, name))) <?> "defs section") st
 
 let parse st =
@@ -40,11 +40,14 @@ let parse st =
 let of_channel c =
   handle_reply (MParser.parse_channel parse c ())
 
-let mem ident (defs: t) = Blist.exists (fun (_, ident') -> Strng.equal ident ident') defs
+let mem ident (defs: t) = 
+  Blist.exists (fun (_, ident') -> Strng.equal ident ident') defs
 
-let is_defined (_, (ident, _)) defs = mem ident defs
+let is_defined (_, (ident, _)) defs = 
+  mem ident defs
 
-let get_def ident (defs: t) = Blist.find (fun (_, ident') -> Strng.equal ident ident') defs
+let get_def ident (defs: t) = 
+  Blist.find (fun (_, ident') -> Strng.equal ident ident') defs
 
 module BasePair =
 struct
@@ -59,7 +62,7 @@ struct
     ")"
   
   let project (v, g) case =
-    let (_, (_, formals)) = Case.dest case in
+    let (_, (_, formals)) = Sl_indrule.dest case in
     (Term.Set.inter v (Term.Set.of_list formals), Heap.project g formals)
   
   let subst theta (v, g) =
@@ -70,11 +73,11 @@ struct
   let unfold (v, h) ((_, (_, params)) as ind) (case, (v', g')) =
     (* simultaneously freshen case and (v',g') *)
     let avoidvars = Term.Set.union v (Heap.vars h) in
-    let theta = Term.avoid_theta avoidvars (Case.vars case) in
-    let case = Case.subst theta case in
+    let theta = Term.avoid_theta avoidvars (Sl_indrule.vars case) in
+    let case = Sl_indrule.subst theta case in
     let (v', g') = subst theta (v', g') in
     (* now carry on with substitution as normal *)
-    let (_, (_, formals)) = Case.dest case in
+    let (_, (_, formals)) = Sl_indrule.dest case in
     let theta = Term.Map.of_list (Blist.combine formals params) in
     (* let formals = Term.Set.of_list (Blist.map fst                 *)
     (* (Term.Map.to_list theta)) in let substs = Term.Set.of_list    *)
@@ -94,7 +97,7 @@ struct
   
   (* assumes case is built with Heap.star so ys are already unequal *)
   let unfold_all case cbps =
-    let (h, _) = Case.dest case in
+    let (h, _) = Sl_indrule.dest case in
     (* let () = assert (Inds.cardinal h.inds =            *)
     (* Blist.length cbps) in                                         *)
     let ys = Term.Set.of_list (Blist.rev_map fst (Ptos.to_list h.ptos)) in
@@ -102,7 +105,7 @@ struct
     Blist.fold_left2 unfold (ys, h) (Inds.to_list h.inds) cbps
   
   let gen case cbps =
-    let (_, (_, args)) = Case.dest case in
+    let (_, (_, args)) = Sl_indrule.dest case in
     let (v, h) = unfold_all case cbps in
     if Heap.inconsistent h then None else
       let l = Blist.rev_append (Term.Set.to_list (Heap.vars h)) args in
@@ -117,10 +120,10 @@ module BasePairSet = MakeTreeSet(BasePair)
 
 module CaseMap =
 struct
-  include MakeMap(Case)
+  include MakeMap(Sl_indrule)
   let to_string cmap =
     let aux (c, s) =
-      (Case.to_string c) ^ "\nBase pairs: " ^
+      (Sl_indrule.to_string c) ^ "\nBase pairs: " ^
       (BasePairSet.to_string s) ^ "\n" in
     Blist.to_string "\n" aux (to_list cmap)
 end
@@ -128,14 +131,14 @@ end
 let get_bps cmap (_, (ident, _)) =
   let l =
     Blist.filter
-      (fun (c, _) -> Strng.equal ident (fst (snd (Case.dest c))))
+      (fun (c, _) -> Strng.equal ident (fst (snd (Sl_indrule.dest c))))
       (CaseMap.to_list cmap) in
   Blist.bind
     (fun (c, s) -> Blist.map (fun bp -> (c, bp)) (BasePairSet.to_list s))
     l
 
 let gen_pairs case cmap =
-  let (h, _) = Case.dest case in
+  let (h, _) = Sl_indrule.dest case in
   let candidates =
     Blist.map (fun i -> get_bps cmap i) (Inds.to_list h.inds) in
   let l = Blist.choose candidates in
@@ -149,7 +152,7 @@ let first_pred_not_empty defs =
   fun cm ->
       CaseMap.exists
         (fun k v ->
-              Strng.equal (fst (snd (Case.dest k))) first_pred &&
+              Strng.equal (fst (snd (Sl_indrule.dest k))) first_pred &&
               not (BasePairSet.is_empty v)
         )
         cm
@@ -189,7 +192,7 @@ let satisfiable defs only_first output =
   if output then
     begin
       let element_conv (c, s) =
-        ((Case.to_string c) ^ " has base " ^ (BasePairSet.to_string s)) in
+        ((Sl_indrule.to_string c) ^ " has base " ^ (BasePairSet.to_string s)) in
       print_endline
         (Blist.to_string "\n" element_conv (CaseMap.to_list res))
     end ;
@@ -202,5 +205,5 @@ let satisfiable defs only_first output =
 
 let of_formula pname params f defs =
   let head = (pname, params) in
-  let caselist = Blist.map (fun h -> Case.mk h head) f in
+  let caselist = Blist.map (fun h -> Sl_indrule.mk h head) f in
   (caselist, pname):: defs

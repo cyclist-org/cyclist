@@ -183,13 +183,13 @@ let instantiate_pto =
 let mk_ruf defs =
   let gen_right_rules (def,_) =
     let gen_rule case =
-      let (_,(ident,_)) = Case.dest case in
+      let (_,(ident,_)) = Sl_indrule.dest case in
       let right_rule seq =
         try
           let (l,r) = Seq.dest seq in
           let preds = Inds.filter (fun (_,(ident',_)) -> Strng.equal ident ident') r.inds in
           if Inds.is_empty preds then [] else
-          let (f, (ident, vs)) = Case.dest (Case.freshen (Seq.vars seq) case) in
+          let (f, (ident, vs)) = Sl_indrule.dest (Sl_indrule.freshen (Seq.vars seq) case) in
           let right_unfold ((_,(_,vs')) as p) =
             let r' = { r with inds=Inds.remove p r.inds } in
             (* NB assumes distinct vars in ind pred def *)
@@ -212,7 +212,7 @@ let gen_left_rules (def, ident) =
       let left_unfold ((id,(_,pvs)) as p) =
         let l' = { l with inds=Inds.remove p l.inds } in
         let do_case case =
-          let (f', (_,vs')) = Case.dest (Case.freshen (Seq.vars seq) case) in
+          let (f', (_,vs')) = Sl_indrule.dest (Sl_indrule.freshen (Seq.vars seq) case) in
           (* FIXME assumes distinct vars in ind pred def *)
           let theta = Term.Map.of_list (Blist.combine vs' pvs) in
           let f' = Heap.subst theta f' in

@@ -30,17 +30,17 @@ let ex_subst_defs defs =
       (* this maintains universal vars *)
       Heap.subst (Term.Map.of_list ex_eqs) { h with eqs=UF.of_list non_ex_eqs } in
   let ex_subst_case c =
-    let (p,h) = Case.dest c in
+    let (p,h) = Sl_indrule.dest c in
     let p' = Heap.fixpoint ex_subst_heap p in
-    Case.mk p' h in
+    Sl_indrule.mk p' h in
   Blist.map (fun (l,i) -> (Blist.map ex_subst_case l, i)) defs
 
 
 let empify defs =
   let empify_ c =
-    let (p,h) = Case.dest c in
+    let (p,h) = Sl_indrule.dest c in
     let inds = Inds.filter (fun pred -> Sl_defs.is_defined pred defs) p.inds in
-    Case.mk {p with inds=inds} h in
+    Sl_indrule.mk {p with inds=inds} h in
   Blist.map (fun (l,i) -> (Blist.map empify_ l, i)) defs
 
 let inline defs =
@@ -49,7 +49,7 @@ let inline defs =
       Blist.find
         begin fun (p,h) ->
           (Blist.length p)=1 &&
-          let (f,_) = Case.dest (Blist.hd p) in
+          let (f,_) = Sl_indrule.dest (Blist.hd p) in
           let idents =
             Inds.map_to Strng.Set.add Strng.Set.empty (fun (_,(id,_)) -> id) f.inds in
           not (Strng.Set.mem h idents)
@@ -57,7 +57,7 @@ let inline defs =
     let defs = Blist.filter ((!=)q) defs in
     let unf = While_rules.gen_left_rules_f (p,h) in
     let f orig =
-      let (p',h') = Case.dest orig in
+      let (p',h') = Sl_indrule.dest orig in
       let first_unfold f =
         let apps = unf ([f],0) in
         if apps=[] then f else
@@ -65,7 +65,7 @@ let inline defs =
           Blist.hd f' in
           (* print_endline (Heap.to_string f'') ; f'' in             *)
       let p'' = Heap.fixpoint first_unfold p' in
-      Case.mk p'' h' in
+      Sl_indrule.mk p'' h' in
     Blist.map (fun (l,i) -> (Blist.map f l, i)) defs
   with Not_found -> defs
 
@@ -97,7 +97,7 @@ let find_unused_arg defs =
     let check_pos pos =
       if Blist.for_all
         begin fun case ->
-          let ((heap, (_, params)) as p) = Case.dest case in
+          let ((heap, (_, params)) as p) = Sl_indrule.dest case in
           not (Term.Set.mem (Blist.nth params pos) (Heap.vars heap)) ||
           used_only_recursively p pos
         end
@@ -106,7 +106,7 @@ let find_unused_arg defs =
         Some (ident, pos)
       else
         None in
-    Blist.find_some check_pos (Blist.range 0 (snd (snd (Case.dest (Blist.hd clauses))))) in
+    Blist.find_some check_pos (Blist.range 0 (snd (snd (Sl_indrule.dest (Blist.hd clauses))))) in
   if Blist.length defs=1 then
     None
   else
@@ -114,7 +114,7 @@ let find_unused_arg defs =
 
 let eliminate (ident, pos) defs =
   let elim_clause case =
-    let (heap, (ident', params)) = Case.dest case in
+    let (heap, (ident', params)) = Sl_indrule.dest case in
     let elim_pred heap =
       { heap with
           inds = Inds.endomap
@@ -124,9 +124,9 @@ let eliminate (ident, pos) defs =
             heap.inds
       } in
     if ident<>ident' then
-      Case.mk (elim_pred heap) (ident', params)
+      Sl_indrule.mk (elim_pred heap) (ident', params)
     else
-      Case.mk (elim_pred heap) (ident', Blist.remove_nth pos params) in
+      Sl_indrule.mk (elim_pred heap) (ident', Blist.remove_nth pos params) in
   Blist.map (fun (cl, ident') -> (Blist.map elim_clause cl, ident')) defs
 
 let elim_dead_vars defs =
@@ -354,7 +354,7 @@ let abd_deref =
 							Heap.star
   							(Heap.mk_pto newx pto_params)
   							(Heap.mk_ind 1 fresh_ident (newparams @ pto_params)) in
-        	( [Case.mk clause head], ident )::defs
+        	( [Sl_indrule.mk clause head], ident )::defs
 				  end
 					newxs in
       Blist.bind f inds
@@ -408,7 +408,7 @@ let abd_det_guard =
               deqs=Deqs.singleton pair ;
               inds=Inds.singleton (1, (fresh_ident', newparams))
             } in
-          ( [Case.mk clause_eq head; Case.mk clause_deq head], ident )::defs in
+          ( [Sl_indrule.mk clause_eq head; Sl_indrule.mk clause_deq head], ident )::defs in
 			  Blist.map g occurrences in
       Blist.bind f inds
     with Not_symheap -> [] in
@@ -461,7 +461,7 @@ let abd_back_rule =
               { Heap.empty with
                 inds=Inds.of_list [(0,(c',perm)); (0, (fresh_ident, newparams))]
               } in
-            (( [Case.mk cl (c, newparams)], c )::defs))
+            (( [Sl_indrule.mk cl (c, newparams)], c )::defs))
 				  combinations in
       Blist.bind f cp
     with Not_symheap -> [] in
@@ -512,7 +512,7 @@ let matches = Abdrule.lift While_rules.dobackl
 (* 				let newpred = (1, (fresh_ident, newparams @ [x])) in                              *)
 (* 				let newpred' = (1, (fresh_ident, newparams @ [Term.nil])) in                      *)
 (*         let clause = { Heap.empty with inds=Inds.of_list [newpred; newpred']} in          *)
-(*         let new_defs = ( [Case.mk clause head], ident )::defs in                          *)
+(*         let new_defs = ( [Sl_indrule.mk clause head], ident )::defs in                          *)
 (* 				let h' = { h' with inds=Inds.filter ((!=)i) h'.inds } in                          *)
 (* 				let newpred = (1, (fresh_ident, params @ [y])) in                                 *)
 (* 				let newpred' = (1, (fresh_ident, Blist.replace_nth y xi params @ [Term.nil])) in  *)
@@ -555,7 +555,7 @@ let matches = Abdrule.lift While_rules.dobackl
 (*   			List.map                                                                 *)
 (*           (fun perm ->                                                           *)
 (*   					let cl = { Heap.empty with inds=Inds.singleton (1,(id2,perm)) } in   *)
-(*             (( [Case.mk cl (id1, newparams)], id1 )::defs))                      *)
+(*             (( [Sl_indrule.mk cl (id1, newparams)], id1 )::defs))                      *)
 (*   			  combinations in                                                        *)
 (*       Blist.bind g cp                                               *)
 (*     with Not_symheap | WrongCmd -> [] in                                         *)

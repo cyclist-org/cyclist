@@ -5,6 +5,7 @@ sig
   include Util.BasicType 
   module Set : Util.OrderedContainer with type elt=t
   module Map : Util.OrderedMap with type key = t
+  module FList : Util.BasicType with type t = t list
 
   val nil : t
   val list_equal : t list -> t list -> bool
@@ -64,6 +65,9 @@ sig
   include Util.OrderedContainer with type elt=Term.t * Term.t list
   val parse : (Term.t * Term.t list, 'a) MParser.parser
 end
+
+module IndSubf : Util.MCTsig with type t = Util.Strng.t * Term.FList.t
+type ind_subf = IndSubf.t
 
 type ind_identifier = string
 type ind_pred = int * (ind_identifier * Term.t list)
@@ -163,18 +167,5 @@ sig
   val parse : (t, 'a) MParser.t
   val of_string : string -> t
 end
-
-module Case :
-sig
-  include Util.BasicType
-  val mk : Heap.t -> ind_identifier * Term.t list -> t
-  val dest: t -> Heap.t * (ind_identifier * Term.t list)
-  val vars : t -> Term.Set.t
-  val freshen : Term.Set.t -> t -> t
-  val subst : Term.substitution -> t -> t
-  val parse : (t, 'a) MParser.t
-end
-
-
 val has_ident : ind_identifier ->  ind_pred -> bool
 

@@ -74,7 +74,7 @@ let gen_left_rules_f (def, ident) seq =
 			let ts = Tags.inter (Heap.tags l) (Heap.tags l) in
       let l' = { l with inds=Inds.remove p l.inds } in
       let do_case case =
-        let (f', (_,vs')) = Case.dest (freshen_case_by_seq seq case) in
+        let (f', (_,vs')) = Sl_indrule.dest (freshen_case_by_seq seq case) in
         let theta = Term.Map.of_list (Blist.combine vs' pvs) in
         let f' = Heap.subst theta f' in
         let f' = Heap.repl_tags id f' in
@@ -293,7 +293,7 @@ let fold (defs,ident) =
       let tags = Seq.tags seq in
       let freshtag = 1 + (try Tags.max_elt tags with Not_found -> 0) in 
       let do_case case =
-        let (f,(ident,vs)) = Case.dest case in 
+        let (f,(ident,vs)) = Sl_indrule.dest case in 
         (* if Inds.is_empty f.inds then [] else *)
         let results : Term.substitution list ref = ref [] in
         let hook sub = results := sub :: !results ; None in 

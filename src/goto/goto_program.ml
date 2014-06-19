@@ -277,7 +277,7 @@ let fresh_evars s i = Term.fresh_evars (Term.Set.add !max_prog_var s) i
 
 (* again, treat prog vars as special *)
 let freshen_case_by_seq seq case =
-  Case.freshen (Term.Set.union (vars_of_program ()) (Seq.vars seq)) case
+  Sl_indrule.freshen (Term.Set.union (vars_of_program ()) (Seq.vars seq)) case
 
 let parse_lcmd st = 
   ( Tokens.integer >>= (fun i ->

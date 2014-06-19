@@ -552,7 +552,7 @@ let fresh_evars s i = Term.fresh_evars (Term.Set.union !program_vars s) i
 
 (* again, treat prog vars as special *)
 let freshen_case_by_seq seq case =
-  Case.freshen (Term.Set.union !program_vars (Seq.vars seq)) case
+  Sl_indrule.freshen (Term.Set.union !program_vars (Seq.vars seq)) case
 
 (* fields: FIELDS; COLON; ils = separated_nonempty_list(COMMA, IDENT); SEMICOLON  *)
 (*     { List.iter P.Field.add ils }                                              *)
