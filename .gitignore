@@ -1,0 +1,13 @@
+# Eclipse Files #
+#################
+.paths
+.project
+.settings/
+
+# Ocaml Executables #
+#####################
+*.native
+*.byte
+*.top
+index.html
+_build/
