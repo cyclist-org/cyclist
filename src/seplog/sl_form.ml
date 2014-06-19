@@ -16,8 +16,8 @@ let star f g =
   Blist.map (fun (f', g') -> Sl_heap.star f' g') (Blist.cartesian_product f g)
 
 let disj f g : t = f @ g
-let terms d = Term.Set.union_of_list (Blist.map Sl_heap.terms d)
-let vars d = Term.filter_vars (terms d)
+let terms d = Sl_term.Set.union_of_list (Blist.map Sl_heap.terms d)
+let vars d = Sl_term.filter_vars (terms d)
 let to_string d = Blist.to_string symb_or.sep Sl_heap.to_string d
 let to_melt d =
   ltx_mk_math

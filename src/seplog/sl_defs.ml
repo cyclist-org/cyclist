@@ -17,7 +17,7 @@ let add_case a l = failwith "not implemented"
 let string_of_case c =
   let (f, (ident, params)) = Sl_indrule.dest c in
   (Sl_heap.to_string f) ^ symb_ind_implies.sep ^ ident ^
-  (bracket (Blist.to_string symb_comma.str Term.to_string params))
+  (bracket (Blist.to_string symb_comma.str Sl_term.to_string params))
 
 let string_of_caseset (cls, ident) =
   ident ^ symb_lb.sep ^ "\n" ^
@@ -53,54 +53,54 @@ let get_def ident (defs: t) =
 
 module BasePair =
 struct
-  include PairTypes(Term.Set)(Sl_heap)
+  include PairTypes(Sl_term.Set)(Sl_heap)
   
   let to_string (v, g) =
     "(" ^
     "{" ^
-    (Blist.to_string "," Term.to_string (Term.Set.to_list v)) ^
+    (Blist.to_string "," Sl_term.to_string (Sl_term.Set.to_list v)) ^
     "}, " ^
     (Sl_heap.to_string g) ^
     ")"
   
   let project (v, g) case =
     let (_, (_, formals)) = Sl_indrule.dest case in
-    (Term.Set.inter v (Term.Set.of_list formals), Sl_heap.project g formals)
+    (Sl_term.Set.inter v (Sl_term.Set.of_list formals), Sl_heap.project g formals)
   
   let subst theta (v, g) =
-    let v' = Term.Set.endomap (fun z -> Term.subst theta z) v in
+    let v' = Sl_term.Set.endomap (fun z -> Sl_term.subst theta z) v in
     let g' = Sl_heap.subst theta g in
     (v', g')
   
   let unfold (v, h) ((_, (_, params)) as ind) (case, (v', g')) =
     (* simultaneously freshen case and (v',g') *)
-    let avoidvars = Term.Set.union v (Sl_heap.vars h) in
-    let theta = Term.avoid_theta avoidvars (Sl_indrule.vars case) in
+    let avoidvars = Sl_term.Set.union v (Sl_heap.vars h) in
+    let theta = Sl_term.avoid_theta avoidvars (Sl_indrule.vars case) in
     let case = Sl_indrule.subst theta case in
     let (v', g') = subst theta (v', g') in
     (* now carry on with substitution as normal *)
     let (_, (_, formals)) = Sl_indrule.dest case in
-    let theta = Term.Map.of_list (Blist.combine formals params) in
-    (* let formals = Term.Set.of_list (Blist.map fst (Term.Map.to_list     *)
-    (* theta)) in let substs = Term.Set.of_list (Blist.map snd             *)
-    (* (Term.Map.to_list theta)) in let () = require (fun () ->            *)
-    (* Term.Set.subset (Sl_heap.vars g') formals) in let () = assert       *)
-    (* (Term.Set.subset v' formals) in let () = assert (Term.Set.is_empty  *)
-    (* (Term.Set.inter (Sl_heap.vars g') substs)) in let () = assert (     *)
-    (* Term.Set.is_empty (Term.Set.inter v' substs)) in                    *)
+    let theta = Sl_term.Map.of_list (Blist.combine formals params) in
+    (* let formals = Sl_term.Set.of_list (Blist.map fst (Sl_term.Map.to_list     *)
+    (* theta)) in let substs = Sl_term.Set.of_list (Blist.map snd             *)
+    (* (Sl_term.Map.to_list theta)) in let () = require (fun () ->            *)
+    (* Sl_term.Set.subset (Sl_heap.vars g') formals) in let () = assert       *)
+    (* (Sl_term.Set.subset v' formals) in let () = assert (Sl_term.Set.is_empty  *)
+    (* (Sl_term.Set.inter (Sl_heap.vars g') substs)) in let () = assert (     *)
+    (* Sl_term.Set.is_empty (Sl_term.Set.inter v' substs)) in                    *)
     let (v', g') = subst theta (v', g') in
     let h' = { h with SH.inds = Inds.remove ind h.SH.inds } in
     let h' = Sl_heap.star h' g' in
-    let cv = Blist.cartesian_product (Term.Set.to_list v) (Term.Set.to_list v') in
+    let cv = Blist.cartesian_product (Sl_term.Set.to_list v) (Sl_term.Set.to_list v') in
     let h' = { h' with SH.deqs = Deqs.union h'.SH.deqs (Deqs.of_list cv) } in
-    let v = Term.Set.union v v' in
+    let v = Sl_term.Set.union v v' in
     (v, h')
   
   (* assumes case is built with Sl_heap.star so ys are already unequal *)
   let unfold_all case cbps =
     let (h, _) = Sl_indrule.dest case in
     (* let () = assert (Inds.cardinal h.inds = Blist.length cbps) in *)
-    let ys = Term.Set.of_list (Blist.rev_map fst (Ptos.to_list h.SH.ptos)) in
+    let ys = Sl_term.Set.of_list (Blist.rev_map fst (Ptos.to_list h.SH.ptos)) in
     let h = { h with SH.ptos = Ptos.empty } in
     Blist.fold_left2 unfold (ys, h) (Inds.to_list h.SH.inds) cbps
   
@@ -108,10 +108,10 @@ struct
     let (_, (_, args)) = Sl_indrule.dest case in
     let (v, h) = unfold_all case cbps in
     if Sl_heap.inconsistent h then None else
-      let l = Blist.rev_append (Term.Set.to_list (Sl_heap.vars h)) args in
+      let l = Blist.rev_append (Sl_term.Set.to_list (Sl_heap.vars h)) args in
       let l = Blist.rev_filter
-          (fun u -> Term.Set.exists (fun z -> Sl_heap.equates h u z) v) l in
-      let v = Term.Set.of_list l in
+          (fun u -> Sl_term.Set.exists (fun z -> Sl_heap.equates h u z) v) l in
+      let v = Sl_term.Set.of_list l in
       Some (project (v, h) case)
   
 end

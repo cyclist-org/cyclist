@@ -18,7 +18,7 @@ let pp fmt (l, r) =
   Format.fprintf fmt "@[%a %s@ %a@]" Sl_form.pp l symb_turnstile.str Sl_form.pp r
 
 let vars (l, r) =
-  Term.filter_vars (Term.Set.union (Sl_form.terms l) (Sl_form.terms r))
+  Sl_term.filter_vars (Sl_term.Set.union (Sl_form.terms l) (Sl_form.terms r))
 let tags (seq: t) = Sl_form.tags (fst seq)
 let tag_pairs f = TagPairs.mk (tags f)
 
@@ -42,7 +42,7 @@ let uni_subsumption s s' =
     if not (Tags.is_empty tags') then
       Some theta' else None in
   let hook theta' = Sl_form.right_subsumption valid theta' r r' in
-  Sl_form.left_subsumption hook Term.Map.empty l' l
+  Sl_form.left_subsumption hook Sl_term.Map.empty l' l
 
 let norm s = Pair.map Sl_form.norm s
 

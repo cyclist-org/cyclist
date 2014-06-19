@@ -44,8 +44,8 @@ exception WrongCmd
 module Cond =
   struct
     type t =
-      | Eq of Term.t * Term.t
-      | Deq of Term.t * Term.t
+      | Eq of Sl_term.t * Sl_term.t
+      | Deq of Sl_term.t * Sl_term.t
       | Non_det
 
     let mk_eq e1 e2 = Eq(e1,e2)
@@ -68,29 +68,29 @@ module Cond =
       | Non_det -> raise WrongCmd
 
     let terms = function
-      | Non_det -> Term.Set.empty
-      | Deq(x,y) | Eq(x,y) -> Term.Set.add x (Term.Set.singleton y)
+      | Non_det -> Sl_term.Set.empty
+      | Deq(x,y) | Eq(x,y) -> Sl_term.Set.add x (Sl_term.Set.singleton y)
 
-    let vars cond = Term.filter_vars (terms cond)
+    let vars cond = Sl_term.filter_vars (terms cond)
 
     let equal cond cond' = match (cond, cond') with
       | (Non_det, Non_det) -> true
       | (Eq(x,y), Eq(x',y')) | (Deq(x,y), Deq(x',y')) ->
-        Term.equal x x' && Term.equal y y'
+        Sl_term.equal x x' && Sl_term.equal y y'
       | _ -> false
 
     let pp fmt = function
       | Non_det ->
         Format.fprintf fmt "@[%s@]" symb_star.str
       | Eq(x,y) ->
-        Format.fprintf fmt "@[%a%s%a@]" Term.pp x symb_eq.str Term.pp y
+        Format.fprintf fmt "@[%a%s%a@]" Sl_term.pp x symb_eq.str Sl_term.pp y
       | Deq(x,y) ->
-        Format.fprintf fmt "@[%a%s%a@]" Term.pp x symb_deq.str Term.pp y
+        Format.fprintf fmt "@[%a%s%a@]" Sl_term.pp x symb_deq.str Sl_term.pp y
 
     let to_melt = function
       | Non_det -> symb_star.melt
-      | Eq(x,y) -> Latex.concat [Term.to_melt x; symb_eq.melt; Term.to_melt y]
-      | Deq(x,y) -> Latex.concat [Term.to_melt x; symb_deq.melt; Term.to_melt y]
+      | Eq(x,y) -> Latex.concat [Sl_term.to_melt x; symb_eq.melt; Sl_term.to_melt y]
+      | Deq(x,y) -> Latex.concat [Sl_term.to_melt x; symb_deq.melt; Sl_term.to_melt y]
 
     let fork f c =
       if is_non_det c then (f,f) else
@@ -112,11 +112,11 @@ module Cmd =
     type cmd_t =
       | Stop
       | Skip
-      | Assign of Term.t * Term.t
-      | Load of Term.t * Term.t * Field.t
-      | Store of Term.t * Field.t * Term.t
-      | New of Term.t
-      | Free of Term.t
+      | Assign of Sl_term.t * Sl_term.t
+      | Load of Sl_term.t * Sl_term.t * Field.t
+      | Store of Sl_term.t * Field.t * Sl_term.t
+      | New of Sl_term.t
+      | Free of Sl_term.t
       | If of Cond.t * t
       | IfElse of Cond.t * t * t
       | While of Cond.t * t
@@ -184,37 +184,37 @@ module Cmd =
       (   attempt (parse_symb keyw_stop >>$ Stop)
       <|> attempt (parse_symb keyw_skip >>$ Skip)
   (*   v = var; ASSIGN; NEW; LP; RP { P.Cmd.mk_new v }                            *)
-      <|> attempt (Term.parse <<
+      <|> attempt (Sl_term.parse <<
           parse_symb symb_assign <<
           parse_symb keyw_new <<
           parse_symb symb_lp <<
           parse_symb symb_rp >>= (fun v ->
-          return (assert (Term.is_var v) ; (New v))))
+          return (assert (Sl_term.is_var v) ; (New v))))
   (*   | v1 = var; ASSIGN; v2 = var; FLD_SEL; fld = IDENT                                                      *)
-      <|> attempt (Term.parse >>= (fun v1 ->
+      <|> attempt (Sl_term.parse >>= (fun v1 ->
           parse_symb symb_assign >>
-          Term.parse >>= (fun v2 ->
+          Sl_term.parse >>= (fun v2 ->
           parse_symb symb_fld_sel >>
           parse_ident >>= (fun id ->
-          return (assert (Term.is_var v1 && Term.is_var v2) ; (Load(v1,v2,id)))))))
+          return (assert (Sl_term.is_var v1 && Sl_term.is_var v2) ; (Load(v1,v2,id)))))))
   (*   | v = var; FLD_SEL; fld = IDENT; ASSIGN; t = term                                                       *)
   (*   { P.Cmd.mk_store v fld t }                                                                              *)
-      <|> attempt (Term.parse >>= (fun v ->
+      <|> attempt (Sl_term.parse >>= (fun v ->
           parse_symb symb_fld_sel >>
           parse_ident >>= (fun id ->
           parse_symb symb_assign >>
-          Term.parse >>= (fun t ->
-          return (assert (Term.is_var v) ; (Store(v,id,t)))))))
+          Sl_term.parse >>= (fun t ->
+          return (assert (Sl_term.is_var v) ; (Store(v,id,t)))))))
   (*   | FREE; ts = paren_terms                                                     *)
   (*   { assert (List.length ts = 1) ; P.Cmd.mk_free (List.hd ts) }                 *)
       <|> attempt (parse_symb keyw_free >>
-          Tokens.parens Term.parse >>= (fun v ->
-          return (assert (Term.is_var v) ; (Free v))))
+          Tokens.parens Sl_term.parse >>= (fun v ->
+          return (assert (Sl_term.is_var v) ; (Free v))))
     (* | v = var; ASSIGN; t = term { P.Cmd.mk_assign v t } *)
-      <|> attempt (Term.parse >>= (fun v -> 
+      <|> attempt (Sl_term.parse >>= (fun v -> 
           parse_symb symb_assign >> 
-          Term.parse >>= (fun t -> 
-          return (assert (Term.is_var v) ; (Assign(v,t))))))
+          Sl_term.parse >>= (fun t -> 
+          return (assert (Sl_term.is_var v) ; (Assign(v,t))))))
   (* | IF; cond = condition; THEN; cmd1 = command; ELSE; cmd2 = command; FI { P.Cmd.mk_ifelse cond cmd1 cmd2 } *)
       <|> attempt (parse_symb keyw_if >>
           Cond.parse >>= (fun cond ->
@@ -321,33 +321,33 @@ module Cmd =
 
 
     let rec cmd_terms = function
-      | Stop | Skip -> Term.Set.empty
-      | New(x) | Free(x) -> Term.Set.singleton x
-      | Assign(x,e) | Load(x,e,_) | Store(x,_,e) -> Term.Set.of_list [x; e]
-      | If(cond,cmd) -> Term.Set.union (Cond.vars cond) (terms cmd)
+      | Stop | Skip -> Sl_term.Set.empty
+      | New(x) | Free(x) -> Sl_term.Set.singleton x
+      | Assign(x,e) | Load(x,e,_) | Store(x,_,e) -> Sl_term.Set.of_list [x; e]
+      | If(cond,cmd) -> Sl_term.Set.union (Cond.vars cond) (terms cmd)
       | IfElse(cond,cmd,cmd') ->
-        Term.Set.union (Term.Set.union (Cond.vars cond) (terms cmd)) (terms cmd')
-      | While(cond,cmd) -> Term.Set.union (Cond.vars cond) (terms cmd)
+        Sl_term.Set.union (Sl_term.Set.union (Cond.vars cond) (terms cmd)) (terms cmd')
+      | While(cond,cmd) -> Sl_term.Set.union (Cond.vars cond) (terms cmd)
     and terms l =
-      Blist.fold_left (fun s c -> Term.Set.union s (cmd_terms c.cmd)) Term.Set.empty l
+      Blist.fold_left (fun s c -> Sl_term.Set.union s (cmd_terms c.cmd)) Sl_term.Set.empty l
 
-    let vars cmd = Term.filter_vars (terms cmd)
+    let vars cmd = Sl_term.filter_vars (terms cmd)
 
     let rec cmd_modifies = function
-      | Stop | Skip | Free _ -> Term.Set.empty
-      | New(x) | Assign(x,_) | Load(x,_,_) | Store(x,_,_) -> Term.Set.singleton x
+      | Stop | Skip | Free _ -> Sl_term.Set.empty
+      | New(x) | Assign(x,_) | Load(x,_,_) | Store(x,_,_) -> Sl_term.Set.singleton x
       | If(_,cmd) | While(_,cmd) -> modifies cmd
-      | IfElse(_,cmd,cmd') -> Term.Set.union (modifies cmd) (modifies cmd')
+      | IfElse(_,cmd,cmd') -> Sl_term.Set.union (modifies cmd) (modifies cmd')
     and modifies l =
       Blist.fold_left 
-        (fun s c -> Term.Set.union s (cmd_modifies c.cmd)) Term.Set.empty l
+        (fun s c -> Sl_term.Set.union s (cmd_modifies c.cmd)) Sl_term.Set.empty l
 
     let rec cmd_equal cmd cmd' = match (cmd, cmd') with
       | (Stop, Stop) | (Skip, Skip) -> true
-      | (New(x), New(y)) | (Free(x), Free(y)) -> Term.equal x y
-      | (Assign(x,e), Assign(x',e')) -> Term.equal x x' && Term.equal e e'
+      | (New(x), New(y)) | (Free(x), Free(y)) -> Sl_term.equal x y
+      | (Assign(x,e), Assign(x',e')) -> Sl_term.equal x x' && Sl_term.equal e e'
       | (Load(x,e,f), Load(x',e',f')) | (Store(x,f,e), Store(x',f',e')) ->
-        Term.equal x x' && Term.equal e e' && f=f'
+        Sl_term.equal x x' && Sl_term.equal e e' && f=f'
       | (While(cond,cmd), While(cond',cmd')) | (If(cond,cmd), If(cond',cmd')) ->
         Cond.equal cond cond' && equal cmd cmd'
       | (IfElse(cond,cmd1,cmd2), IfElse(cond',cmd1',cmd2')) ->
@@ -375,19 +375,19 @@ module Cmd =
       | Skip -> Format.fprintf fmt "%s" keyw_skip.str
       | New(x) ->
         Format.fprintf fmt "%a%s%s%s%s"
-          Term.pp x symb_assign.sep keyw_new.str symb_lp.str symb_rp.str
+          Sl_term.pp x symb_assign.sep keyw_new.str symb_lp.str symb_rp.str
       | Free(x) ->
         Format.fprintf fmt "%s%s%a%s"
-          keyw_free.str symb_lp.str Term.pp x symb_rp.str
+          keyw_free.str symb_lp.str Sl_term.pp x symb_rp.str
       | Assign(x,e) ->
         Format.fprintf fmt "%a%s%a"
-          Term.pp x symb_assign.sep Term.pp e
+          Sl_term.pp x symb_assign.sep Sl_term.pp e
       | Load(x,e,f) ->
         Format.fprintf fmt "%a%s%a%s%s"
-          Term.pp x symb_assign.sep Term.pp e symb_fld_sel.str f
+          Sl_term.pp x symb_assign.sep Sl_term.pp e symb_fld_sel.str f
       | Store(x,f,e) ->
         Format.fprintf fmt "%a%s%s%s%a"
-          Term.pp x symb_fld_sel.str f symb_assign.sep Term.pp e
+          Sl_term.pp x symb_fld_sel.str f symb_assign.sep Sl_term.pp e
       | If(cond,cmd) ->
         if abbr then
           Format.fprintf fmt "%s %a %s %a... %s"
@@ -442,22 +442,22 @@ module Cmd =
       | Skip -> keyw_skip.melt
       | New(x) ->
         Latex.concat
-          [ Term.to_melt x; symb_assign.melt;
+          [ Sl_term.to_melt x; symb_assign.melt;
             keyw_new.melt; symb_lp.melt; symb_rp.melt; ]
       | Free(x) ->
         Latex.concat
-          [ keyw_free.melt; symb_lp.melt; Term.to_melt x; symb_rp.melt ]
+          [ keyw_free.melt; symb_lp.melt; Sl_term.to_melt x; symb_rp.melt ]
       | Assign(x,e) ->
         Latex.concat
-          [ Term.to_melt x; symb_assign.melt; Term.to_melt e ]
+          [ Sl_term.to_melt x; symb_assign.melt; Sl_term.to_melt e ]
       | Load(x,e,f) ->
         Latex.concat
-          [ Term.to_melt x; symb_assign.melt; Term.to_melt e;
+          [ Sl_term.to_melt x; symb_assign.melt; Sl_term.to_melt e;
             symb_fld_sel.melt; Field.to_melt f ]
       | Store(x,f,e) ->
         Latex.concat
-          [ Term.to_melt x; symb_fld_sel.melt;
-            Field.to_melt f; symb_assign.melt; Term.to_melt e ]
+          [ Sl_term.to_melt x; symb_fld_sel.melt;
+            Field.to_melt f; symb_assign.melt; Sl_term.to_melt e ]
       | If(cond,cmd) ->
         Latex.concat
           [ keyw_if.melt; ltx_math_space; Cond.to_melt cond; ltx_math_space;
@@ -519,8 +519,8 @@ module Seq =
       if not (Cmd.equal cmd cmd') then None else
       let tags = Tags.inter (tags s) (tags s') in
       let valid theta' =
-        if Term.Map.exists
-          (fun k v -> Term.is_univ_var k && not (Sl_form.equates l k v)) theta'
+        if Sl_term.Map.exists
+          (fun k v -> Sl_term.is_univ_var k && not (Sl_form.equates l k v)) theta'
           then None else 
 				if not !termination then Some theta' else 
         let s'' = subst theta' s' in
@@ -530,7 +530,7 @@ module Seq =
             if subsumed_wrt_tags new_acc s s'' then new_acc else acc
           ) tags Tags.empty in
         if not (Tags.is_empty tags') then Some theta' else None in
-      Sl_form.spw_left_subsumption valid Term.empty_subst l' l
+      Sl_form.spw_left_subsumption valid Sl_term.empty_subst l' l
 
     let pp fmt (f,cmd) =
       Format.fprintf fmt "@[%a%s%a@]"
@@ -539,7 +539,7 @@ module Seq =
     let equal (f,cmd) (f',cmd') = Cmd.equal cmd cmd' && Sl_form.equal f f'
   end
 
-let program_vars = ref Term.Set.empty
+let program_vars = ref Sl_term.Set.empty
 
 let set_program p =
   program_vars := Cmd.vars p
@@ -547,14 +547,14 @@ let set_program p =
 let vars_of_program () = !program_vars
 
 (* remember prog vars when introducing fresh ones *)
-let fresh_uvar s = Term.fresh_uvar (Term.Set.union !program_vars s)
-let fresh_uvars s i = Term.fresh_uvars (Term.Set.union !program_vars s) i
-let fresh_evar s = Term.fresh_evar (Term.Set.union !program_vars s)
-let fresh_evars s i = Term.fresh_evars (Term.Set.union !program_vars s) i
+let fresh_uvar s = Sl_term.fresh_uvar (Sl_term.Set.union !program_vars s)
+let fresh_uvars s i = Sl_term.fresh_uvars (Sl_term.Set.union !program_vars s) i
+let fresh_evar s = Sl_term.fresh_evar (Sl_term.Set.union !program_vars s)
+let fresh_evars s i = Sl_term.fresh_evars (Sl_term.Set.union !program_vars s) i
 
 (* again, treat prog vars as special *)
 let freshen_case_by_seq seq case =
-  Sl_indrule.freshen (Term.Set.union !program_vars (Seq.vars seq)) case
+  Sl_indrule.freshen (Sl_term.Set.union !program_vars (Seq.vars seq)) case
 
 (* fields: FIELDS; COLON; ils = separated_nonempty_list(COMMA, IDENT); SEMICOLON  *)
 (*     { List.iter P.Field.add ils }                                              *)

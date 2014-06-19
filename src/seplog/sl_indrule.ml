@@ -8,17 +8,17 @@ include PairTypes(Sl_heap)(IndSubf)
 let mk f i : t = (f, i)
 let dest (c : t) = c
 let vars ((f, (_, vs)): t) =
-  Term.filter_vars (Term.Set.union (Term.Set.of_list vs) (Sl_heap.terms f))
+  Sl_term.filter_vars (Sl_term.Set.union (Sl_term.Set.of_list vs) (Sl_heap.terms f))
 let subst theta ((f, (ident, vs)): t) =
-  (Sl_heap.subst theta f, (ident, Blist.map (Term.subst theta) vs))
+  (Sl_heap.subst theta f, (ident, Blist.map (Sl_term.subst theta) vs))
 let freshen varset case =
   let casevars = vars case in
-  let theta = Term.avoid_theta varset casevars in
+  let theta = Sl_term.avoid_theta varset casevars in
   subst theta case
 
 let to_string (f, (ident, vs)) =
   (Sl_heap.to_string f) ^ symb_ind_implies.sep ^
-  ident ^ symb_lp.str ^ (Blist.to_string symb_comma.str Term.to_string vs) ^
+  ident ^ symb_lp.str ^ (Blist.to_string symb_comma.str Sl_term.to_string vs) ^
   symb_rp.str
 
 let pp fmt (f, (ident, vs)) =
@@ -27,7 +27,7 @@ let pp fmt (f, (ident, vs)) =
     symb_ind_implies.sep
     ident
     symb_lp.str
-    (Blist.to_string "," Term.to_string vs)
+    (Blist.to_string "," Sl_term.to_string vs)
     symb_rp.str
 
 let parse st =

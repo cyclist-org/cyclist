@@ -77,7 +77,7 @@ let gen_left_rules_f (def, ident) seq =
       let l' = { l with SH.inds=Inds.remove p l.SH.inds } in
       let do_case case =
         let (f', (_,vs')) = Sl_indrule.dest (freshen_case_by_seq seq case) in
-        let theta = Term.Map.of_list (Blist.combine vs' pvs) in
+        let theta = Sl_term.Map.of_list (Blist.combine vs' pvs) in
         let f' = Sl_heap.subst theta f' in
         let f' = Sl_heap.repl_tags id f' in
         let l' = Sl_heap.star l' f' in
@@ -112,9 +112,9 @@ let symex_assign_rule =
       let (f,cmd) = dest_sh_seq seq in
       let (x,e) = Cmd.dest_assign cmd in
       let fv = fresh_evar (Sl_heap.vars f) in
-      let theta = Term.singleton_subst x fv in
+      let theta = Sl_term.singleton_subst x fv in
       let f' = Sl_heap.subst theta f in
-      let e' = Term.subst theta e in
+      let e' = Sl_term.subst theta e in
       [[ Sl_heap.norm { f' with SH.eqs=UF.add (e',x) f'.SH.eqs } ], "Assign"]
     with WrongCmd | Not_symheap -> [] in
   mk_symex rl
@@ -130,9 +130,9 @@ let symex_load_rule =
       let (_,ys) = find_pto_on f e in
       let t = Blist.nth ys (Field.get_index s) in
       let fv = fresh_evar (Sl_heap.vars f) in
-      let theta = Term.singleton_subst x fv in
+      let theta = Sl_term.singleton_subst x fv in
       let f' = Sl_heap.subst theta f in
-      let t' = Term.subst theta t in
+      let t' = Sl_term.subst theta t in
       [[ { f' with SH.eqs=UF.add (t',x) f'.SH.eqs } ], "Load"]
     with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl
@@ -165,7 +165,7 @@ let symex_new_rule =
       let x = Cmd.dest_new cmd in
       let l = fresh_evars (Sl_heap.vars f) (1 + (Field.get_no_fields ())) in
       let (fv,fvs) = (Blist.hd l, Blist.tl l) in
-      let f' = Sl_heap.subst (Term.singleton_subst x fv) f in
+      let f' = Sl_heap.subst (Sl_term.singleton_subst x fv) f in
 			let f'' = Sl_heap.mk_pto x fvs in
       [[ Sl_heap.star f' f'' ], "New"]
     with Not_symheap | WrongCmd-> [] in
@@ -272,7 +272,7 @@ let dobackl idx prf =
         then Rule.identity
         else Rule.mk_infrule (weaken subst_seq);
         
-      if Term.Map.for_all Term.equal theta
+      if Sl_term.Map.for_all Sl_term.equal theta
         then Rule.identity
         else Rule.mk_infrule (subst_rule theta targ_seq);
          
@@ -297,11 +297,11 @@ let fold (defs,ident) =
       let do_case case =
         let (f,(ident,vs)) = Sl_indrule.dest case in 
         (* if Inds.is_empty f.SH.inds then [] else *)
-        let results : Term.substitution list ref = ref [] in
+        let results : Sl_term.substitution list ref = ref [] in
         let hook sub = results := sub :: !results ; None in 
-        let () = ignore (Sl_heap.spw_left_subsumption hook Term.empty_subst f l) in
+        let () = ignore (Sl_heap.spw_left_subsumption hook Sl_term.empty_subst f l) in
         let process_sub theta = 
-          let (f, vs) = (Sl_heap.subst theta f, Blist.map (Term.subst theta) vs) in
+          let (f, vs) = (Sl_heap.subst theta f, Blist.map (Sl_term.subst theta) vs) in
           let l' = 
             {
               (* FIXME hacky stuff in SH.eqs : in reality a proper way to diff *)
@@ -320,7 +320,7 @@ let fold (defs,ident) =
                   (fun (_, (f_ident, f_vs)) a -> 
                     Inds.del_first 
                     (fun (_, (l_ident, l_vs)) -> 
-                      f_ident = l_ident && Term.list_equal f_vs l_vs) a) 
+                      f_ident = l_ident && Sl_term.FList.equal f_vs l_vs) a) 
                   f.SH.inds
                   l.SH.inds;
             } in
@@ -346,16 +346,16 @@ let generalise_while_rule =
   let generalise m h =
     let avoid = ref (Sl_heap.vars h) in
     let gen_term t =
-    if Term.Set.mem t m then
-      (let r = fresh_evar !avoid in avoid := Term.Set.add r !avoid ; r)
+    if Sl_term.Set.mem t m then
+      (let r = fresh_evar !avoid in avoid := Sl_term.Set.add r !avoid ; r)
     else t in
     let gen_pto (x,args) =
     let l = Blist.map gen_term (x::args) in (Blist.hd l, Blist.tl l) in
       { h with
-        SH.eqs = Term.Set.fold UF.remove m h.SH.eqs;
+        SH.eqs = Sl_term.Set.fold UF.remove m h.SH.eqs;
         SH.deqs =
           Deqs.filter
-          (fun p -> Pair.conj (Pair.map (fun z -> not (Term.Set.mem z m)) p))
+          (fun p -> Pair.conj (Pair.map (fun z -> not (Sl_term.Set.mem z m)) p))
           h.SH.deqs;
           SH.ptos = Ptos.endomap gen_pto h.SH.ptos
       } in
@@ -363,8 +363,8 @@ let generalise_while_rule =
       try
         let (f,cmd) = dest_sh_seq seq in
         let (_,cmd') = Cmd.dest_while cmd in
-        let m = Term.Set.inter (Cmd.modifies cmd') (Sl_heap.vars f) in
-        let subs = Term.Set.subsets m in
+        let m = Sl_term.Set.inter (Cmd.modifies cmd') (Sl_heap.vars f) in
+        let subs = Sl_term.Set.subsets m in
         Option.list_get (Blist.map
           begin fun m' ->
             let f' = generalise m' f in

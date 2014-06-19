@@ -44,11 +44,11 @@ let eq_subst_rule seq =
     let (l,r) = Sl_seq.dest seq in
     if UF.is_empty l.SH.eqs then [] else
 		let leqs = UF.bindings l.SH.eqs in
-		let (x,y) as p = Blist.find (fun p' -> Pair.disj (Pair.map Term.is_var p')) leqs in
+		let (x,y) as p = Blist.find (fun p' -> Pair.disj (Pair.map Sl_term.is_var p')) leqs in
 		let leqs = Blist.filter (fun q -> q!=p) leqs in
 		let l = { l with SH.eqs = UF.of_list leqs } in
-		let (x,y) = if Term.is_var x then p else (y,x) in
-		let theta = Term.singleton_subst x y in
+		let (x,y) = if Sl_term.is_var x then p else (y,x) in
+		let theta = Sl_term.singleton_subst x y in
     let (l',r') = Pair.map (fun z -> Sl_heap.subst theta z) (l,r) in
     [ [ (([l'], [r']), Sl_heap.tag_pairs l, TagPairs.empty) ], "" ]
   with Not_symheap | Not_found -> []
@@ -59,11 +59,11 @@ let eq_ex_subst_rule seq =
   try
     let (l,r) = Sl_seq.dest seq in
 		let reqs = UF.bindings r.SH.eqs in
-		let (x,y) as p = Blist.find (fun (x,_) -> Term.is_exist_var x) reqs in
+		let (x,y) as p = Blist.find (fun (x,_) -> Sl_term.is_exist_var x) reqs in
 		let reqs = Blist.filter (fun q -> q!=p) reqs in
     let r = { r with SH.eqs=UF.of_list reqs } in
-		let (x,y) = if Term.is_var x then p else (y,x) in
-    let r' = Sl_heap.subst (Term.singleton_subst x y) r in
+		let (x,y) = if Sl_term.is_var x then p else (y,x) in
+    let r' = Sl_heap.subst (Sl_term.singleton_subst x y) r in
     [ [ (([l], [r']), Sl_heap.tag_pairs l, TagPairs.empty) ], "" ]
   with Not_symheap | Not_found -> []
 
@@ -128,10 +128,10 @@ let simpl_deqs seq =
   try
     let (l,r) = Sl_seq.dest seq in
     let non_deq_vars =
-			Term.Set.add Term.nil
-				(Term.Set.union
+			Sl_term.Set.add Sl_term.nil
+				(Sl_term.Set.union
 				  (Sl_heap.vars { l with SH.deqs=Deqs.empty }) (Sl_heap.vars r)) in
-    let f p = Pair.conj (Pair.map (fun t -> Term.Set.mem t non_deq_vars) p) in
+    let f p = Pair.conj (Pair.map (fun t -> Sl_term.Set.mem t non_deq_vars) p) in
     let l' = { l with SH.deqs=Deqs.filter f l.SH.deqs } in
     if Sl_heap.equal l l' then [] else
     [ [ (([l'], [r]), Sl_heap.tag_pairs l', TagPairs.empty) ], "" ]
@@ -165,7 +165,7 @@ let instantiate_pto =
     try
       let (l,r) = Sl_seq.dest seq in
       let (lptos,rptos) = Pair.map Ptos.elements (l.SH.ptos,r.SH.ptos) in
-      let eptos = Blist.filter (fun (x,_) -> Term.is_exist_var x) rptos in
+      let eptos = Blist.filter (fun (x,_) -> Sl_term.is_exist_var x) rptos in
       let match_ls xs ys =
         try
 					Blist.exists2 (fun x y -> Sl_heap.equates l x y) xs ys
@@ -195,7 +195,7 @@ let mk_ruf defs =
           let right_unfold ((_,(_,vs')) as p) =
             let r' = { r with SH.inds=Inds.remove p r.SH.inds } in
             (* NB assumes distinct vars in ind pred def *)
-            let theta = Term.Map.of_list (Blist.combine vs vs') in
+            let theta = Sl_term.Map.of_list (Blist.combine vs vs') in
             let f' = Sl_heap.subst theta f in
             [ (([l], [Sl_heap.star r' f']), Sl_heap.tag_pairs l, TagPairs.empty) ],
             (ident ^ " R.Unf.") in
@@ -216,7 +216,7 @@ let gen_left_rules (def, ident) =
         let do_case case =
           let (f', (_,vs')) = Sl_indrule.dest (Sl_indrule.freshen (Sl_seq.vars seq) case) in
           (* FIXME assumes distinct vars in ind pred def *)
-          let theta = Term.Map.of_list (Blist.combine vs' pvs) in
+          let theta = Sl_term.Map.of_list (Blist.combine vs' pvs) in
           let f' = Sl_heap.subst theta f' in
           let f' = Sl_heap.repl_tags id f' in
           let l' = Sl_heap.star l' f' in
@@ -285,7 +285,7 @@ let dobackl idx prf =
         then Rule.identity
         else Rule.mk_infrule (weaken subst_seq);
         
-      if Term.Map.for_all Term.equal theta
+      if Sl_term.Map.for_all Sl_term.equal theta
         then Rule.identity
         else Rule.mk_infrule (subst_rule theta targ_seq);
          

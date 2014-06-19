@@ -36,10 +36,10 @@ let get_idents p =
   Inds.map_to Strng.MSet.add Strng.MSet.empty (fun (_, (id, _)) -> id) p.inds
 
 let terms f =
-  Term.Set.union_of_list
+  Sl_term.Set.union_of_list
     [UF.vars f.eqs; Deqs.vars f.deqs; Ptos.vars f.ptos; Inds.vars f.inds]
 
-let vars f = Term.filter_vars (terms f)
+let vars f = Sl_term.filter_vars (terms f)
 
 let tags l =
   Inds.map_to Tags.add Tags.empty (fun i -> fst i) l.inds
@@ -85,7 +85,7 @@ let star f g =
   let explode_deqs ptos =
     let cp = Blist.cartesian_hemi_square ptos in
     let s1 =
-      (Blist.fold_left (fun s p -> Deqs.add (fst p, Term.nil) s) Deqs.empty ptos) in
+      (Blist.fold_left (fun s p -> Deqs.add (fst p, Sl_term.nil) s) Deqs.empty ptos) in
     (Blist.fold_left (fun s (p, q) -> Deqs.add (fst p, fst q) s) s1 cp) in
   let newptos = Ptos.union f.ptos g.ptos in
   (* norm *)
@@ -99,11 +99,11 @@ let star f g =
 
 let univ s f =
   let vs = vars f in
-  let evs = Term.Set.filter Term.is_exist_var vs in
-  let n = Term.Set.cardinal evs in
+  let evs = Sl_term.Set.filter Sl_term.is_exist_var vs in
+  let n = Sl_term.Set.cardinal evs in
   if n =0 then f else
-    let uvs = Term.fresh_uvars (Term.Set.union s vs) n in
-    let theta = Term.Map.of_list (Blist.combine (Term.Set.elements evs) uvs) in
+    let uvs = Sl_term.fresh_uvars (Sl_term.Set.union s vs) n in
+    let theta = Sl_term.Map.of_list (Blist.combine (Sl_term.Set.elements evs) uvs) in
     subst theta f
 
 let repl_tags t f =
@@ -124,7 +124,7 @@ let disequates h x y =
           (equates h x w && equates h y z)
           || (equates h x z && equates h y w) ) h.deqs
 
-let eq_class h x = Term.Set.filter (equates h x) (terms h)
+let eq_class h x = Sl_term.Set.filter (equates h x) (terms h)
 
 let aux_subsumption left spw hook theta h h' =
   let f1 theta' = UF.uni_subsumption left hook theta' h.eqs h'.eqs in
@@ -172,42 +172,42 @@ let find_lval x h =
   with Not_found -> None
 
 let inconsistent h =
-  (* let lvalues = Ptos.map_to Term.Set.add Term.Set.empty fst h.ptos in   *)
-  (* Term.Set.cardinal lvalues <> Ptos.cardinal h.ptos ||                  *)
+  (* let lvalues = Ptos.map_to Sl_term.Set.add Sl_term.Set.empty fst h.ptos in   *)
+  (* Sl_term.Set.cardinal lvalues <> Ptos.cardinal h.ptos ||                  *)
   Deqs.exists (fun (x, y) -> equates h x y) h.deqs
-(* Term.Set.mem Term.nil lvalues *)
+(* Sl_term.Set.mem Sl_term.nil lvalues *)
 
 let subst_existentials h =
   let aux h' =
     let (ex_eqs, non_ex_eqs) =
       Blist.partition
-        (fun (x, _) -> Term.is_exist_var x) (UF.bindings h'.eqs) in
+        (fun (x, _) -> Sl_term.is_exist_var x) (UF.bindings h'.eqs) in
     if ex_eqs =[] then h' else
       (* NB order of subst is reversed so that the greater variable        *)
       (* replaces the lesser this maintains universal vars                 *)
       let h'' = { h' with eqs = UF.of_list non_ex_eqs } in
-      subst (Term.Map.of_list ex_eqs) h'' in
+      subst (Sl_term.Map.of_list ex_eqs) h'' in
   fixpoint aux h
 
-let is_fresh_in x h = not (Term.Set.mem x (vars h))
+let is_fresh_in x h = not (Sl_term.Set.mem x (vars h))
 
 let hash (h: t) = Hashtbl.hash h
 
 let project f xs =
   (* let () = assert (Inds.is_empty f.inds && Ptos.is_empty f.ptos) in *)
   let trm_nin_lst x =
-    not (Term.is_nil x) &&
-    not (Blist.exists (fun y -> Term.equal x y) xs) in
+    not (Sl_term.is_nil x) &&
+    not (Blist.exists (fun y -> Sl_term.equal x y) xs) in
   let pair_nin_lst (x, y) = trm_nin_lst x || trm_nin_lst y in
   let rec proj_eqs h =
     let orig_eqs = UF.bindings h.eqs in
     let p = Blist.find_first pair_nin_lst orig_eqs in
     if Option.is_none p then h else
       let (x, y) = Option.get p in
-      (* let new_eqs = List.filter (fun (x',y') -> not (Term.equal x x')   *)
-      (* || not (Term.equal y y')) orig_eqs in                             *)
+      (* let new_eqs = List.filter (fun (x',y') -> not (Sl_term.equal x x')   *)
+      (* || not (Sl_term.equal y y')) orig_eqs in                             *)
       let (x', y') = if trm_nin_lst x then (y, x) else (x, y) in
-      let theta = Term.singleton_subst y' x' in
+      let theta = Sl_term.singleton_subst y' x' in
       proj_eqs (subst theta h) in
   let proj_deqs g =
     { g with deqs = Deqs.filter (fun p -> not (pair_nin_lst p)) g.deqs } in
