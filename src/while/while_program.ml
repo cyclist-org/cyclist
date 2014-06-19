@@ -216,25 +216,44 @@ module Cmd =
           Term.parse >>= (fun t -> 
           return (assert (Term.is_var v) ; (Assign(v,t))))))
   (* | IF; cond = condition; THEN; cmd1 = command; ELSE; cmd2 = command; FI { P.Cmd.mk_ifelse cond cmd1 cmd2 } *)
+  (* | IF; cond = condition; LB; cmd1 = command; RB; ELSE; LB; cmd2 = command; RB { P.Cmd.mk_ifelse cond cmd1 cmd2 } *)
       <|> attempt (parse_symb keyw_if >>
           Cond.parse >>= (fun cond ->
-          parse_symb keyw_then >>
-          parse >>= (fun cmd1 ->
-          parse_symb keyw_else >>
-          parse >>= (fun cmd2 ->
-          parse_symb keyw_fi >>$ (IfElse(cond,cmd1,cmd2))))))
+              (parse_symb keyw_then >>
+              parse >>= (fun cmd1 ->
+              parse_symb keyw_else >>
+              parse >>= (fun cmd2 ->
+              parse_symb keyw_fi >>$ (IfElse(cond,cmd1,cmd2)))))
+				  <|> (parse_symb symb_lb >>
+              parse >>= (fun cmd1 ->
+              parse_symb symb_rb >>
+							parse_symb keyw_else >>
+							parse_symb symb_lb >>
+              parse >>= (fun cmd2 ->
+              parse_symb symb_rb >>$ (IfElse(cond,cmd1,cmd2)))))
+					))
   (* | IF; cond = condition; THEN; cmd = command; FI { P.Cmd.mk_if cond cmd }                                  *)
+  (* | IF; cond = condition; LB; cmd = command; RB { P.Cmd.mk_if cond cmd }                                  *)
       <|> attempt (parse_symb keyw_if >>
           Cond.parse >>= (fun cond ->
-          parse_symb keyw_then >>
-          parse >>= (fun cmd ->
-          parse_symb keyw_fi >>$ (If(cond,cmd)))))
+              (parse_symb keyw_then >>
+              parse >>= (fun cmd ->
+              parse_symb keyw_fi >>$ (If(cond,cmd))))
+					<|> (parse_symb symb_lb >>
+              parse >>= (fun cmd ->
+              parse_symb symb_rb >>$ (If(cond,cmd))))
+					))
   (* | WHILE; cond = condition; DO; cmd = command; OD { P.Cmd.mk_while cond cmd }                              *)
+  (* | WHILE; cond = condition; LB; cmd = command; RB { P.Cmd.mk_while cond cmd }                              *)
       <|> (parse_symb keyw_while >>
           Cond.parse >>= (fun cond ->
-          parse_symb keyw_do >>
-          parse >>= (fun cmd ->
-          parse_symb keyw_od >>$ (While(cond,cmd)))))
+              (parse_symb keyw_do >>
+              parse >>= (fun cmd ->
+              parse_symb keyw_od >>$ (While(cond,cmd))))
+					<|> (parse_symb symb_lb >>
+              parse >>= (fun cmd ->
+              parse_symb symb_rb >>$ (While(cond,cmd))))
+					))
       <?> "Cmd") st
     and parse st = 
       (sep_by1 parse_cmd (parse_symb symb_semicolon) >>= (fun cmds ->
