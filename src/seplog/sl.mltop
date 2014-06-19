@@ -2,6 +2,7 @@ Sl_rules
 Symheap
 Sl_defs
 Sl_indrule
+sl_seq
 Stats
 Blist
 Lib

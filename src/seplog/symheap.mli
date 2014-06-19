@@ -137,6 +137,9 @@ sig
   val subst : Term.substitution -> t -> t
   val subsumed_wrt_tags : Util.Tags.t -> t -> t -> bool
   val spw_subsumed_wrt_tags : Util.Tags.t -> t -> t -> bool
+  val right_subsumption :
+    (Term.substitution -> Term.substitution option) ->
+    Term.substitution -> t -> t -> Term.substitution option
   val left_subsumption :
     (Term.substitution -> Term.substitution option) ->
     Term.substitution -> t -> t -> Term.substitution option
@@ -151,21 +154,5 @@ sig
 end
 exception Not_symheap
 
-module Seq :
-sig
-  include Util.BasicType with type t = Form.t * Form.t
-
-  val dest : t -> Heap.t * Heap.t
-  val to_melt : t -> Latex.t
-  val vars : t -> Term.Set.t
-  val tags : t -> Util.Tags.t
-  val tag_pairs : t -> Util.TagPairs.t
-  val subst : Term.substitution -> t -> t
-  val subsumed_wrt_tags : Util.Tags.t -> t -> t -> bool
-  val uni_subsumption : t -> t -> Term.substitution option
-  val norm : t -> t
-  val parse : (t, 'a) MParser.t
-  val of_string : string -> t
-end
 val has_ident : ind_identifier ->  ind_pred -> bool
 

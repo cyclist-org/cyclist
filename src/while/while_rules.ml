@@ -374,7 +374,7 @@ let generalise_while_rule =
     with Not_symheap | WrongCmd -> [] in
   Rule.mk_infrule rl 
 
-module Slprover = Prover.Make(Symheap.Seq)
+module Slprover = Prover.Make(Sl_seq)
 
 let backlink_cut defs =
   let rl s1 s2 =
