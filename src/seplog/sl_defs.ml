@@ -49,8 +49,14 @@ let is_defined (_, (ident, _)) defs =
   mem ident defs
 
 let get_def ident (defs: t) =
-  Blist.find (fun (_, ident') -> Strng.equal ident ident') defs
+  fst (Blist.find (fun (_, ident') -> Strng.equal ident ident') defs)
 
+let unfold vars pred defs = 
+  let (_, (ident, _)) = pred in
+  let def = get_def ident defs in
+  Blist.map (Sl_indrule.unfold vars pred) def
+  
+  
 module BasePair =
 struct
   include PairTypes(Sl_term.Set)(Sl_heap)

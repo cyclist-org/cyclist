@@ -14,7 +14,7 @@ let pp_star fmt () = Format.fprintf fmt " *@ "
 
 let mk_to_string pp v =
   ignore (Format.flush_str_formatter ());
-  Format.pp_set_margin Format.str_formatter 300;
+  Format.pp_set_margin Format.str_formatter max_int;
   pp Format.str_formatter v ;
   Format.flush_str_formatter ()
 

@@ -182,51 +182,42 @@ let instantiate_pto =
     with Not_symheap | Invalid_argument _ -> [] in
   wrap rl 
 
-let mk_ruf defs =
-  let gen_right_rules (def,_) =
-    let gen_rule case =
-      let (_,(ident,_)) = Sl_indrule.dest case in
-      let right_rule seq =
-        try
-          let (l,r) = Sl_seq.dest seq in
-          let preds = Inds.filter (fun (_,(ident',_)) -> Strng.equal ident ident') r.SH.inds in
-          if Inds.is_empty preds then [] else
-          let (f, (ident, vs)) = Sl_indrule.dest (Sl_indrule.freshen (Sl_seq.vars seq) case) in
-          let right_unfold ((_,(_,vs')) as p) =
-            let r' = { r with SH.inds=Inds.remove p r.SH.inds } in
-            (* NB assumes distinct vars in ind pred def *)
-            let theta = Sl_term.Map.of_list (Blist.combine vs vs') in
-            let f' = Sl_heap.subst theta f in
-            [ (([l], [Sl_heap.star r' f']), Sl_heap.tag_pairs l, TagPairs.empty) ],
-            (ident ^ " R.Unf.") in
-          Inds.map_to_list right_unfold preds
-        with Not_symheap -> [] in
-      wrap right_rule in
-    Blist.map gen_rule def in
-  Blist.bind gen_right_rules defs
-
-let gen_left_rules (def, ident) =
-  let left_rule seq =
+let ruf defs = 
+  let rl seq = 
     try
       let (l,r) = Sl_seq.dest seq in
-      let preds = Inds.filter (fun (_, (ident', _)) -> Strng.equal ident ident') l.SH.inds in
-      if Inds.is_empty preds then [] else
-      let left_unfold ((id,(_,pvs)) as p) =
+      let seq_vars = Sl_seq.vars seq in
+      let right_unfold ((_, (ident,_)) as p) =
+        if not (Sl_defs.mem ident defs) then [] else
+        let cases = Sl_defs.get_def ident defs in 
+        let r' = { r with SH.inds=Inds.remove p r.SH.inds } in
+        let do_case c = 
+          let f' = Sl_indrule.unfold seq_vars p c in
+          [ (([l], [Sl_heap.star r' f']), Sl_heap.tag_pairs l, TagPairs.empty) ],
+          (ident ^ " R.Unf.") in
+        Blist.map do_case cases in
+      Blist.flatten (Inds.map_to_list right_unfold r.SH.inds)  
+    with Not_symheap -> [] in
+  wrap rl 
+
+      
+let luf defs =
+  let rl seq =
+    try
+      let (l,r) = Sl_seq.dest seq in
+      let seq_vars = Sl_seq.vars seq in
+      let left_unfold ((tag, (ident, _)) as p) =
         let l' = { l with SH.inds=Inds.remove p l.SH.inds } in
-        let do_case case =
-          let (f', (_,vs')) = Sl_indrule.dest (Sl_indrule.freshen (Sl_seq.vars seq) case) in
-          (* FIXME assumes distinct vars in ind pred def *)
-          let theta = Sl_term.Map.of_list (Blist.combine vs' pvs) in
-          let f' = Sl_heap.subst theta f' in
-          let f' = Sl_heap.repl_tags id f' in
+        let clauses = Sl_defs.unfold seq_vars p defs in
+        let do_case f' =
           let l' = Sl_heap.star l' f' in
 					let l' = Sl_heap.univ (Sl_heap.vars r) l' in
           let ts = Tags.inter (Sl_heap.tags l') (Sl_heap.tags l) in
-          (([l'], [r]), TagPairs.mk ts, TagPairs.singleton (id, id)) in
-        Blist.map do_case def, (ident ^ " L.Unf.") in
-      Inds.map_to_list left_unfold preds
+          (([l'], [r]), TagPairs.mk ts, TagPairs.singleton (tag, tag)) in
+        Blist.map do_case clauses, (ident ^ " L.Unf.") in
+      Inds.map_to_list left_unfold l.SH.inds
     with Not_symheap -> [] in
-  wrap left_rule  
+  wrap rl
 
 (* s2 *)
 (* -- *)
@@ -316,7 +307,7 @@ let setup defs =
   		wrap pto_intro_rule;
   		wrap pred_intro_rule;
       instantiate_pto ;
-      Rule.choice (mk_ruf defs);
-      Rule.choice (Blist.map gen_left_rules defs)
+      ruf defs;
+      luf defs
     ] 
   ]
