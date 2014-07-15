@@ -21,6 +21,8 @@ let dest_sh_seq = While_rules.dest_sh_seq
 let last_pred = ref 0
 let get_fresh_ident () = Printf.sprintf "I%.3d" (incr last_pred ; !last_pred)
 
+let get_undefined defs h = Inds.filter (Defs.is_undefined defs) h.SH.inds 
+
 let ex_subst_defs defs =
   let ex_subst_heap h =
     let (ex_eqs, non_ex_eqs) =
@@ -40,7 +42,7 @@ let ex_subst_defs defs =
 let empify defs =
   let empify_ c =
     let (p,h) = Sl_indrule.dest c in
-    let inds = Inds.filter (fun pred -> Sl_defs.is_defined pred defs) p.SH.inds in
+    let inds = Inds.filter (Sl_defs.is_defined defs) p.SH.inds in
     Sl_indrule.mk {p with SH.inds=inds} h in
   Blist.map (fun (l,i) -> (Blist.map empify_ l, i)) defs
 
@@ -56,15 +58,17 @@ let inline defs =
           not (Strng.Set.mem h idents)
         end (Blist.but_last defs) in
     let defs = Blist.filter ((!=)q) defs in
-    let unf = While_rules.gen_left_rules_f (p,h) in
+    let case = Blist.hd p in
     let f orig =
       let (p',h') = Sl_indrule.dest orig in
       let first_unfold f =
-        let apps = unf ([f],0) in
-        if apps=[] then f else
-          let ((f',_), _, _) = Blist.hd (fst (Blist.hd apps)) in
-          Blist.hd f' in
-          (* print_endline (Sl_heap.to_string f'') ; f'' in             *)
+        try
+          let pred = 
+            Inds.find (fun (_, (h'', _)) -> Strng.equal h h'') f.SH.inds in
+          let f = { f with SH.inds = Inds.remove pred f.SH.inds } in
+          let g = Sl_indrule.unfold (Sl_indrule.vars orig) pred case in
+          Sl_heap.star f g
+        with Not_found -> f in
       let p'' = Sl_heap.fixpoint first_unfold p' in
       Sl_indrule.mk p'' h' in
     Blist.map (fun (l,i) -> (Blist.map f l, i)) defs
@@ -335,9 +339,7 @@ let abd_deref =
     try
       let (f,cmd) = dest_sh_seq seq in
       let x = Cmd.dest_deref cmd in
-      let inds = Inds.elements f.SH.inds in
-      (* filter formula predicates by undefinedness *)
-      let inds = Blist.filter (fun pred -> not (Defs.is_defined pred defs)) inds in
+      let inds = Inds.to_list (get_undefined defs f) in
 		  if inds=[] then [] else
       let fresh_ident = get_fresh_ident () in
       let f (_,(ident, params)) =
@@ -379,9 +381,7 @@ let abd_det_guard =
 			if cv_size = 0 then [] else
 			let with_nil = (cv_size = 1) in
       let (x,y) = Cond.dest c in
-      let inds = Inds.elements f.SH.inds in
-      (* filter formula predicates by undefinedness *)
-      let inds = Blist.filter (fun pred -> not (Defs.is_defined pred defs)) inds in
+      let inds = Inds.to_list (get_undefined defs f) in
 			if inds=[] then [] else
       let (fresh_ident, fresh_ident') = Pair.map get_fresh_ident ((),()) in
       let f (_,(ident, params)) =
@@ -429,8 +429,7 @@ let abd_back_rule =
       (* find set of identifiers of ind preds in s1/s2 *)
       let (inds1,inds2) = Pair.map Sl_heap.get_idents (l1,l2) in
       (* find fresh ones in s1 *)
-      let candidates =
-				Inds.filter (fun pred -> not (Defs.is_defined pred defs)) l1.SH.inds in
+      let candidates = get_undefined defs l1 in
       (* discard those that already exist in s2 *)
       let candidates =
         Inds.filter
@@ -600,18 +599,22 @@ let matches = Abdrule.lift While_rules.dobackl
 (* 	Proof_tacs.seq [ abd_backlink_cut; abd_mid_backlink_cut; backlink_cut ]        *)
 
 let unfold =
-  let gen_left_rule_fun seq defs =
-    let rls = Blist.map While_rules.gen_left_rules_f defs in
-    let rl = Seqtactics.choice rls in
-    let apps = rl seq in
-    Blist.map (fun app -> (app,defs)) apps in
-  Abdrule.mk_abdgenrule gen_left_rule_fun
+  Abdrule.mk_abdgenrule 
+    (fun seq defs -> 
+      Blist.map 
+        (fun app -> (app,defs)) 
+        (While_rules.luf_rl seq defs)) 
   
 let unfold_last =
-  let gen_left_rule_fun seq defs =
-    let apps = While_rules.gen_left_rules_f (Blist.hd defs) seq in
-    Blist.map (fun app -> (app,defs)) apps in
-  Abdrule.mk_abdgenrule gen_left_rule_fun
+  Abdrule.mk_abdgenrule 
+    (fun seq defs -> 
+      Blist.map 
+        (fun app -> (app,defs)) 
+        (While_rules.luf_rl seq [Blist.hd defs])) 
+  (* let gen_left_rule_fun seq defs =                                 *)
+  (*   let apps = While_rules.gen_left_rules_f (Blist.hd defs) seq in *)
+  (*   Blist.map (fun app -> (app,defs)) apps in                      *)
+  (* Abdrule.mk_abdgenrule gen_left_rule_fun                          *)
 
 (* let u r = Abdrule.choice [ r ; Abdrule.compose unfold_last r ] *)
 

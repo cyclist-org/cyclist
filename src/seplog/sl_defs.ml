@@ -45,8 +45,10 @@ let of_channel c =
 let mem ident (defs: t) =
   Blist.exists (fun (_, ident') -> Strng.equal ident ident') defs
 
-let is_defined (_, (ident, _)) defs =
+let is_defined defs (_, (ident, _)) =
   mem ident defs
+
+let is_undefined defs pred = not (is_defined defs pred)
 
 let get_def ident (defs: t) =
   fst (Blist.find (fun (_, ident') -> Strng.equal ident ident') defs)

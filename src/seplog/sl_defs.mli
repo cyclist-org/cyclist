@@ -5,7 +5,8 @@ include Util.BasicType with
 val to_melt : t -> Latex.t
 
 val mem : Symheap.ind_identifier -> t -> bool
-val is_defined : Symheap.ind_pred -> t -> bool
+val is_defined : t -> Symheap.ind_pred -> bool
+val is_undefined : t -> Symheap.ind_pred -> bool
 val get_def : Symheap.ind_identifier -> t -> Sl_indrule.t list
 
 val satisfiable : t -> bool -> bool -> bool
