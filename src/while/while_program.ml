@@ -39,7 +39,7 @@ module Field =
     let parse st = parse_ident st
   end
 
-exception WrongCmd
+exception WrongCmd of string
 
 module Cond =
   struct
@@ -65,7 +65,7 @@ module Cond =
 
     let dest = function
       | Eq(e1, e2) | Deq(e1, e2) -> (e1,e2)
-      | Non_det -> raise WrongCmd
+      | Non_det -> raise (WrongCmd "line 68")
 
     let terms = function
       | Non_det -> Term.Set.empty
@@ -123,8 +123,8 @@ module Cmd =
     and basic_t = { label:int option; cmd:cmd_t }
     and t = basic_t list
 
-    let get_cmd c = if c=[] then raise WrongCmd else (Blist.hd c).cmd
-    let get_cont c = if c=[] then raise WrongCmd else Blist.tl c
+    let get_cmd c = if c=[] then raise (WrongCmd "line 126") else (Blist.hd c).cmd
+    let get_cont c = if c=[] then raise (WrongCmd "line 127") else Blist.tl c
 
     let is_empty c = c=[]
     let is_not_empty c = not (is_empty c)
@@ -261,39 +261,39 @@ module Cmd =
 
     let _dest_stop = function
       | Stop -> ()
-      | _ -> raise WrongCmd
+      | _ -> raise (WrongCmd "line 264")
     let _dest_skip = function
       | Skip -> ()
-      | _ -> raise WrongCmd
+      | _ -> raise (WrongCmd "line 267")
     let _dest_assign = function
       | Assign(x,e) -> (x,e)
-      | _ -> raise WrongCmd
+      | _ -> raise (WrongCmd "line 270")
     let _dest_load = function
       | Load(x,e,s) -> (x,e,s)
-      | _ -> raise WrongCmd
+      | _ -> raise (WrongCmd "line 273")
     let _dest_store = function
       | Store(e1,s,e2) -> (e1,s,e2)
-      | _ -> raise WrongCmd
+      | _ -> raise (WrongCmd "line 276")
     let _dest_new = function
       | New(x) -> x
-      | _ -> raise WrongCmd
+      | _ -> raise (WrongCmd "line 279")
     let _dest_free = function
       | Free(e) -> e
-      | _ -> raise WrongCmd
+      | _ -> raise (WrongCmd "line 282")
     let _dest_if = function
       | If(cond,cmd) -> (cond,cmd)
-      | _ -> raise WrongCmd
+      | _ -> raise (WrongCmd "line 285")
     let _dest_ifelse = function
       | IfElse(cond,cmd,cmd') -> (cond,cmd,cmd')
-      | _ -> raise WrongCmd
+      | _ -> raise (WrongCmd "line 288")
     let _dest_while = function
       | While(cond,cmd) -> (cond,cmd)
-      | _ -> raise WrongCmd
+      | _ -> raise (WrongCmd "line 291")
     let _dest_deref = function
       | Load(x,e,s) -> e
       | Store(e1,s,e2) -> e1
       | Free(e) -> e
-      | _ -> raise WrongCmd
+      | _ -> raise (WrongCmd "line 296")
 
     let dest_cmd f = fun c -> f (get_cmd c)
 
@@ -308,7 +308,7 @@ module Cmd =
     let dest_if = dest_cmd _dest_if
     let dest_ifelse = dest_cmd _dest_ifelse
     let dest_while = dest_cmd _dest_while
-    let dest_empty c = if c=[] then () else raise WrongCmd
+    let dest_empty c = if c=[] then () else raise (WrongCmd "line 311")
 
     let number c =
       let rec aux n = function
@@ -512,34 +512,48 @@ let pp_cmd fmt cmd =
 
 module Seq =
   struct
-    type t = Form.t * Cmd.t
+    type t = Form.t * Cmd.t * Form.t
 
     let tagset_one = Tags.singleton 1
 		let tagpairs_one = TagPairs.mk tagset_one
-    let tags (f,cmd) = if !termination then Form.tags f else tagset_one
-    let vars (l,_) = Form.vars l
-    let terms (l,_) = Form.terms l
-    let subst theta (l,cmd) = (Form.subst theta l, cmd)
-    let to_string (f,cmd) =
-      (Form.to_string f) ^ symb_turnstile.sep ^ (Cmd.to_string cmd)
-    let to_melt (f,cmd) =
-      ltx_mk_math
-        (Latex.concat [ Form.to_melt f; symb_turnstile.melt; Cmd.to_melt cmd ])
+    let tags (pre,cmd,_) = if !termination then Form.tags pre else tagset_one
 
-    (* let subsumed tags (l,cmd) (l',cmd') =                              *)
-    (*   Cmd.equal cmd cmd' && Form.spw_subsumed_wrt_tags Tags.empty l' l *)
-    let is_subsumed (l,cmd) (l',cmd') =
-      Cmd.equal cmd cmd' && Form.spw_subsumed_wrt_tags Tags.empty l' l
-    
-    let subsumed_wrt_tags tags (l,cmd) (l',cmd') =
-      Cmd.equal cmd cmd' && Form.spw_subsumed_wrt_tags tags l' l
+		(* Do we want the vars from the postcondition as well, or not? *)
+		(* 		let vars (pre,_,post) = Term.Set.union (Form.vars pre) (Form.vars post) *)
+		let vars (pre,_,_) = Form.vars pre
 		
-    let uni_subsumption ((l,cmd) as s) ((l',cmd') as s') =
+		(* Do we want the vars from the postcondition as well, or not? *)
+		(*     let terms (pre,_,post) = Term.Set.union (Form.terms pre) (Form.terms post) *)
+		let terms (l,_,_) = Form.terms l
+
+		let subst theta (pre,cmd,post) = 
+			(Form.subst theta pre, cmd, Form.subst theta post)
+    
+		let to_string (pre,cmd,post) =
+      symb_turnstile.sep ^ 
+			symb_lb.str ^ (Form.to_string pre) ^ symb_rb.str ^ " " ^ 
+			(Cmd.to_string cmd) ^
+			symb_lb.str ^ (Form.to_string post) ^ symb_rb.str
+    
+		let to_melt (pre,cmd,post) =
+      ltx_mk_math
+        (Latex.concat [ symb_turnstile.melt; 
+				 								symb_lb.melt; Form.to_melt pre; symb_rb.melt;
+												Cmd.to_melt cmd;
+												symb_lb.melt; Form.to_melt post; symb_rb.melt ])
+
+    let is_subsumed (pre,cmd,_) (pre',cmd',_) =
+      Cmd.equal cmd cmd' && Form.spw_subsumed_wrt_tags Tags.empty pre' pre
+    
+    let subsumed_wrt_tags tags (pre,cmd,_) (pre',cmd',_) =
+      Cmd.equal cmd cmd' && Form.spw_subsumed_wrt_tags tags pre' pre
+		
+    let uni_subsumption ((pre,cmd,post) as s) ((pre',cmd',post') as s') =
       if not (Cmd.equal cmd cmd') then None else
       let tags = Tags.inter (tags s) (tags s') in
       let valid theta' =
         if Term.Map.exists
-          (fun k v -> Term.is_univ_var k && not (Form.equates l k v)) theta'
+          (fun k v -> Term.is_univ_var k && not (Form.equates pre k v)) theta'
           then None else 
 				if not !termination then Some theta' else 
         let s'' = subst theta' s' in
@@ -549,13 +563,18 @@ module Seq =
             if subsumed_wrt_tags new_acc s s'' then new_acc else acc
           ) tags Tags.empty in
         if not (Tags.is_empty tags') then Some theta' else None in
-      Form.spw_left_subsumption valid Term.empty_subst l' l
+      Form.spw_left_subsumption valid Term.empty_subst pre' pre
 
-    let pp fmt (f,cmd) =
-      Format.fprintf fmt "@[%a%s%a@]"
-        Symheap.Form.pp f symb_turnstile.sep (Cmd.pp ~abbr:true 0) cmd
+    let pp fmt (pre,cmd,post) =
+      Format.fprintf fmt "@[%s{%a}%a{%a}@]"
+        symb_turnstile.sep
+				Symheap.Form.pp pre 
+				(Cmd.pp ~abbr:true 0) cmd
+				Symheap.Form.pp post
 
-    let equal (f,cmd) (f',cmd') = Cmd.equal cmd cmd' && Symheap.Form.equal f f'
+    let equal (pre,cmd, post) (pre',cmd', post') = 
+			Cmd.equal cmd cmd' && Symheap.Form.equal pre pre'
+			  && Symheap.Form.equal pre pre'
   end
 
 let program_vars = ref Term.Set.empty
@@ -590,12 +609,21 @@ let parse_precondition st =
     Form.parse >>= (fun f ->
     parse_symb symb_semicolon >>$ f) <?> "Precondition") st
 
-    (* fields; p = precondition; cmd = command; EOF { (p, cmd) } *)
+(* postcondition: POSTCONDITION; COLON; f = formula; SEMICOLON { f } *)
+let parse_postcondition st = 
+  ( parse_symb keyw_postcondition >>
+    parse_symb symb_colon >>
+    Form.parse >>= (fun f ->
+    parse_symb symb_semicolon >>$ f) <?> "Postcondition") st
+
+(* fields; p = precondition; cmd = command; EOF { (p, cmd, true) } *)
+(* fields; p = precondition; q = postcondition; cmd = command; EOF { (p, cmd, q) } *)
 let parse st = 
   ( parse_fields >>
     parse_precondition >>= (fun p ->
+	  parse_postcondition >>= (fun q ->
     Cmd.parse >>= (fun cmd ->
-    eof >>$ (p,cmd))) <?> "program") st
+    eof >>$ (p,cmd,q)))) <?> "program") st
 
 let of_channel c =
   handle_reply (parse_channel parse c ())

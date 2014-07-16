@@ -1,9 +1,10 @@
 fields: left, right;
-precondition: bt(x) ;
-while x!=nil do
-  if * then
+precondition: bt(x);
+postcondition: bt(x); 
+while x!=nil {
+  if * {
     x := x.left 
-  else
+  } else {
     x := x.right
-  fi
-od
+  }
+}

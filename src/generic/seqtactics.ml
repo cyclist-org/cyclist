@@ -41,7 +41,8 @@ struct
       choices
         
   let compose r r' seq = Blist.bind (apply_to_application r') (r seq)
-        
+  
+	(* Returns the results of the first tactic in lr to succeed on seq *)
   let rec first lr seq = match lr with
     | [] -> []
     | r::rs -> match r seq with

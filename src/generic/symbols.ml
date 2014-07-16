@@ -28,8 +28,8 @@ let symb_eq = make_symb "=" (ltx_math " = ")
 let symb_deq = make_symb "!=" Latex.neq
 let symb_lp = make_symb "(" (Latex.text "(")
 let symb_rp = make_symb ")" (Latex.text ")")
-let symb_lb = make_symb "{" Latex.empty
-let symb_rb = make_symb "}" Latex.empty
+let symb_lb = make_symb "{" (Latex.text "\\{")
+let symb_rb = make_symb "}" (Latex.text "\\}")
 let symb_semicolon = make_symb ";" (Latex.text ";")
 let symb_colon = make_symb ":" Latex.empty
 let symb_comma = make_symb "," (Latex.text ", ")
@@ -59,6 +59,7 @@ let keyw_nil = mk_keyw "nil"
 let keyw_fields = mk_keyw "fields"
 let keyw_judgement = mk_keyw "judgement"
 let keyw_precondition = mk_keyw "precondition"
+let keyw_postcondition = mk_keyw "postcondition"
 let keyw_skip = mk_keyw "skip"
 let keyw_else = mk_keyw "else"
 let keyw_while = mk_keyw "while"

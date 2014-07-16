@@ -176,18 +176,29 @@ sig
   type axiom_f = seq_t -> string option
   type infrule_app = (seq_t * Util.TagPairs.t * Util.TagPairs.t) list * string
   type infrule_f = seq_t -> infrule_app list
-  type t = int -> proof_t -> (int list * proof_t) Blist.t
   type backrule_f = seq_t -> seq_t -> (Util.TagPairs.t * string) list
   type select_f = int -> proof_t -> int list
-  
+
+  (** The type of proof rules:
+        Proof rules are functions that take an open node in a proof (i.e. an int
+				identifying the node, and the proof structure containing the node) and
+				return a list of new proofs that are obtained by applying the rule in all
+				applicable ways to the open node in the provided proof, along with a list
+				for each new proof of the newly added open nodes (i.e. the premises) 
+  **)
+  type t = int -> proof_t -> (int list * proof_t) Blist.t
+
+		  
   (** Axioms are modeled as functions that return [Some string] when the 
       input sequent is an instance of an axiom described by [string], else
       [None]. *) 
   val mk_axiom : axiom_f -> t
+	
   (** Rules are functions that break down a sequent to a choice of applications
       where each application is a list of premises, including tag information,
       and a description. *)
   val mk_infrule : infrule_f -> t
+	
   (** Backlink rules take:
       - a boolean [eager] 
       - a selection function [s]

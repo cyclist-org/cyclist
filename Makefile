@@ -17,6 +17,9 @@ all:
 
 %.native: 
 	$(OCB) "$@"
+	
+%.byte:
+	$(OCB) "$@"
 
 clean:
 	$(OCB) -clean

@@ -487,7 +487,7 @@ module Heap =
 
     (* star two formulae together *)
     let star f g =
-      (* computes all deqs due to a list of ptos - no normalization *)
+      (* computes all deqs (disequalities?) due to a list of ptos - no normalization *)
       let explode_deqs (ptos : Pto.t list) =
         let cp = Blist.cartesian_hemi_square ptos in
         let s1 =
@@ -579,6 +579,7 @@ module Heap =
         Some (Ptos.find (fun (y,_) -> equates h x y) h.ptos)
       with Not_found -> None
 
+    (* A heap h is inconsistent if it allows for x = y whenever it contains x \= y *)
     let inconsistent h =
       (* let lvalues = Ptos.map_to Term.Set.add Term.Set.empty fst h.ptos in *)
       (* Term.Set.cardinal lvalues <> Ptos.cardinal h.ptos ||                *)
@@ -596,6 +597,9 @@ module Heap =
         (* this maintains universal vars *)
         let h'' = { h' with eqs=UF.of_list non_ex_eqs } in
         subst (Term.Map.of_list ex_eqs) h'' in
+				(* ?Question: is fixpoint needed here, since I think the fixed point *)
+				(*   is always reached after one iteration: by this time, there are no *)
+				(*   more equations containing an existential variable on the lhs *)
       fixpoint aux h
 
     let is_fresh_in x h = not (Term.Set.mem x (vars h))

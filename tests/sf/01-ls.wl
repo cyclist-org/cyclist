@@ -1,5 +1,6 @@
 fields: next;
 precondition: ls(x,nil); 
-while x!=nil do
+postcondition: ls(x,nil);
+while x!=nil {
   x := x.next
-od
+}
