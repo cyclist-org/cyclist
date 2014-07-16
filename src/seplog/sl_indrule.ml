@@ -52,3 +52,8 @@ let unfold vars (tag, (ident, args)) case =
   let theta = Sl_term.Map.of_list (Blist.combine formals args) in
   Sl_heap.repl_tags tag (Sl_heap.subst theta f) 
  
+let fold (f, (predsym, args)) h =
+  let results : Sl_term.substitution list ref = ref [] in
+  let hook theta = results := theta :: !results ; None in 
+  let _ = Sl_heap.spw_left_subsumption hook Sl_term.empty_subst f h in
+  !results

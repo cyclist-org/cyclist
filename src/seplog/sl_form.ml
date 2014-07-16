@@ -82,4 +82,6 @@ let is_heap f = Blist.length f = 1
 let parse st =
   (sep_by1 Sl_heap.parse (parse_symb symb_or) <?> "formula") st
 
+let of_string s =
+  handle_reply (MParser.parse_string parse s ())
 

@@ -66,33 +66,29 @@ let lhs_disj_to_symheaps =
     ] in
   Rule.mk_infrule rl
 
-let gen_left_rules_f (def, ident) seq =
+let luf_rl seq defs =
   try
     let (l,cmd) = dest_sh_seq seq in
-    let preds = 
-      Inds.filter (fun (_,(ident',_)) -> Strng.equal ident ident') l.SH.inds in
-    if Inds.is_empty preds then [] else
-    let left_unfold ((id,(_,pvs)) as p) = 
-			let ts = Tags.inter (Sl_heap.tags l) (Sl_heap.tags l) in
+    let seq_vars = Seq.vars seq in
+    let ts = Sl_heap.tags l in
+    let left_unfold ((tag, (ident, _)) as p) = 
       let l' = { l with SH.inds=Inds.remove p l.SH.inds } in
-      let do_case case =
-        let (f', (_,vs')) = Sl_indrule.dest (freshen_case_by_seq seq case) in
-        let theta = Sl_term.Map.of_list (Blist.combine vs' pvs) in
-        let f' = Sl_heap.subst theta f' in
-        let f' = Sl_heap.repl_tags id f' in
+      let clauses = Sl_defs.unfold seq_vars p defs in
+      let do_case f' =
         let l' = Sl_heap.star l' f' in
         ( 
 					([l'],cmd), 
 					(if !termination then TagPairs.mk ts else Seq.tagpairs_one), 
-					(if !termination then TagPairs.singleton (id,id) else TagPairs.empty)
+					(if !termination then TagPairs.singleton (tag,tag) else TagPairs.empty)
 				) in
-      Blist.map do_case def, (ident ^ " L.Unf.") in
-    Inds.map_to_list left_unfold preds
-  with Not_symheap -> [] 
- 
-let gen_left_rules (def,ident) = 
-  wrap (gen_left_rules_f (def,ident)) 
+      Blist.map do_case clauses, (ident ^ " L.Unf.") in
+    Inds.map_to_list 
+      left_unfold 
+      (Inds.filter (Sl_defs.is_defined defs) l.SH.inds)
+  with Not_symheap -> []
 
+let luf defs = wrap (fun seq -> luf_rl seq defs)
+  
 (* FOR SYMEX ONLY *)
 let fix_tps l = 
   Blist.map 
@@ -242,19 +238,28 @@ let matches_fun ((l1,cmd1) as s1) ((l2,cmd2) as s2) =
 let subst_rule theta seq' seq = 
   if Seq.equal (Seq.subst theta seq') seq 
     then 
-        [ [(seq', TagPairs.mk (Seq.tags seq'), TagPairs.empty)], "Subst" ]
+        [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], "Subst" ]
     else 
         []
 
 (*   F |- G * Pi'  *)
 (* --------------- *)
 (*   Pi * F |- G   *)
-(* where seq' = F |- G * Pi' and seq = Pi * F |- G *)     
+(* where seq' = F |- G * Pi' and seq = Pi * F |- G *)
+
+(* the below is related to a bug that appears when Tags.empty is replaced *)
+(* with intersection in the cyclic reversal test. *)     
 let weaken seq' seq = 
   if Seq.subsumed_wrt_tags Tags.empty seq seq' then
     [ [(seq', TagPairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')), TagPairs.empty)], "Weaken" ]
   else
     []
+
+(* let weaken seq' seq =                                             *)
+(*   if Sl_seq.subsumed_wrt_tags (Sl_seq.tags seq') seq seq' then    *)
+(*     [ [(seq', Sl_seq.tag_pairs seq', TagPairs.empty)], "Weaken" ] *)
+(*   else                                                            *)
+(*     []                                                            *)
 
 (* if there is a backlink achievable through substitution and classical *)
 (* weakening then make the proof steps that achieve it explicit so that *)
@@ -265,27 +270,27 @@ let dobackl idx prf =
     let apps = 
         Blist.map (fun idx' -> matches_fun src_seq (Proof.get_seq idx' prf)) targets in
     let f targ_idx (p, theta) =
-        let targ_seq = Proof.get_seq targ_idx prf in
-    let subst_seq = Seq.subst theta targ_seq in
-    Rule.sequence [
-      if Seq.equal src_seq subst_seq
-        then Rule.identity
-        else Rule.mk_infrule (weaken subst_seq);
-        
-      if Sl_term.Map.for_all Sl_term.equal theta
-        then Rule.identity
-        else Rule.mk_infrule (subst_rule theta targ_seq);
-         
-      Rule.mk_backrule 
-        true 
-        (fun _ _ -> [targ_idx]) 
-        (fun s s' -> if Seq.equal s s' then [p] else [])
-    ] in
-    Rule.first 
-      (Blist.map2 
-          (fun idx' l -> Rule.first (Blist.map (f idx') l)) 
-            targets 
-            apps) idx prf
+      let targ_seq = Proof.get_seq targ_idx prf in
+      let subst_seq = Seq.subst theta targ_seq in
+      Rule.sequence [
+        if Seq.equal src_seq subst_seq
+          then Rule.identity
+          else Rule.mk_infrule (weaken subst_seq);
+          
+        if Sl_term.Map.for_all Sl_term.equal theta
+          then Rule.identity
+          else Rule.mk_infrule (subst_rule theta targ_seq);
+           
+        Rule.mk_backrule 
+          true 
+          (fun _ _ -> [targ_idx]) 
+          (fun s s' -> if Seq.equal s s' then [p] else [])
+      ] in
+      Rule.first 
+        (Blist.map2 
+            (fun idx' l -> Rule.first (Blist.map (f idx') l)) 
+              targets 
+              apps) idx prf
 
 let fold (defs,ident) =
   let fold_rl seq = 
@@ -293,22 +298,21 @@ let fold (defs,ident) =
       let (l,i) = dest_sh_seq seq in
       if Inds.is_empty l.SH.inds then [] else
       let tags = Seq.tags seq in
-      let freshtag = 1 + (try Tags.max_elt tags with Not_found -> 0) in 
+      let freshtag = Symbols.next_tag () in 
       let do_case case =
         let (f,(ident,vs)) = Sl_indrule.dest case in 
-        (* if Inds.is_empty f.SH.inds then [] else *)
         let results : Sl_term.substitution list ref = ref [] in
         let hook sub = results := sub :: !results ; None in 
         let () = ignore (Sl_heap.spw_left_subsumption hook Sl_term.empty_subst f l) in
         let process_sub theta = 
           let (f, vs) = (Sl_heap.subst theta f, Blist.map (Sl_term.subst theta) vs) in
           let l' = 
-            {
+            { l with 
               (* FIXME hacky stuff in SH.eqs : in reality a proper way to diff *)
               (* two union-find structures is required *)
               SH.eqs =
-                UF.of_list 
-                (Deqs.to_list 
+                UF.of_list
+                (Deqs.to_list
                   (Deqs.diff
                     (Deqs.of_list (UF.bindings l.SH.eqs))
                     (Deqs.of_list (UF.bindings f.SH.eqs))
@@ -430,6 +434,6 @@ let setup defs =
       generalise_while_rule ;
       (* backlink_cut defs; *)
       
-      Rule.choice (Blist.map gen_left_rules defs)
+      luf defs;
     ]
   ]

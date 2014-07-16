@@ -23,11 +23,10 @@ open Util;;
 open Symheap;;
 #install_printer Sl_term.pp;;
 #install_printer Sl_term.Set.pp;;
-#install_printer Sl_term.pp_subst;;
 #install_printer Sl_heap.pp;;
 #install_printer Sl_form.pp;;
 #install_printer Sl_seq.pp;;
-#install_printer Defs.pp;;
+#install_printer Sl_defs.pp;;
 open Goto_rules;;
 #install_printer Proof.pp;;
 

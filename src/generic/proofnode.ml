@@ -83,12 +83,17 @@ struct
         Format.fprintf fmt "@[%a (Open)@]" Seq.pp n.seq
     | AxiomNode ->
         Format.fprintf fmt "@[%a (%s)@]" Seq.pp n.seq n.descr
-    | BackNode(i, _) ->
-        Format.fprintf fmt "@[%a (%s) [%i]@]" Seq.pp n.seq n.descr i
+    | BackNode(i, tps) ->
+        Format.fprintf fmt "@[%a (%s) [%i] <pre=%a>@]" 
+          Seq.pp n.seq n.descr i
+          TagPairs.pp tps
     | InfNode(p) ->
         Format.fprintf fmt "@[%a (%s) [%a]@]" 
           Seq.pp n.seq n.descr
-          (Blist.pp pp_comma (fun fmt (i,_,_) -> Int.pp fmt i)) p
+          (Blist.pp pp_commasp 
+            (fun fmt (i,pres,prog) -> 
+              Format.fprintf fmt "%i" i)) p
+              (* Format.fprintf fmt "@[%i <%a/%a>@]" i TagPairs.pp pres TagPairs.pp prog)) p *)
   
   let justify = Latex.text "\n\\justifies\n\\thickness=0.1em\n"
   let using = Latex.text "\\using"

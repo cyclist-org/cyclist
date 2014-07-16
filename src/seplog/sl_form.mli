@@ -30,3 +30,4 @@ val subst_existentials : t -> t
 val is_fresh_in : Sl_term.t -> t -> bool
 val is_heap : t -> bool
 val parse : (t, 'a) MParser.t
+val of_string : string -> t
