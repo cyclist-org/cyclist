@@ -118,6 +118,10 @@ let cartesian_hemi_square xs =
 
 let bind f xs = flatten (map f xs) 
 
+let rec uniq eq = function
+  | [] -> []
+  | x::xs -> x::(uniq eq (filter (fun x' -> not (eq x x')) xs))
+
 (* let rec choose = function                    *)
 (*   | [] -> [[]]                               *)
 (*   | xs::ys ->                                *)

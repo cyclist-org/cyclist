@@ -26,7 +26,7 @@ let pure_axiom_f, pure_axiom =
           (* FIXME the star below is due to the strict entailment of slprover *)
           Option.is_some 
             (Slprover.idfs 
-              (l, Symheap.Form.star l (Form.to_slformula f))) 
+              (l, Sl_form.star l (Form.to_slformula f))) 
         end
         rs in
     Lib.do_debug := olddebug ; result in

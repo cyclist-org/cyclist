@@ -78,5 +78,7 @@ let _ = dispatch begin function
     
     flag ["link"; "ocaml"; "byte"] (A"-custom");
     
+    (* skip asserts if the tag noassert is found *)
+    flag ["compile"; "ocaml"; "noassert"] (A"-noassert");
   | _ -> ()
 end

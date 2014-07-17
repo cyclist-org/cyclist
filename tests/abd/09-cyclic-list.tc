@@ -1,6 +1,0 @@
-fields: next;
-judgement: cls(x) |-_ 0 !
-0: y := x;
-1: x := x->next;
-2: if x!=y goto 1;
-3: stop

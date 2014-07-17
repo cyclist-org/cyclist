@@ -29,10 +29,10 @@ let ex_subst_defs defs =
       (* NB order of subst is reversed so that *)
       (* the greater variable replaces the lesser *)
       (* this maintains universal vars *)
-      Heap.subst (Term.Map.of_list ex_eqs) { h with eqs=UF.of_list non_ex_eqs } in
+      Sl_heap.subst (Term.Map.of_list ex_eqs) { h with eqs=UF.of_list non_ex_eqs } in
   let ex_subst_case c = 
     let (p,h) = Case.dest c in
-    let p' = Heap.fixpoint ex_subst_heap p in
+    let p' = Sl_heap.fixpoint ex_subst_heap p in
     Case.mk p' h in
   Blist.map (fun (l,i) -> (Blist.map ex_subst_case l, i)) defs
   
@@ -64,8 +64,8 @@ let inline defs =
         if apps=[] then f else 
           let ((f',_), _, _) = Blist.hd (fst (Blist.hd apps)) in 
           Blist.hd f' in
-          (* print_endline (Heap.to_string f'') ; f'' in             *)
-      let p'' = Heap.fixpoint first_unfold p' in
+          (* print_endline (Sl_heap.to_string f'') ; f'' in             *)
+      let p'' = Sl_heap.fixpoint first_unfold p' in
       Case.mk p'' h' in
     Blist.map (fun (l,i) -> (Blist.map f l, i)) defs
   with Not_found -> defs
@@ -74,7 +74,7 @@ let inline defs =
 let used_only_recursively (heap, (ident, params)) pos = 
   let var = Blist.nth params pos in
   let heap' = { heap with inds=Inds.empty } in
-  if Term.Set.mem var (Heap.vars heap') then false else
+  if Term.Set.mem var (Sl_heap.vars heap') then false else
   Inds.for_all  
     begin fun (_,(ident', params')) ->
       if ident<>ident' then 
@@ -99,7 +99,7 @@ let find_unused_arg defs =
       if Blist.for_all 
         begin fun case ->
           let ((heap, (_, params)) as p) = Case.dest case in
-          not (Term.Set.mem (Blist.nth params pos) (Heap.vars heap)) ||
+          not (Term.Set.mem (Blist.nth params pos) (Sl_heap.vars heap)) ||
           used_only_recursively p pos
         end
         clauses 
@@ -142,7 +142,7 @@ let self_recursive_case case =
 let elim_inconsistency defs =
   let is_inconsistent_case c =
     let (heap, (ident, _)) = Case.dest c in
-    Heap.inconsistent heap ||
+    Sl_heap.inconsistent heap ||
     Blist.for_all self_recursive_case (fst (Defs.get_def ident defs)) ||
     Inds.exists
       begin fun (_,(ident', _)) ->
@@ -190,12 +190,12 @@ let symex_assign_rule_f seq =
     let cmd = get_cmd i in
     let (x,e) = Cmd.dest_assign cmd in
     (* if is_fresh_in x f then [] else *)
-    let fv = fresh_evar (Heap.vars f) in
+    let fv = fresh_evar (Sl_heap.vars f) in
     let theta = Term.singleton_subst x fv in
-    let f' = Heap.subst theta f in
+    let f' = Sl_heap.subst theta f in
     let e' = Term.subst theta e in
     let f' = { f' with eqs=UF.add (e',x) f'.eqs } in
-    [ [ (([f'], i+1), Heap.tag_pairs f, TagPairs.empty) ], "Assign" ]
+    [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Assign" ]
   with WrongCmd | Not_symheap -> []
   
 let symex_assign_rule = Abdrule.lift (Rule.mk_infrule symex_assign_rule_f)
@@ -205,19 +205,19 @@ let post_abd_assign_rule_f seq =
     let (f,i) = dest_sh_seq seq in
     let cmd = get_cmd i in
     let (x,e) = Cmd.dest_assign cmd in
-    if not (Heap.is_fresh_in x f) then [] else
+    if not (Sl_heap.is_fresh_in x f) then [] else
      (* exist var is on the left, right is x *)
     let feqs = UF.bindings f.eqs in
     let ((y,_) as eq) = Blist.find (fun (y,z) -> 
-      Term.is_exist_var y && Heap.equates f e z 
+      Term.is_exist_var y && Sl_heap.equates f e z 
       ) feqs in
     let neweqs = Blist.filter ((!=)eq) feqs in
     let f' = { f with eqs=UF.add (e,x) f.eqs } in
-    let f'' = Heap.subst (Term.singleton_subst y x) 
+    let f'' = Sl_heap.subst (Term.singleton_subst y x) 
       { f with eqs=UF.of_list neweqs } in
     [ 
-      [ (([f'], i+1), Heap.tag_pairs f, TagPairs.empty) ], "Post Abd Assign";
-      [ (([f''], i+1), Heap.tag_pairs f, TagPairs.empty) ], "Post Abd Assign"
+      [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Post Abd Assign";
+      [ (([f''], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Post Abd Assign"
     ]
   with WrongCmd | Not_symheap | Not_found -> []
  
@@ -234,8 +234,8 @@ let post_abd_assign_rule = Abdrule.lift (Rule.mk_infrule post_abd_assign_rule_f)
 (*      if eqs=[] then [] else                                                     *)
 (*      let f ((x,y) as eq) =                                                      *)
 (*        let new_eqs = (removeq eq eqs) @ rest in                                 *)
-(*        let l' = Heap.norm { l with eqs=UF.of_list new_eqs } in                  *)
-(*        [ (([l'], i), Heap.tag_pairs l, TagPairs.empty) ] in                     *)
+(*        let l' = Sl_heap.norm { l with eqs=UF.of_list new_eqs } in                  *)
+(*        [ (([l'], i), Sl_heap.tag_pairs l, TagPairs.empty) ] in                     *)
 (*      Blist.map f eqs                                                             *)
 (*    with Not_symheap -> [] in                                                    *)
 (*  rl, Apr.mk_inf_rule rl "Gen"                                                   *)
@@ -253,7 +253,7 @@ let wrap r = Abdrule.compose r (Abdrule.attempt simplify)
 (*      let (x,e) = Cmd.dest_assign cmd in                      *)
 (*      let (x,e) = Pair.map (fun z -> UF.find z f.eqs) (x,e) in*)
 (*      if Term.equal x e then                                  *)
-(*        [ [ (([f], i+1), Heap.tag_pairs f, TagPairs.empty) ] ]*)
+(*        [ [ (([f], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ] ]*)
 (*      else []                                                 *)
 (*    with Not_symheap | WrongCmd -> [] in                      *)
 (*  rl, Apr.mk_inf_rule rl "Assign"                             *)
@@ -267,14 +267,14 @@ let symex_det_if_rule =
       if Cmd.is_non_det c then [] else
       let (x,y) = Cmd.dest_cond c in
       let (x,y) = Pair.map (fun z -> UF.find z f.eqs) (x,y) in
-      let t = Heap.tag_pairs f in
-      match (Cmd.is_deq c, Heap.equates f x y) with
+      let t = Sl_heap.tag_pairs f in
+      match (Cmd.is_deq c, Sl_heap.equates f x y) with
         | (false , true) ->
           (* cmd wants equality and formula provides it so take the branch *) 
           [ [ (([f], j), t, TagPairs.empty) ], "If(det)" ]
         | (false, false) -> 
           (* cmd wants equality *)
-          if Heap.disequates f x y then
+          if Sl_heap.disequates f x y then
             (* and formula forbids it so take other branch *) 
             [ [ (([f], i+1), t, TagPairs.empty) ], "If(det)" ] 
           else 
@@ -285,7 +285,7 @@ let symex_det_if_rule =
           [ [ (([f], i+1), t, TagPairs.empty) ], "If(det)" ]
         | (true, false) -> 
           (* cmd wants disequality *)
-          if Heap.disequates f x y then
+          if Sl_heap.disequates f x y then
             (* formula provides it so take branch *) 
             [ [ (([f], j), t, TagPairs.empty) ], "If(det)" ] 
           else 
@@ -338,7 +338,7 @@ let abd_assign =
       let (f,i) = dest_sh_seq seq in
       let cmd = get_cmd i in
       let (x,e) = Cmd.dest_assign cmd in
-      if not (Heap.is_fresh_in x f)(* || not (Program.is_local_var x)*) then [] else
+      if not (Sl_heap.is_fresh_in x f)(* || not (Program.is_local_var x)*) then [] else
       let inds = Inds.elements f.inds in
       (* filter formula predicates by undefinedness *)
       let inds = Blist.filter (fun pred -> not (Defs.is_defined pred defs)) inds in
@@ -346,7 +346,7 @@ let abd_assign =
       (* unless either is a const(nil) *)
       let inds = if Term.equal e Term.nil then inds else
         Blist.filter (fun (_,(_,params)) -> 
-          Blist.exists (fun z -> Heap.equates f e z) params) inds in 
+          Blist.exists (fun z -> Sl_heap.equates f e z) params) inds in 
       let fresh_ident = get_fresh_ident () in
       let f (_,(ident, params)) =
         let outerparams = fresh_uvars (Term.Set.empty) (Blist.length params) in 
@@ -355,10 +355,10 @@ let abd_assign =
         let newparams = outerparams @ [ x' ] in
         let head = (ident, outerparams) in
         let e' = if Term.equal e Term.nil then e else 
-          Blist.nth newparams (Blist.find_index (fun t -> Heap.equates f e t) params) in
+          Blist.nth newparams (Blist.find_index (fun t -> Sl_heap.equates f e t) params) in
         (* let x' = Blist.nth newparams ((Blist.length newparams)-1) in *)
         let clause =
-          { Heap.empty with
+          { Sl_heap.empty with
             eqs=UF.of_list [(x', e')];
             inds=Inds.singleton (0, (fresh_ident, newparams))
           } in
@@ -377,14 +377,14 @@ let abd_deref =
       let (f,i) = dest_sh_seq seq in
       let x = Cmd.dest_deref (get_cmd i) in
       let y = UF.find x f.eqs in
-      if Option.is_some (Heap.find_lval y f) then [] else
+      if Option.is_some (Sl_heap.find_lval y f) then [] else
       let inds = Inds.elements f.inds in
       (* filter formula predicates by undefinedness *)
       let inds = Blist.filter (fun pred -> not (Defs.is_defined pred defs)) inds in
       (* further filter by having y in parameter list *)
       let inds = Blist.filter 
         (fun (_,(_,params)) -> 
-          Blist.exists (fun y' -> Heap.equates f y' y) params) inds in
+          Blist.exists (fun y' -> Sl_heap.equates f y' y) params) inds in
       let fresh_ident = get_fresh_ident () in 
       let f (_,(ident, params)) =
         let newparams = fresh_uvars (Term.Set.empty) (Blist.length params) in
@@ -394,7 +394,7 @@ let abd_deref =
             (Term.Set.of_list newparams) 
             (Blist.length (fst !Goto_program.program)) in
         let newy = 
-          Blist.nth newparams (Blist.find_index (fun t -> Heap.equates f y t) params) in
+          Blist.nth newparams (Blist.find_index (fun t -> Sl_heap.equates f y t) params) in
         let clause =  
           { 
             eqs=UF.empty; 
@@ -422,7 +422,7 @@ let abd_det_if =
       let (x',y') = Pair.map (fun z -> UF.find z f.eqs) (x,y) in
 (*      let () = print_endline ((Term.to_string x') ^ "," ^ (Term.to_string y')) in*)
       (* refuse to do anything if normal sym ex can fire *)
-      if Cmd.is_deq c && Heap.disequates f x' y' then [] else
+      if Cmd.is_deq c && Sl_heap.disequates f x' y' then [] else
       if not (Cmd.is_deq c) && Term.equal x' y' then [] else
       let inds = Inds.elements f.inds in
       (* filter formula predicates by undefinedness *)
@@ -430,7 +430,7 @@ let abd_det_if =
       (* further filter by having x *and* y in parameter list, unless either is a const(nil) *)
       let inds_filter z inds_ = 
         if Term.is_var z then
-          Blist.filter (fun (_,(_,params)) -> Blist.exists (fun t -> Heap.equates f z t) params) inds_ 
+          Blist.filter (fun (_,(_,params)) -> Blist.exists (fun t -> Sl_heap.equates f z t) params) inds_ 
         else
           inds_ in
       let inds = inds_filter x inds in
@@ -442,17 +442,17 @@ let abd_det_if =
         let (newx, newy) = Pair.map  
           (fun z -> 
             if Term.is_var z then 
-              Blist.nth newparams (Blist.find_index (fun t -> Heap.equates f z t) params) 
+              Blist.nth newparams (Blist.find_index (fun t -> Sl_heap.equates f z t) params) 
             else z) 
           (x,y) in
         let clause_eq = 
-          Heap.norm 
-            { Heap.empty with
+          Sl_heap.norm 
+            { Sl_heap.empty with
               eqs=UF.of_list [(newx, newy)] ;
               inds=Inds.singleton (0, (fresh_ident, newparams))
             } in
         let clause_deq =  
-          { Heap.empty with
+          { Sl_heap.empty with
             deqs=Deqs.singleton (newx, newy) ;
             inds=Inds.singleton (0, (fresh_ident', newparams))
           } in
@@ -479,7 +479,7 @@ let abd_back_rule =
         []) 
       else
       (* find set of identifiers of ind preds in s1/s2 *)
-      let (inds1,inds2) = Pair.map Heap.get_idents (l1,l2) in
+      let (inds1,inds2) = Pair.map Sl_heap.get_idents (l1,l2) in
       let (inds1,inds2) = Pair.map (Strng.MSet.map_to Strng.Set.add Strng.Set.empty Fun.id) (inds1,inds2) in
       (* find fresh ones in s1 *)
       let candidates = Strng.Set.filter (fun ident -> not (Defs.mem ident defs)) inds1 in

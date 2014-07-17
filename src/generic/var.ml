@@ -27,7 +27,7 @@ let is_valid_name v exist =
   exist && is_exist_name v || not exist && is_univ_name v
       
 let set v name = 
-  require (fun () -> not (present v) && not (name_present name)) ;
+  assert (not (present v) && not (name_present name)) ;
   assert 
     (is_exist_var v && is_exist_name name || 
      is_univ_var v && is_univ_name name);
@@ -37,9 +37,9 @@ let set v name =
   min_var := min !min_var v  
 
 let mk_var name exist =
-  require (fun () -> is_valid_name name exist);
+  assert (is_valid_name name exist);
   if name_present name then
-    let v = get_idx name in require (fun () -> is_valid_var v exist) ; v
+    let v = get_idx name in assert (is_valid_var v exist) ; v
   else
     let v = (get_diff exist) + (get_limit exist) in 
     set v name ; v

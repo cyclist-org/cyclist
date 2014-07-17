@@ -31,7 +31,7 @@ let () =
   if !prog_path="" then F.die "-P must be specified." ;
   let (pre, prog, post) = While_program.of_channel (open_in !prog_path) in
   let prog = Cmd.number prog in
-	let defs = Defs.of_channel (open_in !defs_path) in
+	let defs = Sl_defs.of_channel (open_in !defs_path) in
 	(* Check well-formedness of the program: *)
 	(* Do all the predicates in the pre/post annotations have the correct arity? *)
 	(* Do all procedure declarations contain distinct formal parameters? *)

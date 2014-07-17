@@ -4,8 +4,6 @@ open Symheap
 open Symbols
 open MParser
 
-module Defs = Defs
-
 type field_t = string
 type label_t = int
 
@@ -13,8 +11,8 @@ exception WrongCmd
 module Cmd =
   struct
     type cond =
-      | Eq of Term.t * Term.t
-      | Deq of Term.t * Term.t
+      | Eq of Sl_term.t * Sl_term.t
+      | Deq of Sl_term.t * Sl_term.t
       | Non_det
     
     let mk_eq e1 e2 = Eq(e1,e2)
@@ -39,11 +37,11 @@ module Cmd =
         attempt (Deqs.parse |>> Fun.uncurry mk_deq) <?> "Cond") st
       
     type t =
-      | Assign of Term.t * Term.t
-      | Load of Term.t * Term.t * field_t
-      | Store of Term.t * field_t * Term.t
-      | New of Term.t
-      | Free of Term.t
+      | Assign of Sl_term.t * Sl_term.t
+      | Load of Sl_term.t * Sl_term.t * field_t
+      | Store of Sl_term.t * field_t * Sl_term.t
+      | New of Sl_term.t
+      | Free of Sl_term.t
       | Goto of label_t
       | If of cond * label_t
       | Stop
@@ -67,33 +65,33 @@ module Cmd =
         attempt (parse_symb keyw_skip >>$ mk_skip)
         <|>
     (* | v1 = var; ASSIGN; v2 = var; POINTS_TO; id = IDENT { P.Cmd.mk_load v1 v2 id } *)
-        attempt (Term.parse >>= (fun v1 ->
+        attempt (Sl_term.parse >>= (fun v1 ->
         parse_symb symb_assign >>
-        Term.parse >>= (fun v2 ->
+        Sl_term.parse >>= (fun v2 ->
         parse_symb symb_pointsto >>
         parse_ident >>= (fun id ->
-        return (assert (Term.is_var v1 && Term.is_var v2) ; mk_load v1 v2 id)))))
+        return (assert (Sl_term.is_var v1 && Sl_term.is_var v2) ; mk_load v1 v2 id)))))
         <|>
   (*   | v = var; POINTS_TO; id = IDENT; ASSIGN; t = term { P.Cmd.mk_store v id t } *)
-        attempt (Term.parse >>= (fun v ->
+        attempt (Sl_term.parse >>= (fun v ->
         parse_symb symb_pointsto >>
         parse_ident >>= (fun id ->
         parse_symb symb_assign >>
-        Term.parse >>= (fun t ->
-        return (assert (Term.is_var v) ; mk_store v id t)))))
+        Sl_term.parse >>= (fun t ->
+        return (assert (Sl_term.is_var v) ; mk_store v id t)))))
         <|>
   (*   | FREE; ts = paren_terms                                                     *)
   (*   { assert (List.length ts = 1) ; P.Cmd.mk_free (List.hd ts) }                 *)
         attempt (parse_symb keyw_free >>
-        Tokens.parens Term.parse >>= (fun v ->
-        return (assert (Term.is_var v) ; mk_free v)))
+        Tokens.parens Sl_term.parse >>= (fun v ->
+        return (assert (Sl_term.is_var v) ; mk_free v)))
         <|>
   (*   | v = var; ASSIGN; NEW; LP; RP { P.Cmd.mk_new v }                            *)
-        attempt (Term.parse >>= (fun v ->
+        attempt (Sl_term.parse >>= (fun v ->
         parse_symb keyw_new >>
         parse_symb symb_lp >>
         parse_symb symb_rp >>
-        return (assert (Term.is_var v) ; mk_new v)))
+        return (assert (Sl_term.is_var v) ; mk_new v)))
         <|>
   (*   | GOTO; n = NUM { P.Cmd.mk_goto n }                                          *)
         attempt (parse_symb keyw_goto >>
@@ -108,10 +106,10 @@ module Cmd =
         return (mk_if c n))))
         <|>
     (* | v = var; ASSIGN; t = term { P.Cmd.mk_assign v t } *)
-        attempt (Term.parse >>= (fun v -> 
+        attempt (Sl_term.parse >>= (fun v -> 
         parse_symb symb_assign >> 
-        Term.parse >>= (fun t -> 
-        return (assert (Term.is_var v) ; mk_assign v t)))) 
+        Sl_term.parse >>= (fun t -> 
+        return (assert (Sl_term.is_var v) ; mk_assign v t)))) 
       <?> "Cmd") st
 
 
@@ -179,14 +177,14 @@ module Cmd =
 
     let vars = function
       | Assign(x,e) | Load(x,e,_) | Store(x,_,e) ->
-        Term.filter_vars (Term.Set.of_list [x; e])
+        Sl_term.filter_vars (Sl_term.Set.of_list [x; e])
       | New(x) | Free(x) ->
-        Term.Set.singleton x
+        Sl_term.Set.singleton x
       | If(c,_) ->
-        if is_non_det c then Term.Set.empty else
+        if is_non_det c then Sl_term.Set.empty else
         let (e1,e2) = dest_cond c in
-        Term.filter_vars (Term.Set.of_list [e1; e2])
-      | Goto _ | Stop | Skip -> Term.Set.empty
+        Sl_term.filter_vars (Sl_term.Set.of_list [e1; e2])
+      | Goto _ | Stop | Skip -> Sl_term.Set.empty
   end
 
 type lab_cmds = (label_t * Cmd.t) list
@@ -196,20 +194,20 @@ type program_t = fields * lab_cmds
 
 module Seq =
   struct
-    type t = Form.t * int
-    let tags (f,_) = Form.tags f
-    let vars (l,_) = Form.vars l
-    let terms (l,_) = Form.terms l
-    let subst theta (l,i) = (Form.subst theta l, i)
+    type t = Sl_form.t * int
+    let tags (f,_) = Sl_form.tags f
+    let vars (l,_) = Sl_form.vars l
+    let terms (l,_) = Sl_form.terms l
+    let subst theta (l,i) = (Sl_form.subst theta l, i)
     let to_string (f,i) =
-      (Form.to_string f) ^ " |-_" ^ (string_of_int i) ^ " !"
+      (Sl_form.to_string f) ^ " |-_" ^ (string_of_int i) ^ " !"
     let to_melt (f,i) =
       Latex.concat
-      [ Form.to_melt f;
+      [ Sl_form.to_melt f;
         Latex.index symb_turnstile.melt (Latex.text (string_of_int i)) ]
 
     let subsumed_wrt_tags tags (l,i) (l',i') =
-      i = i' && Form.spw_subsumed_wrt_tags tags l' l
+      i = i' && Sl_form.spw_subsumed_wrt_tags tags l' l
     (*  s' *)
     (* ___ *)
     (*  s  *)
@@ -217,8 +215,8 @@ module Seq =
       if i<>i' then None else
       let tags = Tags.inter (tags s) (tags s') in
       let valid theta' =
-        if Term.Map.exists
-          (fun k v -> Term.is_univ_var k && not (Form.equates l k v)) theta'
+        if Sl_term.Map.exists
+          (fun k v -> Sl_term.is_univ_var k && not (Sl_form.equates l k v)) theta'
           then None else
         let s'' = subst theta' s' in
         let tags' = Tags.fold
@@ -227,29 +225,29 @@ module Seq =
             if subsumed_wrt_tags new_acc s s'' then new_acc else acc
           ) tags Tags.empty in
         if not (Tags.is_empty tags') then Some theta' else None in
-      Form.spw_left_subsumption valid Term.empty_subst l' l
+      Sl_form.spw_left_subsumption valid Sl_term.empty_subst l' l
 
     let pp fmt (f,i) =
-      Format.fprintf fmt "@[%a |-_%i@]" Symheap.Form.pp f i
+      Format.fprintf fmt "@[%a |-_%i@]" Sl_form.pp f i
 
-    let equal (f,i) (f',i') = (i=i') && Symheap.Form.equal f f'
+    let equal (f,i) (f',i') = (i=i') && Sl_form.equal f f'
     
     let parse st = 
-      ( Form.parse >>= (fun f ->
+      ( Sl_form.parse >>= (fun f ->
         parse_symb symb_turnstile_underscore >>
         Tokens.integer >>= (fun i ->
         parse_symb symb_bang >>$ (f,i))) <?> "GotoSeq") st
   end
 
-let max_prog_var = ref Term.nil
-let program_vars = ref Term.Set.empty
-let local_vars = ref Term.Set.empty
-let set_local_vars seq = local_vars := Term.Set.diff !program_vars (Seq.vars seq)
+let max_prog_var = ref Sl_term.nil
+let program_vars = ref Sl_term.Set.empty
+let local_vars = ref Sl_term.Set.empty
+let set_local_vars seq = local_vars := Sl_term.Set.diff !program_vars (Seq.vars seq)
 
 let program = ref (([], []):program_t)
 
 let get_sel_index s =
-  require (fun () -> Blist.mem_assoc s (fst !program)) ;
+  assert (Blist.mem_assoc s (fst !program)) ;
   Blist.assoc s (fst !program)
 
 let get_no_fields () = Blist.length (fst !program)
@@ -260,26 +258,26 @@ let set_program p =
   program := p ;
   let cmds = Blist.map snd (snd !program) in
   max_prog_var :=
-    Term.fresh_uvar (Term.Set.union_of_list (Blist.map Cmd.vars cmds)) ;
+    Sl_term.fresh_uvar (Sl_term.Set.union_of_list (Blist.map Cmd.vars cmds)) ;
   let cmds = Blist.map snd (snd !program) in
-  program_vars := Term.Set.union_of_list (Blist.map Cmd.vars cmds)
+  program_vars := Sl_term.Set.union_of_list (Blist.map Cmd.vars cmds)
 
 let get_cmd i = snd (Blist.nth (snd !program) i)
 
 let vars_of_program () = !program_vars
 
-let is_local_var v = Term.Set.mem v !local_vars
+let is_local_var v = Sl_term.Set.mem v !local_vars
 
 
 (* remember prog vars when introducing fresh ones *)
-let fresh_uvar s = Term.fresh_uvar (Term.Set.add !max_prog_var s)
-let fresh_uvars s i = Term.fresh_uvars (Term.Set.add !max_prog_var s) i
-let fresh_evar s = Term.fresh_evar (Term.Set.add !max_prog_var s)
-let fresh_evars s i = Term.fresh_evars (Term.Set.add !max_prog_var s) i
+let fresh_uvar s = Sl_term.fresh_uvar (Sl_term.Set.add !max_prog_var s)
+let fresh_uvars s i = Sl_term.fresh_uvars (Sl_term.Set.add !max_prog_var s) i
+let fresh_evar s = Sl_term.fresh_evar (Sl_term.Set.add !max_prog_var s)
+let fresh_evars s i = Sl_term.fresh_evars (Sl_term.Set.add !max_prog_var s) i
 
 (* again, treat prog vars as special *)
 let freshen_case_by_seq seq case =
-  Case.freshen (Term.Set.union (vars_of_program ()) (Seq.vars seq)) case
+  Sl_indrule.freshen (Sl_term.Set.union (vars_of_program ()) (Seq.vars seq)) case
 
 let parse_lcmd st = 
   ( Tokens.integer >>= (fun i ->
@@ -301,7 +299,7 @@ let parse_fields st =
 let parse_judgment st =
   ( parse_symb keyw_judgement >>
     parse_symb symb_colon >>
-    Form.parse >>= (fun f ->
+    Sl_form.parse >>= (fun f ->
     parse_symb symb_turnstile_underscore >>
     Tokens.integer >>= (fun n ->
     parse_symb symb_bang >>$ (f,n))) <?> "GotoJudgement" ) st

@@ -32,7 +32,7 @@ let check_consistency defs =
   Format.set_margin (Sys.command "exit $(tput cols)") ;
   Stats.reset () ;
   Stats.Gen.call () ;
-  let consistency_check () = Defs.consistent defs !only_first !show_proof in
+  let consistency_check () = Sl_defs.satisfiable defs !only_first !show_proof in
   let res = w_timeout consistency_check !timeout in
   Stats.Gen.end_call () ;
   begin

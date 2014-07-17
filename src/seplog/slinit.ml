@@ -21,12 +21,12 @@ open Util;;
 #install_printer Strng.Pairing.MSet.pp;;
 #install_printer Strng.Pairing.FList.pp;;
 open Symheap;;
-#install_printer Term.pp;;
-#install_printer Term.Set.pp;;
-#install_printer Term.pp_subst;;
-#install_printer Heap.pp;;
-#install_printer Form.pp;;
-#install_printer Seq.pp;;
+#install_printer Sl_term.pp;;
+#install_printer Sl_term.Set.pp;;
+#install_printer Sl_term.pp_subst;;
+#install_printer Sl_heap.pp;;
+#install_printer Sl_form.pp;;
+#install_printer Sl_seq.pp;;
 #install_printer Defs.pp;;
 open Goto_rules;;
 #install_printer Proof.pp;;
@@ -55,4 +55,4 @@ open Lib;;
 
 open MParser;;
 
-let f = parse_string Symheap.Heap.parse "x!=y" () ;;
+let f = parse_string Sl_heap.parse "x!=y" () ;;

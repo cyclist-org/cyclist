@@ -1,5 +1,11 @@
 Sl_rules
 Symheap
+Sl_term
+Sl_heap
+Sl_form
+Sl_defs
+Sl_indrule
+sl_seq
 Stats
 Blist
 Lib

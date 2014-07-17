@@ -1,9 +1,6 @@
 let do_debug = ref false
 let debug f = if !do_debug then print_endline (f ()) else ()
 
-let skip_asserts = ref false
-let require f = if !skip_asserts then () else assert (f ()) 
-
 let pp_comma fmt () =
   Format.pp_print_char fmt ','
 
@@ -17,7 +14,7 @@ let pp_star fmt () = Format.fprintf fmt " *@ "
 
 let mk_to_string pp v =
   ignore (Format.flush_str_formatter ());
-  Format.pp_set_margin Format.str_formatter 300;
+  Format.pp_set_margin Format.str_formatter max_int;
   pp Format.str_formatter v ;
   Format.flush_str_formatter ()
 
