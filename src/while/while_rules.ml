@@ -126,22 +126,21 @@ let fix_tps l =
 
 let mk_symex f = 
   let rl ((_, cmd, post) as seq) =
-		let cont = Cmd.get_cont cmd 
-(*
-			try Cmd.get_cont cmd 
-			with WrongCmd(s) -> [] 
-				(* print_endline (Cmd.to_string cmd); Printexc.print_backtrace stdout; *)
-*)
-		in
-    fix_tps 
-		  (Blist.map (fun (g,d) -> Blist.map (fun h' -> ([h'], cont, post)) g, d) (f seq)) in
-	wrap rl
+		if (Cmd.is_empty cmd) then
+			[]
+		else
+			let cont = Cmd.get_cont cmd
+			in
+		    fix_tps 
+				  (Blist.map (fun (g,d) -> Blist.map (fun h' -> ([h'], cont, post)) g, d) (f seq))
+	in
+		wrap rl
   
 (* symbolic execution rules *)
 let symex_assign_rule =
   let rl seq =
     try
-      let (pre ,cmd, _) = dest_sh_seq seq in
+      let (pre , cmd, _) = dest_sh_seq seq in
       let (x,e) = Cmd.dest_assign cmd in
       (* Does fv need to be fresh in the post condition too? *)
 			let fv = fresh_evar (Sl_heap.vars pre) in
@@ -149,7 +148,7 @@ let symex_assign_rule =
       let pre' = Sl_heap.subst theta pre in
       let e' = Sl_term.subst theta e in
       [[ Sl_heap.norm { pre' with SH.eqs=UF.add (e',x) pre'.SH.eqs } ], "Assign"]
-    with WrongCmd(_) | Not_symheap -> [] in
+    with WrongCmd | Not_symheap -> [] in
   mk_symex rl
 
 let find_pto_on f e = 
@@ -168,7 +167,7 @@ let symex_load_rule =
       let pre' = Sl_heap.subst theta pre in
       let t' = Sl_term.subst theta t in
       [[ { pre' with SH.eqs=UF.add (t',x) pre'.SH.eqs } ], "Load"]
-    with Not_symheap | WrongCmd(_) | Not_found -> [] in
+    with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl
 
 let symex_store_rule =
@@ -179,7 +178,7 @@ let symex_store_rule =
       let ((x',ys) as pto) = find_pto_on pre x in
       let pto' = (x', Blist.replace_nth e (Field.get_index f) ys) in
       [[ { pre with SH.ptos=Ptos.add pto' (Ptos.remove pto pre.SH.ptos) } ], "Store"]
-    with Not_symheap | WrongCmd(_) | Not_found -> [] in
+    with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl
 
 let symex_free_rule =
@@ -189,7 +188,7 @@ let symex_free_rule =
       let e = Cmd.dest_free cmd in
       let pto = find_pto_on pre e in
       [[ { pre with SH.ptos=Ptos.remove pto pre.SH.ptos } ], "Free"]
-    with Not_symheap | WrongCmd(_) | Not_found -> [] in
+    with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl
 
 let symex_new_rule =
@@ -202,7 +201,7 @@ let symex_new_rule =
       let pre' = Sl_heap.subst (Sl_term.singleton_subst x fv) pre in
 			let new_pto = Sl_heap.mk_pto x fvs in
       [[ Sl_heap.star pre' new_pto ], "New"]
-    with Not_symheap | WrongCmd(_) -> [] in
+    with Not_symheap | WrongCmd -> [] in
   mk_symex rl
 
 let symex_skip_rule =
@@ -210,7 +209,7 @@ let symex_skip_rule =
     try
       let (pre, cmd, _) = dest_sh_seq seq in 
       let () = Cmd.dest_skip cmd in [[pre], "Skip"]
-    with Not_symheap | WrongCmd(_) -> [] in
+    with Not_symheap | WrongCmd -> [] in
   mk_symex rl
 
 let symex_if_rule =
@@ -226,7 +225,7 @@ let symex_if_rule =
 					  ([cond_false_pre], cont, post) ], 
 				  "If"
 			  ]
-    with Not_symheap | WrongCmd(_) -> [] in
+    with Not_symheap | WrongCmd -> [] in
   wrap rl
 
 let symex_ifelse_rule =
@@ -242,7 +241,7 @@ let symex_ifelse_rule =
 				    ([cond_false_pre], Cmd.mk_seq cmd2 cont, post) ],
          "IfElse"
         ]
-    with Not_symheap | WrongCmd(_) -> [] in
+    with Not_symheap | WrongCmd -> [] in
   wrap rl
 
 let symex_while_rule =
@@ -258,7 +257,7 @@ let symex_while_rule =
 					  ([cond_false_pre], cont, post) ], 
 				  "While"
 				]
-    with Not_symheap | WrongCmd(_) -> [] in
+    with Not_symheap | WrongCmd -> [] in
   wrap rl
 
 let matches_fun ((pre1, cmd1, post1) as s1) ((pre2, cmd2, post2) as s2) =
@@ -420,7 +419,7 @@ let generalise_while_rule =
             Some ([ (s', tagpairs s', TagPairs.empty) ], "Gen.While")
           end
           subs)
-    with Not_symheap | WrongCmd(_) -> [] in
+    with Not_symheap | WrongCmd -> [] in
   Rule.mk_infrule rl 
 
 let backlink_cut entails =

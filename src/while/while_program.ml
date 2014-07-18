@@ -39,7 +39,7 @@ module Field =
     let parse st = parse_ident st
   end
 
-exception WrongCmd of string
+exception WrongCmd
 
 module Cond =
   struct
@@ -65,7 +65,7 @@ module Cond =
 
     let dest = function
       | Eq(e1, e2) | Deq(e1, e2) -> (e1,e2)
-      | Non_det -> raise (WrongCmd "line 68")
+      | Non_det -> raise WrongCmd
 
     let terms = function
       | Non_det -> Sl_term.Set.empty
@@ -123,8 +123,8 @@ module Cmd =
     and basic_t = { label:int option; cmd:cmd_t }
     and t = basic_t list
 
-    let get_cmd c = if c=[] then raise (WrongCmd "line 126") else (Blist.hd c).cmd
-    let get_cont c = if c=[] then raise (WrongCmd "line 127") else Blist.tl c
+    let get_cmd c = if c=[] then raise WrongCmd else (Blist.hd c).cmd
+    let get_cont c = if c=[] then raise WrongCmd else Blist.tl c
 
     let is_empty c = c=[]
     let is_not_empty c = not (is_empty c)
@@ -258,39 +258,39 @@ module Cmd =
 
     let _dest_stop = function
       | Stop -> ()
-      | _ -> raise (WrongCmd "line 264")
+      | _ -> raise WrongCmd
     let _dest_skip = function
       | Skip -> ()
-      | _ -> raise (WrongCmd "line 267")
+      | _ -> raise WrongCmd
     let _dest_assign = function
       | Assign(x,e) -> (x,e)
-      | _ -> raise (WrongCmd "line 270")
+      | _ -> raise WrongCmd
     let _dest_load = function
       | Load(x,e,s) -> (x,e,s)
-      | _ -> raise (WrongCmd "line 273")
+      | _ -> raise WrongCmd
     let _dest_store = function
       | Store(e1,s,e2) -> (e1,s,e2)
-      | _ -> raise (WrongCmd "line 276")
+      | _ -> raise WrongCmd
     let _dest_new = function
       | New(x) -> x
-      | _ -> raise (WrongCmd "line 279")
+      | _ -> raise WrongCmd
     let _dest_free = function
       | Free(e) -> e
-      | _ -> raise (WrongCmd "line 282")
+      | _ -> raise WrongCmd
     let _dest_if = function
       | If(cond,cmd) -> (cond,cmd)
-      | _ -> raise (WrongCmd "line 285")
+      | _ -> raise WrongCmd
     let _dest_ifelse = function
       | IfElse(cond,cmd,cmd') -> (cond,cmd,cmd')
-      | _ -> raise (WrongCmd "line 288")
+      | _ -> raise WrongCmd
     let _dest_while = function
       | While(cond,cmd) -> (cond,cmd)
-      | _ -> raise (WrongCmd "line 291")
+      | _ -> raise WrongCmd
     let _dest_deref = function
       | Load(x,e,s) -> e
       | Store(e1,s,e2) -> e1
       | Free(e) -> e
-      | _ -> raise (WrongCmd "line 296")
+      | _ -> raise WrongCmd
 
     let dest_cmd f = fun c -> f (get_cmd c)
 
@@ -305,7 +305,7 @@ module Cmd =
     let dest_if = dest_cmd _dest_if
     let dest_ifelse = dest_cmd _dest_ifelse
     let dest_while = dest_cmd _dest_while
-    let dest_empty c = if c=[] then () else raise (WrongCmd "line 311")
+    let dest_empty c = if c=[] then () else raise WrongCmd
 
     let number c =
       let rec aux n = function

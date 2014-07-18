@@ -3,6 +3,7 @@ precondition:
 ls^1(x,w') * ls^2(y,nil) * w'->i' * ls^3(i',w') \/
 ls^2(j',nil) * w'->j' * ls^3(x,w') * ls^1(y,w') \/
 ls^2(x,nil) * ls^1(y,w') * w'->k' * ls^3(k',w');
+postcondition: ls(w',x);
 while x!=nil do
   z := x;
   x := x.next;
