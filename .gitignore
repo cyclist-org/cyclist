@@ -2,6 +2,7 @@
 #################
 .paths
 .project
+.projectSettings
 .settings/
 
 # Ocaml Executables #
@@ -11,3 +12,4 @@
 *.top
 index.html
 _build/
+
