@@ -95,8 +95,8 @@ module Cond =
     let fork f c =
       if is_non_det c then (f,f) else
       let pair = dest c in
-      let f' =  { f with SH.eqs=UF.add pair f.SH.eqs } in
-      let f'' = { f with SH.deqs=Deqs.add pair f.SH.deqs } in
+      let f' =  SH.with_eqs f (UF.add pair f.SH.eqs) in
+      let f'' = SH.with_deqs f (Deqs.add pair f.SH.deqs) in
       let (f',f'') = if is_deq c then (f'',f') else (f',f'') in
       (f',f'')
     

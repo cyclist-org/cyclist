@@ -5,4 +5,5 @@
 [TODO] consider hash consing for terms formulas etc
 [TODO] consider patricia trees and maps for most uses
 [TODO] decide on symheap representation: special data structure or general formula type
+[DONE] fix bug wrt tags in weaken tactic in backlinks
 [DONE] modularise and clean up parsers; maybe drop menhir and use PCL

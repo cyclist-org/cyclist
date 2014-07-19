@@ -63,7 +63,7 @@ let gen_left_rules_f (def, ident) seq =
       Inds.filter (fun (_,(ident',_)) -> Strng.equal ident ident') l.SH.inds in
     if Inds.is_empty preds then [] else
     let left_unfold ((id,(_,pvs)) as p) = 
-      let l' = { l with SH.inds=Inds.remove p l.SH.inds } in
+      let l' = SH.with_inds l (Inds.remove p l.SH.inds) in
       let do_case case =
         let (f', (_,vs')) = Sl_indrule.dest (freshen_case_by_seq seq case) in
         let theta = Sl_term.Map.of_list (Blist.combine vs' pvs) in
@@ -95,7 +95,7 @@ let symex_assign_rule_f, symex_assign_rule =
       let theta = Sl_term.singleton_subst x fv in
       let f' = Sl_heap.subst theta f in
       let e' = Sl_term.subst theta e in
-      let f' = { f' with SH.eqs=UF.add (e',x) f'.SH.eqs } in
+      let f' = SH.with_eqs f' (UF.add (e',x) f'.SH.eqs) in
       [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Assign" ]
     with WrongCmd | Not_symheap -> [] in
   rl, wrap rl 
@@ -113,7 +113,7 @@ let symex_load_rule_f, symex_load_rule =
       let theta = Sl_term.singleton_subst x fv in
       let f' = Sl_heap.subst theta f in
       let t' = Sl_term.subst theta t in
-      let f' = { f' with SH.eqs=UF.add (t',x) f'.SH.eqs } in
+      let f' = SH.with_eqs f' (UF.add (t',x) f'.SH.eqs) in
       [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Load" ]
     with Not_symheap | WrongCmd | Not_found -> [] in
   rl, wrap rl 
@@ -133,7 +133,7 @@ let symex_store_rule_f, symex_store_rule =
           print_endline ("seq= " ^ (Seq.to_string seq) ^ "   x=" ^ (Sl_term.to_string x) ^ " s=" ^ s ^ " e=" ^ (Sl_term.to_string e)) ;
           assert false
         in
-      let f' = { f with SH.ptos=Ptos.add pto' newptos } in
+      let f' = SH.with_ptos f (Ptos.add pto' newptos) in
       [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Store" ]
     with Not_symheap | WrongCmd | Not_found -> [] in
   rl, wrap rl 
@@ -146,7 +146,7 @@ let symex_free_rule_f, symex_free_rule =
       let e = Cmd.dest_free cmd in
       let pto = Ptos.find (fun (v,_) -> Sl_heap.equates f v e) f.SH.ptos in
       let newptos = Ptos.remove pto f.SH.ptos in
-      let f' = { f with SH.ptos=newptos } in
+      let f' = SH.with_ptos f newptos in
       [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Free" ]
     with Not_symheap | WrongCmd | Not_found -> [] in
   rl, wrap rl 
@@ -160,7 +160,7 @@ let symex_new_rule_f, symex_new_rule =
       let l = fresh_evars (Sl_heap.vars f) (1 + Blist.length (fst !program)) in
       let (fv,fvs) = (Blist.hd l, Blist.tl l) in
       let f' = Sl_heap.subst (Sl_term.singleton_subst x fv) f in
-      let f' = { f' with SH.ptos=Ptos.add (x, fvs) f'.SH.ptos } in
+      let f' = SH.with_ptos f' (Ptos.add (x, fvs) f'.SH.ptos) in
       [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "New" ]
     with Not_symheap | WrongCmd-> [] in
   rl, wrap rl 
@@ -191,8 +191,8 @@ let symex_det_if_rule_f, symex_det_if_rule =
       let (c,i') = Cmd.dest_if cmd in
       if Cmd.is_non_det c then [] else
       let pair = Cmd.dest_cond c in
-      let f' =  { f with SH.eqs=UF.add pair f.SH.eqs } in
-      let f'' = { f with SH.deqs=Deqs.add pair f.SH.deqs } in
+      let f' =  SH.with_eqs f (UF.add pair f.SH.eqs) in
+      let f'' = SH.with_deqs f (Deqs.add pair f.SH.deqs) in
       let (f',f'') = if (Cmd.is_deq c) then (f'',f') else (f',f'') in 
       let t = Sl_heap.tag_pairs f in
       [ 
@@ -349,29 +349,26 @@ let fold (defs,ident) =
         let process_sub theta = 
           let (f, vs) = (Sl_heap.subst theta f, Blist.map (Sl_term.subst theta) vs) in
           let l' = 
-            {
+            SH.mk
               (* FIXME hacky stuff in eqs : in reality a proper way to diff *)
               (* two union-find structures is required *)
-              SH.eqs =
-                UF.of_list 
+                (UF.of_list 
                 (Deqs.to_list 
                   (Deqs.diff
                     (Deqs.of_list (UF.bindings l.SH.eqs))
                     (Deqs.of_list (UF.bindings f.SH.eqs))
-                  ));
-              SH.deqs = Deqs.diff l.SH.deqs f.SH.deqs;
-              SH.ptos = Ptos.diff l.SH.ptos f.SH.ptos;
-              SH.inds = 
-                Inds.fold 
-                  (fun (_, (f_ident, f_vs)) a -> 
-                    Inds.del_first 
-                    (fun (_, (l_ident, l_vs)) -> 
-                      f_ident = l_ident && Sl_term.FList.equal f_vs l_vs) a) 
-                  f.SH.inds
-                  l.SH.inds;
-            } in
+                  )))
+              (Deqs.diff l.SH.deqs f.SH.deqs)
+              (Ptos.diff l.SH.ptos f.SH.ptos)
+              (Inds.fold 
+                (fun (_, (f_ident, f_vs)) a -> 
+                  Inds.del_first 
+                  (fun (_, (l_ident, l_vs)) -> 
+                    f_ident = l_ident && Sl_term.FList.equal f_vs l_vs) a) 
+                f.SH.inds
+                l.SH.inds) in
           let newpred = (freshtag,(ident,vs)) in
-          let l' = { l' with SH.inds = Inds.add newpred l'.SH.inds } in
+          let l' = SH.with_inds l' (Inds.add newpred l'.SH.inds) in
           let seq' = ([l'],i) in
           (* let () = print_endline "Fold match:" in        *)
           (* let () = print_endline (Seq.to_string seq) in  *)

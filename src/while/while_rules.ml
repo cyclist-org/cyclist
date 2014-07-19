@@ -72,7 +72,7 @@ let luf_rl seq defs =
     let seq_vars = Seq.vars seq in
     let ts = Sl_heap.tags l in
     let left_unfold ((tag, (ident, _)) as p) = 
-      let l' = { l with SH.inds=Inds.remove p l.SH.inds } in
+      let l' = SH.with_inds l (Inds.remove p l.SH.inds) in
       let clauses = Sl_defs.unfold seq_vars p defs in
       let do_case f' =
         let l' = Sl_heap.star l' f' in
@@ -111,7 +111,7 @@ let symex_assign_rule =
       let theta = Sl_term.singleton_subst x fv in
       let f' = Sl_heap.subst theta f in
       let e' = Sl_term.subst theta e in
-      [[ Sl_heap.norm { f' with SH.eqs=UF.add (e',x) f'.SH.eqs } ], "Assign"]
+      [[ Sl_heap.norm (SH.with_eqs f' (UF.add (e',x) f'.SH.eqs)) ], "Assign"]
     with WrongCmd | Not_symheap -> [] in
   mk_symex rl
 
@@ -129,7 +129,7 @@ let symex_load_rule =
       let theta = Sl_term.singleton_subst x fv in
       let f' = Sl_heap.subst theta f in
       let t' = Sl_term.subst theta t in
-      [[ { f' with SH.eqs=UF.add (t',x) f'.SH.eqs } ], "Load"]
+      [[ SH.with_eqs f' (UF.add (t',x) f'.SH.eqs) ], "Load"]
     with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl
 
@@ -140,7 +140,7 @@ let symex_store_rule =
       let (x,s,e) = Cmd.dest_store cmd in
       let ((x',ys) as pto) = find_pto_on f x in
       let pto' = (x', Blist.replace_nth e (Field.get_index s) ys) in
-      [[ { f with SH.ptos=Ptos.add pto' (Ptos.remove pto f.SH.ptos) } ], "Store"]
+      [[ SH.with_ptos f (Ptos.add pto' (Ptos.remove pto f.SH.ptos)) ], "Store"]
     with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl
 
@@ -150,7 +150,7 @@ let symex_free_rule =
       let (f,cmd) = dest_sh_seq seq in
       let e = Cmd.dest_free cmd in
       let pto = find_pto_on f e in
-      [[ { f with SH.ptos=Ptos.remove pto f.SH.ptos } ], "Free"]
+      [[ SH.with_ptos f (Ptos.remove pto f.SH.ptos) ], "Free"]
     with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl
 
@@ -307,29 +307,26 @@ let fold (defs,ident) =
         let process_sub theta = 
           let (f, vs) = (Sl_heap.subst theta f, Blist.map (Sl_term.subst theta) vs) in
           let l' = 
-            { l with 
+            SH.mk 
               (* FIXME hacky stuff in SH.eqs : in reality a proper way to diff *)
               (* two union-find structures is required *)
-              SH.eqs =
-                UF.of_list
+              (UF.of_list
                 (Deqs.to_list
                   (Deqs.diff
                     (Deqs.of_list (UF.bindings l.SH.eqs))
                     (Deqs.of_list (UF.bindings f.SH.eqs))
-                  ));
-              SH.deqs = Deqs.diff l.SH.deqs f.SH.deqs;
-              SH.ptos = Ptos.diff l.SH.ptos f.SH.ptos;
-              SH.inds = 
-                Inds.fold 
-                  (fun (_, (f_ident, f_vs)) a -> 
-                    Inds.del_first 
-                    (fun (_, (l_ident, l_vs)) -> 
-                      f_ident = l_ident && Sl_term.FList.equal f_vs l_vs) a) 
-                  f.SH.inds
-                  l.SH.inds;
-            } in
+                  )))
+              (Deqs.diff l.SH.deqs f.SH.deqs)
+              (Ptos.diff l.SH.ptos f.SH.ptos)
+              (Inds.fold 
+                (fun (_, (f_ident, f_vs)) a -> 
+                  Inds.del_first 
+                  (fun (_, (l_ident, l_vs)) -> 
+                    f_ident = l_ident && Sl_term.FList.equal f_vs l_vs) a) 
+                f.SH.inds
+                l.SH.inds) in
           let newpred = (freshtag,(ident,vs)) in
-          let l' = { l' with SH.inds = Inds.add newpred l'.SH.inds } in
+          let l' = SH.with_inds l' (Inds.add newpred l'.SH.inds) in
           let seq' = ([l'],i) in
           (* let () = print_endline "Fold match:" in        *)
           (* let () = print_endline (Seq.to_string seq) in  *)
@@ -355,14 +352,13 @@ let generalise_while_rule =
     else t in
     let gen_pto (x,args) =
     let l = Blist.map gen_term (x::args) in (Blist.hd l, Blist.tl l) in
-      { h with
-        SH.eqs = Sl_term.Set.fold UF.remove m h.SH.eqs;
-        SH.deqs =
-          Deqs.filter
+      SH.mk 
+        (Sl_term.Set.fold UF.remove m h.SH.eqs)
+        (Deqs.filter
           (fun p -> Pair.conj (Pair.map (fun z -> not (Sl_term.Set.mem z m)) p))
-          h.SH.deqs;
-          SH.ptos = Ptos.endomap gen_pto h.SH.ptos
-      } in
+          h.SH.deqs)
+        (Ptos.endomap gen_pto h.SH.ptos)
+        h.inds in
     let rl seq =
       try
         let (f,cmd) = dest_sh_seq seq in

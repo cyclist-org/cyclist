@@ -14,23 +14,29 @@ type symheap =
 
 type t = symheap
 
-let empty =
-  { eqs = UF.empty; deqs = Deqs.empty; ptos = Ptos.empty; inds = Inds.empty }
+let mk eqs deqs ptos inds = { eqs; deqs; ptos; inds }
+let empty = mk UF.empty Deqs.empty Ptos.empty Inds.empty 
 
 let subst theta h =
-  { eqs = UF.subst theta h.eqs;
-    deqs = Deqs.subst theta h.deqs;
-    ptos = Ptos.subst theta h.ptos;
-    inds = Inds.subst theta h.inds
-  }
+  mk
+    (UF.subst theta h.eqs)
+    (Deqs.subst theta h.deqs)
+    (Ptos.subst theta h.ptos)
+    (Inds.subst theta h.inds)
+
+let with_eqs h eqs = mk eqs h.deqs h.ptos h.inds
+let with_deqs h deqs = mk h.eqs deqs h.ptos h.inds
+let with_ptos h ptos = mk h.eqs h.deqs ptos h.inds
+let with_inds h inds = mk h.eqs h.deqs h.ptos inds
+
 
 let norm h =
   let theta = UF.to_subst h.eqs in
-  { h with
-    deqs = Deqs.subst theta h.deqs;
-    ptos = Ptos.subst theta h.ptos;
-    inds = Inds.subst theta h.inds
-  }
+  mk 
+    h.eqs
+    (Deqs.subst theta h.deqs)
+    (Ptos.subst theta h.ptos)
+    (Inds.subst theta h.inds)
 
 let get_idents p =
   Inds.map_to Strng.MSet.add Strng.MSet.empty (fun (_, (id, _)) -> id) p.inds
@@ -89,13 +95,11 @@ let star f g =
     (Blist.fold_left (fun s (p, q) -> Deqs.add (fst p, fst q) s) s1 cp) in
   let newptos = Ptos.union f.ptos g.ptos in
   (* norm *)
-  {
-    eqs = UF.union f.eqs g.eqs;
-    deqs = Deqs.union_of_list
-        [f.deqs; g.deqs; explode_deqs (Ptos.elements newptos)];
-    ptos = newptos;
-    inds = Inds.union f.inds g.inds
-  }
+  mk 
+    (UF.union f.eqs g.eqs)
+    (Deqs.union_of_list [f.deqs; g.deqs; explode_deqs (Ptos.elements newptos)])
+    newptos
+    (Inds.union f.inds g.inds)
 
 let univ s f =
   let vs = vars f in
