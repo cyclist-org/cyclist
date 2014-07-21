@@ -102,18 +102,26 @@ let gen_left_rules_f (def, ident) seq =
 			let ts = Tags.inter (Sl_heap.tags pre) (Sl_heap.tags pre) in
       let pre' = { pre with SH.inds=Inds.remove p pre.SH.inds } in
       let do_case case =
-        let (f', (_,vs')) = Sl_indrule.dest (freshen_case_by_seq seq case) in
-        let theta = Sl_term.Map.of_list (Blist.combine vs' pvs) in
-        let f' = Sl_heap.subst theta f' in
-        let f' = Sl_heap.repl_tags id f' in
-        let pre' = Sl_heap.star pre' f' in
-        ( 
-					([pre'], cmd, post), 
-					(if !termination then TagPairs.mk ts else Seq.tagpairs_one), 
-					(if !termination then TagPairs.singleton (id,id) else TagPairs.empty)
-				) in
-      Blist.map do_case def, (ident ^ " L.Unf.") in
-    Inds.map_to_list left_unfold preds
+				let n = Blist.length (Sl_indrule.params case) in
+				let n' = Blist.length pvs in
+				let err_msg = fun () -> 
+					(Printf.sprintf "Skipping unfolding of inductive predicate \"%s\" due to parameter mismatch: \
+					definition expects %d parameters, but was given %d" ident n n')	in
+				Option.mk_lazily (n == n' || (debug err_msg; false))
+	      (fun () -> 
+					let (f', (_,vs')) = Sl_indrule.dest (freshen_case_by_seq seq case) in
+  	      let theta = Sl_term.Map.of_list (Blist.combine vs' pvs) in
+    	    let f' = Sl_heap.subst theta f' in
+      	  let f' = Sl_heap.repl_tags id f' in
+        	let pre' = Sl_heap.star pre' f' in
+	        ( 
+						([pre'], cmd, post), 
+						(if !termination then TagPairs.mk ts else Seq.tagpairs_one), 
+						(if !termination then TagPairs.singleton (id,id) else TagPairs.empty)
+					)) in
+			let subgoals = Option.list_get (Blist.map do_case def) in
+			Option.mk (not (Blist.is_empty subgoals)) (subgoals, (ident ^ " L.Unf.")) in
+    Option.list_get (Inds.map_to_list left_unfold preds)
   with Not_symheap -> [] 
  
 let gen_left_rules (def,ident) = 

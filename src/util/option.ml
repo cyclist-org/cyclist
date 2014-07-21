@@ -6,6 +6,9 @@ let pred p x =
 
 let mk b x =
   if b then Some x else None
+	
+let mk_lazily b f =
+	if b then Some (f()) else None
 
 let get = function
   | Some(x) -> x
