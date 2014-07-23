@@ -56,6 +56,7 @@ let to_melt f =
           (Blist.filter (fun l -> not (Latex.is_empty l))
               [UF.to_melt f.eqs; Deqs.to_melt f.deqs;
               Ptos.to_melt f.ptos; Inds.to_melt f.inds])) in
+  let content = if (Latex.is_empty content) then symb_emp.melt else content in
   let content = if !split_heaps then
       Latex.concat
         [

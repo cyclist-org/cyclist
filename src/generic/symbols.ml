@@ -22,6 +22,7 @@ let symb_true = make_symb "T" Latex.top
 let symb_or = make_symb "\\/" Latex.lor_
 let symb_and = make_symb "/\\" Latex.land_
 let symb_ampersand = make_symb "&" Latex.empty (* FIXME *)
+let symb_emp = make_symb "emp" (Latex.texttt (Latex.text "emp"))
 let symb_star = make_symb "*" Latex.ast
 let symb_pointsto = make_symb "->" Latex.mapsto
 let symb_eq = make_symb "=" (ltx_math " = ")
