@@ -3,6 +3,7 @@ open Lib
 open Symheap
 open Symbols
 open MParser
+open Parsers
 
 module SH = Sl_heap
 
@@ -38,7 +39,7 @@ module Field =
     
     let parse st = parse_ident st
   end
-
+  
 exception WrongCmd
 
 module Cond =
@@ -180,58 +181,81 @@ module Cmd =
     let mk_seq cmd cmd' = cmd @ cmd'
     let mk_from_list l = Blist.flatten l
 
-    let rec parse_cmd st = 
-      (   attempt (parse_symb keyw_stop >>$ Stop)
-      <|> attempt (parse_symb keyw_skip >>$ Skip)
+    (* TODO: Finish improving parsing of commands to give better error feedback for syntax errors *)
+    let rec parse_atomic_cmd st =
+      (   try_prefix (parse_symb keyw_stop) (fun p -> p >>$ Stop)
+      <|> try_prefix (parse_symb keyw_skip) (fun p -> p >>$ Skip)
+      <|> try_prefix (parse_symb keyw_free) (fun p -> 
+            p >> Tokens.parens Sl_term.parse |>> (fun v ->
+            assert (Sl_term.is_var v) ; Free v))
+      <|> try_prefix (Sl_term.parse << (parse_symb symb_fld_sel))
+            (fun p -> p >>= (fun v ->
+            parse_ident >>= (fun id ->
+            parse_symb symb_assign >>
+            Sl_term.parse |>> (fun t ->
+            assert (Sl_term.is_var v) ; Store(v,id,t)))))
+(*
+      <|> try_prefix (Sl_term.parse << (parse_symb symb_assign))
+            (fun p -> p >>= (fun v ->
+              
+            (parse_symb keyw_new) >>
+            Tokens.parens (skip_string "")))
+            (fun p -> p |>> (fun v -> assert (Sl_term.is_var v) ; New v))
+*)
+       << parse_symb symb_semicolon ) st 
+    and parse_block_cmd st =
+      ( message "Block commands not implemented yet" ) st
+    and parse_cmd st =
+      let parse_cmdlist_endedby symb st = 
+        ( expect_before parse (parse_symb symb) "Expecting CmdList" ) st in
+      (* (   parse_atomic_cmd               *)
+      (* <|> parse_block_cmd <?> "Cmd" ) st *)
+      (   attempt (parse_symb keyw_stop >> parse_symb symb_semicolon >>$ Stop)
+      <|> attempt (parse_symb keyw_skip >> parse_symb symb_semicolon >>$ Skip)
       <|> attempt (parse_symb keyw_free >>
-          Tokens.parens Sl_term.parse |>> (fun v ->
-          assert (Sl_term.is_var v) ; Free v))
+          Tokens.parens Sl_term.parse >>= (fun v ->
+          parse_symb symb_semicolon >>$ (assert (Sl_term.is_var v) ; Free v)))
   (* | IF; cond = condition; THEN; cmd1 = command; ELSE; cmd2 = command; FI { P.Cmd.mk_ifelse cond cmd1 cmd2 } *)
   (* | IF; cond = condition; LB; cmd1 = command; RB; ELSE; LB; cmd2 = command; RB { P.Cmd.mk_ifelse cond cmd1 cmd2 } *)
       <|> attempt (parse_symb keyw_if >>
           Cond.parse >>= (fun cond ->
               (parse_symb keyw_then >>
-              parse >>= (fun cmd1 ->
+              (parse_cmdlist_endedby keyw_else) >>= (fun cmd1 ->
               parse_symb keyw_else >>
-              parse >>= (fun cmd2 ->
+              (parse_cmdlist_endedby keyw_fi) >>= (fun cmd2 ->
               parse_symb keyw_fi >>$ (IfElse(cond,cmd1,cmd2)))))
-				  <|> (parse_symb symb_lb >>
-              parse >>= (fun cmd1 ->
-              parse_symb symb_rb >>
+				  <|> (Tokens.braces parse >>= (fun cmd1 ->
 							parse_symb keyw_else >>
-							parse_symb symb_lb >>
-              parse >>= (fun cmd2 ->
-              parse_symb symb_rb >>$ (IfElse(cond,cmd1,cmd2)))))
+              Tokens.braces (parse_cmdlist_endedby symb_rb) |>> (fun cmd2 ->
+              IfElse(cond,cmd1,cmd2))))
 					))
   (* | IF; cond = condition; THEN; cmd = command; FI { P.Cmd.mk_if cond cmd }                                  *)
   (* | IF; cond = condition; LB; cmd = command; RB { P.Cmd.mk_if cond cmd }                                  *)
       <|> attempt (parse_symb keyw_if >>
           Cond.parse >>= (fun cond ->
               (parse_symb keyw_then >>
-              parse >>= (fun cmd ->
+              (parse_cmdlist_endedby keyw_fi) >>= (fun cmd ->
               parse_symb keyw_fi >>$ (If(cond,cmd))))
-					<|> (parse_symb symb_lb >>
-              parse >>= (fun cmd ->
-              parse_symb symb_rb >>$ (If(cond,cmd))))
+					<|> (Tokens.braces (parse_cmdlist_endedby symb_rb) |>> (fun cmd ->
+             If(cond,cmd)))
 					))
   (* | WHILE; cond = condition; DO; cmd = command; OD { P.Cmd.mk_while cond cmd }                              *)
   (* | WHILE; cond = condition; LB; cmd = command; RB { P.Cmd.mk_while cond cmd }                              *)
       <|> (parse_symb keyw_while >>
           Cond.parse >>= (fun cond ->
               (parse_symb keyw_do >>
-              parse >>= (fun cmd ->
+              (parse_cmdlist_endedby keyw_od) >>= (fun cmd ->
               parse_symb keyw_od >>$ (While(cond,cmd))))
-					<|> (parse_symb symb_lb >>
-              parse >>= (fun cmd ->
-              parse_symb symb_rb >>$ (While(cond,cmd))))
+					<|> (Tokens.braces (parse_cmdlist_endedby symb_rb) |>> (fun cmd ->
+              While(cond,cmd)))
 					))
   (*   | v = var; FLD_SEL; fld = IDENT; ASSIGN; t = term                                                       *)
       <|> attempt (Sl_term.parse >>= (fun v ->
           parse_symb symb_fld_sel >>
           parse_ident >>= (fun id ->
           parse_symb symb_assign >>
-          Sl_term.parse |>> (fun t ->
-          assert (Sl_term.is_var v) ; Store(v,id,t)))))
+          Sl_term.parse >>= (fun t ->
+          parse_symb symb_semicolon >>$ (assert (Sl_term.is_var v) ; Store(v,id,t))))))
   (*   v = var; ASSIGN; NEW; LP; RP { P.Cmd.mk_new v }                            *)
       <|> attempt (Sl_term.parse <<
           parse_symb symb_assign <<
@@ -244,17 +268,17 @@ module Cmd =
           parse_symb symb_assign >>
           Sl_term.parse >>= (fun v2 ->
           parse_symb symb_fld_sel >>
-          parse_ident |>> (fun id ->
-          assert (Sl_term.is_var v1 && Sl_term.is_var v2) ; Load(v1,v2,id)))))
+          parse_ident >>= (fun id ->
+          parse_symb symb_semicolon >>$ (
+          assert (Sl_term.is_var v1 && Sl_term.is_var v2) ; Load(v1,v2,id))))))
     (* | v = var; ASSIGN; t = term { P.Cmd.mk_assign v t } *)
       <|> (Sl_term.parse >>= (fun v -> 
           parse_symb symb_assign >> 
-          Sl_term.parse |>> (fun t -> 
-          assert (Sl_term.is_var v) ; Assign(v,t))))
+          Sl_term.parse >>= (fun t -> 
+          parse_symb symb_semicolon >>$ (assert (Sl_term.is_var v) ; Assign(v,t)))))
       <?> "Cmd") st
     and parse st = 
-      (sep_by1 parse_cmd (parse_symb symb_semicolon) |>> 
-      Blist.map mklc <?> "CmdList") st
+      ( many1 parse_cmd |>> Blist.map mklc) st
 
     let _dest_stop = function
       | Stop -> ()
@@ -501,6 +525,61 @@ module Cmd =
 
   end
 
+module Proc =
+  struct
+    
+    let add p = ()
+    
+    (* precondition: PRECONDITION; COLON; f = formula; SEMICOLON { f } *)
+    let parse_precondition st = 
+      ( parse_symb keyw_precondition >>
+        parse_symb symb_colon >>
+        Sl_form.parse >>= (fun f ->
+        parse_symb symb_semicolon >>$ f) <?> "Precondition") st
+
+    (* postcondition: POSTCONDITION; COLON; f = formula; SEMICOLON { f } *)
+    let parse_postcondition st = 
+      ( parse_symb keyw_postcondition >>
+        parse_symb symb_colon >>
+        Sl_form.parse >>= (fun f ->
+        parse_symb symb_semicolon >>$ f) <?> "Postcondition") st
+
+    let parse_named st = 
+      let parse_params st =
+      let rec parse_params' acc st =
+      let tail st =
+      let try_parse_next_param check msg st = 
+        (   look_ahead(Sl_term.parse >>= (fun p -> 
+              if (check p) then zero else return ()))
+        <|> fail msg) st in
+      ((followed_by Sl_term.parse "") >>
+      (try_parse_next_param (fun p -> Sl_term.is_nil p) "Not a formal parameter") >>
+      (try_parse_next_param (fun p -> Sl_term.is_exist_var p) 
+        "Not a formal parameter - must not be primed (')") >>
+      (try_parse_next_param (fun p -> List.mem p acc) "Duplicate parameter") >>
+      Sl_term.parse >>= (fun p -> parse_params' (p::acc))) st in
+      (   (if (List.length acc == 0) then tail else ((parse_symb symb_comma) >> tail)) 
+      <|> (return acc) ) st in
+      parse_params' [] st in
+      (parse_symb keyw_proc >> 
+      parse_ident >>= (fun id ->
+      (Tokens.parens parse_params) >>= (fun params ->
+      parse_precondition >>= (fun pre ->
+      parse_postcondition >>= (fun post ->
+      Tokens.braces 
+        (expect_before Cmd.parse (parse_symb symb_rb) "Expecting CmdList") |>> 
+      (fun body ->
+        return (id, params, pre, post, body) <?> "Procedure" )))))) st
+    
+    let parse_unnamed st = 
+      (parse_precondition >>= (fun pre ->
+      parse_postcondition >>= (fun post ->
+      Cmd.parse >>= 
+      (fun body ->
+        return (pre, body, post)))) <?> "CmdList") st
+    
+  end
+
 let program_pp fmt cmd =
   Format.fprintf fmt "%a@\n%a" Field.pp () (Cmd.pp 0) cmd
 
@@ -599,28 +678,18 @@ let parse_fields st =
     sep_by1 Field.parse (parse_symb symb_comma) >>= (fun ils ->
     parse_symb symb_semicolon >>$ List.iter Field.add ils) <?> "Fields") st
 
-(* precondition: PRECONDITION; COLON; f = formula; SEMICOLON { f } *)
-let parse_precondition st = 
-  ( parse_symb keyw_precondition >>
-    parse_symb symb_colon >>
-    Sl_form.parse >>= (fun f ->
-    parse_symb symb_semicolon >>$ f) <?> "Precondition") st
+(* procedures *)
+let parse_procs st = 
+  ( many Proc.parse_named >>= (fun procs -> return (List.iter Proc.add procs)) ) st
+  
+let parse_main st =
+  ( Proc.parse_unnamed << eof) st
 
-(* postcondition: POSTCONDITION; COLON; f = formula; SEMICOLON { f } *)
-let parse_postcondition st = 
-  ( parse_symb keyw_postcondition >>
-    parse_symb symb_colon >>
-    Sl_form.parse >>= (fun f ->
-    parse_symb symb_semicolon >>$ f) <?> "Postcondition") st
-
-(* fields; p = precondition; cmd = command; EOF { (p, cmd, true) } *)
-(* fields; p = precondition; q = postcondition; cmd = command; EOF { (p, cmd, q) } *)
+(* fields; procs; p = precondition; q = postcondition; cmd = command; EOF { (p, cmd, q) } *)
 let parse st = 
   ( parse_fields >>
-    parse_precondition >>= (fun p ->
-	  parse_postcondition >>= (fun q ->
-    Cmd.parse >>= (fun cmd ->
-    eof >>$ (p,cmd,q)))) <?> "program") st
+    parse_procs >>
+    (parse_main <?> "Main procedure") <?> "Program") st
 
 let of_channel c =
   handle_reply (parse_channel parse c ())
