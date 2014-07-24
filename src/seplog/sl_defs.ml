@@ -53,10 +53,10 @@ let is_undefined defs pred = not (is_defined defs pred)
 let get_def ident (defs: t) =
   fst (Blist.find (fun (_, ident') -> Strng.equal ident ident') defs)
 
-let unfold vars pred defs = 
+let unfold vars h pred defs = 
   let (_, (ident, _)) = pred in
   let def = get_def ident defs in
-  Blist.map (Sl_indrule.unfold vars pred) def
+  Blist.map (Sl_indrule.unfold vars h pred) def
   
   
 module BasePair =

@@ -25,24 +25,25 @@ let tag_pairs f = TagPairs.mk (tags f)
 let subst theta seq = Pair.map (fun f -> Sl_form.subst theta f) seq
 
 (* s2 entails s1 *)
-let subsumed_wrt_tags t s1 s2 =
-  Sl_form.subsumed_wrt_tags t (fst s2) (fst s1) &&
-  Sl_form.subsumed_wrt_tags Tags.empty (snd s1) (snd s2)
+(* let subsumed_wrt_tags t s1 s2 =                          *)
+(*   Sl_form.subsumed_wrt_tags t (fst s2) (fst s1) &&       *)
+(*   Sl_form.subsumed_wrt_tags Tags.empty (snd s1) (snd s2) *)
 (* s' ___ s *)
 let uni_subsumption s s' =
-  let ((l, r), (l', r')) = (s, s') in
-  let tags = Tags.inter (tags s) (tags s') in
-  let valid theta' =
-    let s'' = subst theta' s' in
-    let tags' = Tags.fold
-        ( fun t acc ->
-              let new_acc = Tags.add t acc in
-              if subsumed_wrt_tags new_acc s s'' then new_acc else acc
-        ) tags Tags.empty in
-    if not (Tags.is_empty tags') then
-      Some theta' else None in
-  let hook theta' = Sl_form.right_subsumption valid theta' r r' in
-  Sl_form.left_subsumption hook Sl_term.Map.empty l' l
+  failwith "FIXME"
+  (* let ((l, r), (l', r')) = (s, s') in                                  *)
+  (* let tags = Tags.inter (tags s) (tags s') in                          *)
+  (* let valid theta' =                                                   *)
+  (*   let s'' = subst theta' s' in                                       *)
+  (*   let tags' = Tags.fold                                              *)
+  (*       ( fun t acc ->                                                 *)
+  (*             let new_acc = Tags.add t acc in                          *)
+  (*             if subsumed_wrt_tags new_acc s s'' then new_acc else acc *)
+  (*       ) tags Tags.empty in                                           *)
+  (*   if not (Tags.is_empty tags') then                                  *)
+  (*     Some theta' else None in                                         *)
+  (* let hook theta' = Sl_form.right_subsumption valid theta' r r' in     *)
+  (* Sl_form.left_subsumption hook Sl_term.Map.empty l' l                 *)
 
 let norm s = Pair.map Sl_form.norm s
 

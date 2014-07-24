@@ -14,7 +14,13 @@ type symheap =
 
 type t = symheap
 
-let mk eqs deqs ptos inds = { eqs; deqs; ptos; inds }
+let mk eqs deqs ptos inds =
+  assert 
+    (Tags.cardinal (Inds.map_to Tags.add Tags.empty fst inds) 
+    =
+    Inds.cardinal inds) ;
+  { eqs; deqs; ptos; inds }
+  
 let empty = mk UF.empty Deqs.empty Ptos.empty Inds.empty 
 
 let subst theta h =
@@ -28,6 +34,11 @@ let with_eqs h eqs = mk eqs h.deqs h.ptos h.inds
 let with_deqs h deqs = mk h.eqs deqs h.ptos h.inds
 let with_ptos h ptos = mk h.eqs h.deqs ptos h.inds
 let with_inds h inds = mk h.eqs h.deqs h.ptos inds
+
+let del_deq h deq = with_deqs h (Deqs.remove deq h.deqs)
+let del_pto h pto = with_ptos h (Ptos.remove pto h.ptos)
+let del_ind h ind = with_inds h (Inds.remove ind h.inds)
+
 
 
 let norm h =
@@ -47,8 +58,7 @@ let terms f =
 
 let vars f = Sl_term.filter_vars (terms f)
 
-let tags l =
-  Inds.map_to Tags.add Tags.empty (fun i -> fst i) l.inds
+let tags h = Inds.tags h.inds
 
 let to_string f =
   let res = String.concat symb_star.sep
@@ -105,10 +115,10 @@ let univ s f =
   let vs = vars f in
   let evs = Sl_term.Set.filter Sl_term.is_exist_var vs in
   let n = Sl_term.Set.cardinal evs in
-  if n =0 then f else
-    let uvs = Sl_term.fresh_uvars (Sl_term.Set.union s vs) n in
-    let theta = Sl_term.Map.of_list (Blist.combine (Sl_term.Set.elements evs) uvs) in
-    subst theta f
+  if n=0 then f else
+  let uvs = Sl_term.fresh_uvars (Sl_term.Set.union s vs) n in
+  let theta = Sl_term.Map.of_list (Blist.combine (Sl_term.Set.elements evs) uvs) in
+  subst theta f
 
 let repl_tags t f =
   { f with inds = Inds.endomap (fun (_, p) -> (t, p)) f.inds }
@@ -146,6 +156,12 @@ let equal h h' =
   Ptos.equal h.ptos h'.ptos &&
   Inds.equal h.inds h'.inds
 
+let subsumed h h' = 
+  UF.subsumed h.eqs h'.eqs &&
+  Deqs.subsumed h'.eqs h.deqs h'.deqs &&
+  Ptos.subsumed h'.eqs h.ptos h'.ptos &&
+  Inds.subsumed h'.eqs h.inds h'.inds 
+
 include Fixpoint(struct type t = symheap let equal = equal end)
 
 let compare f g =
@@ -159,16 +175,16 @@ let compare f g =
             | _ -> Inds.compare f.inds g.inds
 
 (* h' |- h if spw=false h' |- h * true if spw=true *)
-let aux_subsumed_wrt_tags spw tags h h' =
-  let h = subst (UF.to_subst h'.eqs) h in
-  UF.is_subsumed h.eqs h'.eqs &&
-  Deqs.subset h.deqs h'.deqs &&
-  if spw then
-    Ptos.subset h.ptos h'.ptos &&
-    Inds.subsumed_wrt_tags tags h.inds h'.inds
-  else
-    Ptos.equal h.ptos h'.ptos &&
-    Inds.equal_wrt_tags tags h.inds h'.inds
+(* let aux_subsumed_wrt_tags spw tags h h' =      *)
+(*   let h = subst (UF.to_subst h'.eqs) h in      *)
+(*   UF.is_subsumed h.eqs h'.eqs &&               *)
+(*   Deqs.subset h.deqs h'.deqs &&                *)
+(*   if spw then                                  *)
+(*     Ptos.subset h.ptos h'.ptos &&              *)
+(*     Inds.subsumed_wrt_tags tags h.inds h'.inds *)
+(*   else                                         *)
+(*     Ptos.equal h.ptos h'.ptos &&               *)
+(*     Inds.equal_wrt_tags tags h.inds h'.inds    *)
 
 let find_lval x h =
   try
@@ -228,3 +244,7 @@ let parse_atom st =
 let parse st =
   (sep_by1 parse_atom (parse_symb symb_star) >>= (fun atoms ->
           return (Blist.foldl star empty atoms)) <?> "symheap") st
+
+let freshen_tags h' h =
+  with_inds h (Inds.freshen_tags h'.inds h.inds)
+  

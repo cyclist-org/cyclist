@@ -66,7 +66,7 @@ let inline defs =
           let pred = 
             Inds.find (fun (_, (h'', _)) -> Strng.equal h h'') f.SH.inds in
           let f = SH.with_inds f (Inds.remove pred f.SH.inds) in
-          let g = Sl_indrule.unfold (Sl_indrule.vars orig) pred case in
+          let (g, _) = Sl_indrule.unfold (Sl_indrule.vars orig) f pred case in
           Sl_heap.star f g
         with Not_found -> f in
       let p'' = Sl_heap.fixpoint first_unfold p' in
@@ -460,7 +460,7 @@ let abd_back_rule =
 						let cl =
               SH.with_inds 
                 Sl_heap.empty 
-                (Inds.of_list [(0,(c',perm)); (0, (fresh_ident, newparams))]) in
+                (Inds.of_list [(1,(c',perm)); (2, (fresh_ident, newparams))]) in
             (( [Sl_indrule.mk cl (c, newparams)], c )::defs))
 				  combinations in
       Blist.bind f cp
@@ -611,12 +611,6 @@ let unfold_last =
       Blist.map 
         (fun app -> (app,defs)) 
         (While_rules.luf_rl seq [Blist.hd defs])) 
-  (* let gen_left_rule_fun seq defs =                                 *)
-  (*   let apps = While_rules.gen_left_rules_f (Blist.hd defs) seq in *)
-  (*   Blist.map (fun app -> (app,defs)) apps in                      *)
-  (* Abdrule.mk_abdgenrule gen_left_rule_fun                          *)
-
-(* let u r = Abdrule.choice [ r ; Abdrule.compose unfold_last r ] *)
 
 let deref_tac =
   Abdrule.first 

@@ -26,7 +26,7 @@ sig
   val uni_subsumption : bool ->
     (Sl_term.substitution -> Sl_term.substitution option) ->
     Sl_term.substitution -> t -> t -> Sl_term.substitution option
-  val is_subsumed : t -> t -> bool
+  val subsumed : t -> t -> bool
 end
 
 (* set-like type for disequalities *)
@@ -42,6 +42,7 @@ sig
   val uni_subsumption : bool ->
     (Sl_term.substitution -> Sl_term.substitution option) ->
     Sl_term.substitution -> t -> t -> Sl_term.substitution option
+  val subsumed : UF.t -> t -> t -> bool
 end
 
 module Ptos : 
@@ -55,6 +56,7 @@ sig
   val aux_subsumption : bool -> bool ->
     (Sl_term.substitution -> Sl_term.substitution option) ->
     Sl_term.substitution -> t -> t -> Sl_term.substitution option
+  val subsumed : UF.t -> t -> t -> bool
 end
 
 module IndSubf : Util.MCTsig with type t = Util.Strng.t * Sl_term.FList.t
@@ -70,11 +72,14 @@ sig
   val vars : t -> Sl_term.Set.t
   val to_string_list : t -> string list
   val to_melt : t -> Latex.t
+  val tags : t -> Util.Tags.t
+  val freshen_tags : t -> t -> t
   val aux_subsumption : bool -> bool ->
     (Sl_term.substitution -> Sl_term.substitution option) ->
     Sl_term.substitution -> t -> t -> Sl_term.substitution option
   val subsumed_wrt_tags : Util.Tags.t -> t -> t -> bool
-  val equal_wrt_tags : Util.Tags.t -> t -> t -> bool
+  (* val equal_wrt_tags : Util.Tags.t -> t -> t -> bool *)
+  val subsumed : UF.t -> t -> t -> bool
 end
 
 exception Not_symheap

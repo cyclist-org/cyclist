@@ -49,7 +49,7 @@ module UF =
     let map f (m:t) =
       Sl_term.Map.fold (fun x y m' -> add (f (x,y)) m') m empty
     let equates m x y = Sl_term.equal (find x m) (find y m)
-    let is_subsumed m m' =
+    let subsumed m m' =
       Sl_term.Map.for_all (fun x y -> equates m' x y) m
 
     let equal u u' = Sl_term.Map.equal Sl_term.equal u u'
@@ -72,7 +72,7 @@ module UF =
       let p = Sl_term.Map.remove k p in
       let to_match = Sl_term.Map.bindings p' in
       let g theta' = uni_subsumption left hook theta' p p' in
-      let f a' = Blist.find_some g (direct Sl_term.unify_pairs theta a a') in
+      let f a' = direct (Sl_term.OrdPair.unord_unify g) theta a a' in
       Blist.find_some f to_match
 
     let to_string_list v = Blist.map (pair_to_string symb_eq.str) (bindings v)
@@ -109,10 +109,11 @@ module UF =
     let to_subst m = m    
   end
 
+module TermPair = PairTypes(Sl_term)(Sl_term)
 
 module Deqs =
   struct
-    include MakeListSet(PairTypes(Sl_term)(Sl_term))
+    include MakeListSet(TermPair)
     (* if a pair contains an exist. variable then *)
     (* the first comp of the pair is an exist. var *)
     let add p deqs = add (norm_pair p) deqs
@@ -135,7 +136,7 @@ module Deqs =
       let p = remove a p in
       let to_match = elements p' in
       let g theta' = uni_subsumption left hook theta' p p' in
-      let f a' = Blist.find_some g (direct Sl_term.unify_pairs theta a a') in
+      let f a' = direct (Sl_term.OrdPair.unord_unify g) theta a a' in
       Blist.find_some f to_match
 
     let to_string_list v = Blist.map (pair_to_string symb_deq.str) (elements v)
@@ -156,19 +157,23 @@ module Deqs =
       (Sl_term.parse >>= (fun x ->
       parse_symb symb_deq >>
       Sl_term.parse << spaces |>> (fun y -> (x,y))) <?> "deq") st
+    
+    let subsumed eqs deqs deqs' =
+      subset (subst eqs deqs) (subst eqs deqs') 
   end
 
-module Pto = MakeComplexType(PairTypes(Sl_term)(Sl_term.FList))
+module Pto = PairTypes(Sl_term)(Sl_term.FList)
 module Ptos =
   struct
-    include Pto.MSet
+    include MakeListMultiset(Pto)
+    include Fixpoint(MakeListMultiset(Pto))
 
     let elt_subst theta (lv, rvs) =
       (Sl_term.subst theta lv, Blist.map (Sl_term.subst theta) rvs)
     let subst theta elts = endomap (fun e -> elt_subst theta e) elts
 
     let unify_ptos theta (x, ys) (x', ys') =
-      Sl_term.unify_list theta (x::ys) (x'::ys')
+      Sl_term.FList.unify theta (x::ys) (x'::ys')
 
     (* finds an extension of theta, theta' such that *)
     (* p[theta'] is a (multi-)subset of p' if left=true and  *)
@@ -199,7 +204,8 @@ module Ptos =
       aux_subsumption true true hook theta p p'
 
     let elem_to_string (x,args) =
-      (Sl_term.to_string x) ^ symb_pointsto.str ^ (Sl_term.list_to_string args)
+      (Sl_term.to_string x) ^ symb_pointsto.str ^ 
+      (Blist.to_string symb_comma.sep Sl_term.to_string args)
     let elem_to_melt (x,args) =
       Latex.concat
         [ Sl_term.to_melt x; symb_pointsto.melt;
@@ -224,6 +230,9 @@ module Ptos =
       parse_symb symb_pointsto >>
       Tokens.comma_sep1 Sl_term.parse << spaces |>> 
       (fun l -> (x,l))) <?> "pto") st
+
+    let subsumed eqs ptos ptos' =
+      equal (subst eqs ptos) (subst eqs ptos') 
       
 	end
 
@@ -246,7 +255,7 @@ module Inds =
 
     let unify_inds theta ((_, (ident, vs)):Ind.t) ((_, (ident', vs')):Ind.t) =
       if not (Strng.equal ident ident') then None else
-      Sl_term.unify_list theta vs vs'
+      Sl_term.FList.unify theta vs vs'
 
     (* finds an extension of theta, theta' such that *)
     (* p[theta'] is a subset of p' if left=true and  *)
@@ -296,7 +305,9 @@ module Inds =
 
     let elem_to_string (t,(ident,args)) =
       ident ^ symb_caret.str ^
-      (string_of_int t) ^ symb_lp.str ^ (Sl_term.list_to_string args) ^ symb_rp.str
+      (string_of_int t) ^ symb_lp.str ^ 
+      (Blist.to_string symb_comma.sep Sl_term.to_string args) ^ 
+      symb_rp.str
     let elem_to_melt (t,(ident,args)) =
       Latex.concat
         ([ Latex.index
@@ -326,7 +337,19 @@ module Inds =
       | Some tag -> upd_tag tag 
       | None -> next_tag () in
       return (tag, (pred, arg_list))))) <?> "ind") st
-		
+
+    let tags inds = map_to Tags.add Tags.empty fst inds
+
+    let freshen_tags inds' inds =
+      if is_empty inds || is_empty inds' then inds else
+      let maxtag = Tags.max_elt (tags inds') in
+      let mintag = fold (fun (tag,_) a -> min tag a) inds max_int in
+      let delta = 1 + maxtag - mintag in
+      endomap (fun (tag, head) -> (tag+delta, head)) inds
+
+    let subsumed eqs inds inds' =
+      equal (subst eqs inds) (subst eqs inds') 
+
 	end
 
 

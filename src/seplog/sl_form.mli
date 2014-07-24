@@ -4,7 +4,6 @@ val dest : t -> Sl_heap.t
 
 val star : t -> t -> t
 val disj : t -> t -> t
-val to_string : t -> string
 val to_melt : t -> Latex.t
 val norm : t -> t
 val terms : t -> Sl_term.Set.t
@@ -14,8 +13,9 @@ val tag_pairs : t -> Util.TagPairs.t
 val equates : t -> Sl_term.t -> Sl_term.t -> bool
 val inconsistent : t -> bool
 val subst : Sl_term.substitution -> t -> t
-val subsumed_wrt_tags : Util.Tags.t -> t -> t -> bool
-val spw_subsumed_wrt_tags : Util.Tags.t -> t -> t -> bool
+(* val subsumed_wrt_tags : Util.Tags.t -> t -> t -> bool *)
+val subsumed : t -> t -> bool
+(* val spw_subsumed_wrt_tags : Util.Tags.t -> t -> t -> bool *)
 val right_subsumption :
 (Sl_term.substitution -> Sl_term.substitution option) ->
 Sl_term.substitution -> t -> t -> Sl_term.substitution option

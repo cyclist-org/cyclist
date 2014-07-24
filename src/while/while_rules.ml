@@ -70,16 +70,15 @@ let luf_rl seq defs =
   try
     let (l,cmd) = dest_sh_seq seq in
     let seq_vars = Seq.vars seq in
-    let ts = Sl_heap.tags l in
-    let left_unfold ((tag, (ident, _)) as p) = 
+    let left_unfold ((_, (ident, _)) as p) = 
       let l' = SH.with_inds l (Inds.remove p l.SH.inds) in
-      let clauses = Sl_defs.unfold seq_vars p defs in
-      let do_case f' =
+      let clauses = Sl_defs.unfold seq_vars l' p defs in
+      let do_case (f', tagpairs) =
         let l' = Sl_heap.star l' f' in
         ( 
 					([l'],cmd), 
-					(if !termination then TagPairs.mk ts else Seq.tagpairs_one), 
-					(if !termination then TagPairs.singleton (tag,tag) else TagPairs.empty)
+					(if !termination then TagPairs.union (Sl_heap.tag_pairs l') tagpairs else Seq.tagpairs_one), 
+					(if !termination then tagpairs else TagPairs.empty)
 				) in
       Blist.map do_case clauses, (ident ^ " L.Unf.") in
     Inds.map_to_list 
@@ -212,24 +211,25 @@ let symex_while_rule =
   wrap rl
 
 let matches_fun ((l1,cmd1) as s1) ((l2,cmd2) as s2) =
-  if not (Cmd.equal cmd1 cmd2)  || 
-     not (Sl_form.is_heap l1 = Sl_form.is_heap l2) then [] else
-  match Seq.uni_subsumption s1 s2 with
-    | None -> []
-    | Some theta ->
-			if !termination then
-				begin 
-  				let tags = Tags.inter (Seq.tags s1) (Seq.tags s2) in
-          let s2' = Seq.subst theta s2 in
-          let tags' = Tags.fold
-            (fun t acc ->
-              let new_acc = Tags.add t acc in
-              if Seq.subsumed_wrt_tags new_acc s1 s2' then new_acc else acc
-            ) tags Tags.empty in
-          [ ((TagPairs.mk tags', "Backl"),theta) ]
-				end
-			else
-			  [ ((Seq.tagpairs_one, "Backl"),theta) ]
+  failwith "FIXME"  
+  (* if not (Cmd.equal cmd1 cmd2)  ||                                          *)
+  (*    not (Sl_form.is_heap l1 = Sl_form.is_heap l2) then [] else             *)
+  (* match Seq.uni_subsumption s1 s2 with                                      *)
+  (*   | None -> []                                                            *)
+  (*   | Some theta ->                                                         *)
+	(* 		if !termination then                                                  *)
+	(* 			begin                                                               *)
+  (* 				let tags = Tags.inter (Seq.tags s1) (Seq.tags s2) in              *)
+  (*         let s2' = Seq.subst theta s2 in                                   *)
+  (*         let tags' = Tags.fold                                             *)
+  (*           (fun t acc ->                                                   *)
+  (*             let new_acc = Tags.add t acc in                               *)
+  (*             if Seq.subsumed_wrt_tags new_acc s1 s2' then new_acc else acc *)
+  (*           ) tags Tags.empty in                                            *)
+  (*         [ ((TagPairs.mk tags', "Backl"),theta) ]                          *)
+	(* 			end                                                                 *)
+	(* 		else                                                                  *)
+	(* 		  [ ((Seq.tagpairs_one, "Backl"),theta) ]                             *)
 
 (*    seq'     *)
 (* ----------  *)
@@ -250,10 +250,11 @@ let subst_rule theta seq' seq =
 (* the below is related to a bug that appears when Tags.empty is replaced *)
 (* with intersection in the cyclic reversal test. *)     
 let weaken seq' seq = 
-  if Seq.subsumed_wrt_tags Tags.empty seq seq' then
-    [ [(seq', TagPairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')), TagPairs.empty)], "Weaken" ]
-  else
-    []
+  failwith "FIXME"
+  (*   if Seq.subsumed_wrt_tags Tags.empty seq seq' then                                               *)
+  (*   [ [(seq', TagPairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')), TagPairs.empty)], "Weaken" ] *)
+  (* else                                                                                              *)
+  (*   []                                                                                              *)
 
 (* let weaken seq' seq =                                             *)
 (*   if Sl_seq.subsumed_wrt_tags (Sl_seq.tags seq') seq seq' then    *)
@@ -358,7 +359,7 @@ let generalise_while_rule =
           (fun p -> Pair.conj (Pair.map (fun z -> not (Sl_term.Set.mem z m)) p))
           h.SH.deqs)
         (Ptos.endomap gen_pto h.SH.ptos)
-        h.inds in
+        h.SH.inds in
     let rl seq =
       try
         let (f,cmd) = dest_sh_seq seq in

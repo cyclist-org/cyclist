@@ -41,18 +41,23 @@ let pp fmt f =
 
 let subst theta f = Blist.map (fun h -> Sl_heap.subst theta h) f
 
-let aux_subsumed_wrt_tags spw t f1 f2 =
-  Blist.for_all (fun d2 ->
-          Blist.exists (fun d1 ->
-                  Sl_heap.aux_subsumed_wrt_tags spw t d1 d2) f1) f2
+(* let aux_subsumed_wrt_tags spw t f1 f2 =                             *)
+(*   Blist.for_all (fun d2 ->                                          *)
+(*           Blist.exists (fun d1 ->                                   *)
+(*                   Sl_heap.aux_subsumed_wrt_tags spw t d1 d2) f1) f2 *)
 
-(* f2 |- f1 *)
-let subsumed_wrt_tags t f1 f2 =
-  aux_subsumed_wrt_tags false t f1 f2
+let subsumed f1 f2 =
+  Blist.for_all (fun d2 ->
+    Blist.exists (fun d1 ->
+      Sl_heap.subsumed d1 d2) f1) f2
+
+(* (* f2 |- f1 *)                        *)
+(* let subsumed_wrt_tags t f1 f2 =       *)
+(*   aux_subsumed_wrt_tags false t f1 f2 *)
 
 (* f2 |- f1 * true *)
-let spw_subsumed_wrt_tags t f1 f2 =
-  aux_subsumed_wrt_tags true t f1 f2
+(* let spw_subsumed_wrt_tags t f1 f2 =  *)
+(*   aux_subsumed_wrt_tags true t f1 f2 *)
 
 let rec aux_subsumption left spw fhook theta f f' =
   if []= f' then fhook theta else

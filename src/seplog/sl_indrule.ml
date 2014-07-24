@@ -46,11 +46,18 @@ let parse st =
           Inds.parse << spaces >>=
           (fun (_, head) -> return (mk h head))) <?> "case") st
 
-let unfold vars (tag, (ident, args)) case =
+let unfold vars h (tag, (ident, args)) case =
   let (f, (ident', formals)) = dest (freshen vars case) in
-  let () = assert (Strng.equal ident ident') in
+  assert (Strng.equal ident ident') ;
+  let f = Sl_heap.freshen_tags h f in 
+  let tagpairs = 
+    Tags.map_to 
+      TagPairs.add 
+      TagPairs.empty 
+      (fun tag' -> (tag,tag')) 
+      (Sl_heap.tags f) in 
   let theta = Sl_term.Map.of_list (Blist.combine formals args) in
-  Sl_heap.repl_tags tag (Sl_heap.subst theta f) 
+  Sl_heap.subst theta f, tagpairs
  
 let fold (f, (predsym, args)) h =
   let results : Sl_term.substitution list ref = ref [] in

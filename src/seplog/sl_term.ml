@@ -3,24 +3,64 @@ open Util
 open Symbols
 open MParser
 
-include Int
-include Var
-
 let nil = 0
 
-let is_nil v = v = nil
-let is_var v = v <> nil && Var.is_var v
+module Trm = 
+  struct
+    type t = int
+    let equal = Int.equal
+    let compare = Int.compare
+    let hash = Int.hash
+    let to_string v = 
+      if equal v nil then keyw_nil.str else Var.to_string v
+    let pp fmt trm = 
+      Format.fprintf fmt "@[%s@]" (to_string trm)
+    let to_melt v =
+      ltx_mk_math 
+        (if v = nil then keyw_nil.melt else Latex.text (Var.to_string v))
+    let parse st =
+      (   attempt (parse_symb keyw_nil >>$ 0 <?> "nil") 
+      <|> Var.parse 
+      <?> "Sl_term") st
+
+    let is_nil v = v = nil
+    let is_var v = v <> nil && Var.is_var v
+    let is_exist_var : t -> bool = Var.is_exist_var
+    let is_univ_var : t -> bool = Var.is_univ_var
+    let mk_univ_var : string -> t = Var.mk_univ_var
+    let mk_exist_var : string -> t = Var.mk_exist_var 
+    let is_exist_name = Var.is_exist_name
+    let is_univ_name = Var.is_univ_name
+
+  end
+
+
+module Set = Util.MakeListSet(Trm) 
+module Map = Util.MakeMap(Trm)
+
+include Trm
+
+(* FIXME *)
+(* conversion from integer sets to term sets should be a runtime noop *)
+let fresh_evar s = Var.fresh_evar (Int.Set.of_list (Set.to_list s))
+let fresh_uvar s = Var.fresh_uvar (Int.Set.of_list (Set.to_list s))
+let fresh_evars s n = Var.fresh_evars (Int.Set.of_list (Set.to_list s)) n
+let fresh_uvars s n = Var.fresh_uvars (Int.Set.of_list (Set.to_list s)) n
+
 let filter_vars s = Set.filter is_var s
 
 type substitution = t Map.t
+
+type 'a unifier = substitution -> 'a -> 'a -> substitution option 
+type 'a gen_unifier = (substitution -> substitution option) -> 'a unifier
+
 let empty_subst : substitution = Map.empty
 let singleton_subst x y = Map.add x y empty_subst
 let subst theta v =
   if not (equal v nil) && Map.mem v theta then Map.find v theta else v
 (* above is significantly faster than exception handling *)
-let subst_list theta l = Blist.map (fun v -> subst theta v) l
 
-let unify theta t t' =
+let trm_unify theta t t' =
   if Map.mem t theta then
     if equal (Map.find t theta) t' then Some theta else None
   else if equal t nil then
@@ -33,34 +73,6 @@ let unify theta t t' =
     None
   else Some (Map.add t t' theta)
 
-let rec unify_list theta args args' = match (args, args') with
-  | ([], []) -> Some theta
-  | (_, []) | ([], _) -> None
-  | (hd:: tl, hd':: tl') ->
-      match unify theta hd hd' with
-      | None -> None
-      | Some theta' -> unify_list theta' tl tl'
-
-let unify_ordered_pairs theta (x, y) (x', y') =
-  match unify theta x x' with
-  | None -> None
-  | Some theta' -> unify theta' y y'
-
-let unify_pairs theta p p' =
-  Option.list_get [
-    unify_ordered_pairs theta p p';
-    unify_ordered_pairs theta p (Pair.swap p')
-    ]
-
-let to_string v = if v = nil then keyw_nil.str else Var.to_string v
-let list_to_string l = Blist.to_string symb_comma.str to_string l
-let to_melt v =
-  ltx_mk_math (if v = nil then keyw_nil.melt else Latex.text (Var.to_string v))
-let pp fmt trm = Format.fprintf fmt "@[%s@]" (to_string trm)
-let pp_list fmt l = Blist.pp pp_comma pp fmt l
-
-(* return a substitution that takes all vars in subvars to new         *)
-(* variables that are outside vars U subvars, respecting exist/univ    *)
 let avoid_theta vars subvars =
   let allvars = Set.union vars subvars in
   let (exist_vars, univ_vars) =
@@ -72,7 +84,26 @@ let avoid_theta vars subvars =
           (Blist.combine exist_vars fresh_e_vars)) in
   theta
 
-let parse st =
-  (   attempt (parse_symb keyw_nil >>$ 0 <?> "nil") 
-  <|> Var.parse 
-  <?> "Sl_term") st
+module OrdPair =
+  struct
+    include PairTypes(Trm)(Trm)
+    let unify theta (x, y) (x', y') =
+      Option.bind (fun theta' -> trm_unify theta' y y') (trm_unify theta x x')
+      
+    let unord_unify cont theta p p' =
+      Blist.find_some cont 
+        (Option.list_get [ unify theta p p'; unify theta p (Pair.swap p') ])
+  end  
+
+module FList =
+  struct
+    include Util.MakeFList(Trm)
+    let rec unify theta args args' = 
+      match (args, args') with
+      | ([], []) -> Some theta
+      | (_, []) | ([], _) -> None
+      | (hd:: tl, hd':: tl') ->
+        Option.bind (fun theta' -> unify theta' tl tl') (trm_unify theta hd hd')
+    
+  end 
+

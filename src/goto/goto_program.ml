@@ -206,26 +206,27 @@ module Seq =
       [ Sl_form.to_melt f;
         Latex.index symb_turnstile.melt (Latex.text (string_of_int i)) ]
 
-    let subsumed_wrt_tags tags (l,i) (l',i') =
-      i = i' && Sl_form.spw_subsumed_wrt_tags tags l' l
+    (* let subsumed_wrt_tags tags (l,i) (l',i') =          *)
+    (*   i = i' && Sl_form.spw_subsumed_wrt_tags tags l' l *)
     (*  s' *)
     (* ___ *)
     (*  s  *)
     let uni_subsumption ((l,i) as s) ((l',i') as s') =
-      if i<>i' then None else
-      let tags = Tags.inter (tags s) (tags s') in
-      let valid theta' =
-        if Sl_term.Map.exists
-          (fun k v -> Sl_term.is_univ_var k && not (Sl_form.equates l k v)) theta'
-          then None else
-        let s'' = subst theta' s' in
-        let tags' = Tags.fold
-          ( fun t acc ->
-            let new_acc = Tags.add t acc in
-            if subsumed_wrt_tags new_acc s s'' then new_acc else acc
-          ) tags Tags.empty in
-        if not (Tags.is_empty tags') then Some theta' else None in
-      Sl_form.spw_left_subsumption valid Sl_term.empty_subst l' l
+      failwith "FIXME"
+      (* if i<>i' then None else                                                      *)
+      (* let tags = Tags.inter (tags s) (tags s') in                                  *)
+      (* let valid theta' =                                                           *)
+      (*   if Sl_term.Map.exists                                                      *)
+      (*     (fun k v -> Sl_term.is_univ_var k && not (Sl_form.equates l k v)) theta' *)
+      (*     then None else                                                           *)
+      (*   let s'' = subst theta' s' in                                               *)
+      (*   let tags' = Tags.fold                                                      *)
+      (*     ( fun t acc ->                                                           *)
+      (*       let new_acc = Tags.add t acc in                                        *)
+      (*       if subsumed_wrt_tags new_acc s s'' then new_acc else acc               *)
+      (*     ) tags Tags.empty in                                                     *)
+      (*   if not (Tags.is_empty tags') then Some theta' else None in                 *)
+      (* Sl_form.spw_left_subsumption valid Sl_term.empty_subst l' l                  *)
 
     let pp fmt (f,i) =
       Format.fprintf fmt "@[%a |-_%i@]" Sl_form.pp f i

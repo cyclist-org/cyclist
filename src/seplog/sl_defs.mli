@@ -16,4 +16,5 @@ val fixpoint: (t -> t) -> t -> t
 val parse : (t, 'a) MParser.t
 val of_channel : in_channel -> t
 
-val unfold : Sl_term.Set.t -> Symheap.ind_pred -> t -> Sl_heap.t list
+val unfold : Sl_term.Set.t -> Sl_heap.t -> Symheap.ind_pred -> t -> 
+  (Sl_heap.t * Util.TagPairs.t) list

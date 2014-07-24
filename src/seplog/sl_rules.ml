@@ -10,7 +10,7 @@ module Seqtactics = Seqtactics.Make(Sl_seq)
 
 let id_axiom =
   Rule.mk_axiom 
-    (fun (l,r) -> Option.mk (Sl_form.subsumed_wrt_tags Tags.empty r l) "Id")
+    (fun (l,r) -> Option.mk (Sl_form.subsumed r l) "Id")
 
 let ex_falso_axiom =
   Rule.mk_axiom (fun (l,_) -> Option.mk (Sl_form.inconsistent l) "Ex Falso")
@@ -108,8 +108,8 @@ let pto_intro_rule seq =
       Ptos.find (fun (w,_) -> Option.is_some (Sl_heap.find_lval w l)) r.SH.ptos in
     let (lx, lys) as p' = Option.get (Sl_heap.find_lval rx l) in
     (* take care to remove only the 1st match *)
-    let l' = SH.with_ptos l (Ptos.remove p' l.SH.ptos) in
-    let r' = SH.with_ptos r (Ptos.remove p r.SH.ptos) in
+    let l' = SH.del_pto l p' in
+    let r' = SH.del_pto r p in
     let r' = SH.with_eqs r' (UF.union r'.SH.eqs (UF.of_list (Blist.combine rys lys))) in
     [ [ ( ([l'], [r']), Sl_heap.tag_pairs l, TagPairs.empty ) ], "Pto Intro" ]
   with Not_symheap | Not_found | Invalid_argument _ -> []
@@ -126,8 +126,8 @@ let pred_intro_rule seq =
         (fun ((_,(id,vs)),(_,(id',vs'))) ->
           Strng.equal id id' &&
 					Blist.for_all2 (fun x y -> Sl_heap.equates l x y) vs vs') cp in
-    let l' = SH.with_inds l (Inds.remove p (Inds.of_list linds)) in
-    let r' = SH.with_inds r (Inds.remove q (Inds.of_list rinds)) in
+    let l' = SH.del_ind l p in
+    let r' = SH.del_ind r q in
     [ [ ( ([l'], [r']), Sl_heap.tag_pairs l', TagPairs.empty ) ], "Pred Intro" ]
   with Not_symheap | Not_found -> []
 
@@ -185,8 +185,8 @@ let instantiate_pto =
       let cp = Blist.cartesian_product eptos lptos in
       let cp = Blist.filter (fun ((_,ys),(_,zs)) -> match_ls ys zs) cp in
       let do_instantiation (((x,ys) as p), ((w,zs) as q)) =
-        let l' = SH.with_ptos l (Ptos.remove q (Ptos.of_list lptos)) in
-        let r' = SH.with_ptos r (Ptos.remove p (Ptos.of_list rptos)) in
+        let l' = SH.del_pto l q in
+        let r' = SH.del_pto r p in
         let r' =
           SH.with_eqs r' (UF.union r'.SH.eqs (UF.of_list ((x,w)::(Blist.combine ys zs)))) in
         [ ( ([l'], [r']), Sl_heap.tag_pairs l, TagPairs.empty ) ], "Inst ->"
@@ -204,7 +204,8 @@ let ruf defs =
         let cases = Sl_defs.get_def ident defs in 
         let r' = SH.with_inds r (Inds.remove p r.SH.inds) in
         let do_case c = 
-          let f' = Sl_indrule.unfold seq_vars p c in
+          let (f', _) = Sl_indrule.unfold seq_vars r' p c in
+          let f' = Sl_heap.freshen_tags r' f' in
           [ (([l], [Sl_heap.star r' f']), Sl_heap.tag_pairs l, TagPairs.empty) ],
           (ident ^ " R.Unf.") in
         Blist.map do_case cases in
@@ -218,13 +219,13 @@ let luf defs =
     try
       let (l,r) = Sl_seq.dest seq in
       let seq_vars = Sl_seq.vars seq in
-      let left_unfold ((tag, (ident, _)) as p) =
-        let l' = SH.with_inds l (Inds.remove p l.SH.inds) in
-        let cases = Sl_defs.unfold seq_vars p defs in
-        let do_case f' =
-          let l' = Sl_heap.star l' f' in
+      let left_unfold ((_, (ident, _)) as p) =
+        let l = SH.with_inds l (Inds.remove p l.SH.inds) in
+        let cases = Sl_defs.unfold seq_vars l p defs in
+        let do_case (f, tagpairs) =
+          let l' = Sl_heap.star l f in
 					let l' = Sl_heap.univ (Sl_heap.vars r) l' in
-          (([l'], [r]), Sl_heap.tag_pairs l', TagPairs.singleton (tag, tag)) in
+          (([l'], [r]), TagPairs.union (Sl_heap.tag_pairs l) tagpairs, tagpairs) in
         Blist.map do_case cases, (ident ^ " L.Unf.") in
       Inds.map_to_list left_unfold l.SH.inds
     with Not_symheap -> [] in
@@ -236,19 +237,20 @@ let luf defs =
 (* where there exists a substitution theta such that *)
 (* s2[theta] entails s1 by classical weakening *)
 let matches s1 s2 =
-  let tags = Tags.inter (Sl_seq.tags s1) (Sl_seq.tags s2) in
-  if Tags.is_empty tags then [] else
-  let res = Sl_seq.uni_subsumption s1 s2 in
-  if Option.is_none res then [] else
-  let theta = Option.get res in
-  let s2' = Sl_seq.subst theta s2 in
-  let tags' = Tags.fold
-    (fun t acc ->
-      let new_acc = Tags.add t acc in
-      if Sl_seq.subsumed_wrt_tags new_acc s1 s2' then new_acc else acc
-    ) tags Tags.empty in
-  let () = assert (not (Tags.is_empty tags')) in
-  [ ((TagPairs.mk tags',  "Backl"), theta) ]
+  failwith "FIXME"
+  (* let tags = Tags.inter (Sl_seq.tags s1) (Sl_seq.tags s2) in           *)
+  (* if Tags.is_empty tags then [] else                                   *)
+  (* let res = Sl_seq.uni_subsumption s1 s2 in                            *)
+  (* if Option.is_none res then [] else                                   *)
+  (* let theta = Option.get res in                                        *)
+  (* let s2' = Sl_seq.subst theta s2 in                                   *)
+  (* let tags' = Tags.fold                                                *)
+  (*   (fun t acc ->                                                      *)
+  (*     let new_acc = Tags.add t acc in                                  *)
+  (*     if Sl_seq.subsumed_wrt_tags new_acc s1 s2' then new_acc else acc *)
+  (*   ) tags Tags.empty in                                               *)
+  (* let () = assert (not (Tags.is_empty tags')) in                       *)
+  (* [ ((TagPairs.mk tags',  "Backl"), theta) ]                           *)
 
 (*    seq'     *)
 (* ----------  *)
@@ -266,10 +268,11 @@ let subst_rule theta seq' seq =
 (*   Pi * F |- G   *)
 (* where seq' = F |- G * Pi' and seq = Pi * F |- G *)     
 let weaken seq' seq = 
-  if Sl_seq.subsumed_wrt_tags (Sl_seq.tags seq') seq seq' then
-    [ [(seq', Sl_seq.tag_pairs seq', TagPairs.empty)], "Weaken" ]
-  else
-    []
+  failwith "FIXME"
+  (* if Sl_seq.subsumed_wrt_tags (Sl_seq.tags seq') seq seq' then    *)
+  (*   [ [(seq', Sl_seq.tag_pairs seq', TagPairs.empty)], "Weaken" ] *)
+  (* else                                                            *)
+  (*   []                                                            *)
 
 (* if there is a backlink achievable through substitution and classical *)
 (* weakening then make the proof steps that achieve it explicit so that *)
