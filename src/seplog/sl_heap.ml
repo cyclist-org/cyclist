@@ -75,10 +75,10 @@ let pp fmt h =
   let l =
     ((UF.to_string_list h.eqs) @ (Deqs.to_string_list h.deqs) @
       (Ptos.to_string_list h.ptos) @ (Inds.to_string_list h.inds)) in
-  if l <>[] then
+  if l <> [] then
     Format.fprintf fmt "@[%a@]" (Blist.pp pp_star Format.pp_print_string) l
   else
-    Format.fprintf fmt "@[true@]"
+    Format.fprintf fmt "@[emp@]"
 
 (* star two formulae together *)
 let star f g =
