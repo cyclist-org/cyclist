@@ -34,7 +34,7 @@ let inconsistent f = Blist.for_all Sl_heap.inconsistent f
 let pp fmt f =
   let pp_or fmt () =
     Format.fprintf fmt " %s@ " symb_or.str in
-  if f <>[] then
+  if f <> [] then
     Format.fprintf fmt "@[%a@]" (Blist.pp pp_or Sl_heap.pp) f
   else
     Format.fprintf fmt "@[F@]"
@@ -55,22 +55,22 @@ let spw_subsumed_wrt_tags t f1 f2 =
   aux_subsumed_wrt_tags true t f1 f2
 
 let rec aux_subsumption left spw fhook theta f f' =
-  if []= f' then fhook theta else
-    let p' = Blist.hd f' in
-    let f' = Blist.tl f' in
+  if f' = [] then fhook theta
+  else
     let hook' theta' =
-      aux_subsumption left spw fhook theta' f f' in
-    let g p = Sl_heap.aux_subsumption left spw hook' theta p p' in
+      aux_subsumption left spw fhook theta' f (Blist.tl f') in
+    let g p = Sl_heap.aux_subsumption left spw hook' theta p (Blist.hd f') in
     Blist.find_some g f
 
 let uni_subsumption left fhook theta f f' =
   aux_subsumption left false fhook theta f f'
 
-let rec spw_left_subsumption fhook theta f f' =
+let spw_left_subsumption fhook theta f f' =
   aux_subsumption true true fhook theta f f'
 
 let left_subsumption fhook theta f f' =
   uni_subsumption true fhook theta f f'
+  
 let right_subsumption fhook theta f f' =
   uni_subsumption false fhook theta f f'
 

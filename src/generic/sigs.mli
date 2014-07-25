@@ -208,7 +208,7 @@ sig
       targets. This allows flexibility e.g., in changing from ancestral-only
       back-links to general ones.  
       
-      Next, [m] is applied to the every pair consisting of the current subgoal
+      Next, [m] is applied to every pair consisting of the current subgoal
       and a goal returned from the selection function. [m] returns a list of
       tag information and string descriptions, each describing a different
       way to form a back-link.

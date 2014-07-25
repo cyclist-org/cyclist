@@ -105,8 +105,10 @@ let gen_left_rules_f (def, ident) seq =
         let n = Blist.length (Sl_indrule.params case) in
         let n' = Blist.length pvs in
         let err_msg = fun () -> 
-          (Printf.sprintf "Skipping unfolding of inductive predicate \"%s\" due to parameter mismatch: \
-          definition expects %d parameters, but was given %d" ident n n')  in
+          (Printf.sprintf 
+            "Skipping unfolding of inductive predicate \"%s\" \
+            due to parameter mismatch: definition expects %d parameters, \
+            but was given %d" ident n n')  in
         Option.mk_lazily (n == n' || (debug err_msg; false))
         (fun () -> 
           let (f', (_,vs')) = Sl_indrule.dest (freshen_case_by_seq seq case) in
@@ -268,47 +270,33 @@ let symex_while_rule =
     with Not_symheap | WrongCmd -> [] in
   wrap rl
 
-let matches_fun ((pre1, cmd1, post1) as s1) ((pre2, cmd2, post2) as s2) =
-  if not (Cmd.equal cmd1 cmd2) || 
-     not (Sl_form.is_heap pre1 = Sl_form.is_heap pre2) || 
-     not (Sl_form.is_heap post1 = Sl_form.is_heap post2) then [] else
-  match Seq.uni_subsumption s1 s2 with
+(* The matching function for forming backlinks:
+     We try and find two substitutions (theta for the precondition, 
+     and theta' for the postcondition) of (universal) variables (consisting of
+     substitutions [x/y] where x = y or y = x is given in the pre/post-condition)
+     such that pre' is a subset of pre[theta] and post[theta] is a subset of
+     post'. This allows equality-based substitution and weakening to be applied.
+     If we are trying to prove termination, then also calculate the new tag set *)
+let matches_fun ((pre, cmd, post) as s) ((pre', cmd', post') as s') =
+  if not (Cmd.equal cmd cmd') || 
+     not (Sl_form.is_heap pre = Sl_form.is_heap pre') || 
+     not (Sl_form.is_heap post = Sl_form.is_heap post') then [] else
+  match Seq.uni_subsumption s s' with
     | None -> []
     | Some theta ->
       if !termination then
         begin 
-          let tags = Tags.inter (Seq.tags s1) (Seq.tags s2) in
-          let s2' = Seq.subst theta s2 in
+          let tags = Tags.inter (Seq.tags s) (Seq.tags s') in
+          let s'' = Seq.subst theta s' in
           let tags' = Tags.fold
             (fun t acc ->
               let new_acc = Tags.add t acc in
-              if Seq.subsumed_wrt_tags new_acc s1 s2' then new_acc else acc
+              if Seq.subsumed_wrt_tags new_acc s s'' then new_acc else acc
             ) tags Tags.empty in
           [ ((TagPairs.mk tags', "Backl"),theta) ]
         end
       else
         [ ((Seq.tagpairs_one, "Backl"),theta) ]
-
-(*    seq'     *)
-(* ----------  *)
-(* seq'[theta] *)
-(* where seq'[theta] = seq *)
-let subst_rule theta seq' seq = 
-  if Seq.equal (Seq.subst theta seq') seq 
-    then 
-        [ [(seq', TagPairs.mk (Seq.tags seq'), TagPairs.empty)], "Subst" ]
-    else 
-        []
-
-(*   F |- G * Pi'  *)
-(* --------------- *)
-(*   Pi * F |- G   *)
-(* where seq' = F |- G * Pi' and seq = Pi * F |- G *)     
-let weaken seq' seq = 
-  if Seq.subsumed_wrt_tags Tags.empty seq seq' then
-    [ [(seq', TagPairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')), TagPairs.empty)], "Weaken" ]
-  else
-    []
 
 (* if there is a backlink achievable through substitution and classical *)
 (* weakening then make the proof steps that achieve it explicit so that *)
@@ -316,30 +304,94 @@ let weaken seq' seq =
 let dobackl idx prf =
     let src_seq = Proof.get_seq idx prf in
     let targets = Rule.all_nodes idx prf in
-    let apps = 
-        Blist.map (fun idx' -> matches_fun src_seq (Proof.get_seq idx' prf)) targets in
-    let f targ_idx (p, theta) =
-        let targ_seq = Proof.get_seq targ_idx prf in
-    let subst_seq = Seq.subst theta targ_seq in
-    Rule.sequence [
-      if Seq.equal src_seq subst_seq
+    (* maybe_apps will be a list of either empty or singleton lists corresponding
+       to targets, where each member is the empty list if the matching function
+       failed on the corresponding target, or a singleton list consisting of a tuple
+       containing the substitution that must be applied to get from the current open
+       node to the target node and the trace pairs for the progression *)
+    let maybe_apps = 
+      Blist.map (fun idx' -> matches_fun src_seq (Proof.get_seq idx' prf)) targets in
+    (* This helper function will take a tuple contained in the maybe_apps list
+       and construct the sequence of rules that can be applied to form a backlink *)
+    let construct_rule_seq targ_idx (p, ((theta,theta') as subst)) =
+      let targ_seq = Proof.get_seq targ_idx prf in
+      let intermediate_seq = Seq.subst subst src_seq in
+      (* Output some debug information *)
+      let () = debug (fun () -> 
+        let pair_to_string to_str (k, v) = "(" ^ (to_str k) ^ ", " ^ (to_str v) ^ ")" in
+        let subst_to_string m = Blist.to_string ", " (pair_to_string Sl_term.to_string) m in
+        let pre_subst_str = subst_to_string (Sl_term.Map.to_list theta) in 
+        let post_subst_str = subst_to_string (Sl_term.Map.to_list theta') in 
+        String.concat "\n" [ 
+          "Trying to form a backlink:";
+          ("target:\t" ^ (Seq.to_string targ_seq));
+          ("src:\t" ^ (Seq.to_string src_seq)); 
+          ("Precondition subst: " ^ pre_subst_str);
+          ("Postcondition subst: " ^ post_subst_str)
+          ]) in
+      (* The following two functions help us to construct rules
+         for the equality-based substitution and weakening steps 
+         that get us to the point where we can form a backlink *)
+      (* 
+          seq'  
+         ------ (=)
+          seq   
+                
+         where seq' = seq[theta], so really the substitution being 
+         applied is the inverse of theta. The rule is formulated 
+         this way because the substitution we have found is one which 
+         turns src_seq into a superset of target_seq, which we then 
+         strengthen to obtain target_seq itself. Remember that proof
+         search goes upwards, as opposed to applying derivation rules
+         which goes downwards (thus the strengthening referred to above
+         is an instance of the weakening rule, and applying theta to 
+         src_seq to obtain a new subgoal corresponds to an instance of
+         the (=) rule where seq = seq'[inv(theta)])
+      *)
+      let subst_rule theta seq' seq = 
+        if Seq.equal (Seq.subst theta seq) seq' 
+          then [ [(seq', TagPairs.mk (Seq.tags seq'), TagPairs.empty)], "=" ]
+          else [] in
+      (*
+         seq' :  |- { P } C { Q * x = y * w != z }
+                 --------------------------------- (weaken) 
+         seq  :  |- { x = y * w != z * P } C { Q } 
+
+         Weakening by adding (dis)equalities to the precondition and
+         removing them from the postcondition *)
+      let weaken_rule seq' seq = 
+        if Seq.is_subsumed seq seq' then
+          [ [(seq', 
+              TagPairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')), 
+              TagPairs.empty)], "Weaken" ]
+        else [] in
+      (* Here is where we actually construct the rule sequence to apply to src_seq *)
+      Rule.sequence [
+        (* First apply the equality-based substitution to src_seq *)
+        (let is_identity = Sl_term.Map.for_all Sl_term.equal in
+        if is_identity theta && is_identity theta'
         then Rule.identity
-        else Rule.mk_infrule (weaken subst_seq);
-        
-      if Sl_term.Map.for_all Sl_term.equal theta
+        else Rule.mk_infrule (subst_rule subst intermediate_seq));
+        (* Now apply the weakening rule *)
+        if Seq.equal targ_seq intermediate_seq
         then Rule.identity
-        else Rule.mk_infrule (subst_rule theta targ_seq);
-         
-      Rule.mk_backrule 
-        true 
-        (fun _ _ -> [targ_idx]) 
-        (fun s s' -> if Seq.equal s s' then [p] else [])
-    ] in
-    Rule.first 
-      (Blist.map2 
-          (fun idx' l -> Rule.first (Blist.map (f idx') l)) 
-            targets 
-            apps) idx prf
+        else Rule.mk_infrule (weaken_rule targ_seq);
+        (* This should bring us to the target_seq, so we can form a backlink *)
+        Rule.mk_backrule 
+          true 
+          (fun _ _ -> [targ_idx]) 
+          (fun s s' -> if Seq.equal s s' then [p] else [])
+      ] in
+    (* construct a list of rules, one for each target node, the can be applied to form
+       a backlink from the current open node to the corresponding target *)
+    let rule_candidates = 
+      Blist.map2 
+        (fun idx' maybe_app -> 
+            Rule.first (Blist.map (construct_rule_seq idx') maybe_app)) 
+        targets 
+        maybe_apps in
+    (* Take the first candidate backlink that succeeds *)
+    Rule.first rule_candidates idx prf
 
 let fold (defs, ident) =
   let fold_rl seq = 

@@ -224,7 +224,7 @@ module Cmd =
               parse_symb keyw_else >>
               (parse_cmdlist_endedby keyw_fi) >>= (fun cmd2 ->
               parse_symb keyw_fi >>$ (IfElse(cond,cmd1,cmd2)))))
-				  <|> (Tokens.braces parse >>= (fun cmd1 ->
+				  <|> ((Tokens.braces parse) >>= (fun cmd1 ->
 							parse_symb keyw_else >>
               Tokens.braces (parse_cmdlist_endedby symb_rb) |>> (fun cmd2 ->
               IfElse(cond,cmd1,cmd2))))
@@ -241,7 +241,7 @@ module Cmd =
 					))
   (* | WHILE; cond = condition; DO; cmd = command; OD { P.Cmd.mk_while cond cmd }                              *)
   (* | WHILE; cond = condition; LB; cmd = command; RB { P.Cmd.mk_while cond cmd }                              *)
-      <|> (parse_symb keyw_while >>
+      <|> attempt (parse_symb keyw_while >>
           Cond.parse >>= (fun cond ->
               (parse_symb keyw_do >>
               (parse_cmdlist_endedby keyw_od) >>= (fun cmd ->
@@ -261,7 +261,8 @@ module Cmd =
           parse_symb symb_assign <<
           parse_symb keyw_new <<
           parse_symb symb_lp <<
-          parse_symb symb_rp |>> (fun v ->
+          parse_symb symb_rp <<
+          parse_symb symb_semicolon |>> (fun v ->
           assert (Sl_term.is_var v) ; New v))
   (*   | v1 = var; ASSIGN; v2 = var; FLD_SEL; fld = IDENT                                                      *)
       <|> attempt (Sl_term.parse >>= (fun v1 ->
@@ -272,7 +273,7 @@ module Cmd =
           parse_symb symb_semicolon >>$ (
           assert (Sl_term.is_var v1 && Sl_term.is_var v2) ; Load(v1,v2,id))))))
     (* | v = var; ASSIGN; t = term { P.Cmd.mk_assign v t } *)
-      <|> (Sl_term.parse >>= (fun v -> 
+      <|> attempt (Sl_term.parse >>= (fun v -> 
           parse_symb symb_assign >> 
           Sl_term.parse >>= (fun t -> 
           parse_symb symb_semicolon >>$ (assert (Sl_term.is_var v) ; Assign(v,t)))))
@@ -600,10 +601,10 @@ module Seq =
 		
 		(* Do we want the vars from the postcondition as well, or not? *)
 		(*     let terms (pre,_,post) = Sl_term.Set.union (Sl_form.terms pre) (Sl_form.terms post) *)
-		let terms (l,_,_) = Sl_form.terms l
+		let terms (pre,_,_) = Sl_form.terms pre
 
-		let subst theta (pre,cmd,post) = 
-			(Sl_form.subst theta pre, cmd, Sl_form.subst theta post)
+		let subst (theta,theta') (pre,cmd,post) = 
+			(Sl_form.subst theta pre, cmd, Sl_form.subst theta' post)
     
 		let to_string (pre,cmd,post) =
       symb_turnstile.sep ^ 
@@ -618,28 +619,47 @@ module Seq =
 												Cmd.to_melt cmd;
 												symb_lb.melt; Sl_form.to_melt post; symb_rb.melt ])
 
-    let is_subsumed (pre,cmd,_) (pre',cmd',_) =
-      Cmd.equal cmd cmd' && Sl_form.spw_subsumed_wrt_tags Tags.empty pre' pre
+    let is_subsumed (pre,cmd,post) (pre',cmd',post') =
+      Cmd.equal cmd cmd' &&
+      (* pre |- pre' *)
+      Sl_form.subsumed_wrt_tags Tags.empty pre' pre &&
+      (* post' |- post *)
+      Sl_form.subsumed_wrt_tags Tags.empty post post'
     
-    let subsumed_wrt_tags tags (pre,cmd,_) (pre',cmd',_) =
-      Cmd.equal cmd cmd' && Sl_form.spw_subsumed_wrt_tags tags pre' pre
+    let subsumed_wrt_tags tags (pre,cmd,post) (pre',cmd',post') =
+      Cmd.equal cmd cmd' && 
+      Sl_form.subsumed_wrt_tags tags pre' pre &&
+      Sl_form.subsumed_wrt_tags tags post post'
 		
     let uni_subsumption ((pre,cmd,post) as s) ((pre',cmd',post') as s') =
       if not (Cmd.equal cmd cmd') then None else
       let tags = Tags.inter (tags s) (tags s') in
-      let valid theta' =
+      let valid_pre theta =
         if Sl_term.Map.exists
-          (fun k v -> Sl_term.is_univ_var k && not (Sl_form.equates pre k v)) theta'
-          then None else 
-				if not !termination then Some theta' else 
-        let s'' = subst theta' s' in
-        let tags' = Tags.fold
-          ( fun t acc ->
-            let new_acc = Tags.add t acc in
-            if subsumed_wrt_tags new_acc s s'' then new_acc else acc
-          ) tags Tags.empty in
-        if not (Tags.is_empty tags') then Some theta' else None in
-      Sl_form.spw_left_subsumption valid Sl_term.empty_subst pre' pre
+          (fun k v -> Sl_term.is_univ_var k && not (Sl_form.equates pre k v)) theta
+          then None
+        else 
+  				if not !termination then Some theta else 
+          let s'' = subst (theta, Sl_term.empty_subst) s' in
+          let tags' = Tags.fold
+            ( fun t acc ->
+              let new_acc = Tags.add t acc in
+              if subsumed_wrt_tags new_acc s s'' then new_acc else acc
+            ) tags Tags.empty in
+          if not (Tags.is_empty tags') then Some theta else None
+        in
+      let valid_post theta =
+        if Sl_term.Map.exists
+          (fun k v -> Sl_term.is_univ_var k && not (Sl_form.equates post k v)) theta
+          then None
+        else Some theta
+        in
+      let theta  = Sl_form.right_subsumption valid_pre Sl_term.empty_subst pre' pre in
+      let theta' = Sl_form.right_subsumption valid_post Sl_term.empty_subst post post' in
+      match (theta, theta') with
+        | (None, _) -> None
+        | (_, None) -> None
+        | (Some theta, Some theta') -> Some (theta, theta')
 
     let pp fmt (pre,cmd,post) =
       Format.fprintf fmt "@[%s{%a}%a{%a}@]"
@@ -649,8 +669,10 @@ module Seq =
 				Sl_form.pp post
 
     let equal (pre, cmd, post) (pre', cmd', post') = 
-			Cmd.equal cmd cmd' && Sl_form.equal pre pre'
-			  && Sl_form.equal post post'
+			Cmd.equal cmd cmd' && 
+      Sl_form.equal pre pre' && 
+      Sl_form.equal post post'
+      
   end
 
 let program_vars = ref Sl_term.Set.empty

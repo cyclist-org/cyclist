@@ -4,5 +4,5 @@ postcondition: emp;
 while x!=nil {
 	y := x;
 	x := x.next;
-	free(y)
+	free(y);
 }
