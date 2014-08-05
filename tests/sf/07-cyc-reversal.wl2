@@ -12,5 +12,5 @@ while x!=nil {
   z := x;
   x := x.next;
   z.next := y;
-  y := z
+  y := z;
 }

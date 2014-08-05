@@ -7,9 +7,9 @@ while x!=nil {
     y.next := x;
     x := x.next;
     y := y.next;
-    y.next := nil
+    y.next := nil;
   } else {
-    y := y.next
+    y := y.next;
   }
 }
  
