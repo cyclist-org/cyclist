@@ -1,15 +1,14 @@
 fields: next;
 precondition: y!=nil * ls(x,nil) * ls(y,nil) ;
-postcondition: ls(y,nil);
-while x!=nil {
+while x!=nil do
   z := y.next;
-  if z=nil {
+  if z=nil then
     y.next := x;
     x := x.next;
     y := y.next;
     y.next := nil
-  } else {
+  else
     y := y.next
-  }
-}
+  fi
+od
  
