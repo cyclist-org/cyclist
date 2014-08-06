@@ -4,7 +4,7 @@ src/slsat/slsat_check.native
 #src/slsat/slsat_expgen.native
 src/goto/goto_prove.native
 src/while/while_prove.native  
-src/while/while_prove2.native  
 src/while/while_abduce.native
+src/extended_while/extended_while_prove.native  
 cyclist.docdir/index.html
 src/seplog/sl.top

@@ -10,7 +10,7 @@ FOMAIN:=./src/firstorder/fo_prove.native
 SLMAIN:=./src/seplog/sl_prove.native
 PRMAIN:=./src/goto/goto_prove.native
 PR2MAIN:=./src/while/while_prove.native
-PR3MAIN:=./src/while/while_prove2.native
+XTDPRMAIN:=./src/while/while_prove2.native
 ABD2MAIN:=./src/while/while_abduce.native
 
 all:
@@ -37,15 +37,15 @@ pr-tests:
 sf-tests:
 	-@for TST in tests/sf/*.wl ; do echo $$TST: ; _build/$(PR2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
-sf2-tests:
-	-@for TST in tests/sf/*.wl2 ; do echo $$TST: ; _build/$(PR3MAIN) $(TST_OPTS) -P $$TST ; echo ; done
+xsf-tests:
+	-@for TST in tests/sf/*.wl2 ; do echo $$TST: ; _build/$(XTDPRMAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
 whl_abd-tests:
 	-@for TST in tests/whl_abd/*.wl ; do echo $$TST ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
 aplas-tests: fo-tests sl-tests pr-tests
 
-tp-tests: fo-tests sl-tests pr-tests sf-tests sf2-tests
+tp-tests: fo-tests sl-tests pr-tests sf-tests xsf-tests
 
 abd-tests: whl_abd-tests
 

@@ -1,13 +1,13 @@
 open Lib
 open Util
 open Symheap
-open While_program2
+open Extended_while_program
 
 module SH = Sl_heap
 
-module Rule = Proofrule.Make(While_program2.Seq)
-module Seqtactics = Seqtactics.Make(While_program2.Seq)
-module Proof = Proof.Make(While_program2.Seq)
+module Rule = Proofrule.Make(Extended_while_program.Seq)
+module Seqtactics = Seqtactics.Make(Extended_while_program.Seq)
+module Proof = Proof.Make(Extended_while_program.Seq)
 module Slprover = Prover.Make(Sl_seq)
 
 let tagpairs s =

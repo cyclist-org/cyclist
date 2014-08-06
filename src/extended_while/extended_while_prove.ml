@@ -1,11 +1,11 @@
 open Symheap
-open While_program2
-open While_rules2
+open Extended_while_program
+open Extended_while_rules
 
 let defs_path = ref "examples/sl.defs"
 let prog_path = ref ""
 
-module Prover = Prover.Make(While_program2.Seq)
+module Prover = Prover.Make(Extended_while_program.Seq)
 module F = Frontend.Make(Prover)
 
 (* let () =                                                      *)
@@ -29,16 +29,16 @@ let () = F.speclist := !F.speclist @ [
 let () =
   Arg.parse !F.speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) !F.usage ;
   if !prog_path="" then F.die "-P must be specified." ;
-  let (pre, prog, post) = While_program2.of_channel (open_in !prog_path) in
+  let (pre, prog, post) = Extended_while_program.of_channel (open_in !prog_path) in
   let prog = Cmd.number prog in
 	let defs = Sl_defs.of_channel (open_in !defs_path) in
 	(* Check well-formedness of the program: *)
 	(* Do all the predicates in the pre/post annotations have the correct arity? *)
 	(* Do all procedure declarations contain distinct formal parameters? *)
 	(* if not While_program.well_formed defs prog then F.die !While_program.error_msg *)
-  While_program2.set_program prog ; 
-  While_rules2.setup defs ;
-  exit (F.prove_seq !While_rules2.axioms !While_rules2.rules (pre, prog, post))
+  Extended_while_program.set_program prog ; 
+  Extended_while_rules.setup defs ;
+  exit (F.prove_seq !Extended_while_rules.axioms !Extended_while_rules.rules (pre, prog, post))
     
 
 
