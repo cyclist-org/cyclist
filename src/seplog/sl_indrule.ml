@@ -4,7 +4,7 @@ open Symbols
 open Symheap
 open MParser
 
-include PairTypes(Sl_heap)(IndSubf)
+include PairTypes(Sl_heap)(Sl_pred)
 let mk f i =
   let (_, args) = i in
   let v_args = Sl_term.Set.of_list args in
@@ -43,8 +43,8 @@ let to_string c = mk_to_string pp c
 let parse st =
   ( Sl_heap.parse >>= (fun h ->
           parse_symb symb_ind_implies >>
-          Inds.parse << spaces >>=
-          (fun (_, head) -> return (mk h head))) <?> "case") st
+          Sl_pred.parse << spaces >>=
+          (fun head -> return (mk h head))) <?> "case") st
 
 let unfold vars h (tag, (ident, args)) case =
   let (f, (ident', formals)) = dest (freshen vars case) in

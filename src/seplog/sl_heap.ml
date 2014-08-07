@@ -248,7 +248,7 @@ let project f xs =
 
 let parse_atom st =
   ( attempt (parse_symb keyw_emp >>$ empty) <|>
-    attempt (Inds.parse |>> (fun (tag, (ident, vs)) -> mk_ind tag ident vs)) <|>
+    attempt (Sl_tpred.parse |>> (fun (tag, (ident, vs)) -> mk_ind tag ident vs)) <|>
     attempt (Sl_uf.parse |>> Fun.uncurry mk_eq) <|>
     attempt (Sl_deqs.parse |>> Fun.uncurry mk_deq) <|>
     (Sl_ptos.parse |>> Fun.uncurry mk_pto) <?> "atom"

@@ -11,7 +11,7 @@ module DefPair = PairTypes(IndRuleList)(Strng)
 include MakeFList(DefPair)
 include Fixpoint(struct type t = DefPair.t list let equal = equal end)
 
-(* type t = ((Sl_indrule.t list) * ind_identifier) list *)
+(* type t = ((Sl_indrule.t list) * Sl_pred.ident_t) list *)
 let empty = []
 let add_case a l = failwith "not implemented"
 let string_of_case c =

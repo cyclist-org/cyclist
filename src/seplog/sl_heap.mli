@@ -11,7 +11,7 @@ val empty : t
 val mk_pto : Sl_term.t -> Sl_term.t list -> t
 val mk_eq : Sl_term.t -> Sl_term.t -> t
 val mk_deq : Sl_term.t -> Sl_term.t -> t
-val mk_ind : int -> Symheap.ind_identifier -> Sl_term.t list -> t
+val mk_ind : int -> Sl_pred.ident_t -> Sl_term.t list -> t
 val mk : Sl_uf.t -> Sl_deqs.t -> Sl_ptos.t -> Symheap.Inds.t -> t
 
 val with_eqs : t -> Sl_uf.t -> t 
@@ -19,9 +19,9 @@ val with_deqs : t -> Sl_deqs.t -> t
 val with_ptos : t -> Sl_ptos.t -> t
 val with_inds : t -> Symheap.Inds.t -> t
 
-val del_deq : t -> (Sl_term.t * Sl_term.t) -> t
-val del_pto : t -> (Sl_term.t * Sl_term.t list) -> t
-val del_ind : t -> Symheap.ind_pred -> t
+val del_deq : t -> Sl_tpair.t -> t
+val del_pto : t -> Sl_pto.t -> t
+val del_ind : t -> Sl_tpred.t -> t
 
 val star : t -> t -> t
 val parse : (t, 'a) MParser.t
@@ -53,7 +53,7 @@ val spw_left_subsumption :
 (Sl_term.substitution -> Sl_term.substitution option) ->
 Sl_term.substitution -> t -> t -> Sl_term.substitution option
 
-val find_lval : Sl_term.t -> t -> (Sl_term.t * Sl_term.t list) option
+val find_lval : Sl_term.t -> t -> Sl_pto.t option
 val inconsistent : t -> bool
 val is_fresh_in : Sl_term.t -> t -> bool
 val to_melt : t -> Latex.t
