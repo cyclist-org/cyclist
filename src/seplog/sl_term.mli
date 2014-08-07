@@ -1,5 +1,7 @@
 (** Module defining SL terms, which consist of variables (universally *)
 (** or existentially quantified), or the constant [nil]. *)
+(** NB the ordering [compare] makes existential variables least, then [nil], *)
+(** and then universal variables.  *)
 
 include Util.BasicType
 module Set : Util.OrderedContainer with type elt = t
@@ -45,22 +47,13 @@ val empty_subst : substitution
 val singleton_subst : t -> t -> substitution
 val subst : substitution -> t -> t
 
+val unify : t unifier 
+
 val avoid_theta : Set.t -> Set.t -> substitution
 (** [avoid_theta vars subvars] *)
 (** returns a substitution that takes all variables in [subvars] to new *)
 (** variables that are outside [vars U subvars], respecting exist/univ   *)
 (** quantification. *)
-
-module OrdPair : 
-  sig
-    include Util.BasicType with type t = t * t
-    val unify : t unifier
-    val unord_unify : t gen_unifier
-    (** Unify two pairs of terms ignoring their internal order.  As multiple *)
-    (** ways to unify may exist, a continuation function has to be provided. *)
-  end
-(** An ordered pair of terms. *)
-
 
 module FList : 
   sig

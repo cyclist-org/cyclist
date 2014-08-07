@@ -86,7 +86,7 @@ let symex_assign_rule_f, symex_assign_rule =
       let theta = Sl_term.singleton_subst x fv in
       let f' = Sl_heap.subst theta f in
       let e' = Sl_term.subst theta e in
-      let f' = SH.with_eqs f' (UF.add (e',x) f'.SH.eqs) in
+      let f' = SH.with_eqs f' (Sl_uf.add (e',x) f'.SH.eqs) in
       [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Assign" ]
     with WrongCmd | Not_symheap -> [] in
   rl, wrap rl 
@@ -104,7 +104,7 @@ let symex_load_rule_f, symex_load_rule =
       let theta = Sl_term.singleton_subst x fv in
       let f' = Sl_heap.subst theta f in
       let t' = Sl_term.subst theta t in
-      let f' = SH.with_eqs f' (UF.add (t',x) f'.SH.eqs) in
+      let f' = SH.with_eqs f' (Sl_uf.add (t',x) f'.SH.eqs) in
       [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Load" ]
     with Not_symheap | WrongCmd | Not_found -> [] in
   rl, wrap rl 
@@ -182,7 +182,7 @@ let symex_det_if_rule_f, symex_det_if_rule =
       let (c,i') = Cmd.dest_if cmd in
       if Cmd.is_non_det c then [] else
       let pair = Cmd.dest_cond c in
-      let f' =  SH.with_eqs f (UF.add pair f.SH.eqs) in
+      let f' =  SH.with_eqs f (Sl_uf.add pair f.SH.eqs) in
       let f'' = SH.with_deqs f (Deqs.add pair f.SH.deqs) in
       let (f',f'') = if (Cmd.is_deq c) then (f'',f') else (f',f'') in 
       let t = Sl_heap.tag_pairs f in
@@ -305,11 +305,11 @@ let fold (defs,ident) =
             SH.mk
               (* FIXME hacky stuff in eqs : in reality a proper way to diff *)
               (* two union-find structures is required *)
-                (UF.of_list 
+                (Sl_uf.of_list 
                 (Deqs.to_list 
                   (Deqs.diff
-                    (Deqs.of_list (UF.bindings l.SH.eqs))
-                    (Deqs.of_list (UF.bindings f.SH.eqs))
+                    (Deqs.of_list (Sl_uf.bindings l.SH.eqs))
+                    (Deqs.of_list (Sl_uf.bindings f.SH.eqs))
                   )))
               (Deqs.diff l.SH.deqs f.SH.deqs)
               (Ptos.diff l.SH.ptos f.SH.ptos)

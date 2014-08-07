@@ -33,7 +33,7 @@ module Cmd =
     
     let parse_cond st =
       ( attempt (parse_symb symb_star >>$ mk_non_det ()) <|>
-        attempt (UF.parse |>> Fun.uncurry mk_eq) <|>
+        attempt (Sl_uf.parse |>> Fun.uncurry mk_eq) <|>
         attempt (Deqs.parse |>> Fun.uncurry mk_deq) <?> "Cond") st
       
     type t =

@@ -110,7 +110,7 @@ let symex_assign_rule =
       let theta = Sl_term.singleton_subst x fv in
       let f' = Sl_heap.subst theta f in
       let e' = Sl_term.subst theta e in
-      [[ Sl_heap.norm (SH.with_eqs f' (UF.add (e',x) f'.SH.eqs)) ], "Assign"]
+      [[ Sl_heap.norm (SH.with_eqs f' (Sl_uf.add (e',x) f'.SH.eqs)) ], "Assign"]
     with WrongCmd | Not_symheap -> [] in
   mk_symex rl
 
@@ -128,7 +128,7 @@ let symex_load_rule =
       let theta = Sl_term.singleton_subst x fv in
       let f' = Sl_heap.subst theta f in
       let t' = Sl_term.subst theta t in
-      [[ SH.with_eqs f' (UF.add (t',x) f'.SH.eqs) ], "Load"]
+      [[ SH.with_eqs f' (Sl_uf.add (t',x) f'.SH.eqs) ], "Load"]
     with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl
 
@@ -311,11 +311,11 @@ let fold (defs,ident) =
             SH.mk 
               (* FIXME hacky stuff in SH.eqs : in reality a proper way to diff *)
               (* two union-find structures is required *)
-              (UF.of_list
+              (Sl_uf.of_list
                 (Deqs.to_list
                   (Deqs.diff
-                    (Deqs.of_list (UF.bindings l.SH.eqs))
-                    (Deqs.of_list (UF.bindings f.SH.eqs))
+                    (Deqs.of_list (Sl_uf.bindings l.SH.eqs))
+                    (Deqs.of_list (Sl_uf.bindings f.SH.eqs))
                   )))
               (Deqs.diff l.SH.deqs f.SH.deqs)
               (Ptos.diff l.SH.ptos f.SH.ptos)
@@ -354,7 +354,7 @@ let generalise_while_rule =
     let gen_pto (x,args) =
     let l = Blist.map gen_term (x::args) in (Blist.hd l, Blist.tl l) in
       SH.mk 
-        (Sl_term.Set.fold UF.remove m h.SH.eqs)
+        (Sl_term.Set.fold Sl_uf.remove m h.SH.eqs)
         (Deqs.filter
           (fun p -> Pair.conj (Pair.map (fun z -> not (Sl_term.Set.mem z m)) p))
           h.SH.deqs)

@@ -5,121 +5,15 @@ open MParser
 
 let split_heaps = ref true
 
-(* we sort the terms in a pair according to Sl_term.compare *)
-let norm_pair ((x,y) as pair) =
-  if Sl_term.compare x y <= 0 then pair else (y,x)
-
-let pair_to_string sep p =
-  let (x,y) = Pair.map Sl_term.to_string p in x ^ sep ^ y
-let pair_to_melt sep p =
-  let (x,y) = Pair.map Sl_term.to_melt p in Latex.concat [x; sep; y]
-
-module UF =
-  struct
-    type t = Sl_term.t Sl_term.Map.t
-    let empty : t = Sl_term.Map.empty
-    let is_empty : t -> bool = Sl_term.Map.is_empty
-
-    (* if a pair contains an exist. variable then *)
-    (* the first comp of the pair is an exist. var *)
-    let bindings (m : t) = Sl_term.Map.bindings m
-
-    let rec find x m =
-      if Sl_term.Map.mem x m then
-        find (Sl_term.Map.find x m) m
-      else
-        x
-
-    let add (x,y) m =
-      let (x,y) = norm_pair (find x m, find y m) in
-      (* do not add trivial identities *)
-      if Sl_term.equal x y then m else
-      (* first split into the pairs that do not/do map to x *)
-      let (to_x, rest) =
-        Sl_term.Map.partition (fun _ z -> Sl_term.equal z x) m in
-      (* now change all the values of keys that map to x to y *)
-      let to_y = Sl_term.Map.map (fun _ -> y) to_x in
-      (* now union and add *)
-      Sl_term.Map.add x y (Sl_term.Map.union rest to_y)
-
-    let union m m' =
-      Sl_term.Map.fold (fun x y m'' -> add (x,y) m'') m' m
-    let of_list ls =
-      Blist.fold_left (fun m pair -> add pair m) empty ls
-    let map f (m:t) =
-      Sl_term.Map.fold (fun x y m' -> add (f (x,y)) m') m empty
-    let equates m x y = Sl_term.equal (find x m) (find y m)
-    let subsumed m m' =
-      Sl_term.Map.for_all (fun x y -> equates m' x y) m
-
-    let equal u u' = Sl_term.Map.equal Sl_term.equal u u'
-
-    let subst theta m =
-      map (fun (x,y) -> (Sl_term.subst theta x, Sl_term.subst theta y)) m
-
-    (* finds an extension of theta, theta' such that *)
-    (* p[theta'] is a subset of p' if left=true and  *)
-    (* p is a subset of p'[theta'] if left=false *)
-    (* p' |- p[theta] if left=true *)
-    (* p'[theta] |- p if left=false *)
-    let rec uni_subsumption left hook theta p p' =
-      (* let return s o =                                                           *)
-      (*   debug (fun () -> s ^ ": " ^ (string_of_bool (Option.is_some o)) ) ; o in *)
-      if is_empty p then hook theta else
-      let direct f theta' a a' =
-        if left then f theta' a a' else f theta' a' a in
-      let (k,_) as a = Sl_term.Map.choose p in
-      let p = Sl_term.Map.remove k p in
-      let to_match = Sl_term.Map.bindings p' in
-      let g theta' = uni_subsumption left hook theta' p p' in
-      let f a' = direct (Sl_term.OrdPair.unord_unify g) theta a a' in
-      Blist.find_some f to_match
-
-    let to_string_list v = Blist.map (pair_to_string symb_eq.str) (bindings v)
-    let to_string v =
-      Blist.to_string symb_star.sep (pair_to_string symb_eq.str) (bindings v)
-
-    let to_melt v =
-      ltx_star (Blist.map (pair_to_melt symb_eq.melt) (bindings v))
-
-    let compare m m' = Sl_term.Map.compare Sl_term.compare m m'
-
-    let terms (m:t) =
-			let l = bindings m in
-			let unfold acc (x,y) : Sl_term.t list = x::y::acc in
-			let r = Blist.fold_left unfold [] l in
-			Sl_term.Set.of_list r
-
-	  let vars m = Sl_term.filter_vars (terms m)
-
-		let remove x m =
-			let xs = Sl_term.Set.filter (equates m x) (vars m) in
-			let rest =
-				Sl_term.Map.filter
-				  (fun y z -> not (Sl_term.Set.mem y xs || Sl_term.Set.mem z xs))
-					m in
-		  let xs' = Sl_term.Set.to_list (Sl_term.Set.remove x xs) in
-			Blist.fold_left (fun m p -> add p m) rest (Blist.pairs xs')
-
-    let parse st =
-      (Sl_term.parse >>= (fun x ->
-      parse_symb symb_eq >>
-      Sl_term.parse << spaces |>> (fun y -> (x,y))) <?> "eq") st
-     
-    let to_subst m = m    
-  end
-
-module TermPair = PairTypes(Sl_term)(Sl_term)
-
 module Deqs =
   struct
-    include MakeListSet(TermPair)
+    include MakeListSet(Sl_tpair)
     (* if a pair contains an exist. variable then *)
     (* the first comp of the pair is an exist. var *)
-    let add p deqs = add (norm_pair p) deqs
-    let singleton p = singleton (norm_pair p)
-    let mem p deqs = mem (norm_pair p) deqs
-    let endomap f s = endomap (fun e -> norm_pair (f e)) s
+    let add p deqs = add (Sl_tpair.norm p) deqs
+    let singleton p = singleton (Sl_tpair.norm p)
+    let mem p deqs = mem (Sl_tpair.norm p) deqs
+    let endomap f s = endomap (fun e -> Sl_tpair.norm (f e)) s
     let subst theta m =
 			endomap (fun (x,y) -> (Sl_term.subst theta x, Sl_term.subst theta y)) m
 
@@ -136,14 +30,14 @@ module Deqs =
       let p = remove a p in
       let to_match = elements p' in
       let g theta' = uni_subsumption left hook theta' p p' in
-      let f a' = direct (Sl_term.OrdPair.unord_unify g) theta a a' in
+      let f a' = direct (Sl_tpair.unord_unify g) theta a a' in
       Blist.find_some f to_match
 
-    let to_string_list v = Blist.map (pair_to_string symb_deq.str) (elements v)
+    let to_string_list v = Blist.map (Sl_tpair.to_string_sep symb_deq.str) (elements v)
     let to_string v =
-      Blist.to_string symb_star.sep (pair_to_string symb_deq.str) (elements v)
+      Blist.to_string symb_star.sep (Sl_tpair.to_string_sep symb_deq.str) (elements v)
     let to_melt v =
-      ltx_star (Blist.map (pair_to_melt symb_deq.melt) (elements v))
+      ltx_star (Blist.map (Sl_tpair.to_melt_sep symb_deq.melt) (elements v))
 
     let terms d =
 			let l = to_list d in
@@ -159,7 +53,8 @@ module Deqs =
       Sl_term.parse << spaces |>> (fun y -> (x,y))) <?> "deq") st
     
     let subsumed eqs deqs deqs' =
-      subset (subst eqs deqs) (subst eqs deqs') 
+      let theta = Sl_uf.to_subst eqs in
+      subset (subst theta deqs) (subst theta deqs') 
   end
 
 module Pto = PairTypes(Sl_term)(Sl_term.FList)
@@ -232,7 +127,8 @@ module Ptos =
       (fun l -> (x,l))) <?> "pto") st
 
     let subsumed eqs ptos ptos' =
-      equal (subst eqs ptos) (subst eqs ptos') 
+      let theta = Sl_uf.to_subst eqs in
+      equal (subst theta ptos) (subst theta ptos') 
       
 	end
 
@@ -348,7 +244,8 @@ module Inds =
       endomap (fun (tag, head) -> (tag+delta, head)) inds
 
     let subsumed eqs inds inds' =
-      equal (subst eqs inds) (subst eqs inds') 
+      let theta = Sl_uf.to_subst eqs in
+      equal (subst theta inds) (subst theta inds') 
 
 	end
 

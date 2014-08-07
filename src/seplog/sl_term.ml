@@ -84,17 +84,6 @@ let avoid_theta vars subvars =
           (Blist.combine exist_vars fresh_e_vars)) in
   theta
 
-module OrdPair =
-  struct
-    include PairTypes(Trm)(Trm)
-    let unify theta (x, y) (x', y') =
-      Option.bind (fun theta' -> trm_unify theta' y y') (trm_unify theta x x')
-      
-    let unord_unify cont theta p p' =
-      Blist.find_some cont 
-        (Option.list_get [ unify theta p p'; unify theta p (Pair.swap p') ])
-  end  
-
 module FList =
   struct
     include Util.MakeFList(Trm)
@@ -107,3 +96,4 @@ module FList =
     
   end 
 
+let unify = trm_unify

@@ -1,5 +1,5 @@
 type symheap = private {
-  eqs : Symheap.UF.t;
+  eqs : Sl_uf.t;
   deqs : Symheap.Deqs.t;
   ptos : Symheap.Ptos.t;
   inds : Symheap.Inds.t;
@@ -12,9 +12,9 @@ val mk_pto : Sl_term.t -> Sl_term.t list -> t
 val mk_eq : Sl_term.t -> Sl_term.t -> t
 val mk_deq : Sl_term.t -> Sl_term.t -> t
 val mk_ind : int -> Symheap.ind_identifier -> Sl_term.t list -> t
-val mk : Symheap.UF.t -> Symheap.Deqs.t -> Symheap.Ptos.t -> Symheap.Inds.t -> t
+val mk : Sl_uf.t -> Symheap.Deqs.t -> Symheap.Ptos.t -> Symheap.Inds.t -> t
 
-val with_eqs : t -> Symheap.UF.t -> t 
+val with_eqs : t -> Sl_uf.t -> t 
 val with_deqs : t -> Symheap.Deqs.t -> t
 val with_ptos : t -> Symheap.Ptos.t -> t
 val with_inds : t -> Symheap.Inds.t -> t
@@ -25,6 +25,7 @@ val del_ind : t -> Symheap.ind_pred -> t
 
 val star : t -> t -> t
 val parse : (t, 'a) MParser.t
+val of_string : string -> t
 
 val subst : Sl_term.substitution -> t -> t
 val norm : t -> t

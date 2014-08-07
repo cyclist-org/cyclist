@@ -6,7 +6,7 @@ open Symheap
 
 type symheap =
   {
-    eqs : UF.t;
+    eqs : Sl_uf.t;
     deqs : Deqs.t;
     ptos : Ptos.t;
     inds : Inds.t
@@ -21,11 +21,11 @@ let mk eqs deqs ptos inds =
     Inds.cardinal inds) ;
   { eqs; deqs; ptos; inds }
   
-let empty = mk UF.empty Deqs.empty Ptos.empty Inds.empty 
+let empty = mk Sl_uf.empty Deqs.empty Ptos.empty Inds.empty 
 
 let subst theta h =
   mk
-    (UF.subst theta h.eqs)
+    (Sl_uf.subst theta h.eqs)
     (Deqs.subst theta h.deqs)
     (Ptos.subst theta h.ptos)
     (Inds.subst theta h.inds)
@@ -42,7 +42,7 @@ let del_ind h ind = with_inds h (Inds.remove ind h.inds)
 
 
 let norm h =
-  let theta = UF.to_subst h.eqs in
+  let theta = Sl_uf.to_subst h.eqs in
   mk 
     h.eqs
     (Deqs.subst theta h.deqs)
@@ -54,7 +54,7 @@ let get_idents p =
 
 let terms f =
   Sl_term.Set.union_of_list
-    [UF.vars f.eqs; Deqs.vars f.deqs; Ptos.vars f.ptos; Inds.vars f.inds]
+    [Sl_uf.vars f.eqs; Deqs.vars f.deqs; Ptos.vars f.ptos; Inds.vars f.inds]
 
 let vars f = Sl_term.filter_vars (terms f)
 
@@ -62,7 +62,7 @@ let tags h = Inds.tags h.inds
 
 let to_string f =
   let res = String.concat symb_star.sep
-      ((UF.to_string_list f.eqs) @ (Deqs.to_string_list f.deqs) @
+      ((Sl_uf.to_string_list f.eqs) @ (Deqs.to_string_list f.deqs) @
         (Ptos.to_string_list f.ptos) @ (Inds.to_string_list f.inds)) in
   if res = "" then keyw_emp.str else res
 
@@ -70,7 +70,7 @@ let to_melt f =
   let sep = if !split_heaps then Latex.text " \\\\ \n" else symb_star.melt in
   let content = Latex.concat (Latex.list_insert sep
           (Blist.filter (fun l -> not (Latex.is_empty l))
-              [UF.to_melt f.eqs; Deqs.to_melt f.deqs;
+              [Sl_uf.to_melt f.eqs; Deqs.to_melt f.deqs;
               Ptos.to_melt f.ptos; Inds.to_melt f.inds])) in
   let content = if !split_heaps then
       Latex.concat
@@ -88,7 +88,7 @@ let to_melt f =
 
 let pp fmt h =
   let l =
-    ((UF.to_string_list h.eqs) @ (Deqs.to_string_list h.deqs) @
+    ((Sl_uf.to_string_list h.eqs) @ (Deqs.to_string_list h.deqs) @
       (Ptos.to_string_list h.ptos) @ (Inds.to_string_list h.inds)) in
   if l <>[] then
     Format.fprintf fmt "@[%a@]" (Blist.pp pp_star Format.pp_print_string) l
@@ -106,7 +106,7 @@ let star f g =
   let newptos = Ptos.union f.ptos g.ptos in
   (* norm *)
   mk 
-    (UF.union f.eqs g.eqs)
+    (Sl_uf.union f.eqs g.eqs)
     (Deqs.union_of_list [f.deqs; g.deqs; explode_deqs (Ptos.elements newptos)])
     newptos
     (Inds.union f.inds g.inds)
@@ -126,12 +126,12 @@ let repl_tags t f =
 let tag_pairs f = TagPairs.mk (tags f)
 
 let mk_pto v1 v2 = { empty with ptos = Ptos.singleton (v1, v2) }
-let mk_eq v1 v2 = { empty with eqs = UF.add (v1, v2) UF.empty }
+let mk_eq v1 v2 = { empty with eqs = Sl_uf.add (v1, v2) Sl_uf.empty }
 let mk_deq v1 v2 = { empty with deqs = Deqs.singleton (v1, v2) }
 let mk_ind tag ident vs =
   { empty with inds = Inds.singleton (tag, (ident, vs)) }
 
-let equates h x y = UF.equates h.eqs x y
+let equates h x y = Sl_uf.equates h.eqs x y
 let disequates h x y =
   Deqs.exists
     (fun (w, z) ->
@@ -141,7 +141,11 @@ let disequates h x y =
 let eq_class h x = Sl_term.Set.filter (equates h x) (terms h)
 
 let aux_subsumption left spw hook theta h h' =
-  let f1 theta' = UF.uni_subsumption left hook theta' h.eqs h'.eqs in
+  let f1 theta' = 
+    if left then
+      Sl_uf.part_unify hook theta' h.eqs h'.eqs 
+    else
+      Sl_uf.part_unify hook theta' h'.eqs h.eqs in 
   let f2 theta' = Deqs.uni_subsumption left f1 theta' h.deqs h'.deqs in
   let f3 theta' = Ptos.aux_subsumption left spw f2 theta' h.ptos h'.ptos in
   Inds.aux_subsumption left spw f3 theta h.inds h'.inds
@@ -151,13 +155,13 @@ let spw_left_subsumption hook theta h h' =
 
 let equal h h' =
   h == h' ||
-  UF.equal h.eqs h'.eqs &&
+  Sl_uf.equal h.eqs h'.eqs &&
   Deqs.equal h.deqs h'.deqs &&
   Ptos.equal h.ptos h'.ptos &&
   Inds.equal h.inds h'.inds
 
 let subsumed h h' = 
-  UF.subsumed h.eqs h'.eqs &&
+  Sl_uf.subsumed h.eqs h'.eqs &&
   Deqs.subsumed h'.eqs h.deqs h'.deqs &&
   Ptos.subsumed h'.eqs h.ptos h'.ptos &&
   Inds.subsumed h'.eqs h.inds h'.inds 
@@ -166,7 +170,7 @@ include Fixpoint(struct type t = symheap let equal = equal end)
 
 let compare f g =
   if f == g then 0 else
-    match UF.compare f.eqs g.eqs with
+    match Sl_uf.compare f.eqs g.eqs with
     | n when n <>0 -> n
     | _ -> match Deqs.compare f.deqs g.deqs with
         | n when n <>0 -> n
@@ -176,8 +180,8 @@ let compare f g =
 
 (* h' |- h if spw=false h' |- h * true if spw=true *)
 (* let aux_subsumed_wrt_tags spw tags h h' =      *)
-(*   let h = subst (UF.to_subst h'.eqs) h in      *)
-(*   UF.is_subsumed h.eqs h'.eqs &&               *)
+(*   let h = subst (Sl_uf.to_subst h'.eqs) h in      *)
+(*   Sl_uf.is_subsumed h.eqs h'.eqs &&               *)
 (*   Deqs.subset h.deqs h'.deqs &&                *)
 (*   if spw then                                  *)
 (*     Ptos.subset h.ptos h'.ptos &&              *)
@@ -201,11 +205,11 @@ let subst_existentials h =
   let aux h' =
     let (ex_eqs, non_ex_eqs) =
       Blist.partition
-        (fun (x, _) -> Sl_term.is_exist_var x) (UF.bindings h'.eqs) in
+        (fun (x, _) -> Sl_term.is_exist_var x) (Sl_uf.bindings h'.eqs) in
     if ex_eqs =[] then h' else
       (* NB order of subst is reversed so that the greater variable        *)
       (* replaces the lesser this maintains universal vars                 *)
-      let h'' = { h' with eqs = UF.of_list non_ex_eqs } in
+      let h'' = { h' with eqs = Sl_uf.of_list non_ex_eqs } in
       subst (Sl_term.Map.of_list ex_eqs) h'' in
   fixpoint aux h
 
@@ -220,7 +224,7 @@ let project f xs =
     not (Blist.exists (fun y -> Sl_term.equal x y) xs) in
   let pair_nin_lst (x, y) = trm_nin_lst x || trm_nin_lst y in
   let rec proj_eqs h =
-    let orig_eqs = UF.bindings h.eqs in
+    let orig_eqs = Sl_uf.bindings h.eqs in
     let p = Blist.find_first pair_nin_lst orig_eqs in
     if Option.is_none p then h else
       let (x, y) = Option.get p in
@@ -236,7 +240,7 @@ let project f xs =
 let parse_atom st =
   ( attempt (parse_symb keyw_emp >>$ empty) <|>
     attempt (Inds.parse |>> (fun (tag, (ident, vs)) -> mk_ind tag ident vs)) <|>
-    attempt (UF.parse |>> Fun.uncurry mk_eq) <|>
+    attempt (Sl_uf.parse |>> Fun.uncurry mk_eq) <|>
     attempt (Deqs.parse |>> Fun.uncurry mk_deq) <|>
     (Ptos.parse |>> Fun.uncurry mk_pto) <?> "atom"
   ) st
@@ -247,4 +251,6 @@ let parse st =
 
 let freshen_tags h' h =
   with_inds h (Inds.freshen_tags h'.inds h.inds)
-  
+
+let of_string s =
+  handle_reply (MParser.parse_string parse s ())

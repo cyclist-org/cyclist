@@ -26,12 +26,12 @@ let get_undefined defs h = Inds.filter (Defs.is_undefined defs) h.SH.inds
 let ex_subst_defs defs =
   let ex_subst_heap h =
     let (ex_eqs, non_ex_eqs) =
-      Blist.partition (fun (x,_) -> Sl_term.is_exist_var x) (UF.bindings h.SH.eqs) in
+      Blist.partition (fun (x,_) -> Sl_term.is_exist_var x) (Sl_uf.bindings h.SH.eqs) in
       if ex_eqs=[] then h else
       (* NB order of subst is reversed so that *)
       (* the greater variable replaces the lesser *)
       (* this maintains universal vars *)
-      Sl_heap.subst (Sl_term.Map.of_list ex_eqs) (SH.with_eqs h (UF.of_list non_ex_eqs)) in
+      Sl_heap.subst (Sl_term.Map.of_list ex_eqs) (SH.with_eqs h (Sl_uf.of_list non_ex_eqs)) in
   let ex_subst_case c =
     let (p,h) = Sl_indrule.dest c in
     let p' = Sl_heap.fixpoint ex_subst_heap p in
@@ -306,7 +306,7 @@ let generalise_while_rule =
     let gen_pto (x,args) =
     	let l = Blist.map gen_term (x::args) in (Blist.hd l, Blist.tl l) in
 		SH.mk 
-			(Sl_term.Set.fold UF.remove m h.SH.eqs)
+			(Sl_term.Set.fold Sl_uf.remove m h.SH.eqs)
 			(Deqs.filter
 			  (fun p -> Pair.conj (Pair.map (fun z -> not (Sl_term.Set.mem z m)) p))
 				h.SH.deqs)
@@ -399,13 +399,13 @@ let abd_det_guard =
 				let g pair =
           let clause_eq =
             SH.mk 
-              (UF.of_list [pair])
+              (Sl_uf.of_list [pair])
               Deqs.empty
               Ptos.empty
               (Inds.singleton (1, (fresh_ident, newparams))) in
           let clause_deq =
             SH.mk
-              UF.empty
+              Sl_uf.empty
               (Deqs.singleton pair)
               Ptos.empty
               (Inds.singleton (1, (fresh_ident', newparams))) in
@@ -500,7 +500,7 @@ let matches = Abdrule.lift While_rules.dobackl
 (*           Blist.exists (fun x -> Sl_term.Set.mem x xs) params) inds in                       *)
 (* 		  if Inds.is_empty inds then [] else                                                  *)
 (* 		  (* weaken by removing y from its equivalence class *)                               *)
-(* 			let h' = { h with eqs=UF.remove y h.eqs } in                                        *)
+(* 			let h' = { h with eqs=Sl_uf.remove y h.eqs } in                                        *)
 (* 			(* is this always needed ? *)                                                       *)
 (* 			if Sl_heap.equal h h' then [] else                                                     *)
 (*       let fresh_ident = get_fresh_ident () in                                             *)

@@ -42,11 +42,11 @@ let rhs_disj_to_symheaps =
 let eq_subst_rule seq =
   try
     let (l,r) = Sl_seq.dest seq in
-		let leqs = UF.bindings l.SH.eqs in
+		let leqs = Sl_uf.bindings l.SH.eqs in
 		let (x,y) as p = 
       Blist.find (fun p' -> Pair.disj (Pair.map Sl_term.is_var p')) leqs in
 		let leqs = Blist.filter (fun q -> q!=p) leqs in
-		let l = SH.with_eqs l (UF.of_list leqs) in
+		let l = SH.with_eqs l (Sl_uf.of_list leqs) in
 		let (x,y) = if Sl_term.is_var x then p else (y,x) in
 		let theta = Sl_term.singleton_subst x y in
     let (l',r') = Pair.map (Sl_heap.subst theta) (l,r) in
@@ -58,10 +58,10 @@ let eq_subst_rule seq =
 let eq_ex_subst_rule seq =
   try
     let (l,r) = Sl_seq.dest seq in
-		let reqs = UF.bindings r.SH.eqs in
+		let reqs = Sl_uf.bindings r.SH.eqs in
 		let (x,y) as p = Blist.find (fun (x,_) -> Sl_term.is_exist_var x) reqs in
 		let reqs = Blist.filter (fun q -> q!=p) reqs in
-    let r = SH.with_eqs r (UF.of_list reqs) in
+    let r = SH.with_eqs r (Sl_uf.of_list reqs) in
     let r' = Sl_heap.subst (Sl_term.singleton_subst x y) r in
     [ [ (([l], [r']), Sl_heap.tag_pairs l, TagPairs.empty) ], "" ]
   with Not_symheap | Not_found -> []
@@ -72,11 +72,11 @@ let eq_simplify seq =
     let (l,r) = Sl_seq.dest seq in
     let (disch, reqs) =
 			Blist.partition 
-        (fun (x,y) -> Sl_heap.equates l x y) (UF.bindings r.SH.eqs) in
+        (fun (x,y) -> Sl_heap.equates l x y) (Sl_uf.bindings r.SH.eqs) in
     if disch=[] then [] else
     [ 
       [ 
-        (([l], [ SH.with_eqs r (UF.of_list reqs) ] ), 
+        (([l], [ SH.with_eqs r (Sl_uf.of_list reqs) ] ), 
         Sl_heap.tag_pairs l, 
         TagPairs.empty) 
       ], "" 
@@ -110,7 +110,7 @@ let pto_intro_rule seq =
     (* take care to remove only the 1st match *)
     let l' = SH.del_pto l p' in
     let r' = SH.del_pto r p in
-    let r' = SH.with_eqs r' (UF.union r'.SH.eqs (UF.of_list (Blist.combine rys lys))) in
+    let r' = SH.with_eqs r' (Sl_uf.union r'.SH.eqs (Sl_uf.of_list (Blist.combine rys lys))) in
     [ [ ( ([l'], [r']), Sl_heap.tag_pairs l, TagPairs.empty ) ], "Pto Intro" ]
   with Not_symheap | Not_found | Invalid_argument _ -> []
 
@@ -188,7 +188,7 @@ let instantiate_pto =
         let l' = SH.del_pto l q in
         let r' = SH.del_pto r p in
         let r' =
-          SH.with_eqs r' (UF.union r'.SH.eqs (UF.of_list ((x,w)::(Blist.combine ys zs)))) in
+          SH.with_eqs r' (Sl_uf.union r'.SH.eqs (Sl_uf.of_list ((x,w)::(Blist.combine ys zs)))) in
         [ ( ([l'], [r']), Sl_heap.tag_pairs l, TagPairs.empty ) ], "Inst ->"
       in Blist.map do_instantiation cp
     with Not_symheap | Invalid_argument _ -> [] in
