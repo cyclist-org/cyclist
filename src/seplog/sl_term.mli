@@ -59,6 +59,10 @@ module FList :
   sig
     include Util.BasicType with type t = t list
     val unify : t unifier
+    val subst : substitution -> t -> t
+    val to_string_sep : string -> t -> string
+    val terms : t -> Set.t
+    val vars : t -> Set.t
   end
 (** A list of terms. *)
 

@@ -3,6 +3,9 @@ Symheap
 Sl_term
 Sl_tpair
 Sl_uf
+Sl_deqs
+Sl_pto
+Sl_ptos
 Sl_heap
 Sl_form
 Sl_defs

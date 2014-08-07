@@ -98,7 +98,7 @@ let symex_load_rule_f, symex_load_rule =
       let cmd = get_cmd i in
       let (x,e,s) = Cmd.dest_load cmd in
       (* now search for pto on e' *)
-      let (_,ys) = Ptos.find (fun (l,vs) -> Sl_heap.equates f e l) f.SH.ptos in
+      let (_,ys) = Sl_ptos.find (fun (l,vs) -> Sl_heap.equates f e l) f.SH.ptos in
       let t = Blist.nth ys (get_sel_index s) in
       let fv = fresh_evar (Sl_heap.vars f) in
       let theta = Sl_term.singleton_subst x fv in
@@ -116,15 +116,15 @@ let symex_store_rule_f, symex_store_rule =
       let cmd = get_cmd i in
       let (x,s,e) = Cmd.dest_store cmd in
       let ((_,ys) as pto) = 
-        Ptos.find (fun (v,_) -> Sl_heap.equates f v x) f.SH.ptos in
-      let newptos = Ptos.remove pto f.SH.ptos in
+        Sl_ptos.find (fun (v,_) -> Sl_heap.equates f v x) f.SH.ptos in
+      let newptos = Sl_ptos.remove pto f.SH.ptos in
       let pto' = 
         try (x, Blist.replace_nth e (get_sel_index s) ys) 
         with Invalid_argument msg ->
           print_endline ("seq= " ^ (Seq.to_string seq) ^ "   x=" ^ (Sl_term.to_string x) ^ " s=" ^ s ^ " e=" ^ (Sl_term.to_string e)) ;
           assert false
         in
-      let f' = SH.with_ptos f (Ptos.add pto' newptos) in
+      let f' = SH.with_ptos f (Sl_ptos.add pto' newptos) in
       [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Store" ]
     with Not_symheap | WrongCmd | Not_found -> [] in
   rl, wrap rl 
@@ -135,8 +135,8 @@ let symex_free_rule_f, symex_free_rule =
       let (f,i) = dest_sh_seq seq in
       let cmd = get_cmd i in
       let e = Cmd.dest_free cmd in
-      let pto = Ptos.find (fun (v,_) -> Sl_heap.equates f v e) f.SH.ptos in
-      let newptos = Ptos.remove pto f.SH.ptos in
+      let pto = Sl_ptos.find (fun (v,_) -> Sl_heap.equates f v e) f.SH.ptos in
+      let newptos = Sl_ptos.remove pto f.SH.ptos in
       let f' = SH.with_ptos f newptos in
       [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Free" ]
     with Not_symheap | WrongCmd | Not_found -> [] in
@@ -151,7 +151,7 @@ let symex_new_rule_f, symex_new_rule =
       let l = fresh_evars (Sl_heap.vars f) (1 + Blist.length (fst !program)) in
       let (fv,fvs) = (Blist.hd l, Blist.tl l) in
       let f' = Sl_heap.subst (Sl_term.singleton_subst x fv) f in
-      let f' = SH.with_ptos f' (Ptos.add (x, fvs) f'.SH.ptos) in
+      let f' = SH.with_ptos f' (Sl_ptos.add (x, fvs) f'.SH.ptos) in
       [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "New" ]
     with Not_symheap | WrongCmd-> [] in
   rl, wrap rl 
@@ -183,7 +183,7 @@ let symex_det_if_rule_f, symex_det_if_rule =
       if Cmd.is_non_det c then [] else
       let pair = Cmd.dest_cond c in
       let f' =  SH.with_eqs f (Sl_uf.add pair f.SH.eqs) in
-      let f'' = SH.with_deqs f (Deqs.add pair f.SH.deqs) in
+      let f'' = SH.with_deqs f (Sl_deqs.add pair f.SH.deqs) in
       let (f',f'') = if (Cmd.is_deq c) then (f'',f') else (f',f'') in 
       let t = Sl_heap.tag_pairs f in
       [ 
@@ -306,13 +306,13 @@ let fold (defs,ident) =
               (* FIXME hacky stuff in eqs : in reality a proper way to diff *)
               (* two union-find structures is required *)
                 (Sl_uf.of_list 
-                (Deqs.to_list 
-                  (Deqs.diff
-                    (Deqs.of_list (Sl_uf.bindings l.SH.eqs))
-                    (Deqs.of_list (Sl_uf.bindings f.SH.eqs))
+                (Sl_deqs.to_list 
+                  (Sl_deqs.diff
+                    (Sl_deqs.of_list (Sl_uf.bindings l.SH.eqs))
+                    (Sl_deqs.of_list (Sl_uf.bindings f.SH.eqs))
                   )))
-              (Deqs.diff l.SH.deqs f.SH.deqs)
-              (Ptos.diff l.SH.ptos f.SH.ptos)
+              (Sl_deqs.diff l.SH.deqs f.SH.deqs)
+              (Sl_ptos.diff l.SH.ptos f.SH.ptos)
               (Inds.fold 
                 (fun (_, (f_ident, f_vs)) a -> 
                   Inds.del_first 

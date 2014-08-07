@@ -96,14 +96,14 @@ module Cond =
       if is_non_det c then (f,f) else
       let pair = dest c in
       let f' =  SH.with_eqs f (Sl_uf.add pair f.SH.eqs) in
-      let f'' = SH.with_deqs f (Deqs.add pair f.SH.deqs) in
+      let f'' = SH.with_deqs f (Sl_deqs.add pair f.SH.deqs) in
       let (f',f'') = if is_deq c then (f'',f') else (f',f'') in
       (f',f'')
     
     let parse st =
       ( attempt (parse_symb symb_star >>$ mk_non_det ()) <|>
         attempt (Sl_uf.parse |>> Fun.uncurry mk_eq) <|>
-                (Deqs.parse |>> Fun.uncurry mk_deq) <?> "Cond") st
+                (Sl_deqs.parse |>> Fun.uncurry mk_deq) <?> "Cond") st
   end
 
 

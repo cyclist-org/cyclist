@@ -11,6 +11,8 @@ val unord_unify : t Sl_term.gen_unifier
 val norm : t -> t
 (** Return a permutation of the input that obeys the ordering Sl_term.compare. *)
 
+val subst : Sl_term.substitution -> t -> t
+
 val to_string_sep : string -> t -> string
 val to_melt_sep : Latex.t -> t -> Latex.t
 
@@ -22,5 +24,7 @@ module FList :
     (** Unify all (unordered) pairs of the 1st argument with *)
     (** a part of the 2nd.  Multiple unifications possible in general, thus *)
     (** a general unifier. *)
+
+    val terms : t -> Sl_term.Set.t
   end
 (** A list of term pairs. *)

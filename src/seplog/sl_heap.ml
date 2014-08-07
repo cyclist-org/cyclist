@@ -7,8 +7,8 @@ open Symheap
 type symheap =
   {
     eqs : Sl_uf.t;
-    deqs : Deqs.t;
-    ptos : Ptos.t;
+    deqs : Sl_deqs.t;
+    ptos : Sl_ptos.t;
     inds : Inds.t
   }
 
@@ -21,13 +21,13 @@ let mk eqs deqs ptos inds =
     Inds.cardinal inds) ;
   { eqs; deqs; ptos; inds }
   
-let empty = mk Sl_uf.empty Deqs.empty Ptos.empty Inds.empty 
+let empty = mk Sl_uf.empty Sl_deqs.empty Sl_ptos.empty Inds.empty 
 
 let subst theta h =
   mk
     (Sl_uf.subst theta h.eqs)
-    (Deqs.subst theta h.deqs)
-    (Ptos.subst theta h.ptos)
+    (Sl_deqs.subst theta h.deqs)
+    (Sl_ptos.subst theta h.ptos)
     (Inds.subst theta h.inds)
 
 let with_eqs h eqs = mk eqs h.deqs h.ptos h.inds
@@ -35,8 +35,8 @@ let with_deqs h deqs = mk h.eqs deqs h.ptos h.inds
 let with_ptos h ptos = mk h.eqs h.deqs ptos h.inds
 let with_inds h inds = mk h.eqs h.deqs h.ptos inds
 
-let del_deq h deq = with_deqs h (Deqs.remove deq h.deqs)
-let del_pto h pto = with_ptos h (Ptos.remove pto h.ptos)
+let del_deq h deq = with_deqs h (Sl_deqs.remove deq h.deqs)
+let del_pto h pto = with_ptos h (Sl_ptos.remove pto h.ptos)
 let del_ind h ind = with_inds h (Inds.remove ind h.inds)
 
 
@@ -45,8 +45,8 @@ let norm h =
   let theta = Sl_uf.to_subst h.eqs in
   mk 
     h.eqs
-    (Deqs.subst theta h.deqs)
-    (Ptos.subst theta h.ptos)
+    (Sl_deqs.subst theta h.deqs)
+    (Sl_ptos.subst theta h.ptos)
     (Inds.subst theta h.inds)
 
 let get_idents p =
@@ -54,7 +54,7 @@ let get_idents p =
 
 let terms f =
   Sl_term.Set.union_of_list
-    [Sl_uf.vars f.eqs; Deqs.vars f.deqs; Ptos.vars f.ptos; Inds.vars f.inds]
+    [Sl_uf.vars f.eqs; Sl_deqs.vars f.deqs; Sl_ptos.vars f.ptos; Inds.vars f.inds]
 
 let vars f = Sl_term.filter_vars (terms f)
 
@@ -62,16 +62,16 @@ let tags h = Inds.tags h.inds
 
 let to_string f =
   let res = String.concat symb_star.sep
-      ((Sl_uf.to_string_list f.eqs) @ (Deqs.to_string_list f.deqs) @
-        (Ptos.to_string_list f.ptos) @ (Inds.to_string_list f.inds)) in
+      ((Sl_uf.to_string_list f.eqs) @ (Sl_deqs.to_string_list f.deqs) @
+        (Sl_ptos.to_string_list f.ptos) @ (Inds.to_string_list f.inds)) in
   if res = "" then keyw_emp.str else res
 
 let to_melt f =
   let sep = if !split_heaps then Latex.text " \\\\ \n" else symb_star.melt in
   let content = Latex.concat (Latex.list_insert sep
           (Blist.filter (fun l -> not (Latex.is_empty l))
-              [Sl_uf.to_melt f.eqs; Deqs.to_melt f.deqs;
-              Ptos.to_melt f.ptos; Inds.to_melt f.inds])) in
+              [Sl_uf.to_melt f.eqs; Sl_deqs.to_melt f.deqs;
+              Sl_ptos.to_melt f.ptos; Inds.to_melt f.inds])) in
   let content = if !split_heaps then
       Latex.concat
         [
@@ -88,8 +88,8 @@ let to_melt f =
 
 let pp fmt h =
   let l =
-    ((Sl_uf.to_string_list h.eqs) @ (Deqs.to_string_list h.deqs) @
-      (Ptos.to_string_list h.ptos) @ (Inds.to_string_list h.inds)) in
+    ((Sl_uf.to_string_list h.eqs) @ (Sl_deqs.to_string_list h.deqs) @
+      (Sl_ptos.to_string_list h.ptos) @ (Inds.to_string_list h.inds)) in
   if l <>[] then
     Format.fprintf fmt "@[%a@]" (Blist.pp pp_star Format.pp_print_string) l
   else
@@ -101,13 +101,13 @@ let star f g =
   let explode_deqs ptos =
     let cp = Blist.cartesian_hemi_square ptos in
     let s1 =
-      (Blist.fold_left (fun s p -> Deqs.add (fst p, Sl_term.nil) s) Deqs.empty ptos) in
-    (Blist.fold_left (fun s (p, q) -> Deqs.add (fst p, fst q) s) s1 cp) in
-  let newptos = Ptos.union f.ptos g.ptos in
+      (Blist.fold_left (fun s p -> Sl_deqs.add (fst p, Sl_term.nil) s) Sl_deqs.empty ptos) in
+    (Blist.fold_left (fun s (p, q) -> Sl_deqs.add (fst p, fst q) s) s1 cp) in
+  let newptos = Sl_ptos.union f.ptos g.ptos in
   (* norm *)
   mk 
     (Sl_uf.union f.eqs g.eqs)
-    (Deqs.union_of_list [f.deqs; g.deqs; explode_deqs (Ptos.elements newptos)])
+    (Sl_deqs.union_of_list [f.deqs; g.deqs; explode_deqs (Sl_ptos.elements newptos)])
     newptos
     (Inds.union f.inds g.inds)
 
@@ -125,15 +125,15 @@ let repl_tags t f =
 
 let tag_pairs f = TagPairs.mk (tags f)
 
-let mk_pto v1 v2 = { empty with ptos = Ptos.singleton (v1, v2) }
+let mk_pto v1 v2 = { empty with ptos = Sl_ptos.singleton (v1, v2) }
 let mk_eq v1 v2 = { empty with eqs = Sl_uf.add (v1, v2) Sl_uf.empty }
-let mk_deq v1 v2 = { empty with deqs = Deqs.singleton (v1, v2) }
+let mk_deq v1 v2 = { empty with deqs = Sl_deqs.singleton (v1, v2) }
 let mk_ind tag ident vs =
   { empty with inds = Inds.singleton (tag, (ident, vs)) }
 
 let equates h x y = Sl_uf.equates h.eqs x y
 let disequates h x y =
-  Deqs.exists
+  Sl_deqs.exists
     (fun (w, z) ->
           (equates h x w && equates h y z)
           || (equates h x z && equates h y w) ) h.deqs
@@ -146,8 +146,17 @@ let aux_subsumption left spw hook theta h h' =
       Sl_uf.part_unify hook theta' h.eqs h'.eqs 
     else
       Sl_uf.part_unify hook theta' h'.eqs h.eqs in 
-  let f2 theta' = Deqs.uni_subsumption left f1 theta' h.deqs h'.deqs in
-  let f3 theta' = Ptos.aux_subsumption left spw f2 theta' h.ptos h'.ptos in
+  let f2 theta' = 
+    if left then
+      Sl_deqs.part_unify f1 theta' h.deqs h'.deqs 
+    else
+      Sl_deqs.part_unify f1 theta' h'.deqs h.deqs in 
+  let f3 theta' = 
+    let u = if spw then Sl_ptos.part_unify else Sl_ptos.unify in 
+    if left then
+      u f2 theta' h.ptos h'.ptos 
+    else
+      u f2 theta' h'.ptos h.ptos in
   Inds.aux_subsumption left spw f3 theta h.inds h'.inds
 
 let spw_left_subsumption hook theta h h' =
@@ -156,14 +165,14 @@ let spw_left_subsumption hook theta h h' =
 let equal h h' =
   h == h' ||
   Sl_uf.equal h.eqs h'.eqs &&
-  Deqs.equal h.deqs h'.deqs &&
-  Ptos.equal h.ptos h'.ptos &&
+  Sl_deqs.equal h.deqs h'.deqs &&
+  Sl_ptos.equal h.ptos h'.ptos &&
   Inds.equal h.inds h'.inds
 
 let subsumed h h' = 
   Sl_uf.subsumed h.eqs h'.eqs &&
-  Deqs.subsumed h'.eqs h.deqs h'.deqs &&
-  Ptos.subsumed h'.eqs h.ptos h'.ptos &&
+  Sl_deqs.subsumed h'.eqs h.deqs h'.deqs &&
+  Sl_ptos.subsumed h'.eqs h.ptos h'.ptos &&
   Inds.subsumed h'.eqs h.inds h'.inds 
 
 include Fixpoint(struct type t = symheap let equal = equal end)
@@ -172,9 +181,9 @@ let compare f g =
   if f == g then 0 else
     match Sl_uf.compare f.eqs g.eqs with
     | n when n <>0 -> n
-    | _ -> match Deqs.compare f.deqs g.deqs with
+    | _ -> match Sl_deqs.compare f.deqs g.deqs with
         | n when n <>0 -> n
-        | _ -> match Ptos.compare f.ptos g.ptos with
+        | _ -> match Sl_ptos.compare f.ptos g.ptos with
             | n when n <>0 -> n
             | _ -> Inds.compare f.inds g.inds
 
@@ -182,23 +191,23 @@ let compare f g =
 (* let aux_subsumed_wrt_tags spw tags h h' =      *)
 (*   let h = subst (Sl_uf.to_subst h'.eqs) h in      *)
 (*   Sl_uf.is_subsumed h.eqs h'.eqs &&               *)
-(*   Deqs.subset h.deqs h'.deqs &&                *)
+(*   Sl_deqs.subset h.deqs h'.deqs &&                *)
 (*   if spw then                                  *)
-(*     Ptos.subset h.ptos h'.ptos &&              *)
+(*     Sl_ptos.subset h.ptos h'.ptos &&              *)
 (*     Inds.subsumed_wrt_tags tags h.inds h'.inds *)
 (*   else                                         *)
-(*     Ptos.equal h.ptos h'.ptos &&               *)
+(*     Sl_ptos.equal h.ptos h'.ptos &&               *)
 (*     Inds.equal_wrt_tags tags h.inds h'.inds    *)
 
 let find_lval x h =
   try
-    Some (Ptos.find (fun (y, _) -> equates h x y) h.ptos)
+    Some (Sl_ptos.find (fun (y, _) -> equates h x y) h.ptos)
   with Not_found -> None
 
 let inconsistent h =
-  (* let lvalues = Ptos.map_to Sl_term.Set.add Sl_term.Set.empty fst h.ptos in   *)
-  (* Sl_term.Set.cardinal lvalues <> Ptos.cardinal h.ptos ||                  *)
-  Deqs.exists (fun (x, y) -> equates h x y) h.deqs
+  (* let lvalues = Sl_ptos.map_to Sl_term.Set.add Sl_term.Set.empty fst h.ptos in   *)
+  (* Sl_term.Set.cardinal lvalues <> Sl_ptos.cardinal h.ptos ||                  *)
+  Sl_deqs.exists (fun (x, y) -> equates h x y) h.deqs
 (* Sl_term.Set.mem Sl_term.nil lvalues *)
 
 let subst_existentials h =
@@ -218,7 +227,7 @@ let is_fresh_in x h = not (Sl_term.Set.mem x (vars h))
 let hash (h: t) = Hashtbl.hash h
 
 let project f xs =
-  (* let () = assert (Inds.is_empty f.inds && Ptos.is_empty f.ptos) in *)
+  (* let () = assert (Inds.is_empty f.inds && Sl_ptos.is_empty f.ptos) in *)
   let trm_nin_lst x =
     not (Sl_term.is_nil x) &&
     not (Blist.exists (fun y -> Sl_term.equal x y) xs) in
@@ -234,15 +243,15 @@ let project f xs =
       let theta = Sl_term.singleton_subst y' x' in
       proj_eqs (subst theta h) in
   let proj_deqs g =
-    { g with deqs = Deqs.filter (fun p -> not (pair_nin_lst p)) g.deqs } in
+    { g with deqs = Sl_deqs.filter (fun p -> not (pair_nin_lst p)) g.deqs } in
   proj_deqs (proj_eqs f)
 
 let parse_atom st =
   ( attempt (parse_symb keyw_emp >>$ empty) <|>
     attempt (Inds.parse |>> (fun (tag, (ident, vs)) -> mk_ind tag ident vs)) <|>
     attempt (Sl_uf.parse |>> Fun.uncurry mk_eq) <|>
-    attempt (Deqs.parse |>> Fun.uncurry mk_deq) <|>
-    (Ptos.parse |>> Fun.uncurry mk_pto) <?> "atom"
+    attempt (Sl_deqs.parse |>> Fun.uncurry mk_deq) <|>
+    (Sl_ptos.parse |>> Fun.uncurry mk_pto) <?> "atom"
   ) st
 
 let parse st =

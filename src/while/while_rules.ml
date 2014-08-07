@@ -115,7 +115,7 @@ let symex_assign_rule =
   mk_symex rl
 
 let find_pto_on f e = 
-	Ptos.find (fun (l,_) -> Sl_heap.equates f e l) f.SH.ptos
+	Sl_ptos.find (fun (l,_) -> Sl_heap.equates f e l) f.SH.ptos
 	
 let symex_load_rule =
   let rl seq =
@@ -139,7 +139,7 @@ let symex_store_rule =
       let (x,s,e) = Cmd.dest_store cmd in
       let ((x',ys) as pto) = find_pto_on f x in
       let pto' = (x', Blist.replace_nth e (Field.get_index s) ys) in
-      [[ SH.with_ptos f (Ptos.add pto' (Ptos.remove pto f.SH.ptos)) ], "Store"]
+      [[ SH.with_ptos f (Sl_ptos.add pto' (Sl_ptos.remove pto f.SH.ptos)) ], "Store"]
     with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl
 
@@ -149,7 +149,7 @@ let symex_free_rule =
       let (f,cmd) = dest_sh_seq seq in
       let e = Cmd.dest_free cmd in
       let pto = find_pto_on f e in
-      [[ SH.with_ptos f (Ptos.remove pto f.SH.ptos) ], "Free"]
+      [[ SH.with_ptos f (Sl_ptos.remove pto f.SH.ptos) ], "Free"]
     with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl
 
@@ -312,13 +312,13 @@ let fold (defs,ident) =
               (* FIXME hacky stuff in SH.eqs : in reality a proper way to diff *)
               (* two union-find structures is required *)
               (Sl_uf.of_list
-                (Deqs.to_list
-                  (Deqs.diff
-                    (Deqs.of_list (Sl_uf.bindings l.SH.eqs))
-                    (Deqs.of_list (Sl_uf.bindings f.SH.eqs))
+                (Sl_deqs.to_list
+                  (Sl_deqs.diff
+                    (Sl_deqs.of_list (Sl_uf.bindings l.SH.eqs))
+                    (Sl_deqs.of_list (Sl_uf.bindings f.SH.eqs))
                   )))
-              (Deqs.diff l.SH.deqs f.SH.deqs)
-              (Ptos.diff l.SH.ptos f.SH.ptos)
+              (Sl_deqs.diff l.SH.deqs f.SH.deqs)
+              (Sl_ptos.diff l.SH.ptos f.SH.ptos)
               (Inds.fold 
                 (fun (_, (f_ident, f_vs)) a -> 
                   Inds.del_first 
@@ -355,10 +355,10 @@ let generalise_while_rule =
     let l = Blist.map gen_term (x::args) in (Blist.hd l, Blist.tl l) in
       SH.mk 
         (Sl_term.Set.fold Sl_uf.remove m h.SH.eqs)
-        (Deqs.filter
+        (Sl_deqs.filter
           (fun p -> Pair.conj (Pair.map (fun z -> not (Sl_term.Set.mem z m)) p))
           h.SH.deqs)
-        (Ptos.endomap gen_pto h.SH.ptos)
+        (Sl_ptos.endomap gen_pto h.SH.ptos)
         h.SH.inds in
     let rl seq =
       try

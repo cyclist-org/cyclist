@@ -1,7 +1,7 @@
 type symheap = private {
   eqs : Sl_uf.t;
-  deqs : Symheap.Deqs.t;
-  ptos : Symheap.Ptos.t;
+  deqs : Sl_deqs.t;
+  ptos : Sl_ptos.t;
   inds : Symheap.Inds.t;
 }
 include Util.BasicType with type t = symheap
@@ -12,11 +12,11 @@ val mk_pto : Sl_term.t -> Sl_term.t list -> t
 val mk_eq : Sl_term.t -> Sl_term.t -> t
 val mk_deq : Sl_term.t -> Sl_term.t -> t
 val mk_ind : int -> Symheap.ind_identifier -> Sl_term.t list -> t
-val mk : Sl_uf.t -> Symheap.Deqs.t -> Symheap.Ptos.t -> Symheap.Inds.t -> t
+val mk : Sl_uf.t -> Sl_deqs.t -> Sl_ptos.t -> Symheap.Inds.t -> t
 
 val with_eqs : t -> Sl_uf.t -> t 
-val with_deqs : t -> Symheap.Deqs.t -> t
-val with_ptos : t -> Symheap.Ptos.t -> t
+val with_deqs : t -> Sl_deqs.t -> t
+val with_ptos : t -> Sl_ptos.t -> t
 val with_inds : t -> Symheap.Inds.t -> t
 
 val del_deq : t -> (Sl_term.t * Sl_term.t) -> t

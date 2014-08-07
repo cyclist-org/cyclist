@@ -100,7 +100,7 @@ struct
     let h' = SH.with_inds h (Inds.remove ind h.SH.inds) in
     let h' = Sl_heap.star h' g' in
     let cv = Blist.cartesian_product (Sl_term.Set.to_list v) (Sl_term.Set.to_list v') in
-    let h' = SH.with_deqs h' (Deqs.union h'.SH.deqs (Deqs.of_list cv)) in
+    let h' = SH.with_deqs h' (Sl_deqs.union h'.SH.deqs (Sl_deqs.of_list cv)) in
     let v = Sl_term.Set.union v v' in
     (v, h')
   
@@ -108,8 +108,8 @@ struct
   let unfold_all case cbps =
     let (h, _) = Sl_indrule.dest case in
     (* let () = assert (Inds.cardinal h.inds = Blist.length cbps) in *)
-    let ys = Sl_term.Set.of_list (Blist.rev_map fst (Ptos.to_list h.SH.ptos)) in
-    let h = SH.with_ptos h Ptos.empty in
+    let ys = Sl_term.Set.of_list (Blist.rev_map fst (Sl_ptos.to_list h.SH.ptos)) in
+    let h = SH.with_ptos h Sl_ptos.empty in
     Blist.fold_left2 unfold (ys, h) (Inds.to_list h.SH.inds) cbps
   
   let gen case cbps =

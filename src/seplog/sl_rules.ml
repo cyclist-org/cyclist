@@ -88,8 +88,8 @@ let deq_simplify seq =
   try
     let (l,r) = Sl_seq.dest seq in
     let (disch, rdeqs) =
-			Deqs.partition (fun (x,y) -> Sl_heap.disequates l x y) r.SH.deqs in
-    if Deqs.is_empty disch then [] else
+			Sl_deqs.partition (fun (x,y) -> Sl_heap.disequates l x y) r.SH.deqs in
+    if Sl_deqs.is_empty disch then [] else
     [ 
       [ 
         (([l], [ SH.with_deqs r rdeqs ] ), 
@@ -105,7 +105,7 @@ let pto_intro_rule seq =
   try
     let (l,r) = Sl_seq.dest seq in
     let (rx, rys) as p =
-      Ptos.find (fun (w,_) -> Option.is_some (Sl_heap.find_lval w l)) r.SH.ptos in
+      Sl_ptos.find (fun (w,_) -> Option.is_some (Sl_heap.find_lval w l)) r.SH.ptos in
     let (lx, lys) as p' = Option.get (Sl_heap.find_lval rx l) in
     (* take care to remove only the 1st match *)
     let l' = SH.del_pto l p' in
@@ -142,9 +142,9 @@ let norm s =
 (*     let non_deq_vars =                                                            *)
 (* 			Sl_term.Set.add Sl_term.nil                                                 *)
 (* 				(Sl_term.Set.union                                                        *)
-(* 				  (Sl_heap.vars { l with SH.deqs=Deqs.empty }) (Sl_heap.vars r)) in       *)
+(* 				  (Sl_heap.vars { l with SH.deqs=Sl_deqs.empty }) (Sl_heap.vars r)) in       *)
 (*     let f p = Pair.conj (Pair.map (fun t -> Sl_term.Set.mem t non_deq_vars) p) in *)
-(*     let l' = { l with SH.deqs=Deqs.filter f l.SH.deqs } in                        *)
+(*     let l' = { l with SH.deqs=Sl_deqs.filter f l.SH.deqs } in                        *)
 (*     if Sl_heap.equal l l' then [] else                                            *)
 (*     [ [ (([l'], [r]), Sl_heap.tag_pairs l', TagPairs.empty) ], "" ]               *)
 (*   with Not_symheap -> []                                                          *)
@@ -176,7 +176,7 @@ let instantiate_pto =
   let rl seq =
     try
       let (l,r) = Sl_seq.dest seq in
-      let (lptos,rptos) = Pair.map Ptos.elements (l.SH.ptos,r.SH.ptos) in
+      let (lptos,rptos) = Pair.map Sl_ptos.elements (l.SH.ptos,r.SH.ptos) in
       let eptos = Blist.filter (fun (x,_) -> Sl_term.is_exist_var x) rptos in
       let match_ls xs ys =
         try

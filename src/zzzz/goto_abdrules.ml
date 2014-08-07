@@ -398,8 +398,8 @@ let abd_deref =
         let clause =  
           { 
             eqs=Sl_uf.empty; 
-            deqs=Deqs.empty; 
-            ptos=Ptos.singleton (newy, pto_params); 
+            deqs=Sl_deqs.empty; 
+            ptos=Sl_ptos.singleton (newy, pto_params); 
             inds=Inds.singleton (0, (fresh_ident, newparams @ pto_params))
           } in
         ( [Case.mk clause head], ident )::defs in 
@@ -453,7 +453,7 @@ let abd_det_if =
             } in
         let clause_deq =  
           { Sl_heap.empty with
-            deqs=Deqs.singleton (newx, newy) ;
+            deqs=Sl_deqs.singleton (newx, newy) ;
             inds=Inds.singleton (0, (fresh_ident', newparams))
           } in
         ( [Case.mk clause_eq head; Case.mk clause_deq head], ident )::defs in 
@@ -470,8 +470,8 @@ let abd_back_rule =
       let ((l1,i1),(l2,i2)) = Pair.map dest_sh_seq (s1,s2) in
       if 
         i1<>i2 ||
-        Deqs.cardinal l1.deqs < Deqs.cardinal l2.deqs ||
-        Ptos.cardinal l1.ptos < Ptos.cardinal l2.ptos ||
+        Sl_deqs.cardinal l1.deqs < Sl_deqs.cardinal l2.deqs ||
+        Sl_ptos.cardinal l1.ptos < Sl_ptos.cardinal l2.ptos ||
         (* refuse if backlink applies already *)
         Goto_rules.is_subsumed s1 s2
       then 
@@ -496,8 +496,8 @@ let abd_back_rule =
       let base_clause =  
         { 
           eqs=Sl_uf.empty; 
-          deqs=Deqs.empty; 
-          ptos=Ptos.empty; 
+          deqs=Sl_deqs.empty; 
+          ptos=Sl_ptos.empty; 
           inds=Inds.empty
         } in
       let res = Blist.bind

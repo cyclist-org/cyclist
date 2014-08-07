@@ -44,17 +44,12 @@ let equates m x y = Sl_term.equal (find x m) (find y m)
 let subsumed m m' =
   Sl_term.Map.for_all (fun x y -> equates m' x y) m
 
-let subst theta m =
-  map (fun (x, y) -> (Sl_term.subst theta x, Sl_term.subst theta y)) m
+let subst theta m = map (Sl_tpair.subst theta) m
 
 let to_melt v =
   ltx_star (Blist.map (Sl_tpair.to_melt_sep symb_eq.melt) (bindings v))
 
-let terms m =
-  Sl_term.Map.fold 
-    (fun k v a -> Sl_term.Set.add k (Sl_term.Set.add v a)) 
-    m 
-    Sl_term.Set.empty 
+let terms m = Sl_tpair.FList.terms (bindings m)
 
 let vars m = Sl_term.filter_vars (terms m)
 

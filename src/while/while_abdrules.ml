@@ -158,9 +158,9 @@ let simpl_deqs seq =
   try
     let (f,cmd) = dest_sh_seq seq in
     let terms =
-			Sl_term.Set.add Sl_term.nil (Sl_heap.vars (SH.with_deqs f Deqs.empty)) in
+			Sl_term.Set.add Sl_term.nil (Sl_heap.vars (SH.with_deqs f Sl_deqs.empty)) in
     let newdeqs =
-      Deqs.filter
+      Sl_deqs.filter
         (fun (x,y) ->
 					Sl_term.equal x y || (Sl_term.Set.mem x terms && Sl_term.Set.mem y terms))
       f.SH.deqs in
@@ -307,10 +307,10 @@ let generalise_while_rule =
     	let l = Blist.map gen_term (x::args) in (Blist.hd l, Blist.tl l) in
 		SH.mk 
 			(Sl_term.Set.fold Sl_uf.remove m h.SH.eqs)
-			(Deqs.filter
+			(Sl_deqs.filter
 			  (fun p -> Pair.conj (Pair.map (fun z -> not (Sl_term.Set.mem z m)) p))
 				h.SH.deqs)
-			(Ptos.endomap gen_pto h.SH.ptos)
+			(Sl_ptos.endomap gen_pto h.SH.ptos)
       h.SH.inds in
   let rl seq =
     try
@@ -400,14 +400,14 @@ let abd_det_guard =
           let clause_eq =
             SH.mk 
               (Sl_uf.of_list [pair])
-              Deqs.empty
-              Ptos.empty
+              Sl_deqs.empty
+              Sl_ptos.empty
               (Inds.singleton (1, (fresh_ident, newparams))) in
           let clause_deq =
             SH.mk
               Sl_uf.empty
-              (Deqs.singleton pair)
-              Ptos.empty
+              (Sl_deqs.singleton pair)
+              Sl_ptos.empty
               (Inds.singleton (1, (fresh_ident', newparams))) in
           ( [Sl_indrule.mk clause_eq head; Sl_indrule.mk clause_deq head], ident )::defs in
 			  Blist.map g occurrences in
@@ -421,8 +421,8 @@ let abd_back_rule =
       let ((l1,cmd1),(l2,cmd2)) = Pair.map dest_sh_seq (s1,s2) in
       if
         not (Cmd.equal cmd1 cmd2) ||
-        Deqs.cardinal l1.SH.deqs < Deqs.cardinal l2.SH.deqs ||
-        Ptos.cardinal l1.SH.ptos < Ptos.cardinal l2.SH.ptos
+        Sl_deqs.cardinal l1.SH.deqs < Sl_deqs.cardinal l2.SH.deqs ||
+        Sl_ptos.cardinal l1.SH.ptos < Sl_ptos.cardinal l2.SH.ptos
       then
         []
       else

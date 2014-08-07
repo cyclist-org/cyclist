@@ -94,6 +94,17 @@ module FList =
       | (hd:: tl, hd':: tl') ->
         Option.bind (fun theta' -> unify theta' tl tl') (trm_unify theta hd hd')
     
+    let subst theta xs = Blist.map (subst theta) xs
+    
+    let to_string_sep sep xs = Blist.to_string sep Trm.to_string xs
+    
+    let terms xs = 
+      Blist.foldl 
+        (fun a x -> Set.add x a) 
+        Set.empty 
+        xs 
+        
+    let vars xs = filter_vars (terms xs)
   end 
 
 let unify = trm_unify

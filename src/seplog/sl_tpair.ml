@@ -16,7 +16,9 @@ let unord_unify cont theta p p' =
 
 let norm ((x,y) as pair) =
   if Sl_term.compare x y <= 0 then pair else (y,x)
-  
+
+let subst theta (x,y) = (Sl_term.subst theta x, Sl_term.subst theta y)
+      
 let to_string_sep sep p =
   let (x,y) = Pair.map Sl_term.to_string p in x ^ sep ^ y
 let to_melt_sep sep p =
@@ -35,5 +37,10 @@ module FList =
           (unord_unify (fun theta' -> part_unify cont theta' ps qs) theta p) 
           qs
     
+    let terms ps = 
+      Blist.foldl 
+        (fun a (x,y) -> Sl_term.Set.add x (Sl_term.Set.add y a)) 
+        Sl_term.Set.empty 
+        ps 
   end 
 
