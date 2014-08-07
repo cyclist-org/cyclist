@@ -1,7 +1,7 @@
 open Lib
 open Util
 
-module Term = Symheap.Term
+module Term = Sl_heap.Term
 module Atom = Sl_heap
 
 module rec Form : 
@@ -282,5 +282,5 @@ module Seq =
     let norm (l,i,r) = (Sl_form.norm l, i, Form.norm r)   
   end
 
-module Case = Symheap.Case
-module Defs = Symheap.Defs
+module Case = Sl_heap.Case
+module Defs = Sl_heap.Defs

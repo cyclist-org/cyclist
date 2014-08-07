@@ -1,8 +1,9 @@
 open Lib
 open Util
-open Symheap
 
 module SH = Sl_heap
+
+exception Not_symheap = Sl_heap.Not_symheap
 
 module Proof = Proof.Make(Sl_seq)
 module Rule = Proofrule.Make(Sl_seq)
@@ -119,7 +120,7 @@ let pto_intro_rule seq =
 let pred_intro_rule seq =
   try
     let (l,r) = Sl_seq.dest seq in
-    let (linds,rinds) = Pair.map Inds.elements (l.SH.inds,r.SH.inds) in
+    let (linds,rinds) = Pair.map Sl_tpreds.elements (l.SH.inds,r.SH.inds) in
     let cp = Blist.cartesian_product linds rinds in
     let (p,q) =
       Blist.find
@@ -202,14 +203,14 @@ let ruf defs =
       let right_unfold ((_, (ident,_)) as p) =
         if not (Sl_defs.mem ident defs) then [] else
         let cases = Sl_defs.get_def ident defs in 
-        let r' = SH.with_inds r (Inds.remove p r.SH.inds) in
+        let r' = SH.with_inds r (Sl_tpreds.remove p r.SH.inds) in
         let do_case c = 
           let (f', _) = Sl_indrule.unfold seq_vars r' p c in
           let f' = Sl_heap.freshen_tags r' f' in
           [ (([l], [Sl_heap.star r' f']), Sl_heap.tag_pairs l, TagPairs.empty) ],
           (ident ^ " R.Unf.") in
         Blist.map do_case cases in
-      Blist.flatten (Inds.map_to_list right_unfold r.SH.inds)  
+      Blist.flatten (Sl_tpreds.map_to_list right_unfold r.SH.inds)  
     with Not_symheap -> [] in
   wrap rl 
 
@@ -220,14 +221,14 @@ let luf defs =
       let (l,r) = Sl_seq.dest seq in
       let seq_vars = Sl_seq.vars seq in
       let left_unfold ((_, (ident, _)) as p) =
-        let l = SH.with_inds l (Inds.remove p l.SH.inds) in
+        let l = SH.with_inds l (Sl_tpreds.remove p l.SH.inds) in
         let cases = Sl_defs.unfold seq_vars l p defs in
         let do_case (f, tagpairs) =
           let l' = Sl_heap.star l f in
 					let l' = Sl_heap.univ (Sl_heap.vars r) l' in
           (([l'], [r]), TagPairs.union (Sl_heap.tag_pairs l) tagpairs, tagpairs) in
         Blist.map do_case cases, (ident ^ " L.Unf.") in
-      Inds.map_to_list left_unfold l.SH.inds
+      Sl_tpreds.map_to_list left_unfold l.SH.inds
     with Not_symheap -> [] in
   wrap rl
 

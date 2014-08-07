@@ -1,6 +1,5 @@
 open Util
 open Lib
-open Symheap
 open Symbols
 open MParser
 

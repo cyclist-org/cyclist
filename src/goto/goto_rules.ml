@@ -1,9 +1,9 @@
 open Lib
 open Util
-open Symheap
 open Goto_program
 
 module SH = Sl_heap
+exception Not_symheap = Sl_heap.Not_symheap
 
 module Proof = Proof.Make(Goto_program.Seq)
 module Rule = Proofrule.Make(Goto_program.Seq)
@@ -61,15 +61,15 @@ let luf_rl seq defs =
     let (l,i) = dest_sh_seq seq in
     let seq_vars = Seq.vars seq in
     let left_unfold ((tag, (ident, _)) as p) = 
-      let l = SH.with_inds l (Inds.remove p l.SH.inds) in
+      let l = SH.with_inds l (Sl_tpreds.remove p l.SH.inds) in
       let clauses = Sl_defs.unfold seq_vars l p defs in
       let do_case (f', tagpairs) =
         let l' = Sl_heap.star l f' in
         (([l'],i), TagPairs.union (Sl_heap.tag_pairs l) tagpairs, tagpairs) in
       Blist.map do_case clauses, (ident ^ " L.Unf.") in
-    Inds.map_to_list 
+    Sl_tpreds.map_to_list 
       left_unfold 
-      (Inds.filter (Sl_defs.is_defined defs) l.SH.inds)
+      (Sl_tpreds.filter (Sl_defs.is_defined defs) l.SH.inds)
   with Not_symheap -> []
 
 let luf defs = wrap (fun seq -> luf_rl seq defs)
@@ -290,12 +290,12 @@ let fold (defs,ident) =
   let fold_rl seq = 
     try 
       let (l,i) = dest_sh_seq seq in
-      if Inds.is_empty l.SH.inds then [] else
+      if Sl_tpreds.is_empty l.SH.inds then [] else
       let tags = Seq.tags seq in
       let freshtag = 1 + (try Tags.max_elt tags with Not_found -> 0) in 
       let do_case case =
         let (f,(ident,vs)) = Sl_indrule.dest case in 
-        (* if Inds.is_empty f.SH.inds then [] else *)
+        (* if Sl_tpreds.is_empty f.SH.inds then [] else *)
         let results : Sl_term.substitution list ref = ref [] in
         let hook sub = results := sub :: !results ; None in 
         let () = ignore (Sl_heap.spw_left_subsumption hook Sl_term.empty_subst f l) in
@@ -313,15 +313,15 @@ let fold (defs,ident) =
                   )))
               (Sl_deqs.diff l.SH.deqs f.SH.deqs)
               (Sl_ptos.diff l.SH.ptos f.SH.ptos)
-              (Inds.fold 
+              (Sl_tpreds.fold 
                 (fun (_, (f_ident, f_vs)) a -> 
-                  Inds.del_first 
+                  Sl_tpreds.del_first 
                   (fun (_, (l_ident, l_vs)) -> 
                     f_ident = l_ident && Sl_term.FList.equal f_vs l_vs) a) 
                 f.SH.inds
                 l.SH.inds) in
           let newpred = (freshtag,(ident,vs)) in
-          let l' = SH.with_inds l' (Inds.add newpred l'.SH.inds) in
+          let l' = SH.with_inds l' (Sl_tpreds.add newpred l'.SH.inds) in
           let seq' = ([l'],i) in
           (* let () = print_endline "Fold match:" in        *)
           (* let () = print_endline (Seq.to_string seq) in  *)

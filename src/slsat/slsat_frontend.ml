@@ -3,7 +3,6 @@
 (* instantiations of the generic cyclic theorem prover.                    *)
 
 open Lib
-open Symheap
 
 let show_proof = ref false
 let latex_path = ref ""

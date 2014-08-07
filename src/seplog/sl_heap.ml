@@ -2,33 +2,38 @@ open Lib
 open Util
 open Symbols
 open MParser
-open Symheap
+
+let split_heaps = ref true
+
+exception Not_symheap
+
+let has_ident ident (_,(ident',_)) = ident=ident'
 
 type symheap =
   {
     eqs : Sl_uf.t;
     deqs : Sl_deqs.t;
     ptos : Sl_ptos.t;
-    inds : Inds.t
+    inds : Sl_tpreds.t
   }
 
 type t = symheap
 
 let mk eqs deqs ptos inds =
   assert 
-    (Tags.cardinal (Inds.map_to Tags.add Tags.empty fst inds) 
+    (Tags.cardinal (Sl_tpreds.map_to Tags.add Tags.empty fst inds) 
     =
-    Inds.cardinal inds) ;
+    Sl_tpreds.cardinal inds) ;
   { eqs; deqs; ptos; inds }
   
-let empty = mk Sl_uf.empty Sl_deqs.empty Sl_ptos.empty Inds.empty 
+let empty = mk Sl_uf.empty Sl_deqs.empty Sl_ptos.empty Sl_tpreds.empty 
 
 let subst theta h =
   mk
     (Sl_uf.subst theta h.eqs)
     (Sl_deqs.subst theta h.deqs)
     (Sl_ptos.subst theta h.ptos)
-    (Inds.subst theta h.inds)
+    (Sl_tpreds.subst theta h.inds)
 
 let with_eqs h eqs = mk eqs h.deqs h.ptos h.inds
 let with_deqs h deqs = mk h.eqs deqs h.ptos h.inds
@@ -37,9 +42,7 @@ let with_inds h inds = mk h.eqs h.deqs h.ptos inds
 
 let del_deq h deq = with_deqs h (Sl_deqs.remove deq h.deqs)
 let del_pto h pto = with_ptos h (Sl_ptos.remove pto h.ptos)
-let del_ind h ind = with_inds h (Inds.remove ind h.inds)
-
-
+let del_ind h ind = with_inds h (Sl_tpreds.remove ind h.inds)
 
 let norm h =
   let theta = Sl_uf.to_subst h.eqs in
@@ -47,23 +50,23 @@ let norm h =
     h.eqs
     (Sl_deqs.subst theta h.deqs)
     (Sl_ptos.subst theta h.ptos)
-    (Inds.subst theta h.inds)
+    (Sl_tpreds.subst theta h.inds)
 
 let get_idents p =
-  Inds.map_to Strng.MSet.add Strng.MSet.empty (fun (_, (id, _)) -> id) p.inds
+  Sl_tpreds.map_to Strng.MSet.add Strng.MSet.empty (fun (_, (id, _)) -> id) p.inds
 
 let terms f =
   Sl_term.Set.union_of_list
-    [Sl_uf.vars f.eqs; Sl_deqs.vars f.deqs; Sl_ptos.vars f.ptos; Inds.vars f.inds]
+    [Sl_uf.vars f.eqs; Sl_deqs.vars f.deqs; Sl_ptos.vars f.ptos; Sl_tpreds.vars f.inds]
 
 let vars f = Sl_term.filter_vars (terms f)
 
-let tags h = Inds.tags h.inds
+let tags h = Sl_tpreds.tags h.inds
 
 let to_string f =
   let res = String.concat symb_star.sep
       ((Sl_uf.to_string_list f.eqs) @ (Sl_deqs.to_string_list f.deqs) @
-        (Sl_ptos.to_string_list f.ptos) @ (Inds.to_string_list f.inds)) in
+        (Sl_ptos.to_string_list f.ptos) @ (Sl_tpreds.to_string_list f.inds)) in
   if res = "" then keyw_emp.str else res
 
 let to_melt f =
@@ -71,7 +74,7 @@ let to_melt f =
   let content = Latex.concat (Latex.list_insert sep
           (Blist.filter (fun l -> not (Latex.is_empty l))
               [Sl_uf.to_melt f.eqs; Sl_deqs.to_melt f.deqs;
-              Sl_ptos.to_melt f.ptos; Inds.to_melt f.inds])) in
+              Sl_ptos.to_melt f.ptos; Sl_tpreds.to_melt f.inds])) in
   let content = if !split_heaps then
       Latex.concat
         [
@@ -89,7 +92,7 @@ let to_melt f =
 let pp fmt h =
   let l =
     ((Sl_uf.to_string_list h.eqs) @ (Sl_deqs.to_string_list h.deqs) @
-      (Sl_ptos.to_string_list h.ptos) @ (Inds.to_string_list h.inds)) in
+      (Sl_ptos.to_string_list h.ptos) @ (Sl_tpreds.to_string_list h.inds)) in
   if l <>[] then
     Format.fprintf fmt "@[%a@]" (Blist.pp pp_star Format.pp_print_string) l
   else
@@ -109,7 +112,7 @@ let star f g =
     (Sl_uf.union f.eqs g.eqs)
     (Sl_deqs.union_of_list [f.deqs; g.deqs; explode_deqs (Sl_ptos.elements newptos)])
     newptos
-    (Inds.union f.inds g.inds)
+    (Sl_tpreds.union f.inds g.inds)
 
 let univ s f =
   let vs = vars f in
@@ -121,7 +124,7 @@ let univ s f =
   subst theta f
 
 let repl_tags t f =
-  { f with inds = Inds.endomap (fun (_, p) -> (t, p)) f.inds }
+  { f with inds = Sl_tpreds.endomap (fun (_, p) -> (t, p)) f.inds }
 
 let tag_pairs f = TagPairs.mk (tags f)
 
@@ -129,7 +132,7 @@ let mk_pto v1 v2 = { empty with ptos = Sl_ptos.singleton (v1, v2) }
 let mk_eq v1 v2 = { empty with eqs = Sl_uf.add (v1, v2) Sl_uf.empty }
 let mk_deq v1 v2 = { empty with deqs = Sl_deqs.singleton (v1, v2) }
 let mk_ind tag ident vs =
-  { empty with inds = Inds.singleton (tag, (ident, vs)) }
+  { empty with inds = Sl_tpreds.singleton (tag, (ident, vs)) }
 
 let equates h x y = Sl_uf.equates h.eqs x y
 let disequates h x y =
@@ -157,7 +160,11 @@ let aux_subsumption left spw hook theta h h' =
       u f2 theta' h.ptos h'.ptos 
     else
       u f2 theta' h'.ptos h.ptos in
-  Inds.aux_subsumption left spw f3 theta h.inds h'.inds
+  let u' = if spw then Sl_tpreds.part_unify else Sl_tpreds.unify in
+  if left then
+    u' f3 theta h.inds h'.inds
+  else
+    u' f3 theta h'.inds h.inds
 
 let spw_left_subsumption hook theta h h' =
   aux_subsumption true true hook theta h h'
@@ -167,13 +174,13 @@ let equal h h' =
   Sl_uf.equal h.eqs h'.eqs &&
   Sl_deqs.equal h.deqs h'.deqs &&
   Sl_ptos.equal h.ptos h'.ptos &&
-  Inds.equal h.inds h'.inds
+  Sl_tpreds.equal h.inds h'.inds
 
 let subsumed h h' = 
   Sl_uf.subsumed h.eqs h'.eqs &&
   Sl_deqs.subsumed h'.eqs h.deqs h'.deqs &&
   Sl_ptos.subsumed h'.eqs h.ptos h'.ptos &&
-  Inds.subsumed h'.eqs h.inds h'.inds 
+  Sl_tpreds.subsumed h'.eqs h.inds h'.inds 
 
 include Fixpoint(struct type t = symheap let equal = equal end)
 
@@ -185,7 +192,7 @@ let compare f g =
         | n when n <>0 -> n
         | _ -> match Sl_ptos.compare f.ptos g.ptos with
             | n when n <>0 -> n
-            | _ -> Inds.compare f.inds g.inds
+            | _ -> Sl_tpreds.compare f.inds g.inds
 
 (* h' |- h if spw=false h' |- h * true if spw=true *)
 (* let aux_subsumed_wrt_tags spw tags h h' =      *)
@@ -194,10 +201,10 @@ let compare f g =
 (*   Sl_deqs.subset h.deqs h'.deqs &&                *)
 (*   if spw then                                  *)
 (*     Sl_ptos.subset h.ptos h'.ptos &&              *)
-(*     Inds.subsumed_wrt_tags tags h.inds h'.inds *)
+(*     Sl_tpreds.subsumed_wrt_tags tags h.inds h'.inds *)
 (*   else                                         *)
 (*     Sl_ptos.equal h.ptos h'.ptos &&               *)
-(*     Inds.equal_wrt_tags tags h.inds h'.inds    *)
+(*     Sl_tpreds.equal_wrt_tags tags h.inds h'.inds    *)
 
 let find_lval x h =
   try
@@ -227,7 +234,7 @@ let is_fresh_in x h = not (Sl_term.Set.mem x (vars h))
 let hash (h: t) = Hashtbl.hash h
 
 let project f xs =
-  (* let () = assert (Inds.is_empty f.inds && Sl_ptos.is_empty f.ptos) in *)
+  (* let () = assert (Sl_tpreds.is_empty f.inds && Sl_ptos.is_empty f.ptos) in *)
   let trm_nin_lst x =
     not (Sl_term.is_nil x) &&
     not (Blist.exists (fun y -> Sl_term.equal x y) xs) in
@@ -259,7 +266,7 @@ let parse st =
           return (Blist.foldl star empty atoms)) <?> "symheap") st
 
 let freshen_tags h' h =
-  with_inds h (Inds.freshen_tags h'.inds h.inds)
+  with_inds h (Sl_tpreds.freshen_tags h'.inds h.inds)
 
 let of_string s =
   handle_reply (MParser.parse_string parse s ())

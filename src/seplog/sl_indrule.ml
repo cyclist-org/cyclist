@@ -1,7 +1,6 @@
 open Lib
 open Util
 open Symbols
-open Symheap
 open MParser
 
 include PairTypes(Sl_heap)(Sl_pred)

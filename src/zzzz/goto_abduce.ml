@@ -94,7 +94,7 @@ let prove_prog seq =
     Abducer.melt_proof ch proof ; close_out ch
   end ;
   if !latex_defs then 
-    ignore (Latex.to_channel ~mode:Latex.M stdout (Symheap.Defs.to_melt (Goto_abdrules.simplify_defs defs)));
+    ignore (Latex.to_channel ~mode:Latex.M stdout (Sl_heap.Defs.to_melt (Goto_abdrules.simplify_defs defs)));
   (* Prprover.setup (Goto_abdrules.simplify_defs defs) seq;                                      *)
   (* let res = w_timeout (fun () -> Prprover.idfs seq) !timeout in                           *)
   (* if Option.is_none res then                                                              *)

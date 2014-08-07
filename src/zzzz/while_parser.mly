@@ -24,10 +24,10 @@ let pred_cnt = ref 0
 %token EOF
 
 %start ind_def_set
-%type <Symheap.Defs.t> ind_def_set
+%type <Sl_heap.Defs.t> ind_def_set
 
 %start program
-%type <Symheap.Form.t * While_program.Cmd.t> program
+%type <Sl_heap.Form.t * While_program.Cmd.t> program
 %%
 
 /* SL sequents stuff */

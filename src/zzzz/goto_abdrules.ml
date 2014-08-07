@@ -19,7 +19,7 @@ let last_pred = ref 0
 let get_fresh_ident () = Printf.sprintf "I%.3d" (incr last_pred ; !last_pred)
 
 let pick_ind c prod = 
-  Inds.min_elt (Inds.filter (has_ident c) prod.inds)
+  Sl_tpreds.min_elt (Sl_tpreds.filter (has_ident c) prod.inds)
 
 let ex_subst_defs defs =
   let ex_subst_heap h = 
@@ -40,7 +40,7 @@ let ex_subst_defs defs =
 let empify defs = 
   let empify_ c = 
     let (p,h) = Case.dest c in 
-    let inds = Inds.filter (fun pred -> Defs.is_defined pred defs) p.inds in
+    let inds = Sl_tpreds.filter (fun pred -> Defs.is_defined pred defs) p.inds in
     Case.mk {p with inds=inds} h in
   Blist.map (fun (l,i) -> (Blist.map empify_ l, i)) defs
 
@@ -52,7 +52,7 @@ let inline defs =
           (Blist.length p)=1 && 
           let (f,_) = Case.dest (Blist.hd p) in
           let idents = 
-            Inds.map_to Strng.Set.add Strng.Set.empty (fun (_,(id,_)) -> id) f.inds in
+            Sl_tpreds.map_to Strng.Set.add Strng.Set.empty (fun (_,(id,_)) -> id) f.inds in
           not (Strng.Set.mem h idents)
         end (Blist.but_last defs) in
     let defs = Blist.filter ((!=)q) defs in
@@ -73,9 +73,9 @@ let inline defs =
 
 let used_only_recursively (heap, (ident, params)) pos = 
   let var = Blist.nth params pos in
-  let heap' = { heap with inds=Inds.empty } in
+  let heap' = { heap with inds=Sl_tpreds.empty } in
   if Term.Set.mem var (Sl_heap.vars heap') then false else
-  Inds.for_all  
+  Sl_tpreds.for_all  
     begin fun (_,(ident', params')) ->
       if ident<>ident' then 
         Blist.for_all (fun var' -> not (Term.equal var var')) params'
@@ -118,7 +118,7 @@ let eliminate (ident, pos) defs =
     let (heap, (ident', params)) = Case.dest case in
     let elim_pred heap =
       { heap with 
-          inds = Inds.endomap 
+          inds = Sl_tpreds.endomap 
             begin fun (t, (ident'', params')) ->
               (t, (ident'', if ident=ident'' then Blist.remove_nth pos params' else params')) 
             end 
@@ -137,14 +137,14 @@ let elim_dead_vars defs =
 
 let self_recursive_case case = 
   let (heap, (ident, _)) = Case.dest case in
-  Inds.exists (has_ident ident) heap.inds
+  Sl_tpreds.exists (has_ident ident) heap.inds
 
 let elim_inconsistency defs =
   let is_inconsistent_case c =
     let (heap, (ident, _)) = Case.dest c in
     Sl_heap.inconsistent heap ||
     Blist.for_all self_recursive_case (fst (Defs.get_def ident defs)) ||
-    Inds.exists
+    Sl_tpreds.exists
       begin fun (_,(ident', _)) ->
         Defs.mem ident' defs &&
         [] = fst (Defs.get_def ident' defs) 
@@ -164,7 +164,7 @@ let simplify_defs defs =
     end
     (empify defs)
 
-let is_base_case c = let (p,_) = Case.dest c in Inds.is_empty p.inds
+let is_base_case c = let (p,_) = Case.dest c in Sl_tpreds.is_empty p.inds
 
 let is_possibly_consistent defs = Defs.consistent (empify defs)
 
@@ -339,7 +339,7 @@ let abd_assign =
       let cmd = get_cmd i in
       let (x,e) = Cmd.dest_assign cmd in
       if not (Sl_heap.is_fresh_in x f)(* || not (Program.is_local_var x)*) then [] else
-      let inds = Inds.elements f.inds in
+      let inds = Sl_tpreds.elements f.inds in
       (* filter formula predicates by undefinedness *)
       let inds = Blist.filter (fun pred -> not (Defs.is_defined pred defs)) inds in
       (* further filter by having e in parameter list, *)
@@ -360,7 +360,7 @@ let abd_assign =
         let clause =
           { Sl_heap.empty with
             eqs=Sl_uf.of_list [(x', e')];
-            inds=Inds.singleton (0, (fresh_ident, newparams))
+            inds=Sl_tpreds.singleton (0, (fresh_ident, newparams))
           } in
         ( [Case.mk clause head], ident )::defs in
       let res = Blist.map f inds in
@@ -378,7 +378,7 @@ let abd_deref =
       let x = Cmd.dest_deref (get_cmd i) in
       let y = Sl_uf.find x f.eqs in
       if Option.is_some (Sl_heap.find_lval y f) then [] else
-      let inds = Inds.elements f.inds in
+      let inds = Sl_tpreds.elements f.inds in
       (* filter formula predicates by undefinedness *)
       let inds = Blist.filter (fun pred -> not (Defs.is_defined pred defs)) inds in
       (* further filter by having y in parameter list *)
@@ -400,7 +400,7 @@ let abd_deref =
             eqs=Sl_uf.empty; 
             deqs=Sl_deqs.empty; 
             ptos=Sl_ptos.singleton (newy, pto_params); 
-            inds=Inds.singleton (0, (fresh_ident, newparams @ pto_params))
+            inds=Sl_tpreds.singleton (0, (fresh_ident, newparams @ pto_params))
           } in
         ( [Case.mk clause head], ident )::defs in 
       Blist.map f inds
@@ -424,7 +424,7 @@ let abd_det_if =
       (* refuse to do anything if normal sym ex can fire *)
       if Cmd.is_deq c && Sl_heap.disequates f x' y' then [] else
       if not (Cmd.is_deq c) && Term.equal x' y' then [] else
-      let inds = Inds.elements f.inds in
+      let inds = Sl_tpreds.elements f.inds in
       (* filter formula predicates by undefinedness *)
       let inds = Blist.filter (fun pred -> not (Defs.is_defined pred defs)) inds in
       (* further filter by having x *and* y in parameter list, unless either is a const(nil) *)
@@ -449,12 +449,12 @@ let abd_det_if =
           Sl_heap.norm 
             { Sl_heap.empty with
               eqs=Sl_uf.of_list [(newx, newy)] ;
-              inds=Inds.singleton (0, (fresh_ident, newparams))
+              inds=Sl_tpreds.singleton (0, (fresh_ident, newparams))
             } in
         let clause_deq =  
           { Sl_heap.empty with
             deqs=Sl_deqs.singleton (newx, newy) ;
-            inds=Inds.singleton (0, (fresh_ident', newparams))
+            inds=Sl_tpreds.singleton (0, (fresh_ident', newparams))
           } in
         ( [Case.mk clause_eq head; Case.mk clause_deq head], ident )::defs in 
       Blist.map f inds
@@ -498,7 +498,7 @@ let abd_back_rule =
           eqs=Sl_uf.empty; 
           deqs=Sl_deqs.empty; 
           ptos=Sl_ptos.empty; 
-          inds=Inds.empty
+          inds=Sl_tpreds.empty
         } in
       let res = Blist.bind
         (fun (c,c') -> 
@@ -506,7 +506,7 @@ let abd_back_rule =
           let (_,(_,params')) = pick_ind c' l2 in
           let newparams = fresh_uvars (Term.Set.empty) (Blist.length params) in
           let base_clause =  
-            { base_clause with inds=Inds.singleton (0, (fresh_ident, newparams)) } in
+            { base_clause with inds=Sl_tpreds.singleton (0, (fresh_ident, newparams)) } in
             (* FIXME why choose and not unify *)
           let combinations = 
             Blist.choose (Blist.repeat newparams (Blist.length params')) in
@@ -514,7 +514,7 @@ let abd_back_rule =
           Blist.map 
             (fun comb ->
               let cl = 
-                { base_clause with inds=Inds.add (0,(c',comb)) base_clause.inds } in
+                { base_clause with inds=Sl_tpreds.add (0,(c',comb)) base_clause.inds } in
               ( [Case.mk cl head], c )::defs
             ) 
             combinations

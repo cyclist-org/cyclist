@@ -6,7 +6,7 @@ let defs_path = ref "examples/sl.defs"
 module Parser = Sl_parser
 module Lexer = Sl_lexer
 module Prover = Tlprover
-(* module F = Frontend.Make(Prover)(Symheap.Seq) *)
+(* module F = Frontend.Make(Prover)(Sl_heap.Seq) *)
 
 let sequent_of_string s =
   let lexbuf = Lexing.from_string s in

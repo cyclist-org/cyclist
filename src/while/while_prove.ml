@@ -1,4 +1,3 @@
-open Symheap
 open While_program
 open While_rules
 

@@ -1,8 +1,14 @@
+val split_heaps : bool ref
+
+exception Not_symheap
+
+val has_ident : Sl_pred.ident_t ->  Sl_tpred.t -> bool
+
 type symheap = private {
   eqs : Sl_uf.t;
   deqs : Sl_deqs.t;
   ptos : Sl_ptos.t;
-  inds : Symheap.Inds.t;
+  inds : Sl_tpreds.t;
 }
 include Util.BasicType with type t = symheap
 
@@ -12,12 +18,12 @@ val mk_pto : Sl_term.t -> Sl_term.t list -> t
 val mk_eq : Sl_term.t -> Sl_term.t -> t
 val mk_deq : Sl_term.t -> Sl_term.t -> t
 val mk_ind : int -> Sl_pred.ident_t -> Sl_term.t list -> t
-val mk : Sl_uf.t -> Sl_deqs.t -> Sl_ptos.t -> Symheap.Inds.t -> t
+val mk : Sl_uf.t -> Sl_deqs.t -> Sl_ptos.t -> Sl_tpreds.t -> t
 
 val with_eqs : t -> Sl_uf.t -> t 
 val with_deqs : t -> Sl_deqs.t -> t
 val with_ptos : t -> Sl_ptos.t -> t
-val with_inds : t -> Symheap.Inds.t -> t
+val with_inds : t -> Sl_tpreds.t -> t
 
 val del_deq : t -> Sl_tpair.t -> t
 val del_pto : t -> Sl_pto.t -> t

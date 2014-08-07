@@ -1,8 +1,9 @@
 open Lib
 open Util
-open Symheap
 open Symbols
 open MParser
+
+exception Not_symheap = Sl_heap.Not_symheap
 
 include MakeFList(Sl_heap)
 

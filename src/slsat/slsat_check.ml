@@ -1,5 +1,4 @@
 open Lib
-open Symheap
 
 let defs_path = ref "examples/sl.defs"
 

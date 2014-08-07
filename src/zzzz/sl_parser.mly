@@ -31,13 +31,13 @@ let pred_cnt = ref 0
 /* %nonassoc BOX DIAMOND CIRCLE */
 
 %start sequent
-%type <Symheap.Seq.t> sequent 
+%type <Sl_heap.Seq.t> sequent 
 
 %start formula
-%type <Symheap.Form.t> formula 
+%type <Sl_heap.Form.t> formula 
 
 %start ind_def_set
-%type <Symheap.Defs.t> ind_def_set
+%type <Sl_heap.Defs.t> ind_def_set
 
 %start program
 %type <Goto_program.Seq.t * Goto_program.program_t> program

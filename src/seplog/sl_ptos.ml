@@ -3,8 +3,7 @@ open Util
 open Symbols
 open MParser
 
-include MakeListMultiset(Sl_pto)
-include Fixpoint(MakeListMultiset(Sl_pto))
+include MakeMultiset(Sl_pto)
 
 let subst theta ptos = endomap (Sl_pto.subst theta) ptos
 
