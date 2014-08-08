@@ -1,4 +1,4 @@
-src/firstorder/fo_prove.native  
+#src/firstorder/fo_prove.native  
 src/seplog/sl_prove.native
 src/slsat/slsat_check.native  
 #src/slsat/slsat_expgen.native
