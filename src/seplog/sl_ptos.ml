@@ -24,10 +24,6 @@ let parse st =
           Tokens.comma_sep1 Sl_term.parse << spaces |>>
           (fun l -> (x, l))) <?> "pto") st
 
-let subsumed eqs ptos ptos' =
-  let theta = Sl_uf.to_subst eqs in
-  equal (subst theta ptos) (subst theta ptos')
-
 let rec aux_unify part cont theta ptos ptos' =
   if is_empty ptos then
     if part || is_empty ptos' then cont theta else None
@@ -43,4 +39,10 @@ let rec aux_unify part cont theta ptos ptos' =
 
 let unify cont theta ptos ptos' = aux_unify false cont theta ptos ptos'
 let part_unify cont theta ptos ptos' = aux_unify true cont theta ptos ptos'
+
+let subsumed eqs ptos ptos' =
+  match unify (Sl_uf.subst_subsumed eqs) Sl_term.empty_subst ptos ptos' with
+  | None -> false
+  | Some theta -> 
+    assert (equal (subst theta ptos) (subst theta ptos')) ; true
 

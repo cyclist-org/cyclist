@@ -3,7 +3,7 @@ open Util
 
 module SH = Sl_heap
 
-exception Not_symheap = Sl_heap.Not_symheap
+exception Not_symheap = Sl_form.Not_symheap
 
 module Proof = Proof.Make(Sl_seq)
 module Rule = Proofrule.Make(Sl_seq)
@@ -131,11 +131,6 @@ let pred_intro_rule seq =
     let r' = SH.del_ind r q in
     [ [ ( ([l'], [r']), Sl_heap.tag_pairs l', TagPairs.empty ) ], "Pred Intro" ]
   with Not_symheap | Not_found -> []
-
-let norm s =
-  let s' = Sl_seq.norm s in
-  if Sl_seq.equal s s' then [] else
-  [ [( s', Sl_seq.tag_pairs s', TagPairs.empty )], "" ]
 
 (* let simpl_deqs seq =                                                              *)
 (*   try                                                                             *)

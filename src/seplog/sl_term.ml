@@ -3,11 +3,11 @@ open Util
 open Symbols
 open MParser
 
-let nil = 0
-
 module Trm = 
   struct
     type t = int
+    let nil = 0
+
     let equal = Int.equal
     let compare = Int.compare
     let hash = Int.hash
@@ -57,21 +57,21 @@ type 'a gen_unifier = (substitution -> substitution option) -> 'a unifier
 let empty_subst : substitution = Map.empty
 let singleton_subst x y = Map.add x y empty_subst
 let subst theta v =
-  if not (equal v nil) && Map.mem v theta then Map.find v theta else v
+  if not (is_nil v) && Map.mem v theta then Map.find v theta else v
 (* above is significantly faster than exception handling *)
 
 let trm_unify theta t t' =
   if Map.mem t theta then
     if equal (Map.find t theta) t' then Some theta else None
-  else if equal t nil then
-    if equal t' nil then Some theta else None
-  else if
-  is_exist_var t &&
-  is_exist_var t' &&
-  Map.exists (fun _ t'' -> equal t' t'') theta then
-    (* avoid capture *)
+  else if is_nil t then
+    if is_nil t' then Some theta else None
+  else if is_exist_var t && (is_exist_var t' || is_nil t') then
+    Some (Map.add t t' theta)
+  else 
     None
-  else Some (Map.add t t' theta)
+    
+  (* FIXME the below is unnecessary I believe *)
+  (* Map.exists (fun _ t'' -> equal t' t'') theta then *) (* avoid capture *)
 
 let avoid_theta vars subvars =
   let allvars = Set.union vars subvars in

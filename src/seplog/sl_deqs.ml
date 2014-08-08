@@ -4,12 +4,11 @@ open Symbols
 open MParser
 
 include MakeListSet(Sl_tpair)
-(* if a pair contains an exist. variable then the first comp of the    *)
-(* pair is an exist. var                                               *)
-let add p deqs = add (Sl_tpair.norm p) deqs
-let singleton p = singleton (Sl_tpair.norm p)
-let mem p deqs = mem (Sl_tpair.norm p) deqs
-let endomap f s = endomap (fun e -> Sl_tpair.norm (f e)) s
+
+let add p deqs = add (Sl_tpair.order p) deqs
+let singleton p = singleton (Sl_tpair.order p)
+let mem p deqs = mem (Sl_tpair.order p) deqs
+let endomap f s = endomap (fun e -> Sl_tpair.order (f e)) s
 let subst theta m = endomap (Sl_tpair.subst theta) m
 
 let to_string_list v = Blist.map (Sl_tpair.to_string_sep symb_deq.str) (elements v)
@@ -27,9 +26,12 @@ let parse st =
           parse_symb symb_deq >>
           Sl_term.parse << spaces |>> (fun y -> (x, y))) <?> "deq") st
 
-let subsumed eqs deqs deqs' =
-  let theta = Sl_uf.to_subst eqs in
-  subset (subst theta deqs) (subst theta deqs')
-
 let part_unify cont theta d d' =
-  Sl_tpair.FList.part_unify cont theta (to_list d) (to_list d')
+  Sl_tpair.FList.part_unord_unify cont theta (to_list d) (to_list d')
+
+let subsumed eqs deqs deqs' =
+  match part_unify (Sl_uf.subst_subsumed eqs) Sl_term.empty_subst deqs deqs' with
+  | None -> false
+  | Some theta -> 
+    assert (subset (subst theta deqs) (subst theta deqs')) ; true
+

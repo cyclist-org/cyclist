@@ -20,7 +20,6 @@ open Util;;
 #install_printer Strng.Pairing.Set.pp;;
 #install_printer Strng.Pairing.MSet.pp;;
 #install_printer Strng.Pairing.FList.pp;;
-open Symheap;;
 #install_printer Sl_term.pp;;
 #install_printer Sl_term.Set.pp;;
 #install_printer Sl_heap.pp;;

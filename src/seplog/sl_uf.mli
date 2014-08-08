@@ -24,17 +24,14 @@ val bindings : t -> Sl_tpair.t list
 *)
 val of_list : Sl_tpair.t list -> t
 
-val to_subst : t -> Sl_term.substitution
-(** Turn a UF structure into a substitution map. *)
-(** For example, 
-- [x'=y'] gives [y'/x']
-- [x'=nil] gives [nil/x']
-- [x'=y] gives [y/x']
-- [nil=y] gives [nil/y] (NB this was incorrectly ignored previously) 
-- [x=y] gives [y/x]
-*)
-
 val subst : Sl_term.substitution -> t -> t
+
+val subst_subsumed : t -> Sl_term.substitution -> Sl_term.substitution option
+(** Compute whether a substitution could be obtained by rewriting under 
+    equalities in first argument.  Meant to be used with unifiers to produce
+    subsumption routines. *)
+
+val terms : t -> Sl_term.Set.t
 val vars : t -> Sl_term.Set.t
 
 val equates : t -> Sl_term.t -> Sl_term.t -> bool

@@ -3,7 +3,7 @@ open Util
 open Symbols
 open MParser
 
-exception Not_symheap = Sl_heap.Not_symheap
+exception Not_symheap
 
 include MakeFList(Sl_heap)
 
@@ -26,7 +26,6 @@ let to_melt d =
         Latex.concat
           (Latex.list_insert symb_or.melt (Blist.map Sl_heap.to_melt d)))
 
-let norm l = Blist.map Sl_heap.norm l
 let tags d = Tags.union_of_list (Blist.map Sl_heap.tags d)
 let tag_pairs f = TagPairs.mk (tags f)
 let equates f x y = Blist.for_all (fun h -> Sl_heap.equates h x y) f
@@ -52,22 +51,9 @@ let subsumed f1 f2 =
     Blist.exists (fun d1 ->
       Sl_heap.subsumed d1 d2) f1) f2
 
-(* (* f2 |- f1 *)                        *)
-(* let subsumed_wrt_tags t f1 f2 =       *)
-(*   aux_subsumed_wrt_tags false t f1 f2 *)
-
-(* f2 |- f1 * true *)
-(* let spw_subsumed_wrt_tags t f1 f2 =  *)
-(*   aux_subsumed_wrt_tags true t f1 f2 *)
-
 let rec aux_subsumption left spw fhook theta f f' =
-  if []= f' then fhook theta else
-    let p' = Blist.hd f' in
-    let f' = Blist.tl f' in
-    let hook' theta' =
-      aux_subsumption left spw fhook theta' f f' in
-    let g p = Sl_heap.aux_subsumption left spw hook' theta p p' in
-    Blist.find_some g f
+  failwith "FIXME"
+  
 
 let uni_subsumption left fhook theta f f' =
   aux_subsumption left false fhook theta f f'
@@ -82,7 +68,6 @@ let right_subsumption fhook theta f f' =
 
 let subst_existentials f = Blist.map Sl_heap.subst_existentials f
 
-let is_fresh_in x f = Blist.for_all (Sl_heap.is_fresh_in x) f
 let is_heap f = Blist.length f = 1
 
 let parse st =

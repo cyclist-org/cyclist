@@ -23,7 +23,7 @@ let rec find x m =
     x
 
 let add (x, y) m =
-  let (x, y) = Sl_tpair.norm (find x m, find y m) in
+  let (x, y) = Sl_tpair.order (find x m, find y m) in
   (* do not add trivial identities *)
   if Sl_term.equal x y then m else
     (* first split into the pairs that do not/do map to x *)
@@ -38,13 +38,14 @@ let union m m' =
   Sl_term.Map.fold (fun x y m'' -> add (x, y) m'') m' m
 let of_list ls =
   Blist.fold_left (fun m pair -> add pair m) empty ls
-let map f m =
-  Sl_term.Map.fold (fun x y m' -> add (f (x, y)) m') m empty
+
 let equates m x y = Sl_term.equal (find x m) (find y m)
+
 let subsumed m m' =
   Sl_term.Map.for_all (fun x y -> equates m' x y) m
 
-let subst theta m = map (Sl_tpair.subst theta) m
+let subst theta m = 
+  Sl_term.Map.fold (fun x y m' -> add (Sl_tpair.subst theta (x, y)) m') m empty
 
 let to_melt v =
   ltx_star (Blist.map (Sl_tpair.to_melt_sep symb_eq.melt) (bindings v))
@@ -58,14 +59,11 @@ let parse st =
           parse_symb symb_eq >>
           Sl_term.parse << spaces |>> (fun y -> (x, y))) <?> "eq") st
 
-let to_subst m = 
-  if not (Sl_term.Map.mem Sl_term.nil m) then m else
-  let image = Sl_term.Map.find Sl_term.nil m in
-  let m = Sl_term.Map.remove Sl_term.nil m in
-  Sl_term.Map.add image Sl_term.nil m
-
 let part_unify cont theta m m' =
-  Sl_tpair.FList.part_unify cont theta (bindings m) (bindings m')
+  Sl_tpair.FList.part_unord_unify cont theta (bindings m) (bindings m')
+
+let subst_subsumed eqs theta = 
+  Option.mk (Sl_term.Map.for_all (equates eqs) theta) theta
 
 let remove x m =
   failwith "FIXME"

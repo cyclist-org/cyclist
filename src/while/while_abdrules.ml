@@ -3,7 +3,7 @@ open Util
 open While_program
 
 module SH = Sl_heap
-exception Not_symheap = Sl_heap.Not_symheap
+exception Not_symheap = Sl_form.Not_symheap
 
 module Defs = Sl_defs
 
@@ -172,14 +172,12 @@ let simpl_deqs seq =
   with Not_symheap -> []
 
 
-let norm = While_rules.norm
-
 let simplify =
   Abdrule.lift 
     (Rule.mk_infrule
       (Seqtactics.relabel "Simplify"
         (Seqtactics.repeat
-          (Seqtactics.first [ (*norm;*) eq_subst_ex; simpl_deqs ]))))
+          (Seqtactics.first [ eq_subst_ex; simpl_deqs ]))))
 
 let wrap r = Abdrule.compose r (Abdrule.attempt simplify)
 
@@ -354,8 +352,8 @@ let abd_deref =
 				  begin fun newx ->
 						let clause =
 							Sl_heap.star
-  							(Sl_heap.mk_pto newx pto_params)
-  							(Sl_heap.mk_ind 1 fresh_ident (newparams @ pto_params)) in
+  							(Sl_heap.mk_pto (newx, pto_params))
+  							(Sl_heap.mk_ind (1, (fresh_ident, (newparams @ pto_params)))) in
         	( [Sl_indrule.mk clause head], ident )::defs
 				  end
 					newxs in
@@ -427,8 +425,8 @@ let abd_back_rule =
       then
         []
       else
-      (* find set of identifiers of ind preds in s1/s2 *)
-      let (inds1,inds2) = Pair.map Sl_heap.get_idents (l1,l2) in
+      (* find multiset of identifiers of ind preds in s1/s2 *)
+      let (inds1,inds2) = Pair.map Sl_heap.idents (l1,l2) in
       (* find fresh ones in s1 *)
       let candidates = get_undefined defs l1 in
       (* discard those that already exist in s2 *)

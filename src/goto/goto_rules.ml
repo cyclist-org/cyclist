@@ -3,7 +3,7 @@ open Util
 open Goto_program
 
 module SH = Sl_heap
-exception Not_symheap = Sl_heap.Not_symheap
+exception Not_symheap = Sl_form.Not_symheap
 
 module Proof = Proof.Make(Goto_program.Seq)
 module Rule = Proofrule.Make(Goto_program.Seq)
@@ -29,12 +29,7 @@ let eq_subst_ex_f =
     [ [ ((l', i), Sl_form.tag_pairs l, TagPairs.empty) ], "" ] in
   rl
 
-let norm (l,i) = 
-  let l' = Sl_form.norm l in
-  if Sl_form.equal l l' then [] else
-  [ [( (l',i), Sl_form.tag_pairs l', TagPairs.empty )], "" ] 
-
-let simplify_rules = [ (* norm ; *) eq_subst_ex_f ]
+let simplify_rules = [ eq_subst_ex_f ]
 
 let simplify_seq_rl = Seqtactics.repeat (Seqtactics.first simplify_rules)
 
@@ -298,7 +293,7 @@ let fold (defs,ident) =
         (* if Sl_tpreds.is_empty f.SH.inds then [] else *)
         let results : Sl_term.substitution list ref = ref [] in
         let hook sub = results := sub :: !results ; None in 
-        let () = ignore (Sl_heap.spw_left_subsumption hook Sl_term.empty_subst f l) in
+        let () = ignore (Sl_heap.part_unify hook Sl_term.empty_subst f l) in
         let process_sub theta = 
           let (f, vs) = (Sl_heap.subst theta f, Blist.map (Sl_term.subst theta) vs) in
           let l' = 

@@ -44,8 +44,6 @@ let uni_subsumption s s' =
   (* let hook theta' = Sl_form.right_subsumption valid theta' r r' in     *)
   (* Sl_form.left_subsumption hook Sl_term.Map.empty l' l                 *)
 
-let norm s = Pair.map Sl_form.norm s
-
 let parse st =
   ( Sl_form.parse >>= (fun l ->
           parse_symb symb_turnstile >> Sl_form.parse >>= (fun r ->

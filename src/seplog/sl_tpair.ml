@@ -14,7 +14,7 @@ let unord_unify cont theta p p' =
   Blist.find_some cont 
     (Option.list_get (Blist.map (unify theta p) [ p'; Pair.swap p' ]))
 
-let norm ((x,y) as pair) =
+let order ((x,y) as pair) =
   if Sl_term.compare x y <= 0 then pair else (y,x)
 
 let subst theta (x,y) = (Sl_term.subst theta x, Sl_term.subst theta y)
@@ -28,13 +28,13 @@ module FList =
   struct
     include Util.MakeFList(TPair)
     
-    let rec part_unify cont theta xs ys =
+    let rec part_unord_unify cont theta xs ys =
       match (xs, ys) with
       | ([], _) -> cont theta
       | (_, []) -> None
       | (p::ps, qs) ->
         Blist.find_some 
-          (unord_unify (fun theta' -> part_unify cont theta' ps qs) theta p) 
+          (unord_unify (fun theta' -> part_unord_unify cont theta' ps qs) theta p) 
           qs
     
     let terms ps = 

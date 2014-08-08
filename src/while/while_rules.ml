@@ -3,7 +3,7 @@ open Util
 open While_program
 
 module SH = Sl_heap
-exception Not_symheap = Sl_heap.Not_symheap
+exception Not_symheap = Sl_form.Not_symheap
 
 module Rule = Proofrule.Make(While_program.Seq)
 module Seqtactics = Seqtactics.Make(While_program.Seq)
@@ -38,12 +38,7 @@ let eq_subst_ex_f ((l,cmd) as s) =
   if Sl_form.equal l l' then [] else
   [ [ ((l', cmd), tagpairs s, TagPairs.empty) ], "Eq. subst. ex" ]
 
-let norm ((l,cmd) as s) = 
-  let l' = Sl_form.norm l in
-  if Sl_form.equal l l' then [] else
-  [ [( (l',cmd), tagpairs s, TagPairs.empty)], "Norm" ] 
-
-let simplify_rules = [ norm; eq_subst_ex_f ]
+let simplify_rules = [ eq_subst_ex_f ]
 
 let simplify_seq_rl = 
   Seqtactics.relabel "Simplify" 
@@ -110,7 +105,7 @@ let symex_assign_rule =
       let theta = Sl_term.singleton_subst x fv in
       let f' = Sl_heap.subst theta f in
       let e' = Sl_term.subst theta e in
-      [[ Sl_heap.norm (SH.with_eqs f' (Sl_uf.add (e',x) f'.SH.eqs)) ], "Assign"]
+      [[ SH.with_eqs f' (Sl_uf.add (e',x) f'.SH.eqs) ], "Assign"]
     with WrongCmd | Not_symheap -> [] in
   mk_symex rl
 
@@ -161,7 +156,7 @@ let symex_new_rule =
       let l = fresh_evars (Sl_heap.vars f) (1 + (Field.get_no_fields ())) in
       let (fv,fvs) = (Blist.hd l, Blist.tl l) in
       let f' = Sl_heap.subst (Sl_term.singleton_subst x fv) f in
-			let f'' = Sl_heap.mk_pto x fvs in
+			let f'' = Sl_heap.mk_pto (x, fvs) in
       [[ Sl_heap.star f' f'' ], "New"]
     with Not_symheap | WrongCmd-> [] in
   mk_symex rl
@@ -304,7 +299,7 @@ let fold (defs,ident) =
         let (f,(ident,vs)) = Sl_indrule.dest case in 
         let results : Sl_term.substitution list ref = ref [] in
         let hook sub = results := sub :: !results ; None in 
-        let () = ignore (Sl_heap.spw_left_subsumption hook Sl_term.empty_subst f l) in
+        let () = ignore (Sl_heap.part_unify hook Sl_term.empty_subst f l) in
         let process_sub theta = 
           let (f, vs) = (Sl_heap.subst theta f, Blist.map (Sl_term.subst theta) vs) in
           let l' = 

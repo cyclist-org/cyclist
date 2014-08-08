@@ -5,6 +5,8 @@ include Util.OrderedContainer with type elt = Sl_tpair.t
 
 val parse : (Sl_tpair.t, 'a) MParser.parser
 val subst : Sl_term.substitution -> t -> t
+
+val terms : t -> Sl_term.Set.t
 val vars : t -> Sl_term.Set.t
 
 val to_string_list : t -> string list

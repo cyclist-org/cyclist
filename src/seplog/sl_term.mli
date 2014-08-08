@@ -30,6 +30,11 @@ val fresh_evar : Set.t -> t
 val fresh_evars : Set.t -> int -> t list
 
 type substitution = t Map.t
+(** A substitution is a map from terms to terms but with some restrictions:
+- Only variables can be in the domain of the map.
+- An existentially quantified variable can only be mapped to an existential one,
+or [nil].
+*)
 
 type 'a unifier = substitution -> 'a -> 'a -> substitution option 
 (** A unifier takes a substitution [theta] and two objects [a] and [b], *) 
