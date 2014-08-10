@@ -132,28 +132,11 @@ let pred_intro_rule seq =
     [ [ ( ([l'], [r']), Sl_heap.tag_pairs l', TagPairs.empty ) ], "Pred Intro" ]
   with Not_symheap | Not_found -> []
 
-(* let simpl_deqs seq =                                                              *)
-(*   try                                                                             *)
-(*     let (l,r) = Sl_seq.dest seq in                                                *)
-(*     let non_deq_vars =                                                            *)
-(* 			Sl_term.Set.add Sl_term.nil                                                 *)
-(* 				(Sl_term.Set.union                                                        *)
-(* 				  (Sl_heap.vars { l with SH.deqs=Sl_deqs.empty }) (Sl_heap.vars r)) in       *)
-(*     let f p = Pair.conj (Pair.map (fun t -> Sl_term.Set.mem t non_deq_vars) p) in *)
-(*     let l' = { l with SH.deqs=Sl_deqs.filter f l.SH.deqs } in                        *)
-(*     if Sl_heap.equal l l' then [] else                                            *)
-(*     [ [ (([l'], [r]), Sl_heap.tag_pairs l', TagPairs.empty) ], "" ]               *)
-(*   with Not_symheap -> []                                                          *)
-
 let simplify_rules = [
-  (* norm ; *)
   eq_subst_rule ;
   eq_ex_subst_rule ;
   eq_simplify ;
   deq_simplify ;
-	(* simpl_deqs *)
-  (* pto_intro_rule *)
-  (* pred_intro_rule  *)
 ]
 
 let simplify_seq = 
@@ -227,26 +210,35 @@ let luf defs =
     with Not_symheap -> [] in
   wrap rl
 
-(* s2 *)
-(* -- *)
-(* s1 *)
+(* seq' = (l',r') *)
+(* ------------   *)
+(* seq = (l ,r )  *)
 (* where there exists a substitution theta such that *)
-(* s2[theta] entails s1 by classical weakening *)
-let matches s1 s2 =
-  failwith "FIXME"
-  (* let tags = Tags.inter (Sl_seq.tags s1) (Sl_seq.tags s2) in           *)
-  (* if Tags.is_empty tags then [] else                                   *)
-  (* let res = Sl_seq.uni_subsumption s1 s2 in                            *)
-  (* if Option.is_none res then [] else                                   *)
-  (* let theta = Option.get res in                                        *)
-  (* let s2' = Sl_seq.subst theta s2 in                                   *)
-  (* let tags' = Tags.fold                                                *)
-  (*   (fun t acc ->                                                      *)
-  (*     let new_acc = Tags.add t acc in                                  *)
-  (*     if Sl_seq.subsumed_wrt_tags new_acc s1 s2' then new_acc else acc *)
-  (*   ) tags Tags.empty in                                               *)
-  (* let () = assert (not (Tags.is_empty tags')) in                       *)
-  (* [ ((TagPairs.mk tags',  "Backl"), theta) ]                           *)
+(* seq'[theta] entails seq by subsumption    *)
+(* that is whenever *)
+(* l subsumes l'[theta] *)
+(* and *)
+(* r'[theta] subsumes r *)
+(* NB we can't directly compute the second query since we always unify *)
+(* the "smaller" (RHS) formula with the "larger" (LHS).  *)
+(* However, if one of these substitutions should suffice and we check that *)
+(* via the continuation function. *)
+
+(* FIXME this returns only the first match.  Refactoring of unification functions *)
+(* is required to allow getting all the results. *)
+let matches seq seq' =
+  try
+    let (l,r), (l',r') = Pair.map Sl_seq.dest (seq, seq') in
+    let verify theta = 
+      Option.mk (Sl_seq.subsumed seq (Sl_seq.subst theta seq')) theta in 
+    (* NB r' is used as first arg below *)
+    let cont theta = 
+      Sl_heap.classical_unify verify theta r' r in
+    match Sl_heap.tagged_classical_unify cont Sl_term.empty_subst l' l with
+    | None -> []
+    | Some result -> [result] 
+  with Not_symheap -> []
+  
 
 (*    seq'     *)
 (* ----------  *)
@@ -264,11 +256,10 @@ let subst_rule theta seq' seq =
 (*   Pi * F |- G   *)
 (* where seq' = F |- G * Pi' and seq = Pi * F |- G *)     
 let weaken seq' seq = 
-  failwith "FIXME"
-  (* if Sl_seq.subsumed_wrt_tags (Sl_seq.tags seq') seq seq' then    *)
-  (*   [ [(seq', Sl_seq.tag_pairs seq', TagPairs.empty)], "Weaken" ] *)
-  (* else                                                            *)
-  (*   []                                                            *)
+  if Sl_seq.subsumed seq seq' then
+    [ [(seq', Sl_seq.tag_pairs seq', TagPairs.empty)], "Weaken" ]
+  else
+    []
 
 (* if there is a backlink achievable through substitution and classical *)
 (* weakening then make the proof steps that achieve it explicit so that *)
@@ -277,10 +268,17 @@ let dobackl idx prf =
 	let src_seq = Proof.get_seq idx prf in
 	let targets = Rule.all_nodes idx prf in
 	let apps = 
-		Blist.map (fun idx' -> matches src_seq (Proof.get_seq idx' prf)) targets in
-	let f targ_idx (p, theta) =
+		Blist.bind
+      (fun idx' -> 
+        Blist.map 
+          (fun res -> (idx',res))
+          (matches src_seq (Proof.get_seq idx' prf))) 
+      targets in
+	let f (targ_idx, (theta, tagpairs)) =
 		let targ_seq = Proof.get_seq targ_idx prf in
-    let subst_seq = Sl_seq.subst theta targ_seq in
+    (* [targ_seq'] is as [targ_seq] but with the tags of [src_seq] *)
+    let targ_seq' = Sl_seq.subst_tags tagpairs targ_seq in 
+    let subst_seq = Sl_seq.subst theta targ_seq' in
     Rule.sequence [
       if Sl_seq.equal src_seq subst_seq
         then Rule.identity
@@ -288,18 +286,16 @@ let dobackl idx prf =
         
       if Sl_term.Map.for_all Sl_term.equal theta
         then Rule.identity
-        else Rule.mk_infrule (subst_rule theta targ_seq);
+        else Rule.mk_infrule (subst_rule theta targ_seq');
          
       Rule.mk_backrule 
         true 
         (fun _ _ -> [targ_idx]) 
-        (fun s s' -> assert (Sl_seq.equal s s') ; [p])
+        (fun s s' -> 
+          assert (Sl_seq.equal targ_seq s' && Sl_seq.equal targ_seq' s) ; 
+          [TagPairs.reflect tagpairs, "Backl"])
     ] in
-	Rule.first 
-	  (Blist.map2 
-		  (fun idx' l -> Rule.first (Blist.map (f idx') l)) 
-			targets 
-			apps) idx prf
+	Rule.first (Blist.map f apps) idx prf
 
 let axioms = ref (Rule.first [id_axiom ; ex_falso_axiom])
 

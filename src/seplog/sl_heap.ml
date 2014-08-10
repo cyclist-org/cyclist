@@ -109,8 +109,15 @@ let subsumed h h' =
   Sl_ptos.subsumed h'.eqs h.ptos h'.ptos &&
   Sl_tpreds.subsumed h'.eqs h.inds h'.inds 
 
+let tagged_subsumed h h' = 
+  Sl_uf.subsumed h.eqs h'.eqs &&
+  Sl_deqs.subsumed h'.eqs h.deqs h'.deqs &&
+  Sl_ptos.subsumed h'.eqs h.ptos h'.ptos &&
+  Sl_tpreds.tagged_subsumed h'.eqs h.inds h'.inds 
 
-
+let equal_upto_tags h h' = 
+  subsumed h h' && subsumed h' h
+  
 (* Constructors *)
 
 let mk eqs deqs ptos inds =
@@ -226,16 +233,25 @@ let project f xs =
 let freshen_tags h' h =
   with_inds h (Sl_tpreds.freshen_tags h'.inds h.inds)
 
-let part_unify cont theta h h' =
-  let f1 theta' = Sl_uf.part_unify cont theta' h.eqs h'.eqs in 
-  let f2 theta' = Sl_deqs.part_unify f1 theta' h.deqs h'.deqs in
-  let f3 theta' = Sl_ptos.part_unify f2 theta' h.ptos h'.ptos in 
-  Sl_tpreds.part_unify f3 theta h.inds h'.inds
+let subst_tags tagpairs h =
+  with_inds h (Sl_tpreds.subst_tags tagpairs h.inds)
+
+let unify_with_part cont theta h h' =
+  let f1 theta' = Sl_uf.unify_with_part cont theta' h.eqs h'.eqs in 
+  let f2 theta' = Sl_deqs.unify_with_part f1 theta' h.deqs h'.deqs in
+  let f3 theta' = Sl_ptos.unify_with_part f2 theta' h.ptos h'.ptos in 
+  Sl_tpreds.unify_with_part f3 theta h.inds h'.inds
   
-let tagged_part_unify cont theta h h' =
-  let f1 theta' = Sl_uf.part_unify cont theta' h.eqs h'.eqs in 
-  let f2 theta' = Sl_deqs.part_unify f1 theta' h.deqs h'.deqs in
-  let f3 theta' = Sl_ptos.part_unify f2 theta' h.ptos h'.ptos in 
-  Sl_tpreds.tagged_part_unify f3 theta h.inds h'.inds
+let classical_unify cont theta h h' =
+  let f1 theta' = Sl_uf.unify_with_part cont theta' h.eqs h'.eqs in 
+  let f2 theta' = Sl_deqs.unify_with_part f1 theta' h.deqs h'.deqs in
+  let f3 theta' = Sl_ptos.unify f2 theta' h.ptos h'.ptos in 
+  Sl_tpreds.unify f3 theta h.inds h'.inds
+
+let tagged_classical_unify cont theta h h' =
+  let f1 theta' = Sl_uf.unify_with_part cont theta' h.eqs h'.eqs in 
+  let f2 theta' = Sl_deqs.unify_with_part f1 theta' h.deqs h'.deqs in
+  let f3 theta' = Sl_ptos.unify f2 theta' h.ptos h'.ptos in 
+  Sl_tpreds.tagged_unify f3 theta h.inds h'.inds
 
 

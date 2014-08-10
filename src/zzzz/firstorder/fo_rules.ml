@@ -7,7 +7,7 @@ module Proof = Proof.Make(Firstorder.Seq)
 module Rule = Proofrule.Make(Firstorder.Seq)
 module Seqtactics = Seqtactics.Make(Firstorder.Seq)
 
-let product_subsumed_modulo_tags p1 p2 =
+let product_subsumed_upto_tags p1 p2 =
   Prod.subsumed_wrt_tags Tags.empty p1 p2
 
 (* axioms *)
@@ -37,7 +37,7 @@ let id_axiom =
         (
           Form.mem Prod.empty r ||
           Form.for_all 
-            (fun p -> Form.exists (product_subsumed_modulo_tags p) l) r
+            (fun p -> Form.exists (product_subsumed_upto_tags p) l) r
         )
         "Id"
     end

@@ -61,5 +61,5 @@ let unfold vars h (tag, (ident, args)) case =
 let fold (f, (predsym, args)) h =
   let results : Sl_term.substitution list ref = ref [] in
   let hook theta = results := theta :: !results ; None in 
-  let _ = Sl_heap.part_unify hook Sl_term.empty_subst f h in
+  let _ = Sl_heap.unify_with_part hook Sl_term.empty_subst f h in
   !results

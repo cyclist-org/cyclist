@@ -451,6 +451,7 @@ module TagPairs =
     let projectl tp = map_to Tags.add Tags.empty fst tp
     let projectr tp = map_to Tags.add Tags.empty snd tp
     
+    let reflect tps = map_to add empty Pair.swap tps
   end
 
 

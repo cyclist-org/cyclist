@@ -78,7 +78,7 @@ struct
     let seq = get_seq idx prf in
     let n = Node.mk_backlink seq descr target vtts in
     ensure_add idx n prf;
-    assert (Seq.equal seq (get_seq target prf));
+    assert (Seq.equal_upto_tags seq (get_seq target prf));
     replace idx n prf
 
    let add_inf idx descr subgoals prf =

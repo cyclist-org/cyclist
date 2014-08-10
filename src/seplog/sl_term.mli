@@ -9,6 +9,7 @@ module Map : Util.OrderedMap with type key = t
 
 val to_melt : t -> Latex.t
 val parse : (t, 'a) MParser.parser
+val of_string : string -> t
 
 val nil : t
 
@@ -36,17 +37,25 @@ type substitution = t Map.t
 or [nil].
 *)
 
-type 'a unifier = substitution -> 'a -> 'a -> substitution option 
+
+type 'a unifier = substitution -> 'a -> 'a -> substitution option
 (** A unifier takes a substitution [theta] and two objects [a] and [b], *) 
 (** and extends [theta] to [theta'] so that [a[theta']] is equal to [b], *) 
 (** returning [Some theta'], or [None] if its impossible to do so. *)
 
-type 'a gen_unifier = (substitution -> substitution option) -> 'a unifier  
+type 'a gen_unifier = (substitution -> substitution option) -> 'a unifier
 (** A generalised unifier takes a continuation function [f] and acts as a *)
 (** unifier.  If it can unify its arguments successfully it should pass the *)
 (** resulting substitution to [f] which will check and further extend the *)
 (** result.  If [f] returns [None] then the unifier should backtrack and *)
 (** search for other substitutions that unify its arguments. *)
+
+type 'a tagged_unifier =
+  (substitution -> substitution option) ->
+    substitution -> 'a -> 'a -> (substitution * Util.TagPairs.t) option
+(** A generalised unifier that returns a set of tag pairs for the (tagged)
+    inductive predicates unified.  This is only relevant when predicates are
+    involved. *)
 
 val empty_subst : substitution
 val singleton_subst : t -> t -> substitution

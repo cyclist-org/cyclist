@@ -59,7 +59,7 @@ let parse st =
           parse_symb symb_eq >>
           Sl_term.parse << spaces |>> (fun y -> (x, y))) <?> "eq") st
 
-let part_unify cont theta m m' =
+let unify_with_part cont theta m m' =
   Sl_tpair.FList.part_unord_unify cont theta (bindings m) (bindings m')
 
 let subst_subsumed eqs theta = 

@@ -1,1 +1,1 @@
-ListE^1(x,y) \/ ListO^1(x,y) |- List(x,y)
+ListE(x,y) \/ ListO(x,y) |- List(x,y)

@@ -39,7 +39,7 @@ module FList =
     
     let terms ps = 
       Blist.foldl 
-        (fun a (x,y) -> Sl_term.Set.add x (Sl_term.Set.add y a)) 
+        (fun a p -> Pair.fold Sl_term.Set.add p a) 
         Sl_term.Set.empty 
         ps 
   end 

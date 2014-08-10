@@ -12,6 +12,6 @@ val vars : t -> Sl_term.Set.t
 val to_string_list : t -> string list
 val to_melt : t -> Latex.t
 
-val part_unify : t Sl_term.gen_unifier
+val unify_with_part : t Sl_term.gen_unifier
 
 val subsumed : Sl_uf.t -> t -> t -> bool

@@ -232,6 +232,8 @@ module Seq =
 
     let equal (f,i) (f',i') = (i=i') && Sl_form.equal f f'
     
+    let equal_upto_tags (f,i) (f',i') = (i=i') && Sl_form.equal_upto_tags f f'
+    
     let parse st = 
       ( Sl_form.parse >>= (fun f ->
         parse_symb symb_turnstile_underscore >>

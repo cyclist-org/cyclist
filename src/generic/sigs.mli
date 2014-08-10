@@ -4,6 +4,12 @@ module type SEQUENT =
 sig
   type t
   val equal : t -> t -> bool
+  (** "Syntactic" equality.  Used to check that closing an open [NODE] is done
+      via another one marked with a syntactically equal sequent. *)
+ 
+  val equal_upto_tags : t -> t -> bool
+  (** As [equal] but ignoring tags.  Used to check that the target of a 
+      backlink [NODE] is equal to that marking it, ignoring tags.*)
   
   val tags : t -> Util.Tags.t
   (** Returns set of tags in sequent. *)

@@ -46,6 +46,8 @@ val inconsistent : t -> bool
 *)
 
 val subsumed : t -> t -> bool
+val tagged_subsumed : t -> t -> bool
+val equal_upto_tags : t -> t -> bool
 
 (** Constructors. *)
 
@@ -92,10 +94,16 @@ val freshen_tags : t -> t -> t
 (** [freshen_tags f g] will rename all tags in [g] such that they are disjoint
     from those of [f]. *)
 
-val part_unify : t Sl_term.gen_unifier
-val tagged_part_unify : t Sl_tpreds.tagged_unifier
-(** Part unify a heap with another and return in addition to the substitution,
-    the set of pairs of tags of predicates unified. *)
-    
+val subst_tags : Util.TagPairs.t -> t -> t
+(** Substitute tags according to the function represented by the set of 
+    tag pairs provided. *)
+
+val unify_with_part : t Sl_term.gen_unifier
+val classical_unify : t Sl_term.gen_unifier
+(** Unify two heaps, by using [unify_with_part] for the pure (classical) part whilst
+    using [unify] for the spatial part. *)
+val tagged_classical_unify : t Sl_term.tagged_unifier
+(** In addition to the substitution found by [classical_unify], 
+    return the set of pairs of tags of predicates unified. *)
 
 

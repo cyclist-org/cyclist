@@ -32,7 +32,7 @@ let symb_lb = make_symb "{" Latex.empty
 let symb_rb = make_symb "}" Latex.empty
 let symb_semicolon = make_symb ";" (Latex.text ";")
 let symb_colon = make_symb ":" Latex.empty
-let symb_comma = make_symb "," (Latex.text ", ")
+let symb_comma = { str=","; sep=", "; melt=Latex.text ", " }
 let symb_turnstile = make_symb "|-" Latex.vdash
 let symb_turnstile_underscore = make_symb "|-_" Latex.empty (* FIXME *)
 (* let symb_dturnstile_underscore = make_symb "||-_" Latex.empty (* FIXME *) *)

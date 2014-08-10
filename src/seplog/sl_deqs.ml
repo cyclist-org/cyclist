@@ -26,11 +26,11 @@ let parse st =
           parse_symb symb_deq >>
           Sl_term.parse << spaces |>> (fun y -> (x, y))) <?> "deq") st
 
-let part_unify cont theta d d' =
+let unify_with_part cont theta d d' =
   Sl_tpair.FList.part_unord_unify cont theta (to_list d) (to_list d')
 
 let subsumed eqs deqs deqs' =
-  match part_unify (Sl_uf.subst_subsumed eqs) Sl_term.empty_subst deqs deqs' with
+  match unify_with_part (Sl_uf.subst_subsumed eqs) Sl_term.empty_subst deqs deqs' with
   | None -> false
   | Some theta -> 
     assert (subset (subst theta deqs) (subst theta deqs')) ; true

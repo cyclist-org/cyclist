@@ -38,7 +38,7 @@ let rec aux_unify part cont theta ptos ptos' =
     Blist.find_some f to_match
 
 let unify cont theta ptos ptos' = aux_unify false cont theta ptos ptos'
-let part_unify cont theta ptos ptos' = aux_unify true cont theta ptos ptos'
+let unify_with_part cont theta ptos ptos' = aux_unify true cont theta ptos ptos'
 
 let subsumed eqs ptos ptos' =
   match unify (Sl_uf.subst_subsumed eqs) Sl_term.empty_subst ptos ptos' with

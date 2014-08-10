@@ -7,6 +7,11 @@ module TPred = PairTypes(Int.T)(Sl_pred)
 include TPred
 
 let subst theta (tag, pred) = (tag, Sl_pred.subst theta pred)
+
+let subst_tag tagpairs (tag, pred) =
+  let (_, tag'') = TagPairs.find (fun (tag',_) -> tag=tag') tagpairs in
+  (tag'', pred) 
+
 let unify theta (_, pred) (_, pred') = Sl_pred.unify theta pred pred'
 
 let tagged_unify theta ((tag, pred) as p) ((tag', pred') as p') = 

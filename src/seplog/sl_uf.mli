@@ -40,7 +40,7 @@ val equates : t -> Sl_term.t -> Sl_term.t -> bool
 val subsumed : t -> t -> bool
 (** [subsumed uf uf'] is true iff uf' |- uf using the normal equality rules. *)
 
-val part_unify : t Sl_term.gen_unifier
+val unify_with_part : t Sl_term.gen_unifier
 
 val remove : Sl_term.t -> t -> t
 (** FIXME why is this here? *)

@@ -532,6 +532,8 @@ module Seq =
         Sl_form.pp f symb_turnstile.sep (Cmd.pp ~abbr:true 0) cmd
 
     let equal (f,cmd) (f',cmd') = Cmd.equal cmd cmd' && Sl_form.equal f f'
+    let equal_upto_tags (f,cmd) (f',cmd') = 
+      Cmd.equal cmd cmd' && Sl_form.equal_upto_tags f f'
   end
 
 let program_vars = ref Sl_term.Set.empty

@@ -22,6 +22,8 @@ module Trm =
       (   attempt (parse_symb keyw_nil >>$ 0 <?> "nil") 
       <|> Var.parse 
       <?> "Sl_term") st
+    let of_string s =
+      handle_reply (MParser.parse_string parse s ())
 
     let is_nil v = v = nil
     let is_var v = v <> nil && Var.is_var v
@@ -53,6 +55,10 @@ type substitution = t Map.t
 
 type 'a unifier = substitution -> 'a -> 'a -> substitution option 
 type 'a gen_unifier = (substitution -> substitution option) -> 'a unifier
+type 'a tagged_unifier = 
+  (substitution -> substitution option) -> 
+    substitution -> 'a -> 'a -> (substitution * Util.TagPairs.t) option
+
 
 let empty_subst : substitution = Map.empty
 let singleton_subst x y = Map.add x y empty_subst
@@ -62,17 +68,14 @@ let subst theta v =
 
 let trm_unify theta t t' =
   if Map.mem t theta then
-    if equal (Map.find t theta) t' then Some theta else None
+    Option.mk (equal (Map.find t theta) t') theta 
   else if is_nil t then
-    if is_nil t' then Some theta else None
-  else if is_exist_var t && (is_exist_var t' || is_nil t') then
+    Option.mk (is_nil t') theta
+  else if is_univ_var t || is_exist_var t && (is_exist_var t' || is_nil t') then 
     Some (Map.add t t' theta)
   else 
     None
     
-  (* FIXME the below is unnecessary I believe *)
-  (* Map.exists (fun _ t'' -> equal t' t'') theta then *) (* avoid capture *)
-
 let avoid_theta vars subvars =
   let allvars = Set.union vars subvars in
   let (exist_vars, univ_vars) =
