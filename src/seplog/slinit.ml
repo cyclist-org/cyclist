@@ -22,35 +22,26 @@ open Util;;
 #install_printer Strng.Pairing.FList.pp;;
 #install_printer Sl_term.pp;;
 #install_printer Sl_term.Set.pp;;
+#install_printer Sl_term.pp_subst ;;
+#install_printer Sl_term.FList.pp ;;
+#install_printer Sl_tpair.pp ;;
+#install_printer Sl_uf.pp ;;
+#install_printer Sl_deqs.pp ;;
+#install_printer Sl_pred.pp ;;
+#install_printer Sl_tpred.pp ;;
+#install_printer Sl_tpreds.pp ;;
+#install_printer Sl_pto.pp ;;
+#install_printer Sl_ptos.pp ;;
 #install_printer Sl_heap.pp;;
 #install_printer Sl_form.pp;;
 #install_printer Sl_seq.pp;;
 #install_printer Sl_defs.pp;;
-open Goto_rules;;
-#install_printer Proof.pp;;
 
 open Lib;;
 
-(* let parse_seq s =                                                                *)
-(*   Sl_parser.sequent Sl_lexer.token (Lexing.from_string s);;                      *)
+let seq = Sl_seq.of_string "nil!=x * nil!=y * x!=y * y->z * ls^2(z, nil) * ls^3(w, y) |- x!=z * ls^4(z, nil) * ls^5(w, z)" ;;
 
-(* let parse_form f =                                                               *)
-(*   Sl_parser.formula Sl_lexer.token (Lexing.from_string f);;                      *)
+let seq' = Sl_seq.of_string "nil!=y * y->z * ls^1(x, y) * ls^2(z, nil) |- ls^3(x, z) * ls^4(z, nil)";;
 
-(* let parse_defs d =                                                               *)
-(*   Sl_parser.ind_def_set Sl_lexer.token (Lexing.from_string d);;                  *)
+let theta = Sl_term.singleton_subst (Sl_term.of_string "x") (Sl_term.of_string "w");;
 
-(* let parse_goto_program p =                                                       *)
-(*   Sl_parser.program Sl_lexer.token (Lexing.from_string p);;                      *)
-  
-(* let defs_of_file f = parse_defs (string_of_file f)                               *)
-  
-(* let f = parse_form "w'!=nil * w'->j' * ls_1(y,w') * ls_2(j',nil) * ls_3(x,w')";; *)
-(* let f' = parse_form "y=z * nil!=z * z->w' * ls_2(w',nil) * ls_3(x,z)";;          *)
-(* let defs = defs_of_file "examples/sl.defs"                                       *)
-(* let prf = Proof.mk (f',1);;                                                      *)
-(* let apps = Rule.choice (Blist.map fold defs) 0 prf;;                             *)
-
-open MParser;;
-
-let f = parse_string Sl_heap.parse "x!=y" () ;;

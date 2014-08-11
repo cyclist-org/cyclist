@@ -53,11 +53,12 @@ let filter_vars s = Set.filter is_var s
 
 type substitution = t Map.t
 
-type 'a unifier = substitution -> 'a -> 'a -> substitution option 
-type 'a gen_unifier = (substitution -> substitution option) -> 'a unifier
-type 'a tagged_unifier = 
-  (substitution -> substitution option) -> 
-    substitution -> 'a -> 'a -> (substitution * Util.TagPairs.t) option
+type 'a unifier_state = substitution * 'a
+
+type ('a,'b) unifier = 
+  ('b unifier_state -> 'b unifier_state option) ->
+    'b unifier_state -> 'a -> 'a ->
+      'b unifier_state option
 
 
 let empty_subst : substitution = Map.empty
@@ -65,16 +66,19 @@ let singleton_subst x y = Map.add x y empty_subst
 let subst theta v =
   if not (is_nil v) && Map.mem v theta then Map.find v theta else v
 (* above is significantly faster than exception handling *)
+let pp_subst = Map.pp pp
 
-let trm_unify theta t t' =
-  if Map.mem t theta then
-    Option.mk (equal (Map.find t theta) t') theta 
-  else if is_nil t then
-    Option.mk (is_nil t') theta
-  else if is_univ_var t || is_exist_var t && (is_exist_var t' || is_nil t') then 
-    Some (Map.add t t' theta)
-  else 
-    None
+let trm_unify cont ((theta, rest) as state) t t' =
+  let res = 
+    if Map.mem t theta then
+      Option.mk (equal (Map.find t theta) t') state 
+    else if is_nil t then
+      Option.mk (is_nil t') state
+    else if is_univ_var t || is_exist_var t && (is_exist_var t' || is_nil t') then 
+      Some (Map.add t t' theta, rest)
+    else 
+      None in
+  Option.bind cont res
     
 let avoid_theta vars subvars =
   let allvars = Set.union vars subvars in
@@ -90,12 +94,12 @@ let avoid_theta vars subvars =
 module FList =
   struct
     include Util.MakeFList(Trm)
-    let rec unify theta args args' = 
+    let rec unify cont ((theta, rest) as state) args args' = 
       match (args, args') with
-      | ([], []) -> Some theta
+      | ([], []) -> cont state
       | (_, []) | ([], _) -> None
-      | (hd:: tl, hd':: tl') ->
-        Option.bind (fun theta' -> unify theta' tl tl') (trm_unify theta hd hd')
+      | (x::xs, y::ys) ->
+        trm_unify (fun state' -> unify cont state' xs ys) state x y
     
     let subst theta xs = Blist.map (subst theta) xs
     

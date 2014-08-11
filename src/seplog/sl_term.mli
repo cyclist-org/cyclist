@@ -37,31 +37,29 @@ type substitution = t Map.t
 or [nil].
 *)
 
+type 'a unifier_state = substitution * 'a
+(** State maintained by unifiers.  Polymorphic in the second member of the pair
+    to allow extensions to unifiers e.g. those that maintain a substitution 
+    over tags along with the standard substitution over variables. *)
 
-type 'a unifier = substitution -> 'a -> 'a -> substitution option
-(** A unifier takes a substitution [theta] and two objects [a] and [b], *) 
-(** and extends [theta] to [theta'] so that [a[theta']] is equal to [b], *) 
-(** returning [Some theta'], or [None] if its impossible to do so. *)
-
-type 'a gen_unifier = (substitution -> substitution option) -> 'a unifier
-(** A generalised unifier takes a continuation function [f] and acts as a *)
-(** unifier.  If it can unify its arguments successfully it should pass the *)
-(** resulting substitution to [f] which will check and further extend the *)
-(** result.  If [f] returns [None] then the unifier should backtrack and *)
-(** search for other substitutions that unify its arguments. *)
-
-type 'a tagged_unifier =
-  (substitution -> substitution option) ->
-    substitution -> 'a -> 'a -> (substitution * Util.TagPairs.t) option
-(** A generalised unifier that returns a set of tag pairs for the (tagged)
-    inductive predicates unified.  This is only relevant when predicates are
-    involved. *)
+type ('a,'b) unifier = 
+  ('b unifier_state -> 'b unifier_state option) ->
+    'b unifier_state -> 'a -> 'a ->
+      'b unifier_state option
+(** [unify cont state o o'] should try to extend [state] so that [o] is unified
+    with [o'], including extending the variable substitution inside [state]. 
+    If this is impossible, then [unify] must return [None].  Otherwise, the 
+    new [state'] is to be passed to the continuation function [cont], which
+    may carry on with the unification of other objects, validate the state in
+    various ways or even record it and return [None] in which case back-tracking
+    should occur. *)
 
 val empty_subst : substitution
 val singleton_subst : t -> t -> substitution
 val subst : substitution -> t -> t
+val pp_subst : Format.formatter -> substitution -> unit
 
-val unify : t unifier 
+val unify : (t, 'a) unifier 
 
 val avoid_theta : Set.t -> Set.t -> substitution
 (** [avoid_theta vars subvars] *)
@@ -72,7 +70,7 @@ val avoid_theta : Set.t -> Set.t -> substitution
 module FList : 
   sig
     include Util.BasicType with type t = t list
-    val unify : t unifier
+    val unify : (t, 'a) unifier
     val subst : substitution -> t -> t
     val to_string_sep : string -> t -> string
     val terms : t -> Set.t

@@ -1,8 +1,11 @@
-(** SL sequent, as a pair of SL formulas. *)
+(** SL sequent, as a pair of SL formulas. 
+    NB [equal] ignores RHS tags.
+*)
 
 include Util.BasicType with type t = Sl_form.t * Sl_form.t
 
 val equal_upto_tags : t -> t -> bool
+(** Like [equal] but ignoring LHS tags as well as RHS ones. *)
 
 val dest : t -> Sl_heap.t * Sl_heap.t
 (** If both LHS and RHS are symbolic heaps then return them else raise
@@ -27,4 +30,9 @@ val subst_tags : Util.TagPairs.t -> t -> t
 val subst : Sl_term.substitution -> t -> t
 
 val subsumed : t -> t -> bool
+(** [subsumed (l,r) (l',r')] is true iff [Sl_form.subsumed l' l] and
+    [Sl_form.subsumed_upto_tags r r'] are true. *)
+    
+val subsumed_upto_tags : t -> t -> bool
+(** Like [subsumed] but ignoring all tags. *)
 

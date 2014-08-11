@@ -52,4 +52,7 @@ let subst_tags tagpairs (l,r) = (Sl_form.subst_tags tagpairs l, r)
 (* and     r' |- r  *)
 
 let subsumed (l,r) (l',r') = 
-  Sl_form.subsumed l' l && Sl_form.subsumed r r'
+  Sl_form.subsumed l' l && Sl_form.subsumed_upto_tags r r'
+
+let subsumed_upto_tags (l,r) (l',r') = 
+  Sl_form.subsumed_upto_tags l' l && Sl_form.subsumed_upto_tags r r'

@@ -292,8 +292,8 @@ let fold (defs,ident) =
         let (f,(ident,vs)) = Sl_indrule.dest case in 
         (* if Sl_tpreds.is_empty f.SH.inds then [] else *)
         let results : Sl_term.substitution list ref = ref [] in
-        let hook sub = results := sub :: !results ; None in 
-        let () = ignore (Sl_heap.unify_with_part hook Sl_term.empty_subst f l) in
+        let hook (sub,_) = results := sub :: !results ; None in 
+        let () = ignore (Sl_heap.unify_within hook (Sl_term.empty_subst,()) f l) in
         let process_sub theta = 
           let (f, vs) = (Sl_heap.subst theta f, Blist.map (Sl_term.subst theta) vs) in
           let l' = 

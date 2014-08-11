@@ -7,12 +7,11 @@ module TPair = PairTypes(Sl_term)(Sl_term)
 
 include TPair
 
-let unify theta (x, y) (x', y') =
-  Option.bind (fun theta' -> Sl_term.unify theta' y y') (Sl_term.unify theta x x')
-  
-let unord_unify cont theta p p' =
-  Blist.find_some cont 
-    (Option.list_get (Blist.map (unify theta p) [ p'; Pair.swap p' ]))
+let unify cont state (x, y) (x', y') =
+  Sl_term.unify (fun state' -> Sl_term.unify cont state' y y') state x x'
+   
+let unord_unify cont state p p' =
+  Blist.find_some (unify cont state p) [ p'; Pair.swap p' ]
 
 let order ((x,y) as pair) =
   if Sl_term.compare x y <= 0 then pair else (y,x)
@@ -28,15 +27,25 @@ module FList =
   struct
     include Util.MakeFList(TPair)
     
-    let rec part_unord_unify cont theta xs ys =
+    let rec unord_unify_within cont state xs ys =
       match (xs, ys) with
-      | ([], _) -> cont theta
+      | ([], _) -> cont state
       | (_, []) -> None
-      | (p::ps, qs) ->
+      | (p::ps, _) ->
         Blist.find_some 
-          (unord_unify (fun theta' -> part_unord_unify cont theta' ps qs) theta p) 
-          qs
+          (unord_unify (fun state' -> unord_unify_within cont state' ps ys) state p) 
+          ys
     
+    let rec inverse_unord_unify_within cont state xs ys =
+      match (xs, ys) with
+      | ([], _) -> cont state
+      | (_, []) -> None
+      | (p::ps, _) ->
+        Blist.find_some 
+          (fun q -> 
+            unord_unify (fun state' -> inverse_unord_unify_within cont state' ps ys) state q p) 
+          ys
+
     let terms ps = 
       Blist.foldl 
         (fun a p -> Pair.fold Sl_term.Set.add p a) 

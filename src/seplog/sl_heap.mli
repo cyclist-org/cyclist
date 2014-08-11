@@ -15,7 +15,9 @@ val empty : t
 
 val vars : t -> Sl_term.Set.t
 val terms : t -> Sl_term.Set.t
+
 val tags : t -> Util.Tags.t
+(** Return set of tags assigned to predicates in heap. *)
 
 val tag_pairs : t -> Util.TagPairs.t
 (** Return a set of pairs representing the identity function over the tags 
@@ -46,8 +48,15 @@ val inconsistent : t -> bool
 *)
 
 val subsumed : t -> t -> bool
-val tagged_subsumed : t -> t -> bool
+(** [subsumed h h'] is true iff [h] can be rewritten using the equalities
+    in [h'] such that its spatial part becomes equal to that of [h']
+    and the pure part becomes a subset of that of [h']. *)
+
+val subsumed_upto_tags : t -> t -> bool
+(** Like [subsumed] but ignoring tag assignment. *)
+
 val equal_upto_tags : t -> t -> bool
+(** Like [equal] but ignoring tag assignment. *)
 
 (** Constructors. *)
 
@@ -60,6 +69,10 @@ val mk_deq : Sl_tpair.t -> t
 val mk_ind : Sl_tpred.t -> t
 
 val mk : Sl_uf.t -> Sl_deqs.t -> Sl_ptos.t -> Sl_tpreds.t -> t
+
+(** Functions [with_*] accept a heap [h] and a heap component [c] and 
+    return the heap that results by replacing [h]'s appropriate component 
+    with [c]. *)
 
 val with_eqs : t -> Sl_uf.t -> t 
 val with_deqs : t -> Sl_deqs.t -> t
@@ -98,11 +111,18 @@ val subst_tags : Util.TagPairs.t -> t -> t
 (** Substitute tags according to the function represented by the set of 
     tag pairs provided. *)
 
-val unify_with_part : t Sl_term.gen_unifier
-val classical_unify : t Sl_term.gen_unifier
-(** Unify two heaps, by using [unify_with_part] for the pure (classical) part whilst
+val unify_within : (t, 'a) Sl_term.unifier
+(** Unify two heaps such that the first becomes a subformula of the second. *)
+
+val classical_unify : (t, 'a) Sl_term.unifier
+(** Unify two heaps, by using [unify_within] for the pure (classical) part whilst
     using [unify] for the spatial part. *)
-val tagged_classical_unify : t Sl_term.tagged_unifier
+
+val inverse_classical_unify : (t, 'a) Sl_term.unifier
+(** Unify two heaps as in [classical_unify] but apply the substitution to the 
+    *second* argument as opposed to the first. *)
+
+val tagged_classical_unify : (t, Util.TagPairs.t) Sl_term.unifier
 (** In addition to the substitution found by [classical_unify], 
     return the set of pairs of tags of predicates unified. *)
 

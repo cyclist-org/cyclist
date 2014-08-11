@@ -219,24 +219,21 @@ let luf defs =
 (* l subsumes l'[theta] *)
 (* and *)
 (* r'[theta] subsumes r *)
-(* NB we can't directly compute the second query since we always unify *)
-(* the "smaller" (RHS) formula with the "larger" (LHS).  *)
-(* However, if one of these substitutions should suffice and we check that *)
-(* via the continuation function. *)
-
-(* FIXME this returns only the first match.  Refactoring of unification functions *)
-(* is required to allow getting all the results. *)
 let matches seq seq' =
   try
     let (l,r), (l',r') = Pair.map Sl_seq.dest (seq, seq') in
-    let verify theta = 
-      Option.mk (Sl_seq.subsumed seq (Sl_seq.subst theta seq')) theta in 
-    (* NB r' is used as first arg below *)
-    let cont theta = 
-      Sl_heap.classical_unify verify theta r' r in
-    match Sl_heap.tagged_classical_unify cont Sl_term.empty_subst l' l with
-    | None -> []
-    | Some result -> [result] 
+    let results = ref [] in
+    let verify ((theta, _) as state) =
+      assert (Sl_seq.subsumed_upto_tags seq (Sl_seq.subst theta seq')) ;
+      results := state :: !results;
+      None in 
+    let cont state = Sl_heap.inverse_classical_unify verify state r r' in
+    let _ =  
+      Sl_heap.tagged_classical_unify 
+        cont 
+        (Sl_term.empty_subst, TagPairs.empty) 
+        l' l in
+    !results
   with Not_symheap -> []
   
 
@@ -291,9 +288,7 @@ let dobackl idx prf =
       Rule.mk_backrule 
         true 
         (fun _ _ -> [targ_idx]) 
-        (fun s s' -> 
-          assert (Sl_seq.equal targ_seq s' && Sl_seq.equal targ_seq' s) ; 
-          [TagPairs.reflect tagpairs, "Backl"])
+        (fun s s' -> [TagPairs.reflect tagpairs, "Backl"])
     ] in
 	Rule.first (Blist.map f apps) idx prf
 

@@ -24,25 +24,27 @@ let parse st =
           Tokens.comma_sep1 Sl_term.parse << spaces |>>
           (fun l -> (x, l))) <?> "pto") st
 
-let rec aux_unify part cont theta ptos ptos' =
+let rec aux_unify part cont state ptos ptos' =
   if is_empty ptos then
-    if part || is_empty ptos' then cont theta else None
+    if part || is_empty ptos' then cont state else None
   else
     let a = choose ptos in
     let ptos = remove a ptos in
     let to_match = elements ptos' in
     let f a' =
-      Option.bind 
-        (fun theta' -> aux_unify part cont theta' ptos (remove a' ptos'))
-        (Sl_pto.unify theta a a') in
+      Sl_pto.unify  
+        (fun state' -> aux_unify part cont state' ptos (remove a' ptos'))
+        state a a' in
     Blist.find_some f to_match
 
-let unify cont theta ptos ptos' = aux_unify false cont theta ptos ptos'
-let unify_with_part cont theta ptos ptos' = aux_unify true cont theta ptos ptos'
+let unify cont state ptos ptos' = aux_unify false cont state ptos ptos'
+let unify_within cont state ptos ptos' = aux_unify true cont state ptos ptos'
 
 let subsumed eqs ptos ptos' =
-  match unify (Sl_uf.subst_subsumed eqs) Sl_term.empty_subst ptos ptos' with
+  (* Option.is_some                                                            *)
+  (*   (unify (Sl_uf.subst_subsumed eqs) (Sl_term.empty_subst, ()) ptos ptos') *)
+  match unify (Sl_uf.subst_subsumed eqs) (Sl_term.empty_subst, ()) ptos ptos' with
   | None -> false
-  | Some theta -> 
+  | Some (theta, _) ->
     assert (equal (subst theta ptos) (subst theta ptos')) ; true
 

@@ -14,6 +14,8 @@ val dest : t -> Sl_heap.t
 (** Return the single disjunct, if there is exactly one, else raise [Not_symheap]. *)
 
 val equal_upto_tags : t -> t -> bool
+(** Whilst [equal] demands syntactic equality including tags, this version 
+    ignores tag assignment. *) 
 
 val to_melt : t -> Latex.t
 val terms : t -> Sl_term.Set.t
@@ -30,7 +32,10 @@ val inconsistent : t -> bool
 
 val subsumed : t -> t -> bool
 (** [subsumed a b]: is it the case that for any disjunct [a'] of [a] there a 
-    disjunct [b'] of [b] such [a'] is subsumed by [b']? *)   
+    disjunct [b'] of [b] such [a'] is subsumed by [b']? 
+    NB this includes matching the tags exactly. *)   
+val subsumed_upto_tags : t -> t -> bool
+(** As above but ignoring tags. *)
 
 val parse : (t, 'a) MParser.t
 val of_string : string -> t
@@ -42,6 +47,10 @@ val disj : t -> t -> t
 (** Or two formulas (list-append). *)
 
 val subst : Sl_term.substitution -> t -> t
+
 val subst_existentials : t -> t
+(** Like [Sl_heap.subst_existentials] applied to all disjuncts. *)
+
 val subst_tags : Util.TagPairs.t -> t -> t
+(** Like [Sl_heap.subst_tags] applied to all disjuncts. *)
 

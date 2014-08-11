@@ -24,6 +24,13 @@ let equal h h' =
   Sl_ptos.equal h.ptos h'.ptos &&
   Sl_tpreds.equal h.inds h'.inds
 
+let equal_upto_tags h h' =
+  h == h' ||
+  Sl_uf.equal h.eqs h'.eqs &&
+  Sl_deqs.equal h.deqs h'.deqs &&
+  Sl_ptos.equal h.ptos h'.ptos &&
+  Sl_tpreds.equal_upto_tags h.inds h'.inds
+
 include Fixpoint(struct type t = symheap let equal = equal end)
 
 let compare f g =
@@ -103,20 +110,18 @@ let inconsistent h = Sl_deqs.exists (fun (x, y) -> equates h x y) h.deqs
 
 let idents p = Sl_tpreds.idents p.inds
 
+let subsumed_upto_tags h h' = 
+  Sl_uf.subsumed h.eqs h'.eqs &&
+  Sl_deqs.subsumed h'.eqs h.deqs h'.deqs &&
+  Sl_ptos.subsumed h'.eqs h.ptos h'.ptos &&
+  Sl_tpreds.subsumed_upto_tags h'.eqs h.inds h'.inds 
+
 let subsumed h h' = 
   Sl_uf.subsumed h.eqs h'.eqs &&
   Sl_deqs.subsumed h'.eqs h.deqs h'.deqs &&
   Sl_ptos.subsumed h'.eqs h.ptos h'.ptos &&
   Sl_tpreds.subsumed h'.eqs h.inds h'.inds 
 
-let tagged_subsumed h h' = 
-  Sl_uf.subsumed h.eqs h'.eqs &&
-  Sl_deqs.subsumed h'.eqs h.deqs h'.deqs &&
-  Sl_ptos.subsumed h'.eqs h.ptos h'.ptos &&
-  Sl_tpreds.tagged_subsumed h'.eqs h.inds h'.inds 
-
-let equal_upto_tags h h' = 
-  subsumed h h' && subsumed h' h
   
 (* Constructors *)
 
@@ -236,21 +241,29 @@ let freshen_tags h' h =
 let subst_tags tagpairs h =
   with_inds h (Sl_tpreds.subst_tags tagpairs h.inds)
 
-let unify_with_part cont theta h h' =
-  let f1 theta' = Sl_uf.unify_with_part cont theta' h.eqs h'.eqs in 
-  let f2 theta' = Sl_deqs.unify_with_part f1 theta' h.deqs h'.deqs in
-  let f3 theta' = Sl_ptos.unify_with_part f2 theta' h.ptos h'.ptos in 
-  Sl_tpreds.unify_with_part f3 theta h.inds h'.inds
+let unify_within cont theta h h' =
+  let f1 theta' = Sl_uf.unify_within cont theta' h.eqs h'.eqs in
+  let f2 theta' = Sl_deqs.unify_within f1 theta' h.deqs h'.deqs in
+  let f3 theta' = Sl_ptos.unify_within f2 theta' h.ptos h'.ptos in
+  Sl_tpreds.unify_within f3 theta h.inds h'.inds
   
 let classical_unify cont theta h h' =
-  let f1 theta' = Sl_uf.unify_with_part cont theta' h.eqs h'.eqs in 
-  let f2 theta' = Sl_deqs.unify_with_part f1 theta' h.deqs h'.deqs in
+  let f1 theta' = Sl_uf.unify_within cont theta' h.eqs h'.eqs in 
+  let f2 theta' = Sl_deqs.unify_within f1 theta' h.deqs h'.deqs in
   let f3 theta' = Sl_ptos.unify f2 theta' h.ptos h'.ptos in 
   Sl_tpreds.unify f3 theta h.inds h'.inds
 
+let inverse_classical_unify cont theta h h' =
+  let f1 theta' = Sl_uf.inverse_unify_within cont theta' h.eqs h'.eqs in 
+  let f2 theta' = Sl_deqs.inverse_unify_within f1 theta' h.deqs h'.deqs in
+  (* NB how we don't need an "inverse" version for ptos and inds, since *)
+  (* we unify the whole multiset, not a subformula *)
+  let f3 theta' = Sl_ptos.unify f2 theta' h'.ptos h.ptos in 
+  Sl_tpreds.unify f3 theta h'.inds h.inds
+
 let tagged_classical_unify cont theta h h' =
-  let f1 theta' = Sl_uf.unify_with_part cont theta' h.eqs h'.eqs in 
-  let f2 theta' = Sl_deqs.unify_with_part f1 theta' h.deqs h'.deqs in
+  let f1 theta' = Sl_uf.unify_within cont theta' h.eqs h'.eqs in 
+  let f2 theta' = Sl_deqs.unify_within f1 theta' h.deqs h'.deqs in
   let f3 theta' = Sl_ptos.unify f2 theta' h.ptos h'.ptos in 
   Sl_tpreds.tagged_unify f3 theta h.inds h'.inds
 

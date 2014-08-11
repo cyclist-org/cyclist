@@ -31,13 +31,19 @@ let vars d = Sl_term.filter_vars (terms d)
 let tags d = Tags.union_of_list (Blist.map Sl_heap.tags d)
 let tag_pairs f = TagPairs.mk (tags f)
 let inconsistent f = Blist.for_all Sl_heap.inconsistent f
+
 let subsumed f1 f2 =
   Blist.for_all (fun d2 ->
     Blist.exists (fun d1 ->
       Sl_heap.subsumed d1 d2) f1) f2
+let subsumed_upto_tags f1 f2 =
+  Blist.for_all (fun d2 ->
+    Blist.exists (fun d1 ->
+      Sl_heap.subsumed_upto_tags d1 d2) f1) f2
 
 let equal_upto_tags f f' =
-  subsumed f f' && subsumed f' f
+  Blist.for_all2 Sl_heap.equal_upto_tags f f'
+  
 
 let parse st =
   (sep_by1 Sl_heap.parse (parse_symb symb_or) <?> "formula") st

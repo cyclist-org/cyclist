@@ -18,9 +18,9 @@ end
 
 include IndSubf
 
-let unify theta (p, args) (p', args') =
+let unify cont state (p, args) (p', args') =
   if not (Strng.equal p p') then None else
-  Sl_term.FList.unify theta args args'
+  Sl_term.FList.unify cont state args args'
 
 let terms (_, args) = Sl_term.FList.terms args
 let vars pred = Sl_term.filter_vars (terms pred)

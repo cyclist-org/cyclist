@@ -5,6 +5,7 @@ type t
 val parse : (Sl_tpair.t, 'a) MParser.parser
 val to_melt : t -> Latex.t
 val to_string_list : t -> string list
+val pp : Format.formatter -> t -> unit
 
 val empty : t
 val is_empty : t -> bool
@@ -26,7 +27,8 @@ val of_list : Sl_tpair.t list -> t
 
 val subst : Sl_term.substitution -> t -> t
 
-val subst_subsumed : t -> Sl_term.substitution -> Sl_term.substitution option
+val subst_subsumed : 
+  t -> 'a Sl_term.unifier_state -> 'a Sl_term.unifier_state option
 (** Compute whether a substitution could be obtained by rewriting under 
     equalities in first argument.  Meant to be used with unifiers to produce
     subsumption routines. *)
@@ -40,7 +42,13 @@ val equates : t -> Sl_term.t -> Sl_term.t -> bool
 val subsumed : t -> t -> bool
 (** [subsumed uf uf'] is true iff uf' |- uf using the normal equality rules. *)
 
-val unify_with_part : t Sl_term.gen_unifier
+val unify_within : (t, 'a) Sl_term.unifier
+(** [unify_within Option.some (Sl_term.empty_subst, ()) u u'] computes a 
+    substitution [theta] such that [u'] |- [u[theta]]. *)
+
+val inverse_unify_within : (t, 'a) Sl_term.unifier
+(** Like [unify_within] but by applying the substitution to the second argument
+    as opposed to the first. *)
 
 val remove : Sl_term.t -> t -> t
 (** FIXME why is this here? *)

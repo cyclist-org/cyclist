@@ -15,6 +15,15 @@ let to_string_list v =
   Blist.map (Sl_tpair.to_string_sep symb_eq.str) (bindings v)
 let to_string v =
   Blist.to_string symb_star.sep (Sl_tpair.to_string_sep symb_eq.str) (bindings v)
+let pp fmt v = 
+  Blist.pp 
+    pp_star   
+    (fun fmt (a,b) -> 
+      Format.fprintf fmt "@[%a%s%a@]" Sl_term.pp a symb_eq.str Sl_term.pp b) 
+    fmt
+    (bindings v)
+   
+
 
 let rec find x m =
   if Sl_term.Map.mem x m then
@@ -59,11 +68,14 @@ let parse st =
           parse_symb symb_eq >>
           Sl_term.parse << spaces |>> (fun y -> (x, y))) <?> "eq") st
 
-let unify_with_part cont theta m m' =
-  Sl_tpair.FList.part_unord_unify cont theta (bindings m) (bindings m')
+let unify_within cont state m m' =
+  Sl_tpair.FList.unord_unify_within cont state (bindings m) (bindings m')
 
-let subst_subsumed eqs theta = 
-  Option.mk (Sl_term.Map.for_all (equates eqs) theta) theta
+let inverse_unify_within cont state m m' =
+  Sl_tpair.FList.inverse_unord_unify_within cont state (bindings m) (bindings m')
+
+let subst_subsumed eqs ((theta,_) as state) = 
+  Option.mk (Sl_term.Map.for_all (equates eqs) theta) state
 
 let remove x m =
   failwith "FIXME"

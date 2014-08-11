@@ -26,6 +26,9 @@ let tags inds = Tags.of_list (Blist.map fst (to_list inds))
 
 let strip_tags inds = 
   map_to Sl_pred.MSet.add Sl_pred.MSet.empty snd inds
+
+let equal_upto_tags inds inds' =
+  Sl_pred.MSet.equal (strip_tags inds) (strip_tags inds')
   
 let subst_tags tagpairs inds = 
   endomap (Sl_tpred.subst_tag tagpairs) inds
@@ -38,57 +41,48 @@ let freshen_tags inds' inds =
     let delta = 1 + maxtag - mintag in
     endomap (fun (tag, head) -> (tag + delta, head)) inds
 
-let rec aux_unify part cont theta inds inds' =
+let rec aux_unify part cont state inds inds' =
   if is_empty inds then
-    if part || is_empty inds' then cont theta else None
+    if part || is_empty inds' then cont state else None
   else
     let a = choose inds in
     let inds = remove a inds in
     let to_match = elements inds' in
     let f a' =
-      Option.bind 
-        (fun theta' -> aux_unify part cont theta' inds (remove a' inds'))
-        (Sl_tpred.unify theta a a') in
+      Sl_tpred.unify
+        (fun state' -> aux_unify part cont state' inds (remove a' inds'))
+        state a a' in
     Blist.find_some f to_match
 
-let unify cont theta inds inds' = aux_unify false cont theta inds inds'
-let unify_with_part cont theta inds inds' = aux_unify true cont theta inds inds'
+let unify cont state inds inds' = 
+  aux_unify false cont state inds inds'
+let unify_within cont state inds inds' = 
+  aux_unify true cont state inds inds'
 
-let subsumed eqs inds inds' =
-  let valid theta =
+let subsumed_upto_tags eqs inds inds' =
+  let valid ((theta,_) as state) =
     if not (Sl_pred.MSet.equal
               (strip_tags (subst theta inds))
               (strip_tags (subst theta inds'))) then None else
-    Sl_uf.subst_subsumed eqs theta in
-  Option.is_some (unify valid Sl_term.empty_subst inds inds')
+    Sl_uf.subst_subsumed eqs state in
+  Option.is_some (unify valid (Sl_term.empty_subst, ()) inds inds')
       
-let tagged_subsumed eqs inds inds' =
-  let valid theta =
+let subsumed eqs inds inds' =
+  let valid ((theta,_) as state) =
     if not (equal (subst theta inds) (subst theta inds')) then None else
-    Sl_uf.subst_subsumed eqs theta in
-  Option.is_some (unify valid Sl_term.empty_subst inds inds')
+    Sl_uf.subst_subsumed eqs state in
+  Option.is_some (unify valid (Sl_term.empty_subst, ()) inds inds')
       
-let rec aux_tagged_unify cont theta tagpairs inds inds' =
+let rec tagged_unify cont state inds inds' =
   if is_empty inds then
-    if is_empty inds' then 
-      Option.map (fun theta' -> (theta', tagpairs)) (cont theta)
-    else
-      None
+    if is_empty inds' then cont state else None
   else
     let a = choose inds in
     let inds = remove a inds in
     let to_match = elements inds' in
     let f a' =
-      Option.bind 
-        (fun (theta', tp) -> 
-          aux_tagged_unify 
-            cont 
-            theta' 
-            (TagPairs.add tp tagpairs) 
-            inds 
-            (remove a' inds'))
-        (Sl_tpred.tagged_unify theta a a') in
+      Sl_tpred.tagged_unify 
+        (fun state' -> tagged_unify cont state' inds (remove a' inds'))
+        state a a' in
     Blist.find_some f to_match
 
-let tagged_unify cont theta inds inds' =
-  aux_tagged_unify cont theta TagPairs.empty inds inds'
