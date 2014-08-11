@@ -12,8 +12,8 @@ val vars : t -> Sl_term.Set.t
 val to_string : t -> string
 val to_melt : t -> Latex.t
 val parse : (t, 'a) MParser.parser
-val unify : (t, 'a) Sl_term.unifier
 
-val tagged_unify : (t, Util.TagPairs.t) Sl_term.unifier
-(** Unify two tagged predicates but also add the pair of tags of the 
-    unified predicates. *) 
+val unify : ?tagpairs:bool -> t Sl_term.unifier
+(** Unify two tagged predicates.
+    If the optional argument [~tagpairs=false] is set to [true] then also 
+    add the pair of tags of the unified predicates. *) 

@@ -299,7 +299,7 @@ let fold (defs,ident) =
         let (f,(ident,vs)) = Sl_indrule.dest case in 
         let results : Sl_term.substitution list ref = ref [] in
         let hook (sub,_) = results := sub :: !results ; None in 
-        let () = ignore (Sl_heap.unify_within hook (Sl_term.empty_subst,()) f l) in
+        let () = ignore (Sl_heap.unify_partial hook (Sl_term.empty_subst, TagPairs.empty) f l) in
         let process_sub theta = 
           let (f, vs) = (Sl_heap.subst theta f, Blist.map (Sl_term.subst theta) vs) in
           let l' = 

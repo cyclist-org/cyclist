@@ -7,11 +7,14 @@ module TPair = PairTypes(Sl_term)(Sl_term)
 
 include TPair
 
-let unify cont state (x, y) (x', y') =
+let _unify cont state (x, y) (x', y') =
   Sl_term.unify (fun state' -> Sl_term.unify cont state' y y') state x x'
    
-let unord_unify cont state p p' =
-  Blist.find_some (unify cont state p) [ p'; Pair.swap p' ]
+let unify ?(order=false) cont state p p' =
+  if order then 
+    _unify cont state p p'
+  else
+    Blist.find_some (_unify cont state p) [ p'; Pair.swap p' ]
 
 let order ((x,y) as pair) =
   if Sl_term.compare x y <= 0 then pair else (y,x)
@@ -27,25 +30,19 @@ module FList =
   struct
     include Util.MakeFList(TPair)
     
-    let rec unord_unify_within cont state xs ys =
+    let rec unify_partial ?(order=false) ?(inverse=false) cont state xs ys =
       match (xs, ys) with
       | ([], _) -> cont state
       | (_, []) -> None
       | (p::ps, _) ->
         Blist.find_some 
-          (unord_unify (fun state' -> unord_unify_within cont state' ps ys) state p) 
+          (fun q ->
+            let (x,y) = if inverse then (q,p) else (p,q) in  
+            unify ~order
+              (fun state' -> 
+                unify_partial ~order ~inverse cont state' ps ys) state x y) 
           ys
     
-    let rec inverse_unord_unify_within cont state xs ys =
-      match (xs, ys) with
-      | ([], _) -> cont state
-      | (_, []) -> None
-      | (p::ps, _) ->
-        Blist.find_some 
-          (fun q -> 
-            unord_unify (fun state' -> inverse_unord_unify_within cont state' ps ys) state q p) 
-          ys
-
     let terms ps = 
       Blist.foldl 
         (fun a p -> Pair.fold Sl_term.Set.add p a) 

@@ -30,9 +30,12 @@ val tag_pairs : t -> Util.TagPairs.t
 val inconsistent : t -> bool
 (** Do all disjuncts entail false in the sense of [Sl_heap.inconsistent]? *)
 
-val subsumed : t -> t -> bool
+val subsumed : ?total:bool -> t -> t -> bool
 (** [subsumed a b]: is it the case that for any disjunct [a'] of [a] there a 
-    disjunct [b'] of [b] such [a'] is subsumed by [b']? 
+    disjunct [b'] of [b] such [a'] is subsumed by [b']?
+    If the optional argument [~total=true] is set to [false] then relax the 
+    check on the spatial part so that it is included rather than equal to that
+    of [b].
     NB this includes matching the tags exactly. *)   
 val subsumed_upto_tags : t -> t -> bool
 (** As above but ignoring tags. *)

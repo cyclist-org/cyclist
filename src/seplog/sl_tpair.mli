@@ -2,10 +2,10 @@
 
 include Util.BasicType with type t = Sl_term.t * Sl_term.t
 
-val unify : (t, 'a) Sl_term.unifier
-
-val unord_unify : (t, 'a) Sl_term.unifier
-(** Unify two pairs of terms ignoring their internal order.  *)
+val unify : ?order:bool -> t Sl_term.unifier
+(** Unify two pairs of terms, ignoring the pairs' internal ordering of members.
+    The optional argument [~order] has a default of [false].  When it is set 
+    to [true] then the internal order is honoured. *)
 
 val order : t -> t
 (** Return a permutation of the input that obeys the ordering [Sl_term.compare].
@@ -20,11 +20,12 @@ module FList :
   sig
     include Util.BasicType with type t = t list
     
-    val unord_unify_within : (t, 'a) Sl_term.unifier
-    (** Unify all (unordered) pairs of the 1st argument with a part of the 2nd. *)
-
-    val inverse_unord_unify_within : (t, 'a) Sl_term.unifier
-    (** Like [unord_unify_within] but applying the substitution to the 2nd arg. *)
+    val unify_partial : ?order:bool -> ?inverse:bool -> t Sl_term.unifier
+    (** Unify all pairs of the 1st argument with a part of the 2nd.
+        - The optional argument [~order:false] indicates whether the internal 
+          ordering of the pair's members is honoured. 
+        - The optional argument [~inverse:false] indicates if the substitution
+          is applied to the second argument (as opposed to the first). *)
 
     val terms : t -> Sl_term.Set.t
   end

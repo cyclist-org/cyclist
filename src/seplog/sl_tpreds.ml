@@ -41,23 +41,18 @@ let freshen_tags inds' inds =
     let delta = 1 + maxtag - mintag in
     endomap (fun (tag, head) -> (tag + delta, head)) inds
 
-let rec aux_unify part cont state inds inds' =
+let rec unify ?(total=true) ?(tagpairs=false) cont state inds inds' =
   if is_empty inds then
-    if part || is_empty inds' then cont state else None
+    if not total || is_empty inds' then cont state else None
   else
     let a = choose inds in
     let inds = remove a inds in
     let to_match = elements inds' in
     let f a' =
-      Sl_tpred.unify
-        (fun state' -> aux_unify part cont state' inds (remove a' inds'))
+      Sl_tpred.unify ~tagpairs
+        (fun state' -> unify ~total ~tagpairs cont state' inds (remove a' inds'))
         state a a' in
     Blist.find_some f to_match
-
-let unify cont state inds inds' = 
-  aux_unify false cont state inds inds'
-let unify_within cont state inds inds' = 
-  aux_unify true cont state inds inds'
 
 let subsumed_upto_tags eqs inds inds' =
   let valid ((theta,_) as state) =
@@ -65,24 +60,14 @@ let subsumed_upto_tags eqs inds inds' =
               (strip_tags (subst theta inds))
               (strip_tags (subst theta inds'))) then None else
     Sl_uf.subst_subsumed eqs state in
-  Option.is_some (unify valid (Sl_term.empty_subst, ()) inds inds')
+  Option.is_some 
+    (unify valid (Sl_term.empty_subst, TagPairs.empty) inds inds')
       
-let subsumed eqs inds inds' =
+let subsumed ?(total=true) eqs inds inds' =
   let valid ((theta,_) as state) =
     if not (equal (subst theta inds) (subst theta inds')) then None else
     Sl_uf.subst_subsumed eqs state in
-  Option.is_some (unify valid (Sl_term.empty_subst, ()) inds inds')
+  Option.is_some 
+    (unify ~total valid (Sl_term.empty_subst, TagPairs.empty) inds inds')
       
-let rec tagged_unify cont state inds inds' =
-  if is_empty inds then
-    if is_empty inds' then cont state else None
-  else
-    let a = choose inds in
-    let inds = remove a inds in
-    let to_match = elements inds' in
-    let f a' =
-      Sl_tpred.tagged_unify 
-        (fun state' -> tagged_unify cont state' inds (remove a' inds'))
-        state a a' in
-    Blist.find_some f to_match
 

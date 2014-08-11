@@ -53,12 +53,12 @@ let filter_vars s = Set.filter is_var s
 
 type substitution = t Map.t
 
-type 'a unifier_state = substitution * 'a
+type unifier_state = substitution * TagPairs.t
 
-type ('a,'b) unifier = 
-  ('b unifier_state -> 'b unifier_state option) ->
-    'b unifier_state -> 'a -> 'a ->
-      'b unifier_state option
+type 'a unifier = 
+  (unifier_state -> unifier_state option) ->
+    unifier_state -> 'a -> 'a ->
+      unifier_state option
 
 
 let empty_subst : substitution = Map.empty
@@ -74,9 +74,15 @@ let trm_unify cont ((theta, rest) as state) t t' =
       Option.mk (equal (Map.find t theta) t') state 
     else if is_nil t then
       Option.mk (is_nil t') state
-    else if is_univ_var t || is_exist_var t && (is_exist_var t' || is_nil t') then 
+    else if 
+      is_univ_var t || 
+      is_univ_var t' ||
+      is_exist_var t && is_nil t' ||
+      is_exist_var t && is_exist_var t' &&
+        Map.for_all (fun _ t'' -> not (equal t' t'')) theta
+    then 
       Some (Map.add t t' theta, rest)
-    else 
+    else   
       None in
   Option.bind cont res
     

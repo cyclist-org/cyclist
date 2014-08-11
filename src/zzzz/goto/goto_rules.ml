@@ -56,7 +56,7 @@ let luf_rl seq defs =
     let (l,i) = dest_sh_seq seq in
     let seq_vars = Seq.vars seq in
     let left_unfold ((tag, (ident, _)) as p) = 
-      let l = SH.with_inds l (Sl_tpreds.remove p l.SH.inds) in
+      let l = SH.del_ind l p in
       let clauses = Sl_defs.unfold seq_vars l p defs in
       let do_case (f', tagpairs) =
         let l' = Sl_heap.star l f' in
@@ -203,29 +203,28 @@ let symex_non_det_if_rule_f, symex_non_det_if_rule =
   rl, wrap rl 
 
 
-
-(* let is_subsumed s1 s2 = Seq.subsumed_wrt_tags Tags.empty s1 s2  *)
-
-let matches_fun ((l1,i1) as s1) ((l2,i2) as s2) =
-  failwith "FIXME"
-  (* the check that both formulas are either symheaps or disjunctions is there *)
-  (*  to avoid excessive weakening through disjunction introduction *)
-  (* if i1<>i2 || not (Sl_form.is_heap l1 = Sl_form.is_heap l2) then [] else *)
-  (* let tags = Tags.inter (Seq.tags s1) (Seq.tags s2) in                    *)
-  (* if Tags.is_empty tags then [] else                                      *)
-  (* let res = Seq.uni_subsumption s1 s2 in                                  *)
-  (* if Option.is_none res then [] else                                      *)
-  (* let theta = Option.get res in                                           *)
-  (* let s2' = Seq.subst theta s2 in                                         *)
-  (* let tags' = Tags.fold                                                   *)
-  (*   (fun t acc ->                                                         *)
-  (*     let new_acc = Tags.add t acc in                                     *)
-  (*     if Seq.subsumed_wrt_tags new_acc s1 s2' then new_acc else acc       *)
-  (*   ) tags Tags.empty in                                                  *)
-  (* let () = assert (not (Tags.is_empty tags')) in                          *)
-  (* [ ((TagPairs.mk tags', "Backl"), theta) ]                               *)
-
-(* let matches = Rule.mk_backrule true Rule.all_nodes (fun s s' -> List.map fst (matches_fun s s')) *)
+let matches (l,i) (l',i') =
+  try
+    if i<>i' then [] else
+    let (l,l') = Pair.map Sl_form.dest (l,l') in
+    let results = ref [] in
+    let verify ((theta, _) as state) =
+      (* assert (Seq.subsumed_upto_tags seq (Seq.subst theta seq')) ; *)
+      if 
+        Sl_term.Map.for_all 
+          (fun x y -> 
+            Sl_heap.equates l' x y || not (Sl_term.Set.mem x !program_vars)) 
+          theta 
+      then
+        results := state :: !results;
+      None in
+    let _ =
+      Sl_heap.unify_partial ~tagpairs:true
+        verify
+        (Sl_term.empty_subst, TagPairs.empty)
+        l' l in
+    !results
+  with Not_symheap -> []
 
 (*    seq'     *)
 (* ----------  *)
@@ -238,16 +237,19 @@ let subst_rule theta seq' seq =
     else 
         []
 
-(*   F |- G * Pi'  *)
-(* --------------- *)
-(*   Pi * F |- G   *)
-(* where seq' = F |- G * Pi' and seq = Pi * F |- G *)     
-let weaken seq' seq = 
-  failwith "FIXME"
-  (* if Seq.subsumed_wrt_tags Tags.empty seq seq' then                                                 *)
-  (*   [ [(seq', TagPairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')), TagPairs.empty)], "Weaken" ] *)
-  (* else                                                                                              *)
-  (*   []                                                                                              *)
+(*   seq' = l' |- i'  *)
+(* ---------------    *)
+(*   seq = l |- i     *)
+(* where l = l' * g   *)
+let weaken ((l',i') as seq') (l,i) =
+  if i<>i' then [] else
+  try
+    let (l,l') = Pair.map Sl_form.dest (l,l') in
+    if Sl_heap.subsumed ~total:false l' l then 
+      [ [(seq', TagPairs.mk (Seq.tags seq'), TagPairs.empty)], "Frame" ]
+    else
+      []
+  with Not_symheap -> []
 
 (* if there is a backlink achievable through substitution and classical *)
 (* weakening then make the proof steps that achieve it explicit so that *)
@@ -256,10 +258,17 @@ let dobackl idx prf =
     let src_seq = Proof.get_seq idx prf in
     let targets = Rule.all_nodes idx prf in
     let apps = 
-        Blist.map (fun idx' -> matches_fun src_seq (Proof.get_seq idx' prf)) targets in
-    let f targ_idx (p, theta) =
+        Blist.bind
+      (fun idx' -> 
+        Blist.map 
+          (fun res -> (idx',res))
+          (matches src_seq (Proof.get_seq idx' prf))) 
+      targets in
+    let f (targ_idx, (theta, tagpairs)) =
         let targ_seq = Proof.get_seq targ_idx prf in
-    let subst_seq = Seq.subst theta targ_seq in
+    (* [targ_seq'] is as [targ_seq] but with the tags of [src_seq] *)
+    let targ_seq' = (Sl_form.subst_tags tagpairs (fst targ_seq), snd targ_seq) in 
+    let subst_seq = Seq.subst theta targ_seq' in
     Rule.sequence [
       if Seq.equal src_seq subst_seq
         then Rule.identity
@@ -267,18 +276,14 @@ let dobackl idx prf =
         
       if Sl_term.Map.for_all Sl_term.equal theta
         then Rule.identity
-        else Rule.mk_infrule (subst_rule theta targ_seq);
+        else Rule.mk_infrule (subst_rule theta targ_seq');
          
       Rule.mk_backrule 
         true 
         (fun _ _ -> [targ_idx]) 
-        (fun s s' -> if Seq.equal s s' then [p] else [])
+        (fun s s' -> [TagPairs.reflect tagpairs, "Backl"])
     ] in
-    Rule.first 
-      (Blist.map2 
-          (fun idx' l -> Rule.first (Blist.map (f idx') l)) 
-            targets 
-            apps) idx prf
+    Rule.first (Blist.map f apps) idx prf
 
 
 let fold (defs,ident) =
@@ -287,47 +292,21 @@ let fold (defs,ident) =
       let (l,i) = dest_sh_seq seq in
       if Sl_tpreds.is_empty l.SH.inds then [] else
       let tags = Seq.tags seq in
-      let freshtag = 1 + (try Tags.max_elt tags with Not_found -> 0) in 
       let do_case case =
-        let (f,(ident,vs)) = Sl_indrule.dest case in 
-        (* if Sl_tpreds.is_empty f.SH.inds then [] else *)
-        let results : Sl_term.substitution list ref = ref [] in
-        let hook (sub,_) = results := sub :: !results ; None in 
-        let () = ignore (Sl_heap.unify_within hook (Sl_term.empty_subst,()) f l) in
-        let process_sub theta = 
-          let (f, vs) = (Sl_heap.subst theta f, Blist.map (Sl_term.subst theta) vs) in
-          let l' = 
-            SH.mk
-              (* FIXME hacky stuff in eqs : in reality a proper way to diff *)
-              (* two union-find structures is required *)
-                (Sl_uf.of_list 
-                (Sl_deqs.to_list 
-                  (Sl_deqs.diff
-                    (Sl_deqs.of_list (Sl_uf.bindings l.SH.eqs))
-                    (Sl_deqs.of_list (Sl_uf.bindings f.SH.eqs))
-                  )))
-              (Sl_deqs.diff l.SH.deqs f.SH.deqs)
-              (Sl_ptos.diff l.SH.ptos f.SH.ptos)
-              (Sl_tpreds.fold 
-                (fun (_, (f_ident, f_vs)) a -> 
-                  Sl_tpreds.del_first 
-                  (fun (_, (l_ident, l_vs)) -> 
-                    f_ident = l_ident && Sl_term.FList.equal f_vs l_vs) a) 
-                f.SH.inds
-                l.SH.inds) in
-          let newpred = (freshtag,(ident,vs)) in
-          let l' = SH.with_inds l' (Sl_tpreds.add newpred l'.SH.inds) in
+        let (f,(ident,vs)) = Sl_indrule.dest case in
+        let results = Sl_indrule.fold case l in
+        let process (theta, l') = 
           let seq' = ([l'],i) in
-          (* let () = print_endline "Fold match:" in        *)
-          (* let () = print_endline (Seq.to_string seq) in  *)
-          (* let () = print_endline (Sl_heap.to_string f) in   *)
-          (* let () = print_endline (Seq.to_string seq') in *)
+          (* let () = print_endline "Fold match:" in         *)
+          (* let () = print_endline (Seq.to_string seq) in   *)
+          (* let () = print_endline (Sl_heap.to_string f) in *)
+          (* let () = print_endline (Seq.to_string seq') in  *)
             [(
               seq', 
               TagPairs.mk (Tags.inter tags (Seq.tags seq')), 
               TagPairs.empty 
             )], (ident ^ " Fold")  in
-        Blist.map process_sub !results in
+        Blist.map process results in
       Blist.bind do_case defs
     with Not_symheap -> [] in
   Rule.mk_infrule fold_rl 

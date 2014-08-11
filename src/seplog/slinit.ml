@@ -36,6 +36,8 @@ open Util;;
 #install_printer Sl_form.pp;;
 #install_printer Sl_seq.pp;;
 #install_printer Sl_defs.pp;;
+#install_printer Sl_indrule.pp;;
+
 
 open Lib;;
 

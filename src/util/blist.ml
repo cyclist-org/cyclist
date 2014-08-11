@@ -138,6 +138,17 @@ let choose lol =
     (fun ll -> foldl (fun tl e -> foldl (fun t l -> (e::l)::t) tl ll) [])
     [[]] lol
 
+let rec _combs k len l =
+  if k = 0 then [ [] ] else
+  if len < k then [] else 
+  if k = len then [ l ] else
+  let (h,t) = (hd l, tl l) in
+  let starting_with_h =
+    (map (fun sublist -> h :: sublist) (_combs (pred k) (pred len) t)) in
+  starting_with_h @ (_combs k (pred len) t)
+
+let combs k l = _combs k (length l) l
+
 let rec pairs = function
   | [] | [_] -> []
   | x::((x'::_) as xs) -> (x,x')::(pairs xs)

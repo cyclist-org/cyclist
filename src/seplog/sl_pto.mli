@@ -7,5 +7,5 @@ val to_melt : t -> Latex.t
 val terms : t -> Sl_term.Set.t
 val vars : t -> Sl_term.Set.t
 
-val unify : (t, 'a) Sl_term.unifier
+val unify : t Sl_term.unifier
 (** Compute substitution that unifies two points-tos. *)

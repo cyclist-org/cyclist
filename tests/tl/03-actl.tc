@@ -1,8 +1,0 @@
-fields: next;
-judgement: y!=nil ||-_0 <>[]x=nil 
-0: x := nil;
-1: if * goto 1;
-2: x := y;
-3: x := nil;
-4: goto 4
-

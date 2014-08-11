@@ -12,13 +12,11 @@ val vars : t -> Sl_term.Set.t
 val to_string_list : t -> string list
 val to_melt : t -> Latex.t
 
-val unify_within : (t, 'a) Sl_term.unifier
-(** [unify_within Option.some (Sl_term.empty_subst, ()) d d'] computes a 
-    substitution [theta] such that [d[theta]] is a subset of [d']. *)
-
-val inverse_unify_within : (t, 'a) Sl_term.unifier
-(** Like [unify_within] but by applying the substitution to the second argument
-    as opposed to the first. *)
+val unify_partial : ?inverse:bool -> t Sl_term.unifier
+(** [unify_partial Option.some (Sl_term.empty_subst, ()) d d'] computes a 
+    substitution [theta] such that [d[theta]] is a subset of [d']. 
+    If the optional argument [~inverse:false] is set to [true] then a 
+    substitution is computed such that [d] is a subset of [d'[theta]]. *)
 
 val subsumed : Sl_uf.t -> t -> t -> bool
 (** [subsumed eqs d d'] is true iff [d] can be rewritten using the equalities

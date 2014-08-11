@@ -21,17 +21,17 @@ all:
 clean:
 	$(OCB) -clean
 
-fo-tests:
-	-@for TST in tests/fo/*.tst ; do _build/$(FOMAIN) $(TST_OPTS) -S "`cat $$TST`" ; done
+#fo-tests:
+#	-@for TST in tests/fo/*.tst ; do _build/$(FOMAIN) $(TST_OPTS) -S "`cat $$TST`" ; done
 
 sl-tests:
 	-@for TST in tests/sl/*.tst ; do _build/$(SLMAIN) $(TST_OPTS) -S "`cat $$TST`" ; done
 
-pr-tests:
-	-@for TST in tests/pr/*.tc ; do _build/$(PRMAIN) $(TST_OPTS) -P $$TST ; done
+goto-tests:
+	-@for TST in tests/goto/*.tc ; do _build/$(PRMAIN) $(TST_OPTS) -P $$TST ; done
 
-sf-tests:
-	-@for TST in tests/sf/*.wl ; do echo $$TST: ; _build/$(PR2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
+whl-tests:
+	-@for TST in tests/whl/*.wl ; do echo $$TST: ; _build/$(PR2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
 mutant-tests:
 	-@for TST in tests/mutant/*.wl ; do echo $$TST: ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
@@ -39,9 +39,9 @@ mutant-tests:
 whl_abd-tests:
 	-@for TST in tests/whl_abd/*.wl ; do echo $$TST ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
-aplas-tests: fo-tests sl-tests pr-tests
+aplas-tests: sl-tests goto-tests #fo-tests 
 
-tp-tests: fo-tests sl-tests pr-tests sf-tests
+tp-tests: sl-tests goto-tests sf-tests #fo-tests 
 
 abd-tests: whl_abd-tests mutant-tests
 

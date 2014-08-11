@@ -1,6 +1,6 @@
 (** Multiset of tagged predicates. 
     NB no check is made for the uniqueness of tags within set. 
-    However, that uniqueness is required if [tagged_unify_within] is to return
+    However, that uniqueness is required if [tagged_unify_partial] is to return
     a set of tag pairs that describes an injective function.
     *)
 include Util.OrderedContainer with type elt = Sl_tpred.t
@@ -34,17 +34,16 @@ val freshen_tags : t -> t -> t
 val subsumed_upto_tags : Sl_uf.t -> t -> t -> bool
 (** Test whether the two arguments are the same modulo the provided equalities. 
     NB the comparison ignores tags. *) 
-val subsumed : Sl_uf.t -> t -> t -> bool
+val subsumed : ?total:bool -> Sl_uf.t -> t -> t -> bool
 (** Test whether the two arguments are the same modulo the provided equalities. 
-    Contrary to [subsumed] this includes tags. *) 
+    Contrary to [subsumed] this includes tags. 
+    If the optional argument [~total=true] is set to [false] then 
+    check if the first multiset is a subset of the second modulo equalities. *)
 
-val unify : (t, 'a) Sl_term.unifier
-(** Compute substitution that makes the two multisets equal up to tags. *)
-
-val unify_within : (t, 'a) Sl_term.unifier
-(** Compute substitution that makes the first multiset a subset of the second,
-    up to tags. *)
-
-val tagged_unify : (t, Util.TagPairs.t) Sl_term.unifier
-(** unify a set with another and return in addition to the substitution,
-    the set of pairs of tags of predicates unified. *)
+val unify : ?total:bool -> ?tagpairs:bool -> t Sl_term.unifier
+(** Compute substitution that makes the two multisets equal up to tags. 
+- If the optional argument [~total=true] is set to [false] then 
+  compute substitution that makes the first multiset a subset of the second.
+- If the optional argument [~tagpairs=false] is set to [true] then return 
+  in addition to the substitution the pairs of tags of predicates unified. *)
+  

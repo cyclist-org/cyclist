@@ -47,10 +47,13 @@ val inconsistent : t -> bool
     NB only equalities and disequalities are used for this check.
 *)
 
-val subsumed : t -> t -> bool
+val subsumed : ?total:bool -> t -> t -> bool
 (** [subsumed h h'] is true iff [h] can be rewritten using the equalities
     in [h'] such that its spatial part becomes equal to that of [h']
-    and the pure part becomes a subset of that of [h']. *)
+    and the pure part becomes a subset of that of [h']. 
+    If the optional argument [~total=true] is set to [false] then check whether
+    both pure and spatial parts are subsets of those of [h'] modulo the equalities
+    of [h']. *)
 
 val subsumed_upto_tags : t -> t -> bool
 (** Like [subsumed] but ignoring tag assignment. *)
@@ -111,19 +114,19 @@ val subst_tags : Util.TagPairs.t -> t -> t
 (** Substitute tags according to the function represented by the set of 
     tag pairs provided. *)
 
-val unify_within : (t, 'a) Sl_term.unifier
-(** Unify two heaps such that the first becomes a subformula of the second. *)
+val unify_partial : ?tagpairs:bool -> t Sl_term.unifier
+(** Unify two heaps such that the first becomes a subformula of the second.
+- If the optional argument [~tagpairs=false] is set to [true] then in addition 
+  to the substitution found, also return the set of pairs of tags of 
+  predicates unified. *)
 
-val classical_unify : (t, 'a) Sl_term.unifier
-(** Unify two heaps, by using [unify_within] for the pure (classical) part whilst
-    using [unify] for the spatial part. *)
-
-val inverse_classical_unify : (t, 'a) Sl_term.unifier
-(** Unify two heaps as in [classical_unify] but apply the substitution to the 
-    *second* argument as opposed to the first. *)
-
-val tagged_classical_unify : (t, Util.TagPairs.t) Sl_term.unifier
-(** In addition to the substitution found by [classical_unify], 
-    return the set of pairs of tags of predicates unified. *)
+val classical_unify : ?inverse:bool -> ?tagpairs:bool -> t Sl_term.unifier
+(** Unify two heaps, by using [unify_partial] for the pure (classical) part whilst
+    using [unify] for the spatial part.
+- If the optional argument [~inverse=false] is set to [true] then compute the 
+  required substitution for the *second* argument as opposed to the first. 
+- If the optional argument [~tagpairs=false] is set to [true] then in addition 
+  to the substitution found, also return the set of pairs of tags of 
+  predicates unified. *)
 
 

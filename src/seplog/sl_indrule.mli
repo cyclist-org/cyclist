@@ -26,7 +26,8 @@ val unfold :
   pair [(tag,tag')] will be returned.
 *)  
     
-val fold : t -> Sl_heap.t -> Sl_term.substitution list
-(** [fold r h] returns a list of substitutions over the formal parameters of 
+val fold : t -> Sl_heap.t -> (Sl_term.substitution * Sl_heap.t) list
+(** [fold r h] returns a list of pairs of substitutions over the formal parameters of 
     the rule [r] such that its body, when one of these substitutions is applied,
-    becomes a subformula of [h]. *)
+    becomes a subformula of [h]; and the result of removing that subformula from
+    [h]. NB the pure part is removed on a best effort basis. *)

@@ -12,12 +12,11 @@ let subst_tag tagpairs (tag, pred) =
   let (_, tag'') = TagPairs.find (fun (tag',_) -> tag=tag') tagpairs in
   (tag'', pred) 
 
-let unify cont state (_, pred) (_, pred') = Sl_pred.unify cont state pred pred'
-
-let tagged_unify cont state ((tag, _) as p) ((tag', _) as p') = 
-  unify 
-    (fun (theta, tagpairs) -> cont (theta, TagPairs.add (tag,tag') tagpairs))
-    state p p'
+let unify ?(tagpairs=false) cont state (tag, pred) (tag', pred') = 
+  Sl_pred.unify 
+    (fun (theta, tps) -> 
+      cont (theta, if tagpairs then TagPairs.add (tag,tag') tps else tps))
+    state pred pred'
 
 
 let terms (_, pred) = Sl_pred.terms pred

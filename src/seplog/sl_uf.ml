@@ -68,11 +68,30 @@ let parse st =
           parse_symb symb_eq >>
           Sl_term.parse << spaces |>> (fun y -> (x, y))) <?> "eq") st
 
-let unify_within cont state m m' =
-  Sl_tpair.FList.unord_unify_within cont state (bindings m) (bindings m')
+let eqclasses m = 
+  let classes = 
+    Sl_term.Map.fold
+      (fun k v c -> 
+        Sl_term.Map.add v
+          (k :: (try Sl_term.Map.find v c with Not_found -> [v]))
+          c
+      ) 
+      m
+      Sl_term.Map.empty in
+  Sl_term.Map.fold (fun _ v ls -> v::ls) classes []
+      
+let unify_eqclasses cont state c c' =
+  Blist.find_some
+    (Sl_term.FList.unify cont state c)
+    (Blist.combs (Blist.length c) c')
 
-let inverse_unify_within cont state m m' =
-  Sl_tpair.FList.inverse_unord_unify_within cont state (bindings m) (bindings m')
+let saturate m = 
+  let ts = Sl_term.Set.to_list (terms m) in
+  let pairs = Blist.cartesian_product ts ts in
+  Blist.filter (Fun.uncurry (equates m)) pairs 
+
+let unify_partial ?(inverse=false) cont state m m' =
+  Sl_tpair.FList.unify_partial ~inverse cont state (bindings m) (saturate m')
 
 let subst_subsumed eqs ((theta,_) as state) = 
   Option.mk (Sl_term.Map.for_all (equates eqs) theta) state

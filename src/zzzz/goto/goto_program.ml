@@ -193,7 +193,8 @@ type program_t = fields * lab_cmds
 
 module Seq =
   struct
-    type t = Sl_form.t * int
+    include PairTypes(Sl_form)(Int.T)
+    
     let tags (f,_) = Sl_form.tags f
     let vars (l,_) = Sl_form.vars l
     let terms (l,_) = Sl_form.terms l
@@ -204,28 +205,6 @@ module Seq =
       Latex.concat
       [ Sl_form.to_melt f;
         Latex.index symb_turnstile.melt (Latex.text (string_of_int i)) ]
-
-    (* let subsumed_wrt_tags tags (l,i) (l',i') =          *)
-    (*   i = i' && Sl_form.spw_subsumed_wrt_tags tags l' l *)
-    (*  s' *)
-    (* ___ *)
-    (*  s  *)
-    let uni_subsumption ((l,i) as s) ((l',i') as s') =
-      failwith "FIXME"
-      (* if i<>i' then None else                                                      *)
-      (* let tags = Tags.inter (tags s) (tags s') in                                  *)
-      (* let valid theta' =                                                           *)
-      (*   if Sl_term.Map.exists                                                      *)
-      (*     (fun k v -> Sl_term.is_univ_var k && not (Sl_form.equates l k v)) theta' *)
-      (*     then None else                                                           *)
-      (*   let s'' = subst theta' s' in                                               *)
-      (*   let tags' = Tags.fold                                                      *)
-      (*     ( fun t acc ->                                                           *)
-      (*       let new_acc = Tags.add t acc in                                        *)
-      (*       if subsumed_wrt_tags new_acc s s'' then new_acc else acc               *)
-      (*     ) tags Tags.empty in                                                     *)
-      (*   if not (Tags.is_empty tags') then Some theta' else None in                 *)
-      (* Sl_form.spw_left_subsumption valid Sl_term.empty_subst l' l                  *)
 
     let pp fmt (f,i) =
       Format.fprintf fmt "@[%a |-_%i@]" Sl_form.pp f i
@@ -239,6 +218,7 @@ module Seq =
         parse_symb symb_turnstile_underscore >>
         Tokens.integer >>= (fun i ->
         parse_symb symb_bang >>$ (f,i))) <?> "GotoSeq") st
+        
   end
 
 let max_prog_var = ref Sl_term.nil

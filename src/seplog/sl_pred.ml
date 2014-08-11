@@ -30,4 +30,7 @@ let parse st =
   Tokens.parens (Tokens.comma_sep1 Sl_term.parse) << spaces >>= (fun arg_list ->
   return (pred, arg_list))) <?> "ind") st
 
+let of_string s =
+  handle_reply (MParser.parse_string parse s ())
+
 module MSet = MakeMultiset(IndSubf)

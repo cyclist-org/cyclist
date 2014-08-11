@@ -227,9 +227,9 @@ let matches seq seq' =
       assert (Sl_seq.subsumed_upto_tags seq (Sl_seq.subst theta seq')) ;
       results := state :: !results;
       None in 
-    let cont state = Sl_heap.inverse_classical_unify verify state r r' in
+    let cont state = Sl_heap.classical_unify ~inverse:true verify state r r' in
     let _ =  
-      Sl_heap.tagged_classical_unify 
+      Sl_heap.classical_unify ~tagpairs:true 
         cont 
         (Sl_term.empty_subst, TagPairs.empty) 
         l' l in
