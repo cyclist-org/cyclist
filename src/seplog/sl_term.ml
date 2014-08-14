@@ -86,6 +86,15 @@ let trm_unify cont ((theta, rest) as state) t t' =
       None in
   Option.bind cont res
     
+let backtrack u cont state x y =
+  let res = ref [] in
+  let valid state' =
+    match cont state' with
+    | None -> None
+    | Some state'' -> res := state'' :: !res ; None in
+  let _ = u valid state x y in !res;;
+
+
 let avoid_theta vars subvars =
   let allvars = Set.union vars subvars in
   let (exist_vars, univ_vars) =

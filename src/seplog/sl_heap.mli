@@ -55,8 +55,11 @@ val subsumed : ?total:bool -> t -> t -> bool
     both pure and spatial parts are subsets of those of [h'] modulo the equalities
     of [h']. *)
 
-val subsumed_upto_tags : t -> t -> bool
-(** Like [subsumed] but ignoring tag assignment. *)
+val subsumed_upto_tags : ?total:bool -> t -> t -> bool
+(** Like [subsumed] but ignoring tag assignment.
+    If the optional argument [~total=true] is set to [false] then check whether
+    both pure and spatial parts are subsets of those of [h'] modulo the equalities
+    of [h']. *)
 
 val equal_upto_tags : t -> t -> bool
 (** Like [equal] but ignoring tag assignment. *)

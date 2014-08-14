@@ -10,10 +10,7 @@ module Seqtactics = Seqtactics.Make(While_program.Seq)
 module Proof = Proof.Make(While_program.Seq)
 
 let tagpairs s =
-	if !termination then
-		TagPairs.mk (Seq.tags s)
-	else
-		Seq.tagpairs_one
+	if !termination then Seq.tag_pairs s else Seq.tagpairs_one
 
 (* following is for symex only *)
 let progpairs () = 
@@ -52,7 +49,7 @@ let wrap r =
 
 (* break LHS disjunctions *)
 let lhs_disj_to_symheaps =
-  let rl ((l,cmd): Seq.t) =
+  let rl (l,cmd) =
     if Blist.length l < 2 then [] else
     [ Blist.map 
         (fun sh -> let s' = ([sh],cmd) in (s', tagpairs s', TagPairs.empty ) ) 
@@ -66,13 +63,13 @@ let luf_rl seq defs =
     let (l,cmd) = dest_sh_seq seq in
     let seq_vars = Seq.vars seq in
     let left_unfold ((_, (ident, _)) as p) = 
-      let l' = SH.with_inds l (Sl_tpreds.remove p l.SH.inds) in
+      let l' = SH.del_ind l p in
       let clauses = Sl_defs.unfold seq_vars l' p defs in
       let do_case (f', tagpairs) =
         let l' = Sl_heap.star l' f' in
         ( 
 					([l'],cmd), 
-					(if !termination then TagPairs.union (Sl_heap.tag_pairs l') tagpairs else Seq.tagpairs_one), 
+					(if !termination then tagpairs else Seq.tagpairs_one), 
 					(if !termination then tagpairs else TagPairs.empty)
 				) in
       Blist.map do_case clauses, (ident ^ " L.Unf.") in
@@ -205,8 +202,25 @@ let symex_while_rule =
     with Not_symheap | WrongCmd -> [] in
   wrap rl
 
-let matches_fun ((l1,cmd1) as s1) ((l2,cmd2) as s2) =
-  failwith "FIXME"  
+(* FIXME below works only for termination!!! *)
+let matches ((l,cmd) as seq) ((l',cmd') as seq') =
+  try
+    if not (Cmd.equal cmd cmd') then [] else
+    let (l,l') = Pair.map Sl_form.dest (l,l') in
+    let verify ((theta, tagpairs) as state) =
+      assert (Seq.subsumed seq (Seq.subst_tags tagpairs (Seq.subst theta seq'))) ;
+      Option.mk 
+        (Sl_term.Map.for_all 
+          (fun x y -> 
+            Sl_term.equal x y || not (Sl_term.Set.mem x !program_vars)) 
+          theta)
+        state in
+    Sl_term.backtrack 
+      (Sl_heap.unify_partial ~tagpairs:true)
+      verify
+      (Sl_term.empty_subst, TagPairs.empty)
+      l' l
+  with Not_symheap -> []
   (* if not (Cmd.equal cmd1 cmd2)  ||                                          *)
   (*    not (Sl_form.is_heap l1 = Sl_form.is_heap l2) then [] else             *)
   (* match Seq.uni_subsumption s1 s2 with                                      *)
@@ -233,110 +247,151 @@ let matches_fun ((l1,cmd1) as s1) ((l2,cmd2) as s2) =
 let subst_rule theta seq' seq = 
   if Seq.equal (Seq.subst theta seq') seq 
     then 
-        [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], "Subst" ]
+      [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], 
+       "Subst "  (* ^ (Format.asprintf "%a" Sl_term.pp_subst theta) *) ]
     else 
-        []
+      []
 
-(*   F |- G * Pi'  *)
-(* --------------- *)
-(*   Pi * F |- G   *)
-(* where seq' = F |- G * Pi' and seq = Pi * F |- G *)
-
-(* the below is related to a bug that appears when Tags.empty is replaced *)
-(* with intersection in the cyclic reversal test. *)     
-let weaken seq' seq = 
-  failwith "FIXME"
-  (*   if Seq.subsumed_wrt_tags Tags.empty seq seq' then                                               *)
-  (*   [ [(seq', TagPairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')), TagPairs.empty)], "Weaken" ] *)
-  (* else                                                                                              *)
-  (*   []                                                                                              *)
-
-(* let weaken seq' seq =                                             *)
-(*   if Sl_seq.subsumed_wrt_tags (Sl_seq.tags seq') seq seq' then    *)
-(*     [ [(seq', Sl_seq.tag_pairs seq', TagPairs.empty)], "Weaken" ] *)
-(*   else                                                            *)
-(*     []                                                            *)
+let frame seq' seq = 
+  if Seq.subsumed seq seq' then
+    [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], "Frame" ]
+  else
+    []
 
 (* if there is a backlink achievable through substitution and classical *)
 (* weakening then make the proof steps that achieve it explicit so that *)
 (* actual backlinking can be done on Seq.equal sequents *) 
 let dobackl idx prf =
-    let src_seq = Proof.get_seq idx prf in
-    let targets = Rule.all_nodes idx prf in
-    let apps = 
-        Blist.map (fun idx' -> matches_fun src_seq (Proof.get_seq idx' prf)) targets in
-    let f targ_idx (p, theta) =
+  let src_seq = Proof.get_seq idx prf in
+  let targets = Rule.all_nodes idx prf in
+  let apps = 
+    Blist.bind
+      (fun idx' -> 
+        Blist.map 
+          (fun res -> (idx',res))
+          (matches src_seq (Proof.get_seq idx' prf))) 
+      targets in
+    let f (targ_idx, (theta, tagpairs)) =
       let targ_seq = Proof.get_seq targ_idx prf in
-      let subst_seq = Seq.subst theta targ_seq in
+      (* [targ_seq'] is as [targ_seq] but with the tags of [src_seq] *)
+      let targ_seq' = (Sl_form.subst_tags tagpairs (fst targ_seq), snd targ_seq) in 
+      let subst_seq = Seq.subst theta targ_seq' in
       Rule.sequence [
         if Seq.equal src_seq subst_seq
           then Rule.identity
-          else Rule.mk_infrule (weaken subst_seq);
+          else Rule.mk_infrule (frame subst_seq);
           
         if Sl_term.Map.for_all Sl_term.equal theta
           then Rule.identity
-          else Rule.mk_infrule (subst_rule theta targ_seq);
+          else Rule.mk_infrule (subst_rule theta targ_seq');
            
         Rule.mk_backrule 
           true 
           (fun _ _ -> [targ_idx]) 
-          (fun s s' -> if Seq.equal s s' then [p] else [])
+          (fun s s' -> [TagPairs.reflect tagpairs, "Backl"])
       ] in
-      Rule.first 
-        (Blist.map2 
-            (fun idx' l -> Rule.first (Blist.map (f idx') l)) 
-              targets 
-              apps) idx prf
+    Rule.first (Blist.map f apps) idx prf
+(*     let src_seq = Proof.get_seq idx prf in                                              *)
+(*     let targets = Rule.all_nodes idx prf in                                             *)
+(*     let apps =                                                                          *)
+(*         Blist.map (fun idx' -> matches_fun src_seq (Proof.get_seq idx' prf)) targets in *)
+(*     let f targ_idx (p, theta) =                                                         *)
+(*       let targ_seq = Proof.get_seq targ_idx prf in                                      *)
+(*       let subst_seq = Seq.subst theta targ_seq in                                       *)
+(*       Rule.sequence [                                                                   *)
+(*         if Seq.equal src_seq subst_seq                                                  *)
+(*           then Rule.identity                                                            *)
+(*           else Rule.mk_infrule (weaken subst_seq);                                      *)
+          
+(*         if Sl_term.Map.for_all Sl_term.equal theta                                      *)
+(*           then Rule.identity                                                            *)
+(*           else Rule.mk_infrule (subst_rule theta targ_seq);                             *)
+           
+(*         Rule.mk_backrule                                                                *)
+(*           true                                                                          *)
+(*           (fun _ _ -> [targ_idx])                                                       *)
+(*           (fun s s' -> if Seq.equal s s' then [p] else [])                              *)
+(*       ] in                                                                              *)
+(*       Rule.first                                                                        *)
+(*         (Blist.map2                                                                     *)
+(*             (fun idx' l -> Rule.first (Blist.map (f idx') l))                           *)
+(*               targets                                                                   *)
+(*               apps) idx prf                                                             *)
 
 let fold (defs,ident) =
   let fold_rl seq = 
     try 
-      let (l,i) = dest_sh_seq seq in
+      let (l,cmd) = dest_sh_seq seq in
       if Sl_tpreds.is_empty l.SH.inds then [] else
       let tags = Seq.tags seq in
-      let freshtag = Symbols.next_tag () in 
       let do_case case =
-        let (f,(ident,vs)) = Sl_indrule.dest case in 
-        let results : Sl_term.substitution list ref = ref [] in
-        let hook (sub,_) = results := sub :: !results ; None in 
-        let () = ignore (Sl_heap.unify_partial hook (Sl_term.empty_subst, TagPairs.empty) f l) in
-        let process_sub theta = 
-          let (f, vs) = (Sl_heap.subst theta f, Blist.map (Sl_term.subst theta) vs) in
-          let l' = 
-            SH.mk 
-              (* FIXME hacky stuff in SH.eqs : in reality a proper way to diff *)
-              (* two union-find structures is required *)
-              (Sl_uf.of_list
-                (Sl_deqs.to_list
-                  (Sl_deqs.diff
-                    (Sl_deqs.of_list (Sl_uf.bindings l.SH.eqs))
-                    (Sl_deqs.of_list (Sl_uf.bindings f.SH.eqs))
-                  )))
-              (Sl_deqs.diff l.SH.deqs f.SH.deqs)
-              (Sl_ptos.diff l.SH.ptos f.SH.ptos)
-              (Sl_tpreds.fold 
-                (fun (_, (f_ident, f_vs)) a -> 
-                  Sl_tpreds.del_first 
-                  (fun (_, (l_ident, l_vs)) -> 
-                    f_ident = l_ident && Sl_term.FList.equal f_vs l_vs) a) 
-                f.SH.inds
-                l.SH.inds) in
-          let newpred = (freshtag,(ident,vs)) in
-          let l' = SH.with_inds l' (Sl_tpreds.add newpred l'.SH.inds) in
-          let seq' = ([l'],i) in
-          (* let () = print_endline "Fold match:" in        *)
-          (* let () = print_endline (Seq.to_string seq) in  *)
-          (* let () = print_endline (Sl_heap.to_string f) in   *)
-          (* let () = print_endline (Seq.to_string seq') in *)
+        let (f,(ident,vs)) = Sl_indrule.dest case in
+        let results = Sl_indrule.fold case l in
+        let process (theta, l') = 
+          let seq' = ([l'],cmd) in
+          (* let () = print_endline "Fold match:" in         *)
+          (* let () = print_endline (Seq.to_string seq) in   *)
+          (* let () = print_endline (Sl_heap.to_string f) in *)
+          (* let () = print_endline (Seq.to_string seq') in  *)
             [(
               seq', 
               TagPairs.mk (Tags.inter tags (Seq.tags seq')), 
               TagPairs.empty 
             )], (ident ^ " Fold")  in
-        Blist.map process_sub !results in
+        Blist.map process results in
       Blist.bind do_case defs
     with Not_symheap -> [] in
   Rule.mk_infrule fold_rl 
+
+(* let fold (defs,ident) =                                                                           *)
+(*   let fold_rl seq =                                                                               *)
+(*     try                                                                                           *)
+(*       let (l,i) = dest_sh_seq seq in                                                              *)
+(*       if Sl_tpreds.is_empty l.SH.inds then [] else                                                *)
+(*       let tags = Seq.tags seq in                                                                  *)
+(*       let freshtag = Symbols.next_tag () in                                                       *)
+(*       let do_case case =                                                                          *)
+(*         let (f,(ident,vs)) = Sl_indrule.dest case in                                              *)
+(*         let results : Sl_term.substitution list ref = ref [] in                                   *)
+(*         let hook (sub,_) = results := sub :: !results ; None in                                   *)
+(*         let () = ignore (Sl_heap.unify_partial hook (Sl_term.empty_subst, TagPairs.empty) f l) in *)
+(*         let process_sub theta =                                                                   *)
+(*           let (f, vs) = (Sl_heap.subst theta f, Blist.map (Sl_term.subst theta) vs) in            *)
+(*           let l' =                                                                                *)
+(*             SH.mk                                                                                 *)
+(*               (* FIXME hacky stuff in SH.eqs : in reality a proper way to diff *)                 *)
+(*               (* two union-find structures is required *)                                         *)
+(*               (Sl_uf.of_list                                                                      *)
+(*                 (Sl_deqs.to_list                                                                  *)
+(*                   (Sl_deqs.diff                                                                   *)
+(*                     (Sl_deqs.of_list (Sl_uf.bindings l.SH.eqs))                                   *)
+(*                     (Sl_deqs.of_list (Sl_uf.bindings f.SH.eqs))                                   *)
+(*                   )))                                                                             *)
+(*               (Sl_deqs.diff l.SH.deqs f.SH.deqs)                                                  *)
+(*               (Sl_ptos.diff l.SH.ptos f.SH.ptos)                                                  *)
+(*               (Sl_tpreds.fold                                                                     *)
+(*                 (fun (_, (f_ident, f_vs)) a ->                                                    *)
+(*                   Sl_tpreds.del_first                                                             *)
+(*                   (fun (_, (l_ident, l_vs)) ->                                                    *)
+(*                     f_ident = l_ident && Sl_term.FList.equal f_vs l_vs) a)                        *)
+(*                 f.SH.inds                                                                         *)
+(*                 l.SH.inds) in                                                                     *)
+(*           let newpred = (freshtag,(ident,vs)) in                                                  *)
+(*           let l' = SH.with_inds l' (Sl_tpreds.add newpred l'.SH.inds) in                          *)
+(*           let seq' = ([l'],i) in                                                                  *)
+(*           (* let () = print_endline "Fold match:" in        *)                                    *)
+(*           (* let () = print_endline (Seq.to_string seq) in  *)                                    *)
+(*           (* let () = print_endline (Sl_heap.to_string f) in   *)                                 *)
+(*           (* let () = print_endline (Seq.to_string seq') in *)                                    *)
+(*             [(                                                                                    *)
+(*               seq',                                                                               *)
+(*               TagPairs.mk (Tags.inter tags (Seq.tags seq')),                                      *)
+(*               TagPairs.empty                                                                      *)
+(*             )], (ident ^ " Fold")  in                                                             *)
+(*         Blist.map process_sub !results in                                                         *)
+(*       Blist.bind do_case defs                                                                     *)
+(*     with Not_symheap -> [] in                                                                     *)
+(*   Rule.mk_infrule fold_rl                                                                         *)
 
 
 let generalise_while_rule =
@@ -401,6 +456,19 @@ let axioms =
 
 let rules = ref Rule.fail
 
+let symex =       
+  Rule.first [
+    symex_skip_rule ;
+    symex_assign_rule;
+    symex_load_rule ;
+    symex_store_rule ;
+    symex_free_rule ;
+    symex_new_rule ;
+    symex_if_rule ;
+    symex_ifelse_rule ;
+    symex_while_rule;
+  ] 
+
 let setup defs =
   (* Program.set_local_vars seq_to_prove ; *)
   rules := Rule.first [ 
@@ -411,19 +479,8 @@ let setup defs =
       dobackl ;
       Rule.choice (Blist.map (fun c -> Rule.compose (fold c) dobackl) defs);
       
-      Rule.first [
-        symex_skip_rule ;
-        symex_assign_rule;
-        symex_load_rule ;
-        symex_store_rule ;
-        symex_free_rule ;
-        symex_new_rule ;
-        symex_if_rule ;
-        symex_ifelse_rule ;
-        symex_while_rule;
-      ] ;
-      
-      generalise_while_rule ;
+      symex;      
+      (* generalise_while_rule ; *)
       (* backlink_cut defs; *)
       
       luf defs;

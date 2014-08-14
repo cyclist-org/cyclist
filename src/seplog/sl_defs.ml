@@ -52,10 +52,8 @@ let is_undefined defs pred = not (is_defined defs pred)
 let get_def ident (defs: t) =
   fst (Blist.find (fun (_, ident') -> Strng.equal ident ident') defs)
 
-let unfold vars h pred defs = 
-  let (_, (ident, _)) = pred in
-  let def = get_def ident defs in
-  Blist.map (Sl_indrule.unfold vars h pred) def
+let unfold vars h ((_, (ident, _)) as pred) defs = 
+  Blist.map (Sl_indrule.unfold vars h pred) (get_def ident defs)
   
   
 module BasePair =
@@ -96,7 +94,7 @@ struct
     (* (Sl_term.Set.inter (Sl_heap.vars g') substs)) in let () = assert (     *)
     (* Sl_term.Set.is_empty (Sl_term.Set.inter v' substs)) in                    *)
     let (v', g') = subst theta (v', g') in
-    let h' = SH.with_inds h (Sl_tpreds.remove ind h.SH.inds) in
+    let h' = SH.del_ind h ind in
     let h' = Sl_heap.star h' g' in
     let cv = Blist.cartesian_product (Sl_term.Set.to_list v) (Sl_term.Set.to_list v') in
     let h' = SH.with_deqs h' (Sl_deqs.union h'.SH.deqs (Sl_deqs.of_list cv)) in

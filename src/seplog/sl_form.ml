@@ -17,9 +17,12 @@ let pp fmt f =
   if f <>[] then
     Format.fprintf fmt "@[%a@]" (Blist.pp pp_or Sl_heap.pp) f
   else
-    Format.fprintf fmt "@[F@]"
+    Format.fprintf fmt "@[%s@]" symb_false.str
 
-let to_string d = Blist.to_string symb_or.sep Sl_heap.to_string d
+let to_string = function
+  | [] -> symb_false.str
+  | d ->  Blist.to_string symb_or.sep Sl_heap.to_string d
+
 let to_melt d =
   ltx_mk_math
     (if d =[] then symb_false.melt else
@@ -36,10 +39,10 @@ let subsumed ?(total=true) f1 f2 =
   Blist.for_all (fun d2 ->
     Blist.exists (fun d1 ->
       Sl_heap.subsumed ~total d1 d2) f1) f2
-let subsumed_upto_tags f1 f2 =
+let subsumed_upto_tags ?(total=true) f1 f2 =
   Blist.for_all (fun d2 ->
     Blist.exists (fun d1 ->
-      Sl_heap.subsumed_upto_tags d1 d2) f1) f2
+      Sl_heap.subsumed_upto_tags ~total d1 d2) f1) f2
 
 let equal_upto_tags f f' =
   Blist.for_all2 Sl_heap.equal_upto_tags f f'

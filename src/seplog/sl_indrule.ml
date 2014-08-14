@@ -62,15 +62,17 @@ let fold (f, (predsym, args)) h =
   let vars = Sl_term.Set.of_list args in
   let tags = Sl_heap.tags h in
   let freshtag = 1 + (try Tags.max_elt tags with Not_found -> 0) in 
-  let results = ref [] in
   let cont ((theta, _) as state) =
     (* disallow substituting over existentials in rule body *)
-    if Sl_term.Map.for_all (fun x _ -> Sl_term.Set.mem x vars) theta then
-      results := state :: !results ; 
-    None in 
-  let _ = 
-    Sl_heap.unify_partial 
-      ~tagpairs:true cont (Sl_term.empty_subst, TagPairs.empty) f h in
+    Option.mk 
+      (Sl_term.Map.for_all 
+        (fun x y -> Sl_term.Set.mem x vars || Sl_term.is_exist_var y || true) 
+        theta) 
+      state in 
+  let results = 
+    Sl_term.backtrack 
+      (Sl_heap.unify_partial ~tagpairs:true) 
+      cont (Sl_term.empty_subst, TagPairs.empty) f h in
   Blist.map 
     (fun (theta, tagpairs) ->
       let f' = Sl_heap.subst_tags tagpairs (Sl_heap.subst theta f) in
@@ -92,4 +94,4 @@ let fold (f, (predsym, args)) h =
             (Sl_tpreds.diff h.Sl_heap.inds f'.Sl_heap.inds)) in
       (theta, h')
     )
-    !results
+    results

@@ -55,6 +55,12 @@ type 'a unifier =
     Some unifiers may add to the tag pairs in [state], or may not, depending on
     their function. *)
 
+val backtrack : 
+  'a unifier -> (unifier_state -> unifier_state option) -> unifier_state -> 
+    'a -> 'a -> unifier_state list
+(** Wrap a unifier into a function that always backtracks, collecting all 
+    states such that [cont state] is not [None] and returning that list. *)
+
 val empty_subst : substitution
 val singleton_subst : t -> t -> substitution
 val subst : substitution -> t -> t

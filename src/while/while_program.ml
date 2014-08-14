@@ -460,8 +460,8 @@ module Cmd =
         Latex.concat
           [ keyw_if.melt; ltx_math_space; Cond.to_melt cond; ltx_math_space;
             keyw_then.melt; ltx_math_space; to_melt_label (Blist.hd cmd);
-            Latex.ldots; keyw_else.melt; to_melt_label (Blist.hd cmd');
-            Latex.ldots; keyw_fi.melt ]
+            Latex.ldots; keyw_else.melt; ltx_math_space; 
+            to_melt_label (Blist.hd cmd'); Latex.ldots; keyw_fi.melt ]
       | While(cond,cmd) ->
         Latex.concat
           [ keyw_while.melt; ltx_math_space; Cond.to_melt cond; ltx_math_space;
@@ -501,39 +501,23 @@ module Seq =
       ltx_mk_math
         (Latex.concat [ Sl_form.to_melt f; symb_turnstile.melt; Cmd.to_melt cmd ])
 
-    (* let subsumed tags (l,cmd) (l',cmd') =                              *)
-    (*   Cmd.equal cmd cmd' && Sl_form.spw_subsumed_wrt_tags Tags.empty l' l *)
-    (* let is_subsumed (l,cmd) (l',cmd') =                                   *)
-    (*   Cmd.equal cmd cmd' && Sl_form.spw_subsumed_wrt_tags Tags.empty l' l *)
-    
-    (* let subsumed_wrt_tags tags (l,cmd) (l',cmd') =                  *)
-    (*   Cmd.equal cmd cmd' && Sl_form.spw_subsumed_wrt_tags tags l' l *)
-		
-    let uni_subsumption ((l,cmd) as s) ((l',cmd') as s') =
-      failwith "FIXME"
-      (* if not (Cmd.equal cmd cmd') then None else                                   *)
-      (* let tags = Tags.inter (tags s) (tags s') in                                  *)
-      (* let valid theta' =                                                           *)
-      (*   if Sl_term.Map.exists                                                      *)
-      (*     (fun k v -> Sl_term.is_univ_var k && not (Sl_form.equates l k v)) theta' *)
-      (*     then None else                                                           *)
-			(* 	if not !termination then Some theta' else                                  *)
-      (*   let s'' = subst theta' s' in                                               *)
-      (*   let tags' = Tags.fold                                                      *)
-      (*     ( fun t acc ->                                                           *)
-      (*       let new_acc = Tags.add t acc in                                        *)
-      (*       if subsumed_wrt_tags new_acc s s'' then new_acc else acc               *)
-      (*     ) tags Tags.empty in                                                     *)
-      (*   if not (Tags.is_empty tags') then Some theta' else None in                 *)
-      (* Sl_form.spw_left_subsumption valid Sl_term.empty_subst l' l                  *)
-
     let pp fmt (f,cmd) =
       Format.fprintf fmt "@[%a%s%a@]"
         Sl_form.pp f symb_turnstile.sep (Cmd.pp ~abbr:true 0) cmd
 
-    let equal (f,cmd) (f',cmd') = Cmd.equal cmd cmd' && Sl_form.equal f f'
+    let equal (f,cmd) (f',cmd') = 
+      Cmd.equal cmd cmd' && Sl_form.equal f f'
     let equal_upto_tags (f,cmd) (f',cmd') = 
       Cmd.equal cmd cmd' && Sl_form.equal_upto_tags f f'
+    
+    let subsumed (f,cmd) (f',cmd') = 
+      Cmd.equal cmd cmd' &&
+      Sl_form.subsumed ~total:false f' f 
+    let subsumed_upto_tags (f,cmd) (f',cmd') = 
+      Cmd.equal cmd cmd' &&
+      Sl_form.subsumed_upto_tags ~total:false f' f 
+    
+    let subst_tags tagpairs (l,cmd) = (Sl_form.subst_tags tagpairs l, cmd)
   end
 
 let program_vars = ref Sl_term.Set.empty

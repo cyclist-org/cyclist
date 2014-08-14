@@ -37,8 +37,11 @@ val subsumed : ?total:bool -> t -> t -> bool
     check on the spatial part so that it is included rather than equal to that
     of [b].
     NB this includes matching the tags exactly. *)   
-val subsumed_upto_tags : t -> t -> bool
-(** As above but ignoring tags. *)
+val subsumed_upto_tags : ?total:bool -> t -> t -> bool
+(** As above but ignoring tags.
+    If the optional argument [~total=true] is set to [false] then relax the 
+    check on the spatial part so that it is included rather than equal to that
+    of [b]. *)
 
 val parse : (t, 'a) MParser.t
 val of_string : string -> t

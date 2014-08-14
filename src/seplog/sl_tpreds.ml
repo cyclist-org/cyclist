@@ -54,19 +54,29 @@ let rec unify ?(total=true) ?(tagpairs=false) cont state inds inds' =
         state a a' in
     Blist.find_some f to_match
 
-let subsumed_upto_tags eqs inds inds' =
+let subsumed_upto_tags ?(total=true) eqs inds inds' =
   let valid ((theta,_) as state) =
-    if not (Sl_pred.MSet.equal
-              (strip_tags (subst theta inds))
-              (strip_tags (subst theta inds'))) then None else
-    Sl_uf.subst_subsumed eqs state in
+    if 
+      not 
+        ((if total then Sl_pred.MSet.equal else Sl_pred.MSet.subset) 
+          (strip_tags (subst theta inds))
+          (strip_tags (subst theta inds'))) then 
+      None 
+    else
+      Sl_uf.subst_subsumed eqs state in
   Option.is_some 
-    (unify valid (Sl_term.empty_subst, TagPairs.empty) inds inds')
+    (unify ~total valid (Sl_term.empty_subst, TagPairs.empty) inds inds')
       
 let subsumed ?(total=true) eqs inds inds' =
   let valid ((theta,_) as state) =
-    if not (equal (subst theta inds) (subst theta inds')) then None else
-    Sl_uf.subst_subsumed eqs state in
+    if 
+      not 
+        ((if total then equal else subset) 
+          (subst theta inds) 
+          (subst theta inds')) then 
+      None 
+    else
+      Sl_uf.subst_subsumed eqs state in
   Option.is_some 
     (unify ~total valid (Sl_term.empty_subst, TagPairs.empty) inds inds')
       

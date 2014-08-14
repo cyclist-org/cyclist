@@ -96,13 +96,13 @@ let unify_partial ?(inverse=false) cont state m m' =
 let subst_subsumed eqs ((theta,_) as state) = 
   Option.mk (Sl_term.Map.for_all (equates eqs) theta) state
 
+(* FIXME *)
 let remove x m =
-  failwith "FIXME"
-  (* let xs = Sl_term.Set.filter (equates m x) (vars m) in               *)
-  (* let rest =                                                          *)
-  (*   Sl_term.Map.filter                                                *)
-  (*     (fun y z -> not (Sl_term.Set.mem y xs || Sl_term.Set.mem z xs)) *)
-  (*     m in                                                            *)
-  (* let xs' = Sl_term.Set.to_list (Sl_term.Set.remove x xs) in          *)
-  (* Blist.fold_left (fun m p -> add p m) rest (Blist.pairs xs')         *)
+  let xs = Sl_term.Set.filter (equates m x) (vars m) in
+  let rest =
+    Sl_term.Map.filter
+      (fun y z -> not (Sl_term.Set.mem y xs || Sl_term.Set.mem z xs))
+      m in
+  let xs' = Sl_term.Set.to_list (Sl_term.Set.remove x xs) in
+  Blist.fold_left (fun m p -> add p m) rest (Blist.pairs xs')
 

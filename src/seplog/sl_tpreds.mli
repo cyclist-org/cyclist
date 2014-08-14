@@ -31,9 +31,11 @@ val to_melt : t -> Latex.t
 val freshen_tags : t -> t -> t
 (** Rename tags in second argument so that they are disjoint to those in the first. *)
 
-val subsumed_upto_tags : Sl_uf.t -> t -> t -> bool
+val subsumed_upto_tags : ?total:bool -> Sl_uf.t -> t -> t -> bool
 (** Test whether the two arguments are the same modulo the provided equalities. 
-    NB the comparison ignores tags. *) 
+    NB the comparison ignores tags.  
+    If the optional argument [~total=true] is set to [false] then 
+    check if the first multiset is a subset of the second modulo equalities. *)
 val subsumed : ?total:bool -> Sl_uf.t -> t -> t -> bool
 (** Test whether the two arguments are the same modulo the provided equalities. 
     Contrary to [subsumed] this includes tags. 

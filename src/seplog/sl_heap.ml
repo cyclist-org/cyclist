@@ -110,11 +110,11 @@ let inconsistent h = Sl_deqs.exists (fun (x, y) -> equates h x y) h.deqs
 
 let idents p = Sl_tpreds.idents p.inds
 
-let subsumed_upto_tags h h' = 
+let subsumed_upto_tags ?(total=true) h h' = 
   Sl_uf.subsumed h.eqs h'.eqs &&
   Sl_deqs.subsumed h'.eqs h.deqs h'.deqs &&
-  Sl_ptos.subsumed h'.eqs h.ptos h'.ptos &&
-  Sl_tpreds.subsumed_upto_tags h'.eqs h.inds h'.inds 
+  Sl_ptos.subsumed ~total h'.eqs h.ptos h'.ptos &&
+  Sl_tpreds.subsumed_upto_tags ~total h'.eqs h.inds h'.inds 
 
 let subsumed ?(total=true) h h' = 
   Sl_uf.subsumed h.eqs h'.eqs &&

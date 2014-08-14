@@ -41,9 +41,4 @@ open Util;;
 
 open Lib;;
 
-let seq = Sl_seq.of_string "nil!=x * nil!=y * x!=y * y->z * ls^2(z, nil) * ls^3(w, y) |- x!=z * ls^4(z, nil) * ls^5(w, z)" ;;
-
-let seq' = Sl_seq.of_string "nil!=y * y->z * ls^1(x, y) * ls^2(z, nil) |- ls^3(x, z) * ls^4(z, nil)";;
-
-let theta = Sl_term.singleton_subst (Sl_term.of_string "x") (Sl_term.of_string "w");;
-
+       
