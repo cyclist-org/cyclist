@@ -11,6 +11,7 @@ Sl_tpreds
 Sl_heap
 Sl_form
 Sl_defs
+Sl_preddef
 Sl_indrule
 Sl_seq
 While_program
@@ -23,8 +24,6 @@ Util
 Symbols
 Pair
 Var
-Goto_rules
-Goto_program
 Proof
 Proofrule
 Proofnode

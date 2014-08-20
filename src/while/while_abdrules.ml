@@ -37,7 +37,11 @@ let ex_subst_defs defs =
     let (p,h) = Sl_indrule.dest c in
     let p' = Sl_heap.fixpoint ex_subst_heap p in
     Sl_indrule.mk p' h in
-  Blist.map (fun (l,i) -> (Blist.map ex_subst_case l, i)) defs
+  Sl_defs.of_list (Blist.map 
+    (fun def -> 
+      Sl_preddef.mk 
+        (Blist.map ex_subst_case (Sl_preddef.rules def), Sl_preddef.predsym def)) 
+    (Sl_defs.to_list defs))
 
 
 let empify defs =
@@ -45,19 +49,27 @@ let empify defs =
     let (p,h) = Sl_indrule.dest c in
     let inds = Sl_tpreds.filter (Sl_defs.is_defined defs) p.SH.inds in
     Sl_indrule.mk (SH.with_inds p inds) h in
-  Blist.map (fun (l,i) -> (Blist.map empify_ l, i)) defs
+  Sl_defs.of_list (Blist.map 
+    (fun def -> 
+      Sl_preddef.mk 
+        (Blist.map empify_ (Sl_preddef.rules def), Sl_preddef.predsym def)) 
+    (Sl_defs.to_list defs))
 
 let inline defs =
+  let defs = Sl_defs.to_list defs in
   try
-    let (p,h) as q =
+    let q = 
       Blist.find
-        begin fun (p,h) ->
+        begin fun def ->
+          let (p,h) = Sl_preddef.dest def in
           (Blist.length p)=1 &&
           let (f,_) = Sl_indrule.dest (Blist.hd p) in
           let idents =
             Sl_tpreds.map_to Strng.Set.add Strng.Set.empty (fun (_,(id,_)) -> id) f.SH.inds in
           not (Strng.Set.mem h idents)
-        end (Blist.but_last defs) in
+        end 
+        (Blist.but_last defs) in
+    let (p,h) = Sl_preddef.dest q in
     let defs = Blist.filter ((!=)q) defs in
     let case = Blist.hd p in
     let f orig =
@@ -72,8 +84,11 @@ let inline defs =
         with Not_found -> f in
       let p'' = Sl_heap.fixpoint first_unfold p' in
       Sl_indrule.mk p'' h' in
-    Blist.map (fun (l,i) -> (Blist.map f l, i)) defs
-  with Not_found -> defs
+    Sl_defs.of_list (Blist.map 
+      (fun def -> 
+        Sl_preddef.mk (Blist.map f (Sl_preddef.rules def), Sl_preddef.predsym def)) 
+        defs)
+  with Not_found -> Sl_defs.of_list defs
 
 
 let used_only_recursively (heap, (ident, params)) pos =
@@ -98,7 +113,9 @@ let used_only_recursively (heap, (ident, params)) pos =
 (* then stop and report predicate and position *)
 (* when all are exhausted return None *)
 let find_unused_arg defs =
-  let check_def (clauses, ident) =
+  let defs = Sl_defs.to_list defs in
+  let check_def def =
+    let (clauses, ident) = Sl_preddef.dest def in
     if clauses = [] then None else
     let check_pos pos =
       if Blist.for_all
@@ -112,7 +129,9 @@ let find_unused_arg defs =
         Some (ident, pos)
       else
         None in
-    Blist.find_some check_pos (Blist.range 0 (snd (snd (Sl_indrule.dest (Blist.hd clauses))))) in
+    Blist.find_some 
+      check_pos 
+      (Blist.range 0 (snd (snd (Sl_indrule.dest (Blist.hd clauses))))) in
   if Blist.length defs=1 then
     None
   else
@@ -132,7 +151,11 @@ let eliminate (ident, pos) defs =
       Sl_indrule.mk (elim_pred heap) (ident', params)
     else
       Sl_indrule.mk (elim_pred heap) (ident', Blist.remove_nth pos params) in
-  Blist.map (fun (cl, ident') -> (Blist.map elim_clause cl, ident')) defs
+  Sl_defs.of_list (Blist.map 
+    (fun def -> 
+      let (cl, ident') = Sl_preddef.dest def in
+      Sl_preddef.mk (Blist.map elim_clause cl, ident')) 
+    (Sl_defs.to_list defs))
 
 let elim_dead_vars defs =
   match find_unused_arg defs with
@@ -145,7 +168,7 @@ let simplify_defs defs =
     (empify defs)
 
 
-let is_sat defs = Defs.satisfiable (empify defs) false false
+let is_sat defs = Sl_basepair.satisfiable (empify defs) false false
 
 let ex_falso_axiom = Abdrule.lift While_rules.ex_falso_axiom
 let symex_empty_axiom = Abdrule.lift While_rules.symex_empty_axiom
@@ -354,7 +377,9 @@ let abd_deref =
 							Sl_heap.star
   							(Sl_heap.mk_pto (newx, pto_params))
   							(Sl_heap.mk_ind (1, (fresh_ident, (newparams @ pto_params)))) in
-        	( [Sl_indrule.mk clause head], ident )::defs
+        	Sl_defs.add 
+            (Sl_preddef.mk ( [Sl_indrule.mk clause head], ident ))
+            defs
 				  end
 					newxs in
       Blist.bind f inds
@@ -408,7 +433,12 @@ let abd_det_guard =
               (Sl_deqs.singleton pair)
               Sl_ptos.empty
               (Sl_tpreds.singleton (1, (fresh_ident', newparams))) in
-          ( [Sl_indrule.mk clause_eq head; Sl_indrule.mk clause_deq head], ident )::defs in
+          Sl_defs.add 
+            (Sl_preddef.mk 
+              ([Sl_indrule.mk clause_eq head; 
+                Sl_indrule.mk clause_deq head], 
+                ident ))
+            defs in
 			  Blist.map g occurrences in
       Blist.bind f inds
     with Not_symheap -> [] in
@@ -460,7 +490,9 @@ let abd_back_rule =
               SH.with_inds 
                 Sl_heap.empty 
                 (Sl_tpreds.of_list [(1,(c',perm)); (2, (fresh_ident, newparams))]) in
-            (( [Sl_indrule.mk cl (c, newparams)], c )::defs))
+            Sl_defs.add 
+              (Sl_preddef.mk (( [Sl_indrule.mk cl (c, newparams)], c )))
+              defs)
 				  combinations in
       Blist.bind f cp
     with Not_symheap -> [] in
@@ -609,7 +641,7 @@ let unfold_last =
     (fun seq defs -> 
       Blist.map 
         (fun app -> (app,defs)) 
-        (While_rules.luf_rl seq [Blist.hd defs])) 
+        (While_rules.luf_rl seq (Sl_defs.of_list [Blist.hd (Sl_defs.to_list defs)]))) 
 
 let deref_tac =
   Abdrule.first 

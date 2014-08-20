@@ -7,6 +7,10 @@ val dest: t -> Sl_heap.t * Sl_pred.t
 
 val vars : t -> Sl_term.Set.t
 
+val predsym : t -> Sl_pred.ident_t
+val arity : t -> int
+val formals : t -> Sl_term.t list
+
 val freshen : Sl_term.Set.t -> t -> t
 (** Replace all variables in rule such that they are disjoint with the set 
     provided. *)

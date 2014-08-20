@@ -1,15 +1,16 @@
-include Util.BasicType with 
-  type t = (Sl_indrule.t list * Sl_pred.ident_t) list
+include Util.BasicType
   
-    
+val empty : t
+val add : Sl_preddef.t -> t -> t
+val to_list : t -> Sl_preddef.t list
+val of_list : Sl_preddef.t list -> t
+                        
 val to_melt : t -> Latex.t
 
 val mem : Sl_pred.ident_t -> t -> bool
 val is_defined : t -> Sl_tpred.t -> bool
 val is_undefined : t -> Sl_tpred.t -> bool
 val get_def : Sl_pred.ident_t -> t -> Sl_indrule.t list
-
-val satisfiable : t -> bool -> bool -> bool
 
 val fixpoint: (t -> t) -> t -> t
 

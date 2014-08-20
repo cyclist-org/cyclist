@@ -36,7 +36,7 @@ let prove_prog seq =
   let res =  
     w_timeout
       (fun () ->
-        Abducer.bfs !minbound !maxbound While_abdrules.rules seq []  
+        Abducer.bfs !minbound !maxbound While_abdrules.rules seq Sl_defs.empty  
         (if !gen_defs then record_defs else While_abdrules.is_sat)) 
       !timeout
       in

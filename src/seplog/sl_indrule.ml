@@ -7,15 +7,19 @@ include PairTypes(Sl_heap)(Sl_pred)
 let mk f i =
   let (_, args) = i in
   let v_args = Sl_term.Set.of_list args in
-  let v_h = Sl_heap.vars f in
+  let v_h = Sl_heap.terms f in
   let (uv_h, ev_h) = Sl_term.Set.partition Sl_term.is_univ_var v_h in
   assert (Blist.for_all Sl_term.is_univ_var args) ;
   assert (Sl_term.Set.cardinal v_args = Blist.length args) ;
   assert (Sl_term.Set.subset uv_h v_args) ;
-  assert (Sl_term.Set.for_all Sl_term.is_exist_var ev_h) ;   
+  assert (Sl_term.Set.for_all (fun trm -> Sl_term.is_nil trm || Sl_term.is_exist_var trm) ev_h) ;   
   (f, i)
   
 let dest c = c
+
+let predsym (_, pred) = Sl_pred.predsym pred
+let arity (_, pred) = Sl_pred.arity pred
+let formals (_, pred) = Sl_pred.args pred
 
 let vars (f, (_, vs)) =
   Sl_term.Set.union (Sl_term.Set.of_list vs) (Sl_heap.vars f)

@@ -318,7 +318,7 @@ let dobackl idx prf =
 (*               targets                                                                   *)
 (*               apps) idx prf                                                             *)
 
-let fold (defs,ident) =
+let fold def =
   let fold_rl seq = 
     try 
       let (l,cmd) = dest_sh_seq seq in
@@ -339,7 +339,7 @@ let fold (defs,ident) =
               TagPairs.empty 
             )], (ident ^ " Fold")  in
         Blist.map process results in
-      Blist.bind do_case defs
+      Blist.bind do_case (Sl_preddef.rules def)
     with Not_symheap -> [] in
   Rule.mk_infrule fold_rl 
 
@@ -477,7 +477,10 @@ let setup defs =
     
     Rule.choice [
       dobackl ;
-      Rule.choice (Blist.map (fun c -> Rule.compose (fold c) dobackl) defs);
+      Rule.choice 
+        (Blist.map 
+          (fun c -> Rule.compose (fold c) dobackl) 
+          (Sl_defs.to_list defs));
       
       symex;      
       (* generalise_while_rule ; *)

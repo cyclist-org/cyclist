@@ -22,7 +22,11 @@ let unify cont state (p, args) (p', args') =
   if not (Strng.equal p p') then None else
   Sl_term.FList.unify cont state args args'
 
-let terms (_, args) = Sl_term.FList.terms args
+let predsym pred = fst pred
+let args pred = snd pred
+let arity (_, args) = Blist.length args
+
+let terms pred = Sl_term.Set.of_list (args pred)
 let vars pred = Sl_term.filter_vars (terms pred)
 let subst theta (p, args) = (p, Sl_term.FList.subst theta args)
 let parse st =

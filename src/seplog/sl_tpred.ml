@@ -18,8 +18,11 @@ let unify ?(tagpairs=false) cont state (tag, pred) (tag', pred') =
       cont (theta, if tagpairs then TagPairs.add (tag,tag') tps else tps))
     state pred pred'
 
+let predsym tpred = Sl_pred.predsym (snd tpred)
+let args tpred = Sl_pred.args (snd tpred)
+let arity tpred = Sl_pred.arity (snd tpred)
 
-let terms (_, pred) = Sl_pred.terms pred
+let terms tpred = Sl_pred.terms (snd tpred)
 let vars tpred = Sl_term.filter_vars (terms tpred)
 
 let to_string (tag, (pred, args)) =
