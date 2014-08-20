@@ -512,7 +512,8 @@ module Seq =
     
     let subsumed (f,cmd) (f',cmd') = 
       Cmd.equal cmd cmd' &&
-      Sl_form.subsumed ~total:false f' f 
+      (if !termination then Sl_form.subsumed else Sl_form.subsumed_upto_tags) 
+        ~total:false  f' f 
     let subsumed_upto_tags (f,cmd) (f',cmd') = 
       Cmd.equal cmd cmd' &&
       Sl_form.subsumed_upto_tags ~total:false f' f 

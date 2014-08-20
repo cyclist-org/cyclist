@@ -23,6 +23,8 @@ let formals (_, pred) = Sl_pred.args pred
 
 let vars (f, (_, vs)) =
   Sl_term.Set.union (Sl_term.Set.of_list vs) (Sl_heap.vars f)
+	
+let params (_, (_, vs)) = vs
   
 let subst theta (f, (ident, vs)) =
   mk (Sl_heap.subst theta f) (ident, Blist.map (Sl_term.subst theta) vs)

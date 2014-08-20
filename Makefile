@@ -10,12 +10,16 @@ FOMAIN:=./src/firstorder/fo_prove.native
 SLMAIN:=./src/seplog/sl_prove.native
 PRMAIN:=./src/goto/goto_prove.native
 PR2MAIN:=./src/while/while_prove.native
+XTDPRMAIN:=./src/extended_while/extended_while_prove.native
 ABD2MAIN:=./src/while/while_abduce.native
 
 all:
 	$(OCB) all.otarget
 
 %.native: 
+	$(OCB) "$@"
+	
+%.byte:
 	$(OCB) "$@"
 
 clean:
@@ -33,17 +37,17 @@ goto-tests:
 whl-tests:
 	-@for TST in tests/whl/*.wl ; do echo $$TST: ; _build/$(PR2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
-mutant-tests:
-	-@for TST in tests/mutant/*.wl ; do echo $$TST: ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
-  
+xsf-tests:
+	-@for TST in tests/sf/*.wl2 ; do echo $$TST: ; _build/$(XTDPRMAIN) $(TST_OPTS) -P $$TST ; echo ; done
+
 whl_abd-tests:
 	-@for TST in tests/whl_abd/*.wl ; do echo $$TST ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
 aplas-tests: sl-tests goto-tests #fo-tests 
 
-tp-tests: sl-tests goto-tests sf-tests #fo-tests 
+tp-tests: sl-tests pr-tests sf-tests xsf-tests #fo-tests
 
-abd-tests: whl_abd-tests mutant-tests
+abd-tests: whl_abd-tests
 
 all-tests: tp-tests abd-tests
 

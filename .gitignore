@@ -1,21 +1,25 @@
-*.cmi
-*.cmx
-*.a
-*.o
-*.html
-.*
-*~
-*.native
-*.top
-*.log
 *.aux
 *.pdf
-*.backup
-*.synctex.gz
-/_build
-/_build/*
+.backup
+.synctex.gz
 /examples/out.tex
+
+# Mutant files on Nikos' tree
 examples/mutant_CAV06
 examples/mutant_CAV06/*
 tests/mutant
 tests/mutant/*
+# Eclipse Files #
+#################
+.paths
+.project
+.projectSettings
+.settings/
+
+# Ocaml Executables #
+#####################
+*.native
+*.byte
+*.top
+index.html
+_build/

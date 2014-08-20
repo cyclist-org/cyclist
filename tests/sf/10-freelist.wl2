@@ -1,0 +1,8 @@
+fields: next;
+precondition: ls(x, nil);
+postcondition: emp;
+while x!=nil do
+	y := x;
+	x := x.next;
+	free(y)
+od

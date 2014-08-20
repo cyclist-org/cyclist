@@ -1,9 +1,9 @@
-[TODO] fix up tagging assumptions
 [TODO] modularise/abstract variables, formulas, definitions for SL
-[TODO] rationalise unification interface across all modules
 [TODO] drop melt as a dependency and re-do the required stuff locally
 [TODO] consider hash consing for terms formulas etc
 [TODO] consider patricia trees and maps for most uses
 [TODO] decide on symheap representation: special data structure or general formula type
+[DONE] rationalise unification interface across all modules
+[DONE] fix up tagging assumptions
 [DONE] fix bug wrt tags in weaken tactic in backlinks
 [DONE] modularise and clean up parsers; maybe drop menhir and use PCL

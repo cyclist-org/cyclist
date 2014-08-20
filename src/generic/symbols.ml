@@ -22,14 +22,15 @@ let symb_true = make_symb "T" Latex.top
 let symb_or = make_symb "\\/" Latex.lor_
 let symb_and = make_symb "/\\" Latex.land_
 let symb_ampersand = make_symb "&" Latex.empty (* FIXME *)
+let symb_emp = make_symb "emp" (Latex.texttt (Latex.text "emp"))
 let symb_star = make_symb "*" Latex.ast
 let symb_pointsto = make_symb "->" Latex.mapsto
 let symb_eq = make_symb "=" (ltx_math " = ")
 let symb_deq = make_symb "!=" Latex.neq
 let symb_lp = make_symb "(" (Latex.text "(")
 let symb_rp = make_symb ")" (Latex.text ")")
-let symb_lb = make_symb "{" Latex.empty
-let symb_rb = make_symb "}" Latex.empty
+let symb_lb = make_symb "{" (Latex.text "\\{")
+let symb_rb = make_symb "}" (Latex.text "\\}")
 let symb_semicolon = make_symb ";" (Latex.text ";")
 let symb_colon = make_symb ":" Latex.empty
 let symb_comma = { str=","; sep=", "; melt=Latex.text ", " }
@@ -54,13 +55,15 @@ let keyw_goto = mk_keyw "goto"
 let keyw_if = mk_keyw "if"
 let keyw_fi = mk_keyw "fi"
 let keyw_then = mk_keyw "then"
+let keyw_else = mk_keyw "else"
 let keyw_stop = mk_keyw "stop"
 let keyw_nil = mk_keyw "nil"
 let keyw_fields = mk_keyw "fields"
 let keyw_judgement = mk_keyw "judgement"
 let keyw_precondition = mk_keyw "precondition"
+let keyw_postcondition = mk_keyw "postcondition"
+let keyw_proc = mk_keyw "proc"
 let keyw_skip = mk_keyw "skip"
-let keyw_else = mk_keyw "else"
 let keyw_while = mk_keyw "while"
 let keyw_do = mk_keyw "do"
 let keyw_od = mk_keyw "od"

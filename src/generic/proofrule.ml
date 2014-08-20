@@ -17,6 +17,15 @@ struct
   type backrule_f = seq_t -> seq_t -> (Util.TagPairs.t * string) list
   type select_f = int -> Proof.t -> int list
   
+	(* Apply the sequent in the open node identified by idx in prf to the
+	   characterising function ax_f. 
+		   If we get back Some descr then the sequent is the conclusion of the axiom
+			   characterised by ax_f (the name of the axiom is given by descr), so return
+			   a singleton list containing the original proof prf updated by closing the
+			   open node using the axiom descr, which does not add any new open nodes,
+			   since axioms do not have any premises.
+		   Otherwise return an empty list of results
+	*)
   let mk_axiom ax_f idx prf =
     match ax_f (Proof.get_seq idx prf) with
     | None -> L.empty
