@@ -47,6 +47,6 @@ let subsumed ?(total=true) eqs ptos ptos' =
   | None -> false
   | Some (theta, _) ->
     assert 
-      ((if total then equal else subset) (subst theta ptos) (subst theta ptos')) ; 
+      ((if total then equal else subset) (subst theta ptos) ptos') ; 
     true
 

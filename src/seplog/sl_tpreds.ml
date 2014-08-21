@@ -71,9 +71,8 @@ let subsumed ?(total=true) eqs inds inds' =
   let valid ((theta,_) as state) =
     if 
       not 
-        ((if total then equal else subset) 
-          (subst theta inds) 
-          (subst theta inds')) then 
+        ((if total then equal else subset) (subst theta inds) inds') 
+    then 
       None 
     else
       Sl_uf.subst_subsumed eqs state in

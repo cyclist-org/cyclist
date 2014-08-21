@@ -1,7 +1,9 @@
 *.aux
 *.pdf
-.backup
-.synctex.gz
+*.backup
+*.log
+*.synctex.gz
+/examples/proof.tex
 /examples/out.tex
 
 # Mutant files on Nikos' tree

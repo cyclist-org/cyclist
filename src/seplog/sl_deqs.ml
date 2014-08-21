@@ -10,6 +10,7 @@ let singleton p = singleton (Sl_tpair.order p)
 let mem p deqs = mem (Sl_tpair.order p) deqs
 let endomap f s = endomap (fun e -> Sl_tpair.order (f e)) s
 let subst theta m = endomap (Sl_tpair.subst theta) m
+let of_list l = Blist.foldl (fun deqs p -> add p deqs) empty l
 
 let to_string_list v = Blist.map (Sl_tpair.to_string_sep symb_deq.str) (elements v)
 let to_string v =
@@ -38,5 +39,13 @@ let subsumed eqs deqs deqs' =
       (Sl_term.empty_subst, TagPairs.empty) deqs deqs' with
   | None -> false
   | Some (theta, _) ->
-    assert (subset (subst theta deqs) (subst theta deqs')) ; true
+    if not (subset (subst theta deqs) deqs') then
+      begin
+        Format.eprintf "%a@." pp deqs ;
+        Format.eprintf "%a@." pp deqs' ;
+        Format.eprintf "%a@." Sl_term.pp_subst theta ;
+        assert false
+      end
+    else 
+      true
 
