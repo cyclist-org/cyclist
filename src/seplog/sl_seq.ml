@@ -56,3 +56,44 @@ let subsumed (l,r) (l',r') =
 
 let subsumed_upto_tags (l,r) (l',r') = 
   Sl_form.subsumed_upto_tags l' l && Sl_form.subsumed_upto_tags r r'
+
+
+let partitions trm_list pi = 
+  let pairs = Blist.cartesian_hemi_square trm_list in
+  let pairs = 
+    Blist.filter 
+      (fun (x,y) -> not (Sl_heap.equates pi x y || Sl_heap.disequates pi x y))
+      pairs in
+  let rec aux = function
+    | [] -> [pi]
+    | q::qs -> 
+      let sub_partitions = aux qs in
+      (Blist.map (fun pi' -> Sl_heap.add_eq pi' q) sub_partitions)
+      @
+      (Blist.map (fun pi' -> Sl_heap.add_deq pi' q) sub_partitions) in
+  aux pairs
+
+let invalid defs seq =
+  let trm_list = 
+    Sl_term.Set.to_list 
+      (Sl_term.Set.add Sl_term.nil 
+        (Sl_term.Set.filter Sl_term.is_univ_var (vars seq))) in
+  let (lbps, rbps) = Pair.map (Sl_basepair.pairs_of_form defs) seq in
+  let res = 
+    Sl_basepair.Set.exists
+    (fun (v,pi) -> 
+      Blist.exists 
+        (fun sigma -> 
+          Sl_basepair.Set.for_all 
+            (Fun.neg (fun (v',pi') -> 
+              Sl_heap.subsumed pi' sigma
+              &&
+              Sl_term.Set.for_all
+                (fun z -> Sl_term.Set.exists (Sl_heap.equates sigma z) v)
+                v'))  
+            rbps)
+        (partitions trm_list pi))
+    lbps in
+  if res then Format.eprintf "INVALID: %a@." pp seq ;
+  res
+    

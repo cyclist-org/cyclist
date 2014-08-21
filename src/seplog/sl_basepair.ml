@@ -5,7 +5,6 @@ open MParser
 
 module SH = Sl_heap
   
-  
 module BasePair =
 struct
   include PairTypes(Sl_term.Set)(Sl_heap)
@@ -78,28 +77,21 @@ struct
           (fun u -> Sl_term.Set.exists (fun z -> Sl_heap.equates h u z) v) l in
       let v = Sl_term.Set.of_list l in
       Some (project (v, h) case)
-  
+ 
 end
 
-module BasePairSet = MakeTreeSet(BasePair)
+include BasePair
 
-module CaseMap =
-struct
-  include MakeMap(Sl_indrule)
-  let to_string cmap =
-    let aux (c, s) =
-      (Sl_indrule.to_string c) ^ "\nBase pairs: " ^
-      (BasePairSet.to_string s) ^ "\n" in
-    Blist.to_string "\n" aux (to_list cmap)
-end
+module Set = MakeTreeSet(BasePair)
+
 
 let get_bps cmap (_, (ident, _)) =
   let l =
     Blist.filter
       (fun (c, _) -> Strng.equal ident (fst (snd (Sl_indrule.dest c))))
-      (CaseMap.to_list cmap) in
+      (Sl_indrule.Map.to_list cmap) in
   Blist.bind
-    (fun (c, s) -> Blist.map (fun bp -> (c, bp)) (BasePairSet.to_list s))
+    (fun (c, s) -> Blist.map (fun bp -> (c, bp)) (Set.to_list s))
     l
 
 let gen_pairs case cmap =
@@ -108,41 +100,43 @@ let gen_pairs case cmap =
     Blist.map (fun i -> get_bps cmap i) (Sl_tpreds.to_list h.SH.inds) in
   let l = Blist.choose candidates in
   let poss_bps =
-    Blist.rev_map (fun cbps -> BasePair.gen case cbps) l in
+    Blist.rev_map (fun cbps -> gen case cbps) l in
   let bps = Option.list_get poss_bps in
-  BasePairSet.of_list bps
+  Set.of_list bps
 
 let first_pred_not_empty defs =
+  let defs = Sl_defs.to_list defs in
   let first_pred = Sl_preddef.predsym (Blist.hd defs) in
   fun cm ->
-      CaseMap.exists
+      Sl_indrule.Map.exists
         (fun k v ->
               Strng.equal (Sl_indrule.predsym k) first_pred &&
-              not (BasePairSet.is_empty v)
+              not (Set.is_empty v)
         )
         cm
 
-let gen_all_pairs defs only_first =
+let gen_all_pairs ?(only_first=false) defs =
   let first_not_empty = first_pred_not_empty defs in
+  let defs = Sl_defs.to_list defs in
   let cmap =
     Blist.fold_left
       (fun m d ->
             Blist.fold_left
-              (fun m' c -> CaseMap.add c BasePairSet.empty m') m (Sl_preddef.rules d))
-      CaseMap.empty
+              (fun m' c -> Sl_indrule.Map.add c Set.empty m') m (Sl_preddef.rules d))
+      Sl_indrule.Map.empty
       defs
   in
   let onestep cmap =
-    let r = CaseMap.endomap
-        (fun (c, s) -> (c, BasePairSet.union s (gen_pairs c cmap)))
+    let r = Sl_indrule.Map.endomap
+        (fun (c, s) -> (c, Set.union s (gen_pairs c cmap)))
         cmap in
-    let () = debug (fun () -> "\n" ^ (CaseMap.to_string r) ^ "\n") in
+    let () = debug (fun () -> "\n" ^ (Sl_indrule.Map.to_string Set.to_string r) ^ "\n") in
     r in
   let rec fixp cm =
     let cm' = onestep cm in
     if
     only_first && first_not_empty cm' ||
-    CaseMap.equal BasePairSet.equal cm cm'
+    Sl_indrule.Map.equal Set.equal cm cm'
     then
       cm'
     else
@@ -151,25 +145,31 @@ let gen_all_pairs defs only_first =
 
 (* NB correctness relies on rules being explicit about x->_ implying       *)
 (* x!=nil !!!                                                              *)
-let satisfiable defs only_first output =
-  let defs = Sl_defs.to_list defs in
+let satisfiable ?(only_first=false) ?(output=false) defs =
   Stats.CC.call () ;
-  let res = gen_all_pairs defs only_first in
+  let res = gen_all_pairs ~only_first defs in
   if output then
     begin
       let element_conv (c, s) =
-        ((Sl_indrule.to_string c) ^ " has base " ^ (BasePairSet.to_string s)) in
+        ((Sl_indrule.to_string c) ^ " has base " ^ (Set.to_string s)) in
       print_endline
-        (Blist.to_string "\n" element_conv (CaseMap.to_list res))
+        (Blist.to_string "\n" element_conv (Sl_indrule.Map.to_list res))
     end ;
   let retval =
     only_first && first_pred_not_empty defs res ||
     not only_first &&
-    CaseMap.for_all (fun _ s -> not (BasePairSet.is_empty s)) res in
+    Sl_indrule.Map.for_all (fun _ s -> not (Set.is_empty s)) res in
   if retval then Stats.CC.accept () else Stats.CC.reject () ;
   retval
 
-let of_formula pname params f defs =
-  let head = (pname, params) in
-  let caselist = Blist.map (fun h -> Sl_indrule.mk h head) f in
-  (caselist, pname):: defs
+let form_sat defs f = satisfiable ~only_first:true (Sl_defs.of_formula defs f)
+
+let pairs_of_form defs f =
+  let defs = Sl_defs.of_formula defs f in
+  let bp_map = gen_all_pairs defs in
+  let (rules,_) = Sl_preddef.dest (Blist.hd (Sl_defs.to_list defs)) in
+  Blist.foldl 
+    (fun bps r -> Set.union bps (Sl_indrule.Map.find r bp_map)) 
+    Set.empty 
+    rules
+  

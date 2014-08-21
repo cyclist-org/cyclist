@@ -98,4 +98,7 @@ struct
     | [] -> identity
     | r::rs -> compose r (sequence rs)
   
+  let conditional cond r idx prf = 
+    if cond (Proof.get_seq idx prf) then r idx prf else []
+  
 end

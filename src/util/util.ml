@@ -42,6 +42,7 @@ module type OrderedMap =
 		val find_some : (key -> 'a -> bool) -> 'a t -> (key * 'a) option
     val fixpoint : ('a -> 'a -> bool) -> ('a t -> 'a t) -> 'a t -> 'a t
     val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit 
+    val to_string : ('a -> string) -> 'a t -> string
 (*    val map_to : ('b -> 'c -> 'c) -> 'c -> (key -> 'v -> 'b) -> 'v t -> 'c *)
 (*    val map_to_list : (key -> 'b -> 'a) -> 'b t -> 'a list                 *)
   end
@@ -323,13 +324,16 @@ module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
 				iter (fun k v -> if f k v then (found:=Some(k,v) ; raise Found)) m ; None
 			with Found -> !found
 
-    let pp pp_val   fmt m =
+    let pp pp_val fmt m =
       Format.fprintf fmt "@[@ ";
       iter 
         (fun k v -> Format.fprintf fmt "@[(%a->%a);@]@ " T.pp k pp_val v)
         m;
-      Format.fprintf fmt "@]";
+      Format.fprintf fmt "@]"
 
+    let to_string val_to_string m = 
+      let pp_val fmt v = Format.pp_print_string fmt (val_to_string v) in
+      Format.asprintf "%a" (pp pp_val) m 
   end
 
 module PairTypes(T: BasicType) (S: BasicType) :

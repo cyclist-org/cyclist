@@ -36,3 +36,7 @@ val subsumed : t -> t -> bool
 val subsumed_upto_tags : t -> t -> bool
 (** Like [subsumed] but ignoring all tags. *)
 
+val invalid : Sl_defs.t -> t -> bool
+(** Run the base-pairs heuristic to show invalidity. A [false] result does {i not}
+    indicated validity. *)
+    

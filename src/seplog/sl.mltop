@@ -11,6 +11,7 @@ Sl_tpreds
 Sl_heap
 Sl_form
 Sl_defs
+Sl_basepair
 Sl_preddef
 Sl_indrule
 Sl_seq

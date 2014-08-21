@@ -13,8 +13,14 @@ let id_axiom =
   Rule.mk_axiom 
     (fun (l,r) -> Option.mk (Sl_form.subsumed r l) "Id")
 
+let preddefs = ref Sl_defs.empty 
+
 let ex_falso_axiom =
-  Rule.mk_axiom (fun (l,_) -> Option.mk (Sl_form.inconsistent l) "Ex Falso")
+  Rule.mk_axiom 
+    (fun (l,_) -> 
+      Option.mk 
+        (Sl_form.inconsistent l || not (Sl_basepair.form_sat !preddefs l)) 
+        "Ex Falso")
 
 (* break LHS disjunctions *)
 let lhs_disj_to_symheaps =
@@ -295,19 +301,22 @@ let axioms = ref (Rule.first [id_axiom ; ex_falso_axiom])
 
 let rules = ref Rule.fail
 
-let setup defs = 
-  rules := Rule.first [
-    lhs_disj_to_symheaps;
-    rhs_disj_to_symheaps;
-    simplify;
-    
-    Rule.choice [
-      (* brl_matches; *)
-			dobackl;
-  		wrap pto_intro_rule;
-  		wrap pred_intro_rule;
-      instantiate_pto ;
-      ruf defs;
-      luf defs
-    ] 
-  ]
+let setup defs =
+  preddefs := defs ; 
+  let prooftac = 
+    Rule.first [
+      lhs_disj_to_symheaps;
+      rhs_disj_to_symheaps;
+      simplify;
+      
+      Rule.choice [
+        (* brl_matches; *)
+  			dobackl;
+    		wrap pto_intro_rule;
+    		wrap pred_intro_rule;
+        instantiate_pto ;
+        ruf defs;
+        luf defs
+      ] 
+    ] in
+  rules := Rule.conditional (Fun.neg (Sl_seq.invalid defs)) prooftac 

@@ -168,7 +168,7 @@ let simplify_defs defs =
     (empify defs)
 
 
-let is_sat defs = Sl_basepair.satisfiable (empify defs) false false
+let is_sat defs = Sl_basepair.satisfiable (empify defs) 
 
 let ex_falso_axiom = Abdrule.lift While_rules.ex_falso_axiom
 let symex_empty_axiom = Abdrule.lift While_rules.symex_empty_axiom

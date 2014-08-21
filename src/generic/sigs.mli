@@ -246,6 +246,8 @@ sig
   val first : t list -> t 
   (** Apply a sequence of rules iteratively through [compose]. *)
   val sequence : t list -> t 
+  
+  val conditional : (seq_t -> bool) -> t -> t  
 end
 
 module type ABDRULE =

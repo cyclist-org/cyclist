@@ -19,3 +19,7 @@ val of_channel : in_channel -> t
 
 val unfold : Sl_term.Set.t -> Sl_heap.t -> Sl_tpred.t -> t -> 
   (Sl_heap.t * Util.TagPairs.t) list
+
+val of_formula : t -> Sl_form.t -> t
+(** Convert a formula to a set of rules and add it to the provided set of 
+    definitions.  The head of the return definition list contains these rules. *)

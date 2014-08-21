@@ -3,7 +3,9 @@ open Util
 open Symbols
 open MParser
 
-include PairTypes(Sl_heap)(Sl_pred)
+module R = PairTypes(Sl_heap)(Sl_pred)
+include R
+
 let mk f i =
   let (_, args) = i in
   let v_args = Sl_term.Set.of_list args in
@@ -101,3 +103,8 @@ let fold (f, (predsym, args)) h =
       (theta, h')
     )
     results
+
+module Map = Util.MakeMap(R)
+
+
+

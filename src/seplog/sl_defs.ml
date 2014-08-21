@@ -48,6 +48,20 @@ module Defs =
     
     let unfold vars h ((_, (ident, _)) as pred) defs = 
       Blist.map (Sl_indrule.unfold vars h pred) (get_def ident defs)
+    
+    let of_formula defs f =
+      let counter = ref 0 in
+      let get_ident () = Printf.sprintf "P%d" !counter in
+      let () = while mem (get_ident ()) defs do incr counter done in
+      let predsym = get_ident () in
+      let formals = 
+        Sl_term.Set.to_list 
+          (Sl_term.Set.filter Sl_term.is_univ_var (Sl_form.vars f)) in
+      let pred = (predsym, formals) in
+      let rules = Blist.map (fun h -> Sl_indrule.mk h pred) f in
+      let def = Sl_preddef.mk (rules, predsym) in
+      def::defs  
+
   end
 include Defs
 include Fixpoint(Defs)
