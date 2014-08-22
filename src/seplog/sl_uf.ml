@@ -23,7 +23,7 @@ let pp fmt v =
     fmt
     (bindings v)
    
-
+let fold f a uf = Sl_term.Map.fold f a uf
 
 let rec find x m =
   if Sl_term.Map.mem x m then
@@ -68,23 +68,18 @@ let parse st =
           parse_symb symb_eq >>
           Sl_term.parse << spaces |>> (fun y -> (x, y))) <?> "eq") st
 
-let eqclasses m = 
-  let classes = 
-    Sl_term.Map.fold
-      (fun k v c -> 
-        Sl_term.Map.add v
-          (k :: (try Sl_term.Map.find v c with Not_found -> [v]))
-          c
-      ) 
-      m
-      Sl_term.Map.empty in
-  Sl_term.Map.fold (fun _ v ls -> v::ls) classes []
+(* let eqclasses m =                                                 *)
+(*   let classes =                                                   *)
+(*     Sl_term.Map.fold                                              *)
+(*       (fun k v c ->                                               *)
+(*         Sl_term.Map.add v                                         *)
+(*           (k :: (try Sl_term.Map.find v c with Not_found -> [v])) *)
+(*           c                                                       *)
+(*       )                                                           *)
+(*       m                                                           *)
+(*       Sl_term.Map.empty in                                        *)
+(*   Sl_term.Map.fold (fun _ v ls -> v::ls) classes []               *)
       
-let unify_eqclasses cont state c c' =
-  Blist.find_some
-    (Sl_term.FList.unify cont state c)
-    (Blist.combs (Blist.length c) c')
-
 let saturate m = 
   let ts = Sl_term.Set.to_list (terms m) in
   let pairs = Blist.cartesian_product ts ts in

@@ -29,7 +29,17 @@ struct
   
   let project (v, g) case =
     let formals = Sl_indrule.formals case in
-    (Sl_term.Set.inter v (Sl_term.Set.of_list formals), Sl_heap.project g formals)
+    let g' = Sl_heap.project g formals in
+    let proj lval =
+      if Sl_heap.equates g' lval Sl_term.nil then 
+        Sl_term.nil 
+      else
+        Sl_uf.find lval g'.Sl_heap.eqs in  
+    let v' =       
+      Sl_term.Set.endomap  
+        proj  
+        (Sl_term.Set.inter v (Sl_term.Set.of_list formals)) in
+    (v', g')
   
   let subst theta (v, g) =
     let v' = Sl_term.Set.endomap (fun z -> Sl_term.subst theta z) v in
@@ -43,15 +53,8 @@ struct
     let case = Sl_indrule.subst theta case in
     let (v', g') = subst theta (v', g') in
     (* now carry on with substitution as normal *)
-    let (_, (_, formals)) = Sl_indrule.dest case in
+    let formals = Sl_indrule.formals case in
     let theta = Sl_term.Map.of_list (Blist.combine formals params) in
-    (* let formals = Sl_term.Set.of_list (Blist.map fst (Sl_term.Map.to_list     *)
-    (* theta)) in let substs = Sl_term.Set.of_list (Blist.map snd             *)
-    (* (Sl_term.Map.to_list theta)) in let () = require (fun () ->            *)
-    (* Sl_term.Set.subset (Sl_heap.vars g') formals) in let () = assert       *)
-    (* (Sl_term.Set.subset v' formals) in let () = assert (Sl_term.Set.is_empty  *)
-    (* (Sl_term.Set.inter (Sl_heap.vars g') substs)) in let () = assert (     *)
-    (* Sl_term.Set.is_empty (Sl_term.Set.inter v' substs)) in                    *)
     let (v', g') = subst theta (v', g') in
     let h' = SH.del_ind h ind in
     let h' = Sl_heap.star h' g' in
@@ -69,14 +72,14 @@ struct
     Blist.fold_left2 unfold (ys, h) (Sl_tpreds.to_list h.SH.inds) cbps
   
   let gen case cbps =
-    let (_, (_, args)) = Sl_indrule.dest case in
+    let args = Sl_indrule.formals case in
     let (v, h) = unfold_all case cbps in
     if Sl_heap.inconsistent h then None else
-      let l = Blist.rev_append (Sl_term.Set.to_list (Sl_heap.vars h)) args in
-      let l = Blist.rev_filter
-          (fun u -> Sl_term.Set.exists (fun z -> Sl_heap.equates h u z) v) l in
-      let v = Sl_term.Set.of_list l in
-      Some (project (v, h) case)
+    let l = Blist.rev_append (Sl_term.Set.to_list (Sl_heap.vars h)) args in
+    let l = Blist.rev_filter
+        (fun u -> Sl_term.Set.exists (fun z -> Sl_heap.equates h u z) v) l in
+    let v = Sl_term.Set.of_list l in
+    Some (project (v, h) case)
  
 end
 

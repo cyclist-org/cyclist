@@ -32,32 +32,32 @@ module Proc =
         Sl_form.parse >>= (fun f ->
         parse_symb symb_semicolon >>$ f) <?> "Postcondition") st
 
-    (* let parse_named st =                                                                *)
-    (*   let parse_params st =                                                             *)
-    (*   let rec parse_params' acc st =                                                    *)
-    (*   let tail st =                                                                     *)
-    (*   let try_parse_next_param check msg st =                                           *)
-    (*     (   look_ahead(Sl_term.parse >>= (fun p ->                                      *)
-    (*           if (check p) then zero else return ()))                                   *)
-    (*     <|> fail msg) st in                                                             *)
-    (*   ((followed_by Sl_term.parse "") >>                                                *)
-    (*   (try_parse_next_param (fun p -> Sl_term.is_nil p) "Not a formal parameter") >>    *)
-    (*   (try_parse_next_param (fun p -> Sl_term.is_exist_var p)                           *)
-    (*     "Not a formal parameter - must not be primed (')") >>                           *)
-    (*   (try_parse_next_param (fun p -> List.mem p acc) "Duplicate parameter") >>         *)
-    (*   Sl_term.parse >>= (fun p -> parse_params' (p::acc))) st in                        *)
-    (*   (   (if (List.length acc == 0) then tail else ((parse_symb symb_comma) >> tail))  *)
-    (*   <|> (return acc) ) st in                                                          *)
-    (*   parse_params' [] st in                                                            *)
-    (*   (parse_symb keyw_proc >>                                                          *)
-    (*   parse_ident >>= (fun id ->                                                        *)
-    (*   (Tokens.parens parse_params) >>= (fun params ->                                   *)
-    (*   parse_precondition >>= (fun pre ->                                                *)
-    (*   parse_postcondition >>= (fun post ->                                              *)
-    (*   Tokens.braces                                                                     *)
-    (*     (expect_before Cmd.parse (parse_symb symb_rb) "Expecting CmdList") |>>          *)
-    (*   (fun body ->                                                                      *)
-    (*     return (id, params, pre, post, body) <?> "Procedure" )))))) st                  *)
+    let parse_named st =
+      let parse_params st =
+      let rec parse_params' acc st =
+      let tail st =
+      let try_parse_next_param check msg st =
+        (   look_ahead(Sl_term.parse >>= (fun p ->
+              if (check p) then zero else return ()))
+        <|> fail msg) st in
+      ((followed_by Sl_term.parse "") >>
+      (try_parse_next_param (fun p -> Sl_term.is_nil p) "Not a formal parameter") >>
+      (try_parse_next_param (fun p -> Sl_term.is_exist_var p)
+        "Not a formal parameter - must not be primed (')") >>
+      (try_parse_next_param (fun p -> List.mem p acc) "Duplicate parameter") >>
+      Sl_term.parse >>= (fun p -> parse_params' (p::acc))) st in
+      (   (if (List.length acc == 0) then tail else ((parse_symb symb_comma) >> tail))
+      <|> (return acc) ) st in
+      parse_params' [] st in
+      (parse_symb keyw_proc >>
+      parse_ident >>= (fun id ->
+      (Tokens.parens parse_params) >>= (fun params ->
+      parse_precondition >>= (fun pre ->
+      parse_postcondition >>= (fun post ->
+      Tokens.braces
+        (expect_before Cmd.parse (parse_symb symb_rb) "Expecting CmdList") |>>
+      (fun body ->
+        return (id, params, pre, post, body) <?> "Procedure" )))))) st
     
     let parse_unnamed st = 
       (parse_precondition >>= (fun pre ->
@@ -196,8 +196,8 @@ let parse_fields st =
     parse_symb symb_semicolon >>$ List.iter Field.add ils) <?> "Fields") st
 
 (* procedures *)
-(* let parse_procs st =                                                                *)
-(*   ( many Proc.parse_named >>= (fun procs -> return (List.iter Proc.add procs)) ) st *)
+let parse_procs st =
+  ( many Proc.parse_named >>= (fun procs -> return (List.iter Proc.add procs)) ) st
   
 let parse_main st =
   ( Proc.parse_unnamed << eof <?> "Main procedure") st
@@ -205,7 +205,7 @@ let parse_main st =
 (* fields; procs; p = precondition; q = postcondition; cmd = command; EOF { (p, cmd, q) } *)
 let parse st = 
   ( parse_fields >>
-    (* parse_procs >> *)
+    parse_procs >>
     parse_main <?> "Program") st
 
 let of_channel c =

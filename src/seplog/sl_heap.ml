@@ -220,15 +220,14 @@ let project f xs =
     not (Blist.exists (fun y -> Sl_term.equal x y) xs) in
   let pair_nin_lst (x, y) = trm_nin_lst x || trm_nin_lst y in
   let rec proj_eqs h =
-    let orig_eqs = Sl_uf.bindings h.eqs in
-    let p = Blist.find_first pair_nin_lst orig_eqs in
-    if Option.is_none p then h else
-      let (x, y) = Option.get p in
-      (* let new_eqs = List.filter (fun (x',y') -> not (Sl_term.equal x x')   *)
-      (* || not (Sl_term.equal y y')) orig_eqs in                             *)
-      let (x', y') = if trm_nin_lst x then (y, x) else (x, y) in
+    let do_eq x y h' =
+      let x_nin_lst = trm_nin_lst x in
+      let y_nin_lst = trm_nin_lst y in
+      if not (x_nin_lst || y_nin_lst) then h' else
+      let (x', y') = if x_nin_lst then (y, x) else (x, y) in
       let theta = Sl_term.singleton_subst y' x' in
-      proj_eqs (subst theta h) in
+      subst theta h' in
+    Sl_uf.fold do_eq h.eqs h in
   let proj_deqs g =
     { g with deqs = Sl_deqs.filter (fun p -> not (pair_nin_lst p)) g.deqs } in
   proj_deqs (proj_eqs f)

@@ -17,6 +17,8 @@ val find : Sl_term.t -> t -> Sl_term.t
 val add : Sl_tpair.t -> t -> t
 val union : t -> t -> t
 
+val fold : (Sl_term.t -> Sl_term.t -> 'a -> 'a) -> t -> 'a -> 'a 
+
 val bindings : t -> Sl_tpair.t list
 (** Return mapping as a list of pairs, where pair members are ordered by *)
 (** [Sl_term.compare].  Additional guarantees:

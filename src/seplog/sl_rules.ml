@@ -19,7 +19,7 @@ let ex_falso_axiom =
   Rule.mk_axiom 
     (fun (l,_) -> 
       Option.mk 
-        (Sl_form.inconsistent l || not (Sl_basepair.form_sat !preddefs l)) 
+        (Sl_form.inconsistent l (*|| not (Sl_basepair.form_sat !preddefs l)*)) 
         "Ex Falso")
 
 (* break LHS disjunctions *)
@@ -319,4 +319,6 @@ let setup defs =
         luf defs
       ] 
     ] in
-  rules := Rule.conditional (Fun.neg (Sl_seq.invalid defs)) prooftac 
+  rules := 
+    Rule.conditional (Fun.neg (Sl_seq.invalid defs))
+      prooftac 

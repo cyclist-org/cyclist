@@ -68,32 +68,60 @@ let partitions trm_list pi =
     | [] -> [pi]
     | q::qs -> 
       let sub_partitions = aux qs in
-      (Blist.map (fun pi' -> Sl_heap.add_eq pi' q) sub_partitions)
-      @
-      (Blist.map (fun pi' -> Sl_heap.add_deq pi' q) sub_partitions) in
+      Blist.rev_filter
+        (Fun.neg Sl_heap.inconsistent)
+        (Blist.rev_append
+          (Blist.rev_map (fun pi' -> Sl_heap.add_eq pi' q) sub_partitions)
+          (Blist.rev_map (fun pi' -> Sl_heap.add_deq pi' q) sub_partitions)) in
   aux pairs
 
-let invalid defs seq =
+let _invalid defs seq =
+  (* Format.eprintf "INVALIDITY CHECK: %a@." pp seq ; *)
   let trm_list = 
     Sl_term.Set.to_list 
       (Sl_term.Set.add Sl_term.nil 
         (Sl_term.Set.filter Sl_term.is_univ_var (vars seq))) in
+  (* Format.eprintf "INVALIDITY CHECK: # of terms in T = %d@."  *)
+  (*   (Blist.length trm_list) ;                                *)
   let (lbps, rbps) = Pair.map (Sl_basepair.pairs_of_form defs) seq in
+  (* Format.eprintf "INVALIDITY CHECK: LHS base pairs = @.%a@."  *)
+  (*   Sl_basepair.Set.pp lbps;                                  *)
+  (* Format.eprintf "INVALIDITY CHECK: RHS base pairs = @.%a@."  *)
+  (*   Sl_basepair.Set.pp rbps;                                  *)
+  (* let all_partitions = partitions trm_list Sl_heap.empty in  *)
+  (* Format.eprintf "INVALIDITY CHECK: # of partitions = %d@."  *)
+    (* (Blist.length all_partitions) ; *)
   let res = 
     Sl_basepair.Set.exists
-    (fun (v,pi) -> 
-      Blist.exists 
-        (fun sigma -> 
-          Sl_basepair.Set.for_all 
-            (Fun.neg (fun (v',pi') -> 
-              Sl_heap.subsumed pi' sigma
-              &&
-              Sl_term.Set.for_all
-                (fun z -> Sl_term.Set.exists (Sl_heap.equates sigma z) v)
-                v'))  
-            rbps)
-        (partitions trm_list pi))
+      (fun (v,pi) -> 
+        Blist.exists 
+          (fun sigma ->
+            Sl_heap.subsumed pi sigma
+            &&
+            Sl_basepair.Set.for_all 
+              (fun (v',pi') -> 
+                (* not (Sl_heap.subsumed pi' sigma) *)
+                (* ||                               *)
+                Sl_term.Set.exists
+                  (fun z -> Sl_term.Set.for_all 
+                    (fun w -> Sl_heap.disequates sigma z w) v)
+                   v'
+              )  
+              rbps)
+          (partitions trm_list pi))
     lbps in
-  if res then Format.eprintf "INVALID: %a@." pp seq ;
+  (* Format.eprintf "INVALIDITY CHECK: %s@." (string_of_bool res) ; *)
   res
+
     
+let invalid =
+  let cache = Hashtbl.create 1001 in
+  fun defs seq ->
+    let key = (defs, seq) in
+    try
+      Hashtbl.find cache key
+    with Not_found ->
+      let v = _invalid defs seq in
+      Hashtbl.add cache key v ;
+      v
+        

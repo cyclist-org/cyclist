@@ -101,10 +101,10 @@ let avoid_theta vars subvars =
     Pair.map Set.elements (Set.partition is_exist_var subvars) in
   let fresh_u_vars = fresh_uvars allvars (Blist.length univ_vars) in
   let fresh_e_vars = fresh_evars allvars (Blist.length exist_vars) in
-  let theta = Map.of_list
-      (Blist.rev_append (Blist.combine univ_vars fresh_u_vars)
-          (Blist.combine exist_vars fresh_e_vars)) in
-  theta
+  Map.of_list
+    (Blist.append 
+      (Blist.combine univ_vars fresh_u_vars)
+      (Blist.combine exist_vars fresh_e_vars))
 
 module FList =
   struct

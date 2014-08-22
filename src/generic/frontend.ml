@@ -47,6 +47,7 @@ module Make(Prover : Sigs.PROVER) =
 			else
 				Some (call ()) in
       Stats.Gen.end_call () ;
+      if !Stats.do_statistics then Stats.gen_print ();
       if Option.is_none res then
         (print_endline ("NOT proved: " ^ (Seq.to_string seq) ^ " [TIMEOUT]") ; 2) else
       let res = Option.get res in
@@ -57,11 +58,7 @@ module Make(Prover : Sigs.PROVER) =
         Prover.Proof.pp Format.std_formatter proof
       else
         print_endline ("Proved: " ^ (Seq.to_string seq)) ;
-      if !Stats.do_statistics then
-      begin
-        Stats.gen_print ();
-        Prover.print_proof_stats proof
-      end ;
+      if !Stats.do_statistics then Prover.print_proof_stats proof ;
       if !latex_path<>"" then
       begin
         let ch =
