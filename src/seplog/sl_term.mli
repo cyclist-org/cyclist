@@ -18,8 +18,6 @@ val is_var : t -> bool
 val is_exist_var : t -> bool
 val is_univ_var : t -> bool
 
-val mk_exist_var : string -> t
-val mk_univ_var : string -> t
 val filter_vars : Set.t -> Set.t
 
 (** The following functions behave exactly as their namesakes in Var, *) 

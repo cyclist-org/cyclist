@@ -187,7 +187,7 @@ let ruf defs =
       let right_unfold ((_, (ident,_)) as p) =
         if not (Sl_defs.mem ident defs) then [] else
         let cases = Sl_defs.get_def ident defs in 
-        let r' = SH.with_inds r (Sl_tpreds.remove p r.SH.inds) in
+        let r' = SH.del_ind r p in
         let do_case c = 
           let (f', _) = Sl_indrule.unfold seq_vars r' p c in
           let f' = Sl_heap.freshen_tags r' f' in

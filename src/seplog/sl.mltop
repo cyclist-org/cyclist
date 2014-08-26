@@ -24,7 +24,6 @@ Option
 Util
 Symbols
 Pair
-Var
 Proof
 Proofrule
 Proofnode
@@ -34,3 +33,4 @@ Prover
 MParser
 CharStream
 Fun
+

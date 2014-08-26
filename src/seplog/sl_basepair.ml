@@ -4,7 +4,7 @@ open Symbols
 open MParser
 
 module SH = Sl_heap
-  
+
 module BasePair =
 struct
   include PairTypes(Sl_term.Set)(Sl_heap)
@@ -67,7 +67,8 @@ struct
   let unfold_all case cbps =
     let (h, _) = Sl_indrule.dest case in
     (* let () = assert (Sl_tpreds.cardinal h.inds = Blist.length cbps) in *)
-    let ys = Sl_term.Set.of_list (Blist.rev_map fst (Sl_ptos.to_list h.SH.ptos)) in
+    let ys = 
+      Sl_ptos.map_to Sl_term.Set.add Sl_term.Set.empty fst h.SH.ptos in
     let h = SH.with_ptos h Sl_ptos.empty in
     Blist.fold_left2 unfold (ys, h) (Sl_tpreds.to_list h.SH.inds) cbps
   
@@ -87,23 +88,26 @@ include BasePair
 
 module Set = MakeTreeSet(BasePair)
 
+module RuleMap = MakeMap(Sl_indrule)
 
 let get_bps cmap (_, (ident, _)) =
-  let l =
-    Blist.filter
-      (fun (c, _) -> Strng.equal ident (fst (snd (Sl_indrule.dest c))))
-      (Sl_indrule.Map.to_list cmap) in
-  Blist.bind
-    (fun (c, s) -> Blist.map (fun bp -> (c, bp)) (Set.to_list s))
-    l
+  Blist.rev 
+    (RuleMap.fold
+      (fun c s l -> 
+        if Strng.equal ident (fst (snd (Sl_indrule.dest c))) 
+        then 
+          Set.fold (fun bp l' -> (c, bp)::l') s l 
+        else 
+          l
+      ) 
+      cmap
+      [])
 
 let gen_pairs case cmap =
   let (h, _) = Sl_indrule.dest case in
-  let candidates =
-    Blist.map (fun i -> get_bps cmap i) (Sl_tpreds.to_list h.SH.inds) in
+  let candidates = Sl_tpreds.map_to_list (fun i -> get_bps cmap i) h.SH.inds in
   let l = Blist.choose candidates in
-  let poss_bps =
-    Blist.rev_map (fun cbps -> gen case cbps) l in
+  let poss_bps = Blist.rev_map (fun cbps -> gen case cbps) l in
   let bps = Option.list_get poss_bps in
   Set.of_list bps
 
@@ -111,12 +115,12 @@ let first_pred_not_empty defs =
   let defs = Sl_defs.to_list defs in
   let first_pred = Sl_preddef.predsym (Blist.hd defs) in
   fun cm ->
-      Sl_indrule.Map.exists
-        (fun k v ->
-              Strng.equal (Sl_indrule.predsym k) first_pred &&
-              not (Set.is_empty v)
-        )
-        cm
+    RuleMap.exists
+      (fun k v ->
+        Strng.equal (Sl_indrule.predsym k) first_pred &&
+        not (Set.is_empty v)
+      )
+      cm
 
 let gen_all_pairs ?(only_first=false) defs =
   let first_not_empty = first_pred_not_empty defs in
@@ -124,22 +128,27 @@ let gen_all_pairs ?(only_first=false) defs =
   let cmap =
     Blist.fold_left
       (fun m d ->
-            Blist.fold_left
-              (fun m' c -> Sl_indrule.Map.add c Set.empty m') m (Sl_preddef.rules d))
-      Sl_indrule.Map.empty
+        Blist.fold_left
+          (fun m' c -> RuleMap.add c Set.empty m') m (Sl_preddef.rules d))
+      RuleMap.empty
       defs
   in
   let onestep cmap =
-    let r = Sl_indrule.Map.endomap
-        (fun (c, s) -> (c, Set.union s (gen_pairs c cmap)))
-        cmap in
-    let () = debug (fun () -> "\n" ^ (Sl_indrule.Map.to_string Set.to_string r) ^ "\n") in
-    r in
+    let progress = ref false in
+    let r = RuleMap.endomap
+      (fun (c, s) -> 
+        let n = Set.cardinal s in
+        let s' = Set.union s (gen_pairs c cmap) in
+        let n' = Set.cardinal s' in
+        progress := !progress || n'>n; 
+        (c, s'))
+      cmap in
+    let () = debug (fun () -> "\n" ^ (RuleMap.to_string Set.to_string r) ^ "\n") in
+    (!progress, r) in
   let rec fixp cm =
-    let cm' = onestep cm in
+    let (progress, cm') = onestep cm in
     if
-    only_first && first_not_empty cm' ||
-    Sl_indrule.Map.equal Set.equal cm cm'
+      only_first && first_not_empty cm' || not progress
     then
       cm'
     else
@@ -156,12 +165,12 @@ let satisfiable ?(only_first=false) ?(output=false) defs =
       let element_conv (c, s) =
         ((Sl_indrule.to_string c) ^ " has base " ^ (Set.to_string s)) in
       print_endline
-        (Blist.to_string "\n" element_conv (Sl_indrule.Map.to_list res))
+        (Blist.to_string "\n" element_conv (RuleMap.to_list res))
     end ;
   let retval =
     only_first && first_pred_not_empty defs res ||
     not only_first &&
-    Sl_indrule.Map.for_all (fun _ s -> not (Set.is_empty s)) res in
+    RuleMap.for_all (fun _ s -> not (Set.is_empty s)) res in
   if retval then Stats.CC.accept () else Stats.CC.reject () ;
   retval
 
@@ -172,7 +181,7 @@ let pairs_of_form defs f =
   let bp_map = gen_all_pairs defs in
   let (rules,_) = Sl_preddef.dest (Blist.hd (Sl_defs.to_list defs)) in
   Blist.foldl 
-    (fun bps r -> Set.union bps (Sl_indrule.Map.find r bp_map)) 
+    (fun bps r -> Set.union bps (RuleMap.find r bp_map)) 
     Set.empty 
     rules
   

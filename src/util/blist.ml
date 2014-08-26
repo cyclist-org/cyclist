@@ -17,24 +17,6 @@ let rec del_first p = function
   | [] -> []
   | x::xs -> if p x then xs else x::(del_first p xs)
 
-let count_foldl f a xs = 
-  let rec aux n acc = function
-    | [] -> acc
-    | y::ys -> aux (n+1) (f acc n y) ys in
-  aux 0 a xs 
-
-let count_foldr f xs a = 
-  let rec aux n acc = function
-    | [] -> acc
-    | y::ys -> f (aux (n+1) acc ys) n y in
-  aux 0 a xs
-
-let count_filter f xs = 
-  count_foldr (fun ys n y -> if f n y then y::ys else ys) xs []
-
-let count_map f xs = 
-  count_foldr (fun ys n y -> (f n y)::ys) xs []
-
 let to_string sep conv xs = String.concat sep (map conv xs)
 
 let rec pp pp_sep pp_elem fmt = function
@@ -62,18 +44,20 @@ let rec but_last = function
   | [_] | [] -> []
   | x::xs -> x::(but_last xs)
 
-let rec range n xs = 
-  count_map (fun m _ -> m+n) xs  
+let range n xs = mapi (fun m _ -> m+n) xs  
 
-let remove_nth n xs =
-  if n<0 then invalid_arg "Blist.remove_nth" else
-  let f a m y = if n=m then a else y::a in
-  count_foldr f xs []
+let rec remove_nth n = function
+  | [] -> invalid_arg "Blist.remove_nth"
+  | y::ys -> if n=0 then ys else y::(remove_nth (n-1) ys)
 
 let replace_nth z n xs = 
   if n<0 then invalid_arg "Blist.replace_nth" else
   let f m y = if n=m then z else y in
-  count_map f xs 
+  mapi f xs 
+
+let rec take n = function
+  | [] -> invalid_arg "Blist.take"
+  | x::xs -> if n=0 then [] else x::(take (n-1) xs)
 
 let indexes xs = range 0 xs
 

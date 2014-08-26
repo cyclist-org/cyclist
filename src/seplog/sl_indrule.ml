@@ -3,8 +3,60 @@ open Util
 open Symbols
 open MParser
 
-module R = PairTypes(Sl_heap)(Sl_pred)
-include R
+include PairTypes(Sl_heap)(Sl_pred)
+
+(* the normalisation of tags is used below to make sure that should we ever *)
+(* try to create the same rule twice but with different tags, we get *)
+(* structurally equal rules *)
+let norm_tags h =
+  let preds = Sl_tpreds.strip_tags (h.Sl_heap.inds) in
+  let tag = ref 0 in
+  let newinds = 
+    Sl_pred.MSet.map_to 
+      Sl_tpreds.add 
+      Sl_tpreds.empty
+      (fun p -> incr tag ; (!tag, p))
+      preds in
+  Sl_heap.with_inds h newinds
+
+let mk_vars exist n = 
+  let rec aux i = 
+    if i>n then [] else 
+    let newvar = 
+      Sl_term.of_string 
+        ((if exist then "v" else "u") ^ 
+        (string_of_int i) ^ 
+        (if exist then "'" else "")) in
+    newvar::(aux (i+1)) in
+  aux 1
+
+let vars (f, (_, vs)) =
+  Sl_term.Set.union (Sl_term.Set.of_list vs) (Sl_heap.vars f)
+    
+(* private version that does not go through mk *)
+let _freshen varset ((h, (pred, args)) as case) =
+  let casevars = vars case in
+  let theta = Sl_term.avoid_theta varset casevars in
+  (Sl_heap.subst theta h, (pred, Sl_term.FList.subst theta args))
+
+(* normalize vars in rules to a fixed set *)
+let norm_vars ((h', (_, args')) as case) =
+  let no_evs = 
+    Sl_term.Set.cardinal 
+      (Sl_term.Set.filter Sl_term.is_exist_var (Sl_heap.vars h')) in
+  (* assume non-arg vars are existentially quantified *) 
+  let no_uvs = Blist.length args' in
+  let evs' = mk_vars true no_evs in
+  let uvs' = mk_vars false no_uvs in
+  let varset = Sl_term.Set.of_list (evs' @ uvs') in
+  let (h, (pred, args)) = _freshen varset case in
+  let evs = 
+    Sl_term.Set.to_list 
+      (Sl_term.Set.filter Sl_term.is_exist_var (Sl_heap.vars h)) in
+  let theta = 
+    Sl_term.Map.of_list ((Blist.combine evs evs') @ (Blist.combine args uvs')) in
+  (Sl_heap.subst theta h, (pred, Sl_term.FList.subst theta args))
+  
 
 let mk f i =
   let (_, args) = i in
@@ -14,8 +66,10 @@ let mk f i =
   assert (Blist.for_all Sl_term.is_univ_var args) ;
   assert (Sl_term.Set.cardinal v_args = Blist.length args) ;
   assert (Sl_term.Set.subset uv_h v_args) ;
-  assert (Sl_term.Set.for_all (fun trm -> Sl_term.is_nil trm || Sl_term.is_exist_var trm) ev_h) ;   
-  (f, i)
+  assert 
+    (Sl_term.Set.for_all 
+      (fun trm -> Sl_term.is_nil trm || Sl_term.is_exist_var trm) ev_h) ;   
+  (norm_tags f, i)
   
 let dest c = c
 
@@ -23,13 +77,20 @@ let predsym (_, pred) = Sl_pred.predsym pred
 let arity (_, pred) = Sl_pred.arity pred
 let formals (_, pred) = Sl_pred.args pred
 
-let vars (f, (_, vs)) =
-  Sl_term.Set.union (Sl_term.Set.of_list vs) (Sl_heap.vars f)
-	
-let params (_, (_, vs)) = vs
+let subst theta (f, (ident, args)) =
+  let f = Sl_heap.subst theta f in
+  let args = Sl_term.FList.subst theta args in
   
-let subst theta (f, (ident, vs)) =
-  mk (Sl_heap.subst theta f) (ident, Blist.map (Sl_term.subst theta) vs)
+  let v_args = Sl_term.Set.of_list args in
+  let v_h = Sl_heap.terms f in
+  let (uv_h, ev_h) = Sl_term.Set.partition Sl_term.is_univ_var v_h in
+  assert (Blist.for_all Sl_term.is_univ_var args) ;
+  assert (Sl_term.Set.cardinal v_args = Blist.length args) ;
+  assert (Sl_term.Set.subset uv_h v_args) ;
+  assert 
+    (Sl_term.Set.for_all 
+      (fun trm -> Sl_term.is_nil trm || Sl_term.is_exist_var trm) ev_h) ;
+  (f, (ident, args))   
   
 let freshen varset case =
   let casevars = vars case in
@@ -103,8 +164,6 @@ let fold (f, (predsym, args)) h =
       (theta, h')
     )
     results
-
-module Map = Util.MakeMap(R)
 
 
 

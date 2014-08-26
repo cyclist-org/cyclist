@@ -2,8 +2,6 @@
 
 include Util.BasicType
 
-module Map : Util.OrderedMap with type key = t
-
 val mk : Sl_heap.t -> Sl_pred.t -> t
 val dest: t -> Sl_heap.t * Sl_pred.t
 

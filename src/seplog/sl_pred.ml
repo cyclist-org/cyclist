@@ -14,6 +14,11 @@ module IndSubf =
       (Sl_term.FList.to_string_sep symb_comma.sep args) ^ 
       symb_rp.str
 
+    let pp fmt (p, args) =
+      Format.fprintf fmt "@[%s%s%s%s@]"
+        p symb_lp.str 
+        (Sl_term.FList.to_string_sep symb_comma.sep args) 
+        symb_rp.str
 end
 
 include IndSubf
