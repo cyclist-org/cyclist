@@ -7,7 +7,7 @@ val dest: t -> Sl_heap.t * Sl_pred.t
 
 val vars : t -> Sl_term.Set.t
 
-val predsym : t -> Sl_pred.ident_t
+val predsym : t -> Sl_predsym.t
 val arity : t -> int
 val formals : t -> Sl_term.t list
 

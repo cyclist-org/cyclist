@@ -19,7 +19,7 @@ val terms : t -> Sl_term.Set.t
 val vars : t -> Sl_term.Set.t
 val tags : t -> Util.Tags.t
 
-val idents : t -> Util.Strng.MSet.t
+val idents : t -> Sl_predsym.MSet.t
 (** Return multiset of identifiers present. *)
 
 val strip_tags : t -> Sl_pred.MSet.t

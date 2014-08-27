@@ -13,7 +13,7 @@ let terms inds =
 let vars inds = Sl_term.filter_vars (terms inds)
 
 let idents inds =
-  map_to Strng.MSet.add Strng.MSet.empty (fun (_, (id, _)) -> id) inds
+  map_to Sl_predsym.MSet.add Sl_predsym.MSet.empty (fun (_, (id, _)) -> id) inds
 
 let to_string_list v = Blist.map Sl_tpred.to_string (elements v)
 let to_string v =

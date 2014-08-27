@@ -20,7 +20,8 @@ module Abdrule = Abdrule.Make(While_program.Seq)(Sl_defs)
 let dest_sh_seq = While_rules.dest_sh_seq
 
 let last_pred = ref 0
-let get_fresh_ident () = Printf.sprintf "I%.3d" (incr last_pred ; !last_pred)
+let get_fresh_ident () = 
+  Sl_predsym.mk (Printf.sprintf "I%.3d" (incr last_pred ; !last_pred))
 
 let get_undefined defs h = Sl_tpreds.filter (Defs.is_undefined defs) h.SH.inds 
 
@@ -65,8 +66,8 @@ let inline defs =
           (Blist.length p)=1 &&
           let (f,_) = Sl_indrule.dest (Blist.hd p) in
           let idents =
-            Sl_tpreds.map_to Strng.Set.add Strng.Set.empty (fun (_,(id,_)) -> id) f.SH.inds in
-          not (Strng.Set.mem h idents)
+            Sl_tpreds.map_to Sl_predsym.Set.add Sl_predsym.Set.empty (fun (_,(id,_)) -> id) f.SH.inds in
+          not (Sl_predsym.Set.mem h idents)
         end 
         (Blist.but_last defs) in
     let (p,h) = Sl_preddef.dest q in
@@ -77,7 +78,7 @@ let inline defs =
       let first_unfold f =
         try
           let pred = 
-            Sl_tpreds.find (fun (_, (h'', _)) -> Strng.equal h h'') f.SH.inds in
+            Sl_tpreds.find (fun (_, (h'', _)) -> Sl_predsym.equal h h'') f.SH.inds in
           let f = SH.with_inds f (Sl_tpreds.remove pred f.SH.inds) in
           let (g, _) = Sl_indrule.unfold (Sl_indrule.vars orig) f pred case in
           Sl_heap.star f g
@@ -463,7 +464,7 @@ let abd_back_rule =
       let candidates =
         Sl_tpreds.filter
           begin fun (_,(ident,_)) ->
-            Sl_tpreds.for_all (fun (_,(ident',_)) -> not (Strng.equal ident ident')) l2.SH.inds
+            Sl_tpreds.for_all (fun (_,(ident',_)) -> not (Sl_predsym.equal ident ident')) l2.SH.inds
           end
           candidates in
       (* for each candidate there must exist one in s2 which *)
@@ -472,7 +473,7 @@ let abd_back_rule =
       let cp = Blist.cartesian_product (Sl_tpreds.to_list candidates) (Sl_tpreds.to_list l2.SH.inds) in
       let cp = Blist.filter
         (fun ((_,(c,_)),(_,(c',_))) ->
-          Strng.MSet.subset inds2 (Strng.MSet.add c' (Strng.MSet.remove c inds1)))
+          Sl_predsym.MSet.subset inds2 (Sl_predsym.MSet.add c' (Sl_predsym.MSet.remove c inds1)))
         cp in
 			if cp=[] then [] else
       let fresh_ident = get_fresh_ident () in
@@ -564,12 +565,12 @@ let matches = Abdrule.lift While_rules.dobackl
 (* 			let () = debug (fun () -> "                  " ^ (Seq.to_string s1)) in    *)
 (*       let (ids1,ids2) = Pair.map Sl_heap.get_idents (l1,l2) in                      *)
 (* 			let (ids1,ids2) =                                                          *)
-(* 				(Strng.MSet.diff ids1 ids2, Strng.MSet.diff ids2 ids1) in                *)
-(* 			if Strng.MSet.cardinal ids1 <> 1 || Strng.MSet.cardinal ids2 <> 1 then     *)
+(* 				(Sl_predsym.MSet.diff ids1 ids2, Sl_predsym.MSet.diff ids2 ids1) in                *)
+(* 			if Sl_predsym.MSet.cardinal ids1 <> 1 || Sl_predsym.MSet.cardinal ids2 <> 1 then     *)
 (* 				(* (print_endline ("1" ^                                            *)   *)
-(* 				(* (Strng.MSet.to_string ids1) ^ "/" ^  (Strng.MSet.to_string ids2) *)   *)
+(* 				(* (Sl_predsym.MSet.to_string ids1) ^ "/" ^  (Sl_predsym.MSet.to_string ids2) *)   *)
 (* 				[] else                                                                  *)
-(* 		  let (id1,id2) = Pair.map Strng.MSet.choose (ids1,ids2) in                  *)
+(* 		  let (id1,id2) = Pair.map Sl_predsym.MSet.choose (ids1,ids2) in                  *)
 (* 			if Defs.mem id1 defs then [] else                                          *)
 (* 			let f i h = Sl_tpreds.filter (fun (_,(i',_)) -> i=i') h.inds in                 *)
 (* 			let (inds1,inds2) = (f id1 l1, f id2 l2) in                                *)

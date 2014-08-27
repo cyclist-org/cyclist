@@ -26,7 +26,7 @@ let terms tpred = Sl_pred.terms (snd tpred)
 let vars tpred = Sl_term.filter_vars (terms tpred)
 
 let to_string (tag, (pred, args)) =
-  pred ^ symb_caret.str ^
+  (Sl_predsym.to_string pred) ^ symb_caret.str ^
   (string_of_int tag) ^ symb_lp.str ^ 
   (Sl_term.FList.to_string_sep symb_comma.sep args) ^ 
   symb_rp.str
@@ -34,12 +34,12 @@ let to_string (tag, (pred, args)) =
 let to_melt (t,(ident,args)) =
   Latex.concat
     ([ Latex.index
-        (Latex.mathit (Latex.text ident))
+        (Sl_predsym.to_melt ident)
         (Latex.text (string_of_int t));
       symb_lp.melt; ltx_comma (Blist.map Sl_term.to_melt args); symb_rp.melt ])
       
 let parse st =
-  (parse_ident >>= (fun pred ->
+  (Sl_predsym.parse >>= (fun pred ->
   option parse_tag >>= (fun opt_tag ->
   Tokens.parens (Tokens.comma_sep1 Sl_term.parse) << spaces >>= (fun arg_list ->
   let tag = match opt_tag with

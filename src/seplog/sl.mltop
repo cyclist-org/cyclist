@@ -5,6 +5,7 @@ Sl_uf
 Sl_deqs
 Sl_pto
 Sl_ptos
+Sl_predsym
 Sl_pred
 Sl_tpred
 Sl_tpreds
@@ -33,4 +34,4 @@ Prover
 MParser
 CharStream
 Fun
-
+Hashcons

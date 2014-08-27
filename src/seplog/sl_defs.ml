@@ -11,7 +11,7 @@ module Defs =
     
     let mem ident defs =
       Blist.exists 
-        (fun def -> Strng.equal ident (Sl_preddef.predsym def)) defs
+        (fun def -> Sl_predsym.equal ident (Sl_preddef.predsym def)) defs
     
     let empty = []
     let to_list d = d
@@ -43,7 +43,7 @@ module Defs =
     
     let get_def ident defs =
       Sl_preddef.rules (Blist.find 
-        (fun def -> Strng.equal ident (Sl_preddef.predsym def)) 
+        (fun def -> Sl_predsym.equal ident (Sl_preddef.predsym def)) 
         defs)
     
     let unfold vars h ((_, (ident, _)) as pred) defs = 
@@ -51,7 +51,7 @@ module Defs =
     
     let of_formula defs f =
       let counter = ref 0 in
-      let get_ident () = Printf.sprintf "P%d" !counter in
+      let get_ident () = Sl_predsym.mk (Printf.sprintf "P%d" !counter) in
       let () = while mem (get_ident ()) defs do incr counter done in
       let predsym = get_ident () in
       let formals = 

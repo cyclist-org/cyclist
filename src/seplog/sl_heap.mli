@@ -39,7 +39,7 @@ val disequates : t -> Sl_term.t -> Sl_term.t -> bool
 val find_lval : Sl_term.t -> t -> Sl_pto.t option
 (** Find pto whose address is provably equal to given term. *)
 
-val idents : t -> Util.Strng.MSet.t
+val idents : t -> Sl_predsym.MSet.t
 (** Get multiset of predicate identifiers. *)
 
 val inconsistent : t -> bool

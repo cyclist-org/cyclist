@@ -7,7 +7,7 @@ val subst_tag : Util.TagPairs.t -> t -> t
 (** Substitute the tag according to the function represented by the set of 
     tag pairs provided. *)
 
-val predsym : t -> Sl_pred.ident_t
+val predsym : t -> Sl_predsym.t
 val arity : t -> int
 val args : t -> Sl_term.t list
 

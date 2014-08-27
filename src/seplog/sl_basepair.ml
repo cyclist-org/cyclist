@@ -94,7 +94,7 @@ let get_bps cmap (_, (ident, _)) =
   Blist.rev 
     (RuleMap.fold
       (fun c s l -> 
-        if Strng.equal ident (fst (snd (Sl_indrule.dest c))) 
+        if Sl_predsym.equal ident (fst (snd (Sl_indrule.dest c))) 
         then 
           Set.fold (fun bp l' -> (c, bp)::l') s l 
         else 
@@ -117,7 +117,7 @@ let first_pred_not_empty defs =
   fun cm ->
     RuleMap.exists
       (fun k v ->
-        Strng.equal (Sl_indrule.predsym k) first_pred &&
+        Sl_predsym.equal (Sl_indrule.predsym k) first_pred &&
         not (Set.is_empty v)
       )
       cm

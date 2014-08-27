@@ -7,10 +7,10 @@ val of_list : Sl_preddef.t list -> t
                         
 val to_melt : t -> Latex.t
 
-val mem : Sl_pred.ident_t -> t -> bool
+val mem : Sl_predsym.t -> t -> bool
 val is_defined : t -> Sl_tpred.t -> bool
 val is_undefined : t -> Sl_tpred.t -> bool
-val get_def : Sl_pred.ident_t -> t -> Sl_indrule.t list
+val get_def : Sl_predsym.t -> t -> Sl_indrule.t list
 
 val fixpoint: (t -> t) -> t -> t
 

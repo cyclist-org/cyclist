@@ -98,10 +98,10 @@ let freshen varset case =
   subst theta case
 
 let pp fmt (f, (ident, vs)) =
-  Format.fprintf fmt "@[%a%s%s%s%s%s@]"
+  Format.fprintf fmt "@[%a%s%a%s%s%s@]"
     Sl_heap.pp f
     symb_ind_implies.sep
-    ident
+    Sl_predsym.pp ident
     symb_lp.str
     (Blist.to_string "," Sl_term.to_string vs)
     symb_rp.str
@@ -116,7 +116,7 @@ let parse st =
 
 let unfold vars h (tag, (ident, args)) case =
   let (f, (ident', formals)) = dest (freshen vars case) in
-  assert (Strng.equal ident ident') ;
+  assert (Sl_predsym.equal ident ident') ;
   let f = Sl_heap.freshen_tags h f in 
   let tagpairs = 
     Tags.map_to 

@@ -131,7 +131,7 @@ let pred_intro_rule seq =
     let (p,q) =
       Blist.find
         (fun ((_,(id,vs)),(_,(id',vs'))) ->
-          Strng.equal id id' &&
+          Sl_predsym.equal id id' &&
 					Blist.for_all2 (fun x y -> Sl_heap.equates l x y) vs vs') cp in
     let l' = SH.del_ind l p in
     let r' = SH.del_ind r q in
@@ -192,7 +192,7 @@ let ruf defs =
           let (f', _) = Sl_indrule.unfold seq_vars r' p c in
           let f' = Sl_heap.freshen_tags r' f' in
           [ (([l], [Sl_heap.star r' f']), Sl_heap.tag_pairs l, TagPairs.empty) ],
-          (ident ^ " R.Unf.") in
+          ((Sl_predsym.to_string ident) ^ " R.Unf.") in
         Blist.map do_case cases in
       Blist.flatten (Sl_tpreds.map_to_list right_unfold r.SH.inds)  
     with Not_symheap -> [] in
@@ -211,7 +211,7 @@ let luf defs =
           let l' = Sl_heap.star l f in
 					let l' = Sl_heap.univ (Sl_heap.vars r) l' in
           (([l'], [r]), TagPairs.union (Sl_heap.tag_pairs l) tagpairs, tagpairs) in
-        Blist.map do_case cases, (ident ^ " L.Unf.") in
+        Blist.map do_case cases, ((Sl_predsym.to_string ident) ^ " L.Unf.") in
       Sl_tpreds.map_to_list left_unfold l.SH.inds
     with Not_symheap -> [] in
   wrap rl

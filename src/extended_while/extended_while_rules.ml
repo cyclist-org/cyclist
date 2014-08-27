@@ -144,7 +144,7 @@ let luf_rl ((pre,cmd,post) as seq) defs =
           (if !termination then tagpairs else Seq.tagpairs_one), 
           (if !termination then tagpairs else TagPairs.empty)
         ) in
-      Blist.map do_case clauses, (ident ^ " L.Unf.") in
+      Blist.map do_case clauses, ((Sl_predsym.to_string ident) ^ " L.Unf.") in
     Sl_tpreds.map_to_list 
       left_unfold 
       (Sl_tpreds.filter (Sl_defs.is_defined defs) pre.SH.inds)
@@ -576,7 +576,7 @@ let fold def =
               seq', 
               TagPairs.mk (Tags.inter tags (Seq.tags seq')), 
               TagPairs.empty 
-            )], (ident ^ " Fold")  in
+            )], ((Sl_predsym.to_string ident) ^ " Fold")  in
         Blist.map process results in
       Blist.bind do_case (Sl_preddef.rules def)
     with Not_symheap -> [] in
