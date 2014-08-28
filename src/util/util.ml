@@ -350,8 +350,8 @@ module PairTypes(T: BasicType) (S: BasicType) :
     let equal i j = 
       i==j || T.equal (fst i) (fst j) && S.equal (snd i) (snd j)
 
-(*    let hash (i:t) = genhash (T.hash (fst i)) (S.hash (snd i))*)
-    let hash = Hashtbl.hash
+    let hash (i:t) = genhash (T.hash (fst i)) (S.hash (snd i))
+    (* let hash = Hashtbl.hash *)
 
     let to_string i =
       "(" ^ (T.to_string (fst i)) ^ "," ^ (S.to_string (snd i)) ^ ")"
@@ -419,7 +419,7 @@ module Int = MakeComplexType
     type t = int
     let compare (i:t) (j:t) = if i<j then -1 else if i>j then +1 else 0
     let equal (i:t) (j:t) = i=j
-    let hash (i:t) = i
+    let hash (i:t) = Hashtbl.hash i
     let to_string = string_of_int
     let pp = Format.pp_print_int
   end)

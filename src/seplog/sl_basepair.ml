@@ -91,22 +91,25 @@ module Set = MakeTreeSet(BasePair)
 module RuleMap = MakeMap(Sl_indrule)
 
 let get_bps cmap (_, (ident, _)) =
-  Blist.rev 
-    (RuleMap.fold
-      (fun c s l -> 
-        if Sl_predsym.equal ident (fst (snd (Sl_indrule.dest c))) 
-        then 
-          Set.fold (fun bp l' -> (c, bp)::l') s l 
-        else 
-          l
-      ) 
-      cmap
-      [])
+  RuleMap.fold
+    (fun c s l -> 
+      if Sl_predsym.equal ident (fst (snd (Sl_indrule.dest c))) 
+      then 
+        Set.fold (fun bp l' -> (c, bp)::l') s l 
+      else 
+        l
+    ) 
+    cmap
+    []
+
+let tried = Hashset.create 997
 
 let gen_pairs case cmap =
   let (h, _) = Sl_indrule.dest case in
   let candidates = Sl_tpreds.map_to_list (fun i -> get_bps cmap i) h.SH.inds in
   let l = Blist.choose candidates in
+  let l = Blist.rev_filter (fun cbp -> not (Hashset.mem tried (case, cbp))) l in
+  let () = Blist.iter (fun cbp -> Hashset.add tried (case, cbp)) l in
   let poss_bps = Blist.rev_map (fun cbps -> gen case cbps) l in
   let bps = Option.list_get poss_bps in
   Set.of_list bps
@@ -123,6 +126,7 @@ let first_pred_not_empty defs =
       cm
 
 let gen_all_pairs ?(only_first=false) defs =
+  let () = Hashset.clear tried in
   let first_not_empty = first_pred_not_empty defs in
   let defs = Sl_defs.to_list defs in
   let cmap =
@@ -134,19 +138,18 @@ let gen_all_pairs ?(only_first=false) defs =
       defs
   in
   let onestep cmap =
-    let progress = ref false in
-    let r = RuleMap.endomap
-      (fun (c, s) -> 
-        let n = Set.cardinal s in
-        let s' = Set.union s (gen_pairs c cmap) in
-        let n' = Set.cardinal s' in
-        progress := !progress || n'>n; 
-        (c, s'))
-      cmap in
+    let (r, progress) = 
+      RuleMap.fold
+        (fun c s (cmap', progress) -> 
+          let s' = Set.union s (gen_pairs c cmap) in
+          ((RuleMap.add c s' cmap'), (progress || not (Set.equal s s'))))
+        cmap 
+        (cmap, false)
+        in
     let () = debug (fun () -> "\n" ^ (RuleMap.to_string Set.to_string r) ^ "\n") in
-    (!progress, r) in
+    (r, progress) in
   let rec fixp cm =
-    let (progress, cm') = onestep cm in
+    let (cm', progress) = onestep cm in
     if
       only_first && first_not_empty cm' || not progress
     then

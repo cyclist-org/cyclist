@@ -35,3 +35,4 @@ MParser
 CharStream
 Fun
 Hashcons
+Hashset

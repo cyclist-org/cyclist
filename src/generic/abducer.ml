@@ -88,8 +88,8 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
 
     exception Continue
     
-    let bfs minbound maxbound rule seq initial_defs check =
-      let bound = ref minbound in
+    let bfs maxbound rule seq initial_defs check =
+      let bound = ref 1 in
       let start = Proof.mk seq in
       let stack = 
         ref [expand_proof_state 0 (mk_app start 0 [(0,0)] initial_defs) rule] in

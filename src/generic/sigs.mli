@@ -301,7 +301,7 @@ sig
   module Proof : PROOF
   
   val bfs : 
-    int -> int -> 
+    int -> 
     abdrule_t -> Seq.t -> defs_t ->
     (defs_t -> bool) -> 
     (proof_t * defs_t) option
