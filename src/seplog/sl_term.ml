@@ -55,7 +55,7 @@ let fresh_varname exist =
   let letter = ref 'a' in
   let gen_name () = 
     (string_of_char !letter) ^ 
-    (if !idx = 0 then "" else Printf.sprintf "%i" !idx) ^ 
+    (if !idx = 0 then "" else string_of_int !idx) ^ 
     suffix in
   let name = ref (gen_name ()) in
   while name_present !name && !letter < 'z' do
@@ -83,12 +83,13 @@ let fresh_var s exist =
   let i = ref d in
   let found = ref false in
   while abs (!i) <= limit && not !found do
-    if Int.Set.mem !i s then 
+    if Int.Set.mem !i s then
       i := !i + d
     else
       found := true
   done ;
-  if !found then !i else mk_var (fresh_varname exist) exist 
+  if !found then !i else
+    mk_var (fresh_varname exist) exist 
 
 let fresh_evar s = fresh_var s true    
 let fresh_uvar s = fresh_var s false
