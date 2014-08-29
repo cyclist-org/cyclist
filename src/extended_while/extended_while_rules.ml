@@ -11,11 +11,7 @@ module Seqtactics = Seqtactics.Make(Extended_while_program.Seq)
 module Proof = Proof.Make(Extended_while_program.Seq)
 module Slprover = Prover.Make(Sl_seq)
 
-let tagpairs s =
-  if !termination then
-    TagPairs.mk (Seq.tags s)
-  else
-    Seq.tagpairs_one
+let tagpairs = Seq.tag_pairs
 
 (* following is for symex only *)
 let progpairs () = 
@@ -300,6 +296,7 @@ let matches ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
     let (pre,pre') = Pair.map Sl_form.dest (pre,pre') in
     let (post,post') = Pair.map Sl_form.dest (post,post') in
     let exvars h = Sl_term.Set.filter Sl_term.is_exist_var (Sl_heap.vars h) in
+    (* FIXME *)
     if not 
        (Sl_term.Set.is_empty (Sl_term.Set.inter (exvars pre) (exvars post))) 
         &&    
@@ -326,7 +323,7 @@ let matches ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
     let cont state = 
       Sl_heap.classical_unify ~inverse:true verify state post post' in
     Sl_term.backtrack 
-      (Sl_heap.classical_unify ~tagpairs:!termination)
+      (Sl_heap.classical_unify ~tagpairs:true)
       cont
       (Sl_term.empty_subst, TagPairs.empty)
       pre' pre
@@ -386,8 +383,7 @@ let dobackl idx prf =
       let (pre,cmd,post) as targ_seq = Proof.get_seq targ_idx prf in
       (* [targ_seq'] is as [targ_seq] but with the tags of [src_seq] *)
       let targ_seq' = 
-        ((if !termination then Sl_form.subst_tags tagpairs else Fun.id) 
-          pre, 
+        ( Sl_form.subst_tags tagpairs pre, 
           cmd,
           post) in 
       let subst_seq = Seq.subst theta targ_seq' in
