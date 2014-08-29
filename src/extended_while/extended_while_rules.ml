@@ -11,11 +11,7 @@ module Seqtactics = Seqtactics.Make(Extended_while_program.Seq)
 module Proof = Proof.Make(Extended_while_program.Seq)
 module Slprover = Prover.Make(Sl_seq)
 
-let tagpairs s =
-  if !termination then
-    TagPairs.mk (Seq.tags s)
-  else
-    Seq.tagpairs_one
+let tagpairs = Seq.tag_pairs
 
 (* following is for symex only *)
 let progpairs () = 
@@ -177,7 +173,7 @@ let symex_assign_rule =
       let (pre , cmd, _) = dest_sh_seq seq in
       let (x,e) = Cmd.dest_assign cmd in
       (* Does fv need to be fresh in the post condition too? *)
-      let fv = fresh_evar (Sl_heap.vars pre) in
+      let fv = fresh_evar (Seq.vars seq) in
       let theta = Sl_term.singleton_subst x fv in
       let pre' = Sl_heap.subst theta pre in
       let e' = Sl_term.subst theta e in
@@ -196,7 +192,7 @@ let symex_load_rule =
       let (_,ys) = find_pto_on pre e in
       let t = Blist.nth ys (Field.get_index f) in
       (* Does fv need to be fresh in the post condition too? *)
-      let fv = fresh_evar (Sl_heap.vars pre) in
+      let fv = fresh_evar (Seq.vars seq) in
       let theta = Sl_term.singleton_subst x fv in
       let pre' = Sl_heap.subst theta pre in
       let t' = Sl_term.subst theta t in
@@ -230,7 +226,7 @@ let symex_new_rule =
     try
       let (pre ,cmd, _) = dest_sh_seq seq in
       let x = Cmd.dest_new cmd in
-      let l = fresh_evars (Sl_heap.vars pre) (1 + (Field.get_no_fields ())) in
+      let l = fresh_evars (Seq.vars seq) (1 + (Field.get_no_fields ())) in
       let (fv,fvs) = (Blist.hd l, Blist.tl l) in
       let pre' = Sl_heap.subst (Sl_term.singleton_subst x fv) pre in
       let new_pto = Sl_heap.mk_pto (x, fvs) in
@@ -300,6 +296,7 @@ let matches ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
     let (pre,pre') = Pair.map Sl_form.dest (pre,pre') in
     let (post,post') = Pair.map Sl_form.dest (post,post') in
     let exvars h = Sl_term.Set.filter Sl_term.is_exist_var (Sl_heap.vars h) in
+    (* FIXME *)
     if not 
        (Sl_term.Set.is_empty (Sl_term.Set.inter (exvars pre) (exvars post))) 
         &&    
@@ -326,7 +323,7 @@ let matches ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
     let cont state = 
       Sl_heap.classical_unify ~inverse:true verify state post post' in
     Sl_term.backtrack 
-      (Sl_heap.classical_unify ~tagpairs:!termination)
+      (Sl_heap.classical_unify ~tagpairs:true)
       cont
       (Sl_term.empty_subst, TagPairs.empty)
       pre' pre
@@ -386,8 +383,7 @@ let dobackl idx prf =
       let (pre,cmd,post) as targ_seq = Proof.get_seq targ_idx prf in
       (* [targ_seq'] is as [targ_seq] but with the tags of [src_seq] *)
       let targ_seq' = 
-        ((if !termination then Sl_form.subst_tags tagpairs else Fun.id) 
-          pre, 
+        ( Sl_form.subst_tags tagpairs pre, 
           cmd,
           post) in 
       let subst_seq = Seq.subst theta targ_seq' in
@@ -584,22 +580,22 @@ let fold def =
 
 
 let generalise_while_rule =
-  let generalise m h =
-    let avoid = ref (Sl_heap.vars h) in
-    let gen_term t =
-    if Sl_term.Set.mem t m then
-      (let r = fresh_evar !avoid in avoid := Sl_term.Set.add r !avoid ; r)
-    else t in
-    let gen_pto (x,args) =
-    let l = Blist.map gen_term (x::args) in (Blist.hd l, Blist.tl l) in
-      SH.mk 
-        (Sl_term.Set.fold Sl_uf.remove m h.SH.eqs)
-        (Sl_deqs.filter
-          (fun p -> Pair.conj (Pair.map (fun z -> not (Sl_term.Set.mem z m)) p))
-          h.SH.deqs)
-        (Sl_ptos.endomap gen_pto h.SH.ptos)
-        h.SH.inds in
     let rl seq =
+      let generalise m h =
+        let avoid = ref (Seq.vars seq) in
+        let gen_term t =
+          if Sl_term.Set.mem t m then
+            (let r = fresh_evar !avoid in avoid := Sl_term.Set.add r !avoid ; r)
+          else t in
+        let gen_pto (x,args) =
+          let l = Blist.map gen_term (x::args) in (Blist.hd l, Blist.tl l) in
+            SH.mk 
+              (Sl_term.Set.fold Sl_uf.remove m h.SH.eqs)
+              (Sl_deqs.filter
+                (fun p -> Pair.conj (Pair.map (fun z -> not (Sl_term.Set.mem z m)) p))
+                h.SH.deqs)
+              (Sl_ptos.endomap gen_pto h.SH.ptos)
+              h.SH.inds in
       try
         let (pre, cmd, post) = dest_sh_seq seq in
         let (_, cmd') = Cmd.dest_while cmd in

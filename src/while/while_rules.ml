@@ -222,8 +222,7 @@ let matches ((l,cmd) as seq) ((l',cmd') as seq') =
     let verify ((theta, tagpairs) as state) =
       assert 
         (Seq.subsumed seq 
-          ((if !termination then Seq.subst_tags tagpairs else Fun.id) 
-            (Seq.subst theta seq'))) ;
+          (Seq.subst_tags tagpairs (Seq.subst theta seq'))) ;
       Option.mk 
         (Sl_term.Map.for_all 
           (fun x y -> 
@@ -231,7 +230,7 @@ let matches ((l,cmd) as seq) ((l',cmd') as seq') =
           theta)
         state in
     Sl_term.backtrack 
-      (Sl_heap.unify_partial ~tagpairs:!termination)
+      (Sl_heap.unify_partial ~tagpairs:true)
       verify
       (Sl_term.empty_subst, TagPairs.empty)
       l' l
@@ -272,8 +271,7 @@ let dobackl idx prf =
       let targ_seq = Proof.get_seq targ_idx prf in
       (* [targ_seq'] is as [targ_seq] but with the tags of [src_seq] *)
       let targ_seq' = 
-        ((if !termination then Sl_form.subst_tags tagpairs else Fun.id) 
-          (fst targ_seq), 
+        (Sl_form.subst_tags tagpairs (fst targ_seq), 
         snd targ_seq) in 
       let subst_seq = Seq.subst theta targ_seq' in
       Rule.sequence [
