@@ -19,7 +19,13 @@ let () =
   Arg.parse !F.speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) !F.usage ;
   if !cl_sequent="" then F.die "-S must be specified." ;
   let seq = Sl_seq.of_string !cl_sequent in
-  Sl_rules.setup (Sl_defs.of_channel (open_in !defs_path)) ;
+  let defs = Sl_defs.of_channel (open_in !defs_path) in
+  Sl_rules.setup defs ;
+  if Sl_seq.invalid defs seq then
+    begin
+      print_endline ("NOT proved: " ^ (Sl_seq.to_string seq) ^ " [invalid]") ; 
+      exit 255
+    end ;    
   exit (F.prove_seq !Sl_rules.axioms !Sl_rules.rules seq)
     
 

@@ -303,7 +303,7 @@ let rules = ref Rule.fail
 
 let setup defs =
   preddefs := defs ; 
-  let prooftac = 
+  rules := 
     Rule.first [
       lhs_disj_to_symheaps;
       rhs_disj_to_symheaps;
@@ -318,7 +318,4 @@ let setup defs =
         ruf defs;
         luf defs
       ] 
-    ] in
-  rules := 
-    Rule.conditional (Fun.neg (Sl_seq.invalid defs))
-      prooftac 
+    ]
