@@ -11,7 +11,6 @@ let latex_defs = ref false
 let timeout = ref 30
 let rec_defs_path = ref "/tmp/recdefs/"
 let gen_defs = ref false
-let minbound = ref 1
 let maxbound = ref 20
 
 module Seq = While_program.Seq
@@ -36,7 +35,7 @@ let prove_prog seq =
   let res =  
     w_timeout
       (fun () ->
-        Abducer.bfs !minbound !maxbound While_abdrules.rules seq Sl_defs.empty  
+        Abducer.bfs !maxbound While_abdrules.rules seq Sl_defs.empty  
         (if !gen_defs then record_defs else While_abdrules.is_sat)) 
       !timeout
       in
@@ -75,11 +74,8 @@ let usage =
 
 
 let speclist = [
-    ("-m", Arg.Set_int minbound, 
-      (": set starting depth for IDFS to <int>, default is " ^ (string_of_int !minbound)));
     ("-M", Arg.Set_int maxbound, 
-      (": set maximum depth for IDFS/BFS to <int>, default is " ^ (string_of_int !maxbound)));
-    ("-L", Arg.Int (fun n -> minbound := n ; maxbound := n), ": set both depths to <int>.");
+      (": set maximum depth for BFS to <int>, default is " ^ (string_of_int !maxbound)));
     ("-p", Arg.Set show_proof,": show proof");
     ("-pd", Arg.Set show_defs,": show abduced definitions");
     ("-sd", Arg.Set simpl_defs,": show simlpified abduced definitions");
