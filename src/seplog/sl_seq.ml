@@ -91,25 +91,18 @@ let _invalid defs seq =
   (* let all_partitions = partitions trm_list Sl_heap.empty in  *)
   (* Format.eprintf "INVALIDITY CHECK: # of partitions = %d@."  *)
     (* (Blist.length all_partitions) ; *)
-  let res = 
-    Sl_basepair.Set.exists
-      (fun (v,pi) -> 
-        Blist.exists 
-          (fun sigma ->
-            Sl_heap.subsumed pi sigma
-            &&
-            Sl_basepair.Set.for_all 
-              (fun (v',pi') -> 
-                (* not (Sl_heap.subsumed pi' sigma) *)
-                (* ||                               *)
-                Sl_term.Set.exists
-                  (fun z -> Sl_term.Set.for_all 
-                    (fun w -> Sl_heap.disequates sigma z w) v)
-                   v'
-              )  
-              rbps)
-          (partitions trm_list pi))
-    lbps in
+  let map_through sigma v =
+    Sl_term.Set.endomap (fun x -> Sl_uf.find x sigma.Sl_heap.eqs) v in
+  let b_move sigma (v,_) (v',pi') =
+    Sl_heap.subsumed pi' sigma
+    && 
+    let (v, v') = Pair.map (map_through sigma) (v, v') in
+    Sl_term.Set.subset v' v in     
+  let a_partition ((v, pi) as bp) sigma =
+    not (Sl_basepair.Set.exists (fun bp' -> b_move sigma bp bp') rbps) in    
+  let a_move ((v,pi) as bp) = 
+    Blist.exists (fun sigma -> a_partition bp sigma) (partitions trm_list pi) in    
+  let res = Sl_basepair.Set.exists a_move lbps in
   (* Format.eprintf "INVALIDITY CHECK: %s@." (string_of_bool res) ; *)
   res
 

@@ -31,21 +31,10 @@ let unify_partial ?(inverse=false) cont state d d' =
   Sl_tpair.FList.unify_partial ~inverse cont state (to_list d) (to_list d')
 
 let subsumed eqs deqs deqs' =
-  (* Option.is_some                                                                   *)
-  (*   (unify_partial (Sl_uf.subst_subsumed eqs) (Sl_term.empty_subst, ()) deqs deqs') *)
-  match
-    unify_partial
-      (Sl_uf.subst_subsumed eqs)
-      (Sl_term.empty_subst, TagPairs.empty) deqs deqs' with
-  | None -> false
-  | Some (theta, _) ->
-    if not (subset (subst theta deqs) deqs') then
-      begin
-        Format.eprintf "%a@." pp deqs ;
-        Format.eprintf "%a@." pp deqs' ;
-        Format.eprintf "%a@." Sl_term.pp_subst theta ;
-        assert false
-      end
-    else 
-      true
-
+  let norm p = Sl_tpair.order (Pair.map (fun x -> Sl_uf.find x eqs) p) in
+  for_all
+    (fun p ->
+      let p' = norm p in 
+      exists (fun q -> Sl_tpair.equal p' (norm q)) deqs'
+      ) 
+    deqs

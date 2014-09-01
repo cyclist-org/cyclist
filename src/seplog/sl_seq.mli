@@ -39,4 +39,5 @@ val subsumed_upto_tags : t -> t -> bool
 val invalid : Sl_defs.t -> t -> bool
 (** Run the base-pairs heuristic to show invalidity. A [false] result does {i not}
     indicated validity. *)
-    
+
+val partitions : Sl_term.t list -> Sl_heap.t -> Sl_heap.t list
