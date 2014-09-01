@@ -37,8 +37,19 @@ open Util;;
 #install_printer Sl_seq.pp;;
 #install_printer Sl_defs.pp;;
 #install_printer Sl_indrule.pp;;
+#install_printer Sl_basepair.pp;;
+#install_printer Sl_basepair.Set.pp;;
+
+Format.set_margin (Sys.command "exit $(tput cols)") ;;
+
+(* let defs = Sl_defs.of_channel (open_in "examples/sl.defs");; *)
+(* let s = Sl_seq.of_string "DLL^1(x, y, z, w) * DLL^2(a, x, w, b) |- DLL^3(a, y, z, b)";; *)
+
+let to_trm_list l = Blist.map Sl_term.of_string l;;
+
+let parts trms = Blist.length (Sl_seq.partitions (to_trm_list trms) Sl_heap.empty);;
 
 
-open Lib;;
+
 
        

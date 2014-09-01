@@ -21,3 +21,8 @@ val unify : ?tagpairs:bool -> t Sl_term.unifier
 (** Unify two tagged predicates.
     If the optional argument [~tagpairs=false] is set to [true] then also 
     add the pair of tags of the unified predicates. *) 
+
+val norm : Sl_uf.t -> t -> t
+(** Replace all terms with their UF representative. NB this may replace [nil] 
+    with a variable. *)
+ 

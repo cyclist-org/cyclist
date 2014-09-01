@@ -5,30 +5,25 @@ open MParser
 
 include PairTypes(Sl_heap)(Sl_pred)
 
-(* the normalisation of tags is used below to make sure that should we ever *)
-(* try to create the same rule twice but with different tags, we get *)
-(* structurally equal rules *)
-let norm_tags h =
-  let preds = Sl_tpreds.strip_tags (h.Sl_heap.inds) in
-  let tag = ref 0 in
-  let newinds = 
-    Sl_pred.MSet.map_to 
-      Sl_tpreds.add 
-      Sl_tpreds.empty
-      (fun p -> incr tag ; (!tag, p))
-      preds in
-  Sl_heap.with_inds h newinds
+(* module Var = Hashtbl.Make(Int.T)                        *)
+  
+(* let freevars = Var.create 997                           *)
+(* let existvars = Var.create 997                          *)
 
-let mk_vars exist n = 
-  let rec aux i = 
-    if i>n then [] else 
-    let newvar = 
-      Sl_term.of_string 
-        ((if exist then "v" else "u") ^ 
-        (string_of_int i) ^ 
-        (if exist then "'" else "")) in
-    newvar::(aux (i+1)) in
-  aux 1
+(* let mk_var exist i =                                    *)
+(*   let varset = if exist then existvars else freevars in *)
+(*   try                                                   *)
+(*     Var.find varset i                                   *)
+(*   with Not_found ->                                     *)
+(*     let newvar =                                        *)
+(*       Sl_term.of_string                                 *)
+(*         ((if exist then "v" else "u") ^                 *)
+(*         (string_of_int i) ^                             *)
+(*         (if exist then "'" else "")) in                 *)
+(*     Var.add varset i newvar ; newvar                    *)
+
+(* let mk_exist_var i = mk_var true i                      *)
+(* let mk_free_var i = mk_var false i                      *)
 
 let vars (f, (_, vs)) =
   Sl_term.Set.union (Sl_term.Set.of_list vs) (Sl_heap.vars f)
@@ -40,23 +35,31 @@ let _freshen varset ((h, (pred, args)) as case) =
   (Sl_heap.subst theta h, (pred, Sl_term.FList.subst theta args))
 
 (* normalize vars in rules to a fixed set *)
-let norm_vars ((h', (_, args')) as case) =
-  let no_evs = 
-    Sl_term.Set.cardinal 
-      (Sl_term.Set.filter Sl_term.is_exist_var (Sl_heap.vars h')) in
-  (* assume non-arg vars are existentially quantified *) 
-  let no_uvs = Blist.length args' in
-  let evs' = mk_vars true no_evs in
-  let uvs' = mk_vars false no_uvs in
-  let varset = Sl_term.Set.of_list (evs' @ uvs') in
-  let (h, (pred, args)) = _freshen varset case in
-  let evs = 
-    Sl_term.Set.to_list 
-      (Sl_term.Set.filter Sl_term.is_exist_var (Sl_heap.vars h)) in
-  let theta = 
-    Sl_term.Map.of_list ((Blist.combine evs evs') @ (Blist.combine args uvs')) in
-  (Sl_heap.subst theta h, (pred, Sl_term.FList.subst theta args))
+(* let norm_vars ((h', (_, args')) as case) =                                        *)
+(*   (* assume non-arg vars are existentially quantified *)                          *)
+(*   let evs =                                                                       *)
+(*     Sl_term.Set.to_list                                                           *)
+(*       (Sl_term.Set.filter Sl_term.is_exist_var (Sl_heap.vars h')) in              *)
+(*   let evs' = Blist.mapi (fun i _ -> mk_exist_var i) evs in                        *)
+(*   let fvs' = Blist.mapi (fun i _ -> mk_free_var i) args' in                       *)
+(*   let varset = Sl_term.Set.of_list (evs' @ fvs') in                               *)
+(*   let (h, (pred, args)) = _freshen varset case in                                 *)
+(*   let evs =                                                                       *)
+(*     Sl_term.Set.to_list                                                           *)
+(*       (Sl_term.Set.filter Sl_term.is_exist_var (Sl_heap.vars h)) in               *)
+(*   let theta =                                                                     *)
+(*     Sl_term.Map.of_list ((Blist.combine evs evs') @ (Blist.combine args fvs')) in *)
+(*   (Sl_heap.subst theta h, (pred, Sl_term.FList.subst theta args))                 *)
   
+(* the normalisation of tags is used below to make sure that should we ever *)
+(* try to create the same rule twice but with different tags, we get *)
+(* structurally equal rules *)
+let norm_tags h =
+  let preds = Sl_tpreds.strip_tags (h.Sl_heap.inds) in
+  let newinds = 
+    Sl_tpreds.of_list 
+      (Blist.mapi (fun tag p -> (1+tag, p)) (Sl_pred.MSet.to_list preds)) in
+  Sl_heap.with_inds h newinds
 
 let mk f i =
   let (_, args) = i in

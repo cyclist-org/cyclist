@@ -60,3 +60,6 @@ val subst_existentials : t -> t
 val subst_tags : Util.TagPairs.t -> t -> t
 (** Like [Sl_heap.subst_tags] applied to all disjuncts. *)
 
+val norm : t -> t
+(** Replace all terms with their UF representatives in the respective heaps. *)
+ 

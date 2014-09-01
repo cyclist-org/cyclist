@@ -47,4 +47,4 @@ let parse st =
   | None -> next_tag () in
   return (tag, (pred, arg_list))))) <?> "ind") st
 
- 
+let norm eqs (t, pred) = (t, Sl_pred.norm eqs pred)

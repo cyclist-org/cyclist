@@ -212,6 +212,13 @@ let subst_existentials h =
       subst (Sl_term.Map.of_list ex_eqs) h'' in
   fixpoint aux h
 
+let norm h =
+  { h with
+    deqs = Sl_deqs.norm h.eqs h.deqs ;
+    ptos = Sl_ptos.norm h.eqs h.ptos ;
+    inds = Sl_tpreds.norm h.eqs h.inds
+  }
+
 (* FIXME review *)
 let project f xs =
   (* let () = assert (Sl_tpreds.is_empty f.inds && Sl_ptos.is_empty f.ptos) in *)
@@ -260,4 +267,3 @@ let classical_unify ?(inverse=false) ?(tagpairs=false) cont theta h h' =
   let f3 theta' = direct inverse (Sl_ptos.unify f2 theta') h.ptos h'.ptos in 
   direct inverse (Sl_tpreds.unify ~tagpairs f3 theta) h.inds h'.inds
   
-

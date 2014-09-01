@@ -17,3 +17,8 @@ val of_string : string -> t
 
 val unify : t Sl_term.unifier
 (** Compute substitution that unifies two predicates. *)
+
+val norm : Sl_uf.t -> t -> t
+(** Replace all terms with their UF representative. NB this may replace [nil] 
+    with a variable. *)
+    

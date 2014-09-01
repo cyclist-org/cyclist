@@ -48,4 +48,8 @@ val unify : ?total:bool -> ?tagpairs:bool -> t Sl_term.unifier
   compute substitution that makes the first multiset a subset of the second.
 - If the optional argument [~tagpairs=false] is set to [true] then return 
   in addition to the substitution the pairs of tags of predicates unified. *)
-  
+
+val norm : Sl_uf.t -> t -> t
+(** Replace all terms with their UF representative. NB this may replace [nil] 
+    with a variable. *)
+ 

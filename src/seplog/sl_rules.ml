@@ -106,6 +106,29 @@ let deq_simplify seq =
     ]
   with Not_symheap -> []
 
+let norm seq =
+  let seq' = Sl_seq.norm seq in
+  if Sl_seq.equal seq seq' then [] else 
+  [ [ (seq', Sl_seq.tag_pairs seq', TagPairs.empty) ], "" ]
+
+let simplify_rules = [
+  eq_subst_rule ;
+  eq_ex_subst_rule ;
+  eq_simplify ;
+  deq_simplify ;
+  norm ;
+]
+
+let simplify_seq = 
+  Seqtactics.relabel "Simplify"
+    (Seqtactics.repeat (Seqtactics.first simplify_rules)) 
+
+let simplify = Rule.mk_infrule simplify_seq
+
+let wrap r =
+  (Rule.mk_infrule (Seqtactics.compose r (Seqtactics.attempt simplify_seq)))
+
+
 (* do the following transformation for the first x such that *)
 (* x->y * A |- x->z * B     if     A |- y=z * B *)
 let pto_intro_rule seq =
@@ -137,22 +160,6 @@ let pred_intro_rule seq =
     let r' = SH.del_ind r q in
     [ [ ( ([l'], [r']), Sl_heap.tag_pairs l', TagPairs.empty ) ], "Pred Intro" ]
   with Not_symheap | Not_found -> []
-
-let simplify_rules = [
-  eq_subst_rule ;
-  eq_ex_subst_rule ;
-  eq_simplify ;
-  deq_simplify ;
-]
-
-let simplify_seq = 
-  Seqtactics.relabel "Simplify"
-    (Seqtactics.repeat (Seqtactics.first simplify_rules)) 
-
-let simplify = Rule.mk_infrule simplify_seq
-
-let wrap r =
-  (Rule.mk_infrule (Seqtactics.compose r (Seqtactics.attempt simplify_seq)))
 
 (* x->ys * A |- e->zs * B if  A |- ys=zs * B[x/e] where e existential *)
 (* and at least one var in ys,zs is the same *)
@@ -301,6 +308,9 @@ let axioms = ref (Rule.first [id_axiom ; ex_falso_axiom])
 
 let rules = ref Rule.fail
 
+let not_invalid =
+  Rule.conditional (fun s -> not (Sl_seq.invalid !preddefs s)) Rule.identity 
+
 let setup defs =
   preddefs := defs ; 
   rules := 
@@ -310,12 +320,17 @@ let setup defs =
       simplify;
       
       Rule.choice [
-        (* brl_matches; *)
   			dobackl;
     		wrap pto_intro_rule;
     		wrap pred_intro_rule;
         instantiate_pto ;
-        ruf defs;
-        luf defs
+        (* Rule.conditional (fun s -> not (Sl_seq.invalid defs s)) *)
+        (*   (Rule.choice                                          *)
+        (*     [                                                   *)
+              (ruf defs);
+              (luf defs) 
+              (* ]) *)
       ] 
-    ]
+    ] ;
+  rules := Rule.conditional (fun s -> not (Sl_seq.invalid defs s)) !rules
+  

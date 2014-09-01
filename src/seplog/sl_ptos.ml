@@ -30,23 +30,19 @@ let rec unify ?(total=true) cont state ptos ptos' =
   else
     let a = choose ptos in
     let ptos = remove a ptos in
-    let to_match = elements ptos' in
     let f a' =
       Sl_pto.unify  
         (fun state' -> unify ~total cont state' ptos (remove a' ptos'))
         state a a' in
-    Blist.find_some f to_match
+    find_map f ptos'
 
-let subsumed ?(total=true) eqs ptos ptos' =
-  (* Option.is_some                                                            *)
-  (*   (unify (Sl_uf.subst_subsumed eqs) (Sl_term.empty_subst, ()) ptos ptos') *)
-  match 
-    unify ~total 
-      (Sl_uf.subst_subsumed eqs) 
-      (Sl_term.empty_subst, TagPairs.empty) ptos ptos' with
+let rec subsumed ?(total=true) eqs ptos ptos' =
+  if is_empty ptos then not total || is_empty ptos' else
+  let pto = choose ptos in
+  let ptos = remove pto ptos in
+  let pto = Sl_pto.norm eqs pto in
+  match find_opt (fun pto' -> Sl_pto.equal pto (Sl_pto.norm eqs pto')) ptos' with
   | None -> false
-  | Some (theta, _) ->
-    assert 
-      ((if total then equal else subset) (subst theta ptos) ptos') ; 
-    true
+  | Some pto' -> subsumed ~total eqs ptos (remove pto' ptos')
 
+let norm eqs ptos = endomap (Sl_pto.norm eqs) ptos

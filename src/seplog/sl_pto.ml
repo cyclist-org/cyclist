@@ -23,3 +23,6 @@ let to_melt (x,args) =
 let terms (x, xs) = Sl_term.FList.terms (x::xs)
 
 let vars pto = Sl_term.filter_vars (terms pto) 
+
+let norm eqs (x, xs) = 
+  (Sl_uf.find x eqs, Blist.map (fun y -> Sl_uf.find y eqs) xs)

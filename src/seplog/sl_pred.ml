@@ -41,4 +41,6 @@ let parse st =
 let of_string s =
   handle_reply (MParser.parse_string parse s ())
 
+let norm eqs (ident, args) = (ident, Blist.map (fun x -> Sl_uf.find x eqs) args)
+
 module MSet = MakeMultiset(IndSubf)

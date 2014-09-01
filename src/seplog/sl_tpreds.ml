@@ -47,36 +47,33 @@ let rec unify ?(total=true) ?(tagpairs=false) cont state inds inds' =
   else
     let a = choose inds in
     let inds = remove a inds in
-    let to_match = elements inds' in
     let f a' =
       Sl_tpred.unify ~tagpairs
         (fun state' -> unify ~total ~tagpairs cont state' inds (remove a' inds'))
         state a a' in
-    Blist.find_some f to_match
+    find_map f inds'
 
 let subsumed_upto_tags ?(total=true) eqs inds inds' =
-  let valid ((theta,_) as state) =
-    if 
-      not 
-        ((if total then Sl_pred.MSet.equal else Sl_pred.MSet.subset) 
-          (strip_tags (subst theta inds))
-          (strip_tags (subst theta inds'))) then 
-      None 
-    else
-      Sl_uf.subst_subsumed eqs state in
-  Option.is_some 
-    (unify ~total valid (Sl_term.empty_subst, TagPairs.empty) inds inds')
-      
-let subsumed ?(total=true) eqs inds inds' =
-  let valid ((theta,_) as state) =
-    if 
-      not 
-        ((if total then equal else subset) (subst theta inds) inds') 
-    then 
-      None 
-    else
-      Sl_uf.subst_subsumed eqs state in
-  Option.is_some 
-    (unify ~total valid (Sl_term.empty_subst, TagPairs.empty) inds inds')
-      
+  let rec aux uinds uinds' = 
+    if Sl_pred.MSet.is_empty uinds then not total || Sl_pred.MSet.is_empty uinds' else
+    let uind = Sl_pred.MSet.choose uinds in
+    let uinds = Sl_pred.MSet.remove uind uinds in
+    let uind = Sl_pred.norm eqs uind in
+    match 
+      Sl_pred.MSet.find_opt 
+        (fun uind' -> Sl_pred.equal uind (Sl_pred.norm eqs uind')) uinds' with
+    | None -> false
+    | Some uind' -> aux uinds (Sl_pred.MSet.remove uind' uinds') in
+  let (uinds, uinds') = Pair.map strip_tags (inds, inds') in
+  aux uinds uinds'  
+    
+let rec subsumed ?(total=true) eqs inds inds' =
+  if is_empty inds then not total || is_empty inds' else
+  let ind = choose inds in
+  let inds = remove ind inds in
+  let ind = Sl_tpred.norm eqs ind in
+  match find_opt (fun ind' -> Sl_tpred.equal ind (Sl_tpred.norm eqs ind')) inds' with
+  | None -> false
+  | Some ind' -> subsumed ~total eqs inds (remove ind' inds')
 
+let norm eqs inds = endomap (Sl_tpred.norm eqs) inds

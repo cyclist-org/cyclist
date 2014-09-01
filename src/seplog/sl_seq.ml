@@ -57,6 +57,7 @@ let subsumed (l,r) (l',r') =
 let subsumed_upto_tags (l,r) (l',r') = 
   Sl_form.subsumed_upto_tags l' l && Sl_form.subsumed_upto_tags r r'
 
+module HSet = MakeTreeSet(Sl_heap)
 
 let partitions trm_list pi = 
   let pairs = Blist.cartesian_hemi_square trm_list in
@@ -64,16 +65,18 @@ let partitions trm_list pi =
     Blist.filter 
       (fun (x,y) -> not (Sl_heap.equates pi x y || Sl_heap.disequates pi x y))
       pairs in
-  let rec aux = function
-    | [] -> [pi]
-    | q::qs -> 
-      let sub_partitions = aux qs in
-      Blist.rev_filter
-        (Fun.neg Sl_heap.inconsistent)
-        (Blist.rev_append
-          (Blist.rev_map (fun pi' -> Sl_heap.add_eq pi' q) sub_partitions)
-          (Blist.rev_map (fun pi' -> Sl_heap.add_deq pi' q) sub_partitions)) in
-  aux pairs
+  let aux acc pair = 
+    HSet.fold
+      (fun pi' acc' ->
+        let pi'' = Sl_heap.add_eq pi' pair in
+        if Sl_heap.inconsistent pi'' then 
+          acc' 
+        else
+          HSet.add pi'' acc'
+      )
+      acc
+      acc in
+  Blist.foldl aux (HSet.singleton pi) pairs
 
 let _invalid defs seq =
   (* Format.eprintf "INVALIDITY CHECK: %a@." pp seq ; *)
@@ -91,25 +94,18 @@ let _invalid defs seq =
   (* let all_partitions = partitions trm_list Sl_heap.empty in  *)
   (* Format.eprintf "INVALIDITY CHECK: # of partitions = %d@."  *)
     (* (Blist.length all_partitions) ; *)
-  let res = 
-    Sl_basepair.Set.exists
-      (fun (v,pi) -> 
-        Blist.exists 
-          (fun sigma ->
-            Sl_heap.subsumed pi sigma
-            &&
-            Sl_basepair.Set.for_all 
-              (fun (v',pi') -> 
-                (* not (Sl_heap.subsumed pi' sigma) *)
-                (* ||                               *)
-                Sl_term.Set.exists
-                  (fun z -> Sl_term.Set.for_all 
-                    (fun w -> Sl_heap.disequates sigma z w) v)
-                   v'
-              )  
-              rbps)
-          (partitions trm_list pi))
-    lbps in
+  let map_through sigma v =
+    Sl_term.Set.endomap (fun x -> Sl_uf.find x sigma.Sl_heap.eqs) v in
+  let b_move sigma (v,_) (v',pi') =
+    Sl_heap.subsumed pi' sigma
+    && 
+    let (v, v') = Pair.map (map_through sigma) (v, v') in
+    Sl_term.Set.subset v' v in     
+  let a_partition ((v, pi) as bp) sigma =
+    not (Sl_basepair.Set.exists (fun bp' -> b_move sigma bp bp') rbps) in    
+  let a_move ((v,pi) as bp) = 
+    HSet.exists (fun sigma -> a_partition bp sigma) (partitions trm_list pi) in    
+  let res = Sl_basepair.Set.exists a_move lbps in
   (* Format.eprintf "INVALIDITY CHECK: %s@." (string_of_bool res) ; *)
   res
 
@@ -124,4 +120,5 @@ let invalid =
       let v = _invalid defs seq in
       Hashtbl.add cache key v ;
       v
-        
+
+let norm s = Pair.map Sl_form.norm s               

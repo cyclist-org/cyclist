@@ -132,4 +132,6 @@ val classical_unify : ?inverse:bool -> ?tagpairs:bool -> t Sl_term.unifier
   to the substitution found, also return the set of pairs of tags of 
   predicates unified. *)
 
-
+val norm : t -> t
+(** Replace all terms with their UF representative (the UF in the heap). *)
+ 
