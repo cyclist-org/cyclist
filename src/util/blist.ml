@@ -80,6 +80,19 @@ let find_indexes p xs =
     | [] -> []
     | y::ys -> if p y then n::(aux (n+1) ys) else aux (n+1) ys in
   aux 0 xs
+  
+let rec equal eq xs ys = match (xs, ys) with
+  | ([], []) -> true
+  | (x::xs, y::ys) -> (eq x y) && equal eq xs ys
+  | _ -> false
+
+let rec prepend_to_all x = function
+  | [] -> []
+  | y::ys -> x :: y :: (prepend_to_all x ys)
+
+let intersperse x = function
+  | [] -> []
+  | y::ys -> y :: (prepend_to_all x ys)
 
 let rec unzip3 = function
   | [] -> ([],[],[])

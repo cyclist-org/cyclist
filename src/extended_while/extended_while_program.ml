@@ -9,21 +9,25 @@ module SH = Sl_heap
 let termination = ref false
 
 module Field = While_program.Field
-exception WrongCmd = While_program.WrongCmd
 module Cond = While_program.Cond
 module Cmd = While_program.Cmd
+
+exception WrongCmd = While_program.WrongCmd
 
 module Proc =
   struct
     
-    let add p = ()
+    type t = string * Sl_term.t Blist.t * Sl_form.t * Sl_form.t * Cmd.t
+    
+    let get_name ((id, _, _, _, _) : t) = id
+    let get_params ((_, params, _, _, _) : t) = params
+    let get_precondition ((_, _, pre, _, _) : t) = pre
+    let get_postcondition ((_, _, _, post, _) : t) = post
+    let get_body ((_, _, _, _, body) : t) = body
+    
     
     (* precondition: PRECONDITION; COLON; f = formula; SEMICOLON { f } *)
-    let parse_precondition st = 
-      ( parse_symb keyw_precondition >>
-        parse_symb symb_colon >>
-        Sl_form.parse >>= (fun f ->
-        parse_symb symb_semicolon >>$ f) <?> "Precondition") st
+    let parse_precondition st = While_program.parse_precondition st
 
     (* postcondition: POSTCONDITION; COLON; f = formula; SEMICOLON { f } *)
     let parse_postcondition st = 
@@ -55,9 +59,16 @@ module Proc =
       parse_precondition >>= (fun pre ->
       parse_postcondition >>= (fun post ->
       Tokens.braces
-        (expect_before Cmd.parse (parse_symb symb_rb) "Expecting CmdList") |>>
+        (expect_before Cmd.parse (parse_symb symb_rb) "Expecting CmdList") >>=
       (fun body ->
-        return (id, params, pre, post, body) <?> "Procedure" )))))) st
+        (* TODO: Check that parameters are not assigned to in procedure body
+                 and that local variables are not mention in the pre/post *)
+        begin
+          assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_form.vars post) (Sl_term.Set.inter (Cmd.modifies ~strict:false body) (Sl_term.Set.of_list params))));
+          assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_form.vars pre) (Cmd.locals (Sl_term.Set.of_list params) body)));
+          assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_form.vars post) (Cmd.locals (Sl_term.Set.of_list params) body)));
+          return (id, params, pre, post, body)
+        end <?> "Procedure" )))))) st
     
     let parse_unnamed st = 
       (parse_precondition >>= (fun pre ->
@@ -118,36 +129,6 @@ module Seq =
       Sl_form.subsumed_upto_tags pre' pre &&
       Sl_form.subsumed_upto_tags post post' 
     
-    (* let uni_subsumption ((pre,cmd,post) as s) ((pre',cmd',post') as s') = *)
-      (* if not (Cmd.equal cmd cmd') then None else                                          *)
-      (* let tags = Tags.inter (tags s) (tags s') in                                         *)
-      (* let valid_pre theta =                                                               *)
-      (*   if Sl_term.Map.exists                                                             *)
-      (*     (fun k v -> Sl_term.is_univ_var k && not (Sl_form.equates pre k v)) theta       *)
-      (*     then None                                                                       *)
-      (*   else                                                                              *)
-  		(* 		if not !termination then Some theta else                                        *)
-      (*     let s'' = subst (theta, Sl_term.empty_subst) s' in                              *)
-      (*     let tags' = Tags.fold                                                           *)
-      (*       ( fun t acc ->                                                                *)
-      (*         let new_acc = Tags.add t acc in                                             *)
-      (*         if subsumed_wrt_tags new_acc s s'' then new_acc else acc                    *)
-      (*       ) tags Tags.empty in                                                          *)
-      (*     if not (Tags.is_empty tags') then Some theta else None                          *)
-      (*   in                                                                                *)
-      (* let valid_post theta =                                                              *)
-      (*   if Sl_term.Map.exists                                                             *)
-      (*     (fun k v -> Sl_term.is_univ_var k && not (Sl_form.equates post k v)) theta      *)
-      (*     then None                                                                       *)
-      (*   else Some theta                                                                   *)
-      (*   in                                                                                *)
-      (* let theta  = Sl_form.right_subsumption valid_pre Sl_term.empty_subst pre' pre in    *)
-      (* let theta' = Sl_form.right_subsumption valid_post Sl_term.empty_subst post post' in *)
-      (* match (theta, theta') with                                                          *)
-      (*   | (None, _) -> None                                                               *)
-      (*   | (_, None) -> None                                                               *)
-      (*   | (Some theta, Some theta') -> Some (theta, theta')                               *)
-
     let pp fmt (pre,cmd,post) =
       Format.fprintf fmt "@[%s{%a}@ %a@ {%a}@]"
         symb_turnstile.sep
@@ -172,8 +153,11 @@ module Seq =
 
 let program_vars = ref Sl_term.Set.empty
 
-let set_program p =
-  program_vars := Cmd.vars p
+let set_program ((_, cmd, _), procs) =
+  program_vars := Blist.foldl 
+    (fun vars (_, _, _, _, body) -> Sl_term.Set.union vars (Cmd.vars body)) 
+    (Cmd.vars cmd) 
+    (procs)
 
 let vars_of_program () = !program_vars
 
@@ -197,16 +181,23 @@ let parse_fields st =
 
 (* procedures *)
 let parse_procs st =
-  ( many Proc.parse_named >>= (fun procs -> return (List.iter Proc.add procs)) ) st
+  let sigs_equiv (id, params, _,_,_) (id', params', _,_,_) = id=id' && (Blist.length params) = (Blist.length params') in
+  ( many Proc.parse_named |>> (fun procs ->
+    Blist.foldr
+      (fun p ps ->
+        assert(not (Blist.exists (sigs_equiv p) ps));
+        p::ps)
+      procs []) ) st
   
+(* main: p = precondition; q = postcondition; cmd = command; EOF { (p, cmd, q) } *)
 let parse_main st =
   ( Proc.parse_unnamed << eof <?> "Main procedure") st
 
-(* fields; procs; p = precondition; q = postcondition; cmd = command; EOF { (p, cmd, q) } *)
+(* fields; procs = procedures; main = main  { (main, procs) } *)
 let parse st = 
   ( parse_fields >>
-    parse_procs >>
-    parse_main <?> "Program") st
+    parse_procs >>= (fun procs ->
+    parse_main |>> (fun main -> (main, procs))) <?> "Program") st
 
 let of_channel c =
   handle_reply (parse_channel parse c ())
