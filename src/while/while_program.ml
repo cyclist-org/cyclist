@@ -40,6 +40,9 @@ module Field =
 
 exception WrongCmd
 
+let is_prog_var v = Sl_term.is_univ_var v
+let is_prog_term t = Sl_term.is_nil t || is_prog_var t
+
 module Cond =
   struct
     type t =
@@ -47,8 +50,8 @@ module Cond =
       | Deq of Sl_term.t * Sl_term.t
       | Non_det
 
-    let mk_eq e1 e2 = Eq(e1,e2)
-    let mk_deq e1 e2 = Deq(e1,e2)
+    let mk_eq e1 e2 = assert(is_prog_term e1); assert(is_prog_term e2); Eq(e1,e2)
+    let mk_deq e1 e2 = assert(is_prog_term e1); assert(is_prog_term e2); Deq(e1,e2)
     let mk_non_det () = Non_det
 
     let is_deq = function
@@ -119,6 +122,7 @@ module Cmd =
       | If of Cond.t * t
       | IfElse of Cond.t * t * t
       | While of Cond.t * t
+      | ProcCall of string * Sl_term.FList.t
     and basic_t = { label:int option; cmd:cmd_t }
     and t = basic_t list
 
@@ -149,9 +153,13 @@ module Cmd =
     let is_skip c = is_not_empty c && match get_cmd c with
       | Skip -> true
       | _ -> false
+    let is_proc_call c = is_not_empty c && match get_cmd c with
+      | ProcCall(_, _) -> true
+      | _ -> false
+    
 
     let is_basic c = is_not_empty c && match get_cmd c with
-      | Assign _ | Load _ | Store _ | New _ | Free _ | Stop | Skip -> true
+      ProcCall(_, _) | Assign _ | Load _ | Store _ | New _ | Free _ | Stop | Skip -> true
       | _ -> false
 
     let is_if c = is_not_empty c && match get_cmd c with
@@ -173,6 +181,7 @@ module Cmd =
     let mk_free e = mk_basic (Free(e))
     let mk_stop = mk_basic (Stop)
     let mk_skip = mk_basic (Skip)
+    let mk_proc_call p args = mk_basic (ProcCall(p, args))
     let mk_if cond cmd = mk_basic (If(cond, cmd))
     let mk_ifelse cond cmd cmd' = mk_basic (IfElse(cond, cmd, cmd'))
     let mk_while cond cmd = mk_basic (While(cond, cmd))
@@ -184,7 +193,7 @@ module Cmd =
       <|> attempt (parse_symb keyw_skip >>$ Skip)
       <|> attempt (parse_symb keyw_free >>
           Tokens.parens Sl_term.parse |>> (fun v ->
-          assert (Sl_term.is_var v) ; Free v))
+          assert (is_prog_var v) ; Free v))
       <|> attempt (parse_symb keyw_if >>
           Cond.parse >>= (fun cond ->
           parse_symb keyw_then >>
@@ -202,32 +211,36 @@ module Cmd =
           parse_symb keyw_do >>
           parse >>= (fun cmd ->
           parse_symb keyw_od >>$ While(cond,cmd))))
-  (*   | v = var; FLD_SEL; fld = IDENT; ASSIGN; t = term                                                       *)
+  (*   | v = var; FLD_SEL; fld = IDENT; ASSIGN; t = term *)
       <|> attempt (Sl_term.parse >>= (fun v ->
           parse_symb symb_fld_sel >>
           parse_ident >>= (fun id ->
           parse_symb symb_assign >>
           Sl_term.parse |>> (fun t ->
-          assert (Sl_term.is_var v) ; Store(v,id,t)))))
-  (*   v = var; ASSIGN; NEW; LP; RP { P.Cmd.mk_new v }                            *)
+          assert (is_prog_var v) ; Store(v,id,t)))))
+  (*   v = var; ASSIGN; NEW; LP; RP { P.Cmd.mk_new v } *)
       <|> attempt (Sl_term.parse <<
           parse_symb symb_assign <<
           parse_symb keyw_new <<
           parse_symb symb_lp <<
           parse_symb symb_rp |>> (fun v ->
-          assert (Sl_term.is_var v) ; New v))
-  (*   | v1 = var; ASSIGN; v2 = var; FLD_SEL; fld = IDENT                                                      *)
+          assert (is_prog_var v) ; New v))
+  (*   | v1 = var; ASSIGN; v2 = var; FLD_SEL; fld = IDENT *)
       <|> attempt (Sl_term.parse >>= (fun v1 ->
           parse_symb symb_assign >>
           Sl_term.parse >>= (fun v2 ->
           parse_symb symb_fld_sel >>
           parse_ident |>> (fun id ->
-          assert (Sl_term.is_var v1 && Sl_term.is_var v2) ; Load(v1,v2,id)))))
+          assert (is_prog_var v1 && is_prog_var v2) ; Load(v1,v2,id)))))
     (* | v = var; ASSIGN; t = term { P.Cmd.mk_assign v t } *)
-      <|> (Sl_term.parse >>= (fun v -> 
+      <|> attempt ( Sl_term.parse >>= (fun v -> 
           parse_symb symb_assign >> 
           Sl_term.parse |>> (fun t -> 
-          assert (Sl_term.is_var v) ; Assign(v,t))))
+          assert (is_prog_var v) ; Assign(v,t))) )
+      <|> (parse_ident >>= (fun p ->
+          Tokens.parens (Tokens.comma_sep Sl_term.parse) |>> (fun args ->
+          (Blist.iter (fun arg -> assert(is_prog_var arg || Sl_term.is_nil arg)) args);
+          ProcCall(p, args))))
       <?> "Cmd") st
     and parse st = 
       (sep_by1 parse_cmd (parse_symb symb_semicolon) |>> 
@@ -263,6 +276,9 @@ module Cmd =
     let _dest_while = function
       | While(cond,cmd) -> (cond,cmd)
       | _ -> raise WrongCmd
+    let _dest_proc_call = function
+      | ProcCall(p, args) -> (p, args)
+      | _ -> raise WrongCmd
     let _dest_deref = function
       | Load(x,e,s) -> e
       | Store(e1,s,e2) -> e1
@@ -282,6 +298,7 @@ module Cmd =
     let dest_if = dest_cmd _dest_if
     let dest_ifelse = dest_cmd _dest_ifelse
     let dest_while = dest_cmd _dest_while
+    let dest_proc_call = dest_cmd _dest_proc_call
     let dest_empty c = if c=[] then () else raise WrongCmd
 
     let number c =
@@ -289,7 +306,8 @@ module Cmd =
         | [] -> ([], n)
         | c::l ->
           begin match c.cmd with
-            | Assign _ | Load _ | Store _ | New _ | Free _ | Stop | Skip ->
+            | ProcCall(_,_) | Assign _ | Load _ | Store _ | New _ | Free _ 
+            | Stop | Skip ->
               let c' = { label=Some n; cmd=c.cmd } in
               let (l', n') = aux (n+1) l in
               (c'::l', n')
@@ -321,26 +339,33 @@ module Cmd =
       | IfElse(cond,cmd,cmd') ->
         Sl_term.Set.union (Sl_term.Set.union (Cond.vars cond) (terms cmd)) (terms cmd')
       | While(cond,cmd) -> Sl_term.Set.union (Cond.vars cond) (terms cmd)
+      | ProcCall(p, args) -> Sl_term.Set.of_list args
     and terms l =
       Blist.fold_left (fun s c -> Sl_term.Set.union s (cmd_terms c.cmd)) Sl_term.Set.empty l
 
     let vars cmd = Sl_term.filter_vars (terms cmd)
+    
+    let locals params cmd = Sl_term.Set.diff (vars cmd) params
 
-    let rec cmd_modifies = function
-      | Stop | Skip | Free _ -> Sl_term.Set.empty
-      | New(x) | Assign(x,_) | Load(x,_,_) | Store(x,_,_) -> Sl_term.Set.singleton x
-      | If(_,cmd) | While(_,cmd) -> modifies cmd
-      | IfElse(_,cmd,cmd') -> Sl_term.Set.union (modifies cmd) (modifies cmd')
-    and modifies l =
+    let rec cmd_modifies ?strict:(flag=true) cmd = match cmd with
+      | Stop | Skip | Free _ | ProcCall(_, _) -> Sl_term.Set.empty
+      | New(x) | Assign(x,_) | Load(x,_,_) -> Sl_term.Set.singleton x
+      | Store(x,_,_) -> if flag then Sl_term.Set.singleton x else Sl_term.Set.empty 
+      | If(_,cmd) | While(_,cmd) -> modifies ~strict:flag cmd
+      | IfElse(_,cmd,cmd') -> 
+          Sl_term.Set.union (modifies ~strict:flag cmd) (modifies ~strict:flag cmd')
+    and modifies ?strict:(flag=true) l =
       Blist.fold_left 
-        (fun s c -> Sl_term.Set.union s (cmd_modifies c.cmd)) Sl_term.Set.empty l
-
+        (fun s c -> Sl_term.Set.union s (cmd_modifies ~strict:flag c.cmd)) Sl_term.Set.empty l
+        
     let rec cmd_equal cmd cmd' = match (cmd, cmd') with
       | (Stop, Stop) | (Skip, Skip) -> true
       | (New(x), New(y)) | (Free(x), Free(y)) -> Sl_term.equal x y
       | (Assign(x,e), Assign(x',e')) -> Sl_term.equal x x' && Sl_term.equal e e'
       | (Load(x,e,f), Load(x',e',f')) | (Store(x,f,e), Store(x',f',e')) ->
         Sl_term.equal x x' && Sl_term.equal e e' && f=f'
+      | (ProcCall(p, args), ProcCall(p', args')) -> 
+        p=p' && Blist.equal Sl_term.equal args args'
       | (While(cond,cmd), While(cond',cmd')) | (If(cond,cmd), If(cond',cmd')) ->
         Cond.equal cond cond' && equal cmd cmd'
       | (IfElse(cond,cmd1,cmd2), IfElse(cond',cmd1',cmd2')) ->
@@ -381,6 +406,8 @@ module Cmd =
       | Store(x,f,e) ->
         Format.fprintf fmt "%a%s%s%s%a"
           Sl_term.pp x symb_fld_sel.str f symb_assign.sep Sl_term.pp e
+      | ProcCall(p, args) -> Format.fprintf fmt "%s(%s)"
+          p (Sl_term.FList.to_string_sep symb_comma.sep args)
       | If(cond,cmd) ->
         if abbr then
           Format.fprintf fmt "%s %a %s %a... %s"
@@ -451,6 +478,11 @@ module Cmd =
         Latex.concat
           [ Sl_term.to_melt x; symb_fld_sel.melt;
             Field.to_melt f; symb_assign.melt; Sl_term.to_melt e ]
+      | ProcCall(p, args) ->
+        let separated_args = 
+          Blist.intersperse symb_comma.melt
+            (Blist.map (fun x -> Sl_term.to_melt x) args) in
+        Latex.concat (ltx_text p :: symb_lp.melt :: separated_args @ [symb_rp.melt])
       | If(cond,cmd) ->
         Latex.concat
           [ keyw_if.melt; ltx_math_space; Cond.to_melt cond; ltx_math_space;

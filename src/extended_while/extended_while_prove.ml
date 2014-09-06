@@ -30,16 +30,16 @@ let () = F.speclist := !F.speclist @ [
 let () =
   Arg.parse !F.speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) !F.usage ;
   if !prog_path="" then F.die "-P must be specified." ;
-  let (pre, prog, post) = Extended_while_program.of_channel (open_in !prog_path) in
-  let prog = Cmd.number prog in
+  let ((pre, cmd, post), procs) = Extended_while_program.of_channel (open_in !prog_path) in
+  let main = (pre, Cmd.number cmd, post) in
+  let procs = Blist.map (fun (id, params, pre, post, body) -> (id, params, pre, post, Cmd.number body)) procs in
 	let defs = Sl_defs.of_channel (open_in !defs_path) in
-	(* Check well-formedness of the program: *)
-	(* Do all the predicates in the pre/post annotations have the correct arity? *)
-	(* Do all procedure declarations contain distinct formal parameters? *)
-	(* if not While_program.well_formed defs prog then F.die !While_program.error_msg *)
-  Extended_while_program.set_program prog ; 
-  Extended_while_rules.setup defs ;
-  exit (F.prove_seq !Extended_while_rules.axioms !Extended_while_rules.rules (pre, prog, post))
+	(* TODO: Check well-formedness of the program: *)
+	(*   Do all the predicates in the pre/post annotations have the correct arity? *)
+	(*   If not While_program.well_formed defs prog then F.die !While_program.error_msg *)
+  Extended_while_program.set_program (main, procs); 
+  Extended_while_rules.setup (defs, procs) ;
+  exit (F.prove_seq !Extended_while_rules.axioms !Extended_while_rules.rules main)
     
 
 

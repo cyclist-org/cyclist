@@ -1,0 +1,18 @@
+fields: next;
+
+proc freelist(x)
+precondition: ls(x, nil);
+postcondition: emp;
+{
+	if x != nil then
+		y := x;
+		x := x.next;
+		free(y);
+		freelist(x)
+	fi
+}
+
+precondition: ls(x, nil);
+postcondition: emp;
+
+freelist(x)
