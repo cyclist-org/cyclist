@@ -31,6 +31,9 @@ module Defs =
         
     let parse st =
       (sep_by1 Sl_preddef.parse (parse_symb symb_semicolon) <?> "defs") st
+
+    let of_string s =
+      handle_reply (MParser.parse_string parse s ())
     
     let of_channel c =
       handle_reply (MParser.parse_channel parse c ())

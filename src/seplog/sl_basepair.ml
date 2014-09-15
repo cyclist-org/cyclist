@@ -79,6 +79,15 @@ struct
         (fun u -> Sl_term.Set.exists (fun z -> Sl_heap.equates h u z) v) l in
     let v = Sl_term.Set.of_list l in
     Some (project (v, h) case)
+  
+  let less_than (v,h) (v',h') = 
+    Sl_heap.subsumed h h' 
+    &&
+    let (v,v') = 
+      (* use stronger heap to rewrite both variable sets *)
+      Pair.map 
+        (Sl_term.Set.endomap (fun x -> Sl_uf.find x h'.Sl_heap.eqs)) (v,v') in
+    Sl_term.Set.subset v v'
  
 end
 
@@ -180,3 +189,18 @@ let pairs_of_form defs f =
     Set.empty 
     rules
   
+let minimise bps = 
+  let res = 
+    Set.fold 
+      (fun x bps' ->
+        if Set.exists (fun y -> BasePair.less_than y x) bps' then 
+          bps'
+        else
+          Set.add x bps' 
+        ) 
+      bps
+      Set.empty in
+  (* if not (Set.equal res bps) then print_endline "~" ;  *)
+  res 
+  
+    

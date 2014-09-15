@@ -43,6 +43,7 @@ val invalid : Sl_defs.t -> t -> bool
 val norm : t -> t
 (** Replace all terms with their UF representatives in the respective formulas.` *)
  
-module HSet : Util.OrderedContainer with type elt = Sl_heap.t
+(* module HSet : Util.OrderedContainer with type elt = Sl_heap.t *)
 
-val partitions : Sl_term.t list -> Sl_heap.t -> HSet.t
+val partitions : Sl_term.t list -> Sl_heap.t -> Sl_heap.t list
+(* val heap_partitions : Sl_term.t list -> Sl_heap.t Util.Enum.t *)
