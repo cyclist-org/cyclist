@@ -38,3 +38,9 @@ let subsumed eqs deqs deqs' =
       exists (fun q -> Sl_tpair.equal p' (norm q)) deqs'
       ) 
     deqs
+
+let norm eqs deqs =
+  endomap 
+    (fun p -> Sl_tpair.order (Pair.map (fun x -> Sl_uf.find x eqs) p)) 
+    deqs
+   

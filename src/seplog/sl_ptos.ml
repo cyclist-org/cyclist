@@ -36,14 +36,13 @@ let rec unify ?(total=true) cont state ptos ptos' =
         state a a' in
     find_map f ptos'
 
-let norm eqs (x,ys) =
-  (Sl_uf.find x eqs, Blist.map (fun y -> Sl_uf.find y eqs) ys)
-
 let rec subsumed ?(total=true) eqs ptos ptos' =
   if is_empty ptos then not total || is_empty ptos' else
   let pto = choose ptos in
   let ptos = remove pto ptos in
-  let pto = norm eqs pto in
-  match find_opt (fun pto' -> Sl_pto.equal pto (norm eqs pto')) ptos' with
+  let pto = Sl_pto.norm eqs pto in
+  match find_opt (fun pto' -> Sl_pto.equal pto (Sl_pto.norm eqs pto')) ptos' with
   | None -> false
   | Some pto' -> subsumed ~total eqs ptos (remove pto' ptos')
+
+let norm eqs ptos = endomap (Sl_pto.norm eqs) ptos

@@ -64,3 +64,4 @@ let disj f g = f @ g
 let subst theta f = Blist.map (fun h -> Sl_heap.subst theta h) f
 let subst_existentials f = Blist.map Sl_heap.subst_existentials f
 let subst_tags tagpairs f = Blist.map (Sl_heap.subst_tags tagpairs) f
+let norm f = Blist.map Sl_heap.norm f

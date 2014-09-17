@@ -21,3 +21,8 @@ val unify : ?total:bool -> t Sl_term.unifier
     If the optional argument [~total=true] is set to [false] then 
     compute a substitution that would make the first multiset a sub(multi)set of 
     the second. *)
+
+val norm : Sl_uf.t -> t -> t
+(** Replace all terms with their UF representative. NB this may replace [nil] 
+    with a variable. *)
+    

@@ -27,19 +27,17 @@ struct
       Sl_heap.pp g
       symb_rp.str
   
+  let norm (v, h) =
+    let h' = Sl_heap.norm h in 
+    let v' = Sl_term.Set.endomap (fun x -> Sl_uf.find x h'.Sl_heap.eqs) v in
+    (v', h')    
+  
+  (* pre: g is consistent *)
   let project (v, g) case =
     let formals = Sl_indrule.formals case in
     let g' = Sl_heap.project g formals in
-    let proj lval =
-      if Sl_heap.equates g' lval Sl_term.nil then 
-        Sl_term.nil 
-      else
-        Sl_uf.find lval g'.Sl_heap.eqs in  
-    let v' =       
-      Sl_term.Set.endomap  
-        proj  
-        (Sl_term.Set.inter v (Sl_term.Set.of_list formals)) in
-    (v', g')
+    let v' = Sl_term.Set.inter v (Sl_term.Set.of_list formals) in
+    norm (v', g')
   
   let subst theta (v, g) =
     let v' = Sl_term.Set.endomap (fun z -> Sl_term.subst theta z) v in
@@ -81,6 +79,15 @@ struct
         (fun u -> Sl_term.Set.exists (fun z -> Sl_heap.equates h u z) v) l in
     let v = Sl_term.Set.of_list l in
     Some (project (v, h) case)
+  
+  let less_than (v,h) (v',h') = 
+    Sl_heap.subsumed h h' 
+    &&
+    let (v,v') = 
+      (* use stronger heap to rewrite both variable sets *)
+      Pair.map 
+        (Sl_term.Set.endomap (fun x -> Sl_uf.find x h'.Sl_heap.eqs)) (v,v') in
+    Sl_term.Set.subset v v'
  
 end
 
@@ -114,10 +121,9 @@ let gen_pairs case cmap =
   let bps = Option.list_get poss_bps in
   Set.of_list bps
 
-let first_pred_not_empty defs =
+let first_pred_not_empty defs cm =
   let defs = Sl_defs.to_list defs in
   let first_pred = Sl_preddef.predsym (Blist.hd defs) in
-  fun cm ->
     RuleMap.exists
       (fun k v ->
         Sl_predsym.equal (Sl_indrule.predsym k) first_pred &&
@@ -150,11 +156,7 @@ let gen_all_pairs ?(only_first=false) defs =
     (r, progress) in
   let rec fixp cm =
     let (cm', progress) = onestep cm in
-    if
-      only_first && first_not_empty cm' || not progress
-    then
-      cm'
-    else
+    if only_first && first_not_empty cm' || not progress then cm' else
       fixp cm' in
   fixp cmap
 
@@ -172,8 +174,7 @@ let satisfiable ?(only_first=false) ?(output=false) defs =
     end ;
   let retval =
     only_first && first_pred_not_empty defs res ||
-    not only_first &&
-    RuleMap.for_all (fun _ s -> not (Set.is_empty s)) res in
+    not only_first && RuleMap.for_all (fun _ s -> not (Set.is_empty s)) res in
   if retval then Stats.CC.accept () else Stats.CC.reject () ;
   retval
 
@@ -188,3 +189,18 @@ let pairs_of_form defs f =
     Set.empty 
     rules
   
+let minimise bps = 
+  let res = 
+    Set.fold 
+      (fun x bps' ->
+        if Set.exists (fun y -> BasePair.less_than y x) bps' then 
+          bps'
+        else
+          Set.add x bps' 
+        ) 
+      bps
+      Set.empty in
+  (* if not (Set.equal res bps) then print_endline "~" ;  *)
+  res 
+  
+    

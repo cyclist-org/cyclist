@@ -148,3 +148,5 @@ val compute_frame :
   None will be returned in case there are existential variables in the frame
   which also occur in the specification. *)
 
+val norm : t -> t
+(** Replace all terms with their UF representative (the UF in the heap). *)

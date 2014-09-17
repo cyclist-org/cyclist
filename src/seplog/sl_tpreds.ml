@@ -53,30 +53,27 @@ let rec unify ?(total=true) ?(tagpairs=false) cont state inds inds' =
         state a a' in
     find_map f inds'
 
-let norm_untagged eqs (ident, args) = 
-  (ident, Blist.map (fun x -> Sl_uf.find x eqs) args)
-  
 let subsumed_upto_tags ?(total=true) eqs inds inds' =
   let rec aux uinds uinds' = 
     if Sl_pred.MSet.is_empty uinds then not total || Sl_pred.MSet.is_empty uinds' else
     let uind = Sl_pred.MSet.choose uinds in
     let uinds = Sl_pred.MSet.remove uind uinds in
-    let uind = norm_untagged eqs uind in
+    let uind = Sl_pred.norm eqs uind in
     match 
       Sl_pred.MSet.find_opt 
-        (fun uind' -> Sl_pred.equal uind (norm_untagged eqs uind')) uinds' with
+        (fun uind' -> Sl_pred.equal uind (Sl_pred.norm eqs uind')) uinds' with
     | None -> false
     | Some uind' -> aux uinds (Sl_pred.MSet.remove uind' uinds') in
   let (uinds, uinds') = Pair.map strip_tags (inds, inds') in
   aux uinds uinds'  
     
-let norm eqs (tag, pred) = (tag, norm_untagged eqs pred)
-        
 let rec subsumed ?(total=true) eqs inds inds' =
   if is_empty inds then not total || is_empty inds' else
   let ind = choose inds in
   let inds = remove ind inds in
-  let ind = norm eqs ind in
-  match find_opt (fun ind' -> Sl_tpred.equal ind (norm eqs ind')) inds' with
+  let ind = Sl_tpred.norm eqs ind in
+  match find_opt (fun ind' -> Sl_tpred.equal ind (Sl_tpred.norm eqs ind')) inds' with
   | None -> false
   | Some ind' -> subsumed ~total eqs inds (remove ind' inds')
+
+let norm eqs inds = endomap (Sl_tpred.norm eqs) inds

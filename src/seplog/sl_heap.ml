@@ -30,7 +30,7 @@ let equal_upto_tags h h' =
   Sl_deqs.equal h.deqs h'.deqs &&
   Sl_ptos.equal h.ptos h'.ptos &&
   Sl_tpreds.equal_upto_tags h.inds h'.inds
-  
+
 include Fixpoint(struct type t = symheap let equal = equal end)
 
 let compare f g =
@@ -213,6 +213,13 @@ let subst_existentials h =
       let h'' = { h' with eqs = Sl_uf.of_list non_ex_eqs } in
       subst (Sl_term.Map.of_list ex_eqs) h'' in
   fixpoint aux h
+
+let norm h =
+  { h with
+    deqs = Sl_deqs.norm h.eqs h.deqs ;
+    ptos = Sl_ptos.norm h.eqs h.ptos ;
+    inds = Sl_tpreds.norm h.eqs h.inds
+  }
 
 (* FIXME review *)
 let project f xs =

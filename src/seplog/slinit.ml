@@ -42,11 +42,45 @@ open Util;;
 
 Format.set_margin (Sys.command "exit $(tput cols)") ;;
 
-let defs = Sl_defs.of_channel (open_in "examples/sl.defs");;
-let s = Sl_seq.of_string "DLL^1(x, y, z, w) * DLL^2(a, x, w, b) |- DLL^3(a, y, z, b)";;
+(* let defs = Sl_defs.of_string                                                               *)
+(*   "dll {                                                                                   *)
+(*   fr=nx * bk=pr => dll(fr,bk,pr,nx) |                                                      *)
+(*   fr!=nx * bk!=pr * fr->u',pr * dll(u',bk,fr,nx) => dll(fr,bk,pr,nx)                       *)
+(*   }";;                                                                                     *)
 
+(* let seq = Sl_seq.of_string                                                                 *)
+(*   "x!=w * w!=t * z!=w * w->t,u * dll(x,u,nil,w) * dll(t,y,w,z) |- dll(x,y,nil,z)";;        *)
 
-#trace Sl_basepair.pairs_of_form;;
-Sl_seq.invalid defs s ;;
+(* let (lbps, rbps) = Pair.map (Sl_basepair.pairs_of_form defs) seq ;;                        *)
 
-       
+(* let trm_list =                                                                             *)
+(*   Sl_term.Set.to_list                                                                      *)
+(*     (Sl_term.Set.add Sl_term.nil                                                           *)
+(*       (Sl_term.Set.filter Sl_term.is_univ_var (Sl_seq.vars seq))) ;;                       *)
+
+(* let (lbps, rbps) = Pair.map (Sl_basepair.pairs_of_form defs) seq ;;                        *)
+
+(* let map_through sigma v =                                                                  *)
+(*   Sl_term.Set.endomap (fun x -> Sl_uf.find x sigma.Sl_heap.eqs) v ;;                       *)
+
+(* let b_move sigma (v,_) (v',pi') =                                                          *)
+(*   Sl_heap.subsumed pi' sigma                                                               *)
+(*   &&                                                                                       *)
+(*   let (v, v') = Pair.map (map_through sigma) (v, v') in                                    *)
+(*   Sl_term.Set.subset v' v ;;                                                               *)
+     
+(* let a_partition ((v, pi) as bp) sigma =                                                    *)
+(*   not (Sl_basepair.Set.exists (fun bp' -> b_move sigma bp bp') rbps) ;;                    *)
+    
+(* let a_move ((v,pi) as bp) =                                                                *)
+(*   Blist.exists (fun sigma -> a_partition bp sigma) (Sl_seq.partitions trm_list pi) ;;      *)
+
+(* #trace a_move;;                                                                            *)
+(* #trace a_partition;;                                                                       *)
+(* #trace b_move;;                                                                            *)
+    
+(* let res = Sl_basepair.Set.exists a_move lbps;; *)
+
+let terms = Blist.map Sl_term.of_string ["x"; "y"; "z" ];;
+
+let hps = Sl_seq.heap_partitions terms ;;

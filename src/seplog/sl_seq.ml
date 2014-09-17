@@ -57,6 +57,7 @@ let subsumed (l,r) (l',r') =
 let subsumed_upto_tags (l,r) (l',r') = 
   Sl_form.subsumed_upto_tags l' l && Sl_form.subsumed_upto_tags r r'
 
+(* module HSet = MakeTreeSet(Sl_heap) *)
 
 let partitions trm_list pi = 
   let pairs = Blist.cartesian_hemi_square trm_list in
@@ -64,6 +65,18 @@ let partitions trm_list pi =
     Blist.filter 
       (fun (x,y) -> not (Sl_heap.equates pi x y || Sl_heap.disequates pi x y))
       pairs in
+  (* let aux acc pair =                          *)
+  (*   HSet.fold                                 *)
+  (*     (fun pi' acc' ->                        *)
+  (*       let pi'' = Sl_heap.add_eq pi' pair in *)
+  (*       if Sl_heap.inconsistent pi'' then     *)
+  (*         acc'                                *)
+  (*       else                                  *)
+  (*         HSet.add pi'' acc'                  *)
+  (*     )                                       *)
+  (*     acc                                     *)
+  (*     acc in                                  *)
+  (* Blist.foldl aux (HSet.singleton pi) pairs   *)
   let rec aux = function
     | [] -> [pi]
     | q::qs -> 
@@ -75,6 +88,60 @@ let partitions trm_list pi =
           (Blist.rev_map (fun pi' -> Sl_heap.add_deq pi' q) sub_partitions)) in
   aux pairs
 
+
+(* paper: GRAY CODES, LOOPLESS ALGORITHM AND PARTITIONS *)
+(* let _partitions n =                                                   *)
+(*   let pi = Array.make n 1 in                                          *)
+(*   let firsttime = ref true in                                         *)
+(*   let j = ref n in                                                    *)
+(*   let prefixmax pi j =                                                *)
+(*     let maxj = ref 0 in                                               *)
+(*     for i = 0 to j-2 do maxj := max !maxj pi.(i) ; done ;             *)
+(*     !maxj in                                                          *)
+(*   fun () ->                                                           *)
+(*     if !j<=0 then None else                                           *)
+(*     if !firsttime then (firsttime := false; Some pi) else             *)
+(*     let () =                                                          *)
+(*       while !j>0 && pi.(!j-1) = 1 + prefixmax pi !j do decr j done in *)
+(*     if !j>0 then                                                      *)
+(*       begin                                                           *)
+(*         pi.(!j-1) <- 1 + pi.(!j-1) ;                                  *)
+(*         for i = !j to n-1 do pi.(i) <- 1 done ;                       *)
+(*         j := n ;                                                      *)
+(*         Some pi                                                       *)
+(*       end                                                             *)
+(*     else                                                              *)
+(*       None                                                            *)
+
+(* let heap_partitions trm_list =                                       *)
+(*   let terms = Array.of_list trm_list in                              *)
+(*   let size = Array.length terms in                                   *)
+(*   let parts_enum = _partitions size in                               *)
+(*   let to_heap part =                                                 *)
+(*     let heap = ref Sl_heap.empty in                                  *)
+(*     let representatives = ref [] in                                  *)
+(*     let active_block = ref 1 in                                      *)
+(*     while !active_block <= size do                                   *)
+(*       let repr = ref None in                                         *)
+(*       for i = 0 to size-1 do                                         *)
+(*         if part.(i) = !active_block then                             *)
+(*           begin                                                      *)
+(*             let term = terms.(i) in                                  *)
+(*             match !repr with                                         *)
+(*             | Some r ->                                              *)
+(*               heap := Sl_heap.add_eq !heap (r, term)                 *)
+(*             | None ->                                                *)
+(*                 repr := Some term ;                                  *)
+(*                 representatives := term::!representatives            *)
+(*           end                                                        *)
+(*       done ;                                                         *)
+(*       incr active_block                                              *)
+(*     done ;                                                           *)
+(*     let deqs = Blist.cartesian_hemi_square !representatives in       *)
+(*     Sl_heap.norm (Sl_heap.with_deqs !heap (Sl_deqs.of_list deqs)) in *)
+(*   Enum.map to_heap parts_enum                                        *)
+
+
 let _invalid defs seq =
   (* Format.eprintf "INVALIDITY CHECK: %a@." pp seq ; *)
   let trm_list = 
@@ -84,6 +151,7 @@ let _invalid defs seq =
   (* Format.eprintf "INVALIDITY CHECK: # of terms in T = %d@."  *)
   (*   (Blist.length trm_list) ;                                *)
   let (lbps, rbps) = Pair.map (Sl_basepair.pairs_of_form defs) seq in
+  let (lbps, rbps) = Pair.map Sl_basepair.minimise (lbps, rbps) in
   (* Format.eprintf "INVALIDITY CHECK: LHS base pairs = @.%a@."  *)
   (*   Sl_basepair.Set.pp lbps;                                  *)
   (* Format.eprintf "INVALIDITY CHECK: RHS base pairs = @.%a@."  *)
@@ -101,14 +169,25 @@ let _invalid defs seq =
   let a_partition ((v, pi) as bp) sigma =
     not (Sl_basepair.Set.exists (fun bp' -> b_move sigma bp bp') rbps) in    
   let a_move ((v,pi) as bp) = 
-    Blist.exists (fun sigma -> a_partition bp sigma) (partitions trm_list pi) in    
+    Blist.exists (fun sigma -> a_partition bp sigma) (partitions trm_list pi) in
+    (* Enum.exists                                                         *)
+    (*   (fun sigma -> Sl_heap.subsumed pi sigma && a_partition bp sigma)  *)
+    (*   (heap_partitions trm_list) in                                     *)
   let res = Sl_basepair.Set.exists a_move lbps in
   (* Format.eprintf "INVALIDITY CHECK: %s@." (string_of_bool res) ; *)
   res
 
-    
+let choices a b =
+  let (a,b) = Pair.map Sl_term.Set.to_list (a,b) in
+  let bs = Blist.repeat b (Blist.length a) in
+  let choices = Blist.choose bs in
+  Blist.map 
+    (fun c -> 
+      Sl_heap.with_eqs Sl_heap.empty (Sl_uf.of_list (Blist.combine a c))) 
+    choices 
+
 let invalid =
-  let cache = Hashtbl.create 1001 in
+  let cache = Hashtbl.create 997 in
   fun defs seq ->
     let key = (defs, seq) in
     try
@@ -117,4 +196,5 @@ let invalid =
       let v = _invalid defs seq in
       Hashtbl.add cache key v ;
       v
-        
+
+let norm s = Pair.map Sl_form.norm s               

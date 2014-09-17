@@ -21,3 +21,7 @@ val unify_partial : ?inverse:bool -> t Sl_term.unifier
 val subsumed : Sl_uf.t -> t -> t -> bool
 (** [subsumed eqs d d'] is true iff [d] can be rewritten using the equalities
     in [eqs] such that it becomes a subset of [d']. *)
+
+val norm : Sl_uf.t -> t -> t
+(** Rename all variables involved by their representative in the UF structure 
+    and re-order pair members if necessary. *) 

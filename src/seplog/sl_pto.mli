@@ -9,3 +9,7 @@ val vars : t -> Sl_term.Set.t
 
 val unify : t Sl_term.unifier
 (** Compute substitution that unifies two points-tos. *)
+
+val norm : Sl_uf.t -> t -> t
+(** Replace all terms with their UF representative. NB this may replace [nil] 
+    with a variable. *)
