@@ -38,6 +38,10 @@ or [nil].
 type unifier_state = substitution * Util.TagPairs.t
 (** State maintained by unifiers. *)
 
+(* val empty_state : unifier_state                                                 *)
+(* (** The unifier state consisting of the empty substitution and the empty set of *)
+(*     tag pairs *)                                                                *)
+
 type 'a unifier = 
   (unifier_state -> unifier_state option) ->
     unifier_state -> 'a -> 'a ->

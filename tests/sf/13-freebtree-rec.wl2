@@ -1,0 +1,19 @@
+fields: left, right;
+
+proc freebtree(x)
+precondition: bt(x);
+postcondition: emp;
+{
+	if x != nil then
+		tmp := x.left;
+		freebtree(tmp);
+		tmp := x.right;
+		freebtree(tmp);
+		free(x)
+	fi
+}
+
+precondition: bt(x);
+postcondition: emp;
+
+freebtree(x)

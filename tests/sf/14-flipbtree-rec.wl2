@@ -1,0 +1,20 @@
+fields: left, right;
+
+proc flipbtree(x)
+precondition: bt(x);
+postcondition: bt(x);
+{
+	if x != nil then
+		left := x.left;
+		right := x.right;
+		flipbtree(left);
+		flipbtree(right);
+		x.left := right;
+		x.right := left
+	fi
+}
+
+precondition: bt(x);
+postcondition: bt(x);
+
+flipbtree(x)

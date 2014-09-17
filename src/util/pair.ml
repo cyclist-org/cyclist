@@ -1,3 +1,4 @@
+let mk x y = (x,y)
 let map f p = (f (fst p), f (snd p))
 let apply f p = f (fst p) (snd p)
 let conj p = apply (&&) p

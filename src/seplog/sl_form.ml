@@ -8,6 +8,9 @@ include MakeFList(Sl_heap)
 let empty = [ Sl_heap.empty ]
 
 exception Not_symheap
+let is_symheap = function
+  | [s] -> true
+  | _ -> false
 let dest = function
   | [s] -> s
   | _ -> raise Not_symheap

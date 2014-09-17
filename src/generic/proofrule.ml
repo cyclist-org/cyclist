@@ -61,10 +61,27 @@ struct
   
   let fail _ _ = L.empty
 
-  let apply_to_subgoals r (subgoals, prf) =
-    Blist.fold_left
-      (* close one subgoal each time by actually appling the rule *)
-      (fun apps idx ->
+  (* This has been generalised below to take a list of rules                   *)
+  (*                                                                           *)
+  (* let apply_to_subgoals r (subgoals, prf) =                                 *)
+  (*   Blist.fold_left                                                         *)
+  (*     (* close one subgoal each time by actually appling the rule *)        *)
+  (*     (fun apps idx ->                                                      *)
+  (*       L.bind                                                              *)
+  (*         (fun (opened, oldprf) ->                                          *)
+  (*           (* add new subgoals to the list of opened ones *)               *)
+  (*           L.map                                                           *)
+  (*             (fun (newsubgoals, newprf) -> (opened @ newsubgoals, newprf)) *)
+  (*             (r idx oldprf))                                               *)
+  (*         apps)                                                             *)
+  (*     (L.singleton ([], prf))                                               *)
+  (*     subgoals                                                              *)
+    
+  let apply_to_subgoals_pairwise rules (subgoals, prf) = 
+    try
+      Blist.fold_left2
+      (* close one subgoal each time by actually appling the corresponding rule *)
+      (fun apps r idx -> 
         L.bind
           (fun (opened, oldprf) ->
             (* add new subgoals to the list of opened ones *)
@@ -72,10 +89,19 @@ struct
               (fun (newsubgoals, newprf) -> (opened @ newsubgoals, newprf))
               (r idx oldprf))
           apps)
-        (L.singleton ([], prf)) 
+      (L.singleton ([], prf))
+      rules
       subgoals
-    
-  let compose r r' idx prf = L.bind (apply_to_subgoals r') (r idx prf)
+    with Invalid_argument(_) -> L.empty
+
+  let compose r r' idx prf = 
+    L.bind 
+      (fun ((subgoals, _) as res) ->
+        apply_to_subgoals_pairwise (Blist.repeat r' (Blist.length subgoals)) res) 
+      (r idx prf)
+
+  let compose_pairwise r rs idx prf =
+    L.bind (apply_to_subgoals_pairwise rs) (r idx prf)
 
   let choice rl idx prf = L.bind (fun f -> f idx prf) (L.of_list rl) 
   

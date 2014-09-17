@@ -10,6 +10,7 @@ let compare m m' = Sl_term.Map.compare Sl_term.compare m m'
 let bindings m = Sl_term.Map.bindings m
 let empty = Sl_term.Map.empty
 let is_empty = Sl_term.Map.is_empty
+let all_members_of = Sl_term.Map.all_members_of Sl_term.equal
 
 let to_string_list v = 
   Blist.map (Sl_tpair.to_string_sep symb_eq.str) (bindings v)
@@ -49,6 +50,12 @@ let of_list ls =
   Blist.fold_left (fun m pair -> add pair m) empty ls
 
 let equates m x y = Sl_term.equal (find x m) (find y m)
+
+let diff eqs eqs' =
+  let eqs_list = bindings eqs in
+  let eqs'_list = bindings eqs' in
+  let diffs_list = Blist.foldl (fun xs eq -> Blist.del_first (Sl_tpair.equal eq) xs) eqs'_list eqs_list in
+  of_list diffs_list
 
 let subsumed m m' =
   Sl_term.Map.for_all (fun x y -> equates m' x y) m

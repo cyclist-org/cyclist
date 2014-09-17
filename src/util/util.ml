@@ -30,6 +30,7 @@ module type OrderedContainer =
 		val subsets : t -> t list
     val fixpoint : (t -> t) -> t -> t
     val del_first : (elt -> bool) -> t -> t
+    val all_members_of : t -> t -> bool
   end
 
 module type OrderedMap =
@@ -45,6 +46,7 @@ module type OrderedMap =
     val to_string : ('a -> string) -> 'a t -> string
 (*    val map_to : ('b -> 'c -> 'c) -> 'c -> (key -> 'v -> 'b) -> 'v t -> 'c *)
 (*    val map_to_list : (key -> 'b -> 'a) -> 'b t -> 'a list                 *)
+    val all_members_of : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
   end
 
 module Fixpoint(T: sig type t val equal : t -> t -> bool end) =
@@ -189,6 +191,8 @@ module MakeListMultiset(T: BasicType) =
 			let xs = remove x xs in
     	let xxs = subsets xs in
 			xxs @ (Blist.map (fun y -> add x y) xxs)
+      
+    let all_members_of xs ys = for_all (Fun.swap mem ys) xs
 
 	end
 
@@ -292,6 +296,9 @@ module MakeTreeSet(T: BasicType) : OrderedContainer with type elt = T.t =
       match find_opt p s with
       | None -> s
       | Some x -> remove x s
+
+    let all_members_of xs ys = for_all (Fun.swap mem ys) xs
+
   end
 
 module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
@@ -334,6 +341,12 @@ module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
     let to_string val_to_string m = 
       let pp_val fmt v = Format.pp_print_string fmt (val_to_string v) in
       Format.asprintf "%a" (pp pp_val) m 
+      
+    let all_members_of eq m m' = 
+      let mem (k, v) s = Blist.exists (fun (k', v') -> (T.equal k k') && (eq v v')) s in
+      let xs = to_list m in
+      let ys = to_list m' in
+      Blist.for_all (Fun.swap mem ys) xs
   end
 
 module PairTypes(T: BasicType) (S: BasicType) :

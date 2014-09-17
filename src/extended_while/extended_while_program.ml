@@ -25,6 +25,9 @@ module Proc =
     let get_postcondition ((_, _, _, post, _) : t) = post
     let get_body ((_, _, _, _, body) : t) = body
     
+    let get_seq ((id, params, pre, post, _) : t) = 
+      let cmd = Cmd.mk_proc_call id params in
+      (pre, cmd, post)
     
     (* precondition: PRECONDITION; COLON; f = formula; SEMICOLON { f } *)
     let parse_precondition st = While_program.parse_precondition st
@@ -61,18 +64,24 @@ module Proc =
       Tokens.braces
         (expect_before Cmd.parse (parse_symb symb_rb) "Expecting CmdList") >>=
       (fun body ->
-        (* TODO: Check that parameters are not assigned to in procedure body
-                 and that local variables are not mention in the pre/post *)
+        (* Check that parameters mentioned in the postcondition are not
+           assigned to in procedure body, that local variables are not mentioned
+           in the pre/post, and that existential variables are disjoint between
+           pre and post *)
         begin
           assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_form.vars post) (Sl_term.Set.inter (Cmd.modifies ~strict:false body) (Sl_term.Set.of_list params))));
           assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_form.vars pre) (Cmd.locals (Sl_term.Set.of_list params) body)));
           assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_form.vars post) (Cmd.locals (Sl_term.Set.of_list params) body)));
+          let f v = Sl_term.is_exist_var v in
+            assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_term.Set.filter f (Sl_form.vars pre)) (Sl_term.Set.filter f (Sl_form.vars post))));
           return (id, params, pre, post, body)
         end <?> "Procedure" )))))) st
     
     let parse_unnamed st = 
       (parse_precondition >>= (fun pre ->
       parse_postcondition >>= (fun post ->
+      let f v = Sl_term.is_exist_var v in
+        assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_term.Set.filter f (Sl_form.vars pre)) (Sl_term.Set.filter f (Sl_form.vars post))));
       Cmd.parse >>= 
       (fun body ->
         return (pre, body, post)))) <?> "CmdList") st
@@ -91,8 +100,9 @@ module Seq =
 
     let tagset_one = Tags.singleton 1
 		let tagpairs_one = TagPairs.mk tagset_one
-    let tags (pre,_,_) = if !termination then Sl_form.tags pre else tagset_one
-    let tag_pairs f = TagPairs.mk (tags f)
+    let form_tags f = if !termination then Sl_form.tags f else tagset_one
+    let tags (pre,_,_) = form_tags pre
+    let tag_pairs seq = TagPairs.mk (tags seq)
 
 		(* Do we want the vars from the postcondition as well, or not? *)
     (* Yes! (NG) *)
@@ -105,6 +115,9 @@ module Seq =
 
 		let subst theta (pre,cmd,post) = 
 			(Sl_form.subst theta pre, cmd, Sl_form.subst theta post)
+      
+    let param_subst theta (pre, cmd, post) = 
+      (Sl_form.subst theta pre, Cmd.subst theta cmd, Sl_form.subst theta post)
     
 		let to_string (pre,cmd,post) =
       symb_turnstile.sep ^ 

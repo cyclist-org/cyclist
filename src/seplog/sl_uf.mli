@@ -19,6 +19,14 @@ val union : t -> t -> t
 
 val fold : (Sl_term.t -> Sl_term.t -> 'a -> 'a) -> t -> 'a -> 'a 
 
+val all_members_of : t -> t -> bool
+(** [all_members_of eqs eqs'] returns true iff all equalities in [eqs] are also
+    in [eqs'] *)
+    
+val diff : t -> t -> t
+(** [diff eqs eqs'] returns the structure given by removing all equalities in
+    [eqs'] from [eqs] *)
+
 val bindings : t -> Sl_tpair.t list
 (** Return mapping as a list of pairs, where pair members are ordered by *)
 (** [Sl_term.compare].  Additional guarantees:

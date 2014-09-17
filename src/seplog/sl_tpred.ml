@@ -41,7 +41,7 @@ let to_melt (t,(ident,args)) =
 let parse st =
   (Sl_predsym.parse >>= (fun pred ->
   option parse_tag >>= (fun opt_tag ->
-  Tokens.parens (Tokens.comma_sep1 Sl_term.parse) << spaces >>= (fun arg_list ->
+  Tokens.parens (Tokens.comma_sep Sl_term.parse) << spaces >>= (fun arg_list ->
   let tag = match opt_tag with
   | Some tag -> upd_tag tag 
   | None -> next_tag () in

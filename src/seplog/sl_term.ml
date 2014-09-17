@@ -165,6 +165,8 @@ type substitution = t Map.t
 
 type unifier_state = substitution * TagPairs.t
 
+(* let empty_state : unifier_state = (Sl_term.empty_subst, TagPairs.empty) *)
+
 type 'a unifier = 
   (unifier_state -> unifier_state option) ->
     unifier_state -> 'a -> 'a ->

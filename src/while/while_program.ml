@@ -81,6 +81,11 @@ module Cond =
         Sl_term.equal x x' && Sl_term.equal y y'
       | _ -> false
 
+    let subst theta cond = match cond with
+      | Eq(x, y) -> Eq ((Sl_term.subst theta x), (Sl_term.subst theta y))
+      | Deq(x, y) -> Deq ((Sl_term.subst theta x), (Sl_term.subst theta y))
+      | _ -> cond
+
     let pp fmt = function
       | Non_det ->
         Format.fprintf fmt "@[%s@]" symb_star.str
@@ -375,6 +380,21 @@ module Cmd =
       | ([], []) -> true
       | ([], _) | (_, []) -> false
       | (c::tl, c'::tl') -> cmd_equal c.cmd c'.cmd && equal tl tl'
+
+    let rec subst_cmd theta cmd = match cmd with
+      | Stop | Skip -> cmd
+      | New(x) -> New (Sl_term.subst theta x)
+      | Free(x) -> Free (Sl_term.subst theta x)
+      | Assign(x, e) -> Assign ((Sl_term.subst theta x), (Sl_term.subst theta e))
+      | Load(x, e, f) -> Load ((Sl_term.subst theta x), (Sl_term.subst theta e), f)
+      | Store(x, f, e) -> Store ((Sl_term.subst theta x), f, (Sl_term.subst theta e))
+      | ProcCall(p, args) -> ProcCall (p, (Sl_term.FList.subst theta args))
+      | If(cond, cmd) -> If ((Cond.subst theta cond), (subst theta cmd))
+      | IfElse(cond, cmd, cmd') -> IfElse ((Cond.subst theta cond), (subst theta cmd), (subst theta cmd'))
+      | While(cond, cmd) -> While ((Cond.subst theta cond), (subst theta cmd))
+    and subst theta cmd = match cmd with
+      | [] -> []
+      | c::tl -> {c with cmd = (subst_cmd theta c.cmd)} :: (subst theta tl) 
 
     let number_width = ref 3
     let indent_by = ref 2

@@ -30,7 +30,7 @@ let equal_upto_tags h h' =
   Sl_deqs.equal h.deqs h'.deqs &&
   Sl_ptos.equal h.ptos h'.ptos &&
   Sl_tpreds.equal_upto_tags h.inds h'.inds
-
+  
 include Fixpoint(struct type t = symheap let equal = equal end)
 
 let compare f g =
@@ -133,6 +133,8 @@ let mk eqs deqs ptos inds =
   { eqs; deqs; ptos; inds }
   
 let empty = mk Sl_uf.empty Sl_deqs.empty Sl_ptos.empty Sl_tpreds.empty 
+
+let is_empty h = equal h empty
 
 let subst theta h =
   { eqs = Sl_uf.subst theta h.eqs;
@@ -246,11 +248,11 @@ let unify_partial ?(tagpairs=false) cont theta h h' =
   let f3 theta' = Sl_ptos.unify ~total:false f2 theta' h.ptos h'.ptos in
   Sl_tpreds.unify ~total:false ~tagpairs f3 theta h.inds h'.inds
 
-let direct inverse f x y = 
+let direct inverse = 
   if not inverse then 
-    f x y
+    Fun.id
   else
-    f y x
+    Fun.swap
   
 let classical_unify ?(inverse=false) ?(tagpairs=false) cont theta h h' =
   let f1 theta' = Sl_uf.unify_partial ~inverse cont theta' h.eqs h'.eqs in 
@@ -260,4 +262,34 @@ let classical_unify ?(inverse=false) ?(tagpairs=false) cont theta h h' =
   let f3 theta' = direct inverse (Sl_ptos.unify f2 theta') h.ptos h'.ptos in 
   direct inverse (Sl_tpreds.unify ~tagpairs f3 theta) h.inds h'.inds
   
-
+let compute_frame ?(freshen_existentials=true) ?(avoid=Sl_term.Set.empty) f f' =
+  Option.flatten
+    ( Option.mk_lazily
+        ((Sl_uf.all_members_of f.eqs f'.eqs)
+          && (Sl_deqs.all_members_of f.deqs f'.deqs)
+          && (Sl_ptos.all_members_of f.ptos f'.ptos)
+          && (Sl_tpreds.all_members_of f.inds f'.inds))
+        (fun _ -> 
+          let frame = { eqs = Sl_uf.diff f.eqs f'.eqs;
+                        deqs = Sl_deqs.diff f'.deqs f.deqs;
+                        ptos = Sl_ptos.diff f'.ptos f.ptos;
+                        inds = Sl_tpreds.diff f'.inds f.inds; } in
+          let vs = 
+            Sl_term.Set.to_list 
+              (Sl_term.Set.inter
+                (Sl_term.Set.filter Sl_term.is_exist_var (terms f))
+                (Sl_term.Set.filter Sl_term.is_exist_var (terms frame))) in
+          Option.mk_lazily
+            ((not freshen_existentials) || (Blist.is_empty vs))
+            (fun _ -> 
+              if (freshen_existentials) then
+                let freshvars = 
+                  Sl_term.fresh_evars 
+                  (Sl_term.Set.union avoid (vars f')) 
+                  (Blist.length vs) in
+                let theta = 
+                  Sl_term.Map.of_list 
+                    (Blist.map2 Pair.mk vs freshvars) in
+                subst theta frame
+              else frame)) )
+    

@@ -10,6 +10,8 @@ val empty : t
     false. *)
 
 exception Not_symheap
+val is_symheap : t -> bool
+(** Returns true iff the formula has a single disjunct only *)
 val dest : t -> Sl_heap.t
 (** Return the single disjunct, if there is exactly one, else raise [Not_symheap]. *)
 

@@ -296,24 +296,193 @@ let mk_symex_proc_unfold procs =
     try
       let (p, args) = Cmd.dest_proc_call cmd in
       if Cmd.is_empty (Cmd.get_cont cmd) then
-        let proc = Blist.find
+        let (_,_,_,_, body) = Blist.find
           (fun (id, params, pre', post', _) -> 
             try
             id=p 
               && Blist.equal Sl_term.equal args params
+              (* NB. We only check equality up to tags as we will effectively be
+                 'instantiating' the pre/post of the procedure summary using the
+                 tags at the call site *)
               && Sl_form.equal_upto_tags pre pre'
               && Sl_form.equal_upto_tags post post'
             with Invalid_argument(_) -> false )
           (procs) in
-        let body = Proc.get_body proc in
         fix_tps
           [
             [ (pre, body, post) ],
             "Proc Unf. " ^ p
           ]
       else []
-    with Not_symheap | WrongCmd | Not_found -> [] in
+    with WrongCmd | Not_found -> [] in
   Rule.mk_infrule rl
+
+let param_subst_rule theta ((_,cmd',_) as seq') ((_,cmd,_) as seq) =
+  if Cmd.is_proc_call cmd && Cmd.is_empty (Cmd.get_cont cmd)
+      && Cmd.is_proc_call cmd' && Cmd.is_empty (Cmd.get_cont cmd')
+      && Seq.equal (Seq.param_subst theta seq') seq
+    then 
+      [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], 
+       "Param Subst"  (* ^ (Format.asprintf " %a" Sl_term.pp_subst theta) *) ]
+    else 
+      []
+
+let subst_rule theta seq' seq = 
+  if Seq.equal (Seq.subst theta seq') seq 
+    then 
+      [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], 
+       "Subst"  (* ^ (Format.asprintf " %a" Sl_term.pp_subst theta) *) ]
+    else 
+      []
+
+let weaken seq' seq = 
+  if Seq.subsumed seq seq' 
+    then
+      [ [(seq', Seq.tag_pairs seq', TagPairs.empty)],
+       "Weaken" ]
+    else
+      []
+    
+let left_or_elim_rule ((pre',cmd',post') as seq') (pre,cmd,post) =
+  if Cmd.equal cmd cmd' && Sl_form.equal post post'
+      && Sl_form.is_symheap pre
+      && Blist.exists (Sl_heap.equal (Sl_form.dest pre)) pre'
+    then
+      [ [(seq', Seq.tag_pairs seq', TagPairs.empty)],
+       "L. Cut (Or Elim.)" ]
+    else
+      []
+      
+(* Rule specialising existential variables *)
+let ex_sp_rule seq' seq =
+  if true (* TO DO *)
+    then
+      [ [(seq', Seq.tag_pairs seq', TagPairs.empty)],
+       "L. Cut (Ex. Sp.)" ]      
+    else
+      []
+      
+let proc_call_rule ((pre, cmd, post) as proc_seq) (pre', cmd', post') =
+  try
+    let pre = Sl_form.dest pre in
+    let post = Sl_form.dest post in 
+    let pre' = Sl_form.dest pre' in
+    let frame = Sl_heap.compute_frame ~freshen_existentials:false pre pre' in
+    if Cmd.is_proc_call cmd && Cmd.is_empty (Cmd.get_cont cmd)
+        && not (Cmd.is_empty cmd') 
+        && Cmd.cmd_equal (Cmd.get_cmd cmd) (Cmd.get_cmd cmd')
+        && Option.is_some frame
+      then
+        let frame = Option.get frame in
+        match (Cmd.get_cmd cmd) with 
+          | Cmd.ProcCall(procname, _) ->
+              [ [ (proc_seq, tagpairs proc_seq, TagPairs.empty) ;
+                  (([Sl_heap.star (Sl_heap.freshen_tags frame post) frame], 
+                    Cmd.get_cont cmd', 
+                    post'), TagPairs.mk (Seq.form_tags [frame]), progpairs()) ;
+                ], "Proc. Call " ^  procname]
+          | _ -> assert(false)
+      else
+        []
+  with Not_symheap -> []
+      
+let mk_symex_proc_call procs =
+  fun idx prf ->
+    let rl = 
+      let ((pre, cmd, post) as src_seq) = Proof.get_seq idx prf in
+      (*********************** 
+         First compute a substitution of the procedure parameters that takes 
+         them to the procedure arguments at the call site
+         
+         Next, apply the substitution to the procedure precondition and unify 
+         the result with the source precondition
+        
+         This should allow us to compute the frame by subtracting the 
+         subtstitution instance of the procedure precondition from the source 
+         precondition 
+      ***********************)
+      try
+        let pre = Sl_form.dest pre in
+        let (p, args) = Cmd.dest_proc_call cmd in
+        let prog_cont = Cmd.get_cont cmd in 
+        let proc = Blist.find 
+          (fun x -> 
+            (Proc.get_name x) = p 
+            && (Blist.length (Proc.get_params x)) = (Blist.length args))
+          (procs) in
+        let param_unifier = Sl_term.FList.unify 
+          (Option.mk true) 
+          (Sl_term.empty_subst, TagPairs.empty)
+          (Proc.get_params proc) args in
+        match param_unifier with
+        | None -> (assert(false); Rule.fail) (* This should not happen *)
+        | Some (param_sub, _) -> 
+          let pre' = Sl_form.subst param_sub (Proc.get_precondition proc) in
+          let mk_rl_from_disj f =
+            let unifiers = 
+              (* The continuation checks that the resulting substitution allows a frame to be computed *)
+              let cont ((theta, tagpairs) as state) =
+                Option.mk 
+                  ((Sl_term.Map.for_all 
+                    (fun x y -> 
+                      Sl_term.equal x y || not (Sl_term.Set.mem x !program_vars)) 
+                    theta)
+                    &&
+                  (Option.is_some (Sl_heap.compute_frame (Sl_heap.subst_tags tagpairs (Sl_heap.subst theta f)) pre)))
+                  state in
+              Sl_term.backtrack
+                (Sl_heap.unify_partial ~tagpairs:true)
+                cont
+                (Sl_term.empty_subst, TagPairs.empty)
+                f pre in
+            let mk_rl (theta, tagpairs) =
+              let target_seq = Seq.subst_tags tagpairs (Proc.get_seq proc) in
+              let ((_,cmd',post') as seq_newparams) = Seq.param_subst param_sub target_seq in
+              let seq_sh_pre = ([Sl_heap.subst_tags tagpairs f], cmd', post') in
+              let ((pre',_,post') as subst_seq) = Seq.subst theta seq_sh_pre in
+              let pre' = Sl_form.dest pre' in
+              let frame = Sl_heap.compute_frame ~avoid:(Sl_form.vars post') pre' pre in
+              match frame with
+                | None -> (assert(false); Rule.fail) (* This should not happen *)
+                | Some(frame) ->
+                  let call_seq = ([Sl_heap.star pre' frame], cmd, post) in
+                  (* Construct all the individual rules that need to be applied *)
+                  let sp_ex_rl = 
+                    if Seq.equal call_seq src_seq 
+                      then Rule.identity
+                      else Rule.mk_infrule (ex_sp_rule call_seq) in
+                  let (proc_call_rl, cont_rl) = 
+                    if (not (Cmd.is_empty prog_cont) || 
+                        not (Sl_heap.is_empty frame) || 
+                        not (Sl_form.equal post post')) 
+                      then (Rule.mk_infrule (proc_call_rule subst_seq), [Rule.identity])
+                      else (Rule.identity, []) in
+                  let subst_rl = 
+                    if Seq.equal seq_sh_pre subst_seq
+                      then Rule.identity
+                      else Rule.mk_infrule (subst_rule theta seq_sh_pre) in
+                  let or_elim_rl = 
+                    if Seq.equal seq_newparams seq_sh_pre
+                      then Rule.identity
+                      else Rule.mk_infrule (left_or_elim_rule seq_newparams) in
+                  let param_rl = 
+                    if Seq.equal src_seq seq_newparams
+                      then Rule.identity
+                      else Rule.mk_infrule (param_subst_rule param_sub target_seq) in
+                  (* Now combine all the rules *)
+                  Rule.compose
+                    sp_ex_rl
+                    (Rule.compose_pairwise
+                      proc_call_rl
+                      ((Rule.sequence [
+                          subst_rl;
+                          or_elim_rl;
+                          param_rl;
+                        ]) :: cont_rl)) in
+            Blist.map mk_rl unifiers in
+          Rule.choice (Blist.bind mk_rl_from_disj pre')
+      with Not_symheap | WrongCmd | Not_found -> Rule.fail in
+    rl idx prf
 
 let matches ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
   try
@@ -354,20 +523,6 @@ let matches ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
       pre' pre
   with Not_symheap -> []
 
-let subst_rule theta seq' seq = 
-  if Seq.equal (Seq.subst theta seq') seq 
-    then 
-      [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], 
-       "Subst "  (* ^ (Format.asprintf "%a" Sl_term.pp_subst theta) *) ]
-    else 
-      []
-
-let weaken seq' seq = 
-  if Seq.subsumed seq seq' then
-    [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], "Weaken" ]
-  else
-    []
-
 let dobackl idx prf =
   let src_seq = Proof.get_seq idx prf in
   let targets = Rule.all_nodes idx prf in
@@ -378,30 +533,30 @@ let dobackl idx prf =
           (fun res -> (idx',res))
           (matches src_seq (Proof.get_seq idx' prf))) 
       targets in
-    let f (targ_idx, (theta, tagpairs)) =
-      let (pre,cmd,post) as targ_seq = Proof.get_seq targ_idx prf in
-      (* [targ_seq'] is as [targ_seq] but with the tags of [src_seq] *)
-      let targ_seq' = 
-        ( Sl_form.subst_tags tagpairs pre, 
-          cmd,
-          post) in 
-      let subst_seq = Seq.subst theta targ_seq' in
-      Rule.sequence [
-        if Seq.equal src_seq subst_seq
-          then Rule.identity
-          else Rule.mk_infrule (weaken subst_seq);
-          
-        if Sl_term.Map.for_all Sl_term.equal theta
-          then Rule.identity
-          else Rule.mk_infrule (subst_rule theta targ_seq');
-           
-        Rule.mk_backrule 
-          false 
-          (fun _ _ -> [targ_idx]) 
-          (fun s s' -> 
-            [(if !termination then TagPairs.reflect tagpairs else Seq.tagpairs_one), "Backl"])
-      ] in
-    Rule.first (Blist.map f apps) idx prf
+  let f (targ_idx, (theta, tagpairs)) =
+    let (pre,cmd,post) as targ_seq = Proof.get_seq targ_idx prf in
+    (* [targ_seq'] is as [targ_seq] but with the tags of [src_seq] *)
+    let targ_seq' = 
+      ( Sl_form.subst_tags tagpairs pre, 
+        cmd,
+        post) in 
+    let subst_seq = Seq.subst theta targ_seq' in
+    Rule.sequence [
+      if Seq.equal src_seq subst_seq
+        then Rule.identity
+        else Rule.mk_infrule (weaken subst_seq);
+        
+      if Sl_term.Map.for_all Sl_term.equal theta
+        then Rule.identity
+        else Rule.mk_infrule (subst_rule theta targ_seq');
+         
+      Rule.mk_backrule 
+        false 
+        (fun _ _ -> [targ_idx]) 
+        (fun s s' -> 
+          [(if !termination then TagPairs.reflect tagpairs else Seq.tagpairs_one), "Backl"])
+    ] in
+  Rule.first (Blist.map f apps) idx prf
 
 let fold def =
   let fold_rl ((pre,cmd,post) as seq) = 
@@ -498,6 +653,7 @@ let setup (defs, procs) =
         mk_symex_empty_axiom entails
       ] in
   let symex_proc_unfold = mk_symex_proc_unfold procs in
+  let symex_proc_call = mk_symex_proc_call procs in
     rules := Rule.first [ 
       lhs_disj_to_symheaps ;
       simplify ;
@@ -520,6 +676,7 @@ let setup (defs, procs) =
           symex_ifelse_rule ;
           symex_while_rule ;
           symex_proc_unfold ;
+          symex_proc_call ;
         ] ;
         
         generalise_while_rule ;

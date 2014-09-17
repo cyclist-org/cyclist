@@ -61,8 +61,12 @@ val subsumed_upto_tags : ?total:bool -> t -> t -> bool
     both pure and spatial parts are subsets of those of [h'] modulo the equalities
     of [h']. *)
 
+val equal : t -> t -> bool
+(** Checks whether two symbolic heaps are equal. *)
 val equal_upto_tags : t -> t -> bool
 (** Like [equal] but ignoring tag assignment. *)
+val is_empty : t -> bool
+(** [is_empty h] tests whether [h] is equal to the empty heap. *)
 
 (** Constructors. *)
 
@@ -132,4 +136,15 @@ val classical_unify : ?inverse:bool -> ?tagpairs:bool -> t Sl_term.unifier
   to the substitution found, also return the set of pairs of tags of 
   predicates unified. *)
 
+val compute_frame : 
+      ?freshen_existentials:bool -> ?avoid:Sl_term.Set.t -> t -> t -> t option
+(** [compute_frame f f'] computes the portion of [f'] left over (the 'frame') 
+    after subtracting all the atomic formulae in the specification [f]. Returns 
+    None when there are atomic formulae in [f] which are not also in [f'] (i.e.
+    [f] is not subsumed by [f']). Any existential variables occurring in the
+    frame which also occur in the specification [f] are freshened, avoiding the
+    variables in the optional argument [~avoid=Sl_term.Set.empty].
+- If the optional argument [~freshen_existentials=true] is set to false, then
+  None will be returned in case there are existential variables in the frame
+  which also occur in the specification. *)
 
