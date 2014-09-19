@@ -125,7 +125,9 @@ module Trm =
       Format.fprintf fmt "@[%s@]" (to_string trm)
     let to_melt v =
       ltx_mk_math 
-        (if v = nil then keyw_nil.melt else Latex.text (to_string v))
+        (Latex.mathit 
+          (if v = nil then keyw_nil.melt else Latex.text (to_string v)))
+        
     let parse st =
       (   attempt (parse_symb keyw_nil >>$ 0 <?> "nil") 
       <|> parse 

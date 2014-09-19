@@ -75,9 +75,9 @@ let to_melt f =
         [
         ltx_newl;
         Latex.environment
-          ~opt: (Latex.A, Latex.text "b")
-          ~args:[(Latex.A, Latex.text "l")]
-          "array" (Latex.M, content) Latex.M;
+          (* ~opt: (Latex.A, Latex.text "b") *)
+          (* ~args:[(Latex.A, Latex.text "l")] *)
+          "gathered" (Latex.M, content) Latex.M;
         ltx_newl
         ]
     else

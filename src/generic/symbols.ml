@@ -29,8 +29,8 @@ let symb_eq = make_symb "=" (ltx_math " = ")
 let symb_deq = make_symb "!=" Latex.neq
 let symb_lp = make_symb "(" (Latex.text "(")
 let symb_rp = make_symb ")" (Latex.text ")")
-let symb_lb = make_symb "{" (Latex.text "\\{")
-let symb_rb = make_symb "}" (Latex.text "\\}")
+let symb_lb = make_symb "{" (Latex.text "\\left\\{")
+let symb_rb = make_symb "}" (Latex.text "\\right\\}")
 let symb_semicolon = make_symb ";" (Latex.text ";")
 let symb_colon = make_symb ":" Latex.empty
 let symb_comma = { str=","; sep=", "; melt=Latex.text ", " }

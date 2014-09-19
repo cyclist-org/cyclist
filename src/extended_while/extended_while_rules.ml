@@ -415,7 +415,7 @@ let mk_symex_proc_call procs =
           (Sl_term.empty_subst, TagPairs.empty)
           (Proc.get_params proc) args in
         match param_unifier with
-        | None -> (assert(false); Rule.fail) (* This should not happen *)
+        | None -> assert false (* This should not happen *)
         | Some (param_sub, _) -> 
           let pre' = Sl_form.subst param_sub (Proc.get_precondition proc) in
           let mk_rl_from_disj f =
@@ -443,7 +443,7 @@ let mk_symex_proc_call procs =
               let pre' = Sl_form.dest pre' in
               let frame = Sl_heap.compute_frame ~avoid:(Sl_form.vars post') pre' pre in
               match frame with
-                | None -> (assert(false); Rule.fail) (* This should not happen *)
+                | None -> assert false (* This should not happen *)
                 | Some(frame) ->
                   let call_seq = ([Sl_heap.star pre' frame], cmd, post) in
                   (* Construct all the individual rules that need to be applied *)
