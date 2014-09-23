@@ -54,7 +54,7 @@ module Proc =
       (try_parse_next_param (fun p -> List.mem p acc) "Duplicate parameter") >>
       Sl_term.parse >>= (fun p -> parse_params' (p::acc))) st in
       (   (if (List.length acc == 0) then tail else ((parse_symb symb_comma) >> tail))
-      <|> (return acc) ) st in
+      <|> (return (Blist.rev acc)) ) st in
       parse_params' [] st in
       (parse_symb keyw_proc >>
       parse_ident >>= (fun id ->
