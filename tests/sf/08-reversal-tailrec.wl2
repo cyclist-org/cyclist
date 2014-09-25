@@ -1,0 +1,37 @@
+fields: next;
+
+proc reverse(x, acc)
+precondition: x -> v' * ls(v', nil) * acc -> w' * ls(w', nil);
+postcondition: x -> nil * acc -> z' * ls(z', nil);
+{
+	list := x.next;
+	if list != nil then
+	
+		rest := list.next;
+		x.next := rest;
+		
+		accumulator := acc.next;
+		list.next := accumulator;
+		acc.next := list;
+		
+		reverse(x, acc)
+		
+	fi
+}
+
+precondition: ls(x, nil);
+postcondition: ls(x, nil);
+
+ptr := new();
+ptr.next := x;
+
+acc := new();
+list := nil;
+acc.next := list;
+
+reverse(ptr, acc);
+
+x := acc.next;
+
+free(ptr);
+free(acc)

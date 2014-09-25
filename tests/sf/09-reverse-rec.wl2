@@ -19,17 +19,33 @@ postcondition: x -> z' * ls(z', nil) * y -> nil;
 	fi
 }
 
-precondition: ls(x, nil) * ls(y, nil);
+proc reverse(x)
+precondition: x->v' * ls(v', nil);
+postcondition: x->w' * ls(w', nil);
+{
+	list := x.next;
+	
+	if list != nil then
+	
+		tail := list.next;
+		x.next := tail;
+		reverse(x);
+		
+		ptr := new();
+		list.next := nil;
+		ptr.next := list;
+		append(x, ptr)
+	
+	fi
+}
+
+precondition: ls(x, nil);
 postcondition: ls(x, nil);
 
-ptr1 := new();
-ptr1.next := x;
+ptr := new();
+ptr.next := x;
 
-ptr2 := new();
-ptr2.next := y;
+reverse(ptr);
 
-append(ptr1, ptr2);
-
-x := ptr1.next;
-free(ptr1);
-free(ptr2)
+x := ptr.next;
+free(ptr)
