@@ -1,0 +1,39 @@
+fields: next;
+
+proc filter(x)
+precondition: x->x' * ls(x',nil);
+postcondition: x->y' * ls(y',nil);
+{
+	list := x.next;
+
+	if list != nil then
+	
+		tail := list.next;
+		x.next := tail;
+		filter(x);
+	
+		if * then
+		
+			free(list)
+		
+		else
+		
+			newlist := x.next;
+			list.next := newlist;
+			x.next := list
+		
+		fi
+	
+	fi
+}
+
+precondition: ls(x,nil);
+postcondition: ls(x,nil);
+
+ptr := new();
+ptr.next := x;
+
+filter(ptr);
+
+x := ptr.next;
+free(ptr)
