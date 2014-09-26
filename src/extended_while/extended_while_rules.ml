@@ -466,7 +466,7 @@ let mk_symex_proc_call procs =
                       then Rule.identity
                       else Rule.mk_infrule (left_or_elim_rule seq_newparams) in
                   let param_rl = 
-                    if Seq.equal src_seq seq_newparams
+                    if Seq.equal target_seq seq_newparams
                       then Rule.identity
                       else Rule.mk_infrule (param_subst_rule param_sub target_seq) in
                   (* Now combine all the rules *)
