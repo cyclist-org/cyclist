@@ -18,6 +18,9 @@ Sl_indrule
 Sl_seq
 While_program
 While_rules
+Parsers
+Extended_while_program
+Extended_while_rules
 Stats
 Blist
 Lib

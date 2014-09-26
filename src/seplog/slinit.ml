@@ -5,6 +5,7 @@
 #directory "_build/src/goto";;
 #directory "_build/src/slsat";;
 #directory "_build/src/while";;
+#directory "_buld/src/extended_while";;
 #directory "_build/src/mparser";;
 open Util;;
 #install_printer Format.pp_print_string;;
@@ -83,4 +84,4 @@ Format.set_margin (Sys.command "exit $(tput cols)") ;;
 
 let terms = Blist.map Sl_term.of_string ["x"; "y"; "z" ];;
 
-let hps = Sl_seq.heap_partitions terms ;;
+let hps = Sl_seq.partitions terms ;;
