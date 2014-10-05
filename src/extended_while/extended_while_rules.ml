@@ -410,30 +410,30 @@ let mk_symex_proc_call procs =
             (Proc.get_name x) = p 
             && (Blist.length (Proc.get_params x)) = (Blist.length args))
           (procs) in
-        let param_unifier = Sl_term.FList.unify 
-          (Option.mk true) 
-          (Sl_term.empty_subst, TagPairs.empty)
-          (Proc.get_params proc) args in
+        let param_unifier = Sl_term.FList.unify (Proc.get_params proc) args in
         match param_unifier with
         | None -> assert false (* This should not happen *)
         | Some (param_sub, _) -> 
           let pre' = Sl_form.subst param_sub (Proc.get_precondition proc) in
+          let prog_vars = Cmd.vars cmd in
           let mk_rl_from_disj f =
-            let unifiers = 
-              (* The continuation checks that the resulting substitution allows a frame to be computed *)
-              let cont ((theta, tagpairs) as state) =
-                Option.mk 
-                  ((Sl_term.Map.for_all 
-                    (fun x y -> 
-                      Sl_term.equal x y || not (Sl_term.Set.mem x !program_vars)) 
-                    theta)
-                    &&
-                  (Option.is_some (Sl_heap.compute_frame (Sl_heap.subst_tags tagpairs (Sl_heap.subst theta f)) pre)))
-                  state in
-              Sl_term.backtrack
+            (* For each term replacement we check that:
+                1. the substitution produced leads to the procedure 
+                   precondition being subsumed by the callsite precondition
+                2. no program variables are replaced *)
+            let sub_check = Sl_term.combine_subst_checks [
+                Sl_term.basic_lhs_down_check ;
+                Sl_term.avoids_replacing_check prog_vars ;
+              ] in
+            (* The continuation checks that the resulting substitution allows a frame to be computed *)
+            let cont = Sl_term.mk_verifier
+              (fun (theta, tagpairs) -> 
+                let f' = Sl_heap.subst_tags tagpairs (Sl_heap.subst theta f) in
+                Option.is_some (Sl_heap.compute_frame f' pre)) in
+            let unifiers = Sl_term.backtrack
                 (Sl_heap.unify_partial ~tagpairs:true)
-                cont
-                (Sl_term.empty_subst, TagPairs.empty)
+                ~sub_check
+                ~cont
                 f pre in
             let mk_rl (theta, tagpairs) =
               let target_seq = Seq.subst_tags tagpairs (Proc.get_seq proc) in
@@ -487,6 +487,7 @@ let mk_symex_proc_call procs =
 let matches ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
   try
     if not (Cmd.equal cmd cmd') then [] else
+    let prog_vars = Cmd.vars cmd in
     let (pre,pre') = Pair.map Sl_form.dest (pre,pre') in
     let (post,post') = Pair.map Sl_form.dest (post,post') in
     let exvars h = Sl_term.Set.filter Sl_term.is_exist_var (Sl_heap.vars h) in
@@ -495,31 +496,34 @@ let matches ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
        (Sl_term.Set.is_empty (Sl_term.Set.inter (exvars pre) (exvars post))) 
         &&    
         Sl_term.Set.is_empty (Sl_term.Set.inter (exvars pre') (exvars post'))
-    then [] else    
-    let verify ((theta, tagpairs) as state) =
-      if not ((if !termination then Seq.subsumed else Seq.subsumed_upto_tags) seq 
-          ((if !termination then Seq.subst_tags tagpairs else Fun.id) 
-            (Seq.subst theta seq'))) 
-      then 
-        begin 
-          Format.eprintf "%a@." Seq.pp seq;
-          Format.eprintf "%a@." Seq.pp seq';
-          Format.eprintf "%a@." Sl_term.pp_subst theta;
-          Format.eprintf "%a@." TagPairs.pp tagpairs ;
-          assert false
-        end ;
-      Option.mk 
-        (Sl_term.Map.for_all 
-          (fun x y -> 
-            Sl_term.equal x y || not (Sl_term.Set.mem x !program_vars)) 
-          theta)
-        state in
-    let cont state = 
-      Sl_heap.classical_unify ~inverse:true verify state post post' in
+    then [] else
+    let sub_check = Sl_term.combine_subst_checks [
+        Sl_term.basic_lhs_down_check ;
+        Sl_term.avoids_replacing_check prog_vars ;
+      ] in
+    let verify = Sl_term.mk_verifier
+      (Sl_term.mk_assert_check
+        (fun (theta, tagpairs) ->
+          let test = 
+            (if !termination then Seq.subsumed else Seq.subsumed_upto_tags) 
+              seq 
+              ((if !termination then Seq.subst_tags tagpairs else Fun.id) 
+                (Seq.subst theta seq')) in
+          if not test then 
+          begin 
+            Format.eprintf "%a@." Seq.pp seq;
+            Format.eprintf "%a@." Seq.pp seq';
+            Format.eprintf "%a@." Sl_term.pp_subst theta;
+            Format.eprintf "%a@." TagPairs.pp tagpairs ;
+          end ;
+          test)
+        ) in
+    let cont init_state = 
+      Sl_heap.classical_unify ~inverse:true ~sub_check ~cont:verify ~init_state post post' in
     Sl_term.backtrack 
-      (Sl_heap.classical_unify ~tagpairs:true)
-      cont
-      (Sl_term.empty_subst, TagPairs.empty)
+      (Sl_heap.classical_unify ~inverse:false ~tagpairs:true)
+      ~sub_check
+      ~cont
       pre' pre
   with Not_symheap -> []
 

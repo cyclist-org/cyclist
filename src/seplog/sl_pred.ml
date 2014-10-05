@@ -22,9 +22,11 @@ end
 
 include IndSubf
 
-let unify cont state (p, args) (p', args') =
+let unify ?(sub_check=Sl_term.trivial_sub_check)
+    ?(cont=Sl_term.trivial_continuation)
+    ?(init_state=Sl_term.empty_state) (p, args) (p', args') =
   if not (Sl_predsym.equal p p') then None else
-  Sl_term.FList.unify cont state args args'
+  Sl_term.FList.unify ~sub_check ~cont ~init_state args args'
 
 let predsym pred = fst pred
 let args pred = snd pred
@@ -35,7 +37,7 @@ let vars pred = Sl_term.filter_vars (terms pred)
 let subst theta (p, args) = (p, Sl_term.FList.subst theta args)
 let parse st =
   (Sl_predsym.parse >>= (fun pred ->
-  Tokens.parens (Tokens.comma_sep1 Sl_term.parse) << spaces >>= (fun arg_list ->
+  Tokens.parens (Tokens.comma_sep Sl_term.parse) << spaces >>= (fun arg_list ->
   return (pred, arg_list))) <?> "ind") st
 
 let of_string s =

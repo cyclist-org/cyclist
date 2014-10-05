@@ -41,16 +41,20 @@ let freshen_tags inds' inds =
     let delta = 1 + maxtag - mintag in
     endomap (fun (tag, head) -> (tag + delta, head)) inds
 
-let rec unify ?(total=true) ?(tagpairs=false) cont state inds inds' =
+let rec unify ?(total=true) ?(tagpairs=false) 
+    ?(sub_check=Sl_term.trivial_sub_check)
+    ?(cont=Sl_term.trivial_continuation)
+    ?(init_state=Sl_term.empty_state) inds inds' =
   if is_empty inds then
-    if not total || is_empty inds' then cont state else None
+    if not total || is_empty inds' then cont init_state else None
   else
     let a = choose inds in
     let inds = remove a inds in
     let f a' =
       Sl_tpred.unify ~tagpairs
-        (fun state' -> unify ~total ~tagpairs cont state' inds (remove a' inds'))
-        state a a' in
+        ~sub_check
+        ~cont:(fun state' -> unify ~total ~tagpairs ~sub_check ~cont ~init_state:state' inds (remove a' inds'))
+        ~init_state a a' in
     find_map f inds'
 
 let subsumed_upto_tags ?(total=true) eqs inds inds' =

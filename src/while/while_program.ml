@@ -106,6 +106,16 @@ module Cond =
       let f'' = SH.with_deqs f (Sl_deqs.add pair f.SH.deqs) in
       let (f',f'') = if is_deq c then (f'',f') else (f',f'') in
       (f',f'')
+      
+    let validated_by h = function
+      | Eq(x, y) -> Sl_heap.equates h x y
+      | Deq(x, y) -> Sl_heap.disequates h x y
+      | _ -> false
+    
+    let invalidated_by h = function
+      | Eq(x, y) -> Sl_heap.disequates h x y
+      | Deq(x, y) -> Sl_heap.equates h x y
+      | _ -> false
     
     let parse st =
       ( attempt (parse_symb symb_star >>$ mk_non_det ()) <|>
@@ -289,6 +299,9 @@ module Cmd =
       | Store(e1,s,e2) -> e1
       | Free(e) -> e
       | _ -> raise WrongCmd
+    let _dest_branching = function
+      | While(cond,_) | If(cond,_) | IfElse(cond,_,_) -> cond
+      | _ -> raise WrongCmd 
 
     let dest_cmd f = fun c -> f (get_cmd c)
 
@@ -303,6 +316,7 @@ module Cmd =
     let dest_if = dest_cmd _dest_if
     let dest_ifelse = dest_cmd _dest_ifelse
     let dest_while = dest_cmd _dest_while
+    let dest_branching = dest_cmd _dest_branching
     let dest_proc_call = dest_cmd _dest_proc_call
     let dest_empty c = if c=[] then () else raise WrongCmd
 

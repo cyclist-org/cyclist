@@ -249,11 +249,14 @@ let freshen_tags h' h =
 let subst_tags tagpairs h =
   with_inds h (Sl_tpreds.subst_tags tagpairs h.inds)
 
-let unify_partial ?(tagpairs=false) cont theta h h' =
-  let f1 theta' = Sl_uf.unify_partial cont theta' h.eqs h'.eqs in
-  let f2 theta' = Sl_deqs.unify_partial f1 theta' h.deqs h'.deqs in
-  let f3 theta' = Sl_ptos.unify ~total:false f2 theta' h.ptos h'.ptos in
-  Sl_tpreds.unify ~total:false ~tagpairs f3 theta h.inds h'.inds
+let unify_partial ?(tagpairs=false) 
+    ?(sub_check=Sl_term.trivial_sub_check)
+    ?(cont=Sl_term.trivial_continuation)
+    ?(init_state=Sl_term.empty_state) h h' =
+  let f1 theta' = Sl_uf.unify_partial ~sub_check ~cont ~init_state:theta' h.eqs h'.eqs in
+  let f2 theta' = Sl_deqs.unify_partial ~sub_check ~cont:f1 ~init_state:theta' h.deqs h'.deqs in
+  let f3 theta' = Sl_ptos.unify ~total:false ~sub_check ~cont:f2 ~init_state:theta' h.ptos h'.ptos in
+  Sl_tpreds.unify ~total:false ~tagpairs ~sub_check ~cont:f3 ~init_state h.inds h'.inds
 
 let direct inverse = 
   if not inverse then 
@@ -261,13 +264,16 @@ let direct inverse =
   else
     Fun.swap
   
-let classical_unify ?(inverse=false) ?(tagpairs=false) cont theta h h' =
-  let f1 theta' = Sl_uf.unify_partial ~inverse cont theta' h.eqs h'.eqs in 
-  let f2 theta' = Sl_deqs.unify_partial ~inverse f1 theta' h.deqs h'.deqs in
+let classical_unify ?(inverse=false) ?(tagpairs=false)
+    ?(sub_check=Sl_term.trivial_sub_check)
+    ?(cont=Sl_term.trivial_continuation)
+    ?(init_state=Sl_term.empty_state) h h' =
+  let f1 theta' = Sl_uf.unify_partial ~inverse ~sub_check ~cont ~init_state:theta' h.eqs h'.eqs in 
+  let f2 theta' = Sl_deqs.unify_partial ~inverse ~sub_check ~cont:f1 ~init_state:theta' h.deqs h'.deqs in
   (* NB how we don't need an "inverse" version for ptos and inds, since *)
   (* we unify the whole multiset, not a subformula *)
-  let f3 theta' = direct inverse (Sl_ptos.unify f2 theta') h.ptos h'.ptos in 
-  direct inverse (Sl_tpreds.unify ~tagpairs f3 theta) h.inds h'.inds
+  let f3 theta' = direct inverse (Sl_ptos.unify ~sub_check ~cont:f2 ~init_state:theta') h.ptos h'.ptos in 
+  direct inverse (Sl_tpreds.unify ~tagpairs ~sub_check ~cont:f3 ~init_state) h.inds h'.inds
   
 let compute_frame ?(freshen_existentials=true) ?(avoid=Sl_term.Set.empty) f f' =
   Option.flatten

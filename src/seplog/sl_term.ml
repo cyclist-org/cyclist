@@ -149,10 +149,11 @@ module Trm =
   end
 
 
+include Trm
+
 module Set = Util.MakeListSet(Trm) 
 module Map = Util.MakeMap(Trm)
 
-include Trm
 
 (* FIXME *)
 (* conversion from integer sets to term sets should be a runtime noop *)
@@ -165,16 +166,6 @@ let filter_vars s = Set.filter is_var s
 
 type substitution = t Map.t
 
-type unifier_state = substitution * TagPairs.t
-
-(* let empty_state : unifier_state = (Sl_term.empty_subst, TagPairs.empty) *)
-
-type 'a unifier = 
-  (unifier_state -> unifier_state option) ->
-    unifier_state -> 'a -> 'a ->
-      unifier_state option
-
-
 let empty_subst : substitution = Map.empty
 let singleton_subst x y = Map.add x y empty_subst
 let subst theta v =
@@ -182,31 +173,48 @@ let subst theta v =
 (* above is significantly faster than exception handling *)
 let pp_subst = Map.pp pp
 
-let trm_unify cont ((theta, rest) as state) t t' =
+type unifier_state = substitution * TagPairs.t
+
+let empty_state = empty_subst, TagPairs.empty
+
+type subst_check = t Map.t -> Map.key -> t -> bool
+
+let trivial_sub_check _ _ _ = true
+
+type continuation = unifier_state -> unifier_state option 
+
+let trivial_continuation state = Some state
+
+type 'a unifier = 
+  ?sub_check:subst_check ->
+    ?cont:continuation ->
+      ?init_state:unifier_state -> 'a -> 'a ->
+        unifier_state option
+
+let trm_unify 
+    ?(sub_check=trivial_sub_check)
+    ?(cont=trivial_continuation) ?(init_state=empty_state) t t' =
+  let (theta, rest) = init_state in
   let res = 
     if Map.mem t theta then
-      Option.mk (equal (Map.find t theta) t') state 
+      Option.mk (equal (Map.find t theta) t') init_state 
     else if is_nil t then
-      Option.mk (is_nil t') state
-    else if 
-      is_univ_var t || 
-      is_univ_var t' ||
-      is_exist_var t && is_nil t' ||
-      is_exist_var t && is_exist_var t' &&
-        Map.for_all (fun _ t'' -> not (equal t' t'')) theta
-    then 
+      Option.mk (is_nil t') init_state
+    else if (sub_check theta t t') then
       Some (Map.add t t' theta, rest)
-    else   
+    else
       None in
   Option.bind cont res
     
-let backtrack u cont state x y =
+let backtrack (u:'a unifier)
+    ?(sub_check=trivial_sub_check) 
+    ?(cont=trivial_continuation) ?(init_state=empty_state) x y =
   let res = ref [] in
   let valid state' =
     match cont state' with
     | None -> None
     | Some state'' -> res := state'' :: !res ; None in
-  let _ = u valid state x y in !res;;
+  let _ = u ~sub_check ~cont:valid ~init_state x y in !res;;
 
 
 let avoid_theta vars subvars =
@@ -219,16 +227,51 @@ let avoid_theta vars subvars =
     (Blist.append 
       (Blist.combine univ_vars fresh_u_vars)
       (Blist.combine exist_vars fresh_e_vars))
+      
+type verifier = unifier_state -> unifier_state option
+type state_check = unifier_state -> bool
+
+let rec combine_subst_checks cs theta x y =
+  match cs with
+  | [] -> true
+  | c::rest -> (c theta x y) && (combine_subst_checks rest theta x y)
+
+let rec combine_state_checks cs state =
+  match cs with
+  | [] -> true
+  | c::rest -> (c state) && (combine_state_checks rest state)
+
+let lift_subst_check c (theta, _) = Map.for_all (c theta) theta
+
+let mk_assert_check c state =
+  let v = (c state) in 
+  assert (v); v
+
+let mk_verifier check state =
+  Option.mk (check state) state
+
+let basic_lhs_down_check theta t t' =
+  is_univ_var t || 
+  is_univ_var t' ||
+  is_exist_var t && is_nil t' ||
+  is_exist_var t && is_exist_var t' &&
+    Map.for_all (fun _ t'' -> not (equal t' t'')) theta
+  
+let basic_lhs_down_verifier = mk_verifier (lift_subst_check basic_lhs_down_check)
+
+let avoids_replacing_check vars =
+  fun _ x y -> equal x y || not (Set.mem x vars) 
 
 module FList =
   struct
     include Util.MakeFList(Trm)
-    let rec unify cont ((theta, rest) as state) args args' = 
+    let rec unify ?(sub_check=trivial_sub_check) ?(cont=trivial_continuation) 
+        ?(init_state=empty_state) args args' =
       match (args, args') with
-      | ([], []) -> cont state
+      | ([], []) -> cont init_state
       | (_, []) | ([], _) -> None
       | (x::xs, y::ys) ->
-        trm_unify (fun state' -> unify cont state' xs ys) state x y
+        trm_unify ~sub_check ~cont:(fun state' -> unify ~sub_check ~cont ~init_state:state' xs ys) ~init_state x y
     
     let subst theta xs = Blist.map (subst theta) xs
     

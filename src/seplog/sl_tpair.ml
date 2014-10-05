@@ -7,14 +7,17 @@ module TPair = PairTypes(Sl_term)(Sl_term)
 
 include TPair
 
-let _unify cont state (x, y) (x', y') =
-  Sl_term.unify (fun state' -> Sl_term.unify cont state' y y') state x x'
+let _unify sub_check cont state (x, y) (x', y') =
+  Sl_term.unify ~sub_check ~cont:(fun state' -> Sl_term.unify ~sub_check ~cont ~init_state:state' y y') ~init_state:state x x'
    
-let unify ?(order=false) cont state p p' =
+let unify ?(order=false) 
+    ?(sub_check=Sl_term.trivial_sub_check) 
+    ?(cont=Sl_term.trivial_continuation)
+    ?(init_state=Sl_term.empty_state) p p' =
   if order then 
-    _unify cont state p p'
+    _unify sub_check cont init_state p p'
   else
-    Blist.find_some (_unify cont state p) [ p'; Pair.swap p' ]
+    Blist.find_some (_unify sub_check cont init_state p) [ p'; Pair.swap p' ]
 
 let order ((x,y) as pair) =
   if Sl_term.compare x y <= 0 then pair else (y,x)
@@ -30,17 +33,20 @@ module FList =
   struct
     include Util.MakeFList(TPair)
     
-    let rec unify_partial ?(order=false) ?(inverse=false) cont state xs ys =
+    let rec unify_partial ?(order=false) ?(inverse=false) 
+        ?(sub_check=Sl_term.trivial_sub_check)
+        ?(cont=Sl_term.trivial_continuation)
+        ?(init_state=Sl_term.empty_state) xs ys =
       match (xs, ys) with
-      | ([], _) -> cont state
+      | ([], _) -> cont init_state
       | (_, []) -> None
       | (p::ps, _) ->
         Blist.find_some 
           (fun q ->
             let (x,y) = if inverse then (q,p) else (p,q) in  
-            unify ~order
-              (fun state' -> 
-                unify_partial ~order ~inverse cont state' ps ys) state x y) 
+            unify ~order ~sub_check
+              ~cont:(fun state' -> 
+                unify_partial ~order ~inverse ~sub_check ~cont ~init_state:state' ps ys) ~init_state x y) 
           ys
     
     let terms ps = 

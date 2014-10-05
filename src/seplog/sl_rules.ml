@@ -235,15 +235,20 @@ let luf defs =
 let matches seq seq' =
   try
     let (l,r), (l',r') = Pair.map Sl_seq.dest (seq, seq') in
-    let verify ((theta, _) as state) =
-      assert (Sl_seq.subsumed_upto_tags seq (Sl_seq.subst theta seq')) ;
-      Some state in 
-    let cont state = Sl_heap.classical_unify ~inverse:true verify state r r' in
+    let verify = 
+      Sl_term.mk_verifier
+        (Sl_term.mk_assert_check
+          (fun (theta, _) -> 
+            Sl_seq.subsumed_upto_tags seq (Sl_seq.subst theta seq'))) in 
+    let cont state = 
+      Sl_heap.classical_unify 
+        ~inverse:true ~sub_check:Sl_term.basic_lhs_down_check ~cont:verify 
+        ~init_state:state r r' in
     let results =
       Sl_term.backtrack  
-        (Sl_heap.classical_unify ~tagpairs:true) 
-        cont 
-        (Sl_term.empty_subst, TagPairs.empty) 
+        (Sl_heap.classical_unify ~inverse:false ~tagpairs:true)
+        ~sub_check:Sl_term.basic_lhs_down_check
+        ~cont:cont 
         l' l in
     results
   with Not_symheap -> []

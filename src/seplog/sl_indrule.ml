@@ -134,17 +134,15 @@ let fold (f, (predsym, args)) h =
   let vars = Sl_term.Set.of_list args in
   let tags = Sl_heap.tags h in
   let freshtag = 1 + (try Tags.max_elt tags with Not_found -> 0) in 
-  let cont ((theta, _) as state) =
-    (* disallow substituting over existentials in rule body *)
-    Option.mk 
-      (Sl_term.Map.for_all 
-        (fun x y -> Sl_term.Set.mem x vars || Sl_term.is_exist_var y || true) 
-        theta) 
-      state in 
+  let sub_check = Sl_term.combine_subst_checks [
+      Sl_term.basic_lhs_down_check ;
+      (fun _ x y -> Sl_term.Set.mem x vars || Sl_term.is_exist_var y || true) ; 
+    ] in 
   let results = 
     Sl_term.backtrack 
-      (Sl_heap.unify_partial ~tagpairs:true) 
-      cont (Sl_term.empty_subst, TagPairs.empty) f h in
+      (Sl_heap.unify_partial ~tagpairs:true)
+      ~sub_check
+      f h in
   Blist.map 
     (fun (theta, tagpairs) ->
       let f' = Sl_heap.subst_tags tagpairs (Sl_heap.subst theta f) in

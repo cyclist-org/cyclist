@@ -24,16 +24,20 @@ let parse st =
           Tokens.comma_sep1 Sl_term.parse << spaces |>>
           (fun l -> (x, l))) <?> "pto") st
 
-let rec unify ?(total=true) cont state ptos ptos' =
+let rec unify ?(total=true) 
+    ?(sub_check=Sl_term.trivial_sub_check)
+    ?(cont=Sl_term.trivial_continuation)
+    ?(init_state=Sl_term.empty_state) ptos ptos' =
   if is_empty ptos then
-    if not total || is_empty ptos' then cont state else None
+    if not total || is_empty ptos' then cont init_state else None
   else
     let a = choose ptos in
     let ptos = remove a ptos in
     let f a' =
-      Sl_pto.unify  
-        (fun state' -> unify ~total cont state' ptos (remove a' ptos'))
-        state a a' in
+      Sl_pto.unify ~sub_check  
+        ~cont:(fun state' -> 
+          unify ~total ~sub_check ~cont ~init_state:state' ptos (remove a' ptos'))
+        ~init_state a a' in
     find_map f ptos'
 
 let rec subsumed ?(total=true) eqs ptos ptos' =
