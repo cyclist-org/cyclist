@@ -681,6 +681,11 @@ let setup (defs, procs) =
           symex_while_rule ;
           symex_proc_unfold ;
           symex_proc_call ;
+          (* Try and fold a predicate to see if this allows a procedure call to fire *)        
+          Rule.choice 
+            (Blist.map 
+              (fun c -> Rule.compose (fold c) symex_proc_call) 
+              (Sl_defs.to_list defs)) ;
         ] ;
         
         generalise_while_rule ;
