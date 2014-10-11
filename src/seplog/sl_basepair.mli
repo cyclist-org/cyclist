@@ -2,6 +2,8 @@ include Util.BasicType with type t = Sl_term.Set.t * Sl_heap.t
 
 module Set : Util.OrderedContainer with type elt = t
 
+val vars : t -> Sl_term.Set.t
+
 val satisfiable : ?only_first:bool -> ?output:bool -> Sl_defs.t -> bool
 (** See [gen_all_pairs] regarding [~only_first]. 
 

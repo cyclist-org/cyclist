@@ -1,6 +1,9 @@
 let do_statistics = ref false
     
-let now () = (Unix.times ()).Unix.tms_utime
+let now () = 
+  let times = Unix.times () in
+  times.Unix.tms_utime +. times.Unix.tms_stime
+  
 let time_since t = (now ()) -. t
 
 module TimeStats(E : sig end) = 
@@ -27,8 +30,9 @@ module TimeStats(E : sig end) =
 module MC = TimeStats(struct end)
 module CC = TimeStats(struct end)
 module Gen = TimeStats(struct end)
+module Invalidity = TimeStats(struct end)
 
-module MCCache = 
+module CacheStats(E : sig end) = 
   struct 
     let queries = ref 0
     let hits = ref 0
@@ -46,30 +50,53 @@ module MCCache =
       hits := 0;
       start_time := 0.0;
       cpu_time := 0.0
-        
   end
 
+module MCCache = CacheStats(struct end)
 
 let gen_print () =
   if !do_statistics then 
 		begin
-      Printf.printf "Elapsed CPU time: %.0f ms\n" (1000.0 *. !Gen.cpu_time) ;
-      Printf.printf "Percentage of CPU time spent model checking: %.0f%%\n"
+      Printf.printf 
+        "GENERAL: Elapsed process time: %.0f ms\n" (1000.0 *. !Gen.cpu_time) ;
+      
+      Printf.printf 
+        "MODCHECK: Percentage of process time spent model checking: %.0f%%\n"
         (if !Gen.cpu_time = 0. then 0. else (100.0 *. !MC.cpu_time /. !Gen.cpu_time)) ;
-      print_endline ("Model checker calls: Rejected " ^ (string_of_int !MC.rejects) ^
-    		" out of " ^ (string_of_int !MC.calls) ^ " calls.") ;
-		  print_endline ("Model checker cache: Hits: " ^ (string_of_int (!MCCache.hits)) ^
-			  " out of " ^ (string_of_int !MCCache.queries) ^ " queries.") ;
-		  Printf.printf "Model checker cache: Time spent caching: %.0f ms \n" (1000.0 *. !MCCache.cpu_time) ;
-      Printf.printf "Percentage of CPU time spent consistency checking: %.0f%%\n"
+      Printf.printf 
+        "MODCHECK: Rejected %d out of %d calls.\n" 
+        !MC.rejects !MC.calls;
+		  
+      Printf.printf 
+        "MCCACHE: Hits: %d out of %d queries.\n" 
+        !MCCache.hits !MCCache.queries;
+		  Printf.printf 
+        "MCCACHE: Time spent caching: %.0f ms \n" (1000.0 *. !MCCache.cpu_time) ;
+      
+      Printf.printf 
+        "SLSAT: Total time spent: %.0f ms\n" 
+        (1000.0 *. !CC.cpu_time);
+      Printf.printf 
+        "SLSAT: Percentage of process time spent: %.0f%%\n"
         (if !Gen.cpu_time = 0. then 0. else (100.0 *. !CC.cpu_time /. !Gen.cpu_time)) ;
-      print_endline 
-  		  ("Consistency checker calls: " ^ (string_of_int !CC.rejects) ^ 
-  			" out of " ^ (string_of_int !CC.calls) ^ " predicate definitions were inconsistent.")
+      Printf.printf 
+        "SLSAT: %d out of %d predicate definitions were inconsistent.\n"
+        !CC.rejects !CC.calls;
+        
+      Printf.printf 
+        "INVAL: Total time spent: %.0f ms\n" 
+        (1000.0 *. !Invalidity.cpu_time);
+      Printf.printf 
+        "INVAL: Percentage of process time spent: %.0f%%\n"
+        (if !Gen.cpu_time = 0. then 0. else (100.0 *. !Invalidity.cpu_time /. !Gen.cpu_time)) ;
+      Printf.printf 
+        "INVAL: Found as invalid %d out of %d calls.\n" 
+        !Invalidity.rejects !Invalidity.calls;
 		end
   
 let reset () =
   Gen.reset ();
 	MC.reset ();
 	CC.reset (); 
-	MCCache.reset ()
+	MCCache.reset ();
+  Invalidity.reset ()

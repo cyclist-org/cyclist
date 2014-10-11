@@ -313,8 +313,7 @@ let axioms = ref (Rule.first [id_axiom ; ex_falso_axiom])
 
 let rules = ref Rule.fail
 
-let not_invalid =
-  Rule.conditional (fun s -> not (Sl_seq.invalid !preddefs s)) Rule.identity 
+let use_invalidity_heuristic = ref false
 
 let setup defs =
   preddefs := defs ; 
@@ -329,13 +328,9 @@ let setup defs =
     		wrap pto_intro_rule;
     		wrap pred_intro_rule;
         instantiate_pto ;
-        (* Rule.conditional (fun s -> not (Sl_seq.invalid defs s)) *)
-        (*   (Rule.choice                                          *)
-        (*     [                                                   *)
-              (ruf defs);
-              (luf defs) 
-              (* ]) *)
+        ruf defs;
+        luf defs 
       ] 
     ] ;
-  rules := Rule.conditional (fun s -> not (Sl_seq.invalid defs s)) !rules
-  
+  if !use_invalidity_heuristic then 
+    rules := Rule.conditional (fun s -> not (Sl_invalid.check defs s)) !rules

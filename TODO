@@ -1,3 +1,4 @@
+[TODO] Fix conditions on term unification and push most to call sites
 [TODO] modularise/abstract variables, formulas, definitions for SL
 [TODO] drop melt as a dependency and re-do the required stuff locally
 [TODO] consider hash consing for terms formulas etc

@@ -3,15 +3,27 @@ open Lib
 let cl_sequent = ref ""
 let defs_path = ref "examples/sl.defs"
 
+(* switches controlling invalidity heuristic *)
+let invalidity_check = ref false
+
 module Prover = Prover.Make(Sl_seq)
 module F = Frontend.Make(Prover)
 
-let () = F.usage := !F.usage ^ " [-D <file>] [-S <string>]"
+let () = F.usage := !F.usage ^ " [-D <file>] [-S <string>] [-IC] [-IT] [-IP]"
 
 let () = F.speclist := !F.speclist @ [
     ("-D", Arg.Set_string defs_path, 
       ": read inductive definitions from <file>, default is " ^ !defs_path);
     ("-S", Arg.Set_string cl_sequent, ": prove the SL sequent provided in <string>");
+    ("-IC", Arg.Set invalidity_check, 
+      ": run invalidity heuristic before search, default is " ^ 
+      (string_of_bool !invalidity_check));
+    ("-IT", Arg.Set Sl_rules.use_invalidity_heuristic, 
+      ": run invalidity heuristic during search, default is " ^ 
+      (string_of_bool !Sl_rules.use_invalidity_heuristic));
+    ("-IP", Arg.Set Sl_invalid.partition_strengthening, 
+      ": use partition strengthening in invalidity heuristic, default is " ^ 
+      (string_of_bool !Sl_invalid.partition_strengthening));
   ]
 
 type search_result =
@@ -30,7 +42,7 @@ let () =
   Stats.reset () ;
   Stats.Gen.call () ;
   let call () =
-    if Sl_seq.invalid defs seq then Invalid else
+    if !invalidity_check && Sl_invalid.check defs seq then Invalid else
     match 
       Prover.idfs !F.minbound !F.maxbound !Sl_rules.axioms !Sl_rules.rules seq
     with

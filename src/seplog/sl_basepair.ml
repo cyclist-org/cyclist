@@ -27,6 +27,9 @@ struct
       Sl_heap.pp g
       symb_rp.str
   
+  let vars (v, h) =
+    Sl_term.Set.union (Sl_term.filter_vars v) (Sl_heap.vars h)
+  
   let norm (v, h) =
     let h' = Sl_heap.norm h in 
     let v' = Sl_term.Set.endomap (fun x -> Sl_uf.find x h'.Sl_heap.eqs) v in

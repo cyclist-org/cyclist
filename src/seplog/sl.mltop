@@ -16,6 +16,7 @@ Sl_basepair
 Sl_preddef
 Sl_indrule
 Sl_seq
+Sl_invalid
 While_program
 While_rules
 Parsers
