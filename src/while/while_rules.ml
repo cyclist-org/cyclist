@@ -219,27 +219,25 @@ let matches ((l,cmd) as seq) ((l',cmd') as seq') =
   try
     if not (Cmd.equal cmd cmd') then [] else
     let (l,l') = Pair.map Sl_form.dest (l,l') in
-    (* let sub_check = Sl_term.combine_subst_checks [      *)
-    (*     Sl_term.basic_lhs_down_check ;                  *)
-    (*     Sl_term.avoids_replacing_check !program_vars ;  *)
-    (*   ] in                                              *)
+    let sub_check = Sl_term.combine_subst_checks [
+        Sl_term.basic_lhs_down_check ;
+        Sl_term.avoids_replacing_check !program_vars ;
+      ] in
     let cont =
       Sl_term.mk_verifier
-        (Sl_term.combine_state_checks [
-            (Sl_term.mk_assert_check
-              (fun (theta, tagpairs) -> 
-                let subst_seq = (Seq.subst_tags tagpairs (Seq.subst theta seq')) in
-                let () = debug (fun _ -> "term substitution: " ^ ((Format.asprintf " %a" Sl_term.pp_subst theta))) in 
-                let () = debug (fun _ -> "tag substitution: " ^ (TagPairs.to_string tagpairs)) in 
-                let () = debug (fun _ -> "source seq: " ^ (Seq.to_string seq)) in
-                let () = debug (fun _ -> "target seq: " ^ (Seq.to_string seq')) in
-                let () = debug (fun _ -> "substituted target seq: " ^ (Seq.to_string subst_seq)) in
-                Seq.subsumed seq subst_seq) ) ;
-            (Sl_term.lift_subst_check (Sl_term.avoids_replacing_check !program_vars)) ;
-          ] ) in
+        (Sl_term.mk_assert_check
+          (fun (theta, tagpairs) -> 
+            let subst_seq = (Seq.subst_tags tagpairs (Seq.subst theta seq')) in
+            let () = debug (fun _ -> "term substitution: " ^ ((Format.asprintf " %a" Sl_term.pp_subst theta))) in 
+            let () = debug (fun _ -> "tag substitution: " ^ (TagPairs.to_string tagpairs)) in 
+            let () = debug (fun _ -> "source seq: " ^ (Seq.to_string seq)) in
+            let () = debug (fun _ -> "target seq: " ^ (Seq.to_string seq')) in
+            let () = debug (fun _ -> "substituted target seq: " ^ (Seq.to_string subst_seq)) in
+            Seq.subsumed seq subst_seq)
+        ) in
     Sl_term.backtrack 
       (Sl_heap.unify_partial ~tagpairs:true)
-      ~sub_check:Sl_term.basic_lhs_down_check
+      ~sub_check
       ~cont
       l' l
   with Not_symheap -> []
