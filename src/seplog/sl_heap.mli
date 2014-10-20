@@ -80,6 +80,8 @@ val mk_ind : Sl_tpred.t -> t
 
 val mk : Sl_uf.t -> Sl_deqs.t -> Sl_ptos.t -> Sl_tpreds.t -> t
 
+val combine : t -> t -> t
+
 (** Functions [with_*] accept a heap [h] and a heap component [c] and 
     return the heap that results by replacing [h]'s appropriate component 
     with [c]. *)
@@ -98,7 +100,12 @@ val add_deq : t -> Sl_tpair.t -> t
 val add_pto : t -> Sl_pto.t -> t
 val add_ind : t -> Sl_tpred.t -> t
 
+val proj_sp : t -> t
+val proj_pure : t -> t
+
 val star : t -> t -> t
+val diff : t -> t -> t
+
 val fixpoint : (t -> t) -> t -> t
 
 val subst : Sl_term.substitution -> t -> t
@@ -150,3 +157,15 @@ val compute_frame :
 
 val norm : t -> t
 (** Replace all terms with their UF representative (the UF in the heap). *)
+
+val all_subheaps : t -> t list
+(** [all_subheaps h] returns a list of all the subheaps of [h]. These are
+    constructed by taking:
+      - all the subsets of the disequalities of [h];
+      - all the subsets of the points-tos of [h];
+      - all the subsets of the predicates of [h];
+      - the equivalence classes of each subset of variables in the equalities of
+        [h] that also respect the equalities of [h] are constructed - this is
+        done by using [Sl_uf.remove] to remove subsets of variables from 
+        [h.eqs];
+    and forming all possible combinations *)

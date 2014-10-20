@@ -228,7 +228,6 @@ let avoid_theta vars subvars =
       (Blist.combine univ_vars fresh_u_vars)
       (Blist.combine exist_vars fresh_e_vars))
       
-type verifier = unifier_state -> unifier_state option
 type state_check = unifier_state -> bool
 
 let rec combine_subst_checks cs theta x y =
@@ -259,8 +258,8 @@ let basic_lhs_down_check theta t t' =
   
 let basic_lhs_down_verifier = mk_verifier (lift_subst_check basic_lhs_down_check)
 
-let avoids_replacing_check vars =
-  fun _ x y -> equal x y || not (Set.mem x vars) 
+let avoids_replacing_check ?(inverse=false) vars =
+  fun _ -> Fun.direct inverse (fun x y -> equal x y || not (Set.mem x vars)) 
 
 module FList =
   struct

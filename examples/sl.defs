@@ -86,4 +86,19 @@ dls {
 lsls {
   x=nil => lsls(x) |
   x->y',x' * lsls(y') * dls(x',nil) => lsls(x)
-} 
+} ;
+
+lsbt {
+  x=nil => lsbt(x) |
+  x->y',x' * lsbt(x') * bt(y') => lsbt(x)
+} ;
+
+spTrue {
+	emp => spTrue() |
+	x'->y' * spTrue() => spTrue()
+};
+
+spTrue2 {
+	emp => spTrue2() |
+	x'->y',z' * spTrue2() => spTrue2()
+}

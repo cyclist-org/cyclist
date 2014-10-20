@@ -118,6 +118,9 @@ module Seq =
       
     let param_subst theta (pre, cmd, post) = 
       (Sl_form.subst theta pre, Cmd.subst theta cmd, Sl_form.subst theta post)
+      
+    let with_pre (pre, cmd, post) f = (f, cmd, post)
+    let with_post (pre, cmd, post) f = (pre, cmd, f)
     
 		let to_string (pre,cmd,post) =
       symb_turnstile.sep ^ 

@@ -157,6 +157,17 @@ let mk_eq p = { empty with eqs = Sl_uf.add p Sl_uf.empty }
 let mk_deq p = { empty with deqs = Sl_deqs.singleton p }
 let mk_ind pred = { empty with inds = Sl_tpreds.singleton pred }
 
+let combine h h' =
+  let eqs = Sl_uf.union h.eqs h'.eqs in
+  let deqs = Sl_deqs.union h.deqs h'.deqs in
+  let ptos = Sl_ptos.union h.ptos h'.ptos in
+  let inds = Sl_tpreds.union h.inds h'.inds in
+  mk eqs deqs ptos inds
+    
+
+let proj_sp h = mk Sl_uf.empty Sl_deqs.empty h.ptos h.inds
+let proj_pure h = mk h.eqs h.deqs Sl_ptos.empty Sl_tpreds.empty
+
 (* star two formulae together *)
 let star f g =
   (* computes all deqs due to a list of ptos *)
@@ -171,6 +182,20 @@ let star f g =
     (Sl_deqs.union_of_list [f.deqs; g.deqs; explode_deqs (Sl_ptos.elements newptos)])
     newptos
     (Sl_tpreds.union f.inds g.inds)
+    
+let diff h h' =
+  mk
+        (* FIXME hacky stuff in SH.eqs : in reality a proper way to diff *)
+        (* two union-find structures is required *)
+    (Sl_uf.of_list
+      (Sl_deqs.to_list
+        (Sl_deqs.diff
+          (Sl_deqs.of_list (Sl_uf.bindings h.eqs))
+          (Sl_deqs.of_list (Sl_uf.bindings h'.eqs))
+        )))
+    (Sl_deqs.diff h.deqs h'.deqs)
+    (Sl_ptos.diff h.ptos h'.ptos)
+    (Sl_tpreds.diff h.inds h'.inds)  
 
 let parse_atom st =
   ( attempt (parse_symb keyw_emp >>$ empty) <|>
@@ -258,12 +283,6 @@ let unify_partial ?(tagpairs=false)
   let f3 theta' = Sl_ptos.unify ~total:false ~sub_check ~cont:f2 ~init_state:theta' h.ptos h'.ptos in
   Sl_tpreds.unify ~total:false ~tagpairs ~sub_check ~cont:f3 ~init_state h.inds h'.inds
 
-let direct inverse = 
-  if not inverse then 
-    Fun.id
-  else
-    Fun.swap
-  
 let classical_unify ?(inverse=false) ?(tagpairs=false)
     ?(sub_check=Sl_term.trivial_sub_check)
     ?(cont=Sl_term.trivial_continuation)
@@ -272,8 +291,8 @@ let classical_unify ?(inverse=false) ?(tagpairs=false)
   let f2 theta' = Sl_deqs.unify_partial ~inverse ~sub_check ~cont:f1 ~init_state:theta' h.deqs h'.deqs in
   (* NB how we don't need an "inverse" version for ptos and inds, since *)
   (* we unify the whole multiset, not a subformula *)
-  let f3 theta' = direct inverse (Sl_ptos.unify ~sub_check ~cont:f2 ~init_state:theta') h.ptos h'.ptos in 
-  direct inverse (Sl_tpreds.unify ~tagpairs ~sub_check ~cont:f3 ~init_state) h.inds h'.inds
+  let f3 theta' = Fun.direct inverse (Sl_ptos.unify ~sub_check ~cont:f2 ~init_state:theta') h.ptos h'.ptos in 
+  Fun.direct inverse (Sl_tpreds.unify ~tagpairs ~sub_check ~cont:f3 ~init_state) h.inds h'.inds
   
 let compute_frame ?(freshen_existentials=true) ?(avoid=Sl_term.Set.empty) f f' =
   Option.flatten
@@ -306,3 +325,28 @@ let compute_frame ?(freshen_existentials=true) ?(avoid=Sl_term.Set.empty) f f' =
                 subst theta frame
               else frame)) )
     
+let all_subheaps h =
+  let all_ptos = Sl_ptos.subsets h.ptos in
+  let all_preds = Sl_tpreds.subsets h.inds in
+  let all_deqs = Sl_deqs.subsets h.deqs in
+  let all_ufs =
+    Blist.map
+      (fun xs -> Blist.foldr Sl_uf.remove xs h.eqs) 
+      (Blist.map 
+        Sl_term.Set.to_list 
+        (Sl_term.Set.subsets (Sl_uf.vars h.eqs))) in
+  Blist.flatten
+    (Blist.map
+      (fun ptos ->
+        Blist.flatten 
+          (Blist.map
+            (fun preds -> 
+              Blist.flatten
+                (Blist.map
+                  (fun deqs ->
+                    Blist.map
+                      (fun eqs -> mk eqs deqs ptos preds)
+                      all_ufs)
+                  all_deqs))
+            all_preds))
+      all_ptos)

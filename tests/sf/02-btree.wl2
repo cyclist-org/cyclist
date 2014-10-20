@@ -1,6 +1,6 @@
 fields: left, right;
 precondition: bt(x);
-postcondition: bt(x); 
+postcondition: spTrue2(); 
 while x!=nil do
   if * then
     x := x.left 

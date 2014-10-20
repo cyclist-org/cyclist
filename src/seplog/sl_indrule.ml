@@ -120,6 +120,7 @@ let parse st =
 let unfold vars h (tag, (ident, args)) case =
   let (f, (ident', formals)) = dest (freshen vars case) in
   assert (Sl_predsym.equal ident ident') ;
+  assert (Blist.length args == Blist.length formals) ;
   let f = Sl_heap.freshen_tags h f in 
   let tagpairs = 
     Tags.map_to 
@@ -143,28 +144,9 @@ let fold (f, (predsym, args)) h =
       (Sl_heap.unify_partial ~tagpairs:true)
       ~sub_check
       f h in
-  Blist.map 
-    (fun (theta, tagpairs) ->
-      let f' = Sl_heap.subst_tags tagpairs (Sl_heap.subst theta f) in
-      let newpred = (freshtag, (predsym, Sl_term.FList.subst theta args)) in
-      let h' = 
-        Sl_heap.mk
-              (* FIXME hacky stuff in SH.eqs : in reality a proper way to diff *)
-              (* two union-find structures is required *)
-          (Sl_uf.of_list
-            (Sl_deqs.to_list
-              (Sl_deqs.diff
-                (Sl_deqs.of_list (Sl_uf.bindings h.Sl_heap.eqs))
-                (Sl_deqs.of_list (Sl_uf.bindings f'.Sl_heap.eqs))
-              )))
-          (Sl_deqs.diff h.Sl_heap.deqs f'.Sl_heap.deqs)
-          (Sl_ptos.diff h.Sl_heap.ptos f'.Sl_heap.ptos)
-          (Sl_tpreds.add
-            newpred
-            (Sl_tpreds.diff h.Sl_heap.inds f'.Sl_heap.inds)) in
-      (theta, h')
-    )
-    results
-
-
-
+  let do_fold (theta, tagpairs) =
+    let f' = Sl_heap.subst_tags tagpairs (Sl_heap.subst theta f) in
+    let newpred = (freshtag, (predsym, Sl_term.FList.subst theta args)) in
+    let h' = Sl_heap.add_ind (Sl_heap.diff h f') newpred in
+    (theta, h') in
+  Blist.map do_fold results
