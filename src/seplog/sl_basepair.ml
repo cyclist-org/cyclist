@@ -83,7 +83,7 @@ struct
     let v = Sl_term.Set.of_list l in
     Some (project (v, h) case)
   
-  let less_than (v,h) (v',h') = 
+  let leq (v,h) (v',h') = 
     Sl_heap.subsumed h h' 
     &&
     let (v,v') = 
@@ -196,7 +196,7 @@ let minimise bps =
   let res = 
     Set.fold 
       (fun x bps' ->
-        if Set.exists (fun y -> BasePair.less_than y x) bps' then 
+        if Set.exists (fun y -> BasePair.leq y x) bps' then 
           bps'
         else
           Set.add x bps' 
