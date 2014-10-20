@@ -78,6 +78,13 @@ let _invalid defs seq =
   Stats.Invalidity.call () ;
   let (lbps, rbps) = Pair.map (Sl_basepair.pairs_of_form defs) seq in
   let (lbps, rbps) = Pair.map Sl_basepair.minimise (lbps, rbps) in
+  let lbps = 
+    Sl_basepair.Set.filter
+      (fun bp -> 
+        Sl_basepair.Set.for_all 
+          (fun bp' -> not (Sl_basepair.leq bp' bp)) 
+          rbps)
+      lbps in 
   let b_vars = 
     Sl_basepair.Set.fold
       (fun bp vs -> Sl_term.Set.union (Sl_basepair.vars bp) vs)
