@@ -26,6 +26,8 @@ let () = F.speclist := !F.speclist @ [
     ("-T", Arg.Set termination, ": also prove termination, default is " ^ 
           (string_of_bool !termination));
   ]
+  
+let () = F.maxbound := 16
 
 let () =
   Arg.parse !F.speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) !F.usage ;
