@@ -56,8 +56,12 @@ let replace_nth z n xs =
   mapi f xs 
 
 let rec take n = function
-  | [] -> invalid_arg "Blist.take"
+  | [] -> if n=0 then [] else invalid_arg "Blist.take"
   | x::xs -> if n=0 then [] else x::(take (n-1) xs)
+
+let rec drop n = function
+  | [] -> if n=0 then [] else invalid_arg "Blist.drop"
+  | x::xs -> if n=0 then x::xs else drop (n-1) xs
 
 let indexes xs = range 0 xs
 

@@ -126,7 +126,7 @@ let lhs_disj_to_symheaps =
 (* let gen_left_rules (def,ident) =                                                       *)
 (*   wrap (gen_left_rules_f (def,ident))                                                  *)
 
-let luf_rl ((pre,cmd,post) as seq) defs =
+let luf_rl defs ((pre,cmd,post) as seq) =
   try
     let pre = Sl_form.dest pre in
     let seq_vars = Seq.vars seq in
@@ -140,15 +140,37 @@ let luf_rl ((pre,cmd,post) as seq) defs =
           (if !termination then tagpairs else Seq.tagpairs_one), 
           (if !termination then tagpairs else TagPairs.empty)
         ) in
-      let () = debug (fun () -> "Unfolding " ^ (Sl_predsym.to_string ident)) in 
+      let () = debug (fun () -> "L. Unfolding " ^ (Sl_predsym.to_string ident)) in 
       Blist.map do_case clauses, ((Sl_predsym.to_string ident) ^ " L.Unf.") in
     Sl_tpreds.map_to_list 
       left_unfold 
       (Sl_tpreds.filter (Sl_defs.is_defined defs) pre.SH.inds)
   with Not_symheap -> []
 
-let luf defs = wrap (fun seq -> luf_rl seq defs)
+let luf defs = wrap (luf_rl defs)
 
+let ruf_rl defs ((pre,cmd,post) as seq) =
+  let post = Sl_form.dest post in
+  let seq_vars = Seq.vars seq in
+  let preds = Sl_tpreds.filter (Sl_defs.is_defined defs) post.SH.inds in 
+  let right_unfold ((_, (ident, _)) as p) =
+    let post' = SH.del_ind post p in
+    let clauses = Sl_defs.unfold seq_vars post' p defs in
+    let do_case (clause, _) =
+      (* Note we do not care about the tag pairs when dealing with postconditions *)
+      let post' = Sl_heap.star post' clause in
+      let seq' = (pre,cmd,[post']) in
+        [ (seq', tagpairs seq', TagPairs.empty) ],
+        (Sl_predsym.to_string ident) ^ " R.Unf."
+      in
+    let () = debug (fun () -> "R. Unfolding " ^ (Sl_predsym.to_string ident)) in 
+    Blist.map do_case clauses in
+  Blist.flatten
+    (Sl_tpreds.map_to_list
+      right_unfold
+      preds)
+
+let ruf defs = wrap (ruf_rl defs)
 
 (* FOR SYMEX ONLY *)
 let fix_tps l = 
@@ -354,34 +376,92 @@ let left_or_elim_rule ((pre',cmd',post') as seq') (pre,cmd,post) =
       []
       
 (* Rule specialising existential variables *)
-let ex_sp_rule seq' seq =
-  if true (* TO DO *)
-    then
-      [ [(seq', Seq.tag_pairs seq', TagPairs.empty)],
-       "L. Cut (Ex. Sp.)" ]      
-    else
-      []
+let ex_sp_rule ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
+  if not (Cmd.equal cmd cmd')
+  then []
+  else
+    try
+      let pre = Sl_form.dest pre in
+      let pre' = Sl_form.dest pre' in
+      let post = Sl_form.dest post in
+      let post' = Sl_form.dest post' in
+      let sub_check _ x y =
+        Sl_term.equal x y || (Sl_term.is_exist_var x && Sl_term.is_exist_var y) in
+      let verify src target = Sl_term.mk_verifier
+        (fun (theta, _) ->
+          Sl_term.Map.for_all
+            (fun k v ->
+              Sl_term.equal k v ||
+              Sl_term.Map.exists
+                (fun k' v' -> not (Sl_term.equal k k') && Sl_term.equal v v')
+                theta)
+            theta &&
+            Sl_heap.equal (Sl_heap.subst theta src) target) in
+      let cont = Sl_term.mk_verifier
+        (fun state ->
+          Option.is_some (verify pre pre' state) &&
+          Option.is_some
+            (Sl_heap.unify_partial
+              ~sub_check
+              ~cont:(verify post' post)
+              post' post)) in
+      let theta = Sl_heap.unify_partial ~sub_check ~cont pre pre' in
+      if Option.is_some theta
+        then
+          [ [(seq, Seq.tag_pairs seq, TagPairs.empty)],
+           "Cut (Ex. Sp.)" ]      
+        else
+          let () = debug (fun _ -> "Failed Ex. Sp. Check:\n" ^ (Seq.to_string seq) ^ "\n" ^ (Seq.to_string seq')) in
+          []
+    with Not_symheap -> []
       
-let proc_call_rule ((pre, cmd, post) as proc_seq) (pre', cmd', post') =
+let ex_intr_rule ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
+  if not (Cmd.equal cmd cmd')
+  then []
+  else
+        [ [(seq, Seq.tag_pairs seq, TagPairs.empty)],
+         "Ex.Intr./Rename" ]      
+
+let frame_rule f ((pre,cmd,post) as seq) seq' =
+  try
+    let pre = Sl_form.dest pre in
+    let post = Sl_form.dest post in
+    let framed_seq = ([Sl_heap.star pre f], cmd, [Sl_heap.star post f]) in
+    if (Seq.equal framed_seq seq') then
+      [ [(seq, Seq.tag_pairs seq, TagPairs.empty)],
+        "Frame" ]
+    else []
+  with Not_symheap -> []
+      
+let proc_call_rule frame ((pre, cmd, post) as proc_seq) ((pre', cmd', post') as call_seq) =
   try
     let pre = Sl_form.dest pre in
     let post = Sl_form.dest post in 
     let pre' = Sl_form.dest pre' in
-    let frame = Sl_heap.compute_frame ~freshen_existentials:false pre pre' in
-    if Cmd.is_proc_call cmd && Cmd.is_empty (Cmd.get_cont cmd)
+    if not (Cmd.is_empty cmd) && Cmd.is_empty (Cmd.get_cont cmd)
         && not (Cmd.is_empty cmd') 
         && Cmd.cmd_equal (Cmd.get_cmd cmd) (Cmd.get_cmd cmd')
-        && Option.is_some frame
+        && Sl_heap.equal (Sl_heap.combine pre frame) pre'
       then
-        let frame = Option.get frame in
         match (Cmd.get_cmd cmd) with 
           | Cmd.ProcCall(procname, _) ->
+              let cont_seq =
+                (* We freshen existential variables in the postcondition of the 
+                   procedure call so that they don't clash with existential
+                   variables in the postcondition of the continuation. It is 
+                   necessary to maintain this proof invariant so that framing
+                   can be computed correctly, among perhaps other things. But:
+                   ********* THIS IS VERY EXPENSIVE! ********** *)
+                let proc_post_evars = Sl_term.Set.to_list (Sl_term.Set.filter Sl_term.is_exist_var (Sl_heap.vars post)) in
+                let new_evars = Sl_term.fresh_evars (Seq.vars call_seq) (Blist.length proc_post_evars) in
+                let theta = Sl_term.Map.of_list (Blist.combine proc_post_evars new_evars) in
+                ([Sl_heap.combine (Sl_heap.freshen_tags frame (Sl_heap.subst theta post)) frame], 
+                 Cmd.get_cont cmd', 
+                 post') in
               [ [ (proc_seq, tagpairs proc_seq, TagPairs.empty) ;
-                  (([Sl_heap.star (Sl_heap.freshen_tags frame post) frame], 
-                    Cmd.get_cont cmd', 
-                    post'), TagPairs.mk (Seq.form_tags [frame]), progpairs()) ;
+                  (cont_seq, TagPairs.mk (Seq.form_tags [frame]), progpairs()) ;
                 ], "Proc. Call " ^  procname]
-          | _ -> assert(false)
+          | _ -> []
       else
         []
   with Not_symheap -> []
@@ -425,9 +505,14 @@ let mk_symex_proc_call procs =
                 Sl_term.basic_lhs_down_check ;
                 Sl_term.avoids_replacing_check prog_vars ;
               ] in
-            (* The continuation checks that the resulting substitution allows a frame to be computed *)
+            (* The continuation checks that the resulting substitution allows a frame to be computed.
+               Since there is no easy way to pass the computed frame along to the point where we use
+               it to construct the actual proof rule, the frame has to be computed there a second time.
+               Experiements show, however, that this does not result in a performance hit - perhaps
+               because we do not have to calculate various sequents for constructing the proof in those
+               cases where it turns out that the call to Sl_heap.compute_frame fails. *)
             let cont = Sl_term.mk_verifier
-              (fun (theta, tagpairs) -> 
+              (fun (theta, tagpairs) ->
                 let f' = Sl_heap.subst_tags tagpairs (Sl_heap.subst theta f) in
                 Option.is_some (Sl_heap.compute_frame f' pre)) in
             let unifiers = Sl_term.backtrack
@@ -443,9 +528,9 @@ let mk_symex_proc_call procs =
               let pre' = Sl_form.dest pre' in
               let frame = Sl_heap.compute_frame ~avoid:(Sl_form.vars post') pre' pre in
               match frame with
-                | None -> assert false (* This should not happen *)
+                | None -> assert(false) (* This should not happen as unification ensures that compute_frame succeeds! *)
                 | Some(frame) ->
-                  let call_seq = ([Sl_heap.star pre' frame], cmd, post) in
+                  let call_seq = ([Sl_heap.combine pre' frame], cmd, post) in
                   (* Construct all the individual rules that need to be applied *)
                   let sp_ex_rl = 
                     if Seq.equal call_seq src_seq 
@@ -455,7 +540,7 @@ let mk_symex_proc_call procs =
                     if (not (Cmd.is_empty prog_cont) || 
                         not (Sl_heap.is_empty frame) || 
                         not (Sl_form.equal post post')) 
-                      then (Rule.mk_infrule (proc_call_rule subst_seq), [Rule.identity])
+                      then (Rule.mk_infrule (proc_call_rule frame subst_seq), [Rule.identity])
                       else (Rule.identity, []) in
                   let subst_rl = 
                     if Seq.equal seq_sh_pre subst_seq
@@ -586,7 +671,119 @@ let fold def =
       Blist.bind do_case (Sl_preddef.rules def)
     with Not_symheap -> [] in
   Rule.mk_infrule fold_rl 
-
+  
+let infer_frame idx prf =
+  let ((pre,cmd,post) as src_seq) = Proof.get_seq idx prf in
+  let frame_rl =
+    try
+      let pre = Sl_form.dest pre in
+      let post = Sl_form.dest post in
+      let all_vars = 
+        (Sl_term.Set.union (Sl_heap.vars pre) (Sl_heap.vars post)) in
+      (* We need that existential variables are distinct between the pre- and postcondition *)
+      assert(Sl_term.Set.is_empty (Sl_term.Set.filter Sl_term.is_exist_var (Sl_term.Set.inter (Sl_heap.vars pre) (Sl_heap.vars post))));
+      let () = debug (fun _ -> "About to find frames for sequent " ^ (Seq.to_string src_seq)) in
+      (* calculate candidate frames from all the subheaps of post *)
+      let frames = 
+        let frames' = Blist.filter
+          (fun f ->
+            (* frames must have a spatial component *)             
+            not (Sl_heap.subsumed Sl_heap.empty f) &&
+            (* cannot split existential variables across frame *)
+            (let (frame_exvars, remaining_exvars) = 
+              Pair.map
+              (fun f' -> 
+                Sl_term.Set.filter Sl_term.is_exist_var (Sl_heap.vars f'))
+              (f, Sl_heap.diff post f) in
+            not 
+              (Sl_term.Set.exists 
+                (Fun.swap Sl_term.Set.mem remaining_exvars) frame_exvars)) &&
+            (* the variables of the pure part must be a subset of those in the
+               spatial part - i.e. the pure constraints must be relevant *)
+            Sl_term.Set.subset 
+              (Sl_heap.vars (Sl_heap.proj_pure f))
+              (Sl_heap.vars (Sl_heap.proj_sp f)))
+          (Sl_heap.all_subheaps post) in
+        Blist.filter
+          (fun f ->
+            (* frames must be maximal wrt to the above conditions *)
+            Blist.for_all
+              (fun f' -> Sl_heap.equal f f' || not (Sl_heap.subsumed f f'))
+              frames')
+          frames' in
+      (* get (unifier, frame) pairs for those frames which can be partially 
+         unified with the precondition *)
+      let ufps = 
+        let unify_frame f =
+          let () = debug (fun _ -> "Trying frame: " ^ (Sl_heap.to_string f)) in
+          let sub_check = 
+            (fun theta x y -> Sl_term.equal x y || Sl_term.is_exist_var x) in
+          let unifiers = 
+            Sl_term.backtrack
+              (Sl_heap.unify_partial ~tagpairs:true)
+              ~sub_check
+              f pre in
+          Blist.map 
+            (fun ((theta, tps) as u) -> 
+              let () = debug
+                (fun _ -> "Found term substitution = " ^ (Format.asprintf " %a" Sl_term.pp_subst theta) ^ " and tag subsitution = " ^ (Util.TagPairs.to_string tps)) in
+              (u, f))
+            unifiers in
+        Blist.bind unify_frame frames in
+      (* Auxiliary function to turn valid (unifier, frame) pairs into rule 
+         applications *)
+      let mk_rl ((theta, tps), frame) = 
+        let () = debug (fun _ -> "Constructing rule for frame: " ^ (Sl_heap.to_string frame) ^ " with term substitution: " ^ (Format.asprintf " %a" Sl_term.pp_subst theta) ^ " and tag subsitution = " ^ (Util.TagPairs.to_string tps)) in
+        let post' = Sl_heap.diff post frame in
+        let frame' = Sl_heap.subst_tags tps (Sl_heap.subst theta frame) in
+        let pre' = Sl_heap.diff pre frame' in
+        let pre_exvars_to_split = 
+          Sl_term.Set.to_list
+            (Sl_term.Set.filter 
+              Sl_term.is_exist_var 
+              (Sl_term.Set.inter (Sl_heap.vars pre') (Sl_heap.vars frame'))) in
+        let (theta', theta'') =
+          let n = Blist.length pre_exvars_to_split in 
+          let vars = Sl_term.fresh_evars all_vars (n * 2) in
+          Pair.map 
+            (fun vs -> 
+              Sl_term.Map.of_list (Blist.combine pre_exvars_to_split vs))
+            (Blist.take n vars, Blist.drop n vars) in
+        let theta = 
+          Sl_term.Map.filter
+            (fun k v ->
+              not (Sl_term.is_exist_var v) ||
+              Sl_term.Map.for_all
+                (fun k' v' -> Sl_term.equal k k' || not (Sl_term.equal v v'))
+                theta)
+            theta in
+        let intermediate_seq = 
+          ([pre], 
+           cmd, 
+           [Sl_heap.combine 
+              post'
+              (Sl_heap.subst theta'' 
+                (Sl_heap.subst theta
+                  (Sl_heap.subst_tags tps frame)))]) in
+        let frame'' = Sl_heap.subst theta'' frame' in
+        let pre'' = Sl_heap.subst theta' pre' in
+        let intermediate_seq' =
+          ([Sl_heap.combine pre'' frame''], cmd, [Sl_heap.combine post' frame'']) in
+        let target_seq = ([pre''], cmd, [post']) in
+        let () = debug (fun _ -> "Constructing the following framing sequence:\n" ^ (Seq.to_string target_seq) ^ "\n" ^ (Seq.to_string intermediate_seq') ^ "\n" ^ (Seq.to_string intermediate_seq) ^ "\n" ^ (Seq.to_string src_seq)) in
+        Rule.sequence [
+            if Seq.equal src_seq intermediate_seq
+              then Rule.identity
+              else Rule.mk_infrule (ex_intr_rule intermediate_seq) ;
+            if Seq.equal intermediate_seq intermediate_seq'
+              then Rule.identity
+              else Rule.mk_infrule (ex_sp_rule intermediate_seq') ;
+            Rule.mk_infrule (frame_rule frame'' target_seq)
+          ] in
+      (* compute all possible rule applications *)
+      Rule.choice (Blist.map mk_rl ufps)
+    with Not_symheap -> Rule.fail in
+  frame_rl idx prf
 
 let generalise_while_rule =
     let rl seq =
@@ -663,11 +860,28 @@ let setup (defs, procs) =
       simplify ;
       
       Rule.choice [
-        dobackl ;
-        Rule.choice 
-          (Blist.map 
-            (fun c -> Rule.compose (fold c) dobackl) 
-            (Sl_defs.to_list defs)) ;
+        
+        (* If we are able to form a backlink without framing, then it's probably
+           the case that applying the framing tactics first would make applying 
+           the backlink tactic fail ? *)
+        Rule.first [
+          Rule.choice [
+            dobackl ;
+            Rule.choice 
+              (Blist.map 
+                (fun c -> Rule.compose (fold c) dobackl) 
+                (Sl_defs.to_list defs)) ;
+            ] ;
+
+          (* Since this is expensive, only try this for proving while loops.
+             Note that procedure calls have their own in-built framing. *)
+          Rule.conditional
+            (fun (_,cmd,_) -> Cmd.is_while cmd)
+            (Rule.first [
+              Rule.sequence [ infer_frame ; dobackl ] ;
+              Rule.sequence [ (ruf defs) ; infer_frame ; dobackl ]
+            ])
+          ] ;
         
         Rule.first [
           symex_skip_rule ;
@@ -688,7 +902,7 @@ let setup (defs, procs) =
               (Sl_defs.to_list defs)) ;
         ] ;
         
-        generalise_while_rule ;
+        (* generalise_while_rule ; *)
         (* backlink_cut entails; *)
         
         luf defs ;

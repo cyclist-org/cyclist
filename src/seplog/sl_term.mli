@@ -90,9 +90,6 @@ val avoid_theta : Set.t -> Set.t -> substitution
 (** variables that are outside [vars U subvars], respecting exist/univ   *)
 (** quantification. *)
 
-type verifier = unifier_state -> unifier_state option
-(** The type of functions that verify the validity of computed unifiers *) 
-
 type state_check = unifier_state -> bool
 (** The type of functions that check the validity of a whole unifier state *)
 
@@ -105,20 +102,29 @@ val combine_state_checks : state_check list -> state_check
     combines them into a single check function *)
     
 val lift_subst_check : subst_check -> state_check
-(** [lift_subst_check c] takes a substitution pair check function [c] and lifts it
-    to a unifier state check function by applying it to each entry in the state's
-    substitution map *)
+(** [lift_subst_check c] takes a substitution pair check function [c] and lifts 
+    it to a unifier state check function by applying it to each entry in the 
+    state's substitution map *)
     
 val mk_assert_check : state_check -> state_check
-(**  *)
+(** Takes a state check and wraps it in an assert *)
 
-val mk_verifier : state_check -> verifier
-(**  *)
+val mk_verifier : state_check -> continuation
+(** Takes a state checking function and converts it into a continuation which
+    returns None if the check fails *)
 
 val basic_lhs_down_check : subst_check
-val basic_lhs_down_verifier : verifier
+(** When used as [subst_check] in the call [Sl_heap.unify subst_check f f'], 
+    ensures that the generated substitution, when applied to [f], produces a
+    formula which is subsumed by [f'] *)
 
-val avoids_replacing_check : Set.t -> subst_check
+val basic_lhs_down_verifier : continuation
+(** A continutation generated from the [basic_lhs_down_check] substitution 
+    check *)
+
+val avoids_replacing_check : ?inverse:bool -> Set.t -> subst_check
+(** A substiution check which prevents replacements of variables within the
+    given set of terms *)
 
 module FList : 
   sig

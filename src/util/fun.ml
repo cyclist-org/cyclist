@@ -5,3 +5,10 @@ let id x = x
 let uncurry f (x, y) = f x y
 let curry f x y = f (x, y)
 let swap f x y = f y x
+
+let direct inverse = 
+  if not inverse then 
+    id
+  else
+    swap
+  
