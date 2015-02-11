@@ -42,9 +42,9 @@ let () =
   let seq = Sl_seq.of_string !cl_sequent in
   let defs = Sl_defs.of_channel (open_in !defs_path) in
   Sl_rules.setup defs ;
-  if !z3 then
-    Sl_invalid.to_z3 defs seq 
-  else
+  (* if !z3 then                  *)
+  (*   Sl_invalid.to_z3 defs seq  *)
+  (* else *)
     begin
     Stats.reset () ;
     Stats.Gen.call () ;

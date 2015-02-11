@@ -13,3 +13,5 @@ val unify : t Sl_term.unifier
 val norm : Sl_uf.t -> t -> t
 (** Replace all terms with their UF representative. NB this may replace [nil] 
     with a variable. *)
+    
+val record_type : t -> (Sl_term.t * int)

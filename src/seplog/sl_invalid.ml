@@ -110,12 +110,14 @@ let _invalid defs seq =
         free_deqs in
     Blist.fold_left Sl_heap.add_deq pi free_deqs in
   let map_through sigma v =
-    Sl_term.Set.endomap (fun x -> Sl_uf.find x sigma.Sl_heap.eqs) v in
+    Sl_basepair.Allocated.endomap 
+      (fun (x,i) -> (Sl_uf.find x sigma.Sl_heap.eqs, i)) 
+      v in
   let b_move sigma (v,_) (v',pi') =
     Sl_heap.subsumed pi' sigma
     && 
     let (v, v') = Pair.map (map_through sigma) (v, v') in
-    Sl_term.Set.subset v' v in     
+    Sl_basepair.Allocated.subset v' v in     
   let a_partition ((v, pi) as bp) sigma =
     not (Sl_basepair.Set.exists (fun bp' -> b_move sigma bp bp') rbps) in    
   let a_move ((v,pi) as bp) =
@@ -138,25 +140,25 @@ let check =
       Hashtbl.add cache key v ;
       v
 
-let to_z3 defs seq =
-  (* Stats.Invalidity.call () ; *)
-  let (lbps, rbps) = Pair.map (Sl_basepair.pairs_of_form defs) seq in
-  let (lbps, rbps) = Pair.map Sl_basepair.minimise (lbps, rbps) in
-  let lbps = 
-    Sl_basepair.Set.filter
-      (fun bp -> 
-        Sl_basepair.Set.for_all 
-          (fun bp' -> not (Sl_basepair.leq bp' bp)) 
-          rbps)
-      lbps in 
-  let vars = 
-    Sl_basepair.Set.fold
-      (fun bp vs -> Sl_term.Set.union (Sl_basepair.vars bp) vs)
-      (Sl_basepair.Set.union lbps rbps) 
-      (Sl_term.Set.singleton Sl_term.nil) in
-  Sl_term.Set.iter
-    (fun x -> Format.printf "(declare-const %a Int)\n" Sl_term.pp x)
-    vars 
+(* let to_z3 defs seq =                                                  *)
+(*   (* Stats.Invalidity.call () ; *)                                    *)
+(*   let (lbps, rbps) = Pair.map (Sl_basepair.pairs_of_form defs) seq in *)
+(*   let (lbps, rbps) = Pair.map Sl_basepair.minimise (lbps, rbps) in    *)
+(*   let lbps =                                                          *)
+(*     Sl_basepair.Set.filter                                            *)
+(*       (fun bp ->                                                      *)
+(*         Sl_basepair.Set.for_all                                       *)
+(*           (fun bp' -> not (Sl_basepair.leq bp' bp))                   *)
+(*           rbps)                                                       *)
+(*       lbps in                                                         *)
+(*   let vars =                                                          *)
+(*     Sl_basepair.Set.fold                                              *)
+(*       (fun bp vs -> Sl_term.Set.union (Sl_basepair.vars bp) vs)       *)
+(*       (Sl_basepair.Set.union lbps rbps)                               *)
+(*       (Sl_term.Set.singleton Sl_term.nil) in                          *)
+(*   Sl_term.Set.iter                                                    *)
+(*     (fun x -> Format.printf "(declare-const %a Int)\n" Sl_term.pp x)  *)
+(*     vars                                                              *)
        
   (* let trm_list bp =                                                            *)
   (*   Sl_term.Set.to_list (Sl_term.Set.union b_vars (Sl_basepair.vars bp)) in    *)

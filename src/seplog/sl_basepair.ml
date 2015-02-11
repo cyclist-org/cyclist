@@ -5,14 +5,29 @@ open MParser
 
 module SH = Sl_heap
 
+module AllocatedT = PairTypes(Sl_term)(Int.T)  
+module Allocated = 
+  struct
+    include MakeListSet(AllocatedT)
+    
+    let terms s = map_to Sl_term.Set.add Sl_term.Set.empty fst s
+    let vars s = Sl_term.filter_vars (terms s)
+    let endomap_fst f s = endomap (fun (x,i) -> (f x, i)) s
+    
+  end 
+
+
 module BasePair =
 struct
-  include PairTypes(Sl_term.Set)(Sl_heap)
+  include PairTypes(Allocated)(Sl_heap)
   
   let to_string (v, g) =
     symb_lp.str ^
     symb_lb.str ^
-    (Blist.to_string symb_comma.sep Sl_term.to_string (Sl_term.Set.to_list v)) ^
+    (Blist.to_string 
+      symb_comma.sep 
+      AllocatedT.to_string 
+      (Allocated.to_list v)) ^
     symb_rb.str ^ symb_comma.sep ^
     (Sl_heap.to_string g) ^
     symb_rp.str
@@ -21,35 +36,40 @@ struct
     Format.fprintf fmt "@[%s%s%a%s%s%a%s@]"
       symb_lp.str
       symb_lb.str
-      (Blist.pp pp_commasp Sl_term.pp) (Sl_term.Set.to_list v)
+      (Blist.pp pp_commasp AllocatedT.pp) (Allocated.to_list v)
       symb_rb.str 
       symb_comma.sep
       Sl_heap.pp g
       symb_rp.str
   
-  let vars (v, h) =
-    Sl_term.Set.union (Sl_term.filter_vars v) (Sl_heap.vars h)
+  let vars (v, h) = Sl_term.Set.union (Allocated.vars v) (Sl_heap.vars h)
   
   let norm (v, h) =
     let h' = Sl_heap.norm h in 
-    let v' = Sl_term.Set.endomap (fun x -> Sl_uf.find x h'.Sl_heap.eqs) v in
+    let v' = 
+      Allocated.endomap_fst (fun x -> Sl_uf.find x h'.Sl_heap.eqs) v in
     (v', h')    
   
   (* pre: g is consistent *)
   let project (v, g) case =
     let formals = Sl_indrule.formals case in
+    let formals_set = Sl_term.Set.of_list formals in
     let g' = Sl_heap.project g formals in
-    let v' = Sl_term.Set.inter v (Sl_term.Set.of_list formals) in
+    let v' = 
+      Allocated.filter 
+        (fun (x,_) -> Sl_term.Set.mem x formals_set) v in
     norm (v', g')
   
   let subst theta (v, g) =
-    let v' = Sl_term.Set.endomap (fun z -> Sl_term.subst theta z) v in
+    let v' = 
+      Allocated.endomap_fst (fun z -> Sl_term.subst theta z) v in
     let g' = Sl_heap.subst theta g in
     (v', g')
   
   let unfold (v, h) ((_, (_, params)) as ind) (case, (v', g')) =
     (* simultaneously freshen case and (v',g') *)
-    let avoidvars = Sl_term.Set.union v (Sl_heap.vars h) in
+    let avoidvars = 
+      Sl_term.Set.union (Allocated.vars v) (Sl_heap.vars h) in
     let theta = Sl_term.avoid_theta avoidvars (Sl_indrule.vars case) in
     let case = Sl_indrule.subst theta case in
     let (v', g') = subst theta (v', g') in
@@ -59,9 +79,13 @@ struct
     let (v', g') = subst theta (v', g') in
     let h' = SH.del_ind h ind in
     let h' = Sl_heap.star h' g' in
-    let cv = Blist.cartesian_product (Sl_term.Set.to_list v) (Sl_term.Set.to_list v') in
-    let h' = SH.with_deqs h' (Sl_deqs.union h'.SH.deqs (Sl_deqs.of_list cv)) in
-    let v = Sl_term.Set.union v v' in
+    let cv = 
+      Blist.cartesian_product 
+        (Allocated.map_to_list fst v) 
+        (Allocated.map_to_list fst v') in
+    let h' = 
+      SH.with_deqs h' (Sl_deqs.union h'.SH.deqs (Sl_deqs.of_list cv)) in
+    let v = Allocated.union v v' in
     (v, h')
   
   (* assumes case is built with Sl_heap.star so ys are already unequal *)
@@ -69,7 +93,11 @@ struct
     let (h, _) = Sl_indrule.dest case in
     (* let () = assert (Sl_tpreds.cardinal h.inds = Blist.length cbps) in *)
     let ys = 
-      Sl_ptos.map_to Sl_term.Set.add Sl_term.Set.empty fst h.SH.ptos in
+      Sl_ptos.map_to 
+        Allocated.add 
+        Allocated.empty 
+        Sl_pto.record_type 
+        h.SH.ptos in
     let h = SH.with_ptos h Sl_ptos.empty in
     Blist.fold_left2 unfold (ys, h) (Sl_tpreds.to_list h.SH.inds) cbps
   
@@ -77,11 +105,24 @@ struct
     let args = Sl_indrule.formals case in
     let (v, h) = unfold_all case cbps in
     if Sl_heap.inconsistent h then None else
-    let l = Blist.rev_append (Sl_term.Set.to_list (Sl_heap.vars h)) args in
-    let l = Blist.rev_filter
-        (fun u -> Sl_term.Set.exists (fun z -> Sl_heap.equates h u z) v) l in
-    let v = Sl_term.Set.of_list l in
-    Some (project (v, h) case)
+    let allvars =
+      Blist.rev_append (Sl_term.Set.to_list (Sl_heap.vars h)) args in
+    let v' = 
+      Allocated.fold 
+        (fun (x,i) v'' ->
+          let equals = Blist.rev_filter (Sl_heap.equates h x) allvars in
+          let pairs = Blist.rev_map (fun y -> (y,i)) equals in
+          Allocated.union v'' (Allocated.of_list pairs)
+        )
+        v 
+        Allocated.empty in
+    (* let l =                                                                   *)
+    (*   Blist.rev_append (Sl_term.Set.to_list (Sl_heap.vars h)) args in         *)
+    (* let l =                                                                   *)
+    (*   Blist.rev_filter                                                        *)
+    (*     (fun u -> Sl_term.Set.exists (fun z -> Sl_heap.equates h u z) v) l in *)
+    (* let v = Sl_term.Set.of_list l in                                          *)
+    Some (project (v', h) case)
   
   let leq (v,h) (v',h') = 
     Sl_heap.subsumed h h' 
@@ -89,8 +130,9 @@ struct
     let (v,v') = 
       (* use stronger heap to rewrite both variable sets *)
       Pair.map 
-        (Sl_term.Set.endomap (fun x -> Sl_uf.find x h'.Sl_heap.eqs)) (v,v') in
-    Sl_term.Set.subset v v'
+        (Allocated.endomap_fst (fun x -> Sl_uf.find x h'.Sl_heap.eqs)) 
+        (v,v') in
+    Allocated.subset v v'
  
 end
 
