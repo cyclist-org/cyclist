@@ -73,8 +73,7 @@ let partitions trm_list pi =
 (*     Sl_heap.norm (Sl_heap.with_deqs !heap (Sl_deqs.of_list deqs)) in *)
 (*   Enum.map to_heap parts_enum                                        *)
 
-
-let _invalid defs seq =
+let invalidity_witness defs seq = 
   Stats.Invalidity.call () ;
   let (lbps, rbps) = Pair.map (Sl_basepair.pairs_of_form defs) seq in
   let (lbps, rbps) = Pair.map Sl_basepair.minimise (lbps, rbps) in
@@ -125,20 +124,24 @@ let _invalid defs seq =
     Blist.exists 
       (fun sigma -> a_partition bp sigma) 
       (partitions trms (strengthen trms pi)) in
-  let result = Sl_basepair.Set.exists a_move lbps in
-  if result then Stats.Invalidity.reject () else Stats.Invalidity.accept () ;
+  let result = Sl_basepair.Set.find_opt a_move lbps in
+  if Option.is_none result then Stats.Invalidity.reject () else Stats.Invalidity.accept () ;
   result
 
-let check =
-  let cache = Hashtbl.create 997 in
-  fun defs seq ->
-    let key = (defs, seq) in
-    try
-      Hashtbl.find cache key
-    with Not_found ->
-      let v = _invalid defs seq in
-      Hashtbl.add cache key v ;
-      v
+let _invalid defs seq = Option.is_some (invalidity_witness defs seq)
+
+let check = _invalid
+
+(* let check =                         *)
+(*   let cache = Hashtbl.create 997 in *)
+(*   fun defs seq ->                   *)
+(*     let key = (defs, seq) in        *)
+(*     try                             *)
+(*       Hashtbl.find cache key        *)
+(*     with Not_found ->               *)
+(*       let v = _invalid defs seq in  *)
+(*       Hashtbl.add cache key v ;     *)
+(*       v                             *)
 
 (* let to_z3 defs seq =                                                  *)
 (*   (* Stats.Invalidity.call () ; *)                                    *)

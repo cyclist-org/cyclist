@@ -3,6 +3,7 @@ open Lib
 let cl_sequent = ref ""
 let defs_path = ref "examples/sl.defs"
 let z3 = ref false
+let show_proof = ref false
 
 let usage = 
   (
@@ -14,7 +15,7 @@ let usage =
 let timeout = ref 60
 
 let speclist = [
-    (* ("-p", Arg.Set show_proof,": show proof"); *)
+    ("-p", Arg.Set show_proof,": show proof");
     ("-d", Arg.Set do_debug,": print debug messages");
     ("-s", Arg.Set Stats.do_statistics,": print statistics");
     ("-t", Arg.Set_int timeout,
@@ -48,7 +49,7 @@ let () =
     begin
     Stats.reset () ;
     Stats.Gen.call () ;
-    let call () = Sl_invalid.check defs seq in
+    let call () = Sl_invalid.invalidity_witness defs seq in
     let res = 
       if !timeout<>0 then w_timeout call !timeout else Some (call ()) in
     Stats.Gen.end_call () ;
@@ -59,12 +60,14 @@ let () =
         print_endline ("UNKNOWN: " ^ (Sl_seq.to_string seq) ^ " [TIMEOUT]") ; 
         2
       end
-    | Some true ->
+    | Some (Some bp) ->
       begin
-        print_endline ("INVALID: " ^ (Sl_seq.to_string seq)) ; 
+        print_endline ("INVALID: " ^ (Sl_seq.to_string seq)) ;
+        if !show_proof then
+          Format.printf "INVALID witness: %a\n" Sl_basepair.pp bp ;          
         255
       end ;
-    | Some false ->
+    | Some None  ->
       begin 
         print_endline ("UNKNOWN: " ^ (Sl_seq.to_string seq)) ; 
         1
