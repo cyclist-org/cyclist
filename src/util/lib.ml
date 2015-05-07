@@ -18,6 +18,8 @@ let mk_to_string pp v =
   pp Format.str_formatter v ;
   Format.flush_str_formatter ()
 
+let id s = s
+
 let bracket s = "(" ^ s ^ ")"
 let sqbracket s = "[" ^ s ^ "]"
 let latex_bracket = bracket

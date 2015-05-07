@@ -43,9 +43,13 @@ let symb_assign = make_symb ":=" (ltx_math ":=")
 let symb_bang = make_symb "!" Latex.empty
 let symb_caret = make_symb "^" Latex.empty
 (* let symb_underscore = make_symb "_" " " Latex.empty (* FIXME *) *)
-(* let symb_box = make_symb "[]" " \\Box" Latex.empty (* FIXME *) *)
-(* let symb_diamond = make_symb "<>" " \\Diamond " Latex.empty    *)
-(* let symb_circle = make_symb "()" " \\bigcirc " Latex.empty     *)
+let symb_box = make_symb "[]" Latex.empty (* FIXME *)
+let symb_diamond = make_symb "<>" Latex.empty
+let symb_circle = make_symb "()" Latex.empty
+let symb_af = make_symb "AF" Latex.empty
+let symb_ag = make_symb "AG" Latex.empty
+let symb_ef = make_symb "EF" Latex.empty
+let symb_eg = make_symb "EG" Latex.empty
 let symb_fld_sel = make_symb "." (Latex.text ".")
 
 let keyw_emp = mk_keyw "emp"
@@ -62,6 +66,7 @@ let keyw_fields = mk_keyw "fields"
 let keyw_judgement = mk_keyw "judgement"
 let keyw_precondition = mk_keyw "precondition"
 let keyw_postcondition = mk_keyw "postcondition"
+let keyw_property = mk_keyw "property"
 let keyw_proc = mk_keyw "proc"
 let keyw_skip = mk_keyw "skip"
 let keyw_while = mk_keyw "while"
