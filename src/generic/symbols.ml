@@ -42,6 +42,7 @@ let symb_ind_sep = make_symb "|" Latex.empty
 let symb_assign = make_symb ":=" (ltx_math ":=")
 let symb_bang = make_symb "!" Latex.empty
 let symb_caret = make_symb "^" Latex.empty
+let symb_mapsto = make_symb "|->" (ltx_math "\\mapsto")
 (* let symb_underscore = make_symb "_" " " Latex.empty (* FIXME *) *)
 (* let symb_box = make_symb "[]" " \\Box" Latex.empty (* FIXME *) *)
 (* let symb_diamond = make_symb "<>" " \\Diamond " Latex.empty    *)
