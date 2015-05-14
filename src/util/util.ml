@@ -427,25 +427,28 @@ module MakeComplexType(T: BasicType) : MCTsig
     module Pairing = ContaineriseType(PairTypes(T)(T))
   end
 
-module Int = MakeComplexType
-  (struct
+module IntType : BasicType with type t = int =
+  struct
     type t = int
     let compare (i:t) (j:t) = if i<j then -1 else if i>j then +1 else 0
     let equal (i:t) (j:t) = i=j
     let hash (i:t) = Hashtbl.hash i
     let to_string = string_of_int
     let pp = Format.pp_print_int
-  end)
+  end
 
-module Strng = MakeComplexType
-  (struct
+module StringType : BasicType with type t = string =
+  struct
     type t = string
     let compare (i:t) (j:t) = String.compare i j
     let equal (i:t) (j:t) = i=j
     let hash (i:t) = Hashtbl.hash i
     let to_string (i:t) = i
     let pp = Format.pp_print_string
-  end)
+  end
+  
+module Int = MakeComplexType(IntType)
+module Strng = MakeComplexType(StringType)
 
 module Tags =
   struct

@@ -31,12 +31,19 @@ module ModelChecker =
     module type S = 
       sig
         
-        type value
-        type location
+        module Location : BasicType
+        module Scalar : BasicType
+        module Value : 
+          sig
+            include BasicType
+            val nil_val : t
+            val mk_loc_val : Location.t -> t
+            val mk_scalar_val : Scalar.t -> t
+          end
         
         module Heap :
           sig
-            module Map : OrderedMap with type key = location
+            module Map : OrderedMap with type key = Location.t
 
             (* include BasicType *)
 
@@ -55,8 +62,8 @@ module ModelChecker =
                     val of_string : string -> t
                   end
                 module Make (T : sig 
-                    val parse_scalar : (value, 'a) MParser.t 
-                    val parse_location : (location, 'a) MParser.t 
+                    val parse_scalar : (Value.t, 'a) MParser.t 
+                    val parse_location : (Location.t, 'a) MParser.t 
                   end) : S
               end
             
@@ -82,7 +89,7 @@ module ModelChecker =
                     val parse : (t, 'a) MParser.t
                     val of_string : string -> t
                   end
-                module Make (T : sig val parse_scalar : (value, 'a) MParser.t end) : S
+                module Make (T : sig val parse_scalar : (Value.t, 'a) MParser.t end) : S
               end
             
           end
@@ -95,6 +102,10 @@ module ModelChecker =
         (*     val phi : t -> t           *)
         (*   end                          *)
         
+        val mk_model_parser : 
+          (((Stack.t, 'a) MParser.t) * ((Heap.t, 'a) MParser.t)) -> (Stack.t * Heap.t, 'a) MParser.t
+        val model_of_string : (Stack.t * Heap.t, unit) MParser.t -> string -> Stack.t * Heap.t 
+        
       end
       
     module type ValueSig =
@@ -103,19 +114,21 @@ module ModelChecker =
         module ScalarValue : BasicType
       end
   
-    module Make (Sig : ValueSig) : S =
+    module Make (Sig : ValueSig) : S 
+        with type Location.t = Sig.HeapLocation.t
+        with type Scalar.t = Sig.ScalarValue.t
+        =
       struct
         
-        type value =
-          | Nil
-          | Location of Sig.HeapLocation.t
-          | Scalar of Sig.ScalarValue.t
-
-        type location = Sig.HeapLocation.t
+        module Location = Sig.HeapLocation
+        module Scalar = Sig.ScalarValue
         
-        module Value : BasicType with type t = value =
+        module Value =
           struct
-            type t = value
+            type t =
+              | Nil
+              | Location of Location.t
+              | Scalar of Scalar.t
             let compare v v' = 
               match (v, v') with
               | (Nil, Nil) -> 0
@@ -136,11 +149,14 @@ module ModelChecker =
               | Location(l) -> Sig.HeapLocation.pp fmt l
               | Scalar(v) -> Sig.ScalarValue.pp fmt v
             let to_string v = mk_to_string pp v
+            let nil_val = Nil
+            let mk_loc_val l = Location(l)
+            let mk_scalar_val v = Scalar(v)
           end
           
         module Heap = 
           struct 
-            module Map = MakeMap(Sig.HeapLocation)
+            module Map = MakeMap(Location)
             module ValList = MakeFList(Value)
             
             type t = (ValList.t) Map.t
@@ -166,8 +182,8 @@ module ModelChecker =
                     val of_string : string -> t
                   end
                 module Make (T : sig 
-                    val parse_scalar : (value, 'a) MParser.t 
-                    val parse_location : (location, 'a) MParser.t 
+                    val parse_scalar : (Value.t, 'a) MParser.t 
+                    val parse_location : (Location.t, 'a) MParser.t 
                   end) : S =
                   struct
                     
@@ -191,7 +207,7 @@ module ModelChecker =
           struct
             module Map = MakeMap(Var)
 
-            type t = value Map.t
+            type t = Value.t Map.t
             
             let compare s s' = Map.compare Value.compare s s'
             let equal s s' = Map.equal Value.equal s s'
@@ -213,7 +229,7 @@ module ModelChecker =
                     val of_string : string -> t
                   end
                 module Make (T : sig 
-                    val parse_scalar : (value, 'a) MParser.t 
+                    val parse_scalar : (Value.t, 'a) MParser.t 
                   end) : S =
                   struct
                     
@@ -231,10 +247,45 @@ module ModelChecker =
               end
               
           end
+          
+      let mk_model_parser (parse_stack, parse_heap) st = 
+        (Tokens.parens (
+          parse_stack >>= (fun s ->
+          (parse_symb symb_comma) >>
+          parse_heap |>> (fun h -> (s, h))))) st
+            
+      let model_of_string parse s = handle_reply (MParser.parse_string parse s ()) 
         
       end
             
   end
+  
+open ModelChecker
+
+module IntSig : ValueSig 
+  with type HeapLocation.t = IntType.t
+  with type ScalarValue.t = IntType.t
+    =
+  struct
+    module HeapLocation = IntType
+    module ScalarValue = IntType
+  end
+  
+module IntSigModelChecker = Make(IntSig)
+open IntSigModelChecker
+  
+module IntSigParser =
+  struct
+    let parse_location = Tokens.decimal
+    let parse_scalar st = 
+      (Tokens.decimal |>> (fun v ->
+        if v == 0 then Value.nil_val else (Value.mk_loc_val v))) st
+  end
+  
+module StackParser = Stack.Parser.Make(IntSigParser)
+module HeapParser = Heap.Parser.Make(IntSigParser)
+
+let model_parser st = (mk_model_parser (StackParser.parse, HeapParser.parse)) st
 
 let defs_path = ref "examples/sl.defs"
 let str_model = ref ""
@@ -285,5 +336,8 @@ let () =
   let sh = Sl_heap.of_string !str_symheap in
   let all_defs = Sl_defs.of_channel (open_in !defs_path) in
   let defs = relevant_defs all_defs sh in
+  let (stack, heap) = model_of_string model_parser !str_model in
   print_endline(Sl_defs.to_string defs) ;
+  print_endline(Stack.to_string stack) ;
+  print_endline(Heap.to_string heap) ;
 
