@@ -11,6 +11,13 @@ module type BasicType =
     val to_string : t -> string
     val pp : Format.formatter -> t -> unit
   end
+  
+module type NaturalType =
+  sig
+    include BasicType
+    val zero : t
+    val succ : t -> t
+  end
 
 module type OrderedContainer =
   sig
@@ -31,6 +38,7 @@ module type OrderedContainer =
     val fixpoint : (t -> t) -> t -> t
     val del_first : (elt -> bool) -> t -> t
     val all_members_of : t -> t -> bool
+    val disjoint : t -> t -> bool
   end
 
 module type OrderedMap =
@@ -193,6 +201,14 @@ module MakeListMultiset(T: BasicType) =
 			xxs @ (Blist.map (fun y -> add x y) xxs)
       
     let all_members_of xs ys = for_all (Fun.swap mem ys) xs
+    
+    let rec disjoint xs ys = match (xs, ys) with
+      | ([], ys) -> true
+      | (xs, []) -> true
+      | (x::xs, y::ys) -> match T.compare x y with
+        | 0 -> false
+        | n when n < 0 -> disjoint xs (y::ys) 
+        | _ -> disjoint (x::xs) ys
 
 	end
 
@@ -298,6 +314,18 @@ module MakeTreeSet(T: BasicType) : OrderedContainer with type elt = T.t =
       | Some x -> remove x s
 
     let all_members_of xs ys = for_all (Fun.swap mem ys) xs
+    
+    let disjoint xs ys =
+      let xs = to_list xs in
+      let ys = to_list ys in
+      let rec disjoint xs ys = match (xs, ys) with
+        | ([], ys) -> true
+        | (xs, []) -> true
+        | (x::xs, y::ys) -> match T.compare x y with
+          | 0 -> false
+          | n when n < 0 -> disjoint xs (y::ys) 
+          | _ -> disjoint (x::xs) ys in
+      disjoint xs ys
 
   end
 
@@ -435,6 +463,13 @@ module IntType : BasicType with type t = int =
     let hash (i:t) = Hashtbl.hash i
     let to_string = string_of_int
     let pp = Format.pp_print_int
+  end
+  
+module NatType : NaturalType with type t = int =
+  struct
+    include IntType
+    let zero = 0
+    let succ i = i + 1
   end
 
 module StringType : BasicType with type t = string =

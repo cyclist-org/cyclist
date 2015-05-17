@@ -2,6 +2,7 @@ include Util.BasicType
 
 module Set : Util.OrderedContainer with type elt = t
 module MSet : Util.OrderedContainer with type elt = t
+module Map : Util.OrderedMap with type key = t
 
 val mk : string -> t
 val parse : (t, 'a) MParser.parser
