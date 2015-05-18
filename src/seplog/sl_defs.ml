@@ -64,6 +64,10 @@ module Defs =
       let rules = Blist.map (fun h -> Sl_indrule.mk h pred) f in
       let def = Sl_preddef.mk (rules, predsym) in
       def::defs  
+      
+    let rule_fold f v defs =
+      let f' v' def = Blist.foldl f v' (Sl_preddef.rules def) in
+      Blist.foldl f' v defs  
 
   end
 include Defs
