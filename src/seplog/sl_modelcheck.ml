@@ -408,7 +408,7 @@ module ModelChecker =
             module BaseSetPair = PairTypes(InterpretantBase.Set)(InterpretantBase.Set)
             
             module SymHeapHash = Hashtbl.Make(Sl_heap)
-            module SymHeapHashPrinter = MakeHashtablePrinter(SymHeapHash)
+            module SymHeapHashPrinter = HashtablePrinter.Make(SymHeapHash)
             module ModelBase = MakeComplexType(PairTypes(Stack)(Location.Set))
             
             module T =
