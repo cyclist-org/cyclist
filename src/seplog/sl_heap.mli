@@ -79,6 +79,7 @@ val mk_deq : Sl_tpair.t -> t
 val mk_ind : Sl_tpred.t -> t
 
 val mk : Sl_uf.t -> Sl_deqs.t -> Sl_ptos.t -> Sl_tpreds.t -> t
+val dest : t -> (Sl_uf.t * Sl_deqs.t * Sl_ptos.t * Sl_tpreds.t)
 
 val combine : t -> t -> t
 

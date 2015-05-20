@@ -132,6 +132,8 @@ let mk eqs deqs ptos inds =
     Sl_tpreds.cardinal inds) ;
   { eqs; deqs; ptos; inds }
   
+let dest h = (h.eqs, h.deqs, h.ptos, h.inds)
+  
 let empty = mk Sl_uf.empty Sl_deqs.empty Sl_ptos.empty Sl_tpreds.empty 
 
 let is_empty h = equal h empty

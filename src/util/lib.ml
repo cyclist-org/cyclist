@@ -1,6 +1,24 @@
 let do_debug = ref false
 let debug f = if !do_debug then print_endline (f ()) else ()
 
+module MakeHashtablePrinter(H : Hashtbl.S) =
+  struct
+    let to_string key_tos val_tos ht =
+      let str_buffer = Buffer.create 0 in
+      let entry_tos k v = 
+        Buffer.add_char str_buffer '(' ;
+        Buffer.add_string str_buffer (key_tos k) ;
+        Buffer.add_string str_buffer " -> " ;
+        Buffer.add_string str_buffer (val_tos v) ;
+        Buffer.add_string str_buffer ") " in
+      let () = Buffer.add_string str_buffer "[ " in 
+      let () = H.iter entry_tos ht in
+      let () = Buffer.add_char str_buffer ']' in 
+      let contents = Buffer.contents str_buffer in
+      let () = Buffer.clear str_buffer in
+      contents
+  end
+
 let pp_comma fmt () =
   Format.pp_print_char fmt ','
 

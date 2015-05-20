@@ -67,7 +67,11 @@ module Defs =
       
     let rule_fold f v defs =
       let f' v' def = Blist.foldl f v' (Sl_preddef.rules def) in
-      Blist.foldl f' v defs  
+      Blist.foldl f' v defs
+      
+    let rule_iter f defs =
+      let f' def = Blist.iter f (Sl_preddef.rules def) in
+      Blist.iter f' defs
 
   end
 include Defs

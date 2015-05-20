@@ -32,7 +32,7 @@ module Var :
     include T
     include ContaineriseType(T)
     exception Not_variable
-    let of_term t = if (Sl_term.is_univ_var t) then t else raise Not_variable
+    let of_term t = if (Sl_term.is_var t) then t else raise Not_variable
     let parse st = (Sl_term.parse |>> (fun t -> of_term t)) st
   end
   
@@ -71,7 +71,7 @@ module ModelChecker =
           sig
             
             include BasicType
-
+            
             module Parser :
               sig                
                 module type S = 
@@ -256,6 +256,104 @@ module ModelChecker =
               let bindings = Var.Map.bindings s in
               let vals = List.map (fun (_, v) -> v) bindings in
               Value.Set.of_list vals
+              
+            let empty : t = Var.Map.empty
+            
+            let of_term_bindings bindings =
+              let bindings = List.filter
+                (fun (t, v) -> not ((Sl_term.is_nil t) && (Value.equal v Value.nil)))
+                bindings in
+              Option.map 
+                Var.Map.of_list 
+                (Option.pred 
+                  (List.for_all (fun (t,_) -> Sl_term.is_var t)) 
+                  bindings)
+            
+            let consistent s s' =
+              let clashes x v = 
+                Var.Map.mem x s' && not (Value.equal v (Var.Map.find x s')) in
+              let clash_map = Var.Map.filter clashes s in
+              Var.Map.is_empty clash_map
+            
+            let merge s s' = 
+              let merge_f x v v' = match (v, v') with
+                | (None, None) -> None
+                | (None, v) -> v
+                | (v, None) -> v
+                | (Some(v), Some(v')) ->
+                    if Value.equal v v' then Some(v)
+                    else raise (invalid_arg ("Stacks are not consistent in _
+                      the value of " ^ (Var.to_string x) ^ "!")) in
+              Var.Map.merge merge_f s s'
+            
+            let satisfies (eqs, deqs) s = 
+              let () = debug (fun _ -> "checking stack " ^ (to_string s)) in
+              List.for_all
+                (fun (t, t') -> 
+                  let b =
+                  (Sl_term.is_nil t && Sl_term.is_nil t') ||
+                  (Sl_term.is_var t && not (Var.Map.mem t s)) ||
+                  (Sl_term.is_var t' && not (Var.Map.mem t' s)) ||
+                  (Sl_term.is_nil t && 
+                    Value.equal Value.nil (Var.Map.find t' s)) ||
+                  (Sl_term.is_nil t' &&
+                    Value.equal Value.nil (Var.Map.find t s)) ||
+                  (Value.equal (Var.Map.find t s) (Var.Map.find t' s)) in
+                  let () = debug (fun _ ->
+                    "does " ^ 
+                    (if b then "" else "not ") ^ "satisfy equality " ^ 
+                    (Sl_tpair.to_string (t, t'))) in
+                  b)
+                (Sl_uf.bindings eqs)
+                  &&
+              Sl_deqs.for_all
+                (fun (t, t') -> 
+                  let b =
+                  (Sl_term.is_var t && not (Var.Map.mem t s)) ||
+                  (Sl_term.is_var t' && not (Var.Map.mem t' s)) ||
+                  (Sl_term.is_nil t && (Sl_term.is_var t') && 
+                    not (Value.equal Value.nil (Var.Map.find t' s))) ||
+                  (Sl_term.is_var t && (Sl_term.is_nil t') && 
+                    not (Value.equal Value.nil (Var.Map.find t s))) ||
+                  (Sl_term.is_var t && (Sl_term.is_var t') &&
+                    not (Value.equal (Var.Map.find t s) (Var.Map.find t' s))) in
+                  let () = debug (fun _ ->
+                    "does " ^ 
+                    (if b then "" else "not ") ^ "satisfy disequality " ^ 
+                    (Sl_tpair.to_string (t, t'))) in
+                  b)
+                (deqs)                  
+            
+            (* precondition:  satisfies (eqs, deqs) s            *)
+            (* precondition:  satisfies (eqs, deqs) s'           *)
+            (* precondition:  consistent s s'                    *)
+            (* postcondition: satisfies (eqs, deqs) (merge s s') *)
+            let cross_satisfies (eqs, deqs) s s' = 
+              List.for_all
+                (fun (t, t') ->
+                  Sl_term.is_nil t || Sl_term.is_nil t' ||
+                  ((not (Var.Map.mem t s)) && not (Var.Map.mem t s')) ||
+                  ((not (Var.Map.mem t' s)) && not (Var.Map.mem t' s')) ||
+                  ((Var.Map.mem t s) && (Var.Map.mem t s')) ||
+                  ((Var.Map.mem t' s) && (Var.Map.mem t' s')) ||
+                  ((Var.Map.mem t s) && 
+                    (Value.equal (Var.Map.find t s) (Var.Map.find t' s'))) ||
+                  ((Var.Map.mem t s') && 
+                    (Value.equal (Var.Map.find t s') (Var.Map.find t' s))))
+                (Sl_uf.bindings eqs)
+                  &&
+              Sl_deqs.for_all
+                (fun (t, t') ->
+                  Sl_term.is_nil t || Sl_term.is_nil t' ||
+                  ((not (Var.Map.mem t s)) && not (Var.Map.mem t s')) ||
+                  ((not (Var.Map.mem t' s)) && not (Var.Map.mem t' s')) ||
+                  ((Var.Map.mem t s) && (Var.Map.mem t s')) ||
+                  ((Var.Map.mem t' s) && (Var.Map.mem t' s')) ||
+                  ((Var.Map.mem t s) && 
+                    not (Value.equal (Var.Map.find t s) (Var.Map.find t' s'))) ||
+                  ((Var.Map.mem t s') && 
+                    not (Value.equal (Var.Map.find t s') (Var.Map.find t' s))))
+                (deqs)
             
             module Parser =
               struct
@@ -309,6 +407,10 @@ module ModelChecker =
             module InterpretantBase = MakeComplexType(PairTypes(Value.FList)(Location.Set))
             module BaseSetPair = PairTypes(InterpretantBase.Set)(InterpretantBase.Set)
             
+            module SymHeapHash = Hashtbl.Make(Sl_heap)
+            module SymHeapHashPrinter = MakeHashtablePrinter(SymHeapHash)
+            module ModelBase = MakeComplexType(PairTypes(Stack)(Location.Set))
+            
             module T =
               struct
                 type t = BaseSetPair.t Sl_predsym.Map.t
@@ -356,18 +458,96 @@ module ModelChecker =
                   add (n-1) v' vs' in
               add n (Value.Set.max_elt vs) vs
               
-            let mk_ptos_base h =
-              let f = fun loc cell ptos ->
-                let cell_size = List.length cell in
-                let base =
-                  if Int.Map.mem cell_size ptos then
-                    Int.Map.find cell_size ptos
-                  else InterpretantBase.Set.empty in
-                let pto = 
-                  ((Value.mk_loc_val loc)::cell, Location.Set.singleton loc) in
-                let base = InterpretantBase.Set.add pto base in
-                Int.Map.add cell_size base ptos in
-              Location.Map.fold f h Int.Map.empty
+            (** 
+              This function creates a hashtable which stores a set of model bases      
+              for each inductive rule in the definition set that is both consistent
+              and contains some number (> 0) of points-to formula atoms. These
+              models are the valid interpretations of the entire set of points-to
+              atoms in each inductive rule body. The hastable is keyed on a symbolic
+              heap formula.
+                i.e. We abstract the points-to set for each rule and compute its 
+              interpretation only once before starting the fixpoint computation, 
+              and make it quickly accessible using a hash table.
+              
+              Notes:
+               1. [all_ptos_itpts] is a map containing all the interpretant bases
+                  of the singleton subheaps of [h] keyed on size of the heap cell 
+                  being pointed to. This allows easy identification of only those 
+                  subheaps relevant to any given points-to formula atom.
+               2. We calculate more or less the precise size we will need for
+                  the hashtable in [num_buckets]; this is done by counting the
+                  number of inductive rule bodies that are both consistent and
+                  have a greater than zero number of points-to formula atoms. 
+                    Note that this is, in practice, a precise bound since it is
+                  unlikely that there will be exactly duplicated inductive rule
+                  bodies.
+             **)
+            let mk_ptos_base defs h =
+              let all_ptos_itpts =
+                let f = fun loc cell ptos ->
+                  let cell_size = List.length cell in
+                  let base =
+                    if Int.Map.mem cell_size ptos then
+                      Int.Map.find cell_size ptos
+                    else InterpretantBase.Set.empty in
+                  let pto = 
+                    ((Value.mk_loc_val loc)::cell, Location.Set.singleton loc) in
+                  let base = InterpretantBase.Set.add pto base in
+                  Int.Map.add cell_size base ptos in
+                Location.Map.fold f h Int.Map.empty in
+              let () = debug (fun _ -> Int.Map.to_string InterpretantBase.Set.to_string all_ptos_itpts) in
+              let num_buckets = 
+                let test_and_incr n rl =
+                  let (body, _) = Sl_indrule.dest rl in 
+                  let inc = 
+                    if (Sl_heap.inconsistent body) then 0
+                    else let (_,_, ptos, _) = Sl_heap.dest body in 
+                      min 1 (Sl_ptos.cardinal ptos) in
+                  n + inc in
+                Sl_defs.rule_fold test_and_incr 0 defs in
+              let base = SymHeapHash.create num_buckets in 
+              let calc_abstractions rl =
+                let (body, _) = Sl_indrule.dest rl in
+                let (eqs, deqs, ptos, _) = Sl_heap.dest body in 
+                let constraints = (eqs, deqs) in
+                if (not (Sl_heap.inconsistent body)) && 
+                   (Sl_ptos.cardinal ptos > 0) then
+                begin
+                  let itpts =
+                    let gen_itpts (t, ts) itpts =
+                      let pto_models =
+                        let pto_itpts = 
+                          let cell_size = List.length ts in
+                          if Int.Map.mem cell_size all_ptos_itpts then
+                            Int.Map.find cell_size all_ptos_itpts
+                          else InterpretantBase.Set.empty in
+                        let add_pto_model (vs, ls) models =
+                          match (Stack.of_term_bindings (List.combine (t::ts) vs)) with
+                          | None -> models
+                          | Some(stack) ->
+                              if Stack.satisfies constraints stack then
+                                ModelBase.Set.add (stack, ls) models
+                              else models in
+                        InterpretantBase.Set.fold add_pto_model pto_itpts ModelBase.Set.empty in
+                      let add_pto_models (s, ls) itpts =
+                        let test_and_merge (s', l) itpts =
+                          if (Location.Set.disjoint ls l) && 
+                             (Stack.consistent s s') &&
+                             (Stack.cross_satisfies constraints s s') then
+                            let new_mdl =
+                              let new_stack = Stack.merge s s' in
+                              let new_heap_spt = Location.Set.union ls l in 
+                              (new_stack, new_heap_spt) in
+                            ModelBase.Set.add new_mdl itpts
+                          else itpts in
+                        ModelBase.Set.fold test_and_merge pto_models itpts in
+                      ModelBase.Set.fold add_pto_models itpts ModelBase.Set.empty in
+                    let start = ModelBase.Set.singleton (Stack.empty, Location.Set.empty) in
+                    Sl_ptos.fold gen_itpts ptos start in
+                  SymHeapHash.add base body itpts 
+                end in
+              let () = Sl_defs.rule_iter calc_abstractions defs in
+              base
               
             let mk_generator (defs, (vs, h)) =
               let valset = Value.Set.union
@@ -380,9 +560,9 @@ module ModelChecker =
                   Sl_defs.rule_fold update_max 0 defs in
                 add_spares max_vars_of_defs valset in
               let valset = Value.Set.add Value.nil valset in
-              let ptos_base = mk_ptos_base h in
+              let ptos_base = mk_ptos_base defs h in
               let () = debug (fun _ -> Value.Set.to_string valset) in
-              let () = debug (fun _ -> Int.Map.to_string InterpretantBase.Set.to_string ptos_base) in
+              let () = debug (fun _ -> SymHeapHashPrinter.to_string Sl_heap.to_string ModelBase.Set.to_string ptos_base) in
               let generator itp = 
                 (* For each rule in the definition set, generate a new interpretation *)
                 (* containing the fresh interpretants; then combine with the old interpretation *)
@@ -412,7 +592,8 @@ module ModelChecker =
               
             let mk (defs, (vs, h)) =
               let generator = mk_generator (defs, (vs, h)) in
-              let base = fixpoint generator (init_empty defs (empty_base, empty_base)) in
+              let start_itp = init_empty defs (empty_base, empty_base) in
+              let base = fixpoint generator start_itp in
               decorate h base
             
           end

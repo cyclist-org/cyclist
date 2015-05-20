@@ -15,6 +15,7 @@ val get_def : Sl_predsym.t -> t -> Sl_indrule.t list
 val fixpoint: (t -> t) -> t -> t
 
 val rule_fold : ('a -> Sl_indrule.t -> 'a) -> 'a -> t -> 'a 
+val rule_iter : (Sl_indrule.t -> unit) -> t -> unit
 
 val parse : (t, 'a) MParser.t
 val of_channel : in_channel -> t
