@@ -12,3 +12,6 @@ let direct inverse =
   else
     swap
   
+let rec iter f n x = match n with
+  | n when n <= 0 -> x
+  | n -> iter f (n-1) (f x) 

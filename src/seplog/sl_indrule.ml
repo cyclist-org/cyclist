@@ -79,6 +79,7 @@ let dest c = c
 let predsym (_, pred) = Sl_pred.predsym pred
 let arity (_, pred) = Sl_pred.arity pred
 let formals (_, pred) = Sl_pred.args pred
+let body (h, _) = h
 
 let subst theta (f, (ident, args)) =
   let f = Sl_heap.subst theta f in
