@@ -587,11 +587,14 @@ module ModelChecker =
                 let unmapped_univs = Sl_term.Set.filter
                   (fun x -> (Sl_term.is_univ_var x) && not (Var.Map.mem x s))
                   (Sl_term.Set.union (Sl_uf.vars eqs) (Sl_deqs.vars deqs)) in
-                let good_stacks = Option.list_get 
-                  (List.map |> (valid_extns (eqs, deqs) vs unmapped_univs s)) in
-                let new_mdls = ModelBase.Set.of_list
-                  (List.map (fun stk -> (stk, ls)) good_stacks) in
-                ModelBase.Set.union new_mdls acc in
+                if Sl_term.Set.is_empty unmapped_univs then
+                  ModelBase.Set.add (s, ls) acc
+                else
+                  let good_stacks = Option.list_get 
+                    (List.map |> (valid_extns (eqs, deqs) vs unmapped_univs s)) in
+                  let new_mdls = ModelBase.Set.of_list
+                    (List.map (fun stk -> (stk, ls)) good_stacks) in
+                  ModelBase.Set.union new_mdls acc in
               ModelBase.Set.fold acc_saturated_models mdls ModelBase.Set.empty
               
             (**
@@ -605,6 +608,7 @@ module ModelChecker =
               let unmapped_exs = Sl_term.Set.filter
                 (fun x -> (Sl_term.is_exist_var x) && not (Var.Map.mem x s))
                 (Sl_term.Set.union (Sl_uf.vars eqs) (Sl_deqs.vars deqs)) in
+              (Sl_term.Set.is_empty unmapped_exs) ||
               Option.is_some 
                 (List.find_some |> (valid_extns (eqs, deqs) vs unmapped_exs s))
               
@@ -694,6 +698,7 @@ module ModelChecker =
               let () = debug (fun _ -> Value.Set.to_string valset) in
               let () = debug (fun _ -> SymHeapHashPrinter.to_string Sl_heap.to_string ModelBase.Set.to_string ptos_base) in
               let generator itp = 
+                let () = debug (fun _ -> "Beginning next fixpoint interation") in 
                 (* The function that generates new interpretants for a given rule *)
                 let rule_gen itp_acc rl = 
                   let predsym = Sl_indrule.predsym rl in
@@ -705,14 +710,34 @@ module ModelChecker =
                     if (Sl_heap.inconsistent body) || (
                        (Sl_tpreds.is_empty inds) && 
                          let (ancestors, parents) = Sl_predsym.Map.find predsym itp in
-                         not (InterpretantBase.Set.is_empty ancestors) ||
+                         (not (InterpretantBase.Set.is_empty ancestors)) ||
                          not (InterpretantBase.Set.is_empty parents)) then
+                      let () = debug (fun _ -> "Skipping over rule " ^ (Sl_indrule.to_string rl)) in
                       InterpretantBase.Set.empty
                     else
+                      let () = debug (fun _ -> "Generating new interpretants for rule: " ^ (Sl_indrule.to_string rl)) in
                       let ptos_models =
                         if Sl_ptos.is_empty ptos then itp_emp
                         else SymHeapHash.find ptos_base body in
-                      let full_models = 
+                      let () = debug (fun _ -> "Found the following interpretation for points-tos: " ^ 
+                        (ModelBase.Set.to_string ptos_models)) in
+                      let saturate mdls =
+                        let () = debug (fun _ -> "Starting universal variable saturation") in
+                        let mdls = 
+                          saturate_univs constraints valset mdls in
+                        let () = debug (fun _ -> "Candidate models after universal variable saturation: " ^ 
+                          (ModelBase.Set.to_string mdls)) in
+                        let () = debug (fun _ -> "Starting existential variable saturation") in
+                        let mdls = ModelBase.Set.filter
+                          (fun (s, _) -> exs_satisfiable constraints valset s)
+                          mdls in
+                        let () = debug (fun _ -> "Generated models after filtering for existential saturation: " ^ 
+                          (ModelBase.Set.to_string mdls)) in
+                        mdls in
+                      let full_models =
+                        if Sl_tpreds.is_empty inds then
+                          saturate ptos_models
+                        else 
                         let get_mdls p ms gen_ancestors = 
                           let p_sym = Sl_tpred.predsym p in
                           let p_args = Sl_tpred.args p in
@@ -734,25 +759,36 @@ module ModelChecker =
                             ModelBase.Set.union
                             (get_mdls p ms flag)
                             ModelBase.Set.empty in
-                          let candidates = 
-                            saturate_univs constraints valset candidates in
-                          ModelBase.Set.filter
-                            (fun (s, _) -> exs_satisfiable constraints valset s)
-                            candidates in
+                          let () = debug (fun _ -> "Generated the following candidate models: " ^ 
+                            (ModelBase.Set.to_string candidates)) in
+                          saturate candidates in
                         let join = List.fold_left ModelBase.Set.union ModelBase.Set.empty in 
                         let acc = (ptos_models, false) in
                         Sl_tpreds.weave split tie join inds acc in
-                      ModelBase.Set.map_to
+                      let itpts = ModelBase.Set.map_to
                         InterpretantBase.Set.add
                         empty_base
                         (fun (s, ls) ->
                           let vs = List.map (fun x -> Var.Map.find x s) params in
                           (vs, ls))
                         full_models in
-                  let itp_acc = Sl_predsym.Map.add predsym new_itpts itp_acc in
+                      let () = debug (fun _ -> "Generated the following interpretants: " ^
+                        (InterpretantBase.Set.to_string itpts)) in
+                      itpts in
+                  let itp_acc = 
+                    if not (Sl_predsym.Map.mem predsym itp_acc) then 
+                      Sl_predsym.Map.add predsym new_itpts itp_acc
+                    else
+                      let prev_itpts = Sl_predsym.Map.find predsym itp_acc in
+                      Sl_predsym.Map.add predsym 
+                        (InterpretantBase.Set.union prev_itpts new_itpts) itp_acc in
+                  let () = debug (fun _ -> "New interpretation after adding new interpretants: " ^
+                    (Sl_predsym.Map.to_string InterpretantBase.Set.to_string itp_acc)) in
                   itp_acc in
                 (* Generate the new interpretants for each rule *)
                 let new_itp = Sl_defs.rule_fold rule_gen Sl_predsym.Map.empty defs in
+                let () = debug (fun _ -> "New interpretants after iteration: " ^ 
+                  (Sl_predsym.Map.to_string InterpretantBase.Set.to_string new_itp)) in
                 (* Add the new interpretants to the old ones *)
                 try
                   let combined_mapping = List.map2
@@ -768,7 +804,10 @@ module ModelChecker =
                         )
                       (Sl_predsym.Map.bindings itp)
                       (Sl_predsym.Map.bindings new_itp) in
-                    Sl_predsym.Map.of_list combined_mapping
+                    let new_itp = Sl_predsym.Map.of_list combined_mapping in
+                    let () = debug (fun _ -> "result of iteration: " ^ 
+                      (Sl_predsym.Map.to_string BaseSetPair.to_string new_itp)) in
+                    new_itp
                 with Invalid_argument(s) -> 
                   failwith (
                     "Something wrong: interpretations map different numbers of predicates!\n" 
@@ -907,6 +946,7 @@ let () =
   if !str_model="" then die "-M must be specified." ;
   if !str_symheap="" then die "-F must be specified." ;
   let sh = Sl_heap.of_string !str_symheap in
+  (* TODO: Need to check that all predicate instances in sh match the arity in defs *)
   let () = setup_defs (Sl_defs.of_channel (open_in !defs_path)) in
   let model = model_of_string model_parser !str_model in
   begin
