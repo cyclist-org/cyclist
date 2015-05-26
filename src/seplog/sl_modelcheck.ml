@@ -405,7 +405,7 @@ module ModelChecker =
           end
             =
           struct
-
+            
             module InterpretantBase = MakeComplexType(PairTypes(Value.FList)(Location.Set))
             module BaseSetPair = PairTypes(InterpretantBase.Set)(InterpretantBase.Set)
             
@@ -465,7 +465,10 @@ module ModelChecker =
                   let v' = Value.succ v in
                   let vs' = Value.Set.add v' vs in
                   add (n-1) v' vs' in
-              add n (Value.Set.max_elt vs) vs
+              let max_elt =
+                if Value.Set.is_empty vs then Value.zero
+                else Value.Set.max_elt vs in
+              add n max_elt vs
               
             (**
               Given a list of terms [ts] which are the formal parameters of
