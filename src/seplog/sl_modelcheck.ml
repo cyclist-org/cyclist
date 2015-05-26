@@ -406,12 +406,52 @@ module ModelChecker =
             =
           struct
             
-            module InterpretantBase = MakeComplexType(PairTypes(Value.FList)(Location.Set))
+            module SetBase =
+              struct
+                include Location.Set                
+                let empty = Location.Set.empty
+                let inj h h' =
+                  if not
+                       (Location.Map.for_all 
+                         (fun k _ -> Location.Map.mem k h) h') then
+                    invalid_arg ("Not a subheap!") 
+                  else
+                    Location.Map.fold
+                      (fun l _ ls -> Location.Set.add l ls)
+                      h' empty
+                let proj h x =
+                  if not 
+                       (Location.Set.for_all 
+                         (fun l -> Location.Map.mem l h) x) then
+                    invalid_arg ("Missing locations!")
+                  else
+                    Location.Map.filter (fun k _ -> Location.Set.mem k x) h
+                let disjoint = Location.Set.disjoint
+                let union = Location.Set.union
+              end
+              
+            module BitvBase =
+              struct
+                (* TODO: Make a HeapBase with bit vector as underlying implementation *)
+              end
+            
+            module HeapBase :
+              sig
+                include BasicType
+                val empty : t
+                val inj : Heap.t -> Heap.t -> t
+                val proj : Heap.t -> t -> Heap.t
+                val disjoint : t -> t -> bool
+                val union : t -> t -> t
+              end
+                = SetBase
+
+            module InterpretantBase = MakeComplexType(PairTypes(Value.FList)(HeapBase))
             module BaseSetPair = PairTypes(InterpretantBase.Set)(InterpretantBase.Set)
             
             module SymHeapHash = Hashtbl.Make(Sl_heap)
             module SymHeapHashPrinter = HashtablePrinter.Make(SymHeapHash)
-            module ModelBase = MakeComplexType(PairTypes(Stack)(Location.Set))
+            module ModelBase = MakeComplexType(PairTypes(Stack)(HeapBase))
             
             module T =
               struct
@@ -436,7 +476,7 @@ module ModelChecker =
                   i.e. the singleton set containing the model base consisting of
                   the empty stack and the empty heap base.
              *)
-            let itp_emp = ModelBase.Set.singleton (Stack.empty, Location.Set.empty)
+            let itp_emp = ModelBase.Set.singleton (Stack.empty, HeapBase.empty)
             
             let init_empty defs empty_val =
               List.fold_left
@@ -450,7 +490,7 @@ module ModelChecker =
             let decorate h itp = 
               let f (ancestors, parents) =
                 let add_subst_heap (vs, ls) acc = 
-                  let h' = Location.Map.filter (fun l _ -> Location.Set.mem l ls) h in
+                  let h' = HeapBase.proj h ls in
                   Interpretant.Set.add (vs, h') acc in
                 InterpretantBase.Set.fold 
                   add_subst_heap 
@@ -511,12 +551,12 @@ module ModelChecker =
             let cross_models constraints ms ms' = 
               let merge (s, ls) mdls =
                 let merge_acc (s', ls') mdls =
-                  if (Location.Set.disjoint ls ls') && 
+                  if (HeapBase.disjoint ls ls') && 
                      (Stack.consistent s s') &&
                      (Stack.cross_satisfies constraints s s') then
                     let new_mdl =
                       let new_stack = Stack.merge s s' in
-                      let new_heap_spt = Location.Set.union ls ls' in 
+                      let new_heap_spt = HeapBase.union ls ls' in 
                       (new_stack, new_heap_spt) in
                     ModelBase.Set.add new_mdl mdls
                   else mdls in
@@ -649,7 +689,8 @@ module ModelChecker =
                       Int.Map.find cell_size ptos
                     else empty_base in
                   let pto = 
-                    ((Value.mk_loc_val loc)::cell, Location.Set.singleton loc) in
+                    ((Value.mk_loc_val loc)::cell, 
+                      HeapBase.inj h (Location.Map.singleton loc cell)) in
                   let base = InterpretantBase.Set.add pto base in
                   Int.Map.add cell_size base ptos in
                 Location.Map.fold f h Int.Map.empty in
