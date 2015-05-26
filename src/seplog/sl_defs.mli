@@ -14,7 +14,7 @@ val get_def : Sl_predsym.t -> t -> Sl_indrule.t list
 
 val fixpoint: (t -> t) -> t -> t
 
-val relevant_defs : t -> Sl_heap.t -> t
+val relevant_defs : t -> Sl_form.t -> t
 
 val check_form_wf : t -> Sl_form.t -> unit
 

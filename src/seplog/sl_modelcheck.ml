@@ -831,12 +831,13 @@ module ModelChecker =
         let setup_defs defs = sl_defs := Some defs
                     
         let check_model (sh, (stk, h)) =
+          let f = [sh] in
           match !sl_defs with
           | None -> raise Defs_not_initialised
           | Some(defs) ->
-          let defs = Sl_defs.relevant_defs defs sh in
-          let () = Sl_defs.check_form_wf defs [sh] in
-          let defs = Sl_defs.of_formula defs [sh] in
+          let defs = Sl_defs.relevant_defs defs f in
+          let () = Sl_defs.check_form_wf defs f in
+          let defs = Sl_defs.of_formula defs f in
           let new_def = List.hd (Sl_defs.to_list defs) in
           let new_predsym = Sl_preddef.predsym (new_def) in
           let vals = 
