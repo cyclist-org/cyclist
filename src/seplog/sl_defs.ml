@@ -73,6 +73,23 @@ module Defs =
       let f' def = Blist.iter f (Sl_preddef.rules def) in
       Blist.iter f' defs
 
+    let relevant_defs all_defs f = 
+      let ident_set f = Sl_predsym.Set.of_list (Sl_predsym.MSet.to_list (Sl_heap.idents f)) in
+      let iterate preds =
+        let add_preds pred preds = 
+          let rules = get_def pred all_defs in
+          let add_preds_from_rule preds rule =
+            let (body, _) = Sl_indrule.dest rule in
+            let new_preds = ident_set body in
+            Sl_predsym.Set.union preds new_preds in
+          Blist.foldl add_preds_from_rule preds rules in
+        Sl_predsym.Set.fold add_preds preds preds in
+      let relevant_preds = Sl_predsym.Set.fixpoint iterate (ident_set f) in
+      Sl_predsym.Set.fold
+        (fun pred defs -> add (Sl_preddef.mk ((get_def pred all_defs), pred)) defs)
+        relevant_preds
+        empty
+
   end
 include Defs
 include Fixpoint(Defs)

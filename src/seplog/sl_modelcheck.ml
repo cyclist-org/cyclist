@@ -829,29 +829,12 @@ module ModelChecker =
         exception Defs_not_initialised
           
         let setup_defs defs = sl_defs := Some defs
-        
-        let relevant_defs all_defs f = 
-          let ident_set f = Sl_predsym.Set.of_list (Sl_predsym.MSet.to_list (Sl_heap.idents f)) in
-          let iterate preds =
-            let add_preds pred preds = 
-              let rules = Sl_defs.get_def pred all_defs in
-              let add_preds_from_rule preds rule =
-                let (body, _) = Sl_indrule.dest rule in
-                let new_preds = ident_set body in
-                Sl_predsym.Set.union preds new_preds in
-              Blist.foldl add_preds_from_rule preds rules in
-            Sl_predsym.Set.fold add_preds preds preds in
-          let relevant_preds = Sl_predsym.Set.fixpoint iterate (ident_set f) in
-          Sl_predsym.Set.fold
-            (fun pred defs -> Sl_defs.add (Sl_preddef.mk ((Sl_defs.get_def pred all_defs), pred)) defs)
-            relevant_preds
-            Sl_defs.empty
-            
+                    
         let check_model (sh, (stk, h)) =
           match !sl_defs with
           | None -> raise Defs_not_initialised
           | Some(defs) ->
-          let defs = relevant_defs defs sh in
+          let defs = Sl_defs.relevant_defs defs sh in
           let defs = Sl_defs.of_formula defs [sh] in
           let new_def = List.hd (Sl_defs.to_list defs) in
           let new_predsym = Sl_preddef.predsym (new_def) in
