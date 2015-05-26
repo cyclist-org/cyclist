@@ -16,6 +16,8 @@ val fixpoint: (t -> t) -> t -> t
 
 val relevant_defs : t -> Sl_heap.t -> t
 
+val check_form_wf : t -> Sl_form.t -> unit
+
 val rule_fold : ('a -> Sl_indrule.t -> 'a) -> 'a -> t -> 'a 
 val rule_iter : (Sl_indrule.t -> unit) -> t -> unit
 

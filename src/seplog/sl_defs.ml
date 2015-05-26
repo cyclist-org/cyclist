@@ -89,7 +89,27 @@ module Defs =
         (fun pred defs -> add (Sl_preddef.mk ((get_def pred all_defs), pred)) defs)
         relevant_preds
         empty
-
+    
+    let check_form_wf defs f =
+      let check_pred p = 
+        let predsym = Sl_tpred.predsym p in
+        let pname = Sl_predsym.to_string predsym in
+        if not (mem predsym defs) then
+          invalid_arg ("Cannot find definition for predicate " ^ pname)
+        else
+          let def = get_def predsym defs in
+          if not (Blist.is_empty def) then
+            let expected = Sl_indrule.arity (Blist.hd def) in
+            let provided = Sl_tpred.arity p in 
+            if expected <> provided then
+              invalid_arg ("Predicate " ^ pname ^ " given " ^ 
+                (Int.to_string provided) ^ " arguments when " ^
+                (Int.to_string expected) ^ " expected!") in
+      Blist.iter
+        (fun h -> let (_, _, _, inds) = Sl_heap.dest h in
+          Sl_tpreds.iter check_pred inds)
+        f
+          
   end
 include Defs
 include Fixpoint(Defs)
