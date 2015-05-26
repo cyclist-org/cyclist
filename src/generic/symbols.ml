@@ -32,7 +32,7 @@ let symb_rp = make_symb ")" (Latex.text ")")
 let symb_lb = make_symb "{" (Latex.text "\\left\\{")
 let symb_rb = make_symb "}" (Latex.text "\\right\\}")
 let symb_semicolon = make_symb ";" (Latex.text ";")
-let symb_colon = make_symb ":" Latex.empty
+let symb_colon = make_symb ":" (Latex.text " : ")
 let symb_comma = { str=","; sep=", "; melt=Latex.text ", " }
 let symb_turnstile = make_symb "|-" Latex.vdash
 let symb_turnstile_underscore = make_symb "|-_" Latex.empty (* FIXME *)
@@ -43,13 +43,13 @@ let symb_assign = make_symb ":=" (ltx_math ":=")
 let symb_bang = make_symb "!" Latex.empty
 let symb_caret = make_symb "^" Latex.empty
 (* let symb_underscore = make_symb "_" " " Latex.empty (* FIXME *) *)
-let symb_box = make_symb "[]" Latex.empty (* FIXME *)
-let symb_diamond = make_symb "<>" Latex.empty
-let symb_circle = make_symb "()" Latex.empty
-let symb_af = make_symb "AF" Latex.empty
-let symb_ag = make_symb "AG" Latex.empty
-let symb_ef = make_symb "EF" Latex.empty
-let symb_eg = make_symb "EG" Latex.empty
+let symb_box = make_symb "[]" Latex.box_
+let symb_diamond = make_symb "<>" Latex.diamond
+let symb_circle = make_symb "()" Latex.circ
+let symb_af = make_symb "AF" (Latex.text "AF ")
+let symb_ag = make_symb "AG" (Latex.text "AG ")
+let symb_ef = make_symb "EF" (Latex.text "EF ")
+let symb_eg = make_symb "EG" (Latex.text "EG")
 let symb_fld_sel = make_symb "." (Latex.text ".")
 
 let keyw_emp = mk_keyw "emp"
