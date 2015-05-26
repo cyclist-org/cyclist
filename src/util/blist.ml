@@ -123,6 +123,12 @@ let rec uniq eq = function
   | [] -> []
   | x::xs -> x::(uniq eq (filter (fun x' -> not (eq x x')) xs))
 
+let rec weave split tie join xs acc = match xs with
+  | [] -> join []
+  | [x] -> tie x acc
+  | hd::tl ->
+    join (map (weave split tie join tl) (split hd acc))
+
 (* let rec choose = function                    *)
 (*   | [] -> [[]]                               *)
 (*   | xs::ys ->                                *)

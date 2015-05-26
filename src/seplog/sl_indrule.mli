@@ -10,6 +10,7 @@ val vars : t -> Sl_term.Set.t
 val predsym : t -> Sl_predsym.t
 val arity : t -> int
 val formals : t -> Sl_term.t list
+val body : t -> Sl_heap.t
 
 val freshen : Sl_term.Set.t -> t -> t
 (** Replace all variables in rule such that they are disjoint with the set 

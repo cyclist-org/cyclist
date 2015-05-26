@@ -11,6 +11,13 @@ module type BasicType =
     val to_string : t -> string
     val pp : Format.formatter -> t -> unit
   end
+  
+module type NaturalType =
+  sig
+    include BasicType
+    val zero : t
+    val succ : t -> t
+  end
 
 module type OrderedContainer =
   sig
@@ -20,6 +27,7 @@ module type OrderedContainer =
     val endomap : (elt -> elt) -> t -> t
     val map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b) -> t -> 'a
     val map_to_list : (elt -> 'a) -> t -> 'a list
+    val weave : (elt -> 'a -> 'a list) -> (elt -> 'a -> 'b) -> ('b list -> 'b) -> t -> 'a -> 'b
     val find : (elt -> bool) -> t -> elt
     val find_opt : (elt -> bool) -> t -> elt option
     val find_map : (elt -> 'a option) -> t -> 'a option
@@ -31,6 +39,7 @@ module type OrderedContainer =
     val fixpoint : (t -> t) -> t -> t
     val del_first : (elt -> bool) -> t -> t
     val all_members_of : t -> t -> bool
+    val disjoint : t -> t -> bool
   end
 
 module type OrderedMap =
@@ -47,6 +56,7 @@ module type OrderedMap =
 (*    val map_to : ('b -> 'c -> 'c) -> 'c -> (key -> 'v -> 'b) -> 'v t -> 'c *)
 (*    val map_to_list : (key -> 'b -> 'a) -> 'b t -> 'a list                 *)
     val all_members_of : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
+    val add_bindings : (key * 'a) list -> 'a t -> 'a t
   end
 
 module Fixpoint(T: sig type t val equal : t -> t -> bool end) =
@@ -176,6 +186,8 @@ module MakeListMultiset(T: BasicType) =
 
     let map_to_list f xs = Blist.map f xs
 
+    let weave = Blist.weave    
+
     let rec find_map f = function
       | [] -> None
       | x::xs -> match f x with
@@ -193,6 +205,14 @@ module MakeListMultiset(T: BasicType) =
 			xxs @ (Blist.map (fun y -> add x y) xxs)
       
     let all_members_of xs ys = for_all (Fun.swap mem ys) xs
+    
+    let rec disjoint xs ys = match (xs, ys) with
+      | ([], ys) -> true
+      | (xs, []) -> true
+      | (x::xs, y::ys) -> match T.compare x y with
+        | 0 -> false
+        | n when n < 0 -> disjoint xs (y::ys) 
+        | _ -> disjoint (x::xs) ys
 
 	end
 
@@ -252,6 +272,9 @@ module MakeTreeSet(T: BasicType) : OrderedContainer with type elt = T.t =
     let endomap f s =
       map_to add empty f s
 
+    let weave split tie join xs acc =
+      Blist.weave split tie join (elements xs) acc
+
     let union_of_list l =
       Blist.fold_left (fun s i -> union s i) empty l
 
@@ -298,7 +321,19 @@ module MakeTreeSet(T: BasicType) : OrderedContainer with type elt = T.t =
       | Some x -> remove x s
 
     let all_members_of xs ys = for_all (Fun.swap mem ys) xs
-
+    
+    let disjoint xs ys =
+      let xs = to_list xs in
+      let ys = to_list ys in
+      let rec disjoint xs ys = match (xs, ys) with
+        | ([], ys) -> true
+        | (xs, []) -> true
+        | (x::xs, y::ys) -> match T.compare x y with
+          | 0 -> false
+          | n when n < 0 -> disjoint xs (y::ys) 
+          | _ -> disjoint (x::xs) ys in
+      disjoint xs ys
+      
   end
 
 module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
@@ -347,6 +382,8 @@ module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
       let xs = to_list m in
       let ys = to_list m' in
       Blist.for_all (Fun.swap mem ys) xs
+      
+    let add_bindings bs m = List.fold_left (fun m (k, v) -> add k v m) m bs
   end
 
 module PairTypes(T: BasicType) (S: BasicType) :
@@ -404,6 +441,7 @@ module type MCTsig =
     module T : BasicType
     include CTsig
     module Pairing : CTsig
+    (* val set_cross : Set.t -> Set.t -> Pairing.Set.t *)
   end
 
 module MakeComplexType(T: BasicType) : MCTsig
@@ -425,27 +463,42 @@ module MakeComplexType(T: BasicType) : MCTsig
     module T = T
     include ContaineriseType(T)
     module Pairing = ContaineriseType(PairTypes(T)(T))
+    (* let set_cross ss ss' =                                      *)
+    (*   Set.map_to Pairing.Set.union Pairing.Set.empty            *)
+    (*     (fun s -> Set.map_to Pairing.Set.add Pairing.Set.empty  *)
+    (*       (fun s' -> (s, s')) ss')                              *)
+    (*     ss                                                      *)
   end
 
-module Int = MakeComplexType
-  (struct
+module IntType : BasicType with type t = int =
+  struct
     type t = int
     let compare (i:t) (j:t) = if i<j then -1 else if i>j then +1 else 0
     let equal (i:t) (j:t) = i=j
     let hash (i:t) = Hashtbl.hash i
     let to_string = string_of_int
     let pp = Format.pp_print_int
-  end)
+  end
+  
+module NatType : NaturalType with type t = int =
+  struct
+    include IntType
+    let zero = 0
+    let succ i = i + 1
+  end
 
-module Strng = MakeComplexType
-  (struct
+module StringType : BasicType with type t = string =
+  struct
     type t = string
     let compare (i:t) (j:t) = String.compare i j
     let equal (i:t) (j:t) = i=j
     let hash (i:t) = Hashtbl.hash i
     let to_string (i:t) = i
     let pp = Format.pp_print_string
-  end)
+  end
+  
+module Int = MakeComplexType(IntType)
+module Strng = MakeComplexType(StringType)
 
 module Tags =
   struct

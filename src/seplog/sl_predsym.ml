@@ -28,3 +28,4 @@ include HT
 
 module Set = Util.MakeTreeSet(HT)
 module MSet = Util.MakeMultiset(HT)
+module Map = Util.MakeMap(HT)
