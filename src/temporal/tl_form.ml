@@ -28,15 +28,14 @@ module rec Form :
 	       val is_ef : t -> bool
 	       val is_and : t -> bool
 	       val is_or : t -> bool
-	       val is_modality : t -> bool
 	       val is_slformula : t -> bool 
 					 
 	       val dest_atom : t -> Sl_heap.t
 	       val dest_circle : t -> t
 	       val dest_diamond : t -> t
 	       val dest_box : t -> t
-	       val dest_ag : t -> int * t
-	       val dest_eg : t -> int * t
+	       val dest_ag : t -> Util.Tags.elt * t
+	       val dest_eg : t -> Util.Tags.elt * t
 	       val dest_af : t -> t
 	       val dest_ef : t -> t
 	       val dest_and : t -> FormSet.t
@@ -129,7 +128,6 @@ module rec Form :
     let is_or = function
       | Or _ -> true
       | _ -> false
-    let is_modality f = is_circle f || is_diamond f || is_box f
 
     let dest_atom = function
       | Atom(x,_) -> x 
@@ -184,11 +182,11 @@ module rec Form :
       | _ -> invalid_arg "unfold_eg"
 
     let unfold_af f = match f with
-      | AF(inner,_) -> (inner, (mk_box f))
+      | AF(inner,_) -> (inner, mk_box f)
       | _ -> invalid_arg "unfold_af"
 
     let unfold_ef f = match f with
-      | EF(inner,_) -> (inner, (mk_diamond f))
+      | EF(inner,_) -> (inner, mk_diamond f)
       | _ -> invalid_arg "unfold_ef"
 
     let rec fold f acc g = match g with
@@ -224,10 +222,21 @@ module rec Form :
       | Or(fs,_) -> 
 	 Blist.to_string " | " to_string (FormSet.to_list fs)
 
-    let to_melt f = Sl_heap.to_melt (List.hd (Form.to_slformula f)) (* Fix head *)
-
+    let rec to_melt f = 
+      match f with
+      | Atom(a,_) -> Sl_heap.to_melt a
+      | Circle(f,_) -> Latex.concat [symb_circle.melt; to_melt f]
+      | Diamond(f,_) -> Latex.concat [symb_diamond.melt; to_melt f]
+      | Box(f,_) -> Latex.concat [symb_box.melt; to_melt f]
+      | AG(_,f,_) -> Latex.concat [symb_ag.melt; to_melt f]
+      | EG(_,f,_) -> Latex.concat [symb_eg.melt; to_melt f]
+      | AF(f,_) -> Latex.concat [symb_af.melt; to_melt f]
+      | EF(f,_) -> Latex.concat [symb_ef.melt; to_melt f]
+      | And(fs,_) -> Latex.concat (Latex.list_insert symb_and.melt (Blist.map to_melt (FormSet.to_list fs)))
+      | Or(fs,_) -> Latex.concat (Latex.list_insert symb_or.melt (Blist.map to_melt (FormSet.to_list fs)))
+				 
     let pp fmt f = Format.fprintf fmt "@[%s@]" (to_string f)
-
+				  
     (* atoms must be minimal to be considered first after unfolding *)
     let rec compare f g = 
       let r = Int.compare (depth f) (depth g) in
@@ -345,15 +354,14 @@ module rec Form :
     let rec tags f =
       fold 
 	begin fun g acc -> match g with
-			   | Atom _ -> acc
 			   | Circle (f,_)
 			   | Diamond (f,_)
 			   | Box (f,_)
-			   | EG (_,f,_)
 			   | AF (f,_)
 			   | EF (f,_)-> tags f
 			   | EG (i,_,_)
 			   | AG(i,_,_) -> Tags.add i acc
+			   | Atom _
 			   | _ -> acc 
 	end
 	Tags.empty
@@ -416,12 +424,10 @@ module rec Form :
 		   parse_aux|>> (fun inner -> mk_diamond inner))
       <|> attempt (parse_symb symb_ag >>
 		   parse_aux|>> (fun inner -> 
-		   let freshtag = 1 + (try Tags.max_elt (tags inner) with Not_found -> 0) in
-		   mk_ag freshtag inner))
+		   mk_ag (next_tag ()) inner))
       <|> attempt (parse_symb symb_eg >>
 		   parse_aux|>> (fun inner -> 
-		   let freshtag = 1 + (try Tags.max_elt (tags inner) with Not_found -> 0) in	
-		   mk_eg freshtag inner))
+		   mk_eg (next_tag()) inner))
       <|> attempt (parse_symb symb_af >>
 		   parse_aux|>> (fun inner -> mk_af inner))
       <|> attempt (parse_symb symb_ef >>

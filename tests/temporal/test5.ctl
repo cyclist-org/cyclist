@@ -1,4 +1,4 @@
-fields: next;
+fields: this;
 precondition: x->a * y->b;
-property: <>x->b;
-x:=y; skip
+property: <><>x->b;
+free(x); x:=y; skip
