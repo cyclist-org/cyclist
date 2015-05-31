@@ -416,6 +416,7 @@ module type CTsig =
     module Set : OrderedContainer
     module Map : OrderedMap
     module Hashmap : Hashtbl.S
+    module Hashset : Hashset.S
     module MSet : OrderedContainer
     module FList : BasicType
   end
@@ -424,6 +425,7 @@ module ContaineriseType(T: BasicType) : CTsig
   with type Set.elt=T.t
   with type Map.key=T.t
   with type Hashmap.key=T.t
+  with type Hashset.elt=T.t
   with type MSet.elt=T.t
   with type FList.t=T.t list
   =
@@ -431,6 +433,7 @@ module ContaineriseType(T: BasicType) : CTsig
     module Set = MakeListSet(T)
     module Map = MakeMap(T)
     module Hashmap = Hashtbl.Make(T)
+    module Hashset = Hashset.Make(T)
     module MSet = MakeMultiset(T)
     module FList = MakeFList(T)
   end
@@ -450,11 +453,13 @@ module MakeComplexType(T: BasicType) : MCTsig
   with type Set.elt=T.t
   with type Map.key=T.t
   with type Hashmap.key=T.t
+  with type Hashset.elt=T.t
   with type MSet.elt=T.t
   with type FList.t=T.t list
   with type Pairing.Set.elt=T.t * T.t
   with type Pairing.Map.key=T.t * T.t
   with type Pairing.Hashmap.key=T.t * T.t
+  with type Pairing.Hashset.elt=T.t * T.t
   with type Pairing.MSet.elt=T.t * T.t
   with type Pairing.FList.t=(T.t * T.t) list
   =

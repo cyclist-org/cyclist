@@ -41,7 +41,7 @@ let resize hashfun tbl =
   let osize = Array.length odata in
   let nsize = min (2 * osize + 1) Sys.max_array_length in
   if nsize <> osize then begin
-    let ndata = Array.create nsize [] in
+    let ndata = Array.make nsize [] in
     let rec insert_bucket = function
         [] -> ()
       | key :: rest ->
@@ -112,6 +112,16 @@ let is_empty h =
   try  
     iter (fun _ -> raise Not_empty) h ; true
   with Not_empty -> false
+  
+(* changes by RR *)
+
+let to_string to_s h =
+  let elems = fold (fun hd tl -> hd::tl) h [] in
+  String.concat ", " (List.map to_s elems)
+  
+let left_union h h' =
+  let () = iter (fun x -> add h x) h' in
+  h
 
 (* Functorial interface *)
 
@@ -135,7 +145,9 @@ module type S =
     val cardinal: t -> int
     val iter: (elt -> unit) -> t -> unit
     val fold: (elt -> 'a -> 'a) -> t -> 'a -> 'a
+    val left_union : t -> t -> t
     val is_empty : t -> bool
+    val to_string : (elt -> string) -> t -> string
   end
 
 module Make(H: HashedType): (S with type elt = H.t) =
@@ -176,11 +188,15 @@ module Make(H: HashedType): (S with type elt = H.t) =
     let mem h key =
       mem_in_bucket key h.data.((safehash key) mod (Array.length h.data))
 
-    let cardinal = cardinal
+    let cardinal h = cardinal h
 
-    let iter = iter
-    let fold = fold
+    let iter f h = iter f h
+    let fold f h init = fold f h init
   
     (* changes by NG *)
-    let is_empty = is_empty
+    let is_empty h = is_empty h
+    
+    (* changes by RR *)
+    let to_string to_s h = to_string to_s h
+    let left_union h h' = left_union h h'
   end

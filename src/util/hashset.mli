@@ -30,7 +30,7 @@ val create : int -> 'a t
    the set.  The internal structure grows as needed, so [n] is just an
    initial guess. *)
 
-val clear : 'a t -> unit
+val clear : 'a t -> unit 
 (* Empty a set. *)
 
 val add : 'a t -> 'a -> unit
@@ -59,6 +59,11 @@ val fold : ('a -> 'b -> 'b) -> 'a t -> 'b -> 'b
    The order in which the elements are passed to [f] is unspecified. *)
 
 val is_empty : 'a t -> bool
+
+val to_string : ('a -> string) -> 'a t -> string
+
+val left_union : 'a t -> 'a t -> 'a t
+(* [left_union h h'] adds all the elements in h' to h, and then returns h *)
 
 (*s Functorial interface *)
 
@@ -94,7 +99,9 @@ module type S =
     val cardinal : t -> int
     val iter : (elt -> unit) -> t -> unit
     val fold : (elt -> 'a -> 'a) -> t -> 'a -> 'a
+    val left_union : t -> t -> t
     val is_empty : t -> bool
+    val to_string : (elt -> string) -> t -> string
   end
 (* The output signature of the functor {!Hashset.Make}. *)
 

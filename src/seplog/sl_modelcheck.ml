@@ -426,6 +426,7 @@ module ModelChecker =
                     invalid_arg ("Missing locations!")
                   else
                     Location.Map.filter (fun k _ -> Location.Set.mem k x) h
+                (* TODO: Eta-expand *)
                 let disjoint = Location.Set.disjoint
                 let union = Location.Set.union
               end
@@ -476,7 +477,11 @@ module ModelChecker =
                   i.e. the singleton set containing the model base consisting of
                   the empty stack and the empty heap base.
              *)
-            let itp_emp = ModelBase.Set.singleton (Stack.empty, HeapBase.empty)
+            let itp_emp = 
+              let itp_emp = ModelBase.Hashset.create 1 in 
+              let () = 
+                ModelBase.Hashset.add itp_emp (Stack.empty, HeapBase.empty) in
+              itp_emp
             
             let init_empty defs empty_val =
               List.fold_left
@@ -514,8 +519,8 @@ module ModelChecker =
               Given a list of terms [ts] which are the formal parameters of
               some atomic spatial formula (predicate or points-to) F, some pure  
               [constraints] Pi, and a set of interpretants [itpts] of F,  
-              [generate_models ts constraints itpts] generates a set of model 
-              bases which represents the interpretation of (Pi : F) 
+              [generate_models ts constraints itpts] generates a hashset of  
+              model bases which represents the interpretation of (Pi : F) 
             **)
             let generate_models ts constraints itpts =
               let acc_model (vs, ls) models =
@@ -523,9 +528,12 @@ module ModelChecker =
                 | None -> models
                 | Some(stack) ->
                     if Stack.satisfies constraints stack then
-                      ModelBase.Set.add (stack, ls) models
-                    else models in
-              InterpretantBase.Set.fold acc_model itpts ModelBase.Set.empty
+                      ModelBase.Hashset.add models (stack, ls);
+                    models in
+              (* Hashset.create: we can tweak the initial size of the hashset for performance *)
+              let empty = 
+                ModelBase.Hashset.create (InterpretantBase.Set.cardinal itpts) in
+              InterpretantBase.Set.fold acc_model itpts empty
               
             (**
               Given some pure [constraints] Pi and two sets of model bases [ms]   
@@ -545,12 +553,21 @@ module ModelChecker =
             (* in future). Such an implementation is arguably clearer to      *)
             (* understand, but while it is not computationally more expensive *)
             (* in terms of time, it is more expensive in terms of space since *)
-            (* it always generates all possible combinations. The             *)
-            (* implementation below uses an accumulator to only generate the  *)
-            (* necessary number of new model bases. *)
+            (* it always generates all possible combinations. The implementa- *)
+            (* tion below uses an accumulator to only generate the necesasry  *)
+            (* number of new model bases. *)
             let cross_models constraints ms ms' = 
-              let merge (s, ls) mdls =
-                let merge_acc (s', ls') mdls =
+              (* A bit of an optimisation: if one or the other of the input   *)
+              (* model base hashsets is empty then just return it, otherwise  *)
+              (* then we have to compute the cross-product. *)
+              if ModelBase.Hashset.is_empty ms then ms
+              else if ModelBase.Hashset.is_empty ms' then ms'
+              else 
+              (* Hashset.create: we can tweak the initial size of the hashset for performance *)
+              let new_mdls = ModelBase.Hashset.create 
+                ((ModelBase.Hashset.cardinal ms) * (ModelBase.Hashset.cardinal ms')) in 
+              let merge (s, ls) =
+                let merge_acc (s', ls') =
                   if (HeapBase.disjoint ls ls') && 
                      (Stack.consistent s s') &&
                      (Stack.cross_satisfies constraints s s') then
@@ -558,10 +575,10 @@ module ModelChecker =
                       let new_stack = Stack.merge s s' in
                       let new_heap_spt = HeapBase.union ls ls' in 
                       (new_stack, new_heap_spt) in
-                    ModelBase.Set.add new_mdl mdls
-                  else mdls in
-                ModelBase.Set.fold merge_acc ms' mdls in
-              ModelBase.Set.fold merge ms ModelBase.Set.empty
+                    ModelBase.Hashset.add new_mdls new_mdl in
+                ModelBase.Hashset.iter merge_acc ms' in
+              let () = ModelBase.Hashset.iter merge ms in
+              new_mdls
             
             (* Note: some efficiency savings to be made here possibly along the *)
             (* lines of fusing the operation of [f] with the generation of the *)
@@ -612,33 +629,38 @@ module ModelChecker =
               fun f -> f test_extn valuations              
             
             (**
-              [saturate constraints vs mdls] generates a new set of model bases    
-              from [mdls] by extending the stacks of each model base in [mdls]     
-              with mappings to values in [vs] from every universal variable 
-              mentioned in [constraints] that is not already mapped. Each model 
-              base in [mdls] gives rise to a new model base for every possible 
-              satisfying extension. Thus, every model base in [mdls] may give 
-              rise to zero or more models in the returned set.
+              [saturate params constraints vs mdls] generates a new set of model 
+              bases from [mdls] by extending the stacks of each model base in 
+              [mdls] with mappings to values in [vs] from every universal 
+              variable either in params or mentioned in [constraints] that is 
+              not already mapped. Each model base in [mdls] gives rise to a new 
+              model base for every possible satisfying extension. Thus, every 
+              model base in [mdls] may give rise to zero or more models in the 
+              returned set.
             **)
             (* precondition: for all mdl in [mdls] :                          *)
             (*   mdl satisfies [constraints]                                  *)
             (* postcondidition:                                               *)
             (*   for all mdl in [saturate_univs constraints vs mdls] :        *)
             (*     mdl satisfies [constraints]                                *)
-            let saturate_univs (eqs, deqs) vs mdls = 
-              let acc_saturated_models (s, ls) acc =
+            let saturate_univs params (eqs, deqs) vs mdls = 
+              let new_mdls = 
+                ModelBase.Hashset.create (ModelBase.Hashset.cardinal mdls) in
+              let acc_saturated_models (s, ls) =
                 let unmapped_univs = Sl_term.Set.filter
                   (fun x -> (Sl_term.is_univ_var x) && not (Var.Map.mem x s))
-                  (Sl_term.Set.union (Sl_uf.vars eqs) (Sl_deqs.vars deqs)) in
+                  (Sl_term.Set.union params 
+                    (Sl_term.Set.union (Sl_uf.vars eqs) (Sl_deqs.vars deqs))) in
                 if Sl_term.Set.is_empty unmapped_univs then
-                  ModelBase.Set.add (s, ls) acc
+                  ModelBase.Hashset.add new_mdls (s, ls)
                 else
                   let good_stacks = Option.list_get 
                     (List.map |> (valid_extns (eqs, deqs) vs unmapped_univs s)) in
-                  let new_mdls = ModelBase.Set.of_list
-                    (List.map (fun stk -> (stk, ls)) good_stacks) in
-                  ModelBase.Set.union new_mdls acc in
-              ModelBase.Set.fold acc_saturated_models mdls ModelBase.Set.empty
+                  List.iter 
+                    (fun stk -> ModelBase.Hashset.add new_mdls (stk, ls)) 
+                    good_stacks in
+              let () = ModelBase.Hashset.iter acc_saturated_models mdls in
+              new_mdls
               
             (**
               [ex_constraint_sat constraints vs s] returns true if and only if
@@ -656,8 +678,8 @@ module ModelChecker =
                 (List.find_some |> (valid_extns (eqs, deqs) vs unmapped_exs s))
               
             (** 
-              [mk_ptos_base defs h] creates a hashtable which stores a set of 
-              model bases for each inductive rule in [defs] that is both 
+              [mk_ptos_base defs h] creates a hashtable which stores a hashset 
+              of model bases for each inductive rule in [defs] that is both 
               consistent and contains some number (> 0) of points-to formula 
               atoms. These models are the valid interpretations of the entire 
               set of points-to atoms in each inductive rule body whose heap is a
@@ -719,7 +741,7 @@ module ModelChecker =
                         if Int.Map.mem cell_size all_ptos_itpts then
                           generate_models (t::ts) constraints 
                             (Int.Map.find cell_size all_ptos_itpts)
-                        else ModelBase.Set.empty in
+                        else ModelBase.Hashset.create 0 in
                       cross_models constraints pto_models mdls in
                     Sl_ptos.fold gen_mdls ptos itp_emp in
                   SymHeapHash.add base body mdls 
@@ -740,7 +762,7 @@ module ModelChecker =
               let valset = Value.Set.add Value.nil valset in
               let ptos_base = mk_ptos_base defs h in
               let () = debug (fun _ -> Value.Set.to_string valset) in
-              let () = debug (fun _ -> SymHeapHashPrinter.to_string Sl_heap.to_string ModelBase.Set.to_string ptos_base) in
+              let () = debug (fun _ -> SymHeapHashPrinter.to_string Sl_heap.to_string (ModelBase.Hashset.to_string ModelBase.T.to_string) ptos_base) in
               let generator itp = 
                 let () = debug (fun _ -> "Beginning next fixpoint interation") in 
                 (* The function that generates new interpretants for a given rule *)
@@ -764,19 +786,26 @@ module ModelChecker =
                         if Sl_ptos.is_empty ptos then itp_emp
                         else SymHeapHash.find ptos_base body in
                       let () = debug (fun _ -> "Found the following interpretation for points-tos: " ^ 
-                        (ModelBase.Set.to_string ptos_models)) in
+                        (ModelBase.Hashset.to_string ModelBase.T.to_string ptos_models)) in
                       let saturate mdls =
                         let () = debug (fun _ -> "Starting universal variable saturation") in
-                        let mdls = 
-                          saturate_univs constraints valset mdls in
+                        let mdls = saturate_univs 
+                          (Sl_term.Set.of_list params) constraints valset mdls in
                         let () = debug (fun _ -> "Candidate models after universal variable saturation: " ^ 
-                          (ModelBase.Set.to_string mdls)) in
+                          (ModelBase.Hashset.to_string ModelBase.T.to_string mdls)) in
                         let () = debug (fun _ -> "Starting existential variable saturation") in
-                        let mdls = ModelBase.Set.filter
-                          (fun (s, _) -> exs_satisfiable constraints valset s)
+                        let mdls =
+                          let filtered_mdls = 
+                            ModelBase.Hashset.create 
+                              (ModelBase.Hashset.cardinal mdls) in
+                          let () = ModelBase.Hashset.iter
+                          (fun ((s, _) as mdl) -> 
+                            if (exs_satisfiable constraints valset s) then
+                              ModelBase.Hashset.add filtered_mdls mdl)
                           mdls in
+                          filtered_mdls in
                         let () = debug (fun _ -> "Generated models after filtering for existential saturation: " ^ 
-                          (ModelBase.Set.to_string mdls)) in
+                          (ModelBase.Hashset.to_string ModelBase.T.to_string mdls)) in
                         mdls in
                       let full_models =
                         if Sl_tpreds.is_empty inds then
@@ -799,23 +828,35 @@ module ModelChecker =
                           (List.hd mdls, flag) :: 
                             List.map (fun m -> (m, true)) (List.tl mdls) in
                         let tie p (ms, flag) =
-                          let candidates = List.fold_right 
-                            ModelBase.Set.union
-                            (get_mdls p ms flag)
-                            ModelBase.Set.empty in
+                          let mdls = (get_mdls p ms flag) in 
+                          let num_candidates = 
+                            List.fold_left 
+                              (fun n mdls -> 
+                                n + (ModelBase.Hashset.cardinal mdls))
+                              0 mdls in
+                          let candidates = List.fold_left 
+                            ModelBase.Hashset.left_union
+                            (ModelBase.Hashset.create num_candidates) 
+                            mdls in
                           let () = debug (fun _ -> "Generated the following candidate models: " ^ 
-                            (ModelBase.Set.to_string candidates)) in
+                            (ModelBase.Hashset.to_string (ModelBase.T.to_string) candidates)) in
                           saturate candidates in
-                        let join = List.fold_left ModelBase.Set.union ModelBase.Set.empty in 
+                        (* Hashset.create: we can tweak the initial size of the hashset for performance *)
+                        let join = List.fold_left 
+                          ModelBase.Hashset.left_union 
+                          (ModelBase.Hashset.create 0) in 
                         let acc = (ptos_models, false) in
                         Sl_tpreds.weave split tie join inds acc in
-                      let itpts = ModelBase.Set.map_to
-                        InterpretantBase.Set.add
-                        empty_base
-                        (fun (s, ls) ->
-                          let vs = List.map (fun x -> Var.Map.find x s) params in
-                          (vs, ls))
-                        full_models in
+                      let itpts = ModelBase.Hashset.fold
+                        (fun (s, ls) itpts ->
+                          let vs = List.map 
+                            (fun x -> 
+                              try Var.Map.find x s with Not_found -> 
+                                print_endline("could not find variable " ^ (Var.to_string x) ^ " in stack " ^ (Stack.to_string s)); raise Not_found) 
+                            params in
+                          InterpretantBase.Set.add (vs, ls) itpts)
+                        full_models
+                        empty_base in
                       let () = debug (fun _ -> "Generated the following interpretants: " ^
                         (InterpretantBase.Set.to_string itpts)) in
                       itpts in
@@ -924,7 +965,7 @@ module IntSig : ValueSig
   struct
     module HeapLocation = NatType
     module ScalarValue = NatType
-    let pp_nil fmt = IntType.pp fmt 0
+    let pp_nil fmt = Format.fprintf fmt "nil"
   end
   
 module IntSigModelChecker = Make(IntSig)
@@ -932,6 +973,7 @@ open IntSigModelChecker
   
 module IntSigParser =
   struct
+    (* TODO: Eta-expand? *)
     let parse_location = Tokens.decimal
     let parse_scalar st = 
       (Tokens.decimal |>> (fun v ->
