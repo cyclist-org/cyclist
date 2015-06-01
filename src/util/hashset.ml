@@ -198,5 +198,7 @@ module Make(H: HashedType): (S with type elt = H.t) =
     
     (* changes by RR *)
     let to_string to_s h = to_string to_s h
-    let left_union h h' = left_union h h'
+    let left_union h h' =
+      let () = iter (fun x -> add h x) h' in
+      h
   end
