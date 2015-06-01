@@ -515,6 +515,11 @@ module ModelChecker =
                 else Value.Set.max_elt vs in
               add n max_elt vs
               
+            let count_mdls mdls =
+              List.fold_left 
+                (fun n mdls -> n + (ModelBase.Hashset.cardinal mdls))
+                0 mdls
+                
             (**
               Given a list of terms [ts] which are the formal parameters of
               some atomic spatial formula (predicate or points-to) F, some pure  
@@ -829,22 +834,19 @@ module ModelChecker =
                             List.map (fun m -> (m, true)) (List.tl mdls) in
                         let tie p (ms, flag) =
                           let mdls = (get_mdls p ms flag) in 
-                          let num_candidates = 
-                            List.fold_left 
-                              (fun n mdls -> 
-                                n + (ModelBase.Hashset.cardinal mdls))
-                              0 mdls in
                           let candidates = List.fold_left 
                             ModelBase.Hashset.left_union
-                            (ModelBase.Hashset.create num_candidates) 
+                            (ModelBase.Hashset.create (count_mdls mdls)) 
                             mdls in
                           let () = debug (fun _ -> "Generated the following candidate models: " ^ 
                             (ModelBase.Hashset.to_string (ModelBase.T.to_string) candidates)) in
                           saturate candidates in
                         (* Hashset.create: we can tweak the initial size of the hashset for performance *)
-                        let join = List.fold_left 
+                        let join = function mdls ->
+                          List.fold_left 
                           ModelBase.Hashset.left_union 
-                          (ModelBase.Hashset.create 0) in 
+                          (ModelBase.Hashset.create (count_mdls mdls))
+                          mdls in 
                         let acc = (ptos_models, false) in
                         Sl_tpreds.weave split tie join inds acc in
                       let itpts = ModelBase.Hashset.fold
