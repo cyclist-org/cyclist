@@ -66,7 +66,7 @@ struct
     let g' = Sl_heap.subst theta g in
     (v', g')
   
-  let unfold (v, h) ((_, (_, params)) as ind) (case, (v', g')) =
+  let unfold (v, h) (_, (_, params)) (case, (v', g')) =
     (* simultaneously freshen case and (v',g') *)
     let avoidvars = 
       Sl_term.Set.union (Allocated.vars v) (Sl_heap.vars h) in
@@ -77,8 +77,8 @@ struct
     let formals = Sl_indrule.formals case in
     let theta = Sl_term.Map.of_list (Blist.combine formals params) in
     let (v', g') = subst theta (v', g') in
-    let h' = SH.del_ind h ind in
-    let h' = Sl_heap.star h' g' in
+    (* let h' = SH.del_ind h ind in *)
+    let h' = Sl_heap.star h g' in
     let cv = 
       Blist.cartesian_product 
         (Allocated.map_to_list fst v) 
@@ -98,8 +98,9 @@ struct
         Allocated.empty 
         Sl_pto.record_type 
         h.SH.ptos in
-    let h = SH.with_ptos h Sl_ptos.empty in
-    Blist.fold_left2 unfold (ys, h) (Sl_tpreds.to_list h.SH.inds) cbps
+    let h' = SH.with_ptos h Sl_ptos.empty in
+    let h' = SH.with_inds h' Sl_tpreds.empty in
+    Blist.fold_left2 unfold (ys, h') (Sl_tpreds.to_list h.SH.inds) cbps
   
   let gen case cbps =
     let args = Sl_indrule.formals case in
@@ -139,6 +140,7 @@ end
 include BasePair
 
 module Set = MakeTreeSet(BasePair)
+module Hashset = Hashset.Make(BasePair)
 
 module RuleMap = MakeMap(Sl_indrule)
 
@@ -154,14 +156,14 @@ let get_bps cmap (_, (ident, _)) =
     cmap
     []
 
-let tried = Hashset.create 997
+(* let tried = Hashset.create 997 *)
 
 let gen_pairs case cmap =
   let (h, _) = Sl_indrule.dest case in
   let candidates = Sl_tpreds.map_to_list (fun i -> get_bps cmap i) h.SH.inds in
   let l = Blist.choose candidates in
-  let l = Blist.rev_filter (fun cbp -> not (Hashset.mem tried (case, cbp))) l in
-  let () = Blist.iter (fun cbp -> Hashset.add tried (case, cbp)) l in
+  (* let l = Blist.rev_filter (fun cbp -> not (Hashset.mem tried (case, cbp))) l in *)
+  (* let () = Blist.iter (fun cbp -> Hashset.add tried (case, cbp)) l in            *)
   let poss_bps = Blist.rev_map (fun cbps -> gen case cbps) l in
   let bps = Option.list_get poss_bps in
   Set.of_list bps
@@ -177,7 +179,7 @@ let first_pred_not_empty defs cm =
       cm
 
 let gen_all_pairs ?(only_first=false) defs =
-  let () = Hashset.clear tried in
+  (* let () = Hashset.clear tried in *)
   let first_not_empty = first_pred_not_empty defs in
   let defs = Sl_defs.to_list defs in
   let cmap =
