@@ -776,7 +776,7 @@ module ModelChecker =
               let valset = Value.Set.add Value.nil valset in
               let ptos_base = mk_ptos_base defs h in
               let () = debug (fun _ -> Value.Set.to_string valset) in
-              let () = debug (fun _ -> SymHeapHashPrinter.to_string Sl_heap.to_string (ModelBase.Hashset.to_string ModelBase.T.to_string) ptos_base) in
+              let () = debug (fun _ -> SymHeapHashPrinter.to_string Sl_heap.to_string ModelBase.Hashset.to_string ptos_base) in
               let generator itp = 
                 let () = debug (fun _ -> "Beginning next fixpoint interation") in 
                 (* The function that generates new interpretants for a given rule *)
@@ -800,13 +800,13 @@ module ModelChecker =
                         if Sl_ptos.is_empty ptos then itp_emp
                         else SymHeapHash.find ptos_base body in
                       let () = debug (fun _ -> "Found the following interpretation for points-tos: " ^ 
-                        (ModelBase.Hashset.to_string ModelBase.T.to_string ptos_models)) in
+                        (ModelBase.Hashset.to_string ptos_models)) in
                       let saturate mdls =
                         let () = debug (fun _ -> "Starting universal variable saturation") in
                         let mdls = saturate_univs 
                           (Sl_term.Set.of_list params) constraints valset mdls in
                         let () = debug (fun _ -> "Candidate models after universal variable saturation: " ^ 
-                          (ModelBase.Hashset.to_string ModelBase.T.to_string mdls)) in
+                          (ModelBase.Hashset.to_string mdls)) in
                         let () = debug (fun _ -> "Starting existential variable saturation") in
                         let mdls =
                           let filtered_mdls = 
@@ -819,7 +819,7 @@ module ModelChecker =
                             mdls in
                           filtered_mdls in
                         let () = debug (fun _ -> "Generated models after filtering for existential saturation: " ^ 
-                          (ModelBase.Hashset.to_string ModelBase.T.to_string mdls)) in
+                          (ModelBase.Hashset.to_string mdls)) in
                         mdls in
                       let full_models =
                         if Sl_tpreds.is_empty inds then
@@ -848,7 +848,7 @@ module ModelChecker =
                             (ModelBase.Hashset.create (count_mdls mdls)) 
                             mdls in
                           let () = debug (fun _ -> "Generated the following candidate models: " ^ 
-                            (ModelBase.Hashset.to_string (ModelBase.T.to_string) candidates)) in
+                            (ModelBase.Hashset.to_string candidates)) in
                           saturate candidates in
                         (* Hashset.create: we can tweak the initial size of the hashset for performance *)
                         let join = function mdls ->

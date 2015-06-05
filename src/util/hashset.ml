@@ -113,6 +113,14 @@ let is_empty h =
     iter (fun _ -> raise Not_empty) h ; true
   with Not_empty -> false
   
+let of_list l =
+  let s = create 11 in
+  let () = List.iter (fun x -> add s x) l in
+  s 
+
+let map_to oadd oempty f xs =
+  fold (fun z ys -> oadd (f z) ys) xs oempty
+
 (* changes by RR *)
 
 let to_string to_s h =
@@ -123,12 +131,14 @@ let left_union h h' =
   let () = iter (fun x -> add h x) h' in
   h
 
+
 (* Functorial interface *)
 
 module type HashedType =
   sig
     type t
     val equal: t -> t -> bool
+    val to_string : t -> string
     val hash: t -> int
   end
 
@@ -147,7 +157,11 @@ module type S =
     val fold: (elt -> 'a -> 'a) -> t -> 'a -> 'a
     val left_union : t -> t -> t
     val is_empty : t -> bool
-    val to_string : (elt -> string) -> t -> string
+    val to_string : t -> string
+    val of_list : elt list -> t
+    val to_list : t -> elt list
+    (* val choose : (elt list -> unit) -> t list ->  unit *)
+    val map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b) -> t -> 'a
   end
 
 module Make(H: HashedType): (S with type elt = H.t) =
@@ -196,9 +210,28 @@ module Make(H: HashedType): (S with type elt = H.t) =
     (* changes by NG *)
     let is_empty h = is_empty h
     
+    let of_list l =
+      let s = create (List.length l) in
+      let () = List.iter (fun x -> add s x) l in
+      s 
+
+    let map_to oadd oempty f xs =
+      fold (fun z ys -> oadd (f z) ys) xs oempty
+
+    let to_list xs = 
+      map_to Blist.cons [] Fun.id xs
+      
+    (* let choose f ss =                                     *)
+    (*   let rec aux f acc = function                        *)
+    (*     | [] -> f (Blist.rev acc)                         *)
+    (*     | s::ss -> iter (fun x -> aux f (x::acc) ss) s in *)
+    (*   aux f [] ss                                         *)
+      
+                                      
     (* changes by RR *)
-    let to_string to_s h = to_string to_s h
+    let to_string h = to_string H.to_string h
     let left_union h h' =
       let () = iter (fun x -> add h x) h' in
       h
+      
   end

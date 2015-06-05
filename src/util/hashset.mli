@@ -13,57 +13,59 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(* This module implements imperative sets as hash tables. 
-   Operations like union, intersection or difference are not provided, 
-   since there is no way to implement them easily (i.e. more easily than
-   iterating over sets). *)
+(* (* This module implements imperative sets as hash tables.                    *)
+(*    Operations like union, intersection or difference are not provided,       *)
+(*    since there is no way to implement them easily (i.e. more easily than     *)
+(*    iterating over sets). *)                                                  *)
 
-(*s Generic interface *)
+(* (*s Generic interface *)                                                     *)
 
-type 'a t
-(* The type of sets. Elements have type ['a]. *)
+(* type 'a t                                                                    *)
+(* (* The type of sets. Elements have type ['a]. *)                             *)
 
-val create : int -> 'a t
-(* [Hashset.create n] creates a new, empty set.
-   For best results, [n] should be on the
-   order of the expected number of elements that will be in
-   the set.  The internal structure grows as needed, so [n] is just an
-   initial guess. *)
+(* val create : int -> 'a t                                                     *)
+(* (* [Hashset.create n] creates a new, empty set.                              *)
+(*    For best results, [n] should be on the                                    *)
+(*    order of the expected number of elements that will be in                  *)
+(*    the set.  The internal structure grows as needed, so [n] is just an       *)
+(*    initial guess. *)                                                         *)
 
-val clear : 'a t -> unit 
-(* Empty a set. *)
+(* val clear : 'a t -> unit                                                     *)
+(* (* Empty a set. *)                                                           *)
 
-val add : 'a t -> 'a -> unit
-(* [Hashset.add s x] adds [x] into the set [s]. *)
+(* val add : 'a t -> 'a -> unit                                                 *)
+(* (* [Hashset.add s x] adds [x] into the set [s]. *)                           *)
 
-val copy : 'a t -> 'a t
-(* Return a copy of the given set. *)
+(* val copy : 'a t -> 'a t                                                      *)
+(* (* Return a copy of the given set. *)                                        *)
 
-val mem : 'a t -> 'a -> bool
-(* [Hashset.mem s x] checks if [x] belongs to [s]. *)
+(* val mem : 'a t -> 'a -> bool                                                 *)
+(* (* [Hashset.mem s x] checks if [x] belongs to [s]. *)                        *)
 
-val remove : 'a t -> 'a -> unit
-(* [Hashset.remove s x] removes [x] from [s].
-   It does nothing if [x] does not belong to [s]. *)
+(* val remove : 'a t -> 'a -> unit                                              *)
+(* (* [Hashset.remove s x] removes [x] from [s].                                *)
+(*    It does nothing if [x] does not belong to [s]. *)                         *)
 
-val cardinal : 'a t -> int
-(* [Hashset.cardinal s] returns the cardinal of [s]. *)
+(* val cardinal : 'a t -> int                                                   *)
+(* (* [Hashset.cardinal s] returns the cardinal of [s]. *)                      *)
 
-val iter : ('a -> unit) -> 'a t -> unit
-(* [Hashset.iter f s] applies [f] to all elements in [s]. *)
+(* val iter : ('a -> unit) -> 'a t -> unit                                      *)
+(* (* [Hashset.iter f s] applies [f] to all elements in [s]. *)                 *)
 
-val fold : ('a -> 'b -> 'b) -> 'a t -> 'b -> 'b
-(* [Hashset.fold f s init] computes
-   [(f eN ... (f e1 init)...)],
-   where [e1 ... eN] are the elements in [s].
-   The order in which the elements are passed to [f] is unspecified. *)
+(* val fold : ('a -> 'b -> 'b) -> 'a t -> 'b -> 'b                              *)
+(* (* [Hashset.fold f s init] computes                                          *)
+(*    [(f eN ... (f e1 init)...)],                                              *)
+(*    where [e1 ... eN] are the elements in [s].                                *)
+(*    The order in which the elements are passed to [f] is unspecified. *)      *)
 
-val is_empty : 'a t -> bool
+(* val is_empty : 'a t -> bool                                                  *)
 
-val to_string : ('a -> string) -> 'a t -> string
+(* val to_string : ('a -> string) -> 'a t -> string                             *)
 
-val left_union : 'a t -> 'a t -> 'a t
-(* [left_union h h'] adds all the elements in h' to h, and then returns h *)
+(* val left_union : 'a t -> 'a t -> 'a t                                        *)
+(* (* [left_union h h'] adds all the elements in h' to h, and then returns h *) *)
+
+(* val map_to : ('b -> 'a -> 'a) -> 'a -> ('e -> 'b) -> 'e t -> 'a              *)
 
 (*s Functorial interface *)
 
@@ -73,6 +75,7 @@ module type HashedType =
       (* The type of the elements. *)
     val equal : t -> t -> bool
       (* The equality predicate used to compare elements. *)
+    val to_string : t -> string
     val hash : t -> int
       (* A hashing function on elements. It must be such that if two elements are
           equal according to [equal], then they have identical hash values
@@ -101,7 +104,11 @@ module type S =
     val fold : (elt -> 'a -> 'a) -> t -> 'a -> 'a
     val left_union : t -> t -> t
     val is_empty : t -> bool
-    val to_string : (elt -> string) -> t -> string
+    val to_string : t -> string
+    val of_list : elt list -> t
+    val to_list : t -> elt list
+    (* val choose : (elt list -> unit) -> t list ->  unit *)
+    val map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b) -> t -> 'a
   end
 (* The output signature of the functor {!Hashset.Make}. *)
 

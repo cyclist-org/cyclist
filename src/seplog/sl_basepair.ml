@@ -149,8 +149,8 @@ let get_bps cmap (_, (ident, _)) =
     (fun c s l -> 
       if Sl_predsym.equal ident (fst (snd (Sl_indrule.dest c))) 
       then 
-        Set.fold (fun bp l' -> (c, bp)::l') s l 
-      else 
+        Hashset.fold (fun bp l' -> (c, bp)::l') s l
+      else
         l
     ) 
     cmap
@@ -166,7 +166,7 @@ let gen_pairs case cmap =
   (* let () = Blist.iter (fun cbp -> Hashset.add tried (case, cbp)) l in            *)
   let poss_bps = Blist.rev_map (fun cbps -> gen case cbps) l in
   let bps = Option.list_get poss_bps in
-  Set.of_list bps
+  bps
 
 let first_pred_not_empty defs cm =
   let defs = Sl_defs.to_list defs in
@@ -174,38 +174,52 @@ let first_pred_not_empty defs cm =
     RuleMap.exists
       (fun k v ->
         Sl_predsym.equal (Sl_indrule.predsym k) first_pred &&
-        not (Set.is_empty v)
+        not (Hashset.is_empty v)
       )
       cm
 
 let gen_all_pairs ?(only_first=false) defs =
   (* let () = Hashset.clear tried in *)
-  let first_not_empty = first_pred_not_empty defs in
+  let first_not_empty c = first_pred_not_empty defs c in
   let defs = Sl_defs.to_list defs in
   let cmap =
     Blist.fold_left
       (fun m d ->
         Blist.fold_left
-          (fun m' c -> RuleMap.add c Set.empty m') m (Sl_preddef.rules d))
+          (fun m' c -> RuleMap.add c (Hashset.create 11) m') m (Sl_preddef.rules d))
       RuleMap.empty
-      defs
-  in
-  let onestep cmap =
-    let (r, progress) = 
+      defs in
+  let add_check s x =
+    let notin = not (Hashset.mem s x) in
+    if notin then Hashset.add s x ;
+    notin in
+  let rec onestep () =
+    let progress = 
       RuleMap.fold
-        (fun c s (cmap', progress) -> 
-          let s' = Set.union s (gen_pairs c cmap) in
-          ((RuleMap.add c s' cmap'), (progress || not (Set.equal s s'))))
-        cmap 
-        (cmap, false)
+        (fun c s prog -> 
+          let bps = gen_pairs c cmap in
+          Blist.fold_left
+            (fun prog' bp -> 
+              let new_prog = add_check s bp in
+              if only_first && first_not_empty cmap then 
+                false
+              else
+                new_prog || prog')
+            prog
+            bps
+        )
+        cmap
+        false
         in
-    let () = debug (fun () -> "\n" ^ (RuleMap.to_string Set.to_string r) ^ "\n") in
-    (r, progress) in
-  let rec fixp cm =
-    let (cm', progress) = onestep cm in
-    if only_first && first_not_empty cm' || not progress then cm' else
-      fixp cm' in
-  fixp cmap
+    let () = debug (fun () -> "\n" ^ (RuleMap.to_string Hashset.to_string cmap) ^ "\n") in
+    if progress then onestep () else () in
+  let _ = onestep() in
+  cmap
+  (* let rec fixp cm =                                                    *)
+  (*   let (cm', progress) = onestep cm in                                *)
+  (*   if only_first && first_not_empty cm' || not progress then cm' else *)
+  (*     fixp cm' in                                                      *)
+  (* fixp cmap                                                            *)
 
 (* NB correctness relies on rules being explicit about x->_ implying       *)
 (* x!=nil !!!                                                              *)
@@ -215,13 +229,13 @@ let satisfiable ?(only_first=false) ?(output=false) defs =
   if output then
     begin
       let element_conv (c, s) =
-        ((Sl_indrule.to_string c) ^ " has base " ^ (Set.to_string s)) in
+        ((Sl_indrule.to_string c) ^ " has base " ^ (Hashset.to_string s)) in
       print_endline
         (Blist.to_string "\n" element_conv (RuleMap.to_list res))
     end ;
   let retval =
     only_first && first_pred_not_empty defs res ||
-    not only_first && RuleMap.for_all (fun _ s -> not (Set.is_empty s)) res in
+    not only_first && RuleMap.for_all (fun _ s -> not (Hashset.is_empty s)) res in
   if retval then Stats.CC.accept () else Stats.CC.reject () ;
   retval
 
@@ -231,10 +245,11 @@ let pairs_of_form defs f =
   let defs = Sl_defs.of_formula defs f in
   let bp_map = gen_all_pairs defs in
   let (rules,_) = Sl_preddef.dest (Blist.hd (Sl_defs.to_list defs)) in
-  Blist.foldl 
-    (fun bps r -> Set.union bps (RuleMap.find r bp_map)) 
-    Set.empty 
-    rules
+  let s = Hashset.create 11 in 
+  let () = Blist.iter
+    (fun r -> let _ = Hashset.left_union s (RuleMap.find r bp_map) in ()) 
+    rules in
+  Hashset.map_to Set.add Set.empty Fun.id s
   
 let minimise bps = 
   let res = 
