@@ -12,6 +12,7 @@ module Var :
       with type Set.elt = t
       with type Map.key = t
       with type Hashmap.key = t
+      with type Hashset.elt = t
       with type MSet.elt = t
       with type FList.t = t list
     val of_term : Sl_term.t -> t
@@ -49,6 +50,7 @@ module ModelChecker =
               with type Set.elt = t
               with type Map.key = t
               with type Hashmap.key = t
+              with type Hashset.elt = t
               with type MSet.elt = t
               with type FList.t = t list
           end
@@ -60,6 +62,7 @@ module ModelChecker =
               with type Set.elt = t
               with type Map.key = t
               with type Hashmap.key = t
+              with type Hashset.elt = t
               with type MSet.elt = t
               with type FList.t = t list
             val mk_loc_val : Location.t -> t
@@ -242,7 +245,7 @@ module ModelChecker =
             
             let compare s s' = Var.Map.compare Value.compare s s'
             let equal s s' = Var.Map.equal Value.equal s s'
-						let hash s = Hashtbl.hash s
+						let hash s = Hashtbl.hash_param 50 100 s
             let pp fmt h = 
               Format.fprintf fmt "@[[@ ";
               Var.Map.iter 
@@ -841,23 +844,22 @@ module ModelChecker =
                           let mdls = get_mdls p ms true in
                           (List.hd mdls, flag) :: 
                             List.map (fun m -> (m, true)) (List.tl mdls) in
+                        (* Hashset.create: we can tweak the initial size of the hashset for performance *)
+                        (* TODO: Change this magic number! *)
+                        let acc = ModelBase.Hashset.create 10000 in 
                         let tie p (ms, flag) =
                           let mdls = (get_mdls p ms flag) in 
-                          let candidates = List.fold_left 
-                            ModelBase.Hashset.left_union
-                            (ModelBase.Hashset.create (count_mdls mdls)) 
+                          List.iter 
+                            (fun ms -> 
+                              let candidates = saturate ms in 
+                              let () = debug (fun _ -> "Generated the following candidate models: " ^ 
+                                (ModelBase.Hashset.to_string candidates)) in
+                              ModelBase.Hashset.iter (ModelBase.Hashset.add acc) candidates) 
                             mdls in
-                          let () = debug (fun _ -> "Generated the following candidate models: " ^ 
-                            (ModelBase.Hashset.to_string candidates)) in
-                          saturate candidates in
-                        (* Hashset.create: we can tweak the initial size of the hashset for performance *)
-                        let join = function mdls ->
-                          List.fold_left 
-                          ModelBase.Hashset.left_union
-                          (ModelBase.Hashset.create (count_mdls mdls))
-                          mdls in 
-                        let acc = (ptos_models, false) in
-                        Sl_tpreds.weave split tie join inds acc in
+                        let join = fun _ -> () in 
+                        let seed = (ptos_models, false) in
+                        let () = Sl_tpreds.weave split tie join inds seed in
+                        acc in
                       let itpts = ModelBase.Hashset.fold
                         (fun (s, ls) itpts ->
                           let vs = List.map 
