@@ -457,15 +457,24 @@ module ModelChecker =
             module T =
               struct
                 type t = BaseSetPair.t Sl_predsym.Map.t
-                let equal x y =
-                  let binding_eq (p, (xs, xs')) (p', (ys, ys')) =
-                    Sl_predsym.equal p p' &&
-                    InterpretantBase.Set.equal xs ys &&
-                    InterpretantBase.Set.equal xs' ys' in 
-                  List.equal 
-                    binding_eq
-                    (Sl_predsym.Map.bindings x)
-                    (Sl_predsym.Map.bindings y)
+                (* Note that we have not implemented a "true" equality        *)
+                (* function between interpretations, but rather one optimised *)
+                (* for the model checking fixpoint computation: at each       *)
+                (* iteration, we only need check that no new interpretants    *)
+                (* have been added.                                           *)
+                let equal itp itp' =
+                  Sl_predsym.Map.for_all
+                    (fun _ (_, itpts) -> InterpretantBase.Set.is_empty itpts)
+                    itp'
+                (* let equal x y =                                   *)
+                (*   let binding_eq (p, (xs, xs')) (p', (ys, ys')) = *)
+                (*     Sl_predsym.equal p p' &&                      *)
+                (*     InterpretantBase.Set.equal xs ys &&           *)
+                (*     InterpretantBase.Set.equal xs' ys' in         *)
+                (*   List.equal                                      *)
+                (*     binding_eq                                    *)
+                (*     (Sl_predsym.Map.bindings x)                   *)
+                (*     (Sl_predsym.Map.bindings y)                   *)
               end
             include T
             include Fixpoint(T)
@@ -648,7 +657,7 @@ module ModelChecker =
             (* postcondidition:                                               *)
             (*   for all mdl in [saturate_univs constraints vs mdls] :        *)
             (*     mdl satisfies [constraints]                                *)
-            let saturate_univs params (eqs, deqs) vs mdls = 
+            let saturate_univs params (eqs, deqs) vs mdls =
               let new_mdls = 
                 ModelBase.Hashset.create (ModelBase.Hashset.cardinal mdls) in
               let acc_saturated_models (s, ls) =
@@ -804,10 +813,10 @@ module ModelChecker =
                             ModelBase.Hashset.create 
                               (ModelBase.Hashset.cardinal mdls) in
                           let () = ModelBase.Hashset.iter
-                          (fun ((s, _) as mdl) -> 
-                            if (exs_satisfiable constraints valset s) then
-                              ModelBase.Hashset.add filtered_mdls mdl)
-                          mdls in
+                            (fun ((s, _) as mdl) -> 
+                              if (exs_satisfiable constraints valset s) then
+                                ModelBase.Hashset.add filtered_mdls mdl)
+                            mdls in
                           filtered_mdls in
                         let () = debug (fun _ -> "Generated models after filtering for existential saturation: " ^ 
                           (ModelBase.Hashset.to_string ModelBase.T.to_string mdls)) in
@@ -844,7 +853,7 @@ module ModelChecker =
                         (* Hashset.create: we can tweak the initial size of the hashset for performance *)
                         let join = function mdls ->
                           List.fold_left 
-                          ModelBase.Hashset.left_union 
+                          ModelBase.Hashset.left_union
                           (ModelBase.Hashset.create (count_mdls mdls))
                           mdls in 
                         let acc = (ptos_models, false) in
