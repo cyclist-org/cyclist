@@ -174,6 +174,10 @@ let rec pairs = function
   | [] | [_] -> []
   | x::((x'::_) as xs) -> (x,x')::(pairs xs)
 
+let map_to oadd oempty f xs =
+  foldl (fun ys z -> oadd (f z) ys) oempty xs
+
+
 (* tail rec versions, generally slower *)
 
 (* let map f xs = rev (rev_map f xs)                                    *)

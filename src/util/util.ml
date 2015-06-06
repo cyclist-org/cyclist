@@ -430,7 +430,8 @@ module ContaineriseType(T: BasicType) : CTsig
   with type FList.t=T.t list
   =
   struct
-    module Set = MakeListSet(T)
+    (* module Set = MakeListSet(T) *)
+    module Set = MakeTreeSet(T) 
     module Map = MakeMap(T)
     module Hashmap = Hashtbl.Make(T)
     module Hashset = Hashset.Make(T)
