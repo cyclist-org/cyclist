@@ -67,15 +67,16 @@ struct
     let g' = Sl_heap.subst theta g in
     (v', g')
   
-  let unfold (v, h) (_, (_, params)) (case, (v', g')) =
+  let unfold (v, h) (_, (_, params)) ((v', g'), formals) =
     (* simultaneously freshen case and (v',g') *)
     let avoidvars = 
       Sl_term.Set.union (Allocated.vars v) (Sl_heap.vars h) in
-    let theta = Sl_term.avoid_theta avoidvars (Sl_indrule.vars case) in
-    let case = Sl_indrule.subst theta case in
+    let theta = Sl_term.avoid_theta avoidvars (Sl_term.Set.of_list formals) in
+    (* let theta = Sl_term.avoid_theta avoidvars (Sl_indrule.vars case) in *)
+    let formals = Blist.map (fun x -> Sl_term.subst theta x) formals in
     let (v', g') = subst theta (v', g') in
     (* now carry on with substitution as normal *)
-    let formals = Sl_indrule.formals case in
+    (* let formals = Sl_indrule.formals case in *)
     let theta = Sl_term.Map.of_list (Blist.combine formals params) in
     let (v', g') = subst theta (v', g') in
     let h' = Sl_heap.star h g' in
@@ -137,7 +138,7 @@ end
 
 module BaseAndRule = 
 struct
-  module T = PairTypes(Sl_indrule)(BasePair)
+  module T = PairTypes(BasePair)(Sl_term.FList)
   include T
   include ContaineriseType(T)
 end
@@ -151,43 +152,40 @@ module PredMap = MakeMap(Sl_predsym)
 
 
 let gen_pair case cbps s s' att = 
+  if Attempted.mem att cbps then () else 
   match gen case cbps with
-  | None -> false
+  | None -> ()
   | Some bp -> 
-    if Hashset.mem s bp || Attempted.mem att cbps then
-      false
-    else
-      begin 
-        Hashset.add s bp ; 
-        BaseAndRule.Hashset.add s' (case, bp) ; 
-        Attempted.add att cbps ;
-        true
-      end
+    Hashset.add s bp ; 
+    BaseAndRule.Hashset.add s' (bp, Sl_indrule.formals case) ; 
+    Attempted.add att cbps
 
 let choose_iter f ys = 
   let rec aux f acc = function
     | [] -> f acc
     | xs::tl -> BaseAndRule.Hashset.iter (fun x -> aux f (x::acc) tl) xs in
   aux f [] (Blist.rev ys)  
-
-let gen_pairs case cmap pmap attmap =
+  
+(* the f argument is a unit-taking function that checks if we can stop *)
+(* due to first predicate being non-empty *)
+let gen_pairs f case cmap pmap attmap =
   let (h, (pred,_)) = Sl_indrule.dest case in
   let candidates = 
     Sl_tpreds.map_to_list (fun (_,(i,_)) -> PredMap.find i pmap) h.SH.inds in
   let s = RuleMap.find case cmap in
   let s' = PredMap.find pred pmap in 
   let att = RuleMap.find case attmap in
-  let progress = ref false in
   choose_iter
-    (fun cbps -> progress := gen_pair case cbps s s' att || !progress)
-    candidates ;
-  !progress
+    (fun cbps -> f () ; gen_pair case cbps s s' att)
+    candidates 
 
 let first_pred_not_empty defs =
   let defs = Sl_defs.to_list defs in
   let first_pred = Sl_preddef.predsym (Blist.hd defs) in
   fun pmap ->
     not (BaseAndRule.Hashset.is_empty (PredMap.find first_pred pmap))
+
+exception FirstNonEmpty
 
 let gen_all_pairs ?(only_first=false) defs =
   let first_not_empty = first_pred_not_empty defs in
@@ -202,6 +200,9 @@ let gen_all_pairs ?(only_first=false) defs =
       )
       RuleMap.empty
       defs in
+  let get_sizemap cmap =
+    RuleMap.fold 
+      (fun c s m -> RuleMap.add c (Hashset.cardinal s) m) cmap RuleMap.empty in 
   let pmap =
     Blist.fold_left
       (fun m d ->
@@ -221,20 +222,25 @@ let gen_all_pairs ?(only_first=false) defs =
       RuleMap.empty
       defs in
   let progress = ref true in
-  while !progress do 
-    debug 
-      (fun () -> "\n" ^ (RuleMap.to_string Hashset.to_string cmap) ^ "\n") ;
-    progress := RuleMap.fold
-      (fun c s prog -> 
-        let prog' = gen_pairs c cmap pmap att in
-        if only_first && first_not_empty pmap then 
-          false
-        else
-          prog || prog'
-      )
-      cmap
-      false
-  done ;
+  (* f is passed down to gen_pairs so that execution can terminate immediately *)
+  (* once the first predicate is non-empty, if asked by the caller. *)
+  (* this is meant to happen during iteration as opposed to after each approximant *)
+  (* has been computed. *)
+  (* NB we can do the below without arguments only because the key-to-value *)
+  (* relationship is immutable, and as values are mutable. *) 
+  let f () = if only_first && first_not_empty pmap then raise FirstNonEmpty in
+  let sizemap = ref (get_sizemap cmap) in
+  let () = 
+    try
+      while !progress do 
+        debug 
+          (fun () -> "\n" ^ (RuleMap.to_string Hashset.to_string cmap) ^ "\n") ;
+        RuleMap.iter (fun c _ -> gen_pairs f c cmap pmap att) cmap ;
+        let newsizemap = get_sizemap cmap in
+        progress := not (RuleMap.equal Int.equal !sizemap newsizemap) ;
+        sizemap := newsizemap 
+      done
+    with FirstNonEmpty -> () in
   (cmap, pmap)
 
 (* NB correctness relies on rules being explicit about x->_ implying       *)

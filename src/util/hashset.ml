@@ -77,13 +77,13 @@ let remove h key =
 let mem h key =
   List.mem key h.data.((Hashtbl.hash key) mod (Array.length h.data))
 
-let cardinal h =
-  let d = h.data in
-  let c = ref 0 in
-  for i = 0 to Array.length d - 1 do
-    c := !c + List.length d.(i)
-  done;
-  !c
+(* let cardinal h =                     *)
+(*   let d = h.data in                  *)
+(*   let c = ref 0 in                   *)
+(*   for i = 0 to Array.length d - 1 do *)
+(*     c := !c + List.length d.(i)      *)
+(*   done;                              *)
+(*   !c                                 *)
 
 let iter f h =
   let d = h.data in
@@ -120,6 +120,8 @@ let of_list l =
 
 let map_to oadd oempty f xs =
   fold (fun z ys -> oadd (f z) ys) xs oempty
+
+let cardinal h = h.size
 
 (* changes by RR *)
 
@@ -183,9 +185,9 @@ module Make(H: HashedType): (S with type elt = H.t) =
       let i = (safehash key) mod (Array.length h.data) in
       let bucket = h.data.(i) in
       if not (mem_in_bucket key bucket) then begin
-	h.data.(i) <- key :: bucket;
-	h.size <- succ h.size;
-	if h.size > Array.length h.data lsl 1 then resize safehash h
+        h.data.(i) <- key :: bucket;
+        h.size <- succ h.size;
+        if h.size > Array.length h.data lsl 1 then resize safehash h
       end
 
     let remove h key =
@@ -220,14 +222,7 @@ module Make(H: HashedType): (S with type elt = H.t) =
 
     let to_list xs = 
       map_to Blist.cons [] Fun.id xs
-      
-    (* let choose f ss =                                     *)
-    (*   let rec aux f acc = function                        *)
-    (*     | [] -> f (Blist.rev acc)                         *)
-    (*     | s::ss -> iter (fun x -> aux f (x::acc) ss) s in *)
-    (*   aux f [] ss                                         *)
-      
-                                      
+                                            
     (* changes by RR *)
     let to_string h = to_string H.to_string h
     let left_union h h' =
