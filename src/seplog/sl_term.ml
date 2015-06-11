@@ -3,19 +3,19 @@ open Util
 open Symbols
 open MParser
 
-let map = ref Int.Map.empty 
-let inv_map = ref Strng.Map.empty
+let map = Int.Hashmap.create 997
+let inv_map = Strng.Hashmap.create 997
 let max_var = ref 0
 let min_var = ref 0
 
 let get_limit exist = if exist then !min_var else !max_var
 let get_diff exist = if exist then (-1) else 1
          
-let present v = Int.Map.mem v !map
-let name_present n = Strng.Map.mem n !inv_map 
+let present v = Int.Hashmap.mem map v
+let name_present n = Strng.Hashmap.mem inv_map n 
         
-let to_string v = Int.Map.find v !map  
-let get_idx n = Strng.Map.find n !inv_map  
+let to_string v = Int.Hashmap.find map v  
+let get_idx n = Strng.Hashmap.find inv_map n  
         
 let is_var t = t<>0
 let is_exist_var v = (is_var v) && v<0
@@ -28,26 +28,60 @@ let is_univ_name n = not (is_exist_name n)
 let is_valid_name v exist = 
   exist && is_exist_name v || not exist && is_univ_name v
       
-let set v name = 
-  assert (not (present v) && not (name_present name)) ;
-  assert 
-    (is_exist_var v && is_exist_name name || 
-     is_univ_var v && is_univ_name name);
-  map := Int.Map.add v name !map ;
-  inv_map := Strng.Map.add name v !inv_map ;
-  max_var := max !max_var v ;
-  min_var := min !min_var v  
-
 let mk_var name exist =
   assert (is_valid_name name exist);
   if name_present name then
     let v = get_idx name in assert (is_valid_var v exist) ; v
   else
     let v = (get_diff exist) + (get_limit exist) in 
-    set v name ; v
+    assert (not (present v) && not (name_present name)) ;
+    assert 
+      (is_exist_var v && is_exist_name name || 
+       is_univ_var v && is_univ_name name);
+    Int.Hashmap.add map v name ;
+    Strng.Hashmap.add inv_map name v ;
+    max_var := max !max_var v ;
+    min_var := min !min_var v ;
+    v
 
-let mk_exist_var name = mk_var name true
-let mk_univ_var name = mk_var name false
+module Trm = 
+  struct
+    
+    type t = int
+    let nil = 0
+
+    let equal = Int.equal
+    let compare = Int.compare
+    let hash = Int.hash
+    
+    let to_string v = 
+      if equal v nil then keyw_nil.str else to_string v
+    let pp fmt trm = 
+      Format.fprintf fmt "@[%s@]" (to_string trm)
+    let to_melt v =
+      ltx_mk_math 
+        (Latex.mathit 
+          (if v = nil then keyw_nil.melt else Latex.text (to_string v)))
+        
+    let parse st =
+      (   attempt (parse_symb keyw_nil >>$ 0 <?> "nil") 
+      <|> (parse_ident >>= (fun name -> return (mk_var name (is_exist_name name)))) 
+      <?> "Sl_term") st
+    let of_string s =
+      handle_reply (MParser.parse_string parse s ())
+  end
+
+
+include Trm
+
+module Set = Util.MakeListSet(Trm) 
+module Map = Util.MakeMap(Trm)
+
+let is_nil v = v = nil
+let is_var v = not (is_nil v) 
+
+let bound s exist = if exist then Set.min_elt s else Set.max_elt s 
+
               
 let fresh_varname exist =
   let suffix = if exist then "'" else "" in
@@ -74,93 +108,23 @@ let fresh_varname exist =
     assert (not (name_present !name)) ; 
     !name
   end
-   
-  
-        
-let fresh_var s exist =
-  let d = get_diff exist in
-  let limit = abs (get_limit exist) in
-  let i = ref d in
-  let found = ref false in
-  while abs (!i) <= limit && not !found do
-    if Int.Set.mem !i s then
-      i := !i + d
-    else
-      found := true
-  done ;
-  if !found then !i else
-    mk_var (fresh_varname exist) exist 
 
-let fresh_evar s = fresh_var s true    
-let fresh_uvar s = fresh_var s false
+let fresh_var m exist =
+  let limit = abs (get_limit exist) in
+  let i = m + (get_diff exist) in
+  if abs i <= limit then i else mk_var (fresh_varname exist) exist 
+
+let fresh_evar s = fresh_var (bound s true) true
+let fresh_uvar s = fresh_var (bound s false) false
   
-let rec fresh_vars s i exist = match i with 
+let rec fresh_vars m i exist = match i with 
   | 0 -> [] 
   | n -> 
-    let v = fresh_var s exist in
-    v::(fresh_vars (Int.Set.add v s) (n-1) exist)
+    let v = fresh_var m exist in
+    v::(fresh_vars (m + (get_diff exist)) (n-1) exist)
 
-let fresh_evars s i = fresh_vars s i true
-let fresh_uvars s i = fresh_vars s i false
-
-open MParser
-let parse st = 
-  (parse_ident >>= (fun name ->
-    return (mk_var name (is_exist_name name))) <?> "variable identifier") st
-
-
-
-module Trm = 
-  struct
-    
-    type t = int
-    let nil = 0
-
-    let equal = Int.equal
-    let compare = Int.compare
-    let hash = Int.hash
-    let to_string v = 
-      if equal v nil then keyw_nil.str else to_string v
-    let pp fmt trm = 
-      Format.fprintf fmt "@[%s@]" (to_string trm)
-    let to_melt v =
-      ltx_mk_math 
-        (Latex.mathit 
-          (if v = nil then keyw_nil.melt else Latex.text (to_string v)))
-        
-    let parse st =
-      (   attempt (parse_symb keyw_nil >>$ 0 <?> "nil") 
-      <|> parse 
-      <?> "Sl_term") st
-    let of_string s =
-      handle_reply (MParser.parse_string parse s ())
-
-    let is_nil v = v = nil
-    let is_var v = not (is_nil v) 
-    
-    let is_exist_name n = n.[(String.length n)-1] = '\''
-    let is_univ_name n = not (is_exist_name n)
-    
-    let is_exist_var : t -> bool = is_exist_var
-    let is_univ_var : t -> bool = is_univ_var
-    let mk_univ_var : string -> t = mk_univ_var
-    let mk_exist_var : string -> t = mk_exist_var 
-
-  end
-
-
-include Trm
-
-module Set = Util.MakeListSet(Trm) 
-module Map = Util.MakeMap(Trm)
-
-
-(* FIXME *)
-(* conversion from integer sets to term sets should be a runtime noop *)
-let fresh_evar s = fresh_evar (Int.Set.of_list (Set.to_list s))
-let fresh_uvar s = fresh_uvar (Int.Set.of_list (Set.to_list s))
-let fresh_evars s n = fresh_evars (Int.Set.of_list (Set.to_list s)) n
-let fresh_uvars s n = fresh_uvars (Int.Set.of_list (Set.to_list s)) n
+let fresh_evars s n = fresh_vars (bound s true) n true 
+let fresh_uvars s n = fresh_vars (bound s false) n false
 
 let filter_vars s = Set.filter is_var s
 
@@ -272,7 +236,7 @@ module FList =
       | (x::xs, y::ys) ->
         trm_unify ~sub_check ~cont:(fun state' -> unify ~sub_check ~cont ~init_state:state' xs ys) ~init_state x y
     
-    let subst theta xs = Blist.map (subst theta) xs
+    let subst theta xs = Blist.map (fun x -> subst theta x) xs
     
     let to_string_sep sep xs = Blist.to_string sep Trm.to_string xs
     
