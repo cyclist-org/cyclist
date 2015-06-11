@@ -1,0 +1,1 @@
+ls(x,t) * t->y * ls(y,nil) |- ls(x,nil)
