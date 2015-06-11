@@ -26,6 +26,22 @@ let parse st =
 let of_string s =
   handle_reply (MParser.parse_string parse s ())
 
+let read_file (input_file) =
+  try (
+    let in_chnl = open_in input_file in
+    let lines = ref [] in
+    try (
+      while true; do
+        lines := input_line in_chnl :: !lines
+      done; !lines
+    )
+    with End_of_file ->
+        close_in in_chnl;
+        List.rev !lines
+  )
+  with _ -> []
+
+
 let to_string (l, r) =
   (Sl_form.to_string l) ^ symb_turnstile.sep ^ (Sl_form.to_string r)
 let to_melt (l, r) =

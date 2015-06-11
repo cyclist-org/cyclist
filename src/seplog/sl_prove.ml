@@ -6,8 +6,17 @@ let defs_path = ref "examples/sl.defs"
 (* switches controlling invalidity heuristic *)
 let invalidity_check = ref false
 
+(* sequent from file *)
+let cl_sequent_fname = ref ("" : string)
+let cl_f_sequents = ref ([]: string list)
+
 module Prover = Prover.Make(Sl_seq)
 module F = Frontend.Make(Prover)
+
+
+let get_seq_fname arg=
+  let _ = cl_sequent_fname := arg in
+  ()
 
 let () = F.usage := !F.usage ^ " [-D <file>] [-S <string>] [-IC] [-IT] [-IP]"
 
@@ -34,8 +43,13 @@ type search_result =
 let () =
   gc_setup () ;
   Format.set_margin (Sys.command "exit $(tput cols)") ;
-  Arg.parse !F.speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) !F.usage ;
-  if !cl_sequent="" then F.die "-S must be specified." ;
+  Arg.parse !F.speclist get_seq_fname !F.usage ;
+  cl_f_sequents := Sl_seq.read_file !cl_sequent_fname;
+  let () = if !cl_sequent="" then
+    match !cl_f_sequents with
+      | [] -> F.die "-S must be specified."
+      | s::_ -> cl_sequent := s (*now only process the first one. to support all*)
+  in
   let seq = Sl_seq.of_string !cl_sequent in
   let defs = Sl_defs.of_channel (open_in !defs_path) in
   Sl_rules.setup defs ;
