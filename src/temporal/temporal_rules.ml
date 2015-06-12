@@ -190,18 +190,32 @@ let symex_ifelse_rule =
       let (sf',sf'') = Cond.fork sf c in 
       if Tl_form.is_box tf then
 	let tf' = Tl_form.a_step tf in
-	fix_tps 
-          [[ ([sf'], Cmd.mk_seq cmd1 cont, tf') ; ([sf''], Cmd.mk_seq cmd2 cont,tf') ],
-           "If-[]"
-          ]
+	if Sl_form.inconsistent [sf'] then
+	  if Sl_form.inconsistent [sf''] then
+	    []
+	  else
+	    fix_tps [[ ([sf''], Cmd.mk_seq cmd2 cont, tf')], "If-[]2"]
+	else if Sl_form.inconsistent [sf''] then
+	  fix_tps [[ ([sf'], Cmd.mk_seq cmd2 cont, tf')], "If-[]1"]
+	else
+	  fix_tps 
+            [[ ([sf'], Cmd.mk_seq cmd1 cont, tf') ; ([sf''], Cmd.mk_seq cmd2 cont,tf') ], "If-[]"]
       else if Tl_form.is_diamond tf then
 	let tf' = Tl_form.e_step tf in
-	fix_tps 
-          [[ ([sf'], Cmd.mk_seq cmd1 cont, tf')],
-           "If-<>1" ;
-	   [ ([sf''], Cmd.mk_seq cmd1 cont, tf')],
-           "If-<>2"
-          ]
+	if Sl_form.inconsistent [sf'] then
+	  if Sl_form.inconsistent [sf''] then
+	    []
+	  else
+	    fix_tps [[ ([sf''], Cmd.mk_seq cmd2 cont, tf')], "If-<>2"]
+	else if Sl_form.inconsistent [sf''] then
+	  fix_tps [[ ([sf'], Cmd.mk_seq cmd1 cont, tf')], "If-<>1"]
+	else
+	  fix_tps 
+            [[ ([sf'], Cmd.mk_seq cmd1 cont, tf')],
+             "If-<>1" ;
+	     [ ([sf''], Cmd.mk_seq cmd2 cont, tf')],
+             "If-<>2"
+            ]
       else
 	[]
     with Not_symheap | WrongCmd -> [] in
@@ -216,10 +230,26 @@ let symex_while_rule =
       let (sf',sf'') = Cond.fork sf c in 
       if Tl_form.is_box tf then
 	let tf' = Tl_form.a_step tf in
+	if Sl_form.inconsistent [sf'] then
+	  if Sl_form.inconsistent [sf''] then
+	    []
+	  else
+	    fix_tps [[ ([sf''], cont, tf')], "While-[]2"]
+	else if Sl_form.inconsistent [sf''] then
+	  fix_tps [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], "While-[]1"]
+	else
 	  fix_tps 
 	    [[ ([sf'], Cmd.mk_seq cmd' cmd, tf') ; ([sf''], cont, tf') ], "While-Box"]
       else if Tl_form.is_diamond tf then
 	let tf' = Tl_form.e_step tf in
+	if Sl_form.inconsistent [sf'] then
+	  if Sl_form.inconsistent [sf''] then
+	    []
+	  else
+	    fix_tps [[ ([sf''], cont, tf')], "While-<>2"]
+	else if Sl_form.inconsistent [sf''] then
+	  fix_tps [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], "While-<>1"]
+	else
 	fix_tps 
           [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], 
            "While-<>1" ;
@@ -246,7 +276,9 @@ let symex_while_rule =
 (* the required sequent.                                                          *)
 let matches ((sf,cmd,tf) as seq) ((sf',cmd',tf') as seq') =
   try
-    if not (Cmd.equal cmd cmd' && Tl_form.equal tf tf') then [] else
+    if not (Cmd.equal cmd cmd' && Tl_form.equal tf tf'
+	   && (Tl_form.is_ag tf || Tl_form.is_eg tf)
+	   && (Tl_form.is_ag tf' || Tl_form.is_eg tf')) then [] else
       let (sf, sf') = Pair.map Sl_form.dest(sf,sf') in
       let sub_check = Sl_term.combine_subst_checks [
         Sl_term.basic_lhs_down_check ;
