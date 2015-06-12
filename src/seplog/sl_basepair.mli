@@ -5,6 +5,7 @@ module Allocated : Util.OrderedContainer with type elt = AllocatedT.t
 include Util.BasicType with type t = Allocated.t * Sl_heap.t
 
 module Set : Util.OrderedContainer with type elt = t
+module Hashset: Hashset.S with type elt = t
 
 val vars : t -> Sl_term.Set.t
 

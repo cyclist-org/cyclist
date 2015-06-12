@@ -41,7 +41,7 @@ let resize hashfun tbl =
   let osize = Array.length odata in
   let nsize = min (2 * osize + 1) Sys.max_array_length in
   if nsize <> osize then begin
-    let ndata = Array.create nsize [] in
+    let ndata = Array.make nsize [] in
     let rec insert_bucket = function
         [] -> ()
       | key :: rest ->
@@ -77,13 +77,13 @@ let remove h key =
 let mem h key =
   List.mem key h.data.((Hashtbl.hash key) mod (Array.length h.data))
 
-let cardinal h =
-  let d = h.data in
-  let c = ref 0 in
-  for i = 0 to Array.length d - 1 do
-    c := !c + List.length d.(i)
-  done;
-  !c
+(* let cardinal h =                     *)
+(*   let d = h.data in                  *)
+(*   let c = ref 0 in                   *)
+(*   for i = 0 to Array.length d - 1 do *)
+(*     c := !c + List.length d.(i)      *)
+(*   done;                              *)
+(*   !c                                 *)
 
 let iter f h =
   let d = h.data in
@@ -112,6 +112,27 @@ let is_empty h =
   try  
     iter (fun _ -> raise Not_empty) h ; true
   with Not_empty -> false
+  
+let of_list l =
+  let s = create 11 in
+  let () = List.iter (fun x -> add s x) l in
+  s 
+
+let map_to oadd oempty f xs =
+  fold (fun z ys -> oadd (f z) ys) xs oempty
+
+let cardinal h = h.size
+
+(* changes by RR *)
+
+let to_string to_s h =
+  let elems = fold (fun hd tl -> hd::tl) h [] in
+  String.concat ", " (List.map to_s elems)
+  
+let left_union h h' =
+  let () = iter (fun x -> add h x) h' in
+  h
+
 
 (* Functorial interface *)
 
@@ -119,6 +140,7 @@ module type HashedType =
   sig
     type t
     val equal: t -> t -> bool
+    val to_string : t -> string
     val hash: t -> int
   end
 
@@ -135,7 +157,13 @@ module type S =
     val cardinal: t -> int
     val iter: (elt -> unit) -> t -> unit
     val fold: (elt -> 'a -> 'a) -> t -> 'a -> 'a
+    val left_union : t -> t -> t
     val is_empty : t -> bool
+    val to_string : t -> string
+    val of_list : elt list -> t
+    val to_list : t -> elt list
+    (* val choose : (elt list -> unit) -> t list ->  unit *)
+    val map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b) -> t -> 'a
   end
 
 module Make(H: HashedType): (S with type elt = H.t) =
@@ -157,9 +185,9 @@ module Make(H: HashedType): (S with type elt = H.t) =
       let i = (safehash key) mod (Array.length h.data) in
       let bucket = h.data.(i) in
       if not (mem_in_bucket key bucket) then begin
-	h.data.(i) <- key :: bucket;
-	h.size <- succ h.size;
-	if h.size > Array.length h.data lsl 1 then resize safehash h
+        h.data.(i) <- key :: bucket;
+        h.size <- succ h.size;
+        if h.size > Array.length h.data lsl 1 then resize safehash h
       end
 
     let remove h key =
@@ -176,11 +204,29 @@ module Make(H: HashedType): (S with type elt = H.t) =
     let mem h key =
       mem_in_bucket key h.data.((safehash key) mod (Array.length h.data))
 
-    let cardinal = cardinal
+    let cardinal h = cardinal h
 
-    let iter = iter
-    let fold = fold
+    let iter f h = iter f h
+    let fold f h init = fold f h init
   
     (* changes by NG *)
-    let is_empty = is_empty
+    let is_empty h = is_empty h
+    
+    let of_list l =
+      let s = create (List.length l) in
+      let () = List.iter (fun x -> add s x) l in
+      s 
+
+    let map_to oadd oempty f xs =
+      fold (fun z ys -> oadd (f z) ys) xs oempty
+
+    let to_list xs = 
+      map_to Blist.cons [] Fun.id xs
+                                            
+    (* changes by RR *)
+    let to_string h = to_string H.to_string h
+    let left_union h h' =
+      let () = iter (fun x -> add h x) h' in
+      h
+      
   end

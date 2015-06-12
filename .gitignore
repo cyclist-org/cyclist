@@ -25,3 +25,7 @@ tests/mutant/*
 *.top
 index.html
 _build/
+
+# Python-related Files #
+########################
+*.pyc

@@ -123,6 +123,20 @@ let rec uniq eq = function
   | [] -> []
   | x::xs -> x::(uniq eq (filter (fun x' -> not (eq x x')) xs))
 
+(* Weave combinator - used in the SL Model Checker *)
+(* A "weave" is a generalised form of a fold - it takes as arguments three    *)
+(* operations ([split], [tie], and [join]), a list to weave (i.e. fold) over, *)
+(* and an accumulator. Whereas a fold combines the previously accumulated     *)
+(* value with the next value in the list to produce the new accumulated       *)
+(* value, a weave uses its [split] argument to combine the next element in    *)
+(* the list with the previously accumulated value to produce a *list* of new  *)
+(* accumulated values - not just a single new value. Each new value in this   *)
+(* list is then used as the accumulator for a distinct recursive call to the  *)
+(* weave function - compared with a single recursive call for a fold. Thus,   *)
+(* at this point, the weave produces a list of final values, which are then   *)
+(* combined using the [join] function argument. Furthermore, in constrast to  *)
+(* fold, the weave combinator treats the final element in the list in a       *)
+(* special way, producing only a single value using the [tie] function.       *)
 let rec weave split tie join xs acc = match xs with
   | [] -> join []
   | [x] -> tie x acc
@@ -159,6 +173,10 @@ let combs k l = _combs k (length l) l
 let rec pairs = function
   | [] | [_] -> []
   | x::((x'::_) as xs) -> (x,x')::(pairs xs)
+
+let map_to oadd oempty f xs =
+  foldl (fun ys z -> oadd (f z) ys) oempty xs
+
 
 (* tail rec versions, generally slower *)
 

@@ -73,6 +73,48 @@ module Defs =
       let f' def = Blist.iter f (Sl_preddef.rules def) in
       Blist.iter f' defs
 
+    let relevant_defs all_defs f = 
+      let ident_set ids = Sl_predsym.Set.of_list (Sl_predsym.MSet.to_list ids) in
+      let iterate preds =
+        let add_preds pred preds = 
+          let rules = get_def pred all_defs in
+          let add_preds_from_rule preds rule =
+            let (body, _) = Sl_indrule.dest rule in
+            let new_preds = ident_set (Sl_heap.idents body) in
+            Sl_predsym.Set.union preds new_preds in
+          Blist.foldl add_preds_from_rule preds rules in
+        Sl_predsym.Set.fold add_preds preds preds in
+      let init_ids = 
+        let ident_mset = Blist.fold_right 
+          (fun h -> Sl_predsym.MSet.union (Sl_heap.idents h)) 
+          f Sl_predsym.MSet.empty in
+        ident_set ident_mset in 
+      let relevant_preds = Sl_predsym.Set.fixpoint iterate init_ids in
+      Sl_predsym.Set.fold
+        (fun pred defs -> add (Sl_preddef.mk ((get_def pred all_defs), pred)) defs)
+        relevant_preds
+        empty
+    
+    let check_form_wf defs f =
+      let check_pred p = 
+        let predsym = Sl_tpred.predsym p in
+        let pname = Sl_predsym.to_string predsym in
+        if not (mem predsym defs) then
+          invalid_arg ("Cannot find definition for predicate " ^ pname)
+        else
+          let def = get_def predsym defs in
+          if not (Blist.is_empty def) then
+            let expected = Sl_indrule.arity (Blist.hd def) in
+            let provided = Sl_tpred.arity p in 
+            if expected <> provided then
+              invalid_arg ("Predicate " ^ pname ^ " given " ^ 
+                (Int.to_string provided) ^ " arguments when " ^
+                (Int.to_string expected) ^ " expected!") in
+      Blist.iter
+        (fun h -> let (_, _, _, inds) = Sl_heap.dest h in
+          Sl_tpreds.iter check_pred inds)
+        f
+          
   end
 include Defs
 include Fixpoint(Defs)

@@ -1,5 +1,11 @@
 open Lib
 
+(* boost::hash_combine *)
+(* size_t hash_combine( size_t lhs, size_t rhs ) {     *)
+(*   lhs^= rhs + 0x9e3779b9 + (lhs << 6) + (lhs >> 2); *)
+(*   return lhs;                                       *)
+(* }                                                   *)
+
 let genhash h v = h lxor (v + (h lsl 5) + (h lsr 2))
 
 module type BasicType =
@@ -85,8 +91,15 @@ module MakeFList(T: BasicType) : BasicType with type t = T.t list =
       | ([], []) -> true
       | (hd::tl, hd'::tl') -> T.equal hd hd' && equal tl tl'
       | ([], _) | (_, []) -> false
-(*    let hash l = Blist.fold_left (fun h v -> genhash h (T.hash v)) 0 l*)
-    let hash = Hashtbl.hash
+    
+    let hash l = Blist.fold_left (fun h v -> genhash h (T.hash v)) 0x9e3779b9 l
+    (* let hash l =                                    *)
+    (*   let rec aux h = function                      *)
+    (*     | [] -> h                                   *)
+    (*     | x::xs -> aux (genhash h (T.hash x)) xs in *)
+    (*   aux 0x9e3779b9 l                              *)
+    (* let hash = Hashtbl.hash *)
+    
     let to_string (l:t) = String.concat ", " (Blist.map T.to_string l)
     let pp fmt l =
       Format.fprintf fmt "@[[%a]@]" (Blist.pp pp_semicolonsp T.pp) l
@@ -416,6 +429,7 @@ module type CTsig =
     module Set : OrderedContainer
     module Map : OrderedMap
     module Hashmap : Hashtbl.S
+    module Hashset : Hashset.S
     module MSet : OrderedContainer
     module FList : BasicType
   end
@@ -424,13 +438,16 @@ module ContaineriseType(T: BasicType) : CTsig
   with type Set.elt=T.t
   with type Map.key=T.t
   with type Hashmap.key=T.t
+  with type Hashset.elt=T.t
   with type MSet.elt=T.t
   with type FList.t=T.t list
   =
   struct
-    module Set = MakeListSet(T)
+    (* module Set = MakeListSet(T) *)
+    module Set = MakeTreeSet(T) 
     module Map = MakeMap(T)
     module Hashmap = Hashtbl.Make(T)
+    module Hashset = Hashset.Make(T)
     module MSet = MakeMultiset(T)
     module FList = MakeFList(T)
   end
@@ -450,11 +467,13 @@ module MakeComplexType(T: BasicType) : MCTsig
   with type Set.elt=T.t
   with type Map.key=T.t
   with type Hashmap.key=T.t
+  with type Hashset.elt=T.t
   with type MSet.elt=T.t
   with type FList.t=T.t list
   with type Pairing.Set.elt=T.t * T.t
   with type Pairing.Map.key=T.t * T.t
   with type Pairing.Hashmap.key=T.t * T.t
+  with type Pairing.Hashset.elt=T.t * T.t
   with type Pairing.MSet.elt=T.t * T.t
   with type Pairing.FList.t=(T.t * T.t) list
   =
