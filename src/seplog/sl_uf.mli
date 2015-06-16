@@ -18,6 +18,7 @@ val add : Sl_tpair.t -> t -> t
 val union : t -> t -> t
 
 val fold : (Sl_term.t -> Sl_term.t -> 'a -> 'a) -> t -> 'a -> 'a 
+val for_all : (Sl_term.t -> Sl_term.t -> bool) -> t -> bool
 
 val all_members_of : t -> t -> bool
 (** [all_members_of eqs eqs'] returns true iff all equalities in [eqs] are also

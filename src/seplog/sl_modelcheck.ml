@@ -201,13 +201,15 @@ module ModelChecker =
               Format.fprintf fmt "]@]"
             let to_string h = mk_to_string pp h
             
-            let get_all_vals h = List.fold_left
-              (fun vs (l, vs') -> 
-                Value.Set.add 
-                  (Value.mk_loc_val l) 
-                  (Value.Set.union vs (Value.Set.of_list vs')))
-              Value.Set.empty
-              (Location.Map.bindings h)
+            let get_all_vals h = 
+              Location.Map.fold 
+                (fun l lvs vs ->
+                  List.fold_left
+                    (fun vs' x -> Value.Set.add x vs') 
+                    (Value.Set.add (Value.mk_loc_val l) vs) 
+                    lvs)
+                h
+                Value.Set.empty
             
             module Parser =
               struct
@@ -255,12 +257,17 @@ module ModelChecker =
               Format.fprintf fmt "]@]"
             let to_string s = mk_to_string pp s
             
-            let vars s = Var.Set.of_list (List.map fst (Var.Map.bindings s))
+            let vars stack = 
+              Var.Map.fold
+                (fun v _ s -> Var.Set.add v s)
+                stack
+                Var.Set.empty
             
-            let get_all_vals s = 
-              let bindings = Var.Map.bindings s in
-              let vals = List.map (fun (_, v) -> v) bindings in
-              Value.Set.of_list vals
+            let get_all_vals stack = 
+              Var.Map.fold
+                (fun _ v s -> Value.Set.add v s)
+                stack
+                Value.Set.empty
               
             let empty : t = Var.Map.empty
             
@@ -268,33 +275,29 @@ module ModelChecker =
               let bindings = List.filter
                 (fun (t, v) -> not ((Sl_term.is_nil t) && (Value.equal v Value.nil)))
                 bindings in
-              Option.map 
-                Var.Map.of_list 
-                (Option.pred 
-                  (List.for_all (fun (t,_) -> Sl_term.is_var t)) 
-                  bindings)
+              if List.for_all (fun (t,_) -> Sl_term.is_var t) bindings then
+                Some (Var.Map.of_list bindings) else None
             
             let consistent s s' =
-              let clashes x v = 
-                Var.Map.mem x s' && not (Value.equal v (Var.Map.find x s')) in
-              let clash_map = Var.Map.filter clashes s in
-              Var.Map.is_empty clash_map
+              Var.Map.for_all
+                (fun x v -> not (Var.Map.mem x s') || Value.equal v (Var.Map.find x s'))
+                s
             
             let merge s s' = 
               let merge_f x v v' = match (v, v') with
                 | (None, None) -> None
                 | (None, v) -> v
                 | (v, None) -> v
-                | (Some(v), Some(v')) ->
-                    if Value.equal v v' then Some(v)
+                | (Some(v) as ret, Some(v')) ->
+                    if Value.equal v v' then ret
                     else raise (invalid_arg ("Stacks are not consistent in _
                       the value of " ^ (Var.to_string x) ^ "!")) in
               Var.Map.merge merge_f s s'
             
             let satisfies (eqs, deqs) s = 
               let () = debug (fun _ -> "checking stack " ^ (to_string s)) in
-              List.for_all
-                (fun (t, t') -> 
+              Sl_uf.for_all
+                (fun t t' -> 
                   let b =
                   (Sl_term.is_nil t && Sl_term.is_nil t') ||
                   (Sl_term.is_var t && not (Var.Map.mem t s)) ||
@@ -309,7 +312,7 @@ module ModelChecker =
                     (if b then "" else "not ") ^ "satisfy equality " ^ 
                     (Sl_tpair.to_string (t, t'))) in
                   b)
-                (Sl_uf.bindings eqs)
+                eqs
                   &&
               Sl_deqs.for_all
                 (fun (t, t') -> 
@@ -327,15 +330,15 @@ module ModelChecker =
                     (if b then "" else "not ") ^ "satisfy disequality " ^ 
                     (Sl_tpair.to_string (t, t'))) in
                   b)
-                (deqs)                  
-            
+                deqs                 
+                        
             (* precondition:  satisfies (eqs, deqs) s            *)
             (* precondition:  satisfies (eqs, deqs) s'           *)
             (* precondition:  consistent s s'                    *)
             (* postcondition: satisfies (eqs, deqs) (merge s s') *)
             let cross_satisfies (eqs, deqs) s s' = 
-              List.for_all
-                (fun (t, t') ->
+              Sl_uf.for_all
+                (fun t t' ->
                   Sl_term.is_nil t || Sl_term.is_nil t' ||
                   ((not (Var.Map.mem t s)) && not (Var.Map.mem t s')) ||
                   ((not (Var.Map.mem t' s)) && not (Var.Map.mem t' s')) ||
@@ -345,7 +348,7 @@ module ModelChecker =
                     (Value.equal (Var.Map.find t s) (Var.Map.find t' s'))) ||
                   ((Var.Map.mem t s') && 
                     (Value.equal (Var.Map.find t s') (Var.Map.find t' s))))
-                (Sl_uf.bindings eqs)
+                eqs
                   &&
               Sl_deqs.for_all
                 (fun (t, t') ->
@@ -358,7 +361,7 @@ module ModelChecker =
                     not (Value.equal (Var.Map.find t s) (Var.Map.find t' s'))) ||
                   ((Var.Map.mem t s') && 
                     not (Value.equal (Var.Map.find t s') (Var.Map.find t' s))))
-                (deqs)
+                deqs
             
             module Parser =
               struct
@@ -516,12 +519,11 @@ module ModelChecker =
               Sl_predsym.Map.map f itp
               
             let add_spares n vs = 
-              let rec add n v vs = match n with
-                | n when n <= 0 -> vs
-                | _ -> 
-                  let v' = Value.succ v in
-                  let vs' = Value.Set.add v' vs in
-                  add (n-1) v' vs' in
+              let rec add n v vs = 
+                if n <= 0 then vs else
+                let v' = Value.succ v in
+                let vs' = Value.Set.add v' vs in
+                add (n-1) v' vs' in
               let max_elt =
                 if Value.Set.is_empty vs then Value.zero
                 else Value.Set.max_elt vs in
@@ -540,17 +542,16 @@ module ModelChecker =
               model bases which represents the interpretation of (Pi : F) 
             **)
             let generate_models ts constraints itpts =
-              let acc_model (vs, ls) models =
+              let models = 
+                ModelBase.Hashset.create (InterpretantBase.Set.cardinal itpts) in
+              let acc_model (vs, ls) =
                 match (Stack.of_term_bindings (List.combine ts vs)) with
-                | None -> models
+                | None -> ()
                 | Some(stack) ->
                     if Stack.satisfies constraints stack then
-                      ModelBase.Hashset.add models (stack, ls);
-                    models in
-              (* Hashset.create: we can tweak the initial size of the hashset for performance *)
-              let empty = 
-                ModelBase.Hashset.create (InterpretantBase.Set.cardinal itpts) in
-              InterpretantBase.Set.fold acc_model itpts empty
+                      ModelBase.Hashset.add models (stack, ls) in
+              InterpretantBase.Set.iter acc_model itpts ;
+              models 
               
             (**
               Given some pure [constraints] Pi and two sets of model bases [ms]   
@@ -594,7 +595,7 @@ module ModelChecker =
                       (new_stack, new_heap_spt) in
                     ModelBase.Hashset.add new_mdls new_mdl in
                 ModelBase.Hashset.iter merge_acc ms' in
-              let () = ModelBase.Hashset.iter merge ms in
+              ModelBase.Hashset.iter merge ms ;
               new_mdls
             
             (* Note: some efficiency savings to be made here possibly along the *)
@@ -864,8 +865,15 @@ module ModelChecker =
                         (fun (s, ls) itpts ->
                           let vs = List.map 
                             (fun x -> 
-                              try Var.Map.find x s with Not_found -> 
-                                print_endline("could not find variable " ^ (Var.to_string x) ^ " in stack " ^ (Stack.to_string s)); raise Not_found) 
+                              if not (Var.Map.mem x s) then 
+                                begin
+                                  print_endline ("could not find variable " ^ 
+                                    (Var.to_string x) ^ " in stack " ^ 
+                                    (Stack.to_string s)); 
+                                    raise Not_found
+                                end
+                              else
+                                Var.Map.find x s) 
                             params in
                           InterpretantBase.Set.add (vs, ls) itpts)
                         full_models

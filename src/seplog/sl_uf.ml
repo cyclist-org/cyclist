@@ -25,6 +25,7 @@ let pp fmt v =
     (bindings v)
    
 let fold f a uf = Sl_term.Map.fold f a uf
+let for_all f uf = Sl_term.Map.for_all f uf
 
 let rec find x m =
   if Sl_term.Map.mem x m then
