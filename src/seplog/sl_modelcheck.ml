@@ -7,16 +7,18 @@ module List = Blist
 
 module Var :
   sig
-    include BasicType with type t = Sl_term.t
+    include BasicType 
     module Set : OrderedContainer with type elt = t
     module Map : OrderedMap with type key = t 
     val of_term : Sl_term.t -> t
+    val to_term : t -> Sl_term.t
     val parse : (t, 'a) MParser.t
   end
     =
   struct
     include Sl_term
     let of_term t = assert (Sl_term.is_var t) ; t 
+    let to_term t = t
     let parse st = (Sl_term.parse |>> (fun t -> of_term t)) st
   end
 
@@ -191,7 +193,7 @@ module Make (Sig : ValueSig) : S
           Format.fprintf fmt "@[[@ ";
           Var.Map.iter 
             (fun k v -> Format.fprintf fmt "%a%s%a,@ " 
-              Sl_term.pp k symb_mapsto.sep Value.pp v)
+              Var.pp k symb_mapsto.sep Value.pp v)
             h;
           Format.fprintf fmt "]@]"
         let to_string s = mk_to_string pp s
@@ -215,7 +217,7 @@ module Make (Sig : ValueSig) : S
             (fun (t, v) -> not ((Sl_term.is_nil t) && (Value.equal v Value.nil)))
             bindings in
           if List.for_all (fun (t,_) -> Sl_term.is_var t) bindings then
-            Some (Var.Map.of_list bindings) else None
+            Some (Var.Map.of_list (List.map (fun (x,y) -> (Var.of_term x, y)) bindings)) else None
         
         let consistent s s' =
           Var.Map.for_all
@@ -239,13 +241,13 @@ module Make (Sig : ValueSig) : S
             (fun t t' -> 
               let b =
               (Sl_term.is_nil t && Sl_term.is_nil t') ||
-              (Sl_term.is_var t && not (Var.Map.mem t s)) ||
-              (Sl_term.is_var t' && not (Var.Map.mem t' s)) ||
+              (Sl_term.is_var t && not (Var.Map.mem (Var.of_term t) s)) ||
+              (Sl_term.is_var t' && not (Var.Map.mem (Var.of_term t') s)) ||
               (Sl_term.is_nil t && 
-                Value.equal Value.nil (Var.Map.find t' s)) ||
+                Value.equal Value.nil (Var.Map.find (Var.of_term t') s)) ||
               (Sl_term.is_nil t' &&
-                Value.equal Value.nil (Var.Map.find t s)) ||
-              (Value.equal (Var.Map.find t s) (Var.Map.find t' s)) in
+                Value.equal Value.nil (Var.Map.find (Var.of_term t) s)) ||
+              (Value.equal (Var.Map.find (Var.of_term t) s) (Var.Map.find (Var.of_term t') s)) in
               let () = debug (fun _ ->
                 "does " ^ 
                 (if b then "" else "not ") ^ "satisfy equality " ^ 
@@ -256,14 +258,14 @@ module Make (Sig : ValueSig) : S
           Sl_deqs.for_all
             (fun (t, t') -> 
               let b =
-              (Sl_term.is_var t && not (Var.Map.mem t s)) ||
-              (Sl_term.is_var t' && not (Var.Map.mem t' s)) ||
+              (Sl_term.is_var t && not (Var.Map.mem (Var.of_term t) s)) ||
+              (Sl_term.is_var t' && not (Var.Map.mem (Var.of_term t') s)) ||
               (Sl_term.is_nil t && (Sl_term.is_var t') && 
-                not (Value.equal Value.nil (Var.Map.find t' s))) ||
+                not (Value.equal Value.nil (Var.Map.find (Var.of_term t') s))) ||
               (Sl_term.is_var t && (Sl_term.is_nil t') && 
-                not (Value.equal Value.nil (Var.Map.find t s))) ||
+                not (Value.equal Value.nil (Var.Map.find (Var.of_term t) s))) ||
               (Sl_term.is_var t && (Sl_term.is_var t') &&
-                not (Value.equal (Var.Map.find t s) (Var.Map.find t' s))) in
+                not (Value.equal (Var.Map.find (Var.of_term t) s) (Var.Map.find (Var.of_term t') s))) in
               let () = debug (fun _ ->
                 "does " ^ 
                 (if b then "" else "not ") ^ "satisfy disequality " ^ 
@@ -279,27 +281,27 @@ module Make (Sig : ValueSig) : S
           Sl_uf.for_all
             (fun t t' ->
               Sl_term.is_nil t || Sl_term.is_nil t' ||
-              ((not (Var.Map.mem t s)) && not (Var.Map.mem t s')) ||
-              ((not (Var.Map.mem t' s)) && not (Var.Map.mem t' s')) ||
-              ((Var.Map.mem t s) && (Var.Map.mem t s')) ||
-              ((Var.Map.mem t' s) && (Var.Map.mem t' s')) ||
-              ((Var.Map.mem t s) && 
-                (Value.equal (Var.Map.find t s) (Var.Map.find t' s'))) ||
-              ((Var.Map.mem t s') && 
-                (Value.equal (Var.Map.find t s') (Var.Map.find t' s))))
+              ((not (Var.Map.mem (Var.of_term t) s)) && not (Var.Map.mem (Var.of_term t) s')) ||
+              ((not (Var.Map.mem (Var.of_term t') s)) && not (Var.Map.mem (Var.of_term t') s')) ||
+              ((Var.Map.mem (Var.of_term t) s) && (Var.Map.mem (Var.of_term t) s')) ||
+              ((Var.Map.mem (Var.of_term t') s) && (Var.Map.mem (Var.of_term t') s')) ||
+              ((Var.Map.mem (Var.of_term t) s) && 
+                (Value.equal (Var.Map.find (Var.of_term t) s) (Var.Map.find (Var.of_term t') s'))) ||
+              ((Var.Map.mem (Var.of_term t) s') && 
+                (Value.equal (Var.Map.find (Var.of_term t) s') (Var.Map.find (Var.of_term t') s))))
             eqs
               &&
           Sl_deqs.for_all
             (fun (t, t') ->
               Sl_term.is_nil t || Sl_term.is_nil t' ||
-              ((not (Var.Map.mem t s)) && not (Var.Map.mem t s')) ||
-              ((not (Var.Map.mem t' s)) && not (Var.Map.mem t' s')) ||
-              ((Var.Map.mem t s) && (Var.Map.mem t s')) ||
-              ((Var.Map.mem t' s) && (Var.Map.mem t' s')) ||
-              ((Var.Map.mem t s) && 
-                not (Value.equal (Var.Map.find t s) (Var.Map.find t' s'))) ||
-              ((Var.Map.mem t s') && 
-                not (Value.equal (Var.Map.find t s') (Var.Map.find t' s))))
+              ((not (Var.Map.mem (Var.of_term t) s)) && not (Var.Map.mem (Var.of_term t) s')) ||
+              ((not (Var.Map.mem (Var.of_term t') s)) && not (Var.Map.mem (Var.of_term t') s')) ||
+              ((Var.Map.mem (Var.of_term t) s) && (Var.Map.mem (Var.of_term t) s')) ||
+              ((Var.Map.mem (Var.of_term t') s) && (Var.Map.mem (Var.of_term t') s')) ||
+              ((Var.Map.mem (Var.of_term t) s) && 
+                not (Value.equal (Var.Map.find (Var.of_term t) s) (Var.Map.find (Var.of_term t') s'))) ||
+              ((Var.Map.mem (Var.of_term t) s') && 
+                not (Value.equal (Var.Map.find (Var.of_term t) s') (Var.Map.find (Var.of_term t') s))))
             deqs
         
         type stack = t
@@ -595,24 +597,27 @@ module Make (Sig : ValueSig) : S
     (* immediately. *)
     let valid_extns (eqs, deqs) vs xs s =
       let mapped_vars = Stack.vars s in
-      let (det_extn, still_to_be_mapped) = Sl_term.Set.fold
+      let (det_extn, still_to_be_mapped) = Var.Set.fold
         (fun x (bndgs, zs) -> 
-          let y = Var.Set.find_opt (Sl_uf.equates eqs x) mapped_vars in
+          let y = 
+            Var.Set.find_opt 
+              (fun z -> Sl_uf.equates eqs (Var.to_term x) (Var.to_term z)) 
+              mapped_vars in
           match y with
             | None -> (bndgs, zs)
-            | Some(y) -> ((x, (Var.Map.find y s))::bndgs, (Sl_term.Set.remove x zs)))
+            | Some(y) -> ((x, (Var.Map.find y s))::bndgs, (Var.Set.remove x zs)))
         xs
         ([], xs) in
       let s' = Var.Map.add_bindings det_extn s in
       let equiv_classes = 
         let rec add_to_classes t = function
-          | [] -> [Sl_term.Set.singleton t]
+          | [] -> [Var.Set.singleton t]
           | c::cs -> 
-            let found = Sl_term.Set.exists 
-              (fun t' -> Sl_uf.equates eqs t t') c in
-            if found then (Sl_term.Set.add t c)::cs
+            let found = Var.Set.exists 
+              (fun t' -> Sl_uf.equates eqs (Var.to_term t) (Var.to_term t')) c in
+            if found then (Var.Set.add t c)::cs
             else c::(add_to_classes t cs) in 
-        Sl_term.Set.fold add_to_classes still_to_be_mapped [] in
+        Var.Set.fold add_to_classes still_to_be_mapped [] in
       let valuations = Fun.iter 
         (fun acc -> List.flatten 
           (Value.Set.fold 
@@ -625,7 +630,7 @@ module Make (Sig : ValueSig) : S
         (* List.weave f f List.flatten equiv_classes [] in *)
       let test_extn valuation =
         let ext = List.fold_left2
-          (fun bndgs v eq_class -> Sl_term.Set.fold 
+          (fun bndgs v eq_class -> Var.Set.fold 
             (fun x bndgs -> (x, v)::bndgs) eq_class bndgs) 
           [] valuation equiv_classes in
         let s' = Var.Map.add_bindings ext s' in
@@ -653,11 +658,15 @@ module Make (Sig : ValueSig) : S
       let new_mdls = 
         ModelBase.Hashset.create (ModelBase.Hashset.cardinal mdls) in
       let acc_saturated_models (s, ls) =
-        let unmapped_univs = Sl_term.Set.filter
-          (fun x -> (Sl_term.is_univ_var x) && not (Var.Map.mem x s))
-          (Sl_term.Set.union params 
-            (Sl_term.Set.union (Sl_uf.vars eqs) (Sl_deqs.vars deqs))) in
-        if Sl_term.Set.is_empty unmapped_univs then
+        let unmapped_univs = Var.Set.filter
+          (fun x -> (Sl_term.is_univ_var (Var.to_term x)) && not (Var.Map.mem x s))
+          (Var.Set.union params 
+            (Var.Set.of_list 
+              (List.map Var.of_term 
+                (List.rev_append 
+                  (Sl_term.Set.to_list (Sl_uf.vars eqs)) 
+                  (Sl_term.Set.to_list (Sl_deqs.vars deqs)))))) in
+        if Var.Set.is_empty unmapped_univs then
           ModelBase.Hashset.add new_mdls (s, ls)
         else
           let good_stacks = Option.list_get 
@@ -676,10 +685,15 @@ module Make (Sig : ValueSig) : S
       [constraints] and also satisfies [constraints].
     **)
     let exs_satisfiable (eqs, deqs) vs s =
-      let unmapped_exs = Sl_term.Set.filter
-        (fun x -> (Sl_term.is_exist_var x) && not (Var.Map.mem x s))
-        (Sl_term.Set.union (Sl_uf.vars eqs) (Sl_deqs.vars deqs)) in
-      (Sl_term.Set.is_empty unmapped_exs) ||
+      let unmapped_exs = 
+        Var.Set.filter
+        (fun x -> (Sl_term.is_exist_var (Var.to_term x)) && not (Var.Map.mem x s))
+        (Var.Set.of_list 
+          (List.map Var.of_term 
+            (List.rev_append 
+              (Sl_term.Set.to_list (Sl_uf.vars eqs)) 
+              (Sl_term.Set.to_list (Sl_deqs.vars deqs))))) in
+      (Var.Set.is_empty unmapped_exs) ||
       Option.is_some 
         (List.find_some |> (valid_extns (eqs, deqs) vs unmapped_exs s))
               
@@ -799,7 +813,7 @@ module Make (Sig : ValueSig) : S
               let saturate mdls =
                 let () = debug (fun _ -> "Starting universal variable saturation") in
                 let mdls = saturate_univs 
-                  (Sl_term.Set.of_list params) constraints valset mdls in
+                  (Var.Set.of_list (List.map Var.of_term params)) constraints valset mdls in
                 let () = debug (fun _ -> "Candidate models after universal variable saturation: " ^ 
                   (ModelBase.Hashset.to_string mdls)) in
                 let () = debug (fun _ -> "Starting existential variable saturation") in
@@ -856,6 +870,7 @@ module Make (Sig : ValueSig) : S
                 (fun (s, ls) itpts ->
                   let vs = List.map 
                     (fun x -> 
+                      let x = Var.of_term x in
                       if not (Var.Map.mem x s) then 
                         begin
                           print_endline ("could not find variable " ^ 
@@ -938,8 +953,9 @@ module Make (Sig : ValueSig) : S
         try
           List.map
             (fun x -> 
+              let x = Var.of_term x in
               try Var.Map.find x stk
-              with Not_found -> invalid_arg (Sl_term.to_string x))
+              with Not_found -> invalid_arg (Var.to_string x))
             formals
         with Invalid_argument(var) -> 
           failwith ("No mapping found for " ^ var ^ " in provided stack") in
