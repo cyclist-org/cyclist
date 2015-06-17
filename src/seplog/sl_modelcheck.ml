@@ -214,10 +214,12 @@ module Make (Sig : ValueSig) : S
         
         let of_term_bindings bindings =
           let bindings = List.filter
-            (fun (t, v) -> not ((Sl_term.is_nil t) && (Value.equal v Value.nil)))
+            (fun (t, v) -> not (Sl_term.is_nil t && Value.equal v Value.nil))
             bindings in
           if List.for_all (fun (t,_) -> Sl_term.is_var t) bindings then
-            Some (Var.Map.of_list (List.map (fun (x,y) -> (Var.of_term x, y)) bindings)) else None
+              Some (Var.Map.of_list (List.map (fun (x,y) -> (Var.of_term x, y)) bindings)) 
+            else 
+              None
         
         let consistent s s' =
           Var.Map.for_all
@@ -229,10 +231,7 @@ module Make (Sig : ValueSig) : S
             | (None, None) -> None
             | (None, v) -> v
             | (v, None) -> v
-            | (Some(v) as ret, Some(v')) ->
-                if Value.equal v v' then ret
-                else invalid_arg ("Stacks are not consistent in _
-                  the value of " ^ (Var.to_string x) ^ "!") in
+            | (Some(v) as ret, Some(v')) -> assert (Value.equal v v') ; ret in
           Var.Map.merge merge_f s s'
         
         let satisfies (eqs, deqs) s = 
@@ -339,21 +338,11 @@ module Make (Sig : ValueSig) : S
         include Location.Set                
         let empty = Location.Set.empty
         let inj h h' =
-          if not
-               (Location.Map.for_all 
-                 (fun k _ -> Location.Map.mem k h) h') then
-            invalid_arg ("Not a subheap!") 
-          else
-            Location.Map.fold
-              (fun l _ ls -> Location.Set.add l ls)
-              h' empty
+          assert (Location.Map.for_all (fun k _ -> Location.Map.mem k h) h') ;
+          Location.Map.fold (fun l _ ls -> Location.Set.add l ls) h' empty
         let proj h x =
-          if not 
-               (Location.Set.for_all 
-                 (fun l -> Location.Map.mem l h) x) then
-            invalid_arg ("Missing locations!")
-          else
-            Location.Map.filter (fun k _ -> Location.Set.mem k x) h
+          assert (Location.Set.for_all (fun l -> Location.Map.mem l h) x) ;
+          Location.Map.filter (fun k _ -> Location.Set.mem k x) h
         (* TODO: Eta-expand *)
         let disjoint = Location.Set.disjoint
         let union = Location.Set.union
@@ -504,13 +493,14 @@ module Make (Sig : ValueSig) : S
               
     let decorate h itp = 
       let f (ancestors, parents) =
-        let add_subst_heap (vs, ls) acc = 
+        let acc = Interpretant.Hashset.create 11 in
+        let add_subst_heap (vs, ls) = 
           let h' = HeapBase.proj h ls in
-          Interpretant.Set.add (vs, h') acc in
-        InterpretantBase.Set.fold 
+          Interpretant.Hashset.add acc (vs, h') in
+        InterpretantBase.Set.iter 
           add_subst_heap 
-          (InterpretantBase.Set.union ancestors parents)
-          Interpretant.Set.empty in 
+          (InterpretantBase.Set.union ancestors parents) ; 
+        acc in 
       Sl_predsym.Map.map f itp
               
     let add_spares n vs = 
@@ -869,17 +859,7 @@ module Make (Sig : ValueSig) : S
               let itpts = ModelBase.Hashset.fold
                 (fun (s, ls) itpts ->
                   let vs = List.map 
-                    (fun x -> 
-                      let x = Var.of_term x in
-                      if not (Var.Map.mem x s) then 
-                        begin
-                          print_endline ("could not find variable " ^ 
-                            (Var.to_string x) ^ " in stack " ^ 
-                            (Stack.to_string s)); 
-                            raise Not_found
-                        end
-                      else
-                        Var.Map.find x s) 
+                    (fun x -> let x = Var.of_term x in Var.Map.find x s) 
                     params in
                   InterpretantBase.Set.add (vs, ls) itpts)
                 full_models
@@ -902,30 +882,19 @@ module Make (Sig : ValueSig) : S
         let () = debug (fun _ -> "New interpretants after iteration: " ^ 
           (Sl_predsym.Map.to_string InterpretantBase.Set.to_string new_itp)) in
         (* Add the new interpretants to the old ones *)
-        try
-          let combined_mapping = List.map2
-              (fun (p, (xs, ys)) (p', zs) ->
-                if not (Sl_predsym.equal p p') then
-                  failwith ("Something has gone wrong: " 
-                    ^ (Sl_predsym.to_string p) ^ " and " 
-                    ^ (Sl_predsym.to_string p') ^ " do not match!")
-                else
-                  let ancestors = InterpretantBase.Set.union xs ys in
-                  let parent = InterpretantBase.Set.diff zs ancestors in
-                  (p, (ancestors, parent)) 
-                )
-              (Sl_predsym.Map.bindings itp)
-              (Sl_predsym.Map.bindings new_itp) in
-            let new_itp = Sl_predsym.Map.of_list combined_mapping in
-            let () = debug (fun _ -> "result of iteration: " ^ 
-              (Sl_predsym.Map.to_string BaseSetPair.to_string new_itp)) in
-            new_itp
-        with Invalid_argument(s) -> 
-          failwith (
-            "Something wrong: interpretations map different numbers of predicates!\n" 
-            ^ (Printexc.to_string (Invalid_argument(s))) ^ "\n"
-            ^ (Printexc.get_backtrace ())) 
-        in
+        let combined_mapping = List.map2
+            (fun (p, (xs, ys)) (p', zs) ->
+              assert (Sl_predsym.equal p p') ;
+              let ancestors = InterpretantBase.Set.union xs ys in
+              let parent = InterpretantBase.Set.diff zs ancestors in
+              (p, (ancestors, parent)) 
+              )
+            (Sl_predsym.Map.bindings itp)
+            (Sl_predsym.Map.bindings new_itp) in
+          let new_itp = Sl_predsym.Map.of_list combined_mapping in
+          let () = debug (fun _ -> "result of iteration: " ^ 
+            (Sl_predsym.Map.to_string BaseSetPair.to_string new_itp)) in
+          new_itp in
       generator 
               
     let mk (defs, (vs, h)) =
@@ -940,34 +909,25 @@ module Make (Sig : ValueSig) : S
       let () = Sl_defs.check_form_wf defs f in
       let defs = Sl_defs.of_formula defs f in
       let new_def = List.hd (Sl_defs.to_list defs) in
-      let new_predsym = Sl_preddef.predsym (new_def) in
+      let new_predsym = Sl_preddef.predsym new_def in
       let vals = 
         let rl = 
           let rls = Sl_preddef.rules new_def in
-          if List.length rls == 1 then
-            List.hd rls
-          else
-            (* Sanity check *)
-            failwith "Unexpected number of clauses in new definition" in
+          assert (List.length rls == 1) ;
+          List.hd rls in
         let formals = Sl_indrule.formals rl in
-        try
-          List.map
-            (fun x -> 
-              let x = Var.of_term x in
-              try Var.Map.find x stk
-              with Not_found -> invalid_arg (Var.to_string x))
-            formals
-        with Invalid_argument(var) -> 
-          failwith ("No mapping found for " ^ var ^ " in provided stack") in
+        List.map
+          (fun x -> let x = Var.of_term x in Var.Map.find x stk)
+          formals in
       let () = debug (fun _ -> Sl_defs.to_string defs) in
       let () = debug (fun _ -> Stack.to_string stk) in
       let () = debug (fun _ -> Heap.to_string h) in
       let () = debug (fun _ -> Sl_preddef.to_string new_def) in
       let () = debug (fun _ -> Value.FList.to_string vals) in          
       let interp = mk (defs, (vals, h)) in 
-      Interpretant.Set.mem
-        (vals, h)
+      Interpretant.Hashset.mem
         (Sl_predsym.Map.find new_predsym interp) 
+        (vals, h)
         
   end
             
