@@ -36,7 +36,7 @@ module type S =
       sig
         include NaturalType
         val mk_loc_val : Location.t -> t
-        (* val mk_scalar_val : Scalar.t -> t -- FIXME: unused *)
+        val mk_scalar_val : Scalar.t -> t
         (* val nil : t  -- FIXME: unused *)
     end
         
@@ -47,6 +47,7 @@ module type S =
             val parse_scalar : (Value.t, 'a) MParser.t 
             val parse_location : (Location.t, 'a) MParser.t 
           end) : ParserSig with type t = t
+        val size : t -> int
       end
 
     module Stack :
@@ -122,7 +123,7 @@ module Make (Sig : ValueSig) : S
         include T
         include ContaineriseType(T)
         let mk_loc_val l = Location(l)
-        (* let mk_scalar_val v = Scalar(v) -- FIXME: unused*)
+        let mk_scalar_val v = Scalar(v)
         let nil = zero
       end
           
@@ -155,6 +156,8 @@ module Make (Sig : ValueSig) : S
             h
             Value.Set.empty
         
+        let size h = List.length (Location.Map.bindings h)
+            
         type heap  = t (* used to get aroung cyclicity of type t = t below *)
         module MakeParser (T : sig 
             val parse_scalar : (Value.t, 'a) MParser.t 
@@ -168,11 +171,12 @@ module Make (Sig : ValueSig) : S
                 Tokens.comma_sep (
                 T.parse_location >>= (fun l ->
                 parse_symb symb_mapsto >>
+                (optional parse_ident) >>
                 Tokens.parens (Tokens.comma_sep T.parse_scalar) |>> 
                 (fun vs -> (l, vs)))) |>> 
                 (fun cells -> Location.Map.of_list cells))) st
             let of_string s = handle_reply (MParser.parse_string parse s ()) 
-            
+                    
           end
       end
           
@@ -353,21 +357,95 @@ module Make (Sig : ValueSig) : S
         let union = Location.Set.union
       end
               
-    module BitvBase =
-      struct
-        (* TODO: Make a HeapBase with bit vector as underlying implementation *)
-      end
+      module BitvBase =
+        struct
+          let to_bool_list b =
+            Bitv_string.fold_right (fun v vs -> v::vs) b []
+          (* Functions for implementing BasicType signature *)
+          type t = Bitv_string.t
+          (* compare, equal and hash are not the "correct" solutions    *)
+          (* because they also compare "rubbish" that might be present  *)
+          (* in the underlying string that is not actually part ot the  *)
+          (* bitvector, however it should not make a difference for our *)
+          (* code since all such "rubbish" should be '0' bits.          *)
+          let compare b b' = 
+            String.compare b.Bitv_string.bits b'.Bitv_string.bits
+          let equal b b' = 
+            String.compare b.Bitv_string.bits b'.Bitv_string.bits == 0
+          let hash b = Hashtbl.hash (b.Bitv_string.bits)
+          let to_string b = Blist.to_string "" 
+            (fun v -> if v then "1" else "0")
+            (to_bool_list b)
+          let pp fmt b = Format.fprintf fmt "%s" (to_string b)
+             
+          let empty = Bitv_string.create 0 false
+          
+          let inj h =
+            let cover = Array.make 
+              (Location.Map.cardinal h) 
+              (Location.zero, []) in
+            let () = List.iteri 
+              (fun i (l,c) -> Array.set cover i (l,c)) 
+              (Location.Map.bindings h) in
+            let rec binary_search ((l,c) as e) min max =
+              if max < min then
+                invalid_arg ("Not a subheap!")
+              else 
+                let mid = (min + max) / 2 in
+                let (l',c') = Array.get cover mid in
+                let cmp = Location.compare l l' in
+                if cmp < 0 then
+                  binary_search e min (mid-1)
+                else if cmp > 0 then
+                  binary_search e (mid+1) max
+                else
+                  if Value.FList.equal c c' then mid
+                  else invalid_arg ("Not a subheap!") in
+            let arr_size = Array.length cover in
+            fun h' ->
+              let b = Bitv_string.create (Array.length cover) false in
+              let bs = Location.Map.bindings h' in
+              let _ = 
+                let f i ((l, c) as e) = 
+                  let j = binary_search e i arr_size in
+                  let () = Bitv_string.unsafe_set b j true in
+                  j + 1 in
+                List.fold_left f 0 bs in
+              b
+              
+          let proj h b =
+            if (Bitv_string.length b) == 0 then Location.Map.empty
+            else if not 
+                ((Location.Map.cardinal h) == (Bitv_string.length b))
+              then
+                invalid_arg ("Missing locations!")
+            else
+              let cs = List.mapi
+                (fun i (l,c) ->
+                  Option.mk (Bitv_string.unsafe_get b i) (l,c))
+                (Location.Map.bindings h) in
+              Location.Map.of_list (Option.list_get cs)
+          
+          let disjoint b b' =
+            (Bitv_string.length b == 0) || (Bitv_string.length b' == 0) ||
+            (Bitv_string.pop (Bitv_string.bw_and b b') == 0)
             
-    module HeapBase :
-      sig
-        include BasicType
-        val empty : t
-        val inj : Heap.t -> Heap.t -> t
-        val proj : Heap.t -> t -> Heap.t
-        val disjoint : t -> t -> bool
-        val union : t -> t -> t
-      end
-        = SetBase
+          let union b b' =
+            if (Bitv_string.length b == 0) then b'
+            else if (Bitv_string.length b' == 0) then b
+            else (Bitv_string.bw_or b b')
+        end
+      
+      module HeapBase :
+        sig
+          include BasicType
+          val empty : t
+          val inj : Heap.t -> Heap.t -> t
+          val proj : Heap.t -> t -> Heap.t
+          val disjoint : t -> t -> bool
+          val union : t -> t -> t
+        end
+          = BitvBase
 
     module InterpretantBase = MakeComplexType(PairTypes(Value.FList)(HeapBase))
     module BaseSetPair = PairTypes(InterpretantBase.Set)(InterpretantBase.Set)
@@ -616,66 +694,69 @@ module Make (Sig : ValueSig) : S
       interpretation only once before starting the fixpoint computation, 
       and make it quickly accessible using a hash table.
       
-      Notes:
-       1. [all_ptos_itpts] is a map containing all the interpretant 
-          bases of the singleton subheaps of [h] keyed on size of the 
-          heap cell being pointed to. This allows easy identification of
-          only those subheaps relevant to any given points-to formula 
-          atom.
-       2. We calculate more or less the precise size we will need for
-          the hashtable in [num_buckets]; this is done by counting the
-          number of inductive rule bodies that are both consistent and
-          have a greater than zero number of points-to formula atoms. 
-            Note that this is, in practice, a precise bound since it is
-          unlikely that there will be exactly duplicated inductive rule
-          bodies.
-     **)
-    let mk_ptos_base defs h =
-      let all_ptos_itpts =
-        let f = fun loc cell ptos ->
-          let cell_size = List.length cell in
-          let base =
-            if Int.Map.mem cell_size ptos then
-              Int.Map.find cell_size ptos
-            else empty_base in
-          let pto = 
-            ((Value.mk_loc_val loc)::cell, 
-              HeapBase.inj h (Location.Map.singleton loc cell)) in
-          let base = InterpretantBase.Set.add pto base in
-          Int.Map.add cell_size base ptos in
-        Location.Map.fold f h Int.Map.empty in
-      let () = debug (fun _ -> Int.Map.to_string InterpretantBase.Set.to_string all_ptos_itpts) in
-      let num_buckets = 
-        let test_and_incr n rl =
-          let body = Sl_indrule.body rl in 
-          let inc = 
-            if (Sl_heap.inconsistent body) then 0
-            else let (_,_, ptos, _) = Sl_heap.dest body in 
-              min 1 (Sl_ptos.cardinal ptos) in
-          n + inc in
-        Sl_defs.rule_fold test_and_incr 0 defs in
-      let base = SymHeapHash.create num_buckets in 
-      let calc_abstractions rl =
-        let (body, _) = Sl_indrule.dest rl in
-        let (eqs, deqs, ptos, _) = Sl_heap.dest body in 
-        let constraints = (eqs, deqs) in
-        if (not (Sl_heap.inconsistent body)) && 
-           (Sl_ptos.cardinal ptos > 0) then
-        begin
-          let mdls =
-            let gen_mdls (t, ts) mdls =
-              let pto_models =
-                let cell_size = List.length ts in
-                if Int.Map.mem cell_size all_ptos_itpts then
-                  generate_models (t::ts) constraints 
-                    (Int.Map.find cell_size all_ptos_itpts)
-                else ModelBase.Hashset.create 0 in
-              cross_models constraints pto_models mdls in
-            Sl_ptos.fold gen_mdls ptos itp_emp in
-          SymHeapHash.add base body mdls 
-        end in
-      let () = Sl_defs.rule_iter calc_abstractions defs in
-      base
+        Notes:
+         1. [all_ptos_itpts] is a map containing all the interpretant 
+            bases of the singleton subheaps of [h] keyed on size of the 
+            heap cell being pointed to. This allows easy identification of
+            only those subheaps relevant to any given points-to formula 
+            atom.
+         2. We calculate more or less the precise size we will need for
+            the hashtable in [num_buckets]; this is done by counting the
+            number of inductive rule bodies that are both consistent and
+            have a greater than zero number of points-to formula atoms. 
+              Note that this is, in practice, a precise bound since it is
+            unlikely that there will be exactly duplicated inductive rule
+            bodies.
+       **)
+      let mk_ptos_base defs h =
+        let all_ptos_itpts =
+          let mk_heap_base h' = 
+            let inj = HeapBase.inj h in
+            inj h' in
+          let f = fun loc cell ptos ->
+            let cell_size = List.length cell in
+            let base =
+              if Int.Map.mem cell_size ptos then
+                Int.Map.find cell_size ptos
+              else empty_base in
+            let pto = 
+              ((Value.mk_loc_val loc)::cell, 
+                mk_heap_base (Location.Map.singleton loc cell)) in
+            let base = InterpretantBase.Set.add pto base in
+            Int.Map.add cell_size base ptos in
+          Location.Map.fold f h Int.Map.empty in
+        let () = debug (fun _ -> Int.Map.to_string InterpretantBase.Set.to_string all_ptos_itpts) in
+        let num_buckets = 
+          let test_and_incr n rl =
+            let body = Sl_indrule.body rl in 
+            let inc = 
+              if (Sl_heap.inconsistent body) then 0
+              else let (_,_, ptos, _) = Sl_heap.dest body in 
+                min 1 (Sl_ptos.cardinal ptos) in
+            n + inc in
+          Sl_defs.rule_fold test_and_incr 0 defs in
+        let base = SymHeapHash.create num_buckets in 
+        let calc_abstractions rl =
+          let (body, _) = Sl_indrule.dest rl in
+          let (eqs, deqs, ptos, _) = Sl_heap.dest body in 
+          let constraints = (eqs, deqs) in
+          if (not (Sl_heap.inconsistent body)) && 
+             (Sl_ptos.cardinal ptos > 0) then
+          begin
+            let mdls =
+              let gen_mdls (t, ts) mdls =
+                let pto_models =
+                  let cell_size = List.length ts in
+                  if Int.Map.mem cell_size all_ptos_itpts then
+                    generate_models (t::ts) constraints 
+                      (Int.Map.find cell_size all_ptos_itpts)
+                  else ModelBase.Hashset.create 0 in
+                cross_models constraints pto_models mdls in
+              Sl_ptos.fold gen_mdls ptos itp_emp in
+            SymHeapHash.add base body mdls 
+          end in
+        let () = Sl_defs.rule_iter calc_abstractions defs in
+        base
               
     let mk_generator (defs, (vs, h)) =
       let valset = Value.Set.union
@@ -889,11 +970,15 @@ open IntSigModelChecker
   
 module IntSigParser =
   struct
-    (* TODO: Eta-expand? *)
-    let parse_location = Tokens.decimal
+    let parse_location st = 
+      (Tokens.hexadecimal |>> (fun v ->
+        if v == 0 then (failwith "0x0 is not a location!") else v)) st 
     let parse_scalar st = 
-      (Tokens.decimal |>> (fun v ->
-        if v == 0 then Value.zero else (Value.mk_loc_val v))) st
+      ( attempt (Tokens.hexadecimal |>> (fun v ->
+        if v == 0 then Value.zero else (Value.mk_loc_val v)))
+        <|>
+        (Tokens.decimal |>> (fun v -> Value.mk_scalar_val v))
+      ) st
   end
   
 module StackParser = Stack.MakeParser(IntSigParser)
@@ -935,7 +1020,8 @@ let () =
   let sh = Sl_heap.of_string !str_symheap in
   (* TODO: Need to check that all predicate instances in sh match the arity in defs *)
   let defs = Sl_defs.of_channel (open_in !defs_path) in
-  let model = model_of_string model_parser !str_model in
+  let ((s, h) as model) = model_of_string model_parser !str_model in
+  let () = print_endline("Heap size: " ^ (Int.to_string (Heap.size h))) in
   begin
     Stats.reset () ;
     Stats.Gen.call () ;

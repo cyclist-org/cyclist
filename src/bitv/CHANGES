@@ -1,0 +1,67 @@
+
+  o added pop (population count, i.e., number of 1 bits)
+  o suppressed some warnings with OCaml >= 4.00
+
+version 1.1, 10/04/2013
+=======================
+  o installation using ocamlfind (if found) or in `ocamlc -where`/bitv otherwise
+  o fixed of_int64_(u)s on a 32-bit architecture (thanks to Florent Monnier)
+
+version 1.0, 14/08/2012
+=======================
+  o functions to/of_int64_s
+  o new functions output_bin/input_bin for export/import in a
+    machine-independent way (contribution from Bruno Guillaume)
+  o fixed installation (patch from Bruno Guillaume)
+
+version 0.9, 20/06/2012
+=======================
+ o fixed tarball (test.ml was missing)
+ o patched installation to use $(DESTDIR), if any (patch from Bruno Guillaume)
+
+version 0.8, 28/02/2012
+=======================
+ o two different modules L and M for conversions to and from string (least
+   and most significant bits first, respectively); apologies for
+   API incompatibility
+ o improved implementation of iteri_true
+
+version 0.7, 03/04/2008
+=======================
+ o fixed bug with unsafe_blit when len=0 (could affect blit, sub, append,
+   concat and fill when used with 0-length bit vectors), thanks to Pat Rondon
+
+version 0.6, 18/02/2005
+=======================
+ o added iteri_true
+ o added foldi_left and foldi_right
+ o patch for ocaml >= 3.08 (0xffffffff is no more accepted as a literal)
+ o fixed Invalid_argument messages (now exactly the function name)
+
+version 0.5, 22/11/2002
+=======================
+ o added print : formatter -> t -> unit
+ o from_list now fails on negative indexes (patch from Karl Zilles)
+ o from_list_with_length to specify the length (patch from Karl Zilles)
+
+version 0.4, 29/8/2002
+======================
+ o to_list/from_list to convert to/from lists of integers
+ o added gray_iter to iterate over all bit vectors of length n
+ o configuration with autoconf
+
+version 0.3, 31/5/2000
+======================
+ o fixed bug in bw_not thanks to Damir Jamsek
+
+version 0.2, 24/4/2000
+======================
+ o normalization, so that generic equality can be used
+ o efficient implementations of append, sub, blit, concat and fill
+ o documentation using ocamlweb
+ o to_string, from_string
+ o bitwise operations, all_zeros
+
+version 0.1
+===========
+ o first release
