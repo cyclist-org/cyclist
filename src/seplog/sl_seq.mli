@@ -13,7 +13,6 @@ val dest : t -> Sl_heap.t * Sl_heap.t
 
 val parse : (t, 'a) MParser.t
 val of_string : string -> t
-val read_file : string -> string list
 
 val to_melt : t -> Latex.t
 

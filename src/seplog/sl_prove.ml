@@ -44,7 +44,7 @@ let () =
   gc_setup () ;
   Format.set_margin (Sys.command "exit $(tput cols)") ;
   Arg.parse !F.speclist get_seq_fname !F.usage ;
-  cl_f_sequents := Sl_seq.read_file !cl_sequent_fname;
+  cl_f_sequents := string_lines_of_file !cl_sequent_fname;
   let () = if !cl_sequent="" then
     match !cl_f_sequents with
       | [] -> F.die "-S must be specified."

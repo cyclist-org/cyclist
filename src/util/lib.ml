@@ -66,6 +66,21 @@ let string_of_file fn =
   with End_of_file ->
     let () = close_in cn in !a
 
+let string_lines_of_file fn =
+  try (
+    let in_chnl = open_in fn in
+    let lines = ref [] in
+    try (
+      while true; do
+        lines := input_line in_chnl :: !lines
+      done; !lines
+    )
+    with End_of_file ->
+        close_in in_chnl;
+        List.rev !lines
+  )
+  with _ -> []
+
 let string_of_char c = String.make 1 c
 
 let gc_setup () =
