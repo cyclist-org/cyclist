@@ -1,10 +1,16 @@
 (** Symbolic heaps. *)
 
+type abstract1
+type abstract2
+
 type symheap = private {
   eqs : Sl_uf.t;
   deqs : Sl_deqs.t;
   ptos : Sl_ptos.t;
   inds : Sl_tpreds.t;
+  mutable _terms : abstract1;
+  mutable _vars : abstract1;
+  mutable _tags : abstract2
 }
 
 include Util.BasicType with type t = symheap

@@ -7,6 +7,7 @@ type t = Sl_term.t Sl_term.Map.t
 
 let equal u u' = Sl_term.Map.equal Sl_term.equal u u'
 let compare m m' = Sl_term.Map.compare Sl_term.compare m m'
+let hash m = Sl_term.Map.hash Sl_term.hash m
 let bindings m = Sl_term.Map.bindings m
 let empty = Sl_term.Map.empty
 let is_empty = Sl_term.Map.is_empty

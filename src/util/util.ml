@@ -59,6 +59,7 @@ module type OrderedMap =
     val fixpoint : ('a -> 'a -> bool) -> ('a t -> 'a t) -> 'a t -> 'a t
     val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit
     val to_string : ('a -> string) -> 'a t -> string
+    val hash : ('a -> int) -> 'a t -> int
 (*    val map_to : ('b -> 'c -> 'c) -> 'c -> (key -> 'v -> 'b) -> 'v t -> 'c *)
 (*    val map_to_list : (key -> 'b -> 'a) -> 'b t -> 'a list                 *)
     val all_members_of : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
@@ -319,7 +320,8 @@ module MakeTreeSet(T: BasicType) : OrderedContainer with type elt = T.t =
 
     let to_string s = "{" ^ (Blist.to_string ", " T.to_string (to_list s)) ^ "}"
 
-    let hash = Hashtbl.hash
+    let hash s = 
+      fold (fun x h -> genhash (T.hash x) h) s 0x9e3779b9
 
     let rec subsets s =
       if is_empty s then [empty] else
@@ -357,6 +359,12 @@ module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
 
     let compare comp m m' =
       if m==m' then 0 else compare comp m m'
+    
+    let hash h m = 
+      fold 
+        (fun k v a -> genhash a (genhash (T.hash k) (h v))) 
+        m 
+        0x9e3779b9
 
     let rec fixpoint eq f x =
       let y = f x in if equal eq x y then x else fixpoint eq f y
@@ -414,7 +422,6 @@ module PairTypes(T: BasicType) (S: BasicType) :
       i==j || T.equal (fst i) (fst j) && S.equal (snd i) (snd j)
 
     let hash (i:t) = genhash (T.hash (fst i)) (S.hash (snd i))
-    (* let hash = Hashtbl.hash *)
 
     let to_string i =
       "(" ^ (T.to_string (fst i)) ^ "," ^ (S.to_string (snd i)) ^ ")"

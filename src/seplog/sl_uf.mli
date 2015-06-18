@@ -1,17 +1,13 @@
 (** A union-find structure for SL terms. *)
 
-type t
+include Util.BasicType
 
 val parse : (Sl_tpair.t, 'a) MParser.parser
 val to_melt : t -> Latex.t
 val to_string_list : t -> string list
-val pp : Format.formatter -> t -> unit
 
 val empty : t
 val is_empty : t -> bool
-
-val equal : t -> t -> bool
-val compare : t -> t -> int
 
 val find : Sl_term.t -> t -> Sl_term.t
 val add : Sl_tpair.t -> t -> t

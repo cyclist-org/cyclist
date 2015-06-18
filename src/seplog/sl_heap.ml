@@ -5,12 +5,18 @@ open MParser
 
 let split_heaps = ref true
 
+type abstract1 = Sl_term.Set.t option
+type abstract2 = Tags.t option
+
 type symheap =
   {
     eqs : Sl_uf.t;
     deqs : Sl_deqs.t;
     ptos : Sl_ptos.t;
-    inds : Sl_tpreds.t
+    inds : Sl_tpreds.t;
+    mutable _terms : Sl_term.Set.t option;
+    mutable _vars : Sl_term.Set.t option;
+    mutable _tags : Tags.t option
   }
 
 type t = symheap
@@ -43,18 +49,46 @@ let compare f g =
             | n when n <>0 -> n
             | _ -> Sl_tpreds.compare f.inds g.inds
 
-let hash = Hashtbl.hash
+(* custom hash function so that memoization fields are ignored when hashing *)
+(* so that the hash invariant is preserved [a = b => hash(a) = hash(b)] *)
+(* FIXME: memoize hash as well? *)
+let hash h = 
+  genhash 
+    (genhash 
+      (genhash 
+        (Sl_tpreds.hash h.inds) 
+        (Sl_ptos.hash h.ptos)) 
+      (Sl_deqs.hash h.deqs)) 
+    (Sl_uf.hash h.eqs)
 
 let terms f =
-  Sl_term.Set.union_of_list
-    [ Sl_uf.terms f.eqs; 
-      Sl_deqs.terms f.deqs; 
-      Sl_ptos.terms f.ptos; 
-      Sl_tpreds.terms f.inds]
+  match f._terms with
+  | Some trms -> trms
+  | None ->
+    let trms = 
+      Sl_term.Set.union_of_list
+        [ Sl_uf.terms f.eqs; 
+          Sl_deqs.terms f.deqs; 
+          Sl_ptos.terms f.ptos; 
+          Sl_tpreds.terms f.inds] in
+    f._terms <- Some trms;
+    trms
 
-let vars f = Sl_term.filter_vars (terms f)
+let vars f = 
+  match f._vars with 
+  | Some v -> v
+  | None ->
+    let v = Sl_term.filter_vars (terms f) in
+    f._vars <- Some v;
+    v
 
-let tags h = Sl_tpreds.tags h.inds
+let tags h = 
+  match h._tags with
+  | Some tgs -> tgs
+  | None ->
+    let tgs = Sl_tpreds.tags h.inds in
+    h._tags <- Some tgs;
+    tgs
 
 let tag_pairs f = TagPairs.mk (tags f)
 
@@ -102,9 +136,7 @@ let disequates h x y =
     h.deqs
 
 let find_lval x h =
-  try
-    Some (Sl_ptos.find (fun (y, _) -> equates h x y) h.ptos)
-  with Not_found -> None
+  Sl_ptos.find_opt (fun (y, _) -> equates h x y) h.ptos 
 
 let inconsistent h = Sl_deqs.exists (fun (x, y) -> equates h x y) h.deqs
 
@@ -130,7 +162,7 @@ let mk eqs deqs ptos inds =
     (Tags.cardinal (Sl_tpreds.map_to Tags.add Tags.empty fst inds) 
     =
     Sl_tpreds.cardinal inds) ;
-  { eqs; deqs; ptos; inds }
+  { eqs; deqs; ptos; inds; _terms=None; _vars=None; _tags=None }
   
 let dest h = (h.eqs, h.deqs, h.ptos, h.inds)
   
@@ -142,22 +174,30 @@ let subst theta h =
   { eqs = Sl_uf.subst theta h.eqs;
     deqs = Sl_deqs.subst theta h.deqs;
     ptos = Sl_ptos.subst theta h.ptos;
-    inds = Sl_tpreds.subst theta h.inds
+    inds = Sl_tpreds.subst theta h.inds;
+    _terms = None;
+    _vars = None; 
+    _tags=None
   }
 
-let with_eqs h eqs = { h with eqs }
-let with_deqs h deqs = { h with deqs }
-let with_ptos h ptos = { h with ptos }
+let with_eqs h eqs = { h with eqs; _terms=None; _vars=None; _tags=None }
+let with_deqs h deqs = { h with deqs; _terms=None; _vars=None; _tags=None }
+let with_ptos h ptos = { h with ptos; _terms=None; _vars=None; _tags=None }
 let with_inds h inds = mk h.eqs h.deqs h.ptos inds
 
 let del_deq h deq = with_deqs h (Sl_deqs.remove deq h.deqs)
 let del_pto h pto = with_ptos h (Sl_ptos.remove pto h.ptos)
-let del_ind h ind = { h with inds = Sl_tpreds.remove ind h.inds }
+let del_ind h ind = 
+  { h with inds = Sl_tpreds.remove ind h.inds; _terms=None; _vars=None; _tags=None }
 
-let mk_pto pto = { empty with ptos = Sl_ptos.singleton pto }
-let mk_eq p = { empty with eqs = Sl_uf.add p Sl_uf.empty }
-let mk_deq p = { empty with deqs = Sl_deqs.singleton p }
-let mk_ind pred = { empty with inds = Sl_tpreds.singleton pred }
+let mk_pto pto = 
+  { empty with ptos = Sl_ptos.singleton pto; _terms=None; _vars=None; _tags=None }
+let mk_eq p = 
+  { empty with eqs = Sl_uf.add p Sl_uf.empty; _terms=None; _vars=None; _tags=None }
+let mk_deq p = 
+  { empty with deqs = Sl_deqs.singleton p; _terms=None; _vars=None; _tags=None }
+let mk_ind pred = 
+  { empty with inds = Sl_tpreds.singleton pred; _terms=None; _vars=None; _tags=None }
 
 let combine h h' =
   let eqs = Sl_uf.union h.eqs h'.eqs in
@@ -214,8 +254,10 @@ let parse st =
 let of_string s =
   handle_reply (MParser.parse_string parse s ())
 
-let add_eq h eq = { h with eqs = Sl_uf.add eq h.eqs }
-let add_deq h deq = { h with deqs = Sl_deqs.add deq h.deqs }
+let add_eq h eq = 
+  { h with eqs = Sl_uf.add eq h.eqs; _terms=None; _vars=None; _tags=None }
+let add_deq h deq = 
+  { h with deqs = Sl_deqs.add deq h.deqs; _terms=None; _vars=None; _tags=None }
 let add_pto h pto = star h (mk_pto pto) 
 let add_ind h ind = with_inds h (Sl_tpreds.add ind h.inds)
 
@@ -237,7 +279,8 @@ let subst_existentials h =
     if ex_eqs =[] then h' else
       (* NB order of subst is reversed so that the greater variable        *)
       (* replaces the lesser this maintains universal vars                 *)
-      let h'' = { h' with eqs = Sl_uf.of_list non_ex_eqs } in
+      let h'' = 
+        { h' with eqs = Sl_uf.of_list non_ex_eqs; _terms=None; _vars=None; _tags=None } in
       subst (Sl_term.Map.of_list ex_eqs) h'' in
   fixpoint aux h
 
@@ -245,7 +288,10 @@ let norm h =
   { h with
     deqs = Sl_deqs.norm h.eqs h.deqs ;
     ptos = Sl_ptos.norm h.eqs h.ptos ;
-    inds = Sl_tpreds.norm h.eqs h.inds
+    inds = Sl_tpreds.norm h.eqs h.inds;
+    _terms=None; 
+    _vars=None; 
+    _tags=None
   }
 
 (* FIXME review *)
@@ -265,7 +311,12 @@ let project f xs =
       subst theta h' in
     Sl_uf.fold do_eq h.eqs h in
   let proj_deqs g =
-    { g with deqs = Sl_deqs.filter (fun p -> not (pair_nin_lst p)) g.deqs } in
+    { g with 
+      deqs = Sl_deqs.filter (fun p -> not (pair_nin_lst p)) g.deqs; 
+      _terms=None; 
+      _vars=None; 
+      _tags=None
+    } in
   proj_deqs (proj_eqs f)
 
 (* tags and unification *)
@@ -307,7 +358,11 @@ let compute_frame ?(freshen_existentials=true) ?(avoid=Sl_term.Set.empty) f f' =
           let frame = { eqs = Sl_uf.diff f.eqs f'.eqs;
                         deqs = Sl_deqs.diff f'.deqs f.deqs;
                         ptos = Sl_ptos.diff f'.ptos f.ptos;
-                        inds = Sl_tpreds.diff f'.inds f.inds; } in
+                        inds = Sl_tpreds.diff f'.inds f.inds;
+                        _terms=None; 
+                        _vars=None; 
+                        _tags=None 
+                      } in
           let vs = 
             Sl_term.Set.to_list 
               (Sl_term.Set.inter
