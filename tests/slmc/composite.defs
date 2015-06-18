@@ -1,0 +1,19 @@
+subtree {
+	x = nil => subtree(x,y) |
+	x != nil * x->l',r',y,n' * subtree(l',x) * subtree(r',x) => subtree(x,y)
+};
+
+context {
+	y = nil => context(x,y) |
+	y != nil * y->x,r',z',n' * context(y,z') * subtree(r',y) => context(x,y) |
+	y != nil * y->l',x,z',n' * context(y,z') * subtree(l',y) => context(x,y)
+};
+
+tree {
+	context(x,y') * subtree(x,y') => tree(x)
+};
+
+spTrue {
+    emp => spTrue() |
+    x'->l',r',p',v' * spTrue() => spTrue()
+}

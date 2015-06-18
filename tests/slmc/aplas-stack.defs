@@ -1,0 +1,14 @@
+lseg {
+	x = y => lseg(x, y) |
+	x != nil * x->z',v' * lseg(z', y) => lseg(x, y)
+};
+
+stack {
+	x->h' * lseg(h', nil) => stack(x)
+};
+
+spTrue {
+    emp => spTrue() |
+    x'->a' * spTrue() => spTrue() |
+    x'->a',b' * spTrue() => spTrue()
+}

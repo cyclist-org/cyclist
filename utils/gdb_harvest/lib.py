@@ -4,6 +4,7 @@ import re
 import traceback
 
 identifier_re = re.compile("[_a-zA-Z][_a-zA-Z0-9]*(?=\s=\s.*\n?)")
+ptr_re = re.compile("0x[a-f0-9]+(?=\s*(<[_a-zA-Z][_a-zA-Z0-9]*\+\d+>)?)")
 
 def print_err(*args):
     sys.stderr.write(' '.join(map(str,args)) + '\n')
@@ -66,7 +67,7 @@ def stringify_ptr(ptr):
     #if ptr.type.code == gdb.TYPE_CODE_PTR : print "pointer"
     #if ptr.type.code == gdb.TYPE_CODE_REF : print "reference"
     #print str(ptr)
-    return str(ptr)
+    return ptr_re.match(str(ptr)).group(0)
 
 def make_cell_string(struct_t, field_vals):
     
@@ -170,21 +171,23 @@ def harvest_addr(heap, ptr_queue):
     else : raise Exception("Cannot deal with this type of value: " + get_type_string(val.type.code))
     return heap, ptr_queue
 
-def harvest(out):
+def harvest(out, vars):
     
-    args_str = gdb.execute("info args", False, True)
-    args = identifier_re.findall(args_str)
+    if not vars :
     
-    locals_str = gdb.execute("info locals", False, True)
-    locals = identifier_re.findall(locals_str)
-    
-    vars = args + locals
+        args_str = gdb.execute("info args", False, True)
+        args = identifier_re.findall(args_str)
+        
+        locals_str = gdb.execute("info locals", False, True)
+        locals = identifier_re.findall(locals_str)
+        
+        vars = args + locals
     
     stack = {}
     ptr_queue = []
     for v in vars:
-        val = gdb.parse_and_eval(v)
-        stack[v] = stringify_value(val)
+        val = gdb.parse_and_eval(v.strip())
+        stack[v] = stringify_ptr(val) if is_ptr(val) else stringify_value(val) 
         if is_ptr(val) : ptr_queue += [val]
     
     heap = {}

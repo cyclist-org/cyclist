@@ -6,32 +6,38 @@ import gdb
 from gdb_harvest.lib import harvest
 
 class HarvesterBP(gdb.Breakpoint):
-    
-    def __init__(self, spec, filename_base):
+
+    def __init__(self, spec, var_list, filename_base):
         super(HarvesterBP, self).__init__(spec)
-        self.filename_gen = filename_base
+        self.var_list = var_list
+        self.filename_base = filename_base
         self.counter = itertools.count()
-        
+
     def stop(self):
-        filename = "{0}{1:04d}.txt".format(self.filename_gen, self.counter.next())
-        try:
-            with open(filename, 'w') as f:
-                harvest(f)
-        except:
-            os.remove(filename)
-            traceback.print_exc()
+        vars = self.var_list.split(',')
+        if self.filename_base == '' :
+            harvest(sys.stdout, vars)
+        else :
+            filename = "{0}{1:04d}.mdl".format(self.filename_base, self.counter.next())
+            try:
+                with open(filename, 'w') as f:
+                    harvest(f, vars)
+            except:
+                os.remove(filename)
+                traceback.print_exc()
         return False
 
-if (len(sys.argv) < 1) or ((len(sys.argv) - 1) % 2 != 0):
-    print "usage: " + sys.argv[0] + " <file-to-run> [<breakpoint> <output-file-prefix>]+"
+if (len(sys.argv) < 4) or ((len(sys.argv) - 1) % 3 != 0):
+    print "usage: " + __file__ + " <file-to-run> [<breakpoint> <vars> <output-file-prefix>]+"
+    print "\tpass empty string as <output-file_prefix> to output to stdout"
     sys.exit()
 
 # Set the file to be executed
 gdb.execute("file " + sys.argv[0])
 
 # Set up all the breakpoints
-for i in range(1, len(sys.argv), 2):
-    HarvesterBP(sys.argv[i], sys.argv[i+1])
-    
+for i in range(1, len(sys.argv), 3):
+    HarvesterBP(sys.argv[i], sys.argv[i+1], sys.argv[i+2])
+
 # Run the file
 gdb.execute("run")

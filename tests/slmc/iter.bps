@@ -1,0 +1,11 @@
+llist_add list models/iter-llist_add
+llist_append list1,list2 models/iter-llist_append
+llist_dispose list models/iter-llist_dispose
+llist_length list models/iter-llist_length
+iter.c:206 f,n,l models/iter-line_206-
+llist_lookup list models/iter-llist_lookup
+iter.c:239 f,n,l models/iter-line_239-
+llist_removeFirst l models/iter-llist_removeFirst
+llist_create_iter l models/iter-llist_create_iter
+iter_next i models/iter-iter_next
+iter_dispose i models/iter-iter_dispose

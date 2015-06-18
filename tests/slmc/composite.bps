@@ -1,0 +1,7 @@
+subtree_get_count node models/composite-subtree_get_count
+fixup_ancestors n,p models/composite-fixup_ancestors
+tree_add_left node models/composite-tree_add_left
+tree_add_right node models/composite-tree_add_right
+tree_get_parent node models/composite-tree_get_parent
+subtree_dispose node models/composite-subtree_dispose
+tree_dispose node models/composite-tree_dispose
