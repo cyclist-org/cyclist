@@ -109,14 +109,14 @@ let fold f h init =
 
 exception Not_empty
 let is_empty h =
-  try  
+  try
     iter (fun _ -> raise Not_empty) h ; true
   with Not_empty -> false
-  
+
 let of_list l =
   let s = create 11 in
   let () = List.iter (fun x -> add s x) l in
-  s 
+  s
 
 let map_to oadd oempty f xs =
   fold (fun z ys -> oadd (f z) ys) xs oempty
@@ -128,7 +128,7 @@ let cardinal h = h.size
 let to_string to_s h =
   let elems = fold (fun hd tl -> hd::tl) h [] in
   String.concat ", " (List.map to_s elems)
-  
+
 let left_union h h' =
   let () = iter (fun x -> add h x) h' in
   h
@@ -208,25 +208,27 @@ module Make(H: HashedType): (S with type elt = H.t) =
 
     let iter f h = iter f h
     let fold f h init = fold f h init
-  
+
     (* changes by NG *)
     let is_empty h = is_empty h
-    
+
     let of_list l =
       let s = create (List.length l) in
       let () = List.iter (fun x -> add s x) l in
-      s 
+      s
 
     let map_to oadd oempty f xs =
       fold (fun z ys -> oadd (f z) ys) xs oempty
 
-    let to_list xs = 
+    let to_list xs =
       map_to Blist.cons [] Fun.id xs
-                                            
+
     (* changes by RR *)
-    let to_string h = to_string H.to_string h
+    let to_string h = to_string
+      (fun k -> "#" ^ (string_of_int (safehash k)) ^ ": " ^ (H.to_string k))
+      h
     let left_union h h' =
       let () = iter (fun x -> add h x) h' in
       h
-      
+
   end
