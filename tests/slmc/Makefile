@@ -71,9 +71,9 @@ spatial-true-tests:
 binary-counter-tests:
 	-@for i in `seq 1 5`; do (set -x; $(TIME) $(MC) -D succ-rec0$$i.defs -F "P()" -M "([], [])"); done
 	
-all-models: aplas-stack-models composite-models iter-models
+all-models: aplas-stack-models composite-models iter-models lcset-models
 
-all-tests: aplas-stack-tests composite-tests iter-tests spatial-true-test binary-counter-tests
+all-tests: aplas-stack-tests composite-tests iter-tests lcset-tests spatial-true-test binary-counter-tests
 
-clean-all: clean-aplas-stack clean-composite clean-iter
+clean-all: clean-aplas-stack clean-composite clean-iter clean-lcset
 	
