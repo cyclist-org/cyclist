@@ -1,0 +1,13 @@
+lseg {
+	x = y => lseg(x,y) |
+	x != nil * l' = nil * x->l',n',v' * lseg(m',y) => lseg(x,y) |
+	x != nil * l' != nil * x->l',n',v' * lseg(n',y) => lseg(x,y)
+};
+
+set {
+	x != nil * h' != nil * x->h' * h'->l',n',v' => set(x)
+};
+
+set_atomic {
+	x != nil * h' != t' * t' != nil * x->h' * t'->l',n',v' * lseg(h',t') => set_atomic(x)
+}

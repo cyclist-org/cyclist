@@ -54,6 +54,15 @@ iter-tests:
 clean-iter:
 	rm -f ./models/iter-*.mdl
 
+lcset-models:
+	EXE=lcset BP_FILE=lcset.bps $(MAKE) --no-print-directory models 
+
+lcset-tests:
+	TEST_FILE=lcset.tst DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory tests 
+
+clean-lcset:
+	rm -f ./models/lcset-*.mdl
+
 
 
 spatial-true-tests:
