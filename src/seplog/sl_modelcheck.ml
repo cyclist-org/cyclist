@@ -493,9 +493,12 @@ module Make (Sig : ValueSig) : S
 
     let decorate h itp =
       let f (ancestors, parents) =
-        let acc = InterpretantBase.Hashset.create 11 in
-        InterpretantBase.Set.iter (InterpretantBase.Hashset.add acc) ancestors ;
-        InterpretantBase.Set.iter (InterpretantBase.Hashset.add acc) parents ;
+        let acc = Interpretant.Hashset.create 11 in
+        let add_subst_heap (vs, ls) =
+          let h' = HeapBase.proj h ls in
+          Interpretant.Hashset.add acc (vs, h') in
+        InterpretantBase.Set.iter add_subst_heap ancestors ;
+        InterpretantBase.Set.iter add_subst_heap parents ;
         acc in
       Sl_predsym.Map.map f itp
 
@@ -922,14 +925,13 @@ module Make (Sig : ValueSig) : S
       let () = debug (fun _ -> Sl_preddef.to_string new_def) in
       let () = debug (fun _ -> Value.FList.to_string vals) in
       let interp = mk (defs, (vals, h)) in
-      let heapbase = HeapBase.inj h h in
-      let () = debug (fun _ -> Sl_predsym.Map.to_string InterpretantBase.Hashset.to_string interp) in
-      let () = debug (fun _ -> "Looking for #" ^ (string_of_int ((InterpretantBase.hash (vals, heapbase)) land max_int)) ^ ":" ^ (InterpretantBase.to_string (vals, heapbase))) in
-      let () = debug (fun _ -> "in " ^ (InterpretantBase.Hashset.to_string (Sl_predsym.Map.find new_predsym interp))) in
-      let () = debug (fun _ -> string_of_bool (InterpretantBase.Hashset.mem (Sl_predsym.Map.find new_predsym interp) (vals, heapbase))) in
-      InterpretantBase.Hashset.mem
+      let () = print_endline(Sl_predsym.Map.to_string Interpretant.Hashset.to_string interp) in
+      let () = print_endline("Looking for #" ^ (string_of_int ((Interpretant.hash (vals, h)) land max_int)) ^ ":" ^ (Interpretant.to_string (vals, h))) in
+      let () = print_endline("in " ^ (Interpretant.Hashset.to_string (Sl_predsym.Map.find new_predsym interp))) in
+      let () = print_endline(string_of_bool (Interpretant.Hashset.mem (Sl_predsym.Map.find new_predsym interp) (vals, h))) in
+      Interpretant.Hashset.mem
         (Sl_predsym.Map.find new_predsym interp)
-        (vals, heapbase)
+        (vals, h)
 
   end
 
