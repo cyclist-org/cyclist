@@ -110,7 +110,10 @@ module Make (Sig : ValueSig) : S
               | (Location(l), Location(l')) -> Sig.HeapLocation.equal l l'
               | (Scalar(v), Scalar(v')) -> Sig.ScalarValue.equal v v'
               | (_, _) -> false
-            let hash v = Hashtbl.hash v
+            let rec hash = function
+              | Nil -> 11
+              | Location(l) -> max_int land (19 * (Location.hash l) + 1)
+              | Scalar(v) -> max_int land (19 * (Scalar.hash v) + 2)
             let pp fmt = function
               | Nil -> Sig.pp_nil fmt
               | Location(l) -> Sig.HeapLocation.pp fmt l
@@ -137,7 +140,7 @@ module Make (Sig : ValueSig) : S
 
         let compare h h' = Location.Map.compare Value.FList.compare h h'
         let equal h h' = Location.Map.equal Value.FList.equal h h'
-        let hash h = Hashtbl.hash h
+        let hash h = Location.Map.hash Value.FList.hash h
         let pp fmt h =
           Format.fprintf fmt "@[[@ ";
           Location.Map.iter
@@ -188,7 +191,7 @@ module Make (Sig : ValueSig) : S
 
         let compare s s' = Var.Map.compare Value.compare s s'
         let equal s s' = Var.Map.equal Value.equal s s'
-        let hash s = Hashtbl.hash_param 50 100 s
+        let hash s = Var.Map.hash Value.hash s
         let pp fmt h =
           Format.fprintf fmt "@[[@ ";
           Var.Map.iter
@@ -363,7 +366,7 @@ module Make (Sig : ValueSig) : S
             String.compare b.Bitv_string.bits b'.Bitv_string.bits
           let equal b b' =
             String.compare b.Bitv_string.bits b'.Bitv_string.bits == 0
-          let hash b = Hashtbl.hash (b.Bitv_string.bits)
+          let hash b = Strng.hash (b.Bitv_string.bits)
           let to_string b = Printf.sprintf "bitv(%s)" (Blist.to_string ""
             (fun v -> if v then "1" else "0")
             (to_bool_list b))
