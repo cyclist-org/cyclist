@@ -1,0 +1,33 @@
+The grammar for SL sequents is roughly as follows.
+
+	sequent ::= form "|-" form
+	form ::= symheap | symheap  "\/" form
+        symheap ::= heap /\ pure
+	heap ::= atomic_h | atomic_h "*" heap
+        atomic_h ::= "emp" | pointsto | pred_h
+        pointsto ::= var "->" termlist
+        pred_h ::= identifier "(" termlist ")"
+        pure ::= atomic_p | atomic_p "/\" pure | atomic_p "\/" pure
+                  | '\exists' var pure | '\for_all' var pure
+        atomic_p ::=  "true"
+                    | eq | deq
+                    | lt | lte | gt | gte
+                    | pred_p
+                    (* bag domain here *)
+        eq ::= term "=" term
+        deq ::= term "!=" term
+        lt ::= term "<" term
+        lte ::= term "<=" term
+        gt ::= term ">" term
+        lt ::= term "<=" term
+        pred_p ::= identifier "(" termlist ")"
+	termlist ::= term | term "," termlist
+	term ::= var | "nil" | c_i
+                 | add | sub | mult | div
+        add ::= term "+" term
+        sub ::= term "-" term
+        mult ::= term "*" term
+        div ::= term "\" term
+
+where var matches any word over letters and numbers possibly postfixed by a 
+quote ', and identifier matches any word over letters and numbers.
