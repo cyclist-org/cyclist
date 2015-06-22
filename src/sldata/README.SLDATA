@@ -31,3 +31,7 @@ The grammar for SL sequents is roughly as follows.
 
 where var matches any word over letters and numbers possibly postfixed by a 
 quote ', and identifier matches any word over letters and numbers.
+
+
+note:
+ - when type is supported, heap may be extended with eq and diseq (like in seplog)

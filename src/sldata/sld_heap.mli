@@ -1,0 +1,172 @@
+(** Symbolic heaps. *)
+
+type symheap = private {
+  eqs : Sld_uf.t;
+  deqs : Sld_deqs.t;
+  ptos : Sld_ptos.t;
+  inds : Sld_tpreds.t;
+}
+
+include Util.BasicType with type t = symheap
+
+val empty : t
+
+(** Accessor functions. *)
+
+val vars : t -> Sld_term.Set.t
+val terms : t -> Sld_term.Set.t
+
+val tags : t -> Util.Tags.t
+(** Return set of tags assigned to predicates in heap. *)
+
+val tag_pairs : t -> Util.TagPairs.t
+(** Return a set of pairs representing the identity function over the tags 
+    of the formula.  This is to be used (as the preserving tag pairs) 
+    whenever the inductive predicates 
+    of a formula (in terms of occurences) are untouched by an inference rule.
+    This includes rules of substitution, rewriting under equalities and 
+    manipulating all other parts apart from [inds]. 
+*) 
+
+val to_melt : t -> Latex.t
+
+val equates : t -> Sld_term.t -> Sld_term.t -> bool
+(** Does a symbolic heap entail the equality of two terms? *)
+
+val disequates : t -> Sld_term.t -> Sld_term.t -> bool
+(** Does a symbolic heap entail the disequality of two terms? *)
+
+val find_lval : Sld_term.t -> t -> Sld_pto.t option
+(** Find pto whose address is provably equal to given term. *)
+
+val idents : t -> Sld_predsym.MSet.t
+(** Get multiset of predicate identifiers. *)
+
+val inconsistent : t -> bool
+(** Trivially false if x=y * x!=y is provable for any x,y.
+    NB only equalities and disequalities are used for this check.
+*)
+
+val subsumed : ?total:bool -> t -> t -> bool
+(** [subsumed h h'] is true iff [h] can be rewritten using the equalities
+    in [h'] such that its spatial part becomes equal to that of [h']
+    and the pure part becomes a subset of that of [h']. 
+    If the optional argument [~total=true] is set to [false] then check whether
+    both pure and spatial parts are subsets of those of [h'] modulo the equalities
+    of [h']. *)
+
+val subsumed_upto_tags : ?total:bool -> t -> t -> bool
+(** Like [subsumed] but ignoring tag assignment.
+    If the optional argument [~total=true] is set to [false] then check whether
+    both pure and spatial parts are subsets of those of [h'] modulo the equalities
+    of [h']. *)
+
+val equal : t -> t -> bool
+(** Checks whether two symbolic heaps are equal. *)
+val equal_upto_tags : t -> t -> bool
+(** Like [equal] but ignoring tag assignment. *)
+val is_empty : t -> bool
+(** [is_empty h] tests whether [h] is equal to the empty heap. *)
+
+(** Constructors. *)
+
+val parse : (t, 'a) MParser.t
+val of_string : string -> t
+
+val mk_pto : Sld_pto.t -> t
+val mk_eq : Sld_tpair.t -> t
+val mk_deq : Sld_tpair.t -> t
+val mk_ind : Sld_tpred.t -> t
+
+val mk : Sld_uf.t -> Sld_deqs.t -> Sld_ptos.t -> Sld_tpreds.t -> t
+val dest : t -> (Sld_uf.t * Sld_deqs.t * Sld_ptos.t * Sld_tpreds.t)
+
+val combine : t -> t -> t
+
+(** Functions [with_*] accept a heap [h] and a heap component [c] and 
+    return the heap that results by replacing [h]'s appropriate component 
+    with [c]. *)
+
+val with_eqs : t -> Sld_uf.t -> t 
+val with_deqs : t -> Sld_deqs.t -> t
+val with_ptos : t -> Sld_ptos.t -> t
+val with_inds : t -> Sld_tpreds.t -> t
+
+val del_deq : t -> Sld_tpair.t -> t
+val del_pto : t -> Sld_pto.t -> t
+val del_ind : t -> Sld_tpred.t -> t
+
+val add_eq : t -> Sld_tpair.t -> t
+val add_deq : t -> Sld_tpair.t -> t
+val add_pto : t -> Sld_pto.t -> t
+val add_ind : t -> Sld_tpred.t -> t
+
+val proj_sp : t -> t
+val proj_pure : t -> t
+
+val star : t -> t -> t
+val diff : t -> t -> t
+
+val fixpoint : (t -> t) -> t -> t
+
+val subst : Sld_term.substitution -> t -> t
+
+val univ : Sld_term.Set.t -> t -> t
+(** Replace all existential variables with fresh universal variables. *)
+
+val subst_existentials : t -> t
+(** For all equalities x'=t, remove the equality and do the substitution [t/x'] *)
+
+val project : t -> Sld_term.t list -> t
+(** See CSL-LICS paper for explanation.  Intuitively, do existential 
+    quantifier elimination for all variables not in parameter list. *)  
+
+val freshen_tags : t -> t -> t
+(** [freshen_tags f g] will rename all tags in [g] such that they are disjoint
+    from those of [f]. *)
+
+val subst_tags : Util.TagPairs.t -> t -> t
+(** Substitute tags according to the function represented by the set of 
+    tag pairs provided. *)
+
+val unify_partial : ?tagpairs:bool -> t Sld_term.unifier
+(** Unify two heaps such that the first becomes a subformula of the second.
+- If the optional argument [~tagpairs=false] is set to [true] then in addition 
+  to the substitution found, also return the set of pairs of tags of 
+  predicates unified. *)
+
+val classical_unify : ?inverse:bool -> ?tagpairs:bool -> t Sld_term.unifier
+(** Unify two heaps, by using [unify_partial] for the pure (classical) part whilst
+    using [unify] for the spatial part.
+- If the optional argument [~inverse=false] is set to [true] then compute the 
+  required substitution for the *second* argument as opposed to the first. 
+- If the optional argument [~tagpairs=false] is set to [true] then in addition 
+  to the substitution found, also return the set of pairs of tags of 
+  predicates unified. *)
+
+val compute_frame : 
+      ?freshen_existentials:bool -> ?avoid:Sld_term.Set.t -> t -> t -> t option
+(** [compute_frame f f'] computes the portion of [f'] left over (the 'frame') 
+    after subtracting all the atomic formulae in the specification [f]. Returns 
+    None when there are atomic formulae in [f] which are not also in [f'] (i.e.
+    [f] is not subsumed by [f']). Any existential variables occurring in the
+    frame which also occur in the specification [f] are freshened, avoiding the
+    variables in the optional argument [~avoid=Sld_term.Set.empty].
+- If the optional argument [~freshen_existentials=true] is set to false, then
+  None will be returned in case there are existential variables in the frame
+  which also occur in the specification. *)
+
+val norm : t -> t
+(** Replace all terms with their UF representative (the UF in the heap). *)
+
+val all_subheaps : t -> t list
+(** [all_subheaps h] returns a list of all the subheaps of [h]. These are
+    constructed by taking:
+      - all the subsets of the disequalities of [h];
+      - all the subsets of the points-tos of [h];
+      - all the subsets of the predicates of [h];
+      - the equivalence classes of each subset of variables in the equalities of
+        [h] that also respect the equalities of [h] are constructed - this is
+        done by using [Sld_uf.remove] to remove subsets of variables from 
+        [h.eqs];
+    and forming all possible combinations *)

@@ -1,5 +1,6 @@
 #src/firstorder/fo_prove.native  
 src/seplog/sl_prove.native
+src/sldata/sld_prove.native
 src/seplog/sl_disprove.native
 src/seplog/sl_modelcheck.native
 src/slsat/slsat_check.native  
@@ -11,3 +12,4 @@ src/extended_while/extended_while_prove.native
 src/temporal/temporal_prove.native
 cyclist.docdir/index.html
 src/seplog/sl.top
+src/sldata/sl.top

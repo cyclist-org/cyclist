@@ -1,4 +1,4 @@
-#OCB := ocamlbuild -ocamlopt "ocamlopt.opt -S" -ocamlmktop "ocamlmktop -custom" -j 8 
+#OCB := ocamlbuild -use-ocamlfind -ocamlopt "ocamlopt.opt -S" -ocamlmktop "ocamlmktop -custom" -j 8 
 OCB := ocamlbuild -j 8 -ocamlopt "ocamlopt -annot -S"
 
 TARBALL:=cyclist.tar.gz
@@ -7,7 +7,8 @@ ORIGDIR:=$(PWD)
 CYCDIR:=$(TMPDIR)/cyclist
 
 FOMAIN:=./src/firstorder/fo_prove.native
-SLMAIN:=./src/seplog/sl_prove.native
+#SLMAIN:=./src/seplog/sl_prove.native
+SLDTMAIN:=./src/sldata/sl_prove.native
 PRMAIN:=./src/goto/goto_prove.native
 PR2MAIN:=./src/while/while_prove.native
 XTDPRMAIN:=./src/extended_while/extended_while_prove.native
