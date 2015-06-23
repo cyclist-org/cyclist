@@ -960,7 +960,13 @@ module IntSigParser =
       ( attempt (Tokens.hexadecimal |>> (fun v ->
         if v == 0 then Value.zero else (Value.mk_loc_val v)))
         <|>
-        (Tokens.integer |>> (fun v -> Value.mk_scalar_val v))
+        attempt (Tokens.integer |>> (fun v -> Value.mk_scalar_val v))
+        <|>
+        attempt (Tokens.skip_symbol "false" >>$ Value.zero)
+        <|>
+        attempt (Tokens.skip_symbol "true" >>$ Value.mk_scalar_val 1)
+        <|>
+        (fail "Cannot parse this as a scalar value!")
       ) st
   end
 

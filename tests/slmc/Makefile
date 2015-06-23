@@ -14,15 +14,18 @@ MC=../../_build/src/seplog/sl_modelcheck.native
 
 TIME=time
 
+SEED=2758437598
+
 .PHONY: models tests
 
 models:
-	-@BPS=$$(cat $(BP_FILE)); (set -x; $(HARVEST) $(EXAMPLES_BIN_DIR)/$(EXE) $$BPS) 
+	-@BPS=$$(cat $(BP_FILE)); (set -x; $(HARVEST) "$(EXAMPLES_BIN_DIR)/$(EXE)" $$BPS) 
 	
 tests:
 	-@while read test formula; do \
 		echo "$(MDL_FILE_BASE)-$$test" ; \
 		for f in $(MODELS_PATH)/$(MDL_FILE_BASE)-$$test*.mdl; do \
+			echo "$$f"; \
 			(MDL=$$(cat $$f); set -x; $(TIME) $(MC) -D ./$(DEFS_FILE) -F "$$formula" -M "$$MDL") ; \
 		done  \
 	done < $(TEST_FILE)
@@ -63,7 +66,29 @@ lcset-tests:
 clean-lcset:
 	rm -f ./models/lcset-*.mdl
 
+schorr-waite-models:
+	-@for i in `seq 1 20`; do \
+		EXE="schorr_waite $$i $(SEED)" BP_FILE=schorr-waite.bps $(MAKE) --no-print-directory models ; \
+	done 
 
+.PHONY: schorr-waite-prepost-test schorr-waite-inv1-test schorr-waite-inv2-test schorr-waite-inv3-test
+
+schorr-waite-prepost-test:
+	TEST_FILE=schorr-waite-prepost.tst DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory tests 
+
+schorr-waite-inv1-test:
+	TEST_FILE=schorr-waite-inv1.tst DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory tests 
+
+schorr-waite-inv2-test:
+	TEST_FILE=schorr-waite-inv2.tst DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory tests 
+
+schorr-waite-inv3-test:
+	TEST_FILE=schorr-waite-inv3.tst DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory tests 
+
+schorr-waite-tests: schorr-waite-prepost-test schorr-waite-inv1-test schorr-waite-inv2-test schorr-waite-inv3-test
+
+clean-schorr-waite:
+	rm -f ./models/schorr-waite-*.mdl
 
 spatial-true-tests:
 	./test_sp_true.sh 1 20
