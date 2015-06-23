@@ -496,12 +496,9 @@ module Make (Sig : ValueSig) : S
 
     let decorate h itp =
       let f (ancestors, parents) =
-        let acc = Interpretant.Hashset.create 11 in
-        let add_subst_heap (vs, ls) =
-          let h' = HeapBase.proj h ls in
-          Interpretant.Hashset.add acc (vs, h') in
-        InterpretantBase.Set.iter add_subst_heap ancestors ;
-        InterpretantBase.Set.iter add_subst_heap parents ;
+        let acc = InterpretantBase.Hashset.create 11 in
+        InterpretantBase.Set.iter (InterpretantBase.Hashset.add acc) ancestors ;
+        InterpretantBase.Set.iter (InterpretantBase.Hashset.add acc) parents ;
         acc in
       Sl_predsym.Map.map f itp
 
@@ -928,13 +925,10 @@ module Make (Sig : ValueSig) : S
       let () = debug (fun _ -> Sl_preddef.to_string new_def) in
       let () = debug (fun _ -> Value.FList.to_string vals) in
       let interp = mk (defs, (vals, h)) in
-      let () = print_endline(Sl_predsym.Map.to_string Interpretant.Hashset.to_string interp) in
-      let () = print_endline("Looking for #" ^ (string_of_int ((Interpretant.hash (vals, h)) land max_int)) ^ ":" ^ (Interpretant.to_string (vals, h))) in
-      let () = print_endline("in " ^ (Interpretant.Hashset.to_string (Sl_predsym.Map.find new_predsym interp))) in
-      let () = print_endline(string_of_bool (Interpretant.Hashset.mem (Sl_predsym.Map.find new_predsym interp) (vals, h))) in
-      Interpretant.Hashset.mem
+      let heapbase = HeapBase.inj h h in
+      InterpretantBase.Hashset.mem
         (Sl_predsym.Map.find new_predsym interp)
-        (vals, h)
+        (vals, heapbase)
 
   end
 
