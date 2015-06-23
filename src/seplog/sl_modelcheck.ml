@@ -249,7 +249,8 @@ module Make (Sig : ValueSig) : S
                 Value.equal Value.nil (Var.Map.find (Var.of_term t') s)) ||
               (Sl_term.is_nil t' &&
                 Value.equal Value.nil (Var.Map.find (Var.of_term t) s)) ||
-              (Value.equal (Var.Map.find (Var.of_term t) s) (Var.Map.find (Var.of_term t') s)) in
+              (Sl_term.is_var t && Sl_term.is_var t' &&
+                Value.equal (Var.Map.find (Var.of_term t) s) (Var.Map.find (Var.of_term t') s)) in
               let () = debug (fun _ ->
                 "does " ^
                 (if b then "" else "not ") ^ "satisfy equality " ^
