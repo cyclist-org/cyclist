@@ -1,29 +1,33 @@
-fields: this;
-precondition: one!=zero * true!=false * wakend=true * flag=one;
-property: EF EG wakend=false;
-while flag=one do
-      if sigup=positive then
-      	 sigup:=zero;
+fields: next;
+precondition: wakend->nil * sigup->nil * flag->nil * numbers->x' * x'->nil;
+property: EF EG wakend=nil * numbers->x' * x'->nil;
+while flag!=nil do
+      if sigup!=nil then
+	 free(sigup);
+      	 sigup:=nil;
 	 skip;
 	 if * then
-	    flag:=zero
+	    free(flag);
+	    flag:=nil
 	 else
 	    skip
 	 fi
        else
          skip
        fi;
-       if flag=zero then
-           if wakend=true then
-	       wakend:=false;
+       if flag=nil then
+           if wakend!=nil then
+	       free(wakend);
+	       wakend:=nil;
 	       skip;
 	       skip
 	   else
 	       skip
 	   fi;
-	   if wakend=false then
+	   if wakend=nil then
 	       if * then
-	           wakend:=true
+		   wakend:=new();
+	           wakend:=numbers.next
 	       else
 	           skip
 	       fi
@@ -31,7 +35,7 @@ while flag=one do
 	       skip
 	   fi;
 	   if * then
-	       flag:=zero
+	       flag:=nil
 	   else
 	       skip
 	   fi

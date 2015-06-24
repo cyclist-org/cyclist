@@ -8,14 +8,13 @@ exception Not_symheap = Sl_form.Not_symheap
 module Rule = Proofrule.Make(Temporal_program.Seq)
 module Seqtactics = Seqtactics.Make(Temporal_program.Seq)
 module Proof = Proof.Make(Temporal_program.Seq)
-module Entailprover = Prover.Make(Sl_seq)
 				 
 let tagpairs s =
   Seq.tag_pairs s
 		
 (* following is for symex only *)
 let progpairs s = 
-  Seq.tag_pairs s	
+  Seq.tag_pairs s
 
 let dest_sh_seq (sf,cmd,tf) = (Sl_form.dest sf, cmd, tf)
 				
@@ -24,7 +23,7 @@ let ex_falso_axiom =
   Rule.mk_axiom (fun (sf,_,_) -> Option.mk (Sl_form.inconsistent sf) "Ex Falso")
 
 let symex_check_axiom entails = 
-  Rule.mk_axiom (fun (sf,_,tf) -> Option.mk (Tl_form.is_slformula tf && Option.is_some (entails sf (Tl_form.to_slformula tf))) "Check")
+  Rule.mk_axiom (fun (sf,_,tf) -> Option.mk (Tl_form.is_checkable tf && Option.is_some (entails sf (Tl_form.extract_checkable_slformula tf))) "Check")
 		
 let symex_empty_axiom =
   Rule.mk_axiom (fun (_,cmd,tf) -> Option.mk (Cmd.is_empty cmd && Tl_form.is_box tf) "Empty")
@@ -138,7 +137,7 @@ let symex_load_rule =
       [[ SH.add_eq sf' (t',x) ], "Load"]
     with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl
-
+	   
 let symex_store_rule =
   let rl seq =
     try
@@ -190,32 +189,21 @@ let symex_ifelse_rule =
       let (sf',sf'') = Cond.fork sf c in 
       if Tl_form.is_box tf then
 	let tf' = Tl_form.a_step tf in
-	if Sl_form.inconsistent [sf'] then
-	  if Sl_form.inconsistent [sf''] then
-	    []
-	  else
-	    fix_tps [[ ([sf''], Cmd.mk_seq cmd2 cont, tf')], "If-[]2"]
-	else if Sl_form.inconsistent [sf''] then
-	  fix_tps [[ ([sf'], Cmd.mk_seq cmd2 cont, tf')], "If-[]1"]
-	else
-	  fix_tps 
-            [[ ([sf'], Cmd.mk_seq cmd1 cont, tf') ; ([sf''], Cmd.mk_seq cmd2 cont,tf') ], "If-[]"]
+	fix_tps 
+          [[ ([sf'], Cmd.mk_seq cmd1 cont, tf') ; ([sf''], Cmd.mk_seq cmd2 cont,tf') ], "If-[]"]
       else if Tl_form.is_diamond tf then
 	let tf' = Tl_form.e_step tf in
-	if Sl_form.inconsistent [sf'] then
-	  if Sl_form.inconsistent [sf''] then
-	    []
-	  else
-	    fix_tps [[ ([sf''], Cmd.mk_seq cmd2 cont, tf')], "If-<>2"]
-	else if Sl_form.inconsistent [sf''] then
-	  fix_tps [[ ([sf'], Cmd.mk_seq cmd1 cont, tf')], "If-<>1"]
-	else
+	if Cond.is_non_det c then 
 	  fix_tps 
             [[ ([sf'], Cmd.mk_seq cmd1 cont, tf')],
              "If-<>1" ;
 	     [ ([sf''], Cmd.mk_seq cmd2 cont, tf')],
              "If-<>2"
             ]
+	else if Cond.validated_by sf c then
+	  fix_tps [[ ([sf'], Cmd.mk_seq cmd1 cont, tf')], "If-<>1"]
+	else 
+	  fix_tps [[ ([sf''], Cmd.mk_seq cmd2 cont, tf')], "If-<>2"]	  
       else
 	[]
     with Not_symheap | WrongCmd -> [] in
@@ -230,37 +218,26 @@ let symex_while_rule =
       let (sf',sf'') = Cond.fork sf c in 
       if Tl_form.is_box tf then
 	let tf' = Tl_form.a_step tf in
-	if Sl_form.inconsistent [sf'] then
-	  if Sl_form.inconsistent [sf''] then
-	    []
-	  else
-	    fix_tps [[ ([sf''], cont, tf')], "While-[]2"]
-	else if Sl_form.inconsistent [sf''] then
-	  fix_tps [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], "While-[]1"]
-	else
-	  fix_tps 
-	    [[ ([sf'], Cmd.mk_seq cmd' cmd, tf') ; ([sf''], cont, tf') ], "While-Box"]
+	fix_tps 
+	  [[ ([sf'], Cmd.mk_seq cmd' cmd, tf') ; ([sf''], cont, tf') ], "While-Box"]
       else if Tl_form.is_diamond tf then
 	let tf' = Tl_form.e_step tf in
-	if Sl_form.inconsistent [sf'] then
-	  if Sl_form.inconsistent [sf''] then
-	    []
-	  else
-	    fix_tps [[ ([sf''], cont, tf')], "While-<>2"]
-	else if Sl_form.inconsistent [sf''] then
+	if Cond.is_non_det c then
+	  fix_tps 
+            [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], 
+             "While-<>1" ;
+	     [ ([sf''], cont, tf')],
+             "While-<>2"
+            ]
+	else if Cond.validated_by sf c then
 	  fix_tps [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], "While-<>1"]
 	else
-	fix_tps 
-          [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], 
-           "While-<>1" ;
-	   [ ([sf''], cont, tf')],
-           "While-<>2"
-          ]
+	  fix_tps [[ ([sf''], cont, tf')], "While-<>2"]
       else
 	[]
     with Not_symheap | WrongCmd -> [] in
   wrap rl
-       
+
 (* There is also a weird, unsound, interaction between looking for substitutions  *)
 (* that rewrite a sequent under its equalities, as opposed to bona fide           *)
 (* substitutions for back-links, and the union-find structure used to record      *)
@@ -510,7 +487,7 @@ let backlink_cut defs =
 let axioms = 
   let entails f f' =
     Slprover.idfs 1 5 !Sl_rules.axioms !Sl_rules.rules (f, f') in
-  ref (Rule.first [ex_falso_axiom ; symex_check_axiom entails; symex_empty_axiom])
+  ref (Rule.first [ex_falso_axiom; symex_check_axiom entails; symex_empty_axiom])
       
 let rules = ref Rule.fail
 
