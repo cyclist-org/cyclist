@@ -301,9 +301,9 @@ module Make (Sig : ValueSig) : S
               ((not (Var.Map.mem (Var.of_term t') s)) && not (Var.Map.mem (Var.of_term t') s')) ||
               ((Var.Map.mem (Var.of_term t) s) && (Var.Map.mem (Var.of_term t) s')) ||
               ((Var.Map.mem (Var.of_term t') s) && (Var.Map.mem (Var.of_term t') s')) ||
-              ((Var.Map.mem (Var.of_term t) s) &&
+              ((Var.Map.mem (Var.of_term t) s) && (Var.Map.mem (Var.of_term t') s') &&
                 not (Value.equal (Var.Map.find (Var.of_term t) s) (Var.Map.find (Var.of_term t') s'))) ||
-              ((Var.Map.mem (Var.of_term t) s') &&
+              ((Var.Map.mem (Var.of_term t) s') && (Var.Map.mem (Var.of_term t') s) &&
                 not (Value.equal (Var.Map.find (Var.of_term t) s') (Var.Map.find (Var.of_term t') s))))
             deqs
 
