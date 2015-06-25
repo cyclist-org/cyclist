@@ -225,8 +225,14 @@ module Make (Sig : ValueSig) : S
               None
 
         let consistent s s' =
+          let () = debug (fun _ -> "checking stacks consistent:\n\t" ^ (to_string s) ^ "\n\t" ^ (to_string s')) in
           Var.Map.for_all
-            (fun x v -> not (Var.Map.mem x s') || Value.equal v (Var.Map.find x s'))
+            (fun x v ->
+              let b =
+                not (Var.Map.mem x s') || Value.equal v (Var.Map.find x s') in
+              let () = debug (fun _ ->
+                (if b then "" else "do not ") ^ "agree on " ^ (Var.to_string x)) in
+              b)
             s
 
         let merge s s' =
@@ -281,30 +287,49 @@ module Make (Sig : ValueSig) : S
         (* precondition:  consistent s s'                    *)
         (* postcondition: satisfies (eqs, deqs) (merge s s') *)
         let cross_satisfies (eqs, deqs) s s' =
+          let () = debug (fun _ -> "checking combination of stacks " ^ (to_string s) ^ " and " ^ (to_string s')) in
           Sl_uf.for_all
             (fun t t' ->
+              let b =
               Sl_term.is_nil t || Sl_term.is_nil t' ||
-              ((not (Var.Map.mem (Var.of_term t) s)) && not (Var.Map.mem (Var.of_term t) s')) ||
-              ((not (Var.Map.mem (Var.of_term t') s)) && not (Var.Map.mem (Var.of_term t') s')) ||
-              ((Var.Map.mem (Var.of_term t) s) && (Var.Map.mem (Var.of_term t) s')) ||
-              ((Var.Map.mem (Var.of_term t') s) && (Var.Map.mem (Var.of_term t') s')) ||
-              ((Var.Map.mem (Var.of_term t) s) &&
-                (Value.equal (Var.Map.find (Var.of_term t) s) (Var.Map.find (Var.of_term t') s'))) ||
-              ((Var.Map.mem (Var.of_term t) s') &&
-                (Value.equal (Var.Map.find (Var.of_term t) s') (Var.Map.find (Var.of_term t') s))))
+              let t = Var.of_term t in
+              let t' = Var.of_term t' in
+              ((not (Var.Map.mem t s)) && not (Var.Map.mem t s')) ||
+              ((not (Var.Map.mem t' s)) && not (Var.Map.mem t' s')) ||
+              ((Var.Map.mem t s) && (Var.Map.mem t s')) ||
+              ((Var.Map.mem t' s) && (Var.Map.mem t' s')) ||
+              ((Var.Map.mem t s) &&
+                (Value.equal (Var.Map.find t s) (Var.Map.find t' s'))) ||
+              ((Var.Map.mem t s') &&
+                (Value.equal (Var.Map.find t s') (Var.Map.find t' s))) in
+              let () = debug (fun _ ->
+                "does " ^
+                (if b then "" else "not ") ^ "satisfy " ^
+                (Sl_term.to_string t) ^ " = " ^ (Sl_term.to_string t')) in
+              b)
             eqs
               &&
           Sl_deqs.for_all
             (fun (t, t') ->
+              let b =
               Sl_term.is_nil t || Sl_term.is_nil t' ||
-              ((not (Var.Map.mem (Var.of_term t) s)) && not (Var.Map.mem (Var.of_term t) s')) ||
-              ((not (Var.Map.mem (Var.of_term t') s)) && not (Var.Map.mem (Var.of_term t') s')) ||
-              ((Var.Map.mem (Var.of_term t) s) && (Var.Map.mem (Var.of_term t) s')) ||
-              ((Var.Map.mem (Var.of_term t') s) && (Var.Map.mem (Var.of_term t') s')) ||
-              ((Var.Map.mem (Var.of_term t) s) && (Var.Map.mem (Var.of_term t') s') &&
-                not (Value.equal (Var.Map.find (Var.of_term t) s) (Var.Map.find (Var.of_term t') s'))) ||
-              ((Var.Map.mem (Var.of_term t) s') && (Var.Map.mem (Var.of_term t') s) &&
-                not (Value.equal (Var.Map.find (Var.of_term t) s') (Var.Map.find (Var.of_term t') s))))
+              let t = Var.of_term t in
+              let t' = Var.of_term t' in
+              ((not (Var.Map.mem t s)) && not (Var.Map.mem t s')) ||
+              ((not (Var.Map.mem t' s)) && not (Var.Map.mem t' s')) ||
+              ((not (Var.Map.mem t s)) && (not (Var.Map.mem t' s))) ||
+              ((not (Var.Map.mem t s')) && (not (Var.Map.mem t' s'))) ||
+              ((Var.Map.mem t s) && (Var.Map.mem t s')) ||
+              ((Var.Map.mem t' s) && (Var.Map.mem t' s')) ||
+              ((Var.Map.mem t s) && (Var.Map.mem t' s') &&
+                not (Value.equal (Var.Map.find t s) (Var.Map.find t' s'))) ||
+              ((Var.Map.mem t s') && (Var.Map.mem t' s) &&
+                not (Value.equal (Var.Map.find t s') (Var.Map.find t' s))) in
+              let () = debug (fun _ ->
+                "does " ^
+                (if b then "" else "not ") ^ "satisfy " ^
+                (Sl_term.to_string t) ^ " != " ^ (Sl_term.to_string t')) in
+              b)
             deqs
 
         type stack = t
@@ -729,7 +754,9 @@ module Make (Sig : ValueSig) : S
             let base = InterpretantBase.Set.add pto base in
             Int.Map.add cell_size base ptos in
           Location.Map.fold f h Int.Map.empty in
-        let () = debug (fun _ -> Int.Map.to_string InterpretantBase.Set.to_string all_ptos_itpts) in
+        let () = debug (fun _ ->
+          "Hashmap of Points-to interpretants: " ^
+          Int.Map.to_string InterpretantBase.Set.to_string all_ptos_itpts) in
         let num_buckets =
           let test_and_incr n rl =
             let body = Sl_indrule.body rl in
@@ -741,6 +768,8 @@ module Make (Sig : ValueSig) : S
           Sl_defs.rule_fold test_and_incr 0 defs in
         let base = SymHeapHash.create num_buckets in
         let calc_abstractions rl =
+          let () = debug (fun _ -> "Calculating points-to base of rule: " ^
+            (Sl_indrule.to_string rl)) in
           let (body, _) = Sl_indrule.dest rl in
           let (eqs, deqs, ptos, _) = Sl_heap.dest body in
           let constraints = (eqs, deqs) in
