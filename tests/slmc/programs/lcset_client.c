@@ -3,7 +3,7 @@
 // The other thread repeatedly asks the user for a value, then tries to remove it until it succeeds, then tries to remove it again.
 // Asserts that the last remove attempt fails.
 
-#include <stdlib.h>
+#include "stdlib.h"
 #include <stdbool.h>
 #include "lcset.h"
 #include "threading.h"
@@ -248,7 +248,7 @@ void adder_thread(struct set *set) //@ : thread_run
     //@ open thread_run_data(adder_thread)(set);
     //@ open cells(?adderCell, ?removerPhaseCell, ?removerCell);
     int x = 0;
-    for (;x<=8;)
+    for (;x<get_maxelems(set);)
         //@ invariant [_]set(set) &*& [1/2]atomic_space(space_inv(set, adderCell, removerPhaseCell, removerCell)) &*& [1/2]ghost_cell<int>(adderCell, ?adderValue) &*& adderValue < x &*& INT_MIN <= adderValue;
     {
         if (INT_MAX <= x) abort();
@@ -279,6 +279,7 @@ void adder_thread(struct set *set) //@ : thread_run
             //@ close set_sep(space_sep)(space_info(set, adderCell, removerPhaseCell, removerCell), set, space_inv(set, adderCell, removerPhaseCell, removerCell), space_unsep);
             //@ produce_lemma_function_pointer_chunk(add_op);
             //@ close set_add_pre(add_op)(space_unsep, space_info(set, adderCell, removerPhaseCell, removerCell), x);
+//printf("Adding %d\n", x);
             add(set, x);
             //@ open set_add_post(add_op)(_);
             //@ open set_sep(space_sep)(_, _, _, _);
@@ -288,6 +289,7 @@ void adder_thread(struct set *set) //@ : thread_run
         }
         x++;
     }
+//printf("Done Adding\n");
 }
 
 /*@
@@ -312,11 +314,12 @@ void remover_thread(struct set *set)
     //@ ensures false;
 {
     //@ open cells(adderCell, removerPhaseCell, removerCell);
-//    for (;;)
+//    for (x = 0;x<get_maxelems(set);x++)
         //@ invariant [_]set(set) &*& [1/2]atomic_space(space_inv(set, adderCell, removerPhaseCell, removerCell)) &*& [1/2]ghost_cell<bool>(removerPhaseCell, false) &*& [1/2]ghost_cell<int>(removerCell, _);
 //    {
-        int x = readNumber();
-				bool success = false;
+        int x = rand() % get_maxelems(set);
+//printf("Fetching %d\n", x);
+		bool success = false;
         for (;!success;)
             //@ invariant [_]set(set) &*& [1/2]atomic_space(space_inv(set, adderCell, removerPhaseCell, removerCell)) &*& [1/2]ghost_cell<bool>(removerPhaseCell, false) &*& [1/2]ghost_cell<int>(removerCell, _);
         {
@@ -353,12 +356,15 @@ void remover_thread(struct set *set)
                 //@ close set_sep(space_sep)(space_info(set, adderCell, removerPhaseCell, removerCell), set, space_inv(set, adderCell, removerPhaseCell, removerCell), space_unsep);
                 //@ produce_lemma_function_pointer_chunk(remove_op);
                 //@ close set_remove_pre(remove_op)(space_unsep, space_info(set, adderCell, removerPhaseCell, removerCell), x);
+//printf("Before remove\n");
                 success = _remove(set, x);
+//printf("After remove: %d\n", success);
                 //@ open set_remove_post(remove_op)(_);
                 //@ open set_sep(space_sep)(_, _, _, _);
                 //@ kill_is_set_remove();
             }
             if (success) {
+//printf("Removed: %d\n", x);
                 bool success2;
                 {
                     /*@
@@ -396,12 +402,14 @@ void remover_thread(struct set *set)
 //    }
 }
 
-int main() //@ : main
+int main(int argc, char **argv) //@ : main
     //@ requires true;
     //@ ensures true;
 {
-		srand(85243053);
-    struct set *set = create_set();
+    int n = atoi(argv[1]);
+    unsigned int seed  = atoi(argv[2]);
+    srand(seed);
+    struct set *set = create_set(n);
     //@ int adderCell = create_ghost_cell<int>(INT_MIN);
     //@ int removerPhaseCell = create_ghost_cell<bool>(false);
     //@ int removerCell = create_ghost_cell<int>(0);
@@ -414,5 +422,5 @@ int main() //@ : main
     //@ close cells(adderCell, removerPhaseCell, removerCell);
     remover_thread(set);
 
-		dispose_set(set);
+    dispose_set(set);
 }

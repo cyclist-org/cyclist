@@ -1,13 +1,18 @@
 lseg {
-	x = y => lseg(x,y) |
-	x != nil * l' = nil * x->l',n',v' * lseg(m',y) => lseg(x,y) |
-	x != nil * l' != nil * x->l',n',v' * lseg(n',y) => lseg(x,y)
-};
-
-set {
-	x != nil * h' != nil * x->h' * h'->l',n',v' => set(x)
+  x = y => lseg(x,y) |
+  x != nil * l' = nil * x->l',n',v' * lseg(m',y) => lseg(x,y) |
+  x != nil * l' != nil * x->l',n',v' * lseg(n',y) => lseg(x,y)
 };
 
 set_atomic {
-	x != nil * h' != t' * t' != nil * x->h' * t'->l',n',v' * lseg(h',t') => set_atomic(x)
+  x != nil * h' != t' * t' != nil * x->h',w' * t'->l',n',v' * lseg(h',t') => set_atomic(x)
+};
+
+lseg2 {
+  x = y => lseg2(x,y) |
+  x != nil * x->l',n',v' * lseg2(n',y) => lseg2(x,y)
+};
+
+set_atomic2 {
+  x != nil * h' != t' * t' != nil * x->h',w' * t'->l',n',v' * lseg2(h',t') => set_atomic2(x)
 }

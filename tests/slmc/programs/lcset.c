@@ -16,6 +16,7 @@ struct node {
 
 struct set {
     struct node *head;
+    int maxelems;
     //@ int nodesList;
     //@ int lockCounter;
 };
@@ -179,7 +180,7 @@ predicate set_atomic(struct set *set, list<int> values) =
     tail->lock |-> _ &*& tail->oldNext |-> _ &*& tail->next |-> _ &*& [1/2]tail->value |-> INT_MAX &*& malloc_block_node(tail);
 @*/
 
-struct set *create_set()
+struct set *create_set(int maxelems)
     //@ requires true;
     //@ ensures set(result) &*& set_atomic(result, nil);
 {
@@ -195,6 +196,7 @@ struct set *create_set()
     struct set *set = malloc(sizeof(struct set));
     if (set == 0) abort();
     set->head = first;
+    set->maxelems = maxelems;
     //@ int nodesList = create_ghost_list<struct node *>();
     //@ ghost_list_insert(nodesList, nil, nil, first);
     //@ set->nodesList = nodesList;
@@ -206,6 +208,11 @@ struct set *create_set()
     //@ close lseg(nodesList, first, INT_MIN, last, INT_MAX, cons(first, nil), cons(INT_MIN, nil), 0);
     //@ close set_atomic(set, nil);
     return set;
+}
+
+int get_maxelems(struct set *set)
+{
+    return set->maxelems;
 }
 
 void dispose_set(struct set *set)

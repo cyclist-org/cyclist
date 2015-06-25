@@ -443,7 +443,38 @@ lemma void change_focus(struct node *node0, path path, struct node *node)
 
 @*/
 
-int main() //@ : main
+void main(int argc, char **argv)
+{
+    int numnodes = atoi(argv[1]);
+    unsigned int seed  = atoi(argv[2]);
+    srand(seed);
+    int i = 1;
+    struct node *root = create_tree();
+    struct node *leftholes[numnodes];
+    struct node *rightholes[numnodes];
+    leftholes[0] = root;
+    rightholes[0] = root;
+    int numleftholes = 1;
+    int numrightholes = 1;
+    while (i < numnodes)
+    {
+        int direction = rand() % 2;
+        int j;
+        if (direction) {
+            j = rand() % numleftholes;
+            leftholes[j] = tree_add_left(leftholes[j]);
+            rightholes[numrightholes++] = leftholes[j];
+        } else {
+            j = rand() % numrightholes;
+            rightholes[j] = tree_add_right(rightholes[j]);
+            leftholes[numleftholes++] = rightholes[j];
+        }
+        i++;
+    }
+    tree_dispose(root);
+}
+
+int verifast_main() //@ : main
     //@ requires emp;
     //@ ensures emp;
 {

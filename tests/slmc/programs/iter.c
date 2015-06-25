@@ -387,7 +387,24 @@ void iter_dispose(struct iter *i)
     free(i);
 }
 
-int main() //@ : main
+int main(int argc, char **argv)
+{
+	int size = atoi(argv[1]);
+  struct llist *l = create_llist();
+	int i, j; struct iter *it;
+	for (i=0;i<size;i++)
+	{
+		llist_add(l, i);
+		it = llist_create_iter(l);
+		for (j=0;j<i;j++)
+		{
+			iter_next(it);
+		}
+		iter_dispose(it);
+	}
+}
+
+int main1() //@ : main
   //@ requires emp;
   //@ ensures emp;
 {

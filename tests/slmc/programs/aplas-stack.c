@@ -116,18 +116,16 @@ int get_length(struct stack* s)
   return r;
 }
 
-int main()
+int main(int argc, char **argv)
   //@ requires true;
   //@ ensures true;
 {
+  int size = atoi(argv[1]);
   struct stack* s = create_stack();
-  push(s, 1);
-  push(s, 2);
-  push(s, 3);
-  int r1 = pop(s);
-  int r2 = pop(s);
-  int r3 = pop(s);
-  //@ assert r3 == 1;
-  dispose(s);
+	int i = 0;
+  for (i = 0; i < size; i++)
+	{
+		push(s, i);
+	}
   return 0;
 }

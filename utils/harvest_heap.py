@@ -35,13 +35,18 @@ if (len(sys.argv) < 4) or ((len(sys.argv) - 1) % 3 != 0):
     print "\tpass empty string as <output-file_prefix> to output to stdout"
     sys.exit()
 
+exe_str = sys.argv[0].strip()
+exe_file = exe_str.split(' ')[0]
 
 # Set the file to be executed
-gdb.execute("file " + sys.argv[0].split(' ')[0])
+gdb.execute("file " + exe_file)
 
 # Set up all the breakpoints
 for i in range(1, len(sys.argv), 3):
     HarvesterBP(sys.argv[i], sys.argv[i+1], sys.argv[i+2])
 
+run_cmd = "run"
+if ' ' in exe_str : run_cmd += " " + sys.argv[0].split(' ',1)[1]
+
 # Run the file
-gdb.execute("run " + sys.argv[0].split(' ',1)[1])
+gdb.execute(run_cmd)

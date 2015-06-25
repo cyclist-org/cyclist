@@ -1,3 +1,1 @@
-push stack(s)
-pop stack(s)
-dispose stack(s)
+line_127- stack(s)

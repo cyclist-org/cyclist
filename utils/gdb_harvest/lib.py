@@ -9,7 +9,7 @@ ptr_re = re.compile("0x[a-f0-9]+(?=\s*(<[_a-zA-Z][_a-zA-Z0-9]*\+\d+>)?)")
 def print_err(*args):
     sys.stderr.write(' '.join(map(str,args)) + '\n')
     sys.stderr.flush()
-        
+
 def stringify_map(m, sep):
     str = "[ "
     add_comma = False
@@ -37,7 +37,7 @@ def stringify_stack_heap_pair(s, h):
     return str
 
 def is_primitive(val):
-    code = val.type.strip_typedefs().code 
+    code = val.type.strip_typedefs().code
     return code == gdb.TYPE_CODE_ENUM or \
          code == gdb.TYPE_CODE_INT or    \
          code == gdb.TYPE_CODE_FLT or    \
@@ -46,12 +46,12 @@ def is_primitive(val):
          code == gdb.TYPE_CODE_STRING
 
 def is_ptr(val):
-    code = val.type.strip_typedefs().code 
+    code = val.type.strip_typedefs().code
     return code == gdb.TYPE_CODE_PTR or \
         code == gdb.TYPE_CODE_REF
 
 def is_struct(val):
-    code = val.type.strip_typedefs().code 
+    code = val.type.strip_typedefs().code
     return code == gdb.TYPE_CODE_STRUCT or \
         code == gdb.TYPE_CODE_UNION
 
@@ -59,7 +59,7 @@ def stringify_value(val):
     # For now, let's just take the predefined string value
     # In future, we can output a more decorated form if necessary
     return str(val)
-    
+
 def stringify_ptr(ptr):
     # For now, let's just take the predefined string value
     # In future, we can output a more decorated form if necessary
@@ -70,7 +70,7 @@ def stringify_ptr(ptr):
     return ptr_re.match(str(ptr)).group(0)
 
 def make_cell_string(struct_t, field_vals):
-    
+
     struct_str = struct_t.tag + "("
     add_comma = False
     for fval in field_vals:
@@ -78,7 +78,7 @@ def make_cell_string(struct_t, field_vals):
         else : add_comma = True
         struct_str += fval
     struct_str +=  ")"
-    
+
     return struct_str
 
 def get_type_string(code):
@@ -110,18 +110,18 @@ def get_type_string(code):
     else : raise Exception("Type code " + str(code) + " not recognised!")
 
 def harvest_addr(heap, ptr_queue):
-    
+
     ptr, ptr_queue = ptr_queue[0], ptr_queue[1:]
-    
+
    # print "Checking if addr already in the heap"
     if heap.has_key(stringify_ptr(ptr)) :
         return heap, ptr_queue
     #print "Found a fresh addr"
-    
+
     if ptr.type.target().code == gdb.TYPE_CODE_VOID :
-        print_err("Encountered void type - ignoring")
+        #print_err("Encountered void type - ignoring")
         return heap, ptr_queue
-    
+
     try:
         #print "About to dereference pointer"
         val = ptr.referenced_value()
@@ -137,7 +137,7 @@ def harvest_addr(heap, ptr_queue):
         return heap, ptr_queue
     #else:
         #print "Dereferenced pointer successfully: " + unicode(val).encode('unicode_escape')
-    
+
     if is_primitive(val) :
         #print "is primitive"
         heap[stringify_ptr(ptr)] = stringify_value(val)
@@ -154,7 +154,7 @@ def harvest_addr(heap, ptr_queue):
             #print "field: " + f_id.name
             field_val = val[f_id]
             #print "Field type = " + str(field_val.type.code)
-            if is_primitive(field_val) : 
+            if is_primitive(field_val) :
                 field_val_strings += [stringify_value(field_val)]
             elif is_ptr(field_val) :
                 #print "Adding pointer to the queue"
@@ -172,28 +172,27 @@ def harvest_addr(heap, ptr_queue):
     return heap, ptr_queue
 
 def harvest(out, vars):
-    
+
     if not vars :
-    
+
         args_str = gdb.execute("info args", False, True)
         args = identifier_re.findall(args_str)
-        
+
         locals_str = gdb.execute("info locals", False, True)
         locals = identifier_re.findall(locals_str)
-        
+
         vars = args + locals
-    
+
     stack = {}
     ptr_queue = []
     for v in vars:
         val = gdb.parse_and_eval(v.strip())
-        stack[v] = stringify_ptr(val) if is_ptr(val) else stringify_value(val) 
+        stack[v] = stringify_ptr(val) if is_ptr(val) else stringify_value(val)
         if is_ptr(val) : ptr_queue += [val]
-    
+
     heap = {}
     while len(ptr_queue) != 0 :
         heap, ptr_queue = harvest_addr(heap, ptr_queue)
-    
+
     out.write(stringify_stack_heap_pair(stack, heap))
     out.write('\n')
-    
