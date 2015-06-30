@@ -5,26 +5,6 @@ open MParser
 
 include PairTypes(Sl_heap)(Sl_pred)
 
-(* module Var = Hashtbl.Make(Int.T)                        *)
-  
-(* let freevars = Var.create 997                           *)
-(* let existvars = Var.create 997                          *)
-
-(* let mk_var exist i =                                    *)
-(*   let varset = if exist then existvars else freevars in *)
-(*   try                                                   *)
-(*     Var.find varset i                                   *)
-(*   with Not_found ->                                     *)
-(*     let newvar =                                        *)
-(*       Sl_term.of_string                                 *)
-(*         ((if exist then "v" else "u") ^                 *)
-(*         (string_of_int i) ^                             *)
-(*         (if exist then "'" else "")) in                 *)
-(*     Var.add varset i newvar ; newvar                    *)
-
-(* let mk_exist_var i = mk_var true i                      *)
-(* let mk_free_var i = mk_var false i                      *)
-
 let vars (f, (_, vs)) =
   Sl_term.Set.union (Sl_term.Set.of_list vs) (Sl_heap.vars f)
     
@@ -151,3 +131,6 @@ let fold (f, (predsym, args)) h =
     let h' = Sl_heap.add_ind (Sl_heap.diff h f') newpred in
     (theta, h') in
   Blist.map do_fold results
+
+let memory_consuming (h, _) = Sl_heap.memory_consuming h
+let constructively_valued (h, _) = Sl_heap.constructively_valued h

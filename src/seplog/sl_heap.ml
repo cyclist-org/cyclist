@@ -407,3 +407,31 @@ let all_subheaps h =
                   all_deqs))
             all_preds))
       all_ptos)
+
+
+let memory_consuming h =
+  Sl_tpreds.is_empty h.inds || not (Sl_ptos.is_empty h.ptos)
+
+let constructively_valued h =
+  let freevars = Sl_term.Set.filter Sl_term.is_univ_var (vars h) in
+  let existvars = Sl_term.Set.filter Sl_term.is_exist_var (vars h) in
+  let is_cvalued cvalued v =
+    Sl_term.Set.exists (equates h v) cvalued ||
+    Sl_ptos.exists 
+      (fun (y,zs) -> 
+        Sl_term.Set.mem y cvalued && Blist.exists (Sl_term.equal v) zs) 
+      h.ptos in
+  let rec aux cvalued rest =
+    let new_cvalued = Sl_term.Set.filter (is_cvalued cvalued) rest in
+    if Sl_term.Set.is_empty new_cvalued 
+    then
+      Sl_term.Set.is_empty rest 
+    else
+      aux 
+        (Sl_term.Set.union cvalued new_cvalued) 
+        (Sl_term.Set.diff rest new_cvalued) in
+  aux freevars existvars
+    
+    
+    
+    

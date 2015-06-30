@@ -34,3 +34,32 @@ let parse st =
   (spaces >> Sl_predsym.parse >>= (fun name ->
     Tokens.braces (sep_by1 Sl_indrule.parse (parse_symb symb_ind_sep)) <<
     spaces >>= (fun cases -> return (mk (cases, name)))) <?> "preddef") st
+
+let memory_consuming (rules, _) = 
+  Blist.for_all Sl_indrule.memory_consuming rules
+
+let constructively_valued (rules, _) = 
+  Blist.for_all Sl_indrule.constructively_valued rules
+
+  
+let deterministic (rules, _) =
+  let arity = Sl_indrule.arity (Blist.hd rules) in
+  let allvars = 
+    Sl_term.Set.union_of_list (Blist.map Sl_indrule.vars rules) in
+  let newformals = Sl_term.fresh_uvars allvars arity in
+  let freshen_rule r = 
+    let formals = Sl_indrule.formals r in
+    let theta = Sl_term.Map.of_list (Blist.combine formals newformals) in
+    Sl_indrule.subst theta r in 
+  let freshrules = Blist.map freshen_rule rules in
+  let bodies = Blist.map (fun r -> Sl_indrule.body r) freshrules in
+  let projbodies = Blist.map (fun b -> Sl_heap.project b newformals) bodies in
+  let rec aux = function
+    | [] -> true
+    | b::bs -> 
+      Blist.for_all 
+        (fun b' -> Sl_heap.inconsistent (Sl_heap.star b b')) 
+        bs 
+      && 
+      aux bs in
+  aux projbodies  
