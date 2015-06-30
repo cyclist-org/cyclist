@@ -34,3 +34,4 @@ val of_formula : t -> Sl_form.t -> t
 
 val memory_consuming : t -> bool
 val constructively_valued : t -> bool
+val deterministic : t -> bool

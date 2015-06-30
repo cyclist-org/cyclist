@@ -121,6 +121,9 @@ module Defs =
     
     let constructively_valued defs =
       Blist.for_all Sl_preddef.constructively_valued defs     
+    
+    let deterministic defs =
+      Blist.for_all Sl_preddef.deterministic defs     
   end
 include Defs
 include Fixpoint(Defs)
