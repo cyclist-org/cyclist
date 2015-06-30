@@ -50,7 +50,7 @@ tests:
 stats:
 	-@if stat -t $(TEST_FILE_BASE)*.tst >/dev/null 2>&1 ; then \
 		for tstfile in $(TEST_FILE_BASE)*.tst; do \
-			STAT_FILE="$(STATS_PATH)/$${tstfile%.*}-$$(date +%N).csv" ; \
+			STAT_FILE="$(STATS_PATH)/$${tstfile%.*}-$$(date +%s).csv" ; \
 			echo "Outputting $$STAT_FILE" ; \
 			(TEST_FILE_BASE="$${tstfile%.*}" $(MAKE) tests 2>&1 | $(STATS_EXTRACTOR) > "$$STAT_FILE") ; \
 		done ; \
@@ -101,7 +101,7 @@ lcset-tests:
 	TEST_FILE_BASE=lcset DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory tests 
 
 lcset-stats:
-	-@TEST_FILE_BASE=lcset-[0-9] DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory stats
+	-@TEST_FILE_BASE=lcset DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory stats
 
 clean-lcset:
 	rm -f $(MODELS_PATH)/lcset-*.mdl
@@ -134,20 +134,20 @@ clean-schorr-waite:
 	rm -f $(MODELS_PATH)/schorr-waite-*.mdl
 
 spatial-true-stats:
-	-@(TEST_FILE_BASE=aplas-stack-spTrue DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory tests 2>&1 ; \
-	TEST_FILE_BASE=composite-spTrue DEFS_FILE=composite.defs MDL_FILE_BASE=composite $(MAKE) --no-print-directory tests 2>&1 ; \
-	TEST_FILE_BASE=aplas-stack-spTrue DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory tests 2>&1 ; \
-	TEST_FILE_BASE=aplas-stack-spTrue DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory tests 2>&1 ; \
-	TEST_FILE_BASE=aplas-stack-spTrue DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory tests 2>&1 ; \
-	TEST_FILE_BASE=aplas-stack-spTrue DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory tests 2>&1 ) \
-	| $(STATS_EXTRACTOR) > "$(STATS_PATH)/spTrue-$$(date +%N).csv"
-	
+	-@echo "Spatial True tests" ; \
+	((echo -e "\tchecking stack models" 1>&2 ; TEST_FILE_BASE=aplas-stack-spTrue DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory tests 2>&1 ; \
+	echo -e "\tchecking composite models" 1>&2 ; TEST_FILE_BASE=composite-spTrue DEFS_FILE=composite.defs MDL_FILE_BASE=composite $(MAKE) --no-print-directory tests 2>&1 ; \
+	echo -e "\tchecking iter models" 1>&2 ; TEST_FILE_BASE=iter-spTrue DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory tests 2>&1 ; \
+	echo -e "\tchecking lcset models" 1>&2 ; TEST_FILE_BASE=lcset-spTrue DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory tests 2>&1 ; \
+	echo -e "\tchecking queue models" 1>&2 ; TEST_FILE_BASE=queue-spTrue DEFS_FILE=queue.defs MDL_FILE_BASE=queue $(MAKE) --no-print-directory tests 2>&1 ; \
+	echo -e "\tchecking schorr-waite models" 1>&2 ; TEST_FILE_BASE=schorr-waite-spTrue DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory tests 2>&1 ) \
+	| $(STATS_EXTRACTOR) > "$(STATS_PATH)/spTrue-$$(date +%s).csv")
 	
 binary-counter-tests:
 	-@for i in `seq 1 5`; do (set -x; $(TIME) $(MC) -D succ-rec0$$i.defs -F "P()" -M "([], [])"); done
 	
 binary-counter-stats:
-	-@($(MAKE) --no-print-directory binary-counter-tests 2>&1) | "$(STATS_PATH)/binary-counter-$$(date +%N).csv"
+	-@($(MAKE) --no-print-directory binary-counter-tests 2>&1) | "$(STATS_PATH)/binary-counter-$$(date +%s).csv"
 	
 all-models: aplas-stack-models composite-models iter-models lcset-models schorr-waite-models
 
