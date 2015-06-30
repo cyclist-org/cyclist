@@ -34,3 +34,10 @@ let parse st =
   (spaces >> Sl_predsym.parse >>= (fun name ->
     Tokens.braces (sep_by1 Sl_indrule.parse (parse_symb symb_ind_sep)) <<
     spaces >>= (fun cases -> return (mk (cases, name)))) <?> "preddef") st
+
+let memory_consuming (rules, _) = 
+  Blist.for_all Sl_indrule.memory_consuming rules
+
+let constructively_valued (rules, _) = 
+  Blist.for_all Sl_indrule.constructively_valued rules
+  

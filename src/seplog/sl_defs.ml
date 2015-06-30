@@ -114,7 +114,13 @@ module Defs =
         (fun h -> let (_, _, _, inds) = Sl_heap.dest h in
           Sl_tpreds.iter check_pred inds)
         f
+     
           
+    let memory_consuming defs =
+      Blist.for_all Sl_preddef.memory_consuming defs
+    
+    let constructively_valued defs =
+      Blist.for_all Sl_preddef.constructively_valued defs     
   end
 include Defs
 include Fixpoint(Defs)

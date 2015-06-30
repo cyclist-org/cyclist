@@ -31,3 +31,6 @@ val unfold : Sl_term.Set.t -> Sl_heap.t -> Sl_tpred.t -> t ->
 val of_formula : t -> Sl_form.t -> t
 (** Convert a formula to a set of rules and add it to the provided set of 
     definitions.  The head of the return definition list contains these rules. *)
+
+val memory_consuming : t -> bool
+val constructively_valued : t -> bool
