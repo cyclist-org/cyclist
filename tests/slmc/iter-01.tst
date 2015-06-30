@@ -1,1 +1,1 @@
-llist_add llist(l)
+llist_add llist(list)
