@@ -33,4 +33,9 @@ tree {
 
 loop_invariant3 {
   stack(p) * tree(t) => loop_invariant3(t,p)
+};
+
+spTrue {
+  emp => spTrue() |
+  t'->f',c',l',r' * spTrue() => spTrue()
 }

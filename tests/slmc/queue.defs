@@ -14,4 +14,10 @@ queue_consumer {
 
 queue_state {
   x != nil * a' != nil * x->f',m',l',w' * a'->n',v' * lseg(l',a') => queue_state(x)
+};
+
+spTrue {
+  emp => spTrue() |
+  x'->z',v' * spTrue() => spTrue() |
+  x'->n',f',m',l' * spTrue() => spTrue()
 }

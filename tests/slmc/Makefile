@@ -10,6 +10,9 @@ OCAMLRUNPARAM=b
 export OCAMLRUNPARAM
 
 MODELS_PATH=./models
+STATS_PATH=./stats
+
+STATS_EXTRACTOR=./extract_times.py
 
 EXAMPLES_BIN_DIR=./programs
 
@@ -19,103 +22,141 @@ TIME=time
 
 SEED=2758437598
 
-.PHONY: models tests
+.PHONY: models tests stats
 
 models:
 	-@BPS=$$(cat $(BP_FILE)); (set -x; $(HARVEST) "$(EXAMPLES_BIN_DIR)/$(EXE)" $$BPS) 
 	
 tests:
-	-@while read test formula; do \
-		echo "$(MDL_FILE_BASE)-$$test" ; \
-		if stat -t $(MODELS_PATH)/$(MDL_FILE_BASE)-$$test*.mdl >/dev/null 2>&1 ; then \
-			(for f in $(MODELS_PATH)/$(MDL_FILE_BASE)-$$test*.mdl; do \
-				echo "$$f"; \
-				(MDL=$$(cat $$f); set -x; $(TIME) $(MC) -D ./$(DEFS_FILE) -F "$$formula" -M "$$MDL") ; \
-			done) ; \
-		else \
-			echo "No files found" ; \
-		fi \
-	done < $(TEST_FILE)
+	-@if stat -t $(TEST_FILE_BASE)*.tst >/dev/null 2>&1 ; then \
+		for tstfile in $(TEST_FILE_BASE)*.tst; do \
+			echo "Reading test file: $$tstfile" ; \
+			while read test formula; do \
+				echo "running test series: $(MDL_FILE_BASE)-$$test" ; \
+				if stat -t $(MODELS_PATH)/$(MDL_FILE_BASE)-$$test*.mdl >/dev/null 2>&1 ; then \
+					(for f in $(MODELS_PATH)/$(MDL_FILE_BASE)-$$test*.mdl; do \
+						echo "$$f"; \
+						(MDL=$$(cat $$f); set -x; $(TIME) $(MC) -D ./$(DEFS_FILE) -F "$$formula" -M "$$MDL") ; \
+					done) ; \
+				else \
+					echo "No files found" ; \
+				fi \
+			done < $$tstfile ; \
+		done ; \
+	else \
+		echo "No test files found!" ; \
+	fi
+	
+stats:
+	-@if stat -t $(TEST_FILE_BASE)*.tst >/dev/null 2>&1 ; then \
+		for tstfile in $(TEST_FILE_BASE)*.tst; do \
+			STAT_FILE="$(STATS_PATH)/$${tstfile%.*}-$$(date +%s).csv" ; \
+			echo "Outputting $$STAT_FILE" ; \
+			(TEST_FILE_BASE="$${tstfile%.*}" $(MAKE) tests 2>&1 | $(STATS_EXTRACTOR) > "$$STAT_FILE") ; \
+		done ; \
+	else \
+		echo "No test files found!" ; \
+	fi
 
 aplas-stack-models:
 	EXE="aplas-stack 100" BP_FILE=aplas-stack.bps $(MAKE) --no-print-directory models 
 
 aplas-stack-tests:
-	TEST_FILE=aplas-stack.tst DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory tests 
+	TEST_FILE_BASE=aplas-stack DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory tests 
+
+aplas-stack-stats:
+	-@TEST_FILE_BASE=aplas-stack-[0-9] DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory stats
 
 clean-aplas-stack:
-	rm -f ./models/aplas-stack-*.mdl
+	rm -f $(MODELS_PATH)/aplas-stack-*.mdl
 
 composite-models:
 	EXE="composite 20 $(SEED)" BP_FILE=composite.bps $(MAKE) --no-print-directory models 
 
 composite-tests:
-	TEST_FILE=composite.tst DEFS_FILE=composite.defs MDL_FILE_BASE=composite $(MAKE) --no-print-directory tests 
+	TEST_FILE_BASE=composite DEFS_FILE=composite.defs MDL_FILE_BASE=composite $(MAKE) --no-print-directory tests 
+
+composite-stats:
+	-@TEST_FILE_BASE=composite-[0-9] DEFS_FILE=composite.defs MDL_FILE_BASE=composite $(MAKE) --no-print-directory stats
 
 clean-composite:
-	rm -f ./models/composite-*.mdl
+	rm -f $(MODELS_PATH)/composite-*.mdl
 
 iter-models:
 	EXE="iter 20" BP_FILE=iter.bps $(MAKE) --no-print-directory models 
 
 iter-tests:
-	TEST_FILE=iter.tst DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory tests 
+	TEST_FILE_BASE=iter DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory tests 
+
+iter-stats:
+	-@TEST_FILE_BASE=iter-[0-9] DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory stats
 
 clean-iter:
-	rm -f ./models/iter-*.mdl
+	rm -f $(MODELS_PATH)/iter-*.mdl
 
 lcset-models:
 	EXE="lcset 8 $(SEED)" BP_FILE=lcset.bps $(MAKE) --no-print-directory models 
 
 lcset-tests:
-	TEST_FILE=lcset.tst DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory tests 
+	TEST_FILE_BASE=lcset DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory tests 
+
+lcset-stats:
+	-@TEST_FILE_BASE=lcset DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory stats
 
 clean-lcset:
-	rm -f ./models/lcset-*.mdl
+	rm -f $(MODELS_PATH)/lcset-*.mdl
 	
 queue-models:
 	EXE="queue 20" BP_FILE=queue.bps $(MAKE) --no-print-directory models ; \
 	EXE="queue-dispose 20" BP_FILE=queue-dispose.bps $(MAKE) --no-print-directory models
 
 queue-tests:
-	TEST_FILE=queue.tst DEFS_FILE=queue.defs MDL_FILE_BASE=queue $(MAKE) --no-print-directory tests 
+	TEST_FILE_BASE=queue DEFS_FILE=queue.defs MDL_FILE_BASE=queue $(MAKE) --no-print-directory tests 
+
+queue-stats:
+	-@TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue $(MAKE) --no-print-directory stats
 
 clean-queue:
-	rm -f ./models/queue-*.mdl
+	rm -f $(MODELS_PATH)/queue-*.mdl
 
 schorr-waite-models:
 	-@for i in `seq 1 20`; do \
 		EXE="schorr_waite $$i $(SEED)" BP_FILE=schorr-waite.bps $(MAKE) --no-print-directory models ; \
 	done 
 
-.PHONY: schorr-waite-prepost-test schorr-waite-inv1-test schorr-waite-inv2-test schorr-waite-inv3-test
+schorr-waite-tests:
+	TEST_FILE_BASE=schorr-waite DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory tests 
 
-schorr-waite-prepost-test:
-	TEST_FILE=schorr-waite-prepost.tst DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory tests 
-
-schorr-waite-inv1-test:
-	TEST_FILE=schorr-waite-inv1.tst DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory tests 
-
-schorr-waite-inv2-test:
-	TEST_FILE=schorr-waite-inv2.tst DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory tests 
-
-schorr-waite-inv3-test:
-	TEST_FILE=schorr-waite-inv3.tst DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory tests 
-
-schorr-waite-tests: schorr-waite-prepost-test schorr-waite-inv1-test schorr-waite-inv2-test schorr-waite-inv3-test
+schorr-waite-stats:
+	-@TEST_FILE_BASE=schorr-waite-[ip] DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory stats
 
 clean-schorr-waite:
-	rm -f ./models/schorr-waite-*.mdl
+	rm -f $(MODELS_PATH)/schorr-waite-*.mdl
 
-spatial-true-tests:
-	./test_sp_true.sh 1 20
+spatial-true-stats:
+	-@echo "Spatial True tests" ; \
+	((echo -e "\tchecking stack models" 1>&2 ; TEST_FILE_BASE=aplas-stack-spTrue DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory tests 2>&1 ; \
+	echo -e "\tchecking composite models" 1>&2 ; TEST_FILE_BASE=composite-spTrue DEFS_FILE=composite.defs MDL_FILE_BASE=composite $(MAKE) --no-print-directory tests 2>&1 ; \
+	echo -e "\tchecking iter models" 1>&2 ; TEST_FILE_BASE=iter-spTrue DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory tests 2>&1 ; \
+	echo -e "\tchecking lcset models" 1>&2 ; TEST_FILE_BASE=lcset-spTrue DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory tests 2>&1 ; \
+	echo -e "\tchecking queue models" 1>&2 ; TEST_FILE_BASE=queue-spTrue DEFS_FILE=queue.defs MDL_FILE_BASE=queue $(MAKE) --no-print-directory tests 2>&1 ; \
+	echo -e "\tchecking schorr-waite models" 1>&2 ; TEST_FILE_BASE=schorr-waite-spTrue DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory tests 2>&1 ) \
+	| $(STATS_EXTRACTOR) > "$(STATS_PATH)/spTrue-$$(date +%s).csv")
 	
 binary-counter-tests:
 	-@for i in `seq 1 5`; do (set -x; $(TIME) $(MC) -D succ-rec0$$i.defs -F "P()" -M "([], [])"); done
 	
+binary-counter-stats:
+	-@($(MAKE) --no-print-directory binary-counter-tests 2>&1) | "$(STATS_PATH)/binary-counter-$$(date +%s).csv"
+	
 all-models: aplas-stack-models composite-models iter-models lcset-models schorr-waite-models
 
-all-tests: aplas-stack-tests composite-tests iter-tests lcset-tests schorr-waite-tests spatial-true-test binary-counter-tests
+all-tests: aplas-stack-tests composite-tests iter-tests lcset-tests queue-tests schorr-waite-tests spatial-true-test binary-counter-tests
 
-clean-all: clean-aplas-stack clean-composite clean-iter clean-lcset clean-schorr-waite
+all-stats: aplas-stack-stats composite-stats iter-stats lcset-stats queue-stats schorr-waite-stats spatial-true-stats binary-counter-stats
+
+clean-stats:
+	rm -f $(STATS_PATH)/*.csv
+
+clean-models: clean-aplas-stack clean-composite clean-iter clean-lcset clean-queue clean-schorr-waite
 	

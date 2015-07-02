@@ -15,4 +15,10 @@ lseg2 {
 
 set_atomic2 {
   x != nil * h' != t' * t' != nil * x->h',w' * t'->l',n',v' * lseg2(h',t') => set_atomic2(x)
+};
+
+spTrue {
+  emp => spTrue() |
+  x'->h',w' * spTrue() => spTrue() |
+  t'->l',n',v' * spTrue() => spTrue()
 }
