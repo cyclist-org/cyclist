@@ -59,7 +59,8 @@ stats:
 	fi
 
 aplas-stack-models:
-	EXE="aplas-stack 100" BP_FILE=aplas-stack.bps $(MAKE) --no-print-directory models 
+	EXE="aplas-stack 100" BP_FILE=aplas-stack.bps $(MAKE) --no-print-directory models ; \
+	EXE="aplas-stack 20" BP_FILE=aplas-stack-spTrue.bps $(MAKE) --no-print-directory models
 
 aplas-stack-tests:
 	TEST_FILE_BASE=aplas-stack DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory tests 
@@ -101,7 +102,7 @@ lcset-tests:
 	TEST_FILE_BASE=lcset DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory tests 
 
 lcset-stats:
-	-@TEST_FILE_BASE=lcset DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory stats
+	-@TEST_FILE_BASE=lcset-[0-9] DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory stats
 
 clean-lcset:
 	rm -f $(MODELS_PATH)/lcset-*.mdl
@@ -133,6 +134,14 @@ schorr-waite-stats:
 clean-schorr-waite:
 	rm -f $(MODELS_PATH)/schorr-waite-*.mdl
 
+spatial-true-test:
+	-@TEST_FILE_BASE=aplas-stack-spTrue DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory tests ; \
+	TEST_FILE_BASE=composite-spTrue DEFS_FILE=composite.defs MDL_FILE_BASE=composite $(MAKE) --no-print-directory tests ; \
+	TEST_FILE_BASE=iter-spTrue DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory tests ; \
+	TEST_FILE_BASE=lcset-spTrue DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory tests ; \
+	TEST_FILE_BASE=queue-spTrue DEFS_FILE=queue.defs MDL_FILE_BASE=queue $(MAKE) --no-print-directory tests ; \
+	TEST_FILE_BASE=schorr-waite-spTrue DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory tests \
+
 spatial-true-stats:
 	-@echo "Spatial True tests" ; \
 	((echo -e "\tchecking stack models" 1>&2 ; TEST_FILE_BASE=aplas-stack-spTrue DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory tests 2>&1 ; \
@@ -147,13 +156,13 @@ binary-counter-tests:
 	-@for i in `seq 1 5`; do (set -x; $(TIME) $(MC) -D succ-rec0$$i.defs -F "P()" -M "([], [])"); done
 	
 binary-counter-stats:
-	-@($(MAKE) --no-print-directory binary-counter-tests 2>&1) | "$(STATS_PATH)/binary-counter-$$(date +%s).csv"
+	-@($(MAKE) --no-print-directory binary-counter-tests 2>&1) | $(STATS_EXTRACTOR) > "$(STATS_PATH)/binary-counter-$$(date +%s).csv"
 	
 all-models: aplas-stack-models composite-models iter-models lcset-models schorr-waite-models
 
 all-tests: aplas-stack-tests composite-tests iter-tests lcset-tests queue-tests schorr-waite-tests spatial-true-test binary-counter-tests
 
-all-stats: aplas-stack-stats composite-stats iter-stats lcset-stats queue-stats schorr-waite-stats spatial-true-stats binary-counter-stats
+all-stats: aplas-stack-stats composite-stats iter-stats lcset-stats queue-stats schorr-waite-stats spatial-true-stats
 
 clean-stats:
 	rm -f $(STATS_PATH)/*.csv
