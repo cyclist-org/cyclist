@@ -28,8 +28,8 @@ models:
 	-@BPS=$$(cat $(BP_FILE)); (set -x; $(HARVEST) "$(EXAMPLES_BIN_DIR)/$(EXE)" $$BPS) 
 	
 tests:
-	-@if stat -t $(TEST_FILE_BASE)*.tst >/dev/null 2>&1 ; then \
-		for tstfile in $(TEST_FILE_BASE)*.tst; do \
+	-@if stat -t $(TEST_FILE_BASE)[0-9]*.tst >/dev/null 2>&1 ; then \
+		for tstfile in $(TEST_FILE_BASE)[0-9]*.tst; do \
 			echo "Reading test file: $$tstfile" ; \
 			while read test formula; do \
 				echo "running test series: $(MDL_FILE_BASE)-$$test" ; \
@@ -48,8 +48,8 @@ tests:
 	fi
 	
 stats:
-	-@if stat -t $(TEST_FILE_BASE)*.tst >/dev/null 2>&1 ; then \
-		for tstfile in $(TEST_FILE_BASE)*.tst; do \
+	-@if stat -t $(TEST_FILE_BASE)[0-9]*.tst >/dev/null 2>&1 ; then \
+		for tstfile in $(TEST_FILE_BASE)[0-9]*.tst; do \
 			STAT_FILE="$(STATS_PATH)/$${tstfile%.*}-$$(date +%s).csv" ; \
 			echo "Outputting $$STAT_FILE" ; \
 			(TEST_FILE_BASE="$${tstfile%.*}" $(MAKE) tests 2>&1 | $(STATS_EXTRACTOR) > "$$STAT_FILE") ; \
@@ -84,7 +84,8 @@ clean-composite:
 	rm -f $(MODELS_PATH)/composite-*.mdl
 
 iter-models:
-	EXE="iter 20" BP_FILE=iter.bps $(MAKE) --no-print-directory models 
+	EXE="iter 100" BP_FILE=iter-01.bps $(MAKE) --no-print-directory models ; \
+	EXE="iter 20" BP_FILE=iter-02.bps $(MAKE) --no-print-directory models
 
 iter-tests:
 	TEST_FILE_BASE=iter DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory tests 
@@ -108,8 +109,11 @@ clean-lcset:
 	rm -f $(MODELS_PATH)/lcset-*.mdl
 	
 queue-models:
-	EXE="queue 20" BP_FILE=queue.bps $(MAKE) --no-print-directory models ; \
-	EXE="queue-dispose 20" BP_FILE=queue-dispose.bps $(MAKE) --no-print-directory models
+	-@(EXE="queue 100" BP_FILE=queue-01.bps $(MAKE) --no-print-directory models ; \
+	EXE="queue-dispose 100" BP_FILE=queue-dispose.bps $(MAKE) --no-print-directory models ; \
+	for i in `seq 1 25`; do \
+		EXE="queue $$i" BP_FILE=queue-02.bps $(MAKE) --no-print-directory models ; \
+	done)
 
 queue-tests:
 	TEST_FILE_BASE=queue DEFS_FILE=queue.defs MDL_FILE_BASE=queue $(MAKE) --no-print-directory tests 
@@ -121,9 +125,13 @@ clean-queue:
 	rm -f $(MODELS_PATH)/queue-*.mdl
 
 schorr-waite-models:
-	-@for i in `seq 1 20`; do \
-		EXE="schorr_waite $$i $(SEED)" BP_FILE=schorr-waite.bps $(MAKE) --no-print-directory models ; \
-	done 
+	-@(for i in `seq 1 30`; do \
+		EXE="schorr_waite $$i $(SEED)" BP_FILE=schorr-waite-01.bps $(MAKE) --no-print-directory models ; \
+	done ; \
+	for i in `seq 1 20`; do \
+		EXE="schorr_waite $$i $(SEED)" BP_FILE=schorr-waite-02.bps $(MAKE) --no-print-directory models ; \
+		EXE="schorr_waite $$i $(SEED)" BP_FILE=schorr-waite-spTrue.bps $(MAKE) --no-print-directory models ; \
+	done)
 
 schorr-waite-tests:
 	TEST_FILE_BASE=schorr-waite DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory tests 
@@ -143,17 +151,15 @@ spatial-true-test:
 	TEST_FILE_BASE=schorr-waite-spTrue DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory tests \
 
 spatial-true-stats:
-	-@echo "Spatial True tests" ; \
-	((echo -e "\tchecking stack models" 1>&2 ; TEST_FILE_BASE=aplas-stack-spTrue DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory tests 2>&1 ; \
-	echo -e "\tchecking composite models" 1>&2 ; TEST_FILE_BASE=composite-spTrue DEFS_FILE=composite.defs MDL_FILE_BASE=composite $(MAKE) --no-print-directory tests 2>&1 ; \
-	echo -e "\tchecking iter models" 1>&2 ; TEST_FILE_BASE=iter-spTrue DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory tests 2>&1 ; \
-	echo -e "\tchecking lcset models" 1>&2 ; TEST_FILE_BASE=lcset-spTrue DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory tests 2>&1 ; \
-	echo -e "\tchecking queue models" 1>&2 ; TEST_FILE_BASE=queue-spTrue DEFS_FILE=queue.defs MDL_FILE_BASE=queue $(MAKE) --no-print-directory tests 2>&1 ; \
-	echo -e "\tchecking schorr-waite models" 1>&2 ; TEST_FILE_BASE=schorr-waite-spTrue DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory tests 2>&1 ) \
-	| $(STATS_EXTRACTOR) > "$(STATS_PATH)/spTrue-$$(date +%s).csv")
+	-@TEST_FILE_BASE=aplas-stack-spTrue DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory stats ; \
+	TEST_FILE_BASE=composite-spTrue DEFS_FILE=composite.defs MDL_FILE_BASE=composite $(MAKE) --no-print-directory stats ; \
+	TEST_FILE_BASE=iter-spTrue DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory stats ; \
+	TEST_FILE_BASE=lcset-spTrue DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory stats ; \
+	TEST_FILE_BASE=queue-spTrue DEFS_FILE=queue.defs MDL_FILE_BASE=queue $(MAKE) --no-print-directory stats ; \
+	TEST_FILE_BASE=schorr-waite-spTrue DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory stats \
 	
 binary-counter-tests:
-	-@for i in `seq 1 5`; do (set -x; $(TIME) $(MC) -D succ-rec0$$i.defs -F "P()" -M "([], [])"); done
+	-@for i in `seq 1 3`; do (set -x; $(TIME) $(MC) -D succ-rec0$$i.defs -F "P()" -M "([], [])"); done
 	
 binary-counter-stats:
 	-@($(MAKE) --no-print-directory binary-counter-tests 2>&1) | $(STATS_EXTRACTOR) > "$(STATS_PATH)/binary-counter-$$(date +%s).csv"
@@ -162,7 +168,7 @@ all-models: aplas-stack-models composite-models iter-models lcset-models schorr-
 
 all-tests: aplas-stack-tests composite-tests iter-tests lcset-tests queue-tests schorr-waite-tests spatial-true-test binary-counter-tests
 
-all-stats: aplas-stack-stats composite-stats iter-stats lcset-stats queue-stats schorr-waite-stats spatial-true-stats
+all-stats: aplas-stack-stats composite-stats iter-stats lcset-stats queue-stats schorr-waite-stats
 
 clean-stats:
 	rm -f $(STATS_PATH)/*.csv

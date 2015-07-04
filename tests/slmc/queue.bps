@@ -1,3 +1,0 @@
-queue_try_dequeue queue models/queue-queue_try_dequeue
-queue.c:604 prev,middle,node,last models/queue-line_604-
-queue.c:667 first,middle,last models/queue-line_667-

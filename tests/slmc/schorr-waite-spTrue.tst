@@ -1,2 +1,2 @@
-pre spTrue()
-post spTrue()
+spTrue spTrue()
+
