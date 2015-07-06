@@ -28,8 +28,8 @@ models:
 	-@BPS=$$(cat $(BP_FILE)); (set -x; $(HARVEST) "$(EXAMPLES_BIN_DIR)/$(EXE)" $$BPS) 
 	
 tests:
-	-@if stat -t $(TEST_FILE_BASE)[0-9]*.tst >/dev/null 2>&1 ; then \
-		for tstfile in $(TEST_FILE_BASE)[0-9]*.tst; do \
+	-@if stat -t $(TEST_FILE_BASE)*.tst >/dev/null 2>&1 ; then \
+		for tstfile in $(TEST_FILE_BASE)*.tst; do \
 			echo "Reading test file: $$tstfile" ; \
 			while read test formula; do \
 				echo "running test series: $(MDL_FILE_BASE)-$$test" ; \
@@ -48,8 +48,8 @@ tests:
 	fi
 	
 stats:
-	-@if stat -t $(TEST_FILE_BASE)[0-9]*.tst >/dev/null 2>&1 ; then \
-		for tstfile in $(TEST_FILE_BASE)[0-9]*.tst; do \
+	-@if stat -t $(TEST_FILE_BASE)*.tst >/dev/null 2>&1 ; then \
+		for tstfile in $(TEST_FILE_BASE)*.tst; do \
 			STAT_FILE="$(STATS_PATH)/$${tstfile%.*}-$$(date +%s).csv" ; \
 			echo "Outputting $$STAT_FILE" ; \
 			(TEST_FILE_BASE="$${tstfile%.*}" $(MAKE) tests 2>&1 | $(STATS_EXTRACTOR) > "$$STAT_FILE") ; \
@@ -169,6 +169,13 @@ all-models: aplas-stack-models composite-models iter-models lcset-models schorr-
 all-tests: aplas-stack-tests composite-tests iter-tests lcset-tests queue-tests schorr-waite-tests spatial-true-test binary-counter-tests
 
 all-stats: aplas-stack-stats composite-stats iter-stats lcset-stats queue-stats schorr-waite-stats
+
+quick-tests:
+	$(TIME) $(MC) -D queue.defs -F "lseg2(first,middle) * lseg(last,middle)" -M "`cat $(MODELS_PATH)/queue-line_667-0022.mdl`"
+	$(TIME) $(MC) -D schorr-waite.defs -F "unmarked_tree(root)" -M "`cat $(MODELS_PATH)/schorr-waite-pre0026.mdl`"
+	$(TIME) $(MC) -D composite.defs -F "tree(node)" -M "`cat $(MODELS_PATH)/composite-tree_add_right0010.mdl`"
+	$(TIME) $(MC) -D lcset.defs -F "set_atomic(set)" -M "`cat $(MODELS_PATH)/lcset-add0008.mdl`"
+	$(TIME) $(MC) -D succ-rec03.defs -F "P()" -M "([], [])"
 
 clean-stats:
 	rm -f $(STATS_PATH)/*.csv
