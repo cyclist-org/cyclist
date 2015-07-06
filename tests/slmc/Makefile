@@ -113,6 +113,11 @@ queue-models:
 	EXE="queue-dispose 100" BP_FILE=queue-dispose.bps $(MAKE) --no-print-directory models ; \
 	for i in `seq 1 25`; do \
 		EXE="queue $$i" BP_FILE=queue-02.bps $(MAKE) --no-print-directory models ; \
+	done ; \
+	EXE="queue 18" BP_FILE=queue-spTrue-01.bps $(MAKE) --no-print-directory models ; \
+	EXE="queue-dispose 18" BP_FILE=queue-spTrue-02.bps $(MAKE) --no-print-directory models ; \
+	for i in `seq 1 20`; do \
+		EXE="queue $$i" BP_FILE=queue-spTrue-03.bps $(MAKE) --no-print-directory models ; \
 	done)
 
 queue-tests:
