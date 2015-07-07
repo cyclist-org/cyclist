@@ -32,3 +32,7 @@ let flatten = function
   | _ -> None
 
 let bind f o = flatten (map f o)
+
+let pp pp_elem fmt = function
+  | None -> Format.fprintf fmt "@[None@]"
+  | Some x -> Format.fprintf fmt "@[Some (%a)@]" pp_elem x

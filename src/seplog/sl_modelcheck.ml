@@ -7,22 +7,6 @@ module List = Blist
 
 open Sl_mc_core
 
-
-module IntSig : ValueSig
-  with type HeapLocation.t = NatType.t
-  with type ScalarValue.t = NatType.t
-    =
-  struct
-    module HeapLocation =
-      struct
-        include NatType
-        let to_string n = Printf.sprintf "0x%x" n
-        let pp fmt n = Format.fprintf fmt "0x%x" n
-      end
-    module ScalarValue = NatType
-    let pp_nil fmt = Format.fprintf fmt "nil"
-  end
-
 module IntSigModelChecker = Make(IntSig)
 open IntSigModelChecker
 
@@ -53,6 +37,7 @@ let model_parser st = (mk_model_parser (StackParser.parse, HeapParser.parse)) st
 let defs_path = ref "examples/sl.defs"
 let str_model = ref ""
 let str_symheap = ref ""
+let cvdet = ref false
 
 let usage =
   (
@@ -68,6 +53,7 @@ let speclist = [
     ("-s", Arg.Set Stats.do_statistics,": print statistics");
     ("-M", Arg.Set_string str_model, ": <string> model to be checked");
     ("-F", Arg.Set_string str_symheap, ": <string> symbolic heap to check against");
+    ("-CVDET", Arg.Set cvdet, ": apply CV+DET algorithm");
   ]
 
 let die msg =
@@ -89,7 +75,11 @@ let () =
   begin
     Stats.reset () ;
     Stats.Gen.call () ;
-    let call () = check_model defs (sh, model) in
+    let call () = 
+      if !cvdet then 
+        Sl_mc_cvdet.check_model defs (sh, model) 
+      else 
+        check_model defs (sh, model) in
     let res = call () in
     Stats.Gen.end_call () ;
     if !Stats.do_statistics then Stats.gen_print ();

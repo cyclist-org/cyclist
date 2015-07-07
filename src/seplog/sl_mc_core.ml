@@ -962,3 +962,18 @@ module Make (Sig : ValueSig)
         (vals, heapbase)
 
   end
+
+module IntSig : ValueSig
+  with type HeapLocation.t = NatType.t
+  with type ScalarValue.t = NatType.t
+    =
+  struct
+    module HeapLocation =
+      struct
+        include NatType
+        let to_string n = Printf.sprintf "0x%x" n
+        let pp fmt n = Format.fprintf fmt "0x%x" n
+      end
+    module ScalarValue = NatType
+    let pp_nil fmt = Format.fprintf fmt "nil"
+  end
