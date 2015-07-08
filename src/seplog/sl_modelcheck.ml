@@ -5,10 +5,7 @@ open Symbols
 
 module List = Blist
 
-open Sl_mc_core
-
-module IntSigModelChecker = Make(IntSig)
-open IntSigModelChecker
+module MCGen = Sl_mc_core.Make(Sl_mc_core.IntSig)
 
 module IntSigParser =
   struct
@@ -17,33 +14,35 @@ module IntSigParser =
         if v == 0 then (failwith "0x0 is not a location!") else v)) st
     let parse_scalar st =
       ( attempt (Tokens.hexadecimal |>> (fun v ->
-        if v == 0 then Value.zero else (Value.mk_loc_val v)))
+        if v == 0 then MCGen.Value.zero else (MCGen.Value.mk_loc_val v)))
         <|>
-        attempt (Tokens.integer |>> (fun v -> Value.mk_scalar_val v))
+        attempt (Tokens.integer |>> (fun v -> MCGen.Value.mk_scalar_val v))
         <|>
-        attempt (Tokens.skip_symbol "false" >>$ Value.zero)
+        attempt (Tokens.skip_symbol "false" >>$ MCGen.Value.zero)
         <|>
-        attempt (Tokens.skip_symbol "true" >>$ Value.mk_scalar_val 1)
+        attempt (Tokens.skip_symbol "true" >>$ MCGen.Value.mk_scalar_val 1)
         <|>
         (fail "Cannot parse this as a scalar value!")
       ) st
   end
 
-module StackParser = Stack.MakeParser(IntSigParser)
-module HeapParser = Heap.MakeParser(IntSigParser)
+module StackParser = MCGen.Stack.MakeParser(IntSigParser)
+module HeapParser = MCGen.Heap.MakeParser(IntSigParser)
 
-let model_parser st = (mk_model_parser (StackParser.parse, HeapParser.parse)) st
+let model_parser st = 
+  (MCGen.mk_model_parser (StackParser.parse, HeapParser.parse)) st
 
 let defs_path = ref "examples/sl.defs"
 let str_model = ref ""
 let str_symheap = ref ""
 let cvdet = ref false
+let intuitionistic = ref false
 
 let usage =
   (
     "usage: " ^
     Sys.argv.(0) ^
-    " [-D <file>] -M <string> -F <string>"
+    " [-D <file>] [-CVDET] [-i] -M <string> -F <string>"
     )
 
 let speclist = [
@@ -54,6 +53,7 @@ let speclist = [
     ("-M", Arg.Set_string str_model, ": <string> model to be checked");
     ("-F", Arg.Set_string str_symheap, ": <string> symbolic heap to check against");
     ("-CVDET", Arg.Set cvdet, ": apply CV+DET algorithm");
+    ("-i", Arg.Set intuitionistic, ": intuitionistic checking");
   ]
 
 let die msg =
@@ -70,16 +70,16 @@ let () =
   let sh = Sl_heap.of_string !str_symheap in
   (* TODO: Need to check that all predicate instances in sh match the arity in defs *)
   let defs = Sl_defs.of_channel (open_in !defs_path) in
-  let ((s, h) as model) = model_of_string model_parser !str_model in
-  let () = print_endline("Heap size: " ^ (Int.to_string (Heap.size h))) in
+  let ((s, h) as model) = MCGen.model_of_string model_parser !str_model in
+  let () = print_endline("Heap size: " ^ (Int.to_string (MCGen.Heap.size h))) in
   begin
     Stats.reset () ;
     Stats.Gen.call () ;
     let call () = 
       if !cvdet then 
-        Sl_mc_cvdet.check_model defs (sh, model) 
+        Sl_mc_cvdet.check_model !intuitionistic defs (sh, model) 
       else 
-        check_model defs (sh, model) in
+        MCGen.check_model !intuitionistic defs (sh, model) in
     let res = call () in
     Stats.Gen.end_call () ;
     if !Stats.do_statistics then Stats.gen_print ();

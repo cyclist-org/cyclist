@@ -934,7 +934,7 @@ module Make (Sig : ValueSig)
       let () = debug (fun _ -> Sl_predsym.Map.to_string BaseSetPair.to_string base) in
       decorate h base
 
-    let check_model defs (sh, (stk, h)) =
+    let check_model intuitionistic defs (sh, (stk, h)) =
       let f = [sh] in
       let defs = Sl_defs.relevant_defs defs f in
       let () = Sl_defs.check_form_wf defs f in
@@ -957,9 +957,14 @@ module Make (Sig : ValueSig)
       let () = debug (fun _ -> Value.FList.to_string vals) in
       let interp = mk (defs, (vals, h)) in
       let heapbase = HeapBase.inj h h in
-      InterpretantBase.Hashset.mem
-        (Sl_predsym.Map.find new_predsym interp)
-        (vals, heapbase)
+      if intuitionistic then
+        InterpretantBase.Hashset.exists
+          (fun (vals',_) -> Value.FList.equal vals vals')
+          (Sl_predsym.Map.find new_predsym interp)
+      else
+        InterpretantBase.Hashset.mem
+          (Sl_predsym.Map.find new_predsym interp)
+          (vals, heapbase)
 
   end
 

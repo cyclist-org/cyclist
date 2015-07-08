@@ -157,6 +157,8 @@ module type S =
     val cardinal: t -> int
     val iter: (elt -> unit) -> t -> unit
     val fold: (elt -> 'a -> 'a) -> t -> 'a -> 'a
+    val exists : (elt -> bool) -> t -> bool
+    val for_all : (elt -> bool) -> t -> bool
     val left_union : t -> t -> t
     val is_empty : t -> bool
     val to_string : t -> string
@@ -223,6 +225,9 @@ module Make(H: HashedType): (S with type elt = H.t) =
     let to_list xs =
       map_to Blist.cons [] Fun.id xs
 
+    let exists f h = fold (fun k acc -> acc || f k) h false
+    let for_all f h = fold (fun k acc -> acc && f k) h true
+    
     (* changes by RR *)
     let to_string h = to_string
       (fun k -> "#" ^ (string_of_int (safehash k)) ^ ": " ^ (H.to_string k))

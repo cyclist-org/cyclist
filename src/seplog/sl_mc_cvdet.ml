@@ -314,7 +314,7 @@ module Make (Sig : Sl_mc_core.ValueSig) =
 module IntSigModelChecker = Make(Sl_mc_core.IntSig)
 module Prover = Prover.Make(IntSigModelChecker.Reduction)
 
-let check_model defs (sh, (stk, h)) =
+let check_model intuitionistic defs (sh, (stk, h)) =
   let defs = Sl_defs.relevant_defs defs [sh] in
   assert (Sl_defs.deterministic defs) ;
   assert (Sl_defs.constructively_valued defs) ;
@@ -330,7 +330,12 @@ let check_model defs (sh, (stk, h)) =
       IntSigModelChecker.axioms 
       IntSigModelChecker.rules 
       red in
-  Option.is_some res
+  Option.is_some res &&
+  (intuitionistic || 
+  IntSigModelChecker.Location.Map.is_empty 
+    (Option.get !(red.IntSigModelChecker.Reduction.heap))
+  )
+    
   
 
 
