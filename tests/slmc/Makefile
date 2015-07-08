@@ -36,7 +36,7 @@ tests:
 				if stat -t $(MODELS_PATH)/$(MDL_FILE_BASE)-$$test*.mdl >/dev/null 2>&1 ; then \
 					(for f in $(MODELS_PATH)/$(MDL_FILE_BASE)-$$test*.mdl; do \
 						echo "$$f"; \
-						(MDL=$$(cat $$f); set -x; $(TIME) $(MC) $(STATS_FLAG) -D ./$(DEFS_FILE) -F "$$formula" -M "$$MDL") ; \
+						(MDL=$$(cat $$f); set -x; $(TIME) $(MC) $(MC_FLAGS) -D ./$(DEFS_FILE) -F "$$formula" -M "$$MDL") ; \
 					done) ; \
 				else \
 					echo "No files found" ; \
@@ -52,7 +52,7 @@ stats:
 		for tstfile in $(TEST_FILE_BASE)*.tst; do \
 			STAT_FILE="$(STATS_PATH)/$${tstfile%.*}-$$(date +%s).csv" ; \
 			echo "Outputting $$STAT_FILE" ; \
-			(TEST_FILE_BASE="$${tstfile%.*}" STATS_FLAG=-s $(MAKE) tests 2>&1 | $(STATS_EXTRACTOR) > "$$STAT_FILE") ; \
+			(TEST_FILE_BASE="$${tstfile%.*}" $(MAKE) tests 2>&1 | $(STATS_EXTRACTOR) > "$$STAT_FILE") ; \
 		done ; \
 	else \
 		echo "No test files found!" ; \
@@ -121,10 +121,10 @@ queue-models:
 	done)
 
 queue-tests:
-	TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue $(MAKE) --no-print-directory tests 
+	TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue MC_FLAGS=-i $(MAKE) --no-print-directory tests 
 
 queue-stats:
-	-@TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue $(MAKE) --no-print-directory stats
+	-@TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue MC_FLAGS=-i $(MAKE) --no-print-directory stats
 
 clean-queue:
 	rm -f $(MODELS_PATH)/queue-*.mdl

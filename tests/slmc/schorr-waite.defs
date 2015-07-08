@@ -19,8 +19,6 @@ loop_invariant2 {
   stack(p) * tree(t,m') => loop_invariant2(t,p)
 };
 
-
-
 spTrue {
   emp => spTrue() |
   t'->f',c',l',r' * spTrue() => spTrue()
