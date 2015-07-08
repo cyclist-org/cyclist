@@ -333,7 +333,7 @@ let check_model intuitionistic defs (sh, (stk, h)) =
   Option.is_some res &&
   (intuitionistic || 
   IntSigModelChecker.Location.Map.is_empty 
-    (Option.get !(red.IntSigModelChecker.Reduction.heap))
+    (Option.get !(red.IntSigModelChecker.Reduction.remainder))
   )
     
   
