@@ -1,1 +1,1 @@
-post marked_tree(t)
+post m' != nil * tree(t,m')

@@ -36,7 +36,7 @@ tests:
 				if stat -t $(MODELS_PATH)/$(MDL_FILE_BASE)-$$test*.mdl >/dev/null 2>&1 ; then \
 					(for f in $(MODELS_PATH)/$(MDL_FILE_BASE)-$$test*.mdl; do \
 						echo "$$f"; \
-						(MDL=$$(cat $$f); set -x; $(TIME) $(MC) -D ./$(DEFS_FILE) -F "$$formula" -M "$$MDL") ; \
+						(MDL=$$(cat $$f); set -x; $(TIME) $(MC) $(STATS_FLAG) -D ./$(DEFS_FILE) -F "$$formula" -M "$$MDL") ; \
 					done) ; \
 				else \
 					echo "No files found" ; \
@@ -52,7 +52,7 @@ stats:
 		for tstfile in $(TEST_FILE_BASE)*.tst; do \
 			STAT_FILE="$(STATS_PATH)/$${tstfile%.*}-$$(date +%s).csv" ; \
 			echo "Outputting $$STAT_FILE" ; \
-			(TEST_FILE_BASE="$${tstfile%.*}" $(MAKE) tests 2>&1 | $(STATS_EXTRACTOR) > "$$STAT_FILE") ; \
+			(TEST_FILE_BASE="$${tstfile%.*}" STATS_FLAG=-s $(MAKE) tests 2>&1 | $(STATS_EXTRACTOR) > "$$STAT_FILE") ; \
 		done ; \
 	else \
 		echo "No test files found!" ; \
@@ -88,7 +88,7 @@ iter-models:
 	EXE="iter 20" BP_FILE=iter-02.bps $(MAKE) --no-print-directory models
 
 iter-tests:
-	TEST_FILE_BASE=iter DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory tests 
+	TEST_FILE_BASE=iter-[0-9] DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory tests 
 
 iter-stats:
 	-@TEST_FILE_BASE=iter-[0-9] DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory stats
@@ -121,7 +121,7 @@ queue-models:
 	done)
 
 queue-tests:
-	TEST_FILE_BASE=queue DEFS_FILE=queue.defs MDL_FILE_BASE=queue $(MAKE) --no-print-directory tests 
+	TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue $(MAKE) --no-print-directory tests 
 
 queue-stats:
 	-@TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue $(MAKE) --no-print-directory stats
@@ -130,11 +130,14 @@ clean-queue:
 	rm -f $(MODELS_PATH)/queue-*.mdl
 
 schorr-waite-models:
-	-@(for i in `seq 1 30`; do \
-		EXE="schorr_waite $$i $(SEED)" BP_FILE=schorr-waite-01.bps $(MAKE) --no-print-directory models ; \
+	-@(for i in `seq 1 100`; do \
+		EXE="schorr_waite $$i $(SEED)" BP_FILE=schorr-waite-pre.bps $(MAKE) --no-print-directory models ; \
+	done ; \
+	for i in `seq 1 30`; do \
+		EXE="schorr_waite $$i $(SEED)" BP_FILE=schorr-waite-post.bps $(MAKE) --no-print-directory models ; \
 	done ; \
 	for i in `seq 1 20`; do \
-		EXE="schorr_waite $$i $(SEED)" BP_FILE=schorr-waite-02.bps $(MAKE) --no-print-directory models ; \
+		EXE="schorr_waite $$i $(SEED)" BP_FILE=schorr-waite-loop.bps $(MAKE) --no-print-directory models ; \
 		EXE="schorr_waite $$i $(SEED)" BP_FILE=schorr-waite-spTrue.bps $(MAKE) --no-print-directory models ; \
 	done)
 
@@ -177,7 +180,7 @@ all-stats: aplas-stack-stats composite-stats iter-stats lcset-stats queue-stats 
 
 quick-tests:
 	$(TIME) $(MC) -D queue.defs -F "lseg2(first,middle) * lseg(last,middle)" -M "`cat $(MODELS_PATH)/queue-line_667-0022.mdl`"
-	$(TIME) $(MC) -D schorr-waite.defs -F "unmarked_tree(root)" -M "`cat $(MODELS_PATH)/schorr-waite-pre0026.mdl`"
+	$(TIME) $(MC) -D schorr-waite.defs -F "tree(root,nil)" -M "`cat $(MODELS_PATH)/schorr-waite-pre0026.mdl`"
 	$(TIME) $(MC) -D composite.defs -F "tree(node)" -M "`cat $(MODELS_PATH)/composite-tree_add_right0010.mdl`"
 	$(TIME) $(MC) -D lcset.defs -F "set_atomic(set)" -M "`cat $(MODELS_PATH)/lcset-add0008.mdl`"
 	$(TIME) $(MC) -D succ-rec03.defs -F "P()" -M "([], [])"

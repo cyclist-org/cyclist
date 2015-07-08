@@ -1,39 +1,25 @@
-unmarked_tree {
-  x = nil => unmarked_tree(x) |
-  x != nil * f' = nil * x->f',c',l',r' * unmarked_tree(l') * unmarked_tree(r') => unmarked_tree(x)
-};
-
-marked_tree {
-  x = nil => marked_tree(x) |
-  x != nil * f' != nil * x->f',c',l',r' * marked_tree(l') * marked_tree(r') => marked_tree(x)
+tree {
+  x = nil * m = nil => tree(x, m) |
+  x = nil * m != nil => tree(x, m) |
+  x != nil * x->m,c',l',r' * tree(l',m) * tree(r',m) => tree(x,m)
 };
 
 stack {
   x = nil => stack(x) |
-  x != nil * f' != nil * c' = nil * x->f',c',l',r' * stack(l') * unmarked_tree(r') => stack(x) |
-  x != nil * f' != nil * c' != nil * x->f',c',l',r' * stack(r') * marked_tree(l') => stack(x)
+  x != nil * f' != nil * c' = nil * x->f',c',l',r' * stack(l') * tree(r',c') => stack(x) |
+  x != nil * f' != nil * c' != nil * x->f',c',l',r' * stack(r') * tree(l',c') => stack(x)
 };
 
 loop_invariant {
   t = nil * stack(p) => loop_invariant(t,p) |
-  t != nil * f' = nil * t->f',c',l',r' * unmarked_tree(l') * unmarked_tree(r') * stack(p) => loop_invariant(t,p) |
-  t != nil * f' != nil * t->f',c',l',r' * marked_tree(l') * marked_tree(r') * stack(p) => loop_invariant(t,p)
+  t != nil * t->f',c',l',r' * tree(l',f') * tree(r',f') * stack(p) => loop_invariant(t,p)
 };
 
 loop_invariant2 {
-  t = nil * stack(p) => loop_invariant2(t,p) |
-  t != nil * unmarked_tree(t) * stack(p) => loop_invariant2(t,p) |
-  t != nil * marked_tree(t) * stack(p) => loop_invariant2(t,p)
+  stack(p) * tree(t,m') => loop_invariant2(t,p)
 };
 
-tree {
-  unmarked_tree(x) => tree(x) |
-  marked_tree(x) => tree(x)
-};
 
-loop_invariant3 {
-  stack(p) * tree(t) => loop_invariant3(t,p)
-};
 
 spTrue {
   emp => spTrue() |
