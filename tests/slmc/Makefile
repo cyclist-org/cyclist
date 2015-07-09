@@ -214,3 +214,60 @@ clean-stats:
 
 clean-models: clean-aplas-stack clean-composite clean-iter clean-lcset clean-queue clean-schorr-waite
 	
+
+#############################################################################
+cvdet-tests:
+	-@if stat -t $(TEST_FILE_BASE)*.tst >/dev/null 2>&1 ; then \
+		for tstfile in $(TEST_FILE_BASE)*.tst; do \
+			echo "Reading test file: $$tstfile" ; \
+			while read test formula; do \
+				echo "running test series: $(MDL_FILE_BASE)-$$test" ; \
+				if stat -t $(MODELS_PATH)/$(MDL_FILE_BASE)-$$test*.mdl >/dev/null 2>&1 ; then \
+					(for f in $(MODELS_PATH)/$(MDL_FILE_BASE)-$$test*.mdl; do \
+						echo "$$f"; \
+						(MDL=$$(cat $$f); set -x; $(TIME) $(MC) $(MC_FLAGS) -D ./$(DEFS_FILE) -F "$$formula" -M "$$MDL" -CVDET) ; \
+					done) ; \
+				else \
+					echo "No files found" ; \
+				fi \
+			done < $$tstfile ; \
+		done ; \
+	else \
+		echo "No test files found!" ; \
+	fi
+
+cvdet-stats:
+	-@if stat -t $(TEST_FILE_BASE)*.tst >/dev/null 2>&1 ; then \
+		for tstfile in $(TEST_FILE_BASE)*.tst; do \
+			STAT_FILE="$(STATS_PATH)/$${tstfile%.*}-cvdet-$$(date +%s).csv" ; \
+			echo "Outputting $$STAT_FILE" ; \
+			(TEST_FILE_BASE="$${tstfile%.*}" $(MAKE) cvdet-tests 2>&1 | $(STATS_EXTRACTOR) > "$$STAT_FILE") ; \
+		done ; \
+	else \
+		echo "No test files found!" ; \
+	fi
+
+aplas-stack-cvdet-tests:
+	TEST_FILE_BASE=aplas-stack-01 DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory cvdet-tests 
+
+aplas-stack-cvdet-stats:
+	-@TEST_FILE_BASE=aplas-stack-01 DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory cvdet-stats
+
+iter-cvdet-tests:
+	TEST_FILE_BASE=iter-01 DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory cvdet-tests 
+
+iter-cvdet-stats:
+	-@TEST_FILE_BASE=iter-01 DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory cvdet-stats
+
+queue-cvdet-tests:
+	TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue MC_FLAGS=-i $(MAKE) --no-print-directory cvdet-tests 
+
+queue-cvdet-stats:
+	-@TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue MC_FLAGS=-i $(MAKE) --no-print-directory cvdet-stats
+
+schorr-waite-cvdet-tests:
+	TEST_FILE_BASE=schorr-waite-pre DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory cvdet-tests 
+
+schorr-waite-cvdet-stats:
+	-@TEST_FILE_BASE=schorr-waite-pre DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory cvdet-stats
+	
