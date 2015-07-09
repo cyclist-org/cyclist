@@ -29,7 +29,7 @@ module IntSigParser =
 module StackParser = MCGen.Stack.MakeParser(IntSigParser)
 module HeapParser = MCGen.Heap.MakeParser(IntSigParser)
 
-let model_parser st = 
+let model_parser st =
   (MCGen.mk_model_parser (StackParser.parse, HeapParser.parse)) st
 
 let defs_path = ref "examples/sl.defs"
@@ -54,6 +54,7 @@ let speclist = [
     ("-F", Arg.Set_string str_symheap, ": <string> symbolic heap to check against");
     ("-CVDET", Arg.Set cvdet, ": apply CV+DET algorithm");
     ("-i", Arg.Set intuitionistic, ": intuitionistic checking");
+    ("-h", Arg.Set_int MCGen.max_hashset_size, ": maximum size for internal hashset creation, default is 15,485,863")
   ]
 
 let die msg =
@@ -75,10 +76,10 @@ let () =
   begin
     Stats.reset () ;
     Stats.Gen.call () ;
-    let call () = 
-      if !cvdet then 
-        Sl_mc_cvdet.check_model !intuitionistic defs (sh, model) 
-      else 
+    let call () =
+      if !cvdet then
+        Sl_mc_cvdet.check_model !intuitionistic defs (sh, model)
+      else
         MCGen.check_model !intuitionistic defs (sh, model) in
     let res = call () in
     Stats.Gen.end_call () ;

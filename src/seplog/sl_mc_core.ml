@@ -75,12 +75,14 @@ module type ValueSig =
     val pp_nil : Format.formatter -> unit
   end
 
-module Make (Sig : ValueSig) 
+module Make (Sig : ValueSig)
   (* : S                                         *)
   (*   with type Location.t = Sig.HeapLocation.t *)
   (*   with type Scalar.t = Sig.ScalarValue.t    *)
     =
   struct
+
+    let max_hashset_size = ref 15485863
 
     module Location =
       struct
@@ -588,8 +590,10 @@ module Make (Sig : ValueSig)
       else if ModelBase.Hashset.is_empty ms' then ms'
       else
       (* Hashset.create: we can tweak the initial size of the hashset for performance *)
-      let new_mdls = ModelBase.Hashset.create
+      let size = min
+        !max_hashset_size
         ((ModelBase.Hashset.cardinal ms) * (ModelBase.Hashset.cardinal ms')) in
+      let new_mdls = ModelBase.Hashset.create size in
       let merge (s, ls) =
         let merge_acc (s', ls') =
           if (HeapBase.disjoint ls ls') &&
@@ -872,7 +876,7 @@ module Make (Sig : ValueSig)
                     List.map (fun m -> (m, true)) (List.tl mdls) in
                 (* Hashset.create: we can tweak the initial size of the hashset for performance *)
                 (* TODO: Change this magic number! *)
-                let acc = ModelBase.Hashset.create 10000 in
+                let acc = ModelBase.Hashset.create 11 in
                 let tie p (ms, flag) =
                   let mdls = (get_mdls p ms flag) in
                   List.iter
