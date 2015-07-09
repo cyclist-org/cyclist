@@ -36,3 +36,12 @@ let bind f o = flatten (map f o)
 let pp pp_elem fmt = function
   | None -> Format.fprintf fmt "@[None@]"
   | Some x -> Format.fprintf fmt "@[Some (%a)@]" pp_elem x
+
+let iter f = function
+  | None -> ()
+  | Some x -> f x
+
+let fold f o a = 
+  match o with
+  | None -> a
+  | Some x -> f x a

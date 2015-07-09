@@ -106,6 +106,7 @@ module type S =
     val for_all : (elt -> bool) -> t -> bool
     val left_union : t -> t -> t
     val is_empty : t -> bool
+    val filter : (elt -> bool) -> t -> unit
     val to_string : t -> string
     val of_list : elt list -> t
     val to_list : t -> elt list

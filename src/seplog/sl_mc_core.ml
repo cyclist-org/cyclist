@@ -353,8 +353,6 @@ module Make (Sig : ValueSig)
           end
       end
 
-    type model = Stack.t * Heap.t
-
     let mk_model_parser (parse_stack, parse_heap) st =
       (Tokens.parens (
         parse_stack >>= (fun s ->
@@ -380,155 +378,128 @@ module Make (Sig : ValueSig)
         let union = Location.Set.union
       end
 
-      module BitvBase =
-        struct
-          let to_bool_list b =
-            Bitv_string.fold_right (fun v vs -> v::vs) b []
-          (* Functions for implementing BasicType signature *)
-          type t = Bitv_string.t
-          (* compare, equal and hash are not the "correct" solutions    *)
-          (* because they also compare "rubbish" that might be present  *)
-          (* in the underlying string that is not actually part ot the  *)
-          (* bitvector, however it should not make a difference for our *)
-          (* code since all such "rubbish" should be '0' bits.          *)
-          let compare b b' =
-            String.compare b.Bitv_string.bits b'.Bitv_string.bits
-          let equal b b' =
-            String.compare b.Bitv_string.bits b'.Bitv_string.bits == 0
-          let hash b = Strng.hash (b.Bitv_string.bits)
-          let to_string b = Printf.sprintf "bitv(%s)" (Blist.to_string ""
-            (fun v -> if v then "1" else "0")
-            (to_bool_list b))
-          let pp fmt b = Format.fprintf fmt "%s" (to_string b)
+    module BitvBase =
+      struct
+        let to_bool_list b =
+          Bitv_string.fold_right (fun v vs -> v::vs) b []
+        (* Functions for implementing BasicType signature *)
+        type t = Bitv_string.t
+        (* compare, equal and hash are not the "correct" solutions    *)
+        (* because they also compare "rubbish" that might be present  *)
+        (* in the underlying string that is not actually part ot the  *)
+        (* bitvector, however it should not make a difference for our *)
+        (* code since all such "rubbish" should be '0' bits.          *)
+        let compare b b' =
+          String.compare b.Bitv_string.bits b'.Bitv_string.bits
+        let equal b b' =
+          String.compare b.Bitv_string.bits b'.Bitv_string.bits == 0
+        let hash b = Strng.hash (b.Bitv_string.bits)
+        let to_string b = Printf.sprintf "bitv(%s)" (Blist.to_string ""
+          (fun v -> if v then "1" else "0")
+          (to_bool_list b))
+        let pp fmt b = Format.fprintf fmt "%s" (to_string b)
 
-          let empty = Bitv_string.create 0 false
+        let empty = Bitv_string.create 0 false
 
-          let inj h =
-            let cover = Array.make
-              (Location.Map.cardinal h)
-              (Location.zero, []) in
-            let () = List.iteri
-              (fun i (l,c) -> Array.set cover i (l,c))
-              (Location.Map.bindings h) in
-            let rec binary_search ((l,c) as e) min max =
-              if max < min then
-                invalid_arg ("Not a subheap!")
-              else
-                let mid = (min + max) / 2 in
-                let (l',c') = Array.get cover mid in
-                let cmp = Location.compare l l' in
-                if cmp < 0 then
-                  binary_search e min (mid-1)
-                else if cmp > 0 then
-                  binary_search e (mid+1) max
-                else
-                  if Value.FList.equal c c' then mid
-                  else invalid_arg ("Not a subheap!") in
-            let arr_size = Array.length cover in
-            fun h' ->
-              let b = Bitv_string.create (Array.length cover) false in
-              let bs = Location.Map.bindings h' in
-              let _ =
-                let f i ((l, c) as e) =
-                  let j = binary_search e i arr_size in
-                  let () = Bitv_string.unsafe_set b j true in
-                  j + 1 in
-                List.fold_left f 0 bs in
-              b
-
-          let proj h b =
-            if (Bitv_string.length b) == 0 then Location.Map.empty
-            else if not
-                ((Location.Map.cardinal h) == (Bitv_string.length b))
-              then
-                invalid_arg ("Missing locations!")
+        let inj h =
+          let cover = Array.make
+            (Location.Map.cardinal h)
+            (Location.zero, []) in
+          let () = List.iteri
+            (fun i (l,c) -> Array.set cover i (l,c))
+            (Location.Map.bindings h) in
+          let rec binary_search ((l,c) as e) min max =
+            if max < min then
+              invalid_arg ("Not a subheap!")
             else
-              let cs = List.mapi
-                (fun i (l,c) ->
-                  Option.mk (Bitv_string.unsafe_get b i) (l,c))
-                (Location.Map.bindings h) in
-              Location.Map.of_list (Option.list_get cs)
+              let mid = (min + max) / 2 in
+              let (l',c') = Array.get cover mid in
+              let cmp = Location.compare l l' in
+              if cmp < 0 then
+                binary_search e min (mid-1)
+              else if cmp > 0 then
+                binary_search e (mid+1) max
+              else
+                if Value.FList.equal c c' then mid
+                else invalid_arg ("Not a subheap!") in
+          let arr_size = Array.length cover in
+          fun h' ->
+            let b = Bitv_string.create (Array.length cover) false in
+            let bs = Location.Map.bindings h' in
+            let _ =
+              let f i ((l, c) as e) =
+                let j = binary_search e i arr_size in
+                let () = Bitv_string.unsafe_set b j true in
+                j + 1 in
+              List.fold_left f 0 bs in
+            b
 
-          let disjoint b b' =
-            (Bitv_string.length b == 0) || (Bitv_string.length b' == 0) ||
-            (Bitv_string.pop (Bitv_string.bw_and b b') == 0)
+        let proj h b =
+          if (Bitv_string.length b) == 0 then Location.Map.empty
+          else if not
+              ((Location.Map.cardinal h) == (Bitv_string.length b))
+            then
+              invalid_arg ("Missing locations!")
+          else
+            let cs = List.mapi
+              (fun i (l,c) ->
+                Option.mk (Bitv_string.unsafe_get b i) (l,c))
+              (Location.Map.bindings h) in
+            Location.Map.of_list (Option.list_get cs)
 
-          let union b b' =
-            if (Bitv_string.length b == 0) then b'
-            else if (Bitv_string.length b' == 0) then b
-            else (Bitv_string.bw_or b b')
-        end
+        let disjoint b b' =
+          (Bitv_string.length b == 0) || (Bitv_string.length b' == 0) ||
+          (Bitv_string.pop (Bitv_string.bw_and b b') == 0)
 
-      module HeapBase :
-        sig
-          include BasicType
-          val empty : t
-          val inj : Heap.t -> Heap.t -> t
-          val proj : Heap.t -> t -> Heap.t
-          val disjoint : t -> t -> bool
-          val union : t -> t -> t
-        end
-          = BitvBase
+        let union b b' =
+          if (Bitv_string.length b == 0) then b'
+          else if (Bitv_string.length b' == 0) then b
+          else (Bitv_string.bw_or b b')
+      end
+
+    module HeapBase :
+      sig
+        include BasicType
+        val empty : t
+        val inj : Heap.t -> Heap.t -> t
+        val proj : Heap.t -> t -> Heap.t
+        val disjoint : t -> t -> bool
+        val union : t -> t -> t
+      end
+        = BitvBase
 
     module InterpretantBase = MakeComplexType(PairTypes(Value.FList)(HeapBase))
-    module BaseSetPair = PairTypes(InterpretantBase.Set)(InterpretantBase.Set)
 
+    let baseSetPair_to_string bp =
+      Pair.to_string 
+        InterpretantBase.Hashset.to_string 
+        InterpretantBase.Hashset.to_string
+        bp
+    
     module SymHeapHash = Hashtbl.Make(Sl_heap)
     module SymHeapHashPrinter = HashtablePrinter.Make(SymHeapHash)
     module ModelBase = MakeComplexType(PairTypes(Stack)(HeapBase))
 
-    module T =
-      struct
-        type t = BaseSetPair.t Sl_predsym.Map.t
-        (* Note that we have not implemented a "true" equality        *)
-        (* function between interpretations, but rather one optimised *)
-        (* for the model checking fixpoint computation: at each       *)
-        (* iteration, we only need check that no new interpretants    *)
-        (* have been added.                                           *)
-        let equal itp itp' =
-          Sl_predsym.Map.for_all
-            (fun _ (_, itpts) -> InterpretantBase.Set.is_empty itpts)
-            itp'
-        (* let equal x y =                                   *)
-        (*   let binding_eq (p, (xs, xs')) (p', (ys, ys')) = *)
-        (*     Sl_predsym.equal p p' &&                      *)
-        (*     InterpretantBase.Set.equal xs ys &&           *)
-        (*     InterpretantBase.Set.equal xs' ys' in         *)
-        (*   List.equal                                      *)
-        (*     binding_eq                                    *)
-        (*     (Sl_predsym.Map.bindings x)                   *)
-        (*     (Sl_predsym.Map.bindings y)                   *)
-      end
-    include Fixpoint(T)
-
-    let empty_base = InterpretantBase.Set.empty
-    let empty_basepair = (empty_base, empty_base)
+    let empty_base () = InterpretantBase.Hashset.create 11
 
     (** [itp_emp] is the minimal set of model bases of the formula emp,
           i.e. the singleton set containing the model base consisting of
           the empty stack and the empty heap base.
      *)
-    let itp_emp =
-      let itp_emp = ModelBase.Hashset.create 1 in
-      let () =
-        ModelBase.Hashset.add itp_emp (Stack.empty, HeapBase.empty) in
+    let itp_emp () =
+      let itp_emp = ModelBase.Hashset.create 11 in
+      ModelBase.Hashset.add itp_emp (Stack.empty, HeapBase.empty) ;
       itp_emp
 
-    let init_empty defs empty_val =
-      List.fold_left
-        (fun base def -> Sl_predsym.Map.add
-          (Sl_preddef.predsym def)
-          empty_val
-          base)
-        Sl_predsym.Map.empty
-        (Sl_defs.to_list defs)
-
+    let init_empty defs =
+      Sl_predsym.Map.of_list 
+        (List.map
+          (fun def -> (Sl_preddef.predsym def, (empty_base (), empty_base ())))
+          (Sl_defs.to_list defs))
+    
     let decorate h itp =
       let f (ancestors, parents) =
-        let acc = InterpretantBase.Hashset.create 11 in
-        InterpretantBase.Set.iter (InterpretantBase.Hashset.add acc) ancestors ;
-        InterpretantBase.Set.iter (InterpretantBase.Hashset.add acc) parents ;
-        acc in
+        InterpretantBase.Hashset.left_union ancestors parents in
       Sl_predsym.Map.map f itp
 
     let add_spares n vs =
@@ -549,16 +520,28 @@ module Make (Sig : ValueSig)
       [generate_models ts constraints itpts] generates a hashset of
       model bases which represents the interpretation of (Pi : F)
     **)
+    let generate_model ts constraints (vs, ls) =
+      Option.bind  
+        (fun stack -> 
+          if Stack.satisfies constraints stack then Some (stack, ls) else None)
+        (Stack.of_term_bindings (List.combine ts vs))
+      
+    let generate_models_ls ts constraints itpts =
+      let f acc itpt =
+        Option.fold
+          (fun mdl acc -> mdl::acc) 
+          (generate_model ts constraints itpt) 
+          acc in
+      List.fold_left f [] itpts 
+
     let generate_models ts constraints itpts =
       let models =
-        ModelBase.Hashset.create (InterpretantBase.Set.cardinal itpts) in
-      let acc_model (vs, ls) =
-        match (Stack.of_term_bindings (List.combine ts vs)) with
-        | None -> ()
-        | Some(stack) ->
-            if Stack.satisfies constraints stack then
-              ModelBase.Hashset.add models (stack, ls) in
-      InterpretantBase.Set.iter acc_model itpts ;
+        ModelBase.Hashset.create (InterpretantBase.Hashset.cardinal itpts) in
+      let f itpt =
+        Option.iter
+          (fun mdl -> ModelBase.Hashset.add models mdl) 
+          (generate_model ts constraints itpt )in
+      InterpretantBase.Hashset.iter f itpts ;
       models
 
     (**
@@ -568,6 +551,27 @@ module Make (Sig : ValueSig)
       generates the set of model bases that denotes the intepretation of
       (Pi : F * G).
     **)
+    
+    let cross_model constraints (s, ls) (s', ls') =
+      if (HeapBase.disjoint ls ls') &&
+         (Stack.consistent s s') &&
+         (Stack.cross_satisfies constraints s s') then
+        let new_stack = Stack.merge s s' in
+        let new_heap_spt = HeapBase.union ls ls' in
+        Some (new_stack, new_heap_spt) 
+      else
+        None
+
+    let cross_models_ls constraints ms ms' =
+      let merge acc m =
+        let merge_acc acc' m' =
+          Option.fold
+            (fun new_mdl acc'' -> new_mdl::acc'')
+            (cross_model constraints m m') 
+            acc' in
+        List.fold_left merge_acc acc ms' in
+      List.fold_left merge [] ms 
+        
     (* Note: I had thought about a more declarative implementation    *)
     (* which first generates the cross product of ms with ms', then   *)
     (* filters out those elements which do not satisfy the guard      *)
@@ -594,16 +598,11 @@ module Make (Sig : ValueSig)
         !max_hashset_size
         ((ModelBase.Hashset.cardinal ms) * (ModelBase.Hashset.cardinal ms')) in
       let new_mdls = ModelBase.Hashset.create size in
-      let merge (s, ls) =
-        let merge_acc (s', ls') =
-          if (HeapBase.disjoint ls ls') &&
-             (Stack.consistent s s') &&
-             (Stack.cross_satisfies constraints s s') then
-            let new_mdl =
-              let new_stack = Stack.merge s s' in
-              let new_heap_spt = HeapBase.union ls ls' in
-              (new_stack, new_heap_spt) in
-            ModelBase.Hashset.add new_mdls new_mdl in
+      let merge m =
+        let merge_acc m' =
+          Option.iter
+            (fun new_mdl -> ModelBase.Hashset.add new_mdls new_mdl)
+            (cross_model constraints m m') in
         ModelBase.Hashset.iter merge_acc ms' in
       ModelBase.Hashset.iter merge ms ;
       new_mdls
@@ -615,7 +614,7 @@ module Make (Sig : ValueSig)
     (* nice to call [test_exn] as soon as a possible valuation is computed *)
     (* and then stop the generation of further valuations and return *)
     (* immediately. *)
-    let valid_extns (eqs, deqs) vs xs s =
+    let valid_extns (eqs, deqs) vs xs s f =
       let mapped_vars = Stack.vars s in
       let (det_extn, still_to_be_mapped) = Var.Set.fold
         (fun x (bndgs, zs) ->
@@ -657,7 +656,7 @@ module Make (Sig : ValueSig)
         (* Note: assuming that s satisfies eqs, then by construction *)
         (* so too does s', thus we need only check it satisfies deqs *)
         Option.pred (Stack.satisfies (Sl_uf.empty, deqs)) s' in
-      fun f -> f test_extn valuations
+      f test_extn valuations
 
     (**
       [saturate params constraints vs mdls] generates a new set of model
@@ -674,29 +673,41 @@ module Make (Sig : ValueSig)
     (* postcondidition:                                               *)
     (*   for all mdl in [saturate_univs constraints vs mdls] :        *)
     (*     mdl satisfies [constraints]                                *)
-    let saturate_univs params (eqs, deqs) vs mdls =
-      let new_mdls =
-        ModelBase.Hashset.create (ModelBase.Hashset.cardinal mdls) in
-      let acc_saturated_models (s, ls) =
-        let unmapped_univs = Var.Set.filter
-          (fun x -> (Sl_term.is_univ_var (Var.to_term x)) && not (Var.Map.mem x s))
-          (Var.Set.union params
-            (Var.Set.of_list
-              (List.map Var.of_term
-                (List.rev_append
-                  (Sl_term.Set.to_list (Sl_uf.vars eqs))
-                  (Sl_term.Set.to_list (Sl_deqs.vars deqs)))))) in
-        if Var.Set.is_empty unmapped_univs then
-          ModelBase.Hashset.add new_mdls (s, ls)
-        else
-          let good_stacks = Option.list_get
-            (List.map |> (valid_extns (eqs, deqs) vs unmapped_univs s)) in
-          List.iter
-            (fun stk -> ModelBase.Hashset.add new_mdls (stk, ls))
-            good_stacks in
-      let () = ModelBase.Hashset.iter acc_saturated_models mdls in
-      new_mdls
-
+    let saturate_univs_one params (eqs, deqs) vs (s, ls) =
+      let unmapped_univs = Var.Set.filter
+        (fun x -> (Sl_term.is_univ_var (Var.to_term x)) && not (Var.Map.mem x s))
+        (Var.Set.union params
+          (Var.Set.of_list
+            (List.map Var.of_term
+              (List.append
+                (Sl_term.Set.to_list (Sl_uf.vars eqs))
+                (Sl_term.Set.to_list (Sl_deqs.vars deqs)))))) in
+      if Var.Set.is_empty unmapped_univs then 
+        [(s, ls)]
+      else
+        let good_stacks = 
+          valid_extns (eqs, deqs) vs unmapped_univs s List.map in
+        List.fold_left
+          (fun acc o ->
+            Option.fold
+              (fun stk acc' -> (stk, ls)::acc')
+              o
+              acc
+          )    
+          []
+          good_stacks 
+    
+    let saturate_univs_ls params (eqs, deqs) vs mdls =
+      List.fold_left 
+        (fun acc mdl -> 
+          let mdls' = saturate_univs_one params (eqs, deqs) vs mdl in
+          List.fold_left
+            (fun acc' mdl' -> mdl'::acc')
+            acc
+            mdls')
+        []
+        mdls 
+   
     (**
       [ex_constraint_sat constraints vs s] returns true if and only if
       the stack [s] can be extended with mappings from existential
@@ -707,15 +718,15 @@ module Make (Sig : ValueSig)
     let exs_satisfiable (eqs, deqs) vs s =
       let unmapped_exs =
         Var.Set.filter
-        (fun x -> (Sl_term.is_exist_var (Var.to_term x)) && not (Var.Map.mem x s))
-        (Var.Set.of_list
-          (List.map Var.of_term
-            (List.rev_append
-              (Sl_term.Set.to_list (Sl_uf.vars eqs))
-              (Sl_term.Set.to_list (Sl_deqs.vars deqs))))) in
+          (fun x -> (Sl_term.is_exist_var (Var.to_term x)) && not (Var.Map.mem x s))
+          (Var.Set.of_list
+            (List.map Var.of_term
+              (List.append
+                (Sl_term.Set.to_list (Sl_uf.vars eqs))
+                (Sl_term.Set.to_list (Sl_deqs.vars deqs))))) in
       (Var.Set.is_empty unmapped_exs) ||
       Option.is_some
-        (List.find_some |> (valid_extns (eqs, deqs) vs unmapped_exs s))
+        (valid_extns (eqs, deqs) vs unmapped_exs s List.find_some)
 
     (**
       [mk_ptos_base defs h] creates a hashtable which stores a hashset
@@ -744,24 +755,23 @@ module Make (Sig : ValueSig)
        **)
       let mk_ptos_base defs h =
         let all_ptos_itpts =
-          let mk_heap_base h' =
-            let inj = HeapBase.inj h in
-            inj h' in
-          let f = fun loc cell ptos ->
+          let mk_heap_base h' = HeapBase.inj h h' in
+          let f loc cell ptos =
             let cell_size = List.length cell in
             let base =
               if Int.Map.mem cell_size ptos then
                 Int.Map.find cell_size ptos
-              else empty_base in
+              else 
+                empty_base () in
             let pto =
               ((Value.mk_loc_val loc)::cell,
                 mk_heap_base (Location.Map.singleton loc cell)) in
-            let base = InterpretantBase.Set.add pto base in
+            InterpretantBase.Hashset.add base pto ;
             Int.Map.add cell_size base ptos in
           Location.Map.fold f h Int.Map.empty in
         let () = debug (fun _ ->
           "Hashmap of Points-to interpretants: " ^
-          Int.Map.to_string InterpretantBase.Set.to_string all_ptos_itpts) in
+          Int.Map.to_string InterpretantBase.Hashset.to_string all_ptos_itpts) in
         let num_buckets =
           let test_and_incr n rl =
             let body = Sl_indrule.body rl in
@@ -781,21 +791,118 @@ module Make (Sig : ValueSig)
           if (not (Sl_heap.inconsistent body)) &&
              (Sl_ptos.cardinal ptos > 0) then
           begin
-            let mdls =
-              let gen_mdls (t, ts) mdls =
-                let pto_models =
-                  let cell_size = List.length ts in
-                  if Int.Map.mem cell_size all_ptos_itpts then
-                    generate_models (t::ts) constraints
-                      (Int.Map.find cell_size all_ptos_itpts)
-                  else ModelBase.Hashset.create 0 in
-                cross_models constraints pto_models mdls in
-              Sl_ptos.fold gen_mdls ptos itp_emp in
-            SymHeapHash.add base body mdls
+            let gen_mdls (t, ts) mdls =
+              let pto_models =
+                let cell_size = List.length ts in
+                if Int.Map.mem cell_size all_ptos_itpts then
+                  generate_models (t::ts) constraints
+                    (Int.Map.find cell_size all_ptos_itpts)
+                else ModelBase.Hashset.create 11 in
+              cross_models constraints pto_models mdls in
+            let mdls = Sl_ptos.fold gen_mdls ptos (itp_emp ()) in
+            SymHeapHash.replace base body (ModelBase.Hashset.to_list mdls)
           end in
         let () = Sl_defs.rule_iter calc_abstractions defs in
         base
 
+    let saturate_ls valset params constraints mdls =
+      debug (fun _ -> "Starting universal variable saturation") ;
+      let mdls = 
+        saturate_univs_ls
+          (Var.Set.of_list (List.map Var.of_term params)) constraints valset mdls in
+      debug (fun _ -> "Candidate models after universal variable saturation: " ^
+        (ModelBase.FList.to_string mdls)) ;
+      let mdls = 
+        Blist.rev_filter 
+          (fun (s,_) -> exs_satisfiable constraints valset s) 
+          mdls in
+      debug (fun _ -> "Generated models after filtering for existential saturation: " ^
+        (ModelBase.FList.to_string mdls)) ;
+      mdls 
+    
+    let add_itpts_of_models_ls params itpts mdls =
+      List.iter 
+        (fun (s, ls) ->
+          let vs = List.map
+            (fun x -> let x = Var.of_term x in Var.Map.find x s)
+            params in
+            InterpretantBase.Hashset.add itpts (vs, ls)
+        )
+        mdls
+        
+    (* The function that generates new interpretants for a given rule *)
+    let rule_gen ptos_base valset itp itp_acc rl =
+      let predsym = Sl_indrule.predsym rl in
+      let body = Sl_indrule.body rl in
+      let (eqs, deqs, ptos, inds) = Sl_heap.dest body in
+      let constraints = (eqs, deqs) in
+      let params = Sl_indrule.formals rl in
+      let prev_itpts = Sl_predsym.Map.find predsym itp_acc in
+      if (Sl_heap.inconsistent body) || (
+         (Sl_tpreds.is_empty inds) &&
+           let (ancestors, parents) = Sl_predsym.Map.find predsym itp in
+           (not (InterpretantBase.Hashset.is_empty ancestors)) ||
+           not (InterpretantBase.Hashset.is_empty parents)) then
+        let () = debug (fun _ -> "Skipping over rule " ^ (Sl_indrule.to_string rl)) in
+        (* stop rule_gen here *)
+        ()
+      else
+      begin
+        debug 
+          (fun _ -> "Generating new interpretants for rule: " ^ 
+          (Sl_indrule.to_string rl)) ;
+        let ptos_models =
+          if Sl_ptos.is_empty ptos then [(Stack.empty, HeapBase.empty)]
+          else SymHeapHash.find ptos_base body in
+        debug (fun _ -> "Found the following interpretation for points-tos: " ^
+          (ModelBase.FList.to_string ptos_models)) ;
+        if Sl_tpreds.is_empty inds then
+          add_itpts_of_models_ls
+            params 
+            prev_itpts
+            (saturate_ls valset params constraints ptos_models)
+            (* end rule_gen here *)
+        else
+        begin
+          let get_mdls p ms gen_ancestors =
+            let p_sym = Sl_tpred.predsym p in
+            let p_args = Sl_tpred.args p in
+            let (ancestors, parents) = 
+              Pair.map InterpretantBase.Hashset.to_list (Sl_predsym.Map.find p_sym itp) in
+            let parent_mdls = generate_models_ls p_args constraints parents in
+            let prod_from_parents = cross_models_ls constraints ms parent_mdls in
+            let ls = [prod_from_parents] in
+            if gen_ancestors then
+              let ancestor_mdls = generate_models_ls p_args constraints ancestors in
+              let prod_from_ancestors = cross_models_ls constraints ms ancestor_mdls in
+              (prod_from_ancestors)::ls
+            else ls in
+          let split p (ms, flag) =
+            let mdls = get_mdls p ms true in
+            (List.hd mdls, flag) :: List.map (fun m -> (m, true)) (List.tl mdls) in
+          let tie p (ms, flag) =
+            let mdls = get_mdls p ms flag in
+            List.iter
+              (fun ms ->
+                let candidates = saturate_ls valset params constraints ms in
+                debug (fun _ -> "Generated the following candidate models: " ^
+                  (ModelBase.FList.to_string candidates)) ;
+                add_itpts_of_models_ls
+                  params 
+                  prev_itpts
+                  candidates
+              )
+              mdls in
+          let join = fun _ -> () in
+          let seed = (ptos_models, false) in
+          Sl_tpreds.weave split tie join inds seed ;
+          let () = debug (fun _ -> "Generated the following interpretants: " ^
+            (InterpretantBase.Hashset.to_string prev_itpts)) in
+          debug (fun _ -> "New interpretation after adding new interpretants: " ^
+            (Sl_predsym.Map.to_string InterpretantBase.Hashset.to_string itp_acc))
+        end 
+      end
+      
     let mk_generator (defs, (vs, h)) =
       let valset = Value.Set.union
         (Value.Set.of_list vs)
@@ -808,134 +915,59 @@ module Make (Sig : ValueSig)
         add_spares max_vars_of_defs valset in
       let valset = Value.Set.add Value.nil valset in
       let ptos_base = mk_ptos_base defs h in
-      let () = debug (fun _ -> Value.Set.to_string valset) in
-      let () = debug (fun _ -> SymHeapHashPrinter.to_string Sl_heap.to_string ModelBase.Hashset.to_string ptos_base) in
-      let generator itp =
+      debug (fun _ -> Value.Set.to_string valset) ;
+      debug (fun _ ->
+        SymHeapHashPrinter.to_string 
+          Sl_heap.to_string ModelBase.FList.to_string ptos_base) ;
+      let itp = init_empty defs in
+      let new_itp = 
+        Sl_predsym.Map.of_list 
+          (List.map 
+            (fun pd -> 
+              let (_,p) = Sl_preddef.dest pd in
+              (p, empty_base ())
+            ) 
+            (Sl_defs.to_list defs)
+          ) in
+      let rec generator () =
         let () = debug (fun _ -> "Beginning next fixpoint interation") in
-        (* The function that generates new interpretants for a given rule *)
-        let rule_gen itp_acc rl =
-          let predsym = Sl_indrule.predsym rl in
-          let body = Sl_indrule.body rl in
-          let (eqs, deqs, ptos, inds) = Sl_heap.dest body in
-          let constraints = (eqs, deqs) in
-          let params = Sl_indrule.formals rl in
-          let new_itpts =
-            if (Sl_heap.inconsistent body) || (
-               (Sl_tpreds.is_empty inds) &&
-                 let (ancestors, parents) = Sl_predsym.Map.find predsym itp in
-                 (not (InterpretantBase.Set.is_empty ancestors)) ||
-                 not (InterpretantBase.Set.is_empty parents)) then
-              let () = debug (fun _ -> "Skipping over rule " ^ (Sl_indrule.to_string rl)) in
-              InterpretantBase.Set.empty
-            else
-              let () = debug (fun _ -> "Generating new interpretants for rule: " ^ (Sl_indrule.to_string rl)) in
-              let ptos_models =
-                if Sl_ptos.is_empty ptos then itp_emp
-                else SymHeapHash.find ptos_base body in
-              let () = debug (fun _ -> "Found the following interpretation for points-tos: " ^
-                (ModelBase.Hashset.to_string ptos_models)) in
-              let saturate mdls =
-                let () = debug (fun _ -> "Starting universal variable saturation") in
-                let mdls = saturate_univs
-                  (Var.Set.of_list (List.map Var.of_term params)) constraints valset mdls in
-                let () = debug (fun _ -> "Candidate models after universal variable saturation: " ^
-                  (ModelBase.Hashset.to_string mdls)) in
-                let () = debug (fun _ -> "Starting existential variable saturation") in
-                let mdls =
-                  let filtered_mdls =
-                    ModelBase.Hashset.create
-                      (ModelBase.Hashset.cardinal mdls) in
-                  let () = ModelBase.Hashset.iter
-                    (fun ((s, _) as mdl) ->
-                      if (exs_satisfiable constraints valset s) then
-                        ModelBase.Hashset.add filtered_mdls mdl)
-                    mdls in
-                  filtered_mdls in
-                let () = debug (fun _ -> "Generated models after filtering for existential saturation: " ^
-                  (ModelBase.Hashset.to_string mdls)) in
-                mdls in
-              let full_models =
-                if Sl_tpreds.is_empty inds then
-                  saturate ptos_models
-                else
-                let get_mdls p ms gen_ancestors =
-                  let p_sym = Sl_tpred.predsym p in
-                  let p_args = Sl_tpred.args p in
-                  let (ancestors, parents) = Sl_predsym.Map.find p_sym itp in
-                  let parent_mdls = generate_models p_args constraints parents in
-                  let prod_from_parents = cross_models constraints ms parent_mdls in
-                  let ls = [prod_from_parents] in
-                  if gen_ancestors then
-                    let ancestor_mdls = generate_models p_args constraints ancestors in
-                    let prod_from_ancestors = cross_models constraints ms ancestor_mdls in
-                    (prod_from_ancestors)::ls
-                  else ls in
-                let split p (ms, flag) =
-                  let mdls = get_mdls p ms true in
-                  (List.hd mdls, flag) ::
-                    List.map (fun m -> (m, true)) (List.tl mdls) in
-                (* Hashset.create: we can tweak the initial size of the hashset for performance *)
-                (* TODO: Change this magic number! *)
-                let acc = ModelBase.Hashset.create 11 in
-                let tie p (ms, flag) =
-                  let mdls = (get_mdls p ms flag) in
-                  List.iter
-                    (fun ms ->
-                      let candidates = saturate ms in
-                      let () = debug (fun _ -> "Generated the following candidate models: " ^
-                        (ModelBase.Hashset.to_string candidates)) in
-                      ModelBase.Hashset.iter (ModelBase.Hashset.add acc) candidates)
-                    mdls in
-                let join = fun _ -> () in
-                let seed = (ptos_models, false) in
-                let () = Sl_tpreds.weave split tie join inds seed in
-                acc in
-              let itpts = ModelBase.Hashset.fold
-                (fun (s, ls) itpts ->
-                  let vs = List.map
-                    (fun x -> let x = Var.of_term x in Var.Map.find x s)
-                    params in
-                  InterpretantBase.Set.add (vs, ls) itpts)
-                full_models
-                empty_base in
-              let () = debug (fun _ -> "Generated the following interpretants: " ^
-                (InterpretantBase.Set.to_string itpts)) in
-              itpts in
-          let itp_acc =
-            if not (Sl_predsym.Map.mem predsym itp_acc) then
-              Sl_predsym.Map.add predsym new_itpts itp_acc
-            else
-              let prev_itpts = Sl_predsym.Map.find predsym itp_acc in
-              Sl_predsym.Map.add predsym
-                (InterpretantBase.Set.union prev_itpts new_itpts) itp_acc in
-          let () = debug (fun _ -> "New interpretation after adding new interpretants: " ^
-            (Sl_predsym.Map.to_string InterpretantBase.Set.to_string itp_acc)) in
-          itp_acc in
         (* Generate the new interpretants for each rule *)
-        let new_itp = Sl_defs.rule_fold rule_gen Sl_predsym.Map.empty defs in
+        Sl_defs.rule_iter (rule_gen ptos_base valset itp new_itp) defs ;
         let () = debug (fun _ -> "New interpretants after iteration: " ^
-          (Sl_predsym.Map.to_string InterpretantBase.Set.to_string new_itp)) in
+          (Sl_predsym.Map.to_string InterpretantBase.Hashset.to_string new_itp)) in
+        
         (* Add the new interpretants to the old ones *)
-        let combined_mapping = List.map2
-            (fun (p, (xs, ys)) (p', zs) ->
-              assert (Sl_predsym.equal p p') ;
-              let ancestors = InterpretantBase.Set.union xs ys in
-              let parent = InterpretantBase.Set.diff zs ancestors in
-              (p, (ancestors, parent))
-              )
-            (Sl_predsym.Map.bindings itp)
-            (Sl_predsym.Map.bindings new_itp) in
-          let new_itp = Sl_predsym.Map.of_list combined_mapping in
-          let () = debug (fun _ -> "result of iteration: " ^
-            (Sl_predsym.Map.to_string BaseSetPair.to_string new_itp)) in
-          new_itp in
+        Sl_predsym.Map.iter
+          (fun p zs ->
+            let (xs,ys) = Sl_predsym.Map.find p itp in
+            let _ = InterpretantBase.Hashset.left_union xs ys in
+            InterpretantBase.Hashset.clear ys ;
+            InterpretantBase.Hashset.iter
+              (fun z ->
+                if not (InterpretantBase.Hashset.mem xs z) then
+                  InterpretantBase.Hashset.add ys z)
+              zs ;
+            InterpretantBase.Hashset.clear zs            
+          ) 
+          new_itp ;
+        
+        debug (fun _ -> "result of iteration: " ^
+          (Sl_predsym.Map.to_string InterpretantBase.Hashset.to_string new_itp)) ;
+          
+        (* if all "new" sets of interpretants are empty then stop else recurse *)
+        if Sl_predsym.Map.for_all
+          (fun _ (_, itpts) -> InterpretantBase.Hashset.is_empty itpts)
+          itp
+        then
+          itp
+        else
+          generator () in
       generator
 
     let mk (defs, (vs, h)) =
       let generator = mk_generator (defs, (vs, h)) in
-      let start_itp = init_empty defs empty_basepair in
-      let base = fixpoint generator start_itp in
-      let () = debug (fun _ -> Sl_predsym.Map.to_string BaseSetPair.to_string base) in
+      let base = generator () in
+      debug (fun _ -> Sl_predsym.Map.to_string baseSetPair_to_string base) ;
       decorate h base
 
     let check_model intuitionistic defs (sh, (stk, h)) =
