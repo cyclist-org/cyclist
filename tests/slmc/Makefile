@@ -50,7 +50,7 @@ tests:
 stats:
 	-@if stat -t $(TEST_FILE_BASE)*.tst >/dev/null 2>&1 ; then \
 		for tstfile in $(TEST_FILE_BASE)*.tst; do \
-			STAT_FILE="$(STATS_PATH)/$${tstfile%.*}-$$(date +%s).csv" ; \
+			STAT_FILE="$(STATS_PATH)/$${tstfile%.*}$(STATS_FILE_SUFFIX)-$$(date +%s).csv" ; \
 			echo "Outputting $$STAT_FILE" ; \
 			(TEST_FILE_BASE="$${tstfile%.*}" $(MAKE) tests 2>&1 | $(STATS_EXTRACTOR) > "$$STAT_FILE") ; \
 		done ; \
@@ -72,7 +72,7 @@ aplas-stack-stats:
 	-@TEST_FILE_BASE=aplas-stack-[0-9] DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory stats
 
 aplas-stack-ptime-stats:
-	-@MC_FLAGS=-CVDET $(MAKE) aplas-stack-stats --no-print-directory
+	-@MC_FLAGS=-CVDET STATS_FILE_SUFFIX=-cvdet $(MAKE) aplas-stack-stats --no-print-directory
 
 clean-aplas-stack:
 	rm -f $(MODELS_PATH)/aplas-stack-*.mdl
@@ -103,7 +103,7 @@ iter-stats:
 	-@TEST_FILE_BASE=iter-[0-9] DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory stats
 
 iter-ptime-stats:
-	-@TEST_FILE_BASE=iter-01 DEFS_FILE=iter.defs MDL_FILE_BASE=iter MC_FLAGS=-CVDET $(MAKE) --no-print-directory stats
+	-@TEST_FILE_BASE=iter-01 DEFS_FILE=iter.defs MDL_FILE_BASE=iter MC_FLAGS=-CVDET STATS_FILE_SUFFIX=-cvdet $(MAKE) --no-print-directory stats
 
 clean-iter:
 	rm -f $(MODELS_PATH)/iter-*.mdl
@@ -142,7 +142,7 @@ queue-stats:
 	-@TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue MC_FLAGS=-i $(MAKE) --no-print-directory stats
 
 queue-ptime-stats:
-	TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue MC_FLAGS="-CVDET -i" $(MAKE) --no-print-directory stats 
+	TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue MC_FLAGS="-CVDET -i" STATS_FILE_SUFFIX=-cvdet $(MAKE) --no-print-directory stats 
 
 clean-queue:
 	rm -f $(MODELS_PATH)/queue-*.mdl
@@ -169,7 +169,7 @@ schorr-waite-stats:
 	-@TEST_FILE_BASE=schorr-waite-[ip] DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory stats
 
 schorr-waite-ptime-stats:
-	TEST_FILE_BASE=schorr-waite-pre DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite MC_FLAGS=-CVDET $(MAKE) --no-print-directory stats 
+	TEST_FILE_BASE=schorr-waite-pre DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite MC_FLAGS=-CVDET STATS_FILE_SUFFIX=-cvdet $(MAKE) --no-print-directory stats 
 
 clean-schorr-waite:
 	rm -f $(MODELS_PATH)/schorr-waite-*.mdl
@@ -200,7 +200,11 @@ all-models: aplas-stack-models composite-models iter-models lcset-models schorr-
 
 all-tests: aplas-stack-tests composite-tests iter-tests lcset-tests queue-tests schorr-waite-tests spatial-true-test binary-counter-tests
 
+all-ptime-tests: aplas-stack-ptime-tests iter-ptime-tests queue-ptime-tests schorr-waite-ptime-tests
+
 all-stats: aplas-stack-stats composite-stats iter-stats lcset-stats queue-stats schorr-waite-stats
+
+all-ptime-stats: aplas-stack-ptime-stats iter-ptime-stats queue-ptime-stats schorr-waite-ptime-stats
 
 quick-tests:
 	$(TIME) $(MC) -D queue.defs -F "lseg2(first,middle) * lseg(last,middle)" -M "`cat $(MODELS_PATH)/queue-line_667-0022.mdl`"
@@ -213,61 +217,4 @@ clean-stats:
 	rm -f $(STATS_PATH)/*.csv
 
 clean-models: clean-aplas-stack clean-composite clean-iter clean-lcset clean-queue clean-schorr-waite
-	
-
-#############################################################################
-cvdet-tests:
-	-@if stat -t $(TEST_FILE_BASE)*.tst >/dev/null 2>&1 ; then \
-		for tstfile in $(TEST_FILE_BASE)*.tst; do \
-			echo "Reading test file: $$tstfile" ; \
-			while read test formula; do \
-				echo "running test series: $(MDL_FILE_BASE)-$$test" ; \
-				if stat -t $(MODELS_PATH)/$(MDL_FILE_BASE)-$$test*.mdl >/dev/null 2>&1 ; then \
-					(for f in $(MODELS_PATH)/$(MDL_FILE_BASE)-$$test*.mdl; do \
-						echo "$$f"; \
-						(MDL=$$(cat $$f); set -x; $(TIME) $(MC) $(MC_FLAGS) -D ./$(DEFS_FILE) -F "$$formula" -M "$$MDL" -CVDET) ; \
-					done) ; \
-				else \
-					echo "No files found" ; \
-				fi \
-			done < $$tstfile ; \
-		done ; \
-	else \
-		echo "No test files found!" ; \
-	fi
-
-cvdet-stats:
-	-@if stat -t $(TEST_FILE_BASE)*.tst >/dev/null 2>&1 ; then \
-		for tstfile in $(TEST_FILE_BASE)*.tst; do \
-			STAT_FILE="$(STATS_PATH)/$${tstfile%.*}-cvdet-$$(date +%s).csv" ; \
-			echo "Outputting $$STAT_FILE" ; \
-			(TEST_FILE_BASE="$${tstfile%.*}" $(MAKE) cvdet-tests 2>&1 | $(STATS_EXTRACTOR) > "$$STAT_FILE") ; \
-		done ; \
-	else \
-		echo "No test files found!" ; \
-	fi
-
-aplas-stack-cvdet-tests:
-	TEST_FILE_BASE=aplas-stack-01 DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory cvdet-tests 
-
-aplas-stack-cvdet-stats:
-	-@TEST_FILE_BASE=aplas-stack-01 DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory cvdet-stats
-
-iter-cvdet-tests:
-	TEST_FILE_BASE=iter-01 DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory cvdet-tests 
-
-iter-cvdet-stats:
-	-@TEST_FILE_BASE=iter-01 DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory cvdet-stats
-
-queue-cvdet-tests:
-	TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue MC_FLAGS=-i $(MAKE) --no-print-directory cvdet-tests 
-
-queue-cvdet-stats:
-	-@TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue MC_FLAGS=-i $(MAKE) --no-print-directory cvdet-stats
-
-schorr-waite-cvdet-tests:
-	TEST_FILE_BASE=schorr-waite-pre DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory cvdet-tests 
-
-schorr-waite-cvdet-stats:
-	-@TEST_FILE_BASE=schorr-waite-pre DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory cvdet-stats
 	
