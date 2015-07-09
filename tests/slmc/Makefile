@@ -63,10 +63,16 @@ aplas-stack-models:
 	EXE="aplas-stack 20" BP_FILE=aplas-stack-spTrue.bps $(MAKE) --no-print-directory models
 
 aplas-stack-tests:
-	TEST_FILE_BASE=aplas-stack DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory tests 
+	TEST_FILE_BASE=aplas-stack-[0-9] DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory tests 
+
+aplas-stack-ptime-tests:
+	-@MC_FLAGS="-CVDET" $(MAKE) aplas-stack-tests --no-print-directory
 
 aplas-stack-stats:
 	-@TEST_FILE_BASE=aplas-stack-[0-9] DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory stats
+
+aplas-stack-ptime-stats:
+	-@MC_FLAGS=-CVDET $(MAKE) aplas-stack-stats --no-print-directory
 
 clean-aplas-stack:
 	rm -f $(MODELS_PATH)/aplas-stack-*.mdl
@@ -90,8 +96,14 @@ iter-models:
 iter-tests:
 	TEST_FILE_BASE=iter-[0-9] DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory tests 
 
+iter-ptime-tests:
+	TEST_FILE_BASE=iter-01 DEFS_FILE=iter.defs MDL_FILE_BASE=iter MC_FLAGS=-CVDET $(MAKE) --no-print-directory tests
+
 iter-stats:
 	-@TEST_FILE_BASE=iter-[0-9] DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory stats
+
+iter-ptime-stats:
+	-@TEST_FILE_BASE=iter-01 DEFS_FILE=iter.defs MDL_FILE_BASE=iter MC_FLAGS=-CVDET $(MAKE) --no-print-directory stats
 
 clean-iter:
 	rm -f $(MODELS_PATH)/iter-*.mdl
@@ -123,8 +135,14 @@ queue-models:
 queue-tests:
 	TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue MC_FLAGS=-i $(MAKE) --no-print-directory tests 
 
+queue-ptime-tests:
+	TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue MC_FLAGS="-CVDET -i" $(MAKE) --no-print-directory tests 
+
 queue-stats:
 	-@TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue MC_FLAGS=-i $(MAKE) --no-print-directory stats
+
+queue-ptime-stats:
+	TEST_FILE_BASE=queue-[0-9] DEFS_FILE=queue.defs MDL_FILE_BASE=queue MC_FLAGS="-CVDET -i" $(MAKE) --no-print-directory stats 
 
 clean-queue:
 	rm -f $(MODELS_PATH)/queue-*.mdl
@@ -142,10 +160,16 @@ schorr-waite-models:
 	done)
 
 schorr-waite-tests:
-	TEST_FILE_BASE=schorr-waite DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory tests 
+	TEST_FILE_BASE=schorr-waite-[ip] DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory tests 
+
+schorr-waite-ptime-tests:
+	TEST_FILE_BASE=schorr-waite-pre DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite MC_FLAGS=-CVDET $(MAKE) --no-print-directory tests 
 
 schorr-waite-stats:
 	-@TEST_FILE_BASE=schorr-waite-[ip] DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite $(MAKE) --no-print-directory stats
+
+schorr-waite-ptime-stats:
+	TEST_FILE_BASE=schorr-waite-pre DEFS_FILE=schorr-waite.defs MDL_FILE_BASE=schorr-waite MC_FLAGS=-CVDET $(MAKE) --no-print-directory stats 
 
 clean-schorr-waite:
 	rm -f $(MODELS_PATH)/schorr-waite-*.mdl
