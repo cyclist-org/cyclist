@@ -81,7 +81,7 @@ composite-models:
 	EXE="composite 20 $(SEED)" BP_FILE=composite.bps $(MAKE) --no-print-directory models 
 
 composite-tests:
-	TEST_FILE_BASE=composite DEFS_FILE=composite.defs MDL_FILE_BASE=composite $(MAKE) --no-print-directory tests 
+	TEST_FILE_BASE=composite-[0-9] DEFS_FILE=composite.defs MDL_FILE_BASE=composite $(MAKE) --no-print-directory tests 
 
 composite-stats:
 	-@TEST_FILE_BASE=composite-[0-9] DEFS_FILE=composite.defs MDL_FILE_BASE=composite $(MAKE) --no-print-directory stats
@@ -112,7 +112,7 @@ lcset-models:
 	EXE="lcset 8 $(SEED)" BP_FILE=lcset.bps $(MAKE) --no-print-directory models 
 
 lcset-tests:
-	TEST_FILE_BASE=lcset DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory tests 
+	TEST_FILE_BASE=lcset-[0-9] DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory tests 
 
 lcset-stats:
 	-@TEST_FILE_BASE=lcset-[0-9] DEFS_FILE=lcset.defs MDL_FILE_BASE=lcset $(MAKE) --no-print-directory stats
