@@ -40,11 +40,11 @@ LaTeX code for proofs or definitions, displaying proofs and
 altering the search parameters.
 
 
+================================================================================
 THEORY:
-See the subfolder papers for electronic versions of papers mentioned and 
-bibliographic information in BibTeX format.
+See papers/SAS14.{pdf,bib}
 
-
+================================================================================
 CONTACT:
 Questions and help to get things working: 
   nikos.gorogiannis+cyclist@gmail.com

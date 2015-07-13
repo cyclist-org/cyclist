@@ -3,9 +3,9 @@ Cyclist is a framework for building cyclic theorem provers based on a sequent
 calculus (for more info on Cyclist have a look at papers/cyclist.pdf).
 
 This file describes briefly the satisfiability checker for separation logic
-with inductive definitions.  The tool is slsat_check.native.
+with inductive definitions.  The tool is sl_satcheck.native.
 
-
+================================================================================
 THEORY:
 The algorithm, its soundness and its complexity are described in
 
@@ -13,35 +13,36 @@ The algorithm, its soundness and its complexity are described in
   A decision procedure for satisfiability in separation logic with inductive
   predicates. To appear at CSL-LICS, 2014.
 
-PDF version and BibTeX are in papers/slsat.*
+PDF version and BibTeX are in papers/CSL-LICS14.{bib,pdf}
 
-
+================================================================================
 QUICKSTART:
 If you downloaded a tarball then the executables in the archive will have been
 linked in such a way that they should work without any additional dependencies
 on an x86_64 Linux system.
 
 Running
-  slsat_check.native -h
+  sl_satcheck.native -h
 will print out instructions for use.
 
 
+================================================================================
 RUNNING THE CSL-LICS14 TEST SUITE:
 Assuming you have downloaded or built the binaries already:
 
 1. A superset of the hand-written tests described in the paper (Sec. 5.1) are in
 examples/sl.defs.  To check their satisfiability, run
 
-  ./slsat_check.native
+  ./sl_satcheck.native
 
-The worst-case complexity example is in tests/cc/succ-circuit*.defs.
+The worst-case complexity example is in tests/slsat/cc/succ-circuit*.defs.
 To run this test iterate the checker over these files, i.e.,
 
   for F in tests/cc/succ-circuit[1-7].defs ; do
     ./slsat_check.native -s -D $F -t 2400;
   done
 
-There are more than 7 tests in tests/cc but the seventh one times out.
+There are more than 7 tests in tests/slsat/cc but the seventh one times out.
 
 2. The benchmark with automatically abduced predicates (Sec. 5.2) is in the tar-file
 examples/cctests.tgz.  To run the benchmark unpack this archive and iterate the
@@ -60,11 +61,11 @@ installed.  Then, do
 
   cd tests/syn ; rm *.dat ; make
 
-
+================================================================================
 COMPILING:
 See README.compiling.
 
-
+================================================================================
 CONTACT:
 Questions and help to get things working:
   nikos.gorogiannis+cyclist@gmail.com

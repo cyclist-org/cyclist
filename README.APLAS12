@@ -1,9 +1,9 @@
 OVERVIEW:
 Cyclist is a framework for building cyclic theorem provers based on a sequent
-calculus (for more info on Cyclist have a look at papers/cyclist.pdf).
+calculus.
 
-Three provers built with Cyclist are described in this README as well as the
-paper listed above.  These are (binaries end in ".native" omitted below):
+Three provers were included in the APLAS12 paper.  
+These are (binaries end in ".native" omitted below):
 
 fo_prove:
   An entailment prover for a fragment of first-order logic with inductive
@@ -16,24 +16,14 @@ goto_prove:
   A termination prover for a heap-manipulating, goto-like programming language
   with specifications in the above fragment of separation logic.
 
-
+================================================================================
 THEORY:
 The theory/design behind Cyclist and the three provers above is described in
 
   J. Brotherston, N. Gorogiannis, and R. L. Petersen. A generic cyclic theorem
   prover. In Proc. APLAS-10, pages 350-367. Springer, 2012.
 
-PDF version and BibTeX are in papers/cyclist.*
-
-
-QUICKSTART:
-If you downloaded a tarball then the executables in the archive will have been
-linked in such a way that they should work without any additional dependencies
-on an x86_64 Linux system.
-
-Running an executable without arguments will print out instructions for use.
-Running "make aplas-tests" will run a test suite for the three provers above
-which is a superset of the tests used in the paper above.
+See papers/APLAS12.{pdf,bib}.
 
 The grammar for SL sequents is roughly as follows.
 
@@ -51,11 +41,29 @@ The grammar for SL sequents is roughly as follows.
 where var matches any word over letters and numbers possibly postfixed by a
 quote ', and identifier matches any word over letters and numbers.
 
+================================================================================
+QUICKSTART:
 
+If you want to use the separation logic prover and you downloaded a tarball then 
+the executables in the archive will have been linked in such a way that they 
+should work without any additional dependencies on an x86_64 Linux system.
+Otherwise consult README.compiling for building instructions.
+
+As the two other provers are not under active development, if you want to try
+them out your best option is to check out an older revision:
+
+git clone https://github.com/ngorogiannis/cyclist.git cyclist
+cd cyclist 
+git checkout b289f39a6a46b4f57da3585aa7fd71f3ca8601fc
+
+Then consult the README of that revision, it contains building instructions
+relevant to that version.
+
+================================================================================
 COMPILING:
 See README.compiling.
 
-
+================================================================================
 CONTACT:
 Questions and help to get things working:
   nikos.gorogiannis+cyclist@gmail.com

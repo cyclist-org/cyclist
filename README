@@ -1,40 +1,56 @@
 OVERVIEW:
+
 Cyclist is a framework for building cyclic theorem provers based on a sequent
 calculus (for more info on Cyclist have a look at papers/cyclist.pdf).
+However, over the years auxiliary decision procedures or algorithms have been
+integrated.
 
-The tools are named <system>_{prove,abduce,check}.native (not all combinations
-exist).  Systems are logical fragments equipped with inductive predicate
-definitions.  Binaries with `prove' in the name are theorem provers.  Binaries
-with `abduce' in the name are theorem provers that abduce inductive definitions
-(for now, inductively defined preconditions for programs).
+Below SL stands for the symbolic-heap fragment of separation logic with
+inductive definitions and existential quantifiers.
 
-The systems currently supported are:
-
-fo: A fragment of first-order logic.
-sl: A fragment of separation logic.
-goto: A heap-manipulating goto programming language with specifications in
-  separation logic, meant for proving termination.
-while: A heap-manipulating while programming language with specifications in
-  separation logic, meant for proving termination and/or safety.
-
-slsat_check is a satisfiability checker for separation logic symbolic heaps
-with inductive definitions.
-
-Running an executable without arguments will print out instructions for use.
-Running "make all-tests" will run a test suite for several provers.
-
-See README.compiling for instructions on how to compile things from scratch.
-
-See README.APLAS12 for details on the first-order, separation logic and
-termination for goto programs provers.
-
-See README.CSL-LICS14 for details on the satisfiability checker for separation
-logic with inductive definitions.
-
-See the subfolder papers for electronic versions of papers mentioned and
+See the subfolder "papers" for electronic versions of papers mentioned and
 bibliographic information in BibTeX format.
 
+================================================================================
+TOOLS:
+Under active development (published):
 
+sl_prove.native: A cyclic theorem prover for SL entailments 
+  (see README.APLAS12).
+
+sl_satcheck.native: A decision procedure for satisfiability of SL formulas
+  (see README.CSL-LICS14).
+  
+sl_disprove.native: A heuristic procedure for disproving SL entailments
+  (see README.TABLEAUX15).
+
+while_prove.native: A cyclic prover for a program logic over simple 
+  while-programs with pointers and dynamic allocation.  Preconditions are
+  expressed in SL and the prover can search for proofs of termination or
+  safety (see README.SAS14).
+
+while_abduce.native: A cyclic prover like while_prove, but which attempts
+  to infer a suitable inductively-defined precondition such that the target
+  program will terminate/execute safely.  NB this includes inferring the 
+  inductive definitions themselves (see README.SAS14).
+
+No longer under active development:
+(see README files below for instructions on how to rebuild them)
+
+fo_prove: A cyclic prover for (for all-exists) first order logic with
+  inductive definitions (see README.APLAS12).
+
+goto_prove.native: A cyclic prover for a program logic like while_prove
+  above, but for a go-to language (see README.APLAS12).
+
+================================================================================
+RUNNING/COMPILING:
+
+Running an executable without arguments will print out instructions for use.
+
+To build from source see README.compiling.
+
+================================================================================
 CONTACT:
 Questions and help to get things working:
   nikos.gorogiannis+cyclist@gmail.com
