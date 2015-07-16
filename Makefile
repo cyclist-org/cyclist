@@ -44,9 +44,9 @@ xsf-tests:
 whl_abd-tests:
 	-@for TST in tests/whl_abd/*.wl ; do echo $$TST ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
-aplas-tests: sl-tests goto-tests #fo-tests 
+aplas-tests: sl-tests #goto-tests #fo-tests 
 
-tp-tests: sl-tests pr-tests sf-tests xsf-tests #fo-tests
+tp-tests: sl-tests whl-tests sf-tests xsf-tests #fo-tests
 
 abd-tests: whl_abd-tests
 
