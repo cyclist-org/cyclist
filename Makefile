@@ -46,7 +46,7 @@ whl_abd-tests:
 
 aplas-tests: sl-tests #goto-tests #fo-tests 
 
-tp-tests: sl-tests whl-tests sf-tests xsf-tests #fo-tests
+tp-tests: sl-tests whl-tests xsf-tests #fo-tests
 
 abd-tests: whl_abd-tests
 

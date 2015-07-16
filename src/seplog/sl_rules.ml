@@ -309,7 +309,8 @@ let dobackl idx prf =
     ] in
 	Rule.first (Blist.map f apps) idx prf
 
-let axioms = ref (Rule.first [id_axiom ; ex_falso_axiom])
+(* let axioms = ref (Rule.first [id_axiom ; ex_falso_axiom]) *)
+let axioms = ref Rule.fail
 
 let rules = ref Rule.fail
 
@@ -332,5 +333,7 @@ let setup defs =
         luf defs 
       ] 
     ] ;
+  let axioms = Rule.first [id_axiom ; ex_falso_axiom] in
+  rules := Rule.combine_axioms axioms !rules ;
   if !use_invalidity_heuristic then 
     rules := Rule.conditional (fun s -> not (Sl_invalid.check defs s)) !rules
