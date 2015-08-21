@@ -6,6 +6,8 @@ let defs_path = ref "examples/sl.defs"
 (* switches controlling invalidity heuristic *)
 let invalidity_check = ref false
 
+let slcomp_mode = ref false
+
 module Prover = Prover.Make(Sl_seq)
 module F = Frontend.Make(Prover)
 
@@ -24,6 +26,7 @@ let () = F.speclist := !F.speclist @ [
     ("-IP", Arg.Set Sl_invalid.partition_strengthening, 
       ": use partition strengthening in invalidity heuristic, default is " ^ 
       (string_of_bool !Sl_invalid.partition_strengthening));
+    ("-SLCOMP", Arg.Set slcomp_mode, ": change output to sat/unsat/unknown for SLCOMP");
   ]
 
 type search_result =
@@ -52,21 +55,32 @@ let () =
   let res = 
     if !F.timeout<>0 then w_timeout call !F.timeout else Some (call ()) in
   Stats.Gen.end_call () ;
-  if !Stats.do_statistics then Stats.gen_print ();
   let exit_code = match res with
   | None -> 
     begin 
-      print_endline ("NOT proved: " ^ (Sl_seq.to_string seq) ^ " [TIMEOUT]") ; 
+      print_endline 
+        (if !slcomp_mode then 
+          "unknown" 
+        else 
+         "NOT proved: " ^ (Sl_seq.to_string seq) ^ " [TIMEOUT]") ; 
       2
     end
   | Some Invalid ->
     begin
-      print_endline ("NOT proved: " ^ (Sl_seq.to_string seq) ^ " [invalid]") ; 
+      print_endline 
+        (if !slcomp_mode then
+          "sat"
+        else
+          "NOT proved: " ^ (Sl_seq.to_string seq) ^ " [invalid]") ; 
       255
     end ;
   | Some Unknown ->
     begin 
-      print_endline ("NOT proved: " ^ (Sl_seq.to_string seq)) ; 
+      print_endline 
+        (if !slcomp_mode then
+          "unknown"
+        else
+          "NOT proved: " ^ (Sl_seq.to_string seq)) ; 
       1
     end
   | Some (Valid proof) ->
@@ -74,7 +88,11 @@ let () =
       if !F.show_proof then
         Prover.Proof.pp Format.std_formatter proof
       else
-        print_endline ("Proved: " ^ (Sl_seq.to_string seq)) ;
+        print_endline 
+          (if !slcomp_mode then
+            "unsat"
+          else
+            "Proved: " ^ (Sl_seq.to_string seq)) ;
       if !Stats.do_statistics then Prover.print_proof_stats proof ;
       if !F.latex_path<>"" then
       begin
@@ -84,7 +102,9 @@ let () =
       end ;
       0
     end in
-    exit exit_code
+  if !Stats.do_statistics then Stats.gen_print ();
+  let exit_code = if !slcomp_mode then 0 else exit_code in
+  exit exit_code
     
 
 

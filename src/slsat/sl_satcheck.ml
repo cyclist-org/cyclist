@@ -5,6 +5,7 @@ let show_proof = ref false
 let latex_path = ref ""
 let timeout = ref 30
 let only_first = ref false
+let slcomp_mode = ref false
 
 let speclist = ref [
     ("-p", Arg.Set show_proof,": show proof");
@@ -16,6 +17,7 @@ let speclist = ref [
     ("-f", Arg.Set only_first,": check satisfiability of first predicate only");
     ("-D", Arg.Set_string defs_path,
        ": read inductive definitions from <file>, default is " ^ !defs_path);
+    ("-SLCOMP", Arg.Set slcomp_mode, ": change output to sat/unsat/unknown for SLCOMP");
     ]
 
 let usage = ref ("usage: " ^ Sys.argv.(0) ^ " [-p/d/s/f] [-t <int>] [-D <file>]" )
@@ -26,7 +28,6 @@ let die msg =
   exit 1
 
 let check_consistency defs =
-  let exit_code = ref 0 in
   Format.set_margin (Sys.command "exit $(tput cols)") ;
   Stats.reset () ;
   Stats.Gen.call () ;
@@ -34,29 +35,40 @@ let check_consistency defs =
     Sl_basepair.satisfiable ~only_first:!only_first ~output:!show_proof defs in
   let res = w_timeout consistency_check !timeout in
   Stats.Gen.end_call () ;
-  begin
+  let exit_code = 
     match res with
     | None ->
       begin
-        print_endline "UNKNOWN: [TIMEOUT]" ;
-        exit_code := 2
+        print_endline 
+          (if !slcomp_mode then
+            "unknown"
+          else
+            "UNKNOWN: [TIMEOUT]") ;
+        2
       end
     | Some false ->
       begin
         print_endline 
-          ("UNSAT: " ^
-          (if !only_first then "First" else "Some") ^ 
-          " predicate has an empty base.") ;
-        exit_code := 1
+          (if !slcomp_mode then 
+            "unsat"
+          else
+            ("UNSAT: " ^
+            (if !only_first then "First" else "Some") ^ 
+            " predicate has an empty base.")) ;
+        1
       end
     | Some true -> 
       print_endline 
-        ("SAT: " ^ 
-        (if !only_first then "First predicate has" else "All predicates have") ^
-        " a non-empty base.")
-  end ;
+        (if !slcomp_mode then
+          "sat"
+        else
+          ("SAT: " ^ 
+          (if !only_first then "First predicate has" else "All predicates have") ^
+          " a non-empty base.")) ;
+      0
+  in
   if !Stats.do_statistics then Stats.gen_print ();
-  !exit_code
+  if !slcomp_mode then 0 else exit_code
     
 
 
@@ -64,7 +76,6 @@ let () =
   gc_setup () ;
 	Arg.parse !speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) !usage ;
 	let res = check_consistency (Sl_defs.of_channel (open_in !defs_path)) in
-  let () = print_endline ("Exit code: " ^ (string_of_int res)) in 
-	exit res
+  exit res
 
 

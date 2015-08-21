@@ -11,7 +11,7 @@ module Seqtactics = Seqtactics.Make(Sl_seq)
 
 let id_axiom =
   Rule.mk_axiom 
-    (fun (l,r) -> Option.mk (Sl_form.subsumed ~total:false r l) "Id")
+    (fun (l,r) -> Option.mk (Sl_form.subsumed ~total:true r l) "Id")
 
 let preddefs = ref Sl_defs.empty 
 
