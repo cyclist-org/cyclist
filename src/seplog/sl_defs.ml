@@ -30,7 +30,8 @@ module Defs =
     let pp fmt d = Format.fprintf fmt "%s" (to_string d)
         
     let parse st =
-      (sep_by1 Sl_preddef.parse (parse_symb symb_semicolon) <?> "defs") st
+      (sep_by1 Sl_preddef.parse (parse_symb symb_semicolon) >>= (fun preddefs -> 
+        eof >>$ (Blist.rev (Blist.fold_left (fun d' d -> add d d') empty preddefs))) <?> "defs") st
 
     let of_string s =
       handle_reply (MParser.parse_string parse s ())
