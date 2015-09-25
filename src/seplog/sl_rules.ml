@@ -137,6 +137,8 @@ let pto_intro_rule seq =
     let (rx, rys) as p =
       Sl_ptos.find (fun (w,_) -> Option.is_some (Sl_heap.find_lval w l)) r.SH.ptos in
     let (lx, lys) as p' = Option.get (Sl_heap.find_lval rx l) in
+    (* avoid scope jumping *)
+    if Blist.exists Sl_term.is_exist_var lys then [] else
     (* take care to remove only the 1st match *)
     let l' = SH.del_pto l p' in
     let r' = SH.del_pto r p in
