@@ -174,6 +174,8 @@ let instantiate_pto =
       let eptos = Blist.filter (fun (x,_) -> Sl_term.is_exist_var x) rptos in
       let match_ls xs ys =
         try
+          (* avoid scope jumping *)
+          not (Blist.exists Sl_term.is_exist_var xs) &&
 					Blist.exists2 (fun x y -> Sl_heap.equates l x y) xs ys
 				with Invalid_argument _ -> false in
       let cp = Blist.cartesian_product eptos lptos in
