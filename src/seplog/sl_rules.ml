@@ -179,7 +179,7 @@ let instantiate_pto =
 					Blist.exists2 (fun x y -> Sl_heap.equates l x y) xs ys
 				with Invalid_argument _ -> false in
       let cp = Blist.cartesian_product eptos lptos in
-      let cp = Blist.filter (fun ((_,ys),(_,zs)) -> match_ls ys zs) cp in
+      let cp = Blist.filter (fun ((_,zs),(_,ys)) -> match_ls ys zs) cp in
       let do_instantiation (((x,ys) as p), ((w,zs) as q)) =
         let l' = SH.del_pto l q in
         let r' = SH.del_pto r p in
