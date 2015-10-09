@@ -174,7 +174,7 @@ schorr-waite-ptime-stats:
 clean-schorr-waite:
 	rm -f $(MODELS_PATH)/schorr-waite-*.mdl
 
-spatial-true-test:
+spatial-true-tests:
 	-@TEST_FILE_BASE=aplas-stack-spTrue DEFS_FILE=aplas-stack.defs MDL_FILE_BASE=aplas-stack $(MAKE) --no-print-directory tests ; \
 	TEST_FILE_BASE=composite-spTrue DEFS_FILE=composite.defs MDL_FILE_BASE=composite $(MAKE) --no-print-directory tests ; \
 	TEST_FILE_BASE=iter-spTrue DEFS_FILE=iter.defs MDL_FILE_BASE=iter $(MAKE) --no-print-directory tests ; \
@@ -198,7 +198,7 @@ binary-counter-stats:
 	
 all-models: aplas-stack-models composite-models iter-models lcset-models schorr-waite-models
 
-all-tests: aplas-stack-tests composite-tests iter-tests lcset-tests queue-tests schorr-waite-tests spatial-true-test binary-counter-tests
+all-tests: aplas-stack-tests composite-tests iter-tests lcset-tests queue-tests schorr-waite-tests spatial-true-tests binary-counter-tests
 
 all-ptime-tests: aplas-stack-ptime-tests iter-ptime-tests queue-ptime-tests schorr-waite-ptime-tests
 
