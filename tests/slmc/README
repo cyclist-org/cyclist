@@ -12,7 +12,7 @@ taken from the test suite of the Verifast tool; they have been modified slightly
 in order to successfully compile them and for our tool to be able to harvest
 an appropriate selection of runtime models.
 
-The tests/slmc directory contains three types of files:
+This directory contains three types of files:
 
     *.defs: these contain inductive predicate definitions against which our tool
             checks the models harvested from the appropriate program.
@@ -22,12 +22,12 @@ The tests/slmc directory contains three types of files:
             appropriate *.mdl files, and a separation logic assertion (formula)
             against which to test the models.
 
-    *.bps:  these files contain descriptors the specify how to harvest runtime
-            models from the test programs. For details of our harvesting tool,
+    *.bps:  these files contain descriptors that specify how to harvest runtime
+            models from the test programs. For details of the harvesting tool,
             see below.
 
-Within the tests/slmc directory, running the make command with the various
-targets discussed below will execute the tests referred to in the paper. In the
+Within this directory, running the make command with the various targets 
+discussed below will execute the tests referred to in the paper. In the
 following, {TEST} will stand for one of the tokens in the set
 
         { aplas-stack, composite, iter, lcset, queue, schorr-waite }
@@ -79,25 +79,29 @@ set of benchmark tests, followed by [lcset-tests] and [schorr-waite-tests]
 RUNTIME HARVESTING OF MODELS:
 -----------------------------
 
-The makefile in the tests/slmc subdirectory contains targets for running the
-harvester tool on the benchmark suite test programs.
+The makefile in this directory contains targets for running the harvester tool 
+on the benchmark suite test programs.
 
 [make {TEST}-models] will run the model harvester over the {TEST} program using
     the descriptors found in the appropriate *.bps files. The resulting .mdl
-    files will be placed in the models/ subdirectory. The script not overwrite
-    any .mdl files it finds, but where files with the same filename prefix exist
-    it will instead append a new numerical suffix to the newly generated files.
+    files will be placed in the models/ subdirectory. The script does not 
+    overwrite any .mdl files it finds, but where files with the same filename 
+    prefix exist it will instead append a new numerical suffix to the newly 
+    generated files.
+
+    Note that when running the tests using the makefile [*-tests] targets the
+    tests specified by the .tst configuration files will be run over ALL the
+    .mdl files in the models/ subdirectory. Therefore running the tests AFTER
+    generating model files will cause the tests to be run over these new models
+    as well.
 
 [make clean-{TEST}] will remove all of the model files within the models/ sub-
-    directory corresponding whose filenames are prefixed with {TEST}.
+    directory whose filenames are prefixed with {TEST}.
 
-N.B. Running the model-harvesting targets for {TEST} in
-
-    { aplas-stack, composite, iter, schorr-waite }
-
-should result in the same set of model files each time, since these are
-deterministic programs. However the lcset and queue programs are concurrent
-and so running the model-harvesting target for these programs will, in general,
-produce different sets of model files each time. The Cyclist source tree
-contains the set of .mdl files that were used to produce the benchmark results
-in the POPL'16 paper.
+N.B. Running the model-harvesting targets, i.e. [make {TEST}-stats] with {TEST}
+in { aplas-stack, composite, iter, schorr-waite }, should result in the same set
+of model files each time, since these are deterministic programs. However the 
+lcset and queue programs are concurrent and so running the model-harvesting 
+target for these programs will, in general, produce different sets of model 
+files each time. The Cyclist source tree contains the set of .mdl files that 
+were used to produce the benchmark results in the POPL'16 paper.
