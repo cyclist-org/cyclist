@@ -1,1 +1,1 @@
-DLL(x,y,z,w) |- SLL(x,y)            
+DLL[a](x,y,z,w) |- SLL[a](x,y)            

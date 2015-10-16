@@ -16,7 +16,8 @@ val subsumed : ?total:bool -> Sl_uf.t -> t -> t -> bool
     check if rewriting could make the first multiset a sub(multi)set of 
     the second. *)
     
-val unify : ?total:bool -> t Sl_term.unifier
+val unify : 
+  ?total:bool -> ?update_check:Sl_unify.update_check -> t Sl_unify.unifier
 (** Compute substitution that would make the two multisets equal. 
     If the optional argument [~total=true] is set to [false] then 
     compute a substitution that would make the first multiset a sub(multi)set of 

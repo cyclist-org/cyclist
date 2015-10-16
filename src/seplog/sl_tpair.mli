@@ -2,7 +2,8 @@
 
 include Util.BasicType with type t = Sl_term.t * Sl_term.t
 
-val unify : ?order:bool -> t Sl_term.unifier
+val unify : 
+  ?order:bool -> ?update_check:Sl_unify.update_check -> t Sl_unify.unifier
 (** Unify two pairs of terms, ignoring the pairs' internal ordering of members.
     The optional argument [~order] has a default of [false].  When it is set 
     to [true] then the internal order is honoured. *)
@@ -20,7 +21,8 @@ module FList :
   sig
     include Util.BasicType with type t = t list
     
-    val unify_partial : ?order:bool -> ?inverse:bool -> t Sl_term.unifier
+    val unify_partial : ?order:bool -> ?inverse:bool -> 
+      ?update_check:Sl_unify.update_check -> t Sl_unify.unifier
     (** Unify all pairs of the 1st argument with a part of the 2nd.
         - The optional argument [~order:false] indicates whether the internal 
           ordering of the pair's members is honoured. 

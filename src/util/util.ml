@@ -32,6 +32,7 @@ module type OrderedContainer =
     val to_list: t -> elt list
     val endomap : (elt -> elt) -> t -> t
     val map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b) -> t -> 'a
+    val opt_map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b option) -> t -> 'a
     val map_to_list : (elt -> 'a) -> t -> 'a list
     val weave : (elt -> 'a -> 'a list) -> (elt -> 'a -> 'b) -> ('b list -> 'b) -> t -> 'a -> 'b
     val find : (elt -> bool) -> t -> elt
@@ -197,6 +198,9 @@ module MakeListMultiset(T: BasicType) =
 
     let map_to oadd oempty f xs =
       fold (fun z ys -> oadd (f z) ys) xs oempty
+      
+    let opt_map_to oadd oempty f xs =
+      map_to (Option.dest Fun.id oadd) oempty f xs
 
     let map_to_list f xs = Blist.map f xs
 
@@ -279,6 +283,9 @@ module MakeTreeSet(T: BasicType) : OrderedContainer with type elt = T.t =
 
     let map_to oadd oempty f s =
       fold (fun el s' -> oadd (f el) s') s oempty
+      
+    let opt_map_to oadd oempty f s =
+      map_to (Option.dest Fun.id oadd) oempty f s
 
     let map_to_list f s =
       Blist.rev (map_to Blist.cons [] f s)
@@ -320,7 +327,7 @@ module MakeTreeSet(T: BasicType) : OrderedContainer with type elt = T.t =
 
     let to_string s = "{" ^ (Blist.to_string ", " T.to_string (to_list s)) ^ "}"
 
-    let hash s = 
+    let hash s =
       fold (fun x h -> genhash (T.hash x) h) s 0x9e3779b9
 
     let rec subsets s =
@@ -359,11 +366,11 @@ module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
 
     let compare comp m m' =
       if m==m' then 0 else compare comp m m'
-    
-    let hash h m = 
-      fold 
-        (fun k v a -> genhash a (genhash (T.hash k) (h v))) 
-        m 
+
+    let hash h m =
+      fold
+        (fun k v a -> genhash a (genhash (T.hash k) (h v)))
+        m
         0x9e3779b9
 
     let rec fixpoint eq f x =
@@ -526,17 +533,136 @@ module StringType : BasicType with type t = string =
 module Int = MakeComplexType(IntType)
 module Strng = MakeComplexType(StringType)
 
+module MakeVarManager
+  (Kernel :
+    sig
+      val map : string Int.Hashmap.t
+      val inv_map : int Strng.Hashmap.t
+      val max_var : int ref
+      val min_var : int ref
+      val default_varname : bool -> string
+    end) =
+  struct
+    let get_limit exist = if exist then !Kernel.min_var else !Kernel.max_var
+    let get_diff exist = if exist then (-1) else 1
+
+    let present v = Int.Hashmap.mem Kernel.map v
+    let name_present n = Strng.Hashmap.mem Kernel.inv_map n
+
+    let to_string v = Int.Hashmap.find Kernel.map v
+    let get_idx n = Strng.Hashmap.find Kernel.inv_map n
+
+    let is_var t = t<>0
+    let is_exist_var v = (is_var v) && v<0
+    let is_univ_var v = (is_var v) && v>0
+    let is_valid_var v exist =
+      exist && is_exist_var v || not exist && is_univ_var v
+
+    let is_exist_name n = n.[(String.length n)-1] = '\''
+    let is_univ_name n = not (is_exist_name n)
+    let is_valid_name v exist =
+      exist && is_exist_name v || not exist && is_univ_name v
+
+    let mk_var name exist =
+      assert (is_valid_name name exist);
+      if name_present name then
+        let v = get_idx name in assert (is_valid_var v exist) ; v
+      else
+        let v = (get_diff exist) + (get_limit exist) in
+        assert (not (present v) && not (name_present name)) ;
+        assert
+          (is_exist_var v && is_exist_name name ||
+           is_univ_var v && is_univ_name name);
+        Int.Hashmap.add Kernel.map v name ;
+        Strng.Hashmap.add Kernel.inv_map name v ;
+        Kernel.max_var := max !Kernel.max_var v ;
+        Kernel.min_var := min !Kernel.min_var v ;
+        v
+
+    let fresh_varname exist =
+      let suffix = if exist then "'" else "" in
+      let idx = ref 0 in
+      let base = ref "a" in
+      let gen_name () =
+        !base ^
+        (if !idx = 0 then "" else string_of_int !idx) ^
+        suffix in
+      let name = ref (gen_name ()) in
+      let letter = ref 'a' in
+      while name_present !name && !letter < 'z' do
+        letter := char_of_int (1 + (int_of_char !letter)) ;
+        base := string_of_char !letter ;
+        name := gen_name ()
+      done ;
+      if not (name_present !name) then !name else
+      begin
+        base := Kernel.default_varname exist ;
+        idx := 1;
+        name := gen_name () ;
+        while name_present !name do
+          incr idx ;
+          name := gen_name ()
+        done ;
+        assert (not (name_present !name)) ;
+        !name
+      end
+
+    let fresh_var m exist =
+      let limit = abs (get_limit exist) in
+      let i = m + (get_diff exist) in
+      if abs i <= limit then i else mk_var (fresh_varname exist) exist
+
+    let rec fresh_vars m i exist = match i with
+      | 0 -> []
+      | n ->
+        let v = fresh_var m exist in
+        v::(fresh_vars (m + (get_diff exist)) (n-1) exist)
+
+    module MakeGenerators(T : OrderedContainer with type elt = int) =
+      struct
+        let bound s exist = if exist then min 0 (T.min_elt s) else max 0 (T.max_elt s)
+        let fresh_evar s = let m = if T.is_empty s then 0 else bound s true in fresh_var m true
+        let fresh_uvar s = let m = if T.is_empty s then 0 else bound s false in fresh_var m false
+        let fresh_evars s n = let m = if T.is_empty s then 0 else bound s true in fresh_vars m n true
+        let fresh_uvars s n = let m = if T.is_empty s then 0 else bound s false in fresh_vars m n false
+      end
+  end
+
 module Tags =
   struct
+    include MakeVarManager(
+      struct
+        let map = Int.Hashmap.create 997
+        let inv_map = Strng.Hashmap.create 997
+        let max_var = ref 0
+        let min_var = ref 0
+        let default_varname exist = if exist then "x" else "w"
+      end)
+
+    let anonymous_tag = 0
+    let tag_name v = to_string v
+
+    module Elt : BasicType with type t = Int.t = Int
     include Int.Set
     let to_string s =
       String.concat "," (map_to_list string_of_int s)
+    let to_names s =
+      map_to Strng.Set.add Strng.Set.empty tag_name s
+
+    include MakeGenerators(Int.Set)
   end
 
 module TagPairs =
   struct
     include Int.Pairing.Set
     let mk s = Tags.fold (fun i p -> add (i,i) p) s empty
+
+    let dest_singleton tps =
+      Option.mk_lazily ((cardinal tps) == 1) (fun _ -> choose tps)
+
+    let to_names tps =
+      map_to Strng.Pairing.Set.add Strng.Pairing.Set.empty
+        (Pair.map Tags.tag_name) tps
 
     let compose t1 t2 : t =
       fold
@@ -548,6 +674,16 @@ module TagPairs =
     let projectr tp = map_to Tags.add Tags.empty snd tp
 
     let reflect tps = map_to add empty Pair.swap tps
-  end
 
+    let apply_to_tag tps t =
+      try
+        snd (find (fun (t',_) -> t=t') tps)
+      with Not_found -> t
+      
+    let mk_univ_subst avoid ts =
+      let exs = Tags.filter Tags.is_exist_var ts in
+      let univs = Tags.fresh_uvars (Tags.union ts avoid) (Tags.cardinal exs) in
+      of_list (Blist.combine (Tags.to_list exs) univs)
+
+  end
 

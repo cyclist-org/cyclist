@@ -1,1 +1,1 @@
-DLL(x,y,z,w) |- BSLL(z,w)                            
+DLL[a](x,y,z,w) |- BSLL[a](z,w)                            

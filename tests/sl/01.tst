@@ -1,1 +1,1 @@
-x->y * RList(y,z) |- RList(x,z) 
+[a] < [b] : x->y * RList[a](y,z) |- RList[b](x,z) 

@@ -22,7 +22,12 @@ let to_melt v =
   ltx_star (Blist.map Sl_tpred.to_melt (elements v))
 
 
-let tags inds = Tags.of_list (Blist.map fst (to_list inds))
+let tags inds = 
+  Tags.of_list 
+    (Option.list_get 
+      (Blist.map 
+        (fun p -> Option.mk (Sl_tpred.is_tagged p) (fst p)) 
+        (to_list inds)))
 
 let strip_tags inds = 
   map_to Sl_pred.MSet.add Sl_pred.MSet.empty snd inds
@@ -41,20 +46,17 @@ let freshen_tags inds' inds =
     let delta = 1 + maxtag - mintag in
     endomap (fun (tag, head) -> (tag + delta, head)) inds
 
-let rec unify ?(total=true) ?(tagpairs=false) 
-    ?(sub_check=Sl_term.trivial_sub_check)
-    ?(cont=Sl_term.trivial_continuation)
-    ?(init_state=Sl_term.empty_state) inds inds' =
+let rec unify ?(total=true) ?(tagpairs=false) ?(update_check=Fun._true)
+    inds inds' cont init_state =
   if is_empty inds then
     if not total || is_empty inds' then cont init_state else None
   else
     let a = choose inds in
     let inds = remove a inds in
     let f a' =
-      Sl_tpred.unify ~tagpairs
-        ~sub_check
-        ~cont:(fun state' -> unify ~total ~tagpairs ~sub_check ~cont ~init_state:state' inds (remove a' inds'))
-        ~init_state a a' in
+      Sl_tpred.unify ~tagpairs ~update_check a a'
+        (fun state -> unify ~total ~tagpairs ~update_check inds (remove a' inds') cont state)
+        init_state in
     find_map f inds'
 
 let subsumed_upto_tags ?(total=true) eqs inds inds' =

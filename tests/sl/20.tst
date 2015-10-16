@@ -1,1 +1,1 @@
-ls(x,y) * ls(y,nil) |- ls(x,nil) 
+[a] <= [c], [b] <= [c] : ls[a](x,y) * ls[b](y,nil) |- ls[c](x,nil) 

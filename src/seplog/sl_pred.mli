@@ -15,7 +15,7 @@ val subst : Sl_term.substitution -> t -> t
 val parse : (t, 'a) MParser.parser
 val of_string : string -> t
 
-val unify : t Sl_term.unifier
+val unify : ?update_check:Sl_unify.update_check -> t Sl_unify.unifier
 (** Compute substitution that unifies two predicates. *)
 
 val norm : Sl_uf.t -> t -> t

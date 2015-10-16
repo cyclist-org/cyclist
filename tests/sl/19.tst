@@ -1,1 +1,1 @@
-x!=z * x->y * ls(y,z) |- ls(x,z) 
+[a] < [b] : x!=z * x->y * ls[a](y,z) |- ls[b](x,z) 

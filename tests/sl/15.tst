@@ -1,1 +1,1 @@
-BinPath(x,z) * BinPath(z,y) |- BinPath(x,y)          
+[a] <= [c], [b] <= [c] : BinPath[a](x,z) * BinPath[b](z,y) |- BinPath[c](x,y)          

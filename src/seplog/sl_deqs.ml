@@ -27,11 +27,10 @@ let parse st =
           parse_symb symb_deq >>
           Sl_term.parse << spaces |>> (fun y -> (x, y))) <?> "deq") st
 
-let unify_partial ?(inverse=false) ?(sub_check=Sl_term.trivial_sub_check)
-    ?(cont=Sl_term.trivial_continuation) 
-    ?(init_state=Sl_term.empty_state) d d' =
-  Sl_tpair.FList.unify_partial 
-    ~inverse ~sub_check ~cont ~init_state (to_list d) (to_list d')
+let unify_partial ?(inverse=false) ?(update_check=Fun._true)
+    d d' cont init_state =
+  Sl_tpair.FList.unify_partial ~inverse ~update_check (to_list d) (to_list d')
+    cont init_state
 
 let subsumed eqs deqs deqs' =
   let norm p = Sl_tpair.order (Pair.map (fun x -> Sl_uf.find x eqs) p) in

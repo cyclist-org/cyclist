@@ -39,10 +39,10 @@ module Defs =
         (fun def -> Sl_predsym.equal ident (Sl_preddef.predsym def))
         defs)
 
-    let unfold vars h ((_, (ident, _)) as pred) defs =
-      Blist.map (Sl_indrule.unfold vars h pred) (get_def ident defs)
+    let unfold (vars, tags) ((_, (ident, _)) as pred) defs =
+      Blist.map (Sl_indrule.unfold (vars, tags) pred) (get_def ident defs)
 
-    let of_formula defs f =
+    let of_formula defs ((_, hs) as f) =
       let counter = ref 0 in
       let get_ident () = Sl_predsym.mk (Printf.sprintf "P%d" !counter) in
       let () = while mem (get_ident ()) defs do incr counter done in
@@ -51,7 +51,7 @@ module Defs =
         Sl_term.Set.to_list
           (Sl_term.Set.filter Sl_term.is_univ_var (Sl_form.vars f)) in
       let pred = (predsym, formals) in
-      let rules = Blist.map (fun h -> Sl_indrule.mk h pred) f in
+      let rules = Blist.map (fun h -> Sl_indrule.mk h pred) hs in
       let def = Sl_preddef.mk (rules, predsym) in
       def::defs
 
@@ -63,7 +63,7 @@ module Defs =
       let f' def = Blist.iter f (Sl_preddef.rules def) in
       Blist.iter f' defs
 
-    let relevant_defs all_defs f =
+    let relevant_defs all_defs (_, hs) =
       let ident_set ids = Sl_predsym.Set.of_list (Sl_predsym.MSet.to_list ids) in
       let iterate preds =
         let add_preds pred preds =
@@ -77,7 +77,7 @@ module Defs =
       let init_ids =
         let ident_mset = Blist.fold_right
           (fun h -> Sl_predsym.MSet.union (Sl_heap.idents h))
-          f Sl_predsym.MSet.empty in
+          hs Sl_predsym.MSet.empty in
         ident_set ident_mset in
       let relevant_preds = Sl_predsym.Set.fixpoint iterate init_ids in
       Sl_predsym.Set.fold
@@ -85,7 +85,7 @@ module Defs =
         relevant_preds
         empty
 
-    let check_form_wf defs f =
+    let check_form_wf defs (_, hs) =
       let check_pred p =
         let predsym = Sl_tpred.predsym p in
         let pname = Sl_predsym.to_string predsym in
@@ -103,12 +103,12 @@ module Defs =
       Blist.iter
         (fun h -> let (_, _, _, inds) = Sl_heap.dest h in
           Sl_tpreds.iter check_pred inds)
-        f
+        hs
 
     let check_consistency defs =
       rule_iter
         (fun rl ->
-          try check_form_wf defs [(Sl_indrule.body rl)]
+          try check_form_wf defs (Ord_constraints.empty, [(Sl_indrule.body rl)])
           with Invalid_argument(s) ->
             failwith ("Error in definition of " ^ (Sl_predsym.to_string (Sl_indrule.predsym rl)) ^ ": " ^ s))
         defs
@@ -118,9 +118,9 @@ module Defs =
         let defs =
           (Blist.rev
             (Blist.fold_left
-              (fun d' d ->
+              (fun defs d ->
                 let () = debug (fun _ -> "Parsing definition of: " ^ (Sl_predsym.to_string (Sl_preddef.predsym d))) in
-                add d d')
+                add d defs)
               empty
               preddefs)) in
         let () = check_consistency defs in

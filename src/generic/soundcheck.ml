@@ -165,10 +165,12 @@ let valid prf =
         Int.Map.mem i prf &&
         TagPairs.subset tp tv &&
         Tags.subset (TagPairs.projectl tv) (get_tags n) &&
-        (* Tags.subset (TagPairs.projectl tp) (get_tags n) && *) (* trivially true whenever tp a subset of tv *)
+        (* Tags.subset (TagPairs.projectl tp) (get_tags n) && *) 
+          (* trivially true, given the previous clause, whenever tp a subset of tv *)
         Tags.subset (TagPairs.projectr tv) (get_tags (Int.Map.find i prf)) 
-        (*   &&                                                                 *)  (* trivially true whenever tp a subset of tv *)
+        (*   &&  *)
         (* Tags.subset (TagPairs.projectr tp) (get_tags (Int.Map.find i prf))  *)
+          (* trivially true, given the previous clause, whenever tp a subset of tv *)
         )
      (get_subg n))
     prf

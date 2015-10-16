@@ -1,1 +1,1 @@
-ListE(x,y) \/ ListO(x,y) |- List(x,y)
+ListE[a](x,y) \/ ListO[a](x,y) |- List[a](x,y)

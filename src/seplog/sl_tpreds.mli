@@ -42,7 +42,8 @@ val subsumed : ?total:bool -> Sl_uf.t -> t -> t -> bool
     If the optional argument [~total=true] is set to [false] then 
     check if the first multiset is a subset of the second modulo equalities. *)
 
-val unify : ?total:bool -> ?tagpairs:bool -> t Sl_term.unifier
+val unify : ?total:bool -> ?tagpairs:bool -> 
+  ?update_check:Sl_unify.update_check -> t Sl_unify.unifier
 (** Compute substitution that makes the two multisets equal up to tags. 
 - If the optional argument [~total=true] is set to [false] then 
   compute substitution that makes the first multiset a subset of the second.

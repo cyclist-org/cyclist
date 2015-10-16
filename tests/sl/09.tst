@@ -1,1 +1,1 @@
-DLL(x,y,z,w) * DLL(a,x,w,b) |- DLL(a,y,z,b)    
+[a] <= [c], [b] <= [c] : DLL[a](x,y,z,w) * DLL[b](a,x,w,b) |- DLL[c](a,y,z,b)    

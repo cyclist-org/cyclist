@@ -1,1 +1,1 @@
-BinPath(x,y) |- BinTreeSeg(x,y)        
+BinPath[a](x,y) |- BinTreeSeg[a](x,y)        

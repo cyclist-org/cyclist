@@ -36,6 +36,14 @@ val tag_pairs : t -> Util.TagPairs.t
 
 val to_melt : t -> Latex.t
 
+val has_untagged_preds : t -> bool
+
+val complete_tags : Util.Tags.t -> t -> t
+(** [complete_tags exist ts h] returns the symbolic heap obtained from [h] 
+    by assigning all untagged predicates a fresh existential tag avoiding 
+    those in [ts].
+*)
+
 val equates : t -> Sl_term.t -> Sl_term.t -> bool
 (** Does a symbolic heap entail the equality of two terms? *)
 
@@ -76,7 +84,7 @@ val is_empty : t -> bool
 
 (** Constructors. *)
 
-val parse : (t, 'a) MParser.t
+val parse : ?allow_tags:bool -> (t, 'a) MParser.t
 val of_string : string -> t
 
 val mk_pto : Sl_pto.t -> t
@@ -135,13 +143,15 @@ val subst_tags : Util.TagPairs.t -> t -> t
 (** Substitute tags according to the function represented by the set of 
     tag pairs provided. *)
 
-val unify_partial : ?tagpairs:bool -> t Sl_term.unifier
+val unify_partial : 
+  ?tagpairs:bool -> ?update_check:Sl_unify.update_check -> t Sl_unify.unifier
 (** Unify two heaps such that the first becomes a subformula of the second.
 - If the optional argument [~tagpairs=false] is set to [true] then in addition 
   to the substitution found, also return the set of pairs of tags of 
   predicates unified. *)
 
-val classical_unify : ?inverse:bool -> ?tagpairs:bool -> t Sl_term.unifier
+val classical_unify : ?inverse:bool -> ?tagpairs:bool -> 
+  ?update_check:Sl_unify.update_check -> t Sl_unify.unifier
 (** Unify two heaps, by using [unify_partial] for the pure (classical) part whilst
     using [unify] for the spatial part.
 - If the optional argument [~inverse=false] is set to [true] then compute the 

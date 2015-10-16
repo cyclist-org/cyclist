@@ -1,1 +1,1 @@
-BinListFirst(x) |- BinTree(x)              
+BinListFirst[a](x) |- BinTree[a](x)              

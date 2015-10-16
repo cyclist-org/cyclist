@@ -94,11 +94,10 @@ let saturate m =
   let pairs = Blist.cartesian_product ts ts in
   Blist.filter (Fun.uncurry (equates m)) pairs 
 
-let unify_partial ?(inverse=false) 
-    ?(sub_check=Sl_term.trivial_sub_check)
-    ?(cont=Sl_term.trivial_continuation)
-    ?(init_state=Sl_term.empty_state) m m' =
-  Sl_tpair.FList.unify_partial ~inverse ~sub_check ~cont ~init_state (bindings m) (saturate m')
+let unify_partial ?(inverse=false) ?(update_check=Fun._true)
+    m m' cont init_state =
+  Sl_tpair.FList.unify_partial ~inverse ~update_check (bindings m) (saturate m')
+     cont init_state
 
 let subst_subsumed eqs ((theta,_) as state) = 
   Option.mk (Sl_term.Map.for_all (equates eqs) theta) state

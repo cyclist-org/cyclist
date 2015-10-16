@@ -34,8 +34,7 @@ val of_list : Sl_tpair.t list -> t
 
 val subst : Sl_term.substitution -> t -> t
 
-val subst_subsumed : 
-  t -> Sl_term.unifier_state -> Sl_term.unifier_state option
+val subst_subsumed : t -> Sl_unify.continuation
 (** Compute whether a substitution could be obtained by rewriting under 
     equalities in first argument.  Meant to be used with unifiers to produce
     subsumption routines. *)
@@ -49,7 +48,8 @@ val equates : t -> Sl_term.t -> Sl_term.t -> bool
 val subsumed : t -> t -> bool
 (** [subsumed uf uf'] is true iff uf' |- uf using the normal equality rules. *)
 
-val unify_partial : ?inverse:bool -> t Sl_term.unifier
+val unify_partial : 
+  ?inverse:bool -> ?update_check:Sl_unify.update_check -> t Sl_unify.unifier
 (** [unify_partial Option.some (Sl_term.empty_subst, ()) u u'] computes a 
     substitution [theta] such that [u'] |- [u[theta]]. 
     If the optional argument [~inverse:false] is set to [true] then a substitution

@@ -1,0 +1,1 @@
+[a] < [c] : ls[a](x,y) * y->z * ls[b](z,nil) |- ls[c](x,z) * ls[b](z,nil)

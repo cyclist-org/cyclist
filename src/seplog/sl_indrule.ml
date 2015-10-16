@@ -41,8 +41,7 @@ let norm_tags h =
       (Blist.mapi (fun tag p -> (1+tag, p)) (Sl_pred.MSet.to_list preds)) in
   Sl_heap.with_inds h newinds
 
-let mk f i =
-  let (_, args) = i in
+let mk f ((_, args) as hd) =
   let v_args = Sl_term.Set.of_list args in
   let v_h = Sl_heap.terms f in
   let (uv_h, ev_h) = Sl_term.Set.partition Sl_term.is_univ_var v_h in
@@ -52,7 +51,7 @@ let mk f i =
   assert 
     (Sl_term.Set.for_all 
       (fun trm -> Sl_term.is_nil trm || Sl_term.is_exist_var trm) ev_h) ;   
-  (norm_tags f, i)
+  (f, hd)
   
 let dest c = c
 
@@ -93,38 +92,37 @@ let pp fmt (f, (ident, vs)) =
 let to_string c = mk_to_string pp c
 
 let parse st =
-  ( Sl_heap.parse >>= (fun h ->
+  ( (Sl_heap.parse ~allow_tags:false) >>= (fun h ->
           parse_symb symb_ind_implies >>
           Sl_pred.parse << spaces >>=
           (fun head -> return (mk h head))) <?> "case") st
 
-let unfold vars h (tag, (ident, args)) case =
+let unfold (vars, tags) (tag, (ident, args)) case =
   let (f, (ident', formals)) = dest (freshen vars case) in
   assert (Sl_predsym.equal ident ident') ;
   assert (Blist.length args == Blist.length formals) ;
-  let f = Sl_heap.freshen_tags h f in 
-  let tagpairs = 
-    Tags.map_to 
-      TagPairs.add 
-      TagPairs.empty 
-      (fun tag' -> (tag,tag')) 
-      (Sl_heap.tags f) in 
+  assert (Util.Tags.is_empty (Sl_heap.tags f)) ;
+  let f = Sl_heap.complete_tags tags f in 
   let theta = Sl_term.Map.of_list (Blist.combine formals args) in
-  Sl_heap.subst theta f, tagpairs
+  Sl_heap.subst theta f
  
 let fold (f, (predsym, args)) h =
   let vars = Sl_term.Set.of_list args in
   let tags = Sl_heap.tags h in
   let freshtag = 1 + (try Tags.max_elt tags with Not_found -> 0) in 
-  let sub_check = Sl_term.combine_subst_checks [
-      Sl_term.basic_lhs_down_check ;
-      (fun _ x y -> Sl_term.Set.mem x vars || Sl_term.is_exist_var y || true) ; 
+  let update_check = Fun.list_conj [
+      Sl_unify.trm_check ;
+      (fun (_, (theta, _)) ->
+        Sl_term.Map.for_all 
+          (* TODO: What's going on here - why is there a disjunct "true"? *)
+          (fun x y -> Sl_term.Set.mem x vars || Sl_term.is_exist_var y || true)
+        theta) ; 
     ] in 
-  let results = 
-    Sl_term.backtrack 
-      (Sl_heap.unify_partial ~tagpairs:true)
-      ~sub_check
-      f h in
+  let results =
+    Sl_unify.realize
+      (Unification.backtrack 
+        (Sl_heap.unify_partial ~tagpairs:true ~update_check) f h
+        Unification.trivial_continuation) in
   let do_fold (theta, tagpairs) =
     let f' = Sl_heap.subst_tags tagpairs (Sl_heap.subst theta f) in
     let newpred = (freshtag, (predsym, Sl_term.FList.subst theta args)) in

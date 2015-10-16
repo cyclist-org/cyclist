@@ -7,17 +7,19 @@ module TPair = PairTypes(Sl_term)(Sl_term)
 
 include TPair
 
-let _unify sub_check cont state (x, y) (x', y') =
-  Sl_term.unify ~sub_check ~cont:(fun state' -> Sl_term.unify ~sub_check ~cont ~init_state:state' y y') ~init_state:state x x'
+let _unify update_check (x, y) (x', y') cont init_state =
+  let cont state' =
+    Sl_unify.unify_trm ~update_check y y' cont state' in
+  Sl_unify.unify_trm ~update_check x x' cont init_state
    
-let unify ?(order=false) 
-    ?(sub_check=Sl_term.trivial_sub_check) 
-    ?(cont=Sl_term.trivial_continuation)
-    ?(init_state=Sl_term.empty_state) p p' =
+let unify ?(order=false) ?(update_check=Fun._true) 
+    p p' cont init_state =
   if order then 
-    _unify sub_check cont init_state p p'
+    _unify update_check p p' cont init_state
   else
-    Blist.find_some (_unify sub_check cont init_state p) [ p'; Pair.swap p' ]
+    Blist.find_some 
+      (fun p' -> _unify update_check p p' cont init_state)
+      [ p'; Pair.swap p' ]
 
 let order ((x,y) as pair) =
   if Sl_term.compare x y <= 0 then pair else (y,x)
@@ -34,19 +36,18 @@ module FList =
     include Util.MakeFList(TPair)
     
     let rec unify_partial ?(order=false) ?(inverse=false) 
-        ?(sub_check=Sl_term.trivial_sub_check)
-        ?(cont=Sl_term.trivial_continuation)
-        ?(init_state=Sl_term.empty_state) xs ys =
+        ?(update_check=Fun._true)
+        xs ys cont init_state =
       match (xs, ys) with
       | ([], _) -> cont init_state
       | (_, []) -> None
       | (p::ps, _) ->
         Blist.find_some 
           (fun q ->
-            let (x,y) = if inverse then (q,p) else (p,q) in  
-            unify ~order ~sub_check
-              ~cont:(fun state' -> 
-                unify_partial ~order ~inverse ~sub_check ~cont ~init_state:state' ps ys) ~init_state x y) 
+            let (x,y) = if inverse then (q,p) else (p,q) in
+            let cont state' =
+              unify_partial ~order ~inverse ~update_check ps ys cont state' in
+            unify ~order ~update_check x y cont init_state) 
           ys
     
     let terms ps = 

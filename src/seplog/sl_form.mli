@@ -1,47 +1,59 @@
-(** SL formula, basically a list of symbolic heaps, denoting their disjunction. 
+(** SL formula, basically a list of symbolic heaps, denoting their disjunction,
+    along with a set of contraints on predicate ordinal labels (tags).
     NB no attempt to enforce variable or tag hygiene is made.  For example,
     if [f] and [g] both use an existential variable [x'] then [[f;g]] would
     mean the bound variable is shared. *)
 
-include Util.BasicType with type t = Sl_heap.t list
+include Util.BasicType with type t = Ord_constraints.t * Sl_heap.t list
 
 val empty : t
-(** The formula [emp]. NB this is not the same as [[]], which is equivalent to 
+(** The formula [emp]. NB this is not the same as [[]], which is equivalent to
     false. *)
 
 exception Not_symheap
 val is_symheap : t -> bool
 (** Returns true iff the formula has a single disjunct only *)
-val dest : t -> Sl_heap.t
+val dest : t -> Ord_constraints.t * Sl_heap.t
 (** Return the single disjunct, if there is exactly one, else raise [Not_symheap]. *)
 
 val equal_upto_tags : t -> t -> bool
-(** Whilst [equal] demands syntactic equality including tags, this version 
-    ignores tag assignment. *) 
+(** Whilst [equal] demands syntactic equality including tags, this version
+    ignores tag assignment. *)
 
 val to_melt : t -> Latex.t
 val terms : t -> Sl_term.Set.t
 val vars : t -> Sl_term.Set.t
 
 val tags : t -> Util.Tags.t
-(** NB no attempt is made to ensure that tags are disjoint between disjuncts. 
+(** NB no attempt is made to ensure that tags are disjoint between disjuncts.
     This is not necessarily unsound. *)
 val tag_pairs : t -> Util.TagPairs.t
 (** The proviso on tags applies here too. *)
 
+val complete_tags : Util.Tags.t -> t -> t
+(** [complete_tags ts f] returns the formula obtained from f by assigning
+    all untagged predicates a fresh existential tag, avoiding those in [ts].
+*)
+
 val inconsistent : t -> bool
-(** Do all disjuncts entail false in the sense of [Sl_heap.inconsistent]? *)
+(** Do all disjuncts entail false in the sense of [Sl_heap.inconsistent]
+    or are the tag constraints inconsistent? *)
 
 val subsumed : ?total:bool -> t -> t -> bool
-(** [subsumed a b]: is it the case that for any disjunct [a'] of [a] there a 
-    disjunct [b'] of [b] such [a'] is subsumed by [b']?
-    If the optional argument [~total=true] is set to [false] then relax the 
+(** [subsumed a b]: is it the case that 
+      i)  the constraints cs of [a] are subsumed by the constraints cs' of [b] 
+          in the sense that [Ord_constraints.subsumed cs' cs] returns [true]
+      ii) for any disjunct [a'] of [a] there a disjunct [b'] of [b] such [a'] is 
+          subsumed by [b']?
+    If the optional argument [~total=true] is set to [false] then relax the
     check on the spatial part so that it is included rather than equal to that
     of [b].
-    NB this includes matching the tags exactly. *)   
+    NB this includes matching the tags exactly. *)
+val subsumed_upto_constraints : ?total:bool -> t -> t -> bool
+(** As above but does not check subsumption of constraints *)
 val subsumed_upto_tags : ?total:bool -> t -> t -> bool
 (** As above but ignoring tags.
-    If the optional argument [~total=true] is set to [false] then relax the 
+    If the optional argument [~total=true] is set to [false] then relax the
     check on the spatial part so that it is included rather than equal to that
     of [b]. *)
 
@@ -64,4 +76,11 @@ val subst_tags : Util.TagPairs.t -> t -> t
 
 val norm : t -> t
 (** Replace all terms with their UF representatives in the respective heaps. *)
- 
+
+val with_constraints : t -> Ord_constraints.t -> t
+(** [with_constraints f cs] returns the formula that results by replacing [f]'s
+    tag constraints with [cs] *)
+
+val with_heaps : t -> Sl_heap.t list -> t
+(** [with_heaps hs cs] returns the formula that results by replacing [f]'s
+    disjunction of symbolic heaps with [hs] *)
