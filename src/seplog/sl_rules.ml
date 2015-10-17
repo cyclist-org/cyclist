@@ -288,7 +288,7 @@ let instantiate_tag =
         Ord_constraints.unify
           ~update_check:
             (Ord_constraints.mk_update_check (Fun.disj
-              (fun (_, (t, t')) -> Tags.is_univ_var t && Tags.Elt.equal t t)
+              (fun (_, (t, t')) -> Tags.is_univ_var t && Tags.Elt.equal t t')
               (fun (_, (t, t')) -> Tags.is_exist_var t && Tags.is_univ_var t'))) in 
       let subs =
         Unification.backtrack unifier singleton cs 
