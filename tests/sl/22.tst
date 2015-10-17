@@ -1,1 +1,1 @@
-ListE[a](x,y) \/ ListO[b](x,y) |- List[a](x,y) \/ List[b](x,y)
+[a] < [c] : ls[a](x,y) * y->z * ls[b](z,nil) |- ls[c](x,z) * ls[b](z,nil)
