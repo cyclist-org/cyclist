@@ -12,7 +12,7 @@ module Seqtactics = Seqtactics.Make(Sl_seq)
 let id_axiom =
   let update_check = Ord_constraints.mk_update_check 
     (Fun.list_disj 
-      [ (fun (_, (t, t')) -> Tags.is_univ_var t && Tags.Elt.equal t t) ;
+      [ (fun (_, (t, t')) -> Tags.is_univ_var t && Tags.Elt.equal t t') ;
         (fun (_, (t, t')) -> Tags.is_exist_var t && Tags.is_univ_var t') ;
         (fun (state, (t, t')) -> Tags.is_exist_var t && Tags.is_exist_var t'
           && not (Tags.mem t' (TagPairs.projectr state))) ]) in
