@@ -30,7 +30,12 @@ clean:
 #	-@for TST in tests/fo/*.tst ; do _build/$(FOMAIN) $(TST_OPTS) -S "`cat $$TST`" ; done
 
 sl-tests:
-	-@for TST in tests/sl/*.tst ; do _build/$(SLMAIN) $(TST_OPTS) -S "`cat $$TST`" ; done
+	-@for TST in tests/sl/*.tst ; do \
+		echo "$$TST"; \
+		while read -r SEQ; do \
+			 _build/$(SLMAIN) $(TST_OPTS) -S "$$SEQ"; \
+		done < $$TST; \
+	done
 
 goto-tests:
 	-@for TST in tests/goto/*.tc ; do _build/$(PRMAIN) $(TST_OPTS) -P $$TST ; done

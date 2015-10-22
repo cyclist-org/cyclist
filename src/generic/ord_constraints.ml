@@ -97,6 +97,27 @@ let close cs =
     let allpairs = Blist.cartesian_product cs_list cs_list in
     Blist.opt_map_to add cs infer_constraint allpairs in
   fixpoint gen cs
+  
+let remove_schema cs used =
+  let tags = Tags.filter 
+    (fun t -> Tags.is_exist_var t && not (Tags.mem t used))
+    (tags cs) in
+  let get_schema t =
+    let (cs', cs) = partition (fun c -> Tags.mem t (Constraint.tags c)) cs in
+    let ident =
+      if Fun.swap for_all cs' (function 
+          | Constraint.LT(t', t'') -> 
+              Tags.Elt.equal t t'' && not (Tags.Elt.equal t t')  
+          | Constraint.LTE(_, t') -> Tags.Elt.equal t t') 
+        then Some "UBound"
+      else if Fun.swap for_all cs' (function 
+          | Constraint.LTE(t', _) -> Tags.Elt.equal t t'  
+          | _ -> false) 
+        then Some "LBound"
+      else
+        None in
+    Option.map (Pair.mk cs) ident in
+  Tags.find_map get_schema tags
     
 let all_pairs cs =
   let extract = (function

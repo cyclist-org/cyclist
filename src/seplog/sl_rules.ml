@@ -9,6 +9,7 @@ module Proof = Proof.Make(Sl_seq)
 module Rule = Proofrule.Make(Sl_seq)
 module Seqtactics = Seqtactics.Make(Sl_seq)
 
+
 let id_axiom =
   let update_check = Ord_constraints.mk_update_check 
     (Fun.list_disj 
@@ -17,7 +18,7 @@ let id_axiom =
         (fun (state, (t, t')) -> Tags.is_exist_var t && Tags.is_exist_var t'
           && not (Tags.mem t' (TagPairs.projectr state))) ]) in
   Rule.mk_axiom
-    (fun (((cs, _) as l), ((cs', _) as r)) -> 
+    (fun (((cs, _) as l), ((cs', _) as r)) ->
       let cs = Ord_constraints.close cs in
       let do_unify () = 
         Ord_constraints.unify cs' cs ~update_check
@@ -25,7 +26,7 @@ let id_axiom =
       Option.mk 
         (Sl_form.subsumed_upto_constraints ~total:true r l &&
           (Ord_constraints.subsumed cs cs' || Option.is_some (do_unify ())))
-        "Id")
+        "Id") 
 
 let preddefs = ref Sl_defs.empty
 
@@ -212,39 +213,52 @@ let wrap r =
 
 (* do the following transformation for the first x such that *)
 (* x->y * A |- x->z * B     if     A |- y=z * B *)
-let pto_intro_rule seq =
-  try
-    let ((cs, l), (cs', r)) = Sl_seq.dest seq in
-    let (rx, rys) as p =
-      Sl_ptos.find (fun (w,_) -> Option.is_some (Sl_heap.find_lval w l)) r.SH.ptos in
-    let (lx, lys) as p' = Option.get (Sl_heap.find_lval rx l) in
-    (* avoid scope jumping *)
-    if Blist.exists Sl_term.is_exist_var lys then [] else
-    (* take care to remove only the 1st match *)
-    let l' = SH.del_pto l p' in
-    let r' = SH.del_pto r p in
-    let r' = SH.with_eqs r' (Sl_uf.union r'.SH.eqs (Sl_uf.of_list (Blist.combine rys lys))) in
-    [ [ ( ((cs, [l']), (cs', [r'])), Sl_heap.tag_pairs l, TagPairs.empty ) ], "Pto Intro" ]
-  with Not_symheap | Not_found | Invalid_argument _ -> []
+let pto_intro_rule =
+  let rl seq =
+    try
+      let ((cs, l), (cs', r)) = Sl_seq.dest seq in
+      let (rx, rys) as p =
+        Sl_ptos.find (fun (w,_) -> Option.is_some (Sl_heap.find_lval w l)) r.SH.ptos in
+      let (lx, lys) as p' = Option.get (Sl_heap.find_lval rx l) in
+      (* avoid scope jumping *)
+      if Blist.exists Sl_term.is_exist_var lys then [] else
+      (* take care to remove only the 1st match *)
+      let l' = SH.del_pto l p' in
+      let r' = SH.del_pto r p in
+      let r' = SH.with_eqs r' (Sl_uf.union r'.SH.eqs (Sl_uf.of_list (Blist.combine rys lys))) in
+      [ [ ( ((cs, [l']), (cs', [r'])), Sl_heap.tag_pairs l, TagPairs.empty ) ], "Pto Intro" ]
+    with Not_symheap | Not_found | Invalid_argument _ -> [] in
+  wrap rl
 
-(* do the following transformation for the first P_i(x1,...,xn) such that *)
-(* P_i(x1,..,xn) * A |- P_i(x1,...,xn) * B     if     A |- B 							*)
-(* with i a free ordinal label	*)
-let pred_intro_rule seq =
-  try
-    let ((cs, l), (cs', r)) = Sl_seq.dest seq in
-    let (linds,rinds) = Pair.map Sl_tpreds.elements (l.SH.inds,r.SH.inds) in
-    let cp = Blist.cartesian_product linds rinds in
-    let (p,q) =
-      Blist.find
-        (fun ((o,(id,vs)) as p,(o',(id',vs'))) ->
-          Sl_tpred.tag_is_univ p && o == o' &&
-          Sl_predsym.equal id id' &&
-          Blist.for_all2 (fun x y -> Sl_heap.equates l x y) vs vs') cp in
-    let l' = SH.del_ind l p in
-    let r' = SH.del_ind r q in
-    [ [ ( ((cs, [l']), (cs', [r'])), Sl_heap.tag_pairs l', TagPairs.empty ) ], "Pred Intro" ]
-  with Not_symheap | Not_found -> []
+(* do the following transformation for the first P, (x_1,...,x_n) such that *)
+(*   P[a](x_1, ..., x_n) * A |- P[b](x_1, ..., x_n) * B    if  A |- B[a/b]  *)
+(* with [a] a universal tag and either [b] = [a] or [b] existential         *)
+let pred_intro_rule =
+  let rl ((l, r) as seq) =
+    try
+      let ((_, h), (_, h')) = Sl_seq.dest seq in
+      let (linds,rinds) = Pair.map Sl_tpreds.elements (h.SH.inds,h'.SH.inds) in
+      let cp = Blist.cartesian_product linds rinds in
+      let (p,q) =
+        Blist.find
+          (fun ((t, (id, vs)), (t', (id', vs'))) ->
+            Sl_predsym.equal id id' &&
+            Tags.is_univ_var t && 
+            (Tags.is_exist_var t' || Tags.Elt.equal t t') &&
+            Blist.for_all2 (fun x y -> Sl_heap.equates h x y) vs vs') cp in
+      let h = SH.del_ind h p in
+      let h' = SH.del_ind h' q in
+      let (t, t') = Pair.map Sl_tpred.tag (p, q) in
+      let subst = TagPairs.singleton (t' ,t) in
+      let rl_name =
+        if Tags.Elt.equal t t' then "Pred Intro"
+        else "Tag.Inst+Pred.Intro" in
+      [ [ ( (Sl_form.with_heaps l [h], 
+              Sl_form.subst_tags subst (Sl_form.with_heaps r [h'])), 
+            Sl_heap.tag_pairs h, 
+            TagPairs.empty ) ], rl_name ]
+    with Not_symheap | Not_found -> [] in
+  wrap rl
 
 (* x->ys * A |- e->zs * B if  A |- ys=zs * B[x/e] where e existential *)
 (* and at least one var in ys,zs is the same *)
@@ -303,8 +317,29 @@ let instantiate_tag =
       Option.some ruleapps in
     Option.dest [] Fun.id (Ord_constraints.find_map do_instantiation cs') in
   wrap rl
-  
 
+  
+(* Lower and Upper Bound Constraint Introduction - do one of:               *)
+(*   A |- b' <= a_1, ..., b' <= a_n : B  if  A |- B                         *)
+(*   A |- a_1 <= b', ..., a_n <= b' : B  if  A |- B                         *)
+(*   A |- a_1 < b', ..., a_n < b' : B    if  A |- B                         *)
+(* where b' is a fresh existential tag not occurring in B and a_1, ..., a_n *)
+(* can be any tags *)
+let bounds_intro = 
+  let rl ((l, r) as seq) =
+    try
+      let (_, (cs, h)) = Sl_seq.dest seq in
+      let f (cs, descr) = 
+        [ [ (l, Sl_form.with_constraints r cs), 
+            Sl_form.tag_pairs l, 
+            TagPairs.empty ], (descr ^ " Intro") ]
+        in
+      let result = Ord_constraints.remove_schema cs (Sl_heap.tags h) in
+      Option.dest [] f result    
+    with Not_symheap -> []
+  in Rule.mk_infrule rl
+
+  
 let ruf defs =
   let rl seq =
     try
@@ -473,13 +508,14 @@ let setup defs =
       simplify;
 
       Rule.choice [
+        bounds_intro ;
         dobackl;
-        wrap pto_intro_rule;
-        wrap pred_intro_rule;
+        pto_intro_rule;
+        pred_intro_rule;
         instantiate_pto ;
         instantiate_tag ;
-        ruf defs;
-        luf defs
+        ruf defs ;
+        luf defs ;
       ]
     ] ;
   let axioms = Rule.first [id_axiom ; ex_falso_axiom] in
