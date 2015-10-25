@@ -6,6 +6,9 @@
 module Elt : sig
   include Util.BasicType
   val tags : t -> Util.Tags.t
+  val subst_tags : Util.TagPairs.t -> t -> t
+  val satisfiable : t Fun.predicate
+  val valid : t Fun.predicate
 end
 
 include Util.OrderedContainer with type elt = Elt.t

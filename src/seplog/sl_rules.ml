@@ -172,9 +172,10 @@ let constraint_simplify ((lhs, rhs) as seq) =
     let cs = Ord_constraints.close cs in
     let (discharged, remaining) = 
       Ord_constraints.partition
-        (Fun.conj 
-          (fun c -> Tags.for_all Tags.is_univ_var (Ord_constraints.Elt.tags c))
-          (fun c -> Ord_constraints.mem c cs))
+        (Fun.disj
+          (fun c -> Ord_constraints.Elt.valid c) 
+          (fun c -> Tags.for_all Tags.is_univ_var (Ord_constraints.Elt.tags c)
+            && Ord_constraints.mem c cs))
         cs' in
     if Ord_constraints.is_empty discharged then [] else
     [

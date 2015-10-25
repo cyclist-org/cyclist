@@ -6,8 +6,8 @@ open MParser
 module Constraint =
   struct
     type t =
-      | LT of (Util.Tags.elt * Util.Tags.elt)
-      | LTE of (Util.Tags.elt * Util.Tags.elt)
+      | LT of (Tags.elt * Tags.elt)
+      | LTE of (Tags.elt * Tags.elt)
 
     let compare (c : t) (c' : t) = compare c c'
     let equal (c : t) (c' : t) = (c = c')
@@ -47,8 +47,12 @@ module Constraint =
       | LTE(ts) -> LTE(Pair.map (TagPairs.apply_to_tag theta) ts)
     
     let satisfiable = function
-      | LT(t, t') -> t <> t'
+      | LT(t, t') -> not (Tags.Elt.equal t t')
       | _ -> true
+
+    let valid = function
+      | LTE(t, t') -> Tags.Elt.equal t t'
+      | _ -> false
 
   end
   
@@ -141,7 +145,11 @@ let inconsistent cs =
     | _ -> false)
     cs
 
-let subsumed cs cs' = for_all (Fun.swap mem cs) cs'
+let subsumed cs cs' = 
+  let cs' = filter 
+    (function | Constraint.LTE(t, t') -> not (Tags.Elt.equal t t') | _ -> true)
+    cs' in
+  for_all (Fun.swap mem cs) cs'
 
 let unify ?(inverse=false) ?(update_check=Fun._true)
     cs cs' cont init_state =
