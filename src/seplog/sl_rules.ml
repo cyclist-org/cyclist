@@ -526,15 +526,22 @@ let setup defs =
       lhs_instantiate;
       simplify;
 
+      bounds_intro ;
+      constraint_match_tag_instantiate ;
+      upper_bound_tag_instantiate ;
+
       Rule.choice [
-        bounds_intro ;
         dobackl;
         pto_intro_rule;
         pred_intro_rule;
         instantiate_pto ;
-        constraint_match_tag_instantiate ;
-        upper_bound_tag_instantiate ;
-        ruf defs ;
+        Rule.conditional 
+          (fun (_, (cs, _)) -> 
+            Ord_constraints.for_all
+              (fun c -> 
+                Tags.exists Tags.is_univ_var (Ord_constraints.Elt.tags c))
+              cs)
+          (ruf defs) ;
         luf defs ;
       ]
     ] ;
