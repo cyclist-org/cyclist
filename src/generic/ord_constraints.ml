@@ -123,6 +123,15 @@ let remove_schema cs used =
     Option.map (Pair.mk cs) ident in
   Tags.find_map get_schema tags
     
+let upper_bounds ?(strict=false) t cs =
+  let f = function
+    | Constraint.LT(t', t'') ->
+        Option.mk (strict && Tags.Elt.equal t t') t''
+    | Constraint.LTE(t', t'') -> 
+        Option.mk (not strict && Tags.Elt.equal t t') t''
+    in
+  opt_map_to Tags.add Tags.empty f cs
+
 let all_pairs cs =
   let extract = (function
     | Constraint.LT(tp) -> tp

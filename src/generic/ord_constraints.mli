@@ -45,14 +45,22 @@ val remove_schema : t -> Util.Tags.t -> (t * string) option
     tautological schema.
 *)
 
+val upper_bounds : ?strict:bool -> Util.Tags.elt -> t -> Util.Tags.t
+(** [upper_bounds ?strict t cs] returns the set of tags [b] such that [cs]
+    contains a constraint of the form [t] <= [b]. If the option argument
+    [strict=false] is set to [true] then the set of tags [b] suh that [cs]
+    contains a constraints of the form [t] < [b] is returned. *)
+
 val close : t -> t
 (** [close cs] generates the set of all constraints entailed by [cs] *)
 
 val all_pairs : t -> Util.TagPairs.t
-(** [tracepairs cs] returns the trace pairs contained in [cs] *)
+(** [all_pairs cs] returns all of the tag pairs ([a], [b]) such that [a] <= [b]
+    is entailed by some constraint in [cs] *)
 
 val prog_pairs : t -> Util.TagPairs.t
-(** [prog_tracepairs cs] returns all the progressing trace pairs contained in [cs] *)
+(** [prog_pairs cs] returns all of the tag pairs ([a], [b]) such that [a] <[b]
+    is entailed by some constraint in [cs] *)
 
 val subsumed : t -> t -> bool
 (** [subsumed cs cs'] checks whether every constraint in [cs'] also occurs in [cs] *)

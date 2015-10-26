@@ -288,12 +288,12 @@ let instantiate_pto =
     with Not_symheap | Invalid_argument _ -> [] in
   wrap rl
   
-(* ([a] <(=) [b], ...) : F |- ([c] <(=) [d], ...) : G *)
-(*   if ([a] <(=) [b], ...) : F |- theta((...) : G) *)
-(* where [a] and [b] universal and either :*)
+(* ([a] <(=) [b], ...) : F |- ([c] <(=) [d], ...) : G            *)
+(*   if ([a] <(=) [b], ...) : F |- theta((...) : G)              *)
+(* where [a] and [b] universal and either :                      *)
 (*   - [a] = [c] and [d] existential with theta = ([d], [b]); or *)
-(*   - [b] = [d] and [c] existential with theta = ([c], [a]) *)
-let instantiate_tag =
+(*   - [b] = [d] and [c] existential with theta = ([c], [a])     *)
+let constraint_match_tag_instantiate =
   let rl ((cs, _) as l, ((cs', _) as r)) =
     let do_instantiation c =
       let singleton = Ord_constraints.singleton c in
@@ -313,12 +313,31 @@ let instantiate_tag =
       let ruleapps = Blist.map
         (fun theta -> 
           [ (l, Sl_form.subst_tags theta r), Sl_form.tag_pairs l, TagPairs.empty ], 
-          "R.Inst.Tag" )
+          "Inst.Tag (Match)" )
         subs in
       Option.some ruleapps in
     Option.dest [] Fun.id (Ord_constraints.find_map do_instantiation cs') in
   wrap rl
 
+(* F |- ([b'] <= [a] ...) : G  if  F |- theta((...) : G)           *)
+(*   where [a] universal, [b'] existential and theta = ([b'], [a]) *)
+let upper_bound_tag_instantiate =
+  let rl (l, ((cs, _) as r)) =
+    let do_instantiation t =
+      let ts = Ord_constraints.upper_bounds t cs in
+      let ts = Tags.filter Tags.is_univ_var ts in
+      if Tags.is_empty ts then None else
+      let ruleapps = Tags.map_to_list
+        (fun t' ->
+          let theta = TagPairs.singleton (t, t') in 
+          [ (l, Sl_form.subst_tags theta r), Sl_form.tag_pairs l, TagPairs.empty ],
+          "Inst.Tag (Sel.UBound)" )
+        ts in
+      Some ruleapps in
+    let ts = Tags.filter Tags.is_exist_var (Ord_constraints.tags cs) in
+    let ruleapps = Tags.find_map do_instantiation ts in
+    Option.dest [] Fun.id ruleapps in
+  wrap rl
   
 (* Lower and Upper Bound Constraint Introduction - do one of:               *)
 (*   A |- b' <= a_1, ..., b' <= a_n : B  if  A |- B                         *)
@@ -333,8 +352,7 @@ let bounds_intro =
       let f (cs, descr) = 
         [ [ (l, Sl_form.with_constraints r cs), 
             Sl_form.tag_pairs l, 
-            TagPairs.empty ], (descr ^ " Intro") ]
-        in
+            TagPairs.empty ], (descr ^ " Intro") ] in
       let result = Ord_constraints.remove_schema cs (Sl_heap.tags h) in
       Option.dest [] f result    
     with Not_symheap -> []
@@ -514,7 +532,8 @@ let setup defs =
         pto_intro_rule;
         pred_intro_rule;
         instantiate_pto ;
-        instantiate_tag ;
+        constraint_match_tag_instantiate ;
+        upper_bound_tag_instantiate ;
         ruf defs ;
         luf defs ;
       ]
