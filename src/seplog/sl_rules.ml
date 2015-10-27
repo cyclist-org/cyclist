@@ -373,7 +373,8 @@ let ruf defs =
           let new_tags = Util.Tags.diff (Sl_heap.tags f) seq_tags in
           let cs' = Ord_constraints.union cs' (Ord_constraints.generate tag new_tags) in
           let r' = Sl_heap.star r' f in
-          [ (((cs, [l]), (cs', [r'])), Sl_heap.tag_pairs l, TagPairs.empty) ],
+          let tps = TagPairs.union (Sl_heap.tag_pairs l) (Ord_constraints.tag_pairs cs) in
+          [ (((cs, [l]), (cs', [r'])), tps, TagPairs.empty) ],
           ((Sl_predsym.to_string ident) ^ " R.Unf.") in
         Blist.map do_case cases in
       Blist.flatten (Sl_tpreds.map_to_list right_unfold r.SH.inds)
@@ -392,7 +393,7 @@ let luf defs =
         let l = SH.with_inds l (Sl_tpreds.remove p l.SH.inds) in
         let cases = Sl_defs.unfold (seq_vars, seq_tags) p defs in
         let do_case f =
-          let new_tags = Util.Tags.diff (Sl_heap.tags f) seq_tags in
+          let new_tags = Sl_heap.tags f in
           let new_cs = Ord_constraints.union cs (Ord_constraints.generate tag new_tags) in
           let cclosure = Ord_constraints.close new_cs in
           let (vt, pt) = 
@@ -401,6 +402,7 @@ let luf defs =
             Pair.map collect 
               (Ord_constraints.all_pairs cclosure, 
                 Ord_constraints.prog_pairs cclosure) in
+          let vt = TagPairs.union vt (TagPairs.mk (Sl_heap.tags l)) in
           ( ((new_cs, [Sl_heap.star l f]), (cs', [r])), vt, pt ) in
         Some (Blist.map do_case cases, ((Sl_predsym.to_string ident) ^ " L.Unf.")) in
       Option.list_get (Sl_tpreds.map_to_list left_unfold l.SH.inds)
