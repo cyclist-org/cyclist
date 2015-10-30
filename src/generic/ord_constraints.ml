@@ -76,6 +76,8 @@ let of_string s = handle_reply (MParser.parse_string parse s ())
 
 let tags cs =
   fold (fun c ts -> Tags.union ts (Constraint.tags c)) cs Tags.empty
+  
+let tag_pairs cs = TagPairs.mk (tags cs)
 
 let subst_tags theta cs = endomap (Constraint.subst_tags theta) cs
 

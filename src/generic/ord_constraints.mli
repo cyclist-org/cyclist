@@ -17,6 +17,11 @@ val inconsistent : t -> bool
 
 val tags : t -> Util.Tags.t
 
+val tag_pairs : t -> Util.TagPairs.t
+(** Return a set of pairs representing the identity function over the tags 
+    in the constraint set, to be used as preserving tag pairs. 
+*) 
+
 val subst_tags : Util.TagPairs.t -> t -> t
 
 val generate : Util.Tags.elt -> Util.Tags.t -> t

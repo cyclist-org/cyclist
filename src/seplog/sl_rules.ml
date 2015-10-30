@@ -370,8 +370,9 @@ let ruf defs =
         let r' = SH.del_ind r p in
         let cases = Sl_defs.unfold (seq_vars, seq_tags) p defs in
         let do_case f =
-          let new_tags = Util.Tags.diff (Sl_heap.tags f) seq_tags in
-          let cs' = Ord_constraints.union cs' (Ord_constraints.generate tag new_tags) in
+          let cs' = 
+            Ord_constraints.union cs' 
+              (Ord_constraints.generate tag (Sl_heap.tags f)) in
           let r' = Sl_heap.star r' f in
           let tps = TagPairs.union (Sl_heap.tag_pairs l) (Ord_constraints.tag_pairs cs) in
           [ (((cs, [l]), (cs', [r'])), tps, TagPairs.empty) ],
@@ -393,17 +394,18 @@ let luf defs =
         let l = SH.with_inds l (Sl_tpreds.remove p l.SH.inds) in
         let cases = Sl_defs.unfold (seq_vars, seq_tags) p defs in
         let do_case f =
-          let new_tags = Sl_heap.tags f in
-          let new_cs = Ord_constraints.union cs (Ord_constraints.generate tag new_tags) in
+          let new_cs = 
+            Ord_constraints.union cs 
+              (Ord_constraints.generate tag (Sl_heap.tags f)) in
           let cclosure = Ord_constraints.close new_cs in
-          let (vt, pt) = 
+          let (vts, pts) = 
             let collect tps = TagPairs.endomap Pair.swap
               (TagPairs.filter (fun (_, t) -> Tags.mem t seq_tags) tps) in
             Pair.map collect 
               (Ord_constraints.all_pairs cclosure, 
                 Ord_constraints.prog_pairs cclosure) in
-          let vt = TagPairs.union vt (TagPairs.mk (Sl_heap.tags l)) in
-          ( ((new_cs, [Sl_heap.star l f]), (cs', [r])), vt, pt ) in
+          let vts = TagPairs.union vts (TagPairs.mk (Sl_heap.tags l)) in
+          ( ((new_cs, [Sl_heap.star l f]), (cs', [r])), vts, pts ) in
         Some (Blist.map do_case cases, ((Sl_predsym.to_string ident) ^ " L.Unf.")) in
       Option.list_get (Sl_tpreds.map_to_list left_unfold l.SH.inds)
     with Not_symheap -> [] in
@@ -420,34 +422,52 @@ let luf defs =
 (* l subsumes l'[theta] *)
 (* and *)
 (* r'[theta] subsumes r *)
-let matches seq seq' =
+let matches ((lhs, rhs) as seq) =
   try
-    let ((lcs, l),(rcs, r)), ((lcs', l'),(rcs', r')) =
-      Pair.map Sl_seq.dest (seq, seq') in
-    Sl_unify.realize (
-      Unification.backtrack
-      (Sl_heap.classical_unify ~inverse:false ~tagpairs:true
-        ~update_check:(Fun.conj Sl_unify.trm_check Sl_unify.tag_check))
-        l' l
-      (Sl_heap.classical_unify ~inverse:true ~tagpairs:true 
-        ~update_check:(Fun.conj Sl_unify.trm_check Sl_unify.tag_check) 
-        r r'
-      (Sl_unify.unify_tag_constraints ~inverse:false
-        ~update_check:Sl_unify.tag_check
-        lcs' lcs
-      (Sl_unify.unify_tag_constraints ~inverse:true
-        ~update_check:Sl_unify.tag_check
-        rcs rcs'
-      (Sl_unify.mk_verifier
-        (Sl_unify.mk_assert_check
-          (fun (theta, tps) ->
-            let () = debug (fun _ -> "Checking results of unification for subsumption:\n\t" ^ 
-              "Term subst: " ^ (Sl_term.Map.to_string Sl_term.to_string theta) ^ ", " ^
-              "Tag subst: " ^ (Strng.Pairing.Set.to_string (TagPairs.to_names tps)) ^ "\n\t" ^
-              (Sl_seq.to_string seq) ^ "\n\t" ^ (Sl_seq.to_string seq')) in
-            let seq' = Sl_seq.subst_tags tps (Sl_seq.subst theta seq') in
-            Sl_seq.subsumed seq seq')))))))
-  with Not_symheap -> []
+    let ((lcs, l),(rcs, r)) = Sl_seq.dest seq in
+    let lcs = Ord_constraints.close lcs in
+    fun ((lhs', rhs') as seq') ->
+      try
+        let ((lcs', l'),(rcs', r')) = Sl_seq.dest seq' in
+        if Sl_tpreds.is_empty l'.SH.inds then [] else
+        Sl_unify.realize (
+          Unification.backtrack
+          (Sl_heap.unify_partial ~tagpairs:true
+            ~update_check:(Fun.conj Sl_unify.trm_check Sl_unify.tag_check))
+            l' l
+          (Sl_unify.unify_tag_constraints ~inverse:false
+            ~update_check:Sl_unify.tag_check
+            lcs' lcs
+          (fun ((trm_subst, tag_subst) as state) ->
+            let () = debug (fun _ -> "Checking results of unification for LHS:\n\t" ^ 
+              "Term subst: " ^ (Sl_term.Map.to_string Sl_term.to_string trm_subst) ^ ", " ^
+              "Tag subst: " ^ (Strng.Pairing.Set.to_string (TagPairs.to_names tag_subst)) ^ "\n\t" ^
+              (Sl_form.to_string lhs) ^ "\n\t" ^ (Sl_form.to_string lhs')) in
+            let lhs' = 
+              Sl_form.subst_tags tag_subst (Sl_form.subst trm_subst lhs') in
+            let (_, l') = Sl_form.dest lhs' in
+            assert (Sl_form.subsumed ~total:false lhs' lhs) ;
+            if not (Sl_heap.subsumed l' l) then Option.some state
+            else
+            let () = debug (fun _ -> "Continuing with unification of RHS") in
+            (Sl_heap.classical_unify ~inverse:true ~tagpairs:true 
+              ~update_check:(Fun.conj Sl_unify.trm_check Sl_unify.tag_check) 
+              r r'
+            (Sl_unify.unify_tag_constraints ~inverse:true
+              ~update_check:Sl_unify.tag_check
+              rcs (Ord_constraints.close rcs')
+            (fun ((trm_subst, tag_subst) as state) ->
+              let () = debug (fun _ -> "Checking results of unification for RHS:\n\t" ^ 
+                "Term subst: " ^ (Sl_term.Map.to_string Sl_term.to_string trm_subst) ^ ", " ^
+                "Tag subst: " ^ (Strng.Pairing.Set.to_string (TagPairs.to_names tag_subst)) ^ "\n\t" ^
+                (Sl_form.to_string rhs) ^ "\n\t" ^ (Sl_form.to_string rhs')) in
+              let rhs' = 
+                Sl_form.subst_tags tag_subst (Sl_form.subst trm_subst rhs') in
+              assert (Sl_form.subsumed rhs rhs') ;
+              Option.some state)))
+            state)))
+      with Not_symheap -> []
+  with Not_symheap -> (fun _ -> [])
 
 
 (*    seq'     *)
@@ -465,6 +485,7 @@ let subst_rule (theta, tps) ((l', _) as seq') ((l, _) as seq) =
     let tagpairs = TagPairs.union tagpairs (TagPairs.mk remaining) in
     [ [(seq', tagpairs, TagPairs.empty)], "Subst" ]
   else
+    let () = debug (fun _ -> "Unsuccessfully tried to apply substitution rule!") in
     []
 
 (*   F |- G * Pi'  *)
@@ -472,45 +493,204 @@ let subst_rule (theta, tps) ((l', _) as seq') ((l, _) as seq) =
 (*   Pi * F |- G   *)
 (* where seq' = F |- G * Pi' and seq = Pi * F |- G *)
 let weaken seq' seq =
+  (* let () = debug (fun _ -> "Trying to apply weakening:") in *)
+  (* let () = debug (fun _ -> Sl_seq.to_string seq') in        *)
+  (* let () = debug (fun _ -> Sl_seq.to_string seq) in         *)
   if Sl_seq.subsumed seq seq' then
     [ [(seq', Sl_seq.tag_pairs seq', TagPairs.empty)], "Weaken" ]
   else
+    let () = debug (fun _ -> "Unsuccessfully tried to apply weakening rule!") in
+    []
+    
+let apply_lemma (lemma_seq, ((lhs, rhs) as cont_seq)) ((lhs', rhs') as seq) =
+  let () = debug (fun _ -> "Trying to apply lemma to subgoal: " ^ (Sl_seq.to_string seq)) in
+  let () = debug (fun _ -> "Lemma: " ^ (Sl_seq.to_string lemma_seq)) in
+  let () = debug (fun _ -> "Continuation: " ^ (Sl_seq.to_string cont_seq)) in
+  let ((lcs, l),(rcs, r)) = Sl_seq.dest lemma_seq in
+  let (cs, h) = Sl_form.dest lhs in
+  assert ( Sl_ptos.subset r.SH.ptos h.SH.ptos ) ;
+  assert ( Sl_tpreds.subset r.SH.inds h.SH.inds ) ;
+  assert ( Ord_constraints.equal cs (Ord_constraints.union lcs rcs) ) ;
+  (* The separating conjunction of the lemma antecedent and the frame may *)
+  (* introduce more disequalities that simply the union *)
+  assert ( Sl_deqs.subset (Sl_deqs.union l.SH.deqs r.SH.deqs) h.SH.deqs ) ;
+  assert ( Sl_uf.subsumed l.SH.eqs h.SH.eqs ) ;
+  assert ( Sl_uf.subsumed r.SH.eqs h.SH.eqs ) ;
+  assert ( 
+    Sl_uf.subsumed 
+      h.SH.eqs 
+      (Sl_uf.fold (Fun.curry Sl_uf.add) l.SH.eqs r.SH.eqs) ) ;
+  try
+    let (cs', h') = Sl_form.dest lhs' in
+    let seq_tags = Sl_form.tags lhs' in
+    let expected = 
+      Sl_heap.with_ptos 
+        (Sl_heap.with_inds l (Sl_tpreds.union l.SH.inds (Sl_tpreds.diff h.SH.inds r.SH.inds))) 
+        (Sl_ptos.union l.SH.ptos (Sl_ptos.diff h.SH.ptos r.SH.ptos)) in
+    (* let () = debug (fun _ -> "Constraints match: " ^ (string_of_bool (Ord_constraints.equal lcs cs'))) in *)
+    (* let () = debug (fun _ -> "Heap as expected: " ^ (string_of_bool (Sl_heap.equal h' expected))) in      *)
+    (* let () = debug (fun _ -> "RHS match: " ^ (string_of_bool (Sl_form.equal rhs rhs'))) in                *)
+    if (Ord_constraints.equal lcs cs') 
+        && (Sl_heap.equal h' expected) && (Sl_form.equal rhs rhs') then
+      let cs = Ord_constraints.close cs in
+      let (vts, pts) = 
+        Pair.map
+          (fun tps -> TagPairs.endomap Pair.swap
+            (TagPairs.filter (fun (_, t) -> Tags.mem t seq_tags) tps)) 
+          (Ord_constraints.all_pairs cs, Ord_constraints.prog_pairs cs) in
+      let vts = 
+        TagPairs.union 
+          (TagPairs.mk (Pair.apply Tags.inter (Pair.map Sl_heap.tags (h, h'))))
+          vts in
+      [ [ (lemma_seq, (Sl_seq.tag_pairs lemma_seq), TagPairs.empty) ;
+          (cont_seq, vts, pts) 
+        ], "Lemma.App" ]        
+    else
+      let () = debug (fun _ -> "Unsuccessfully tried to apply lemma - open node does not match expected!") in
+      []
+  with Not_symheap -> 
+    let () = debug (fun _ -> "Unsuccessfully tried to apply lemma - LHS of open node not a symbolic heap!") in
     []
 
-(* if there is a backlink achievable through substitution and classical *)
-(* weakening then make the proof steps that achieve it explicit so that *)
-(* actual backlinking can be done on Sl_seq.equal sequents *)
+
+let mk_backlink_rule_seq (trm_subst, tag_subst) src_seq (targ_idx, targ_seq) =
+  let subst_seq = 
+    Sl_seq.subst trm_subst (Sl_seq.subst_tags tag_subst targ_seq) in
+  Rule.sequence [
+    if Sl_seq.equal src_seq subst_seq
+      then Rule.identity
+      else Rule.mk_infrule (weaken subst_seq);
+
+    if (Sl_term.Map.for_all Sl_term.equal trm_subst
+        && TagPairs.for_all (Fun.uncurry Tags.Elt.equal) tag_subst)
+      then Rule.identity
+      else Rule.mk_infrule (subst_rule (trm_subst, tag_subst) targ_seq);
+
+    Rule.mk_backrule
+      true
+      (fun _ _ -> [targ_idx])
+      (fun s s' -> [Sl_seq.tag_pairs s', "Backl"])
+  ]
+  
+let mk_lemma_rule_seq (trm_subst, tag_subst) (src_lhs, src_rhs) 
+    (targ_idx, ((lhs, rhs) as targ_seq)) =
+  let (cs, h) = Sl_form.dest src_lhs in
+  let ((subst_lhs, subst_rhs) as subst_seq) = 
+    Sl_seq.subst trm_subst (Sl_seq.subst_tags tag_subst targ_seq) in 
+  (* let () = debug (fun _ -> "substituted seq is " ^ (Sl_seq.to_string subst_seq)) in *)
+  let ((subst_cs, subst_h), (subst_cs', subst_h')) = 
+    Sl_seq.dest (subst_seq) in
+  (* Calculate the frame *)
+  let frame =
+    Sl_ptos.fold (Fun.swap Sl_heap.del_pto) subst_h.SH.ptos
+      (Sl_tpreds.fold (Fun.swap Sl_heap.del_ind) subst_h.SH.inds h) in
+  (* let () = debug (fun _ -> "Calculated frame is " ^ (Sl_heap.to_string frame)) in *)
+  (* Alpha-rename any clashing existential variables in the succedent of the lemma *)
+  let ctxt_vars = 
+    Sl_term.Set.union (Sl_heap.terms frame) (Sl_form.terms src_rhs) in
+  let ctxt_tags = 
+    Tags.union_of_list [ 
+      (Sl_heap.tags frame) ; 
+      (Ord_constraints.tags cs) ; 
+      (Sl_form.tags src_rhs) ] in
+  let clashed_tags =
+    Tags.inter ctxt_tags
+      (Tags.filter Tags.is_exist_var (Sl_form.tags subst_rhs)) in
+  let clashed_vars =
+    Sl_term.Set.inter ctxt_vars
+      (Sl_term.Set.filter Sl_term.is_exist_var (Sl_form.terms subst_rhs)) in
+  let all_tags = Tags.union ctxt_tags (Sl_seq.tags subst_seq) in
+  let all_vars = Sl_term.Set.union ctxt_vars (Sl_seq.vars subst_seq) in
+  let fresh_tags =
+    Tags.fresh_evars all_tags (Tags.cardinal clashed_tags) in
+  let fresh_vars =
+    Sl_term.fresh_evars all_vars (Sl_term.Set.cardinal clashed_vars) in
+  let tag_subst' = TagPairs.of_list 
+    (Blist.combine (Tags.to_list clashed_tags) fresh_tags) in
+  let trm_subst' = Sl_term.Map.of_list
+    (Blist.combine (Sl_term.Set.to_list clashed_vars) fresh_vars) in
+  let subst_rhs = Sl_form.subst trm_subst' (Sl_form.subst_tags tag_subst' subst_rhs) in
+  let (subst_cs', subst_h') = Sl_form.dest subst_rhs in
+  (* Update the substitutions with the new mappings for alpha-renaming *)
+  let trm_subst = Sl_term.Map.fold 
+    (fun x y m -> 
+      let z = 
+        if Sl_term.Map.mem y trm_subst' then Sl_term.Map.find y trm_subst' 
+        else y in 
+      Sl_term.Map.add x z m) 
+    trm_subst Sl_term.Map.empty in
+  let tag_subst =
+    TagPairs.union
+      tag_subst' 
+      (TagPairs.fold 
+        (fun (a, b) tps ->
+          let c = TagPairs.find_opt (fun (t, _) -> Tags.Elt.equal t b) tag_subst' in
+          TagPairs.add (a, Option.dest b snd c) tps)
+        tag_subst TagPairs.empty) in
+  (* let () = debug (fun _ -> "Term Subst after freshening: " ^ (Sl_term.Map.to_string Sl_term.to_string theta)) in           *)
+  (* let () = debug (fun _ -> "Tag Subst after freshening: " ^ (Strng.Pairing.Set.to_string (TagPairs.to_names tagpairs))) in *)
+  (* Construct the new subgoals *)
+  let lemma_seq =
+    let subst_h = 
+      Sl_heap.with_eqs (Sl_heap.with_deqs subst_h h.SH.deqs) h.SH.eqs in  
+    ((cs, [subst_h]), subst_rhs) in
+  (* let () = debug (fun _ -> (Sl_heap.to_string subst_h') ^ " * " ^ (Sl_heap.to_string frame) ^ " = " ^ (Sl_heap.to_string (Sl_heap.star subst_h' frame))) in *)
+  let cont_seq = 
+    let cont_lhs = 
+      ((Ord_constraints.union cs subst_cs'), [Sl_heap.star subst_h' frame]) in
+    (cont_lhs, src_rhs) in
+  (* Construct the rule sequence *)
+  Rule.compose_pairwise
+    (Rule.mk_infrule (apply_lemma (lemma_seq, cont_seq)))
+    [ mk_backlink_rule_seq 
+        (trm_subst, tag_subst) lemma_seq (targ_idx, targ_seq) ; 
+      Rule.identity ]
+
+
+type backlink_t = FULL of Rule.t | PARTIAL of Rule.t
+
+let dest_taggedrule = function
+  | FULL(r) -> r
+  | PARTIAL(r) -> r
+  
+let cmp_taggedrule r r' = 
+  match (r, r') with
+  | (FULL(_), PARTIAL(_)) -> -1
+  | (PARTIAL(_), FULL(_)) -> 1
+  | _ -> 0
+
+(* If there is a backlink achievable through substitution and classical   *)
+(* weakening (possibly after applying a lemma), then make the proof steps *)
+(* that achieve it explicit so that actual backlinking can be done on     *)
+(* Sl_seq.equal sequents *)
 let dobackl idx prf =
-  let src_seq = Proof.get_seq idx prf in
+  let ((src_lhs, src_rhs) as src_seq) = Proof.get_seq idx prf in
+  let matches = matches src_seq in 
   let targets = Rule.all_nodes idx prf in
   let apps =
-    Blist.bind
-      (fun idx' ->
-        Blist.map
-          (fun res -> (idx',res))
-          (matches src_seq (Proof.get_seq idx' prf)))
+    Blist.bind 
+      (fun idx' -> Blist.map (Pair.mk idx') (matches (Proof.get_seq idx' prf))) 
       targets in
-  let f (targ_idx, (theta, tagpairs)) =
+  let f (targ_idx, ((theta, tagpairs) as subst)) =
+    let () = debug (fun _ -> "Constructing backlink") in
     let targ_seq = Proof.get_seq targ_idx prf in
-    (* [targ_seq'] is as [targ_seq] but with the tags of [src_seq] *)
-    let targ_seq' = Sl_seq.subst_tags tagpairs targ_seq in
-    let subst_seq = Sl_seq.subst theta targ_seq' in
-    Rule.sequence [
-      if Sl_seq.equal src_seq subst_seq
-        then Rule.identity
-        else Rule.mk_infrule (weaken subst_seq);
-
-      if (Sl_term.Map.for_all Sl_term.equal theta
-          && TagPairs.for_all (Fun.uncurry Tags.Elt.equal) tagpairs)
-        then Rule.identity
-        else Rule.mk_infrule (subst_rule (theta, tagpairs) targ_seq);
-
-      Rule.mk_backrule
-        true
-        (fun _ _ -> [targ_idx])
-        (fun s s' -> [Sl_seq.tag_pairs s', "Backl"])
-    ] in
-  Rule.first (Blist.map f apps) idx prf
+    (* let () = debug (fun _ -> "Target seq is " ^ (Int.to_string targ_idx) ^ ": " ^ (Sl_seq.to_string targ_seq)) in *)
+    (* let () = debug (fun _ -> "Term Subst: " ^ (Sl_term.Map.to_string Sl_term.to_string theta)) in                 *)
+    (* let () = debug (fun _ -> "Tag Subst: " ^ (Strng.Pairing.Set.to_string (TagPairs.to_names tagpairs))) in       *)
+    let (subst_lhs, _) = 
+      Sl_seq.subst theta (Sl_seq.subst_tags tagpairs targ_seq) in 
+    if Sl_form.subsumed subst_lhs src_lhs then
+      FULL (mk_backlink_rule_seq subst src_seq (targ_idx, targ_seq))
+    else
+      PARTIAL (mk_lemma_rule_seq subst src_seq (targ_idx, targ_seq)) in
+  (* Although application of all the constructed rule sequences will *)
+  (* succeed by construction the backlinking may fail to satisfy the *)
+  (* soundness condition, and so we pick the first one that is sound *)
+  (* and we also prefer full backlinking to lemma application        *)
+  let rules = 
+    Blist.map dest_taggedrule 
+      (Blist.stable_sort cmp_taggedrule (Blist.map f apps)) in
+  Rule.first rules idx prf
 
 (* let axioms = ref (Rule.first [id_axiom ; ex_falso_axiom]) *)
 let axioms = ref Rule.fail

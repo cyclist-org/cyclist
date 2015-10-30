@@ -33,6 +33,7 @@ sl-tests:
 	-@for TST in tests/sl/*.tst ; do \
 		echo "$$TST"; \
 		while read -r SEQ; do \
+			echo -n "\t"; \
 			 _build/$(SLMAIN) $(TST_OPTS) -S "$$SEQ"; \
 		done < $$TST; \
 	done

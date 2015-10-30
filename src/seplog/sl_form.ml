@@ -71,7 +71,8 @@ let subsumed_upto_constraints ?(total=true) (_, hs) (_, hs') =
 
 let subsumed ?(total=true) ((cs, _) as l) ((cs', _) as r) =
   subsumed_upto_constraints ~total l r  && 
-  let () = debug (fun _ -> "Checking constraint subsumption: " ^ (Ord_constraints.to_string cs) ^ " |- " ^ (Ord_constraints.to_string cs')) in
+  let () = debug (fun _ -> "Checking constraint subsumption: " ^ (Ord_constraints.to_string cs') ^ " |- " ^ (Ord_constraints.to_string cs)) in
+  let cs' = Ord_constraints.close cs' in
   Ord_constraints.subsumed cs' cs
       
 let subsumed_upto_tags ?(total=true) (cs, hs) (cs', hs') =
