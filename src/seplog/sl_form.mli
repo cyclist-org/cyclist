@@ -45,8 +45,8 @@ val subsumed_upto_tags : ?total:bool -> t -> t -> bool
     check on the spatial part so that it is included rather than equal to that
     of [b]. *)
 
-val parse : (t, 'a) MParser.t
-val of_string : string -> t
+val parse : ?null_is_emp:bool -> (t, 'a) MParser.t
+val of_string : ?null_is_emp:bool -> string -> t
 
 val star : t -> t -> t
 (** Star two formulas by distributing [*] through [\/]. *)

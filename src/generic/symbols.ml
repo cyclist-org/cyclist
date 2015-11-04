@@ -80,7 +80,7 @@ let ltx_star l = Latex.concat (Latex.list_insert symb_star.melt l)
 let ltx_math_space = Latex.text "\\;"
 
 open MParser
-let parse_symb s st = Tokens.skip_symbol s.str st
+let parse_symb s st = ( spaces >> Tokens.skip_symbol s.str >> spaces ) st
 
 let max_tag = ref 0
 let upd_tag tag = 

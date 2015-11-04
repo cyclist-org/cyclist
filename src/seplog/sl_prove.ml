@@ -3,6 +3,8 @@ open Lib
 let cl_sequent = ref ""
 let defs_path = ref "examples/sl.defs"
 
+let parse_null_as_emp = ref false
+
 (* switches controlling invalidity heuristic *)
 let invalidity_check = ref false
 
@@ -17,6 +19,9 @@ let () = F.speclist := !F.speclist @ [
     ("-D", Arg.Set_string defs_path, 
       ": read inductive definitions from <file>, default is " ^ !defs_path);
     ("-S", Arg.Set_string cl_sequent, ": prove the SL sequent provided in <string>");
+    ("-emp", Arg.Set parse_null_as_emp, 
+      "parse the empty string as the formula [emp] rather than [False], " ^
+      "default is " ^ (string_of_bool !parse_null_as_emp));
     ("-IC", Arg.Set invalidity_check, 
       ": run invalidity heuristic before search, default is " ^ 
       (string_of_bool !invalidity_check));
@@ -39,7 +44,7 @@ let () =
   Format.set_margin (Sys.command "exit $(tput cols)") ;
   Arg.parse !F.speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) !F.usage ;
   if !cl_sequent="" then F.die "-S must be specified." ;
-  let seq = Sl_seq.of_string !cl_sequent in
+  let seq = Sl_seq.of_string ~null_is_emp:!parse_null_as_emp !cl_sequent in
   let defs = Sl_defs.of_channel (open_in !defs_path) in
   Sl_rules.setup defs ;
   Stats.reset () ;

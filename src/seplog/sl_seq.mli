@@ -11,8 +11,8 @@ val dest : t -> Sl_heap.t * Sl_heap.t
 (** If both LHS and RHS are symbolic heaps then return them else raise
     [Sl_form.Not_symheap]. *)
 
-val parse : (t, 'a) MParser.t
-val of_string : string -> t
+val parse : ?null_is_emp:bool -> (t, 'a) MParser.t
+val of_string : ?null_is_emp:bool -> string -> t
 
 val to_melt : t -> Latex.t
 
