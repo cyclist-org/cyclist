@@ -52,7 +52,8 @@ let () =
   let call () =
     if !invalidity_check && Sl_invalid.check defs seq then Invalid else
     match 
-      Prover.idfs !F.minbound !F.maxbound !Sl_rules.axioms !Sl_rules.rules seq
+      let maxbound = if !F.maxbound < 1 then max_int else !F.maxbound in
+      Prover.idfs !F.minbound maxbound !Sl_rules.axioms !Sl_rules.rules seq
     with
     | None -> Unknown
     | Some p -> Valid p 
