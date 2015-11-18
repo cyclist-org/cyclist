@@ -13,7 +13,7 @@ The algorithm, its soundness and its complexity are described in
   A decision procedure for satisfiability in separation logic with inductive
   predicates. To appear at CSL-LICS, 2014.
 
-PDF version and BibTeX are in papers/CSL-LICS14.{bib,pdf}
+PDF version and BibTeX are in doc/papers/CSL-LICS14.{bib,pdf}
 
 ================================================================================
 QUICKSTART:
@@ -63,7 +63,7 @@ installed.  Then, do
 
 ================================================================================
 COMPILING:
-See README.compiling.
+See doc/README.compiling.
 
 ================================================================================
 CONTACT:

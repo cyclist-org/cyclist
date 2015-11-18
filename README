@@ -8,7 +8,7 @@ integrated.
 Below SL stands for the symbolic-heap fragment of separation logic with
 inductive definitions and existential quantifiers.
 
-See the subfolder "papers" for electronic versions of papers mentioned and
+See the subfolder "doc/papers" for electronic versions of papers mentioned and
 bibliographic information in BibTeX format.
 
 ================================================================================
@@ -16,39 +16,42 @@ TOOLS:
 Under active development (published):
 
 sl_prove.native: A cyclic theorem prover for SL entailments 
-  (see README.APLAS12).
+  (see doc/README.APLAS12).
 
 sl_satcheck.native: A decision procedure for satisfiability of SL formulas
-  (see README.CSL-LICS14).
+  (see doc/README.CSL-LICS14).
   
 sl_disprove.native: A heuristic procedure for disproving SL entailments
-  (see README.TABLEAUX15).
+  (see doc/README.TABLEAUX15).
 
+sl_modelcheck.native: A model checker for SL with arbitrary inductive predicates
+  (see doc/README.POPL16)
+  
 while_prove.native: A cyclic prover for a program logic over simple 
   while-programs with pointers and dynamic allocation.  Preconditions are
   expressed in SL and the prover can search for proofs of termination or
-  safety (see README.SAS14).
+  safety (see doc/README.SAS14).
 
 while_abduce.native: A cyclic prover like while_prove, but which attempts
   to infer a suitable inductively-defined precondition such that the target
   program will terminate/execute safely.  NB this includes inferring the 
-  inductive definitions themselves (see README.SAS14).
+  inductive definitions themselves (see doc/README.SAS14).
 
 No longer under active development:
 (see README files below for instructions on how to rebuild them)
 
 fo_prove: A cyclic prover for (for all-exists) first order logic with
-  inductive definitions (see README.APLAS12).
+  inductive definitions (see doc/README.APLAS12).
 
 goto_prove.native: A cyclic prover for a program logic like while_prove
-  above, but for a go-to language (see README.APLAS12).
+  above, but for a go-to language (see doc/README.APLAS12).
 
 ================================================================================
 RUNNING/COMPILING:
 
 Running an executable without arguments will print out instructions for use.
 
-To build from source see README.compiling.
+To build from source see doc/README.compiling.
 
 ================================================================================
 CONTACT:
