@@ -23,7 +23,7 @@ The theory/design behind Cyclist and the three provers above is described in
   J. Brotherston, N. Gorogiannis, and R. L. Petersen. A generic cyclic theorem
   prover. In Proc. APLAS-10, pages 350-367. Springer, 2012.
 
-See papers/APLAS12.{pdf,bib}.
+See doc/papers/APLAS12.{pdf,bib}.
 
 The grammar for SL sequents is roughly as follows.
 
@@ -61,7 +61,7 @@ relevant to that version.
 
 ================================================================================
 COMPILING:
-See README.compiling.
+See doc/README.compiling.
 
 ================================================================================
 CONTACT:
