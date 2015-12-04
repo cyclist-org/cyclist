@@ -23,10 +23,15 @@ val to_melt : t -> Latex.t
 val parse : ?allow_tags:bool -> (t, 'a) MParser.parser
 
 val unify : 
-  ?tagpairs:bool -> ?update_check:Sl_unify.update_check -> t Sl_unify.unifier
+  ?tagpairs:bool -> ?update_check:Sl_unify.Unidirectional.update_check 
+    -> t Sl_unify.Unidirectional.unifier
 (** Unify two tagged predicates.
     If the optional argument [~tagpairs=false] is set to [true] then also
     add the pair of tags of the unified predicates. *)
+
+val biunify : 
+  ?tagpairs:bool -> ?update_check:Sl_unify.Bidirectional.update_check 
+    -> t Sl_unify.Bidirectional.unifier
 
 val norm : Sl_uf.t -> t -> t
 (** Replace all terms with their UF representative. NB this may replace [nil]

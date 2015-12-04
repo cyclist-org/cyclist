@@ -143,6 +143,11 @@ module Cmd =
 
     let get_cmd c = if c=[] then raise WrongCmd else (Blist.hd c).cmd
     let get_cont c = if c=[] then raise WrongCmd else Blist.tl c
+    
+    let split c = 
+      if Blist.length c < 2 
+        then raise WrongCmd
+        else ([Blist.hd c], Blist.tl c)
 
     let is_empty c = c=[]
     let is_not_empty c = not (is_empty c)
@@ -366,16 +371,16 @@ module Cmd =
     
     let locals params cmd = Sl_term.Set.diff (vars cmd) params
 
-    let rec cmd_modifies ?strict:(flag=true) cmd = match cmd with
+    let rec cmd_modifies ?(strict=true) cmd = match cmd with
       | Stop | Skip | Free _ | ProcCall(_, _) -> Sl_term.Set.empty
       | New(x) | Assign(x,_) | Load(x,_,_) -> Sl_term.Set.singleton x
-      | Store(x,_,_) -> if flag then Sl_term.Set.singleton x else Sl_term.Set.empty 
-      | If(_,cmd) | While(_,cmd) -> modifies ~strict:flag cmd
+      | Store(x,_,_) -> if strict then Sl_term.Set.singleton x else Sl_term.Set.empty 
+      | If(_,cmd) | While(_,cmd) -> modifies ~strict cmd
       | IfElse(_,cmd,cmd') -> 
-          Sl_term.Set.union (modifies ~strict:flag cmd) (modifies ~strict:flag cmd')
-    and modifies ?strict:(flag=true) l =
+          Sl_term.Set.union (modifies ~strict cmd) (modifies ~strict cmd')
+    and modifies ?(strict=true) l =
       Blist.fold_left 
-        (fun s c -> Sl_term.Set.union s (cmd_modifies ~strict:flag c.cmd)) Sl_term.Set.empty l
+        (fun s c -> Sl_term.Set.union s (cmd_modifies ~strict c.cmd)) Sl_term.Set.empty l
         
     let rec cmd_equal cmd cmd' = match (cmd, cmd') with
       | (Stop, Stop) | (Skip, Skip) -> true

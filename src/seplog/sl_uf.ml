@@ -96,8 +96,18 @@ let saturate m =
 
 let unify_partial ?(inverse=false) ?(update_check=Fun._true)
     m m' cont init_state =
-  Sl_tpair.FList.unify_partial ~inverse ~update_check (bindings m) (saturate m')
-     cont init_state
+  let eqs = Sl_tpair.ListSet.of_list (bindings m) in
+  let eqs' = Sl_tpair.ListSet.of_list (saturate m') in
+  Sl_tpair.ListSet.mk_unifier 
+    false false (Fun.direct inverse (Sl_tpair.unify ~update_check)) 
+    eqs eqs' cont init_state
+
+let biunify_partial ?(update_check=Fun._true) m m' cont init_state =
+  let eqs = Sl_tpair.ListSet.of_list (bindings m) in
+  let eqs' = Sl_tpair.ListSet.of_list (saturate m') in
+  Sl_tpair.ListSet.mk_unifier 
+    false false (Sl_tpair.biunify ~update_check) 
+    eqs eqs' cont init_state
 
 let subst_subsumed eqs ((theta,_) as state) = 
   Option.mk (Sl_term.Map.for_all (equates eqs) theta) state

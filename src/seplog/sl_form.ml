@@ -11,7 +11,7 @@ exception Not_symheap
 let is_symheap = function
   | (_, [s]) -> true
   | _ -> false
-let dest = function
+let dest : t -> Ord_constraints.t * Sl_heap.t = function
   | (cs, [s]) -> (cs, s)
   | _ -> raise Not_symheap
 
@@ -73,7 +73,7 @@ let subsumed ?(total=true) ((cs, _) as l) ((cs', _) as r) =
   subsumed_upto_constraints ~total l r  && 
   let () = debug (fun _ -> "Checking constraint subsumption: " ^ (Ord_constraints.to_string cs') ^ " |- " ^ (Ord_constraints.to_string cs)) in
   let cs' = Ord_constraints.close cs' in
-  Ord_constraints.subsumed cs' cs
+  Ord_constraints.subsumes cs' cs
       
 let subsumed_upto_tags ?(total=true) (cs, hs) (cs', hs') =
   Blist.for_all (fun d2 ->
@@ -84,15 +84,21 @@ let equal_upto_tags (cs, hs) (cs', hs') =
   Blist.for_all2 Sl_heap.equal_upto_tags hs hs'
 
 
-let parse st =
-  (option Ord_constraints.parse >>= (fun cs ->
-  (sep_by1 Sl_heap.parse (parse_symb symb_or) <?> "formula") >>= (fun hs ->
-  return (Option.dest Ord_constraints.empty Fun.id cs, hs)))) st
-let of_string s =
-  handle_reply (MParser.parse_string parse s ())
+let parse ?(null_is_emp=false) st =
+  ((option Ord_constraints.parse) >>= (fun cs ->
+  ((attempt (sep_by Sl_heap.parse (parse_symb symb_or) <?> "formula")) 
+    <|> (return [])) >>= (fun hs ->
+  return 
+    (Option.dest Ord_constraints.empty Fun.id cs, 
+      if null_is_emp && Blist.is_empty hs then [ Sl_heap.empty ] else hs)))) st
+let of_string ?(null_is_emp=false) s =
+  handle_reply (MParser.parse_string (parse ~null_is_emp) s ())
 
-let star (cs, f) (cs', g) =
-  let hs = Blist.map (fun (f', g') -> Sl_heap.star f' g') (Blist.cartesian_product f g) in
+let star ?(augment_deqs=true) (cs, f) (cs', g) =
+  let hs = 
+    Blist.map 
+      (fun (f', g') -> Sl_heap.star ~augment_deqs f' g') 
+      (Blist.cartesian_product f g) in
   let constraints = Ord_constraints.union cs cs' in
   (constraints, hs)
 
@@ -107,3 +113,62 @@ let norm (cs, hs) = (cs, Blist.map Sl_heap.norm hs)
 
 let with_constraints (_, hs) cs = (cs, hs)
 let with_heaps (cs, _) hs = (cs, hs)
+
+let get_tracepairs f ((cs, _) as f') =
+  let cs = Ord_constraints.close cs in
+  let id_pairs = 
+    (TagPairs.mk (Pair.apply Tags.inter (Pair.map tags (f, f')))) in
+  let (allpairs, progressing) = 
+    Pair.map
+      (fun tps -> TagPairs.endomap Pair.swap
+        (TagPairs.filter (fun (_, t) -> Tags.mem t (tags f)) tps)) 
+      ((TagPairs.union id_pairs (Ord_constraints.all_pairs cs)), 
+        Ord_constraints.prog_pairs cs) in
+  (allpairs, progressing)
+
+let compute_frame 
+    ?(freshen_existentials=true) ?(avoid=(Tags.empty, Sl_term.Set.empty)) f f' =
+  try
+    let (cs, h) = dest f in
+    let (cs', h') = dest f' in
+    let (eqs, deqs, ptos, inds) = Sl_heap.dest h in
+    let (eqs', deqs', ptos', inds') = Sl_heap.dest h' in
+    if
+      not (Ord_constraints.subset cs cs') then None
+    else if
+      not (Sl_uf.subsumed eqs eqs') then None
+    else if
+      not (Sl_deqs.all_members_of deqs deqs') then None
+    else if
+      not (Sl_ptos.all_members_of ptos ptos') then None
+    else if
+      not (Sl_tpreds.all_members_of inds inds') then None
+    else
+      let ex_tags = Tags.filter Tags.is_exist_var (Sl_heap.tags h) in
+      let ex_vars = Sl_term.Set.filter Sl_term.is_exist_var (Sl_heap.terms h) in
+      let frame = 
+        (Ord_constraints.diff cs' cs,
+          [ Sl_heap.mk
+              (Sl_uf.diff eqs eqs')
+              (Sl_deqs.diff deqs' deqs)
+              (Sl_ptos.diff ptos' ptos)
+              (Sl_tpreds.diff inds' inds) ] ) in
+      let ex_frame_tags = Tags.filter Tags.is_exist_var (tags frame) in
+      let ex_frame_vars = 
+        Sl_term.Set.filter Sl_term.is_exist_var (terms frame) in
+      let clashing_tags = Tags.inter ex_tags ex_frame_tags in
+      let clashing_vars = Sl_term.Set.inter ex_vars ex_frame_vars in
+      if not freshen_existentials && 
+          (not (Tags.is_empty clashing_tags) || 
+           not (Sl_term.Set.is_empty clashing_vars)) then None
+      else
+        let tag_subst = 
+          TagPairs.mk_ex_subst 
+            (Tags.union (fst avoid) (tags f')) 
+            clashing_tags in
+        let trm_subst =
+          Sl_term.mk_ex_subst
+            (Sl_term.Set.union (snd avoid) (terms f'))
+            clashing_vars in 
+        Some (subst trm_subst (subst_tags tag_subst frame))
+  with Not_symheap -> None

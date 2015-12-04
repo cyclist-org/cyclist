@@ -3,7 +3,7 @@ open Util
 open Symbols
 open MParser
 
-include MakeListSet(Sl_tpair)
+include Sl_tpair.ListSet
 
 let add p deqs = add (Sl_tpair.order p) deqs
 let singleton p = singleton (Sl_tpair.order p)
@@ -29,8 +29,11 @@ let parse st =
 
 let unify_partial ?(inverse=false) ?(update_check=Fun._true)
     d d' cont init_state =
-  Sl_tpair.FList.unify_partial ~inverse ~update_check (to_list d) (to_list d')
-    cont init_state
+  mk_unifier false false (Fun.direct inverse (Sl_tpair.unify ~update_check)) 
+    d d' cont init_state
+    
+let biunify_partial ?(update_check=Fun._true) d d' cont init_state =
+  mk_unifier false false (Sl_tpair.biunify ~update_check) d d' cont init_state
 
 let subsumed eqs deqs deqs' =
   let norm p = Sl_tpair.order (Pair.map (fun x -> Sl_uf.find x eqs) p) in

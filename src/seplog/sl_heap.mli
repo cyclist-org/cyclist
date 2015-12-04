@@ -57,7 +57,8 @@ val idents : t -> Sl_predsym.MSet.t
 (** Get multiset of predicate identifiers. *)
 
 val inconsistent : t -> bool
-(** Trivially false if x=y * x!=y is provable for any x,y.
+(** Trivially false if heap contains t!=t for any term t, or if x=y * x!=y 
+    is provable for any x,y.
     NB only equalities and disequalities are used for this check.
 *)
 
@@ -95,8 +96,6 @@ val mk_ind : Sl_tpred.t -> t
 val mk : Sl_uf.t -> Sl_deqs.t -> Sl_ptos.t -> Sl_tpreds.t -> t
 val dest : t -> (Sl_uf.t * Sl_deqs.t * Sl_ptos.t * Sl_tpreds.t)
 
-val combine : t -> t -> t
-
 (** Functions [with_*] accept a heap [h] and a heap component [c] and 
     return the heap that results by replacing [h]'s appropriate component 
     with [c]. *)
@@ -118,7 +117,7 @@ val add_ind : t -> Sl_tpred.t -> t
 val proj_sp : t -> t
 val proj_pure : t -> t
 
-val star : t -> t -> t
+val star : ?augment_deqs:bool -> t -> t -> t
 val diff : t -> t -> t
 
 val fixpoint : (t -> t) -> t -> t
@@ -144,33 +143,25 @@ val subst_tags : Util.TagPairs.t -> t -> t
     tag pairs provided. *)
 
 val unify_partial : 
-  ?tagpairs:bool -> ?update_check:Sl_unify.update_check -> t Sl_unify.unifier
-(** Unify two heaps such that the first becomes a subformula of the second.
-- If the optional argument [~tagpairs=false] is set to [true] then in addition 
-  to the substitution found, also return the set of pairs of tags of 
-  predicates unified. *)
+  ?tagpairs:bool -> ?update_check:Sl_unify.Unidirectional.update_check 
+    -> t Sl_unify.Unidirectional.unifier
+(** Unify two heaps such that the first becomes a subformula of the second. *)
+
+val biunify_partial : 
+  ?tagpairs:bool -> ?update_check:Sl_unify.Bidirectional.update_check 
+    -> t Sl_unify.Bidirectional.unifier
 
 val classical_unify : ?inverse:bool -> ?tagpairs:bool -> 
-  ?update_check:Sl_unify.update_check -> t Sl_unify.unifier
+  ?update_check:Sl_unify.Unidirectional.update_check 
+    -> t Sl_unify.Unidirectional.unifier
 (** Unify two heaps, by using [unify_partial] for the pure (classical) part whilst
     using [unify] for the spatial part.
 - If the optional argument [~inverse=false] is set to [true] then compute the 
-  required substitution for the *second* argument as opposed to the first. 
-- If the optional argument [~tagpairs=false] is set to [true] then in addition 
-  to the substitution found, also return the set of pairs of tags of 
-  predicates unified. *)
+  required substitution for the *second* argument as opposed to the first. *)
 
-val compute_frame : 
-      ?freshen_existentials:bool -> ?avoid:Sl_term.Set.t -> t -> t -> t option
-(** [compute_frame f f'] computes the portion of [f'] left over (the 'frame') 
-    after subtracting all the atomic formulae in the specification [f]. Returns 
-    None when there are atomic formulae in [f] which are not also in [f'] (i.e.
-    [f] is not subsumed by [f']). Any existential variables occurring in the
-    frame which also occur in the specification [f] are freshened, avoiding the
-    variables in the optional argument [~avoid=Sl_term.Set.empty].
-- If the optional argument [~freshen_existentials=true] is set to false, then
-  None will be returned in case there are existential variables in the frame
-  which also occur in the specification. *)
+val classical_biunify : 
+  ?tagpairs:bool -> ?update_check:Sl_unify.Bidirectional.update_check 
+    -> t Sl_unify.Bidirectional.unifier
 
 val norm : t -> t
 (** Replace all terms with their UF representative (the UF in the heap). *)

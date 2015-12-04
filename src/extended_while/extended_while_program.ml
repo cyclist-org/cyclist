@@ -39,6 +39,17 @@ module Proc =
         Sl_form.parse >>= (fun f ->
         parse_symb symb_semicolon >>$ f) <?> "Postcondition") st
 
+    let ensure_tags (pre, post) =
+      let tags = Tags.union (Sl_form.tags pre) (Sl_form.tags post) in
+      let pre' = Sl_form.complete_tags tags pre in
+      let inst_subst = 
+        Util.TagPairs.mk_univ_subst 
+          tags 
+          (Util.Tags.diff (Sl_form.tags pre') tags) in
+      let pre' = Sl_form.subst_tags inst_subst pre' in
+      let post' = Sl_form.complete_tags tags post in
+      (pre', post')
+
     let parse_named st =
       let parse_params st =
       let rec parse_params' acc st =
@@ -64,16 +75,23 @@ module Proc =
       Tokens.braces
         (expect_before Cmd.parse (parse_symb symb_rb) "Expecting CmdList") >>=
       (fun body ->
-        (* Check that parameters mentioned in the postcondition are not
-           assigned to in procedure body, that local variables are not mentioned
-           in the pre/post, and that existential variables are disjoint between
-           pre and post *)
+        (* Add any missing tags *)
+        let (pre, post) = ensure_tags (pre, post) in
+        (* Check that:                                                        *)
         begin
+          (* - parameters mentioned in the postcondition are not assigned to  *)
+          (*   in the procedure body;                                         *)
           assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_form.vars post) (Sl_term.Set.inter (Cmd.modifies ~strict:false body) (Sl_term.Set.of_list params))));
+          (* - local variables are not mentioned in the pre/post;             *)
           assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_form.vars pre) (Cmd.locals (Sl_term.Set.of_list params) body)));
           assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_form.vars post) (Cmd.locals (Sl_term.Set.of_list params) body)));
-          let f v = Sl_term.is_exist_var v in
-            assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_term.Set.filter f (Sl_form.vars pre)) (Sl_term.Set.filter f (Sl_form.vars post))));
+          (* - existential variables are disjoint between pre and post;       *)
+          (* assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_term.Set.filter Sl_term.is_exist_var (Sl_form.vars pre)) (Sl_term.Set.filter Sl_term.is_exist_var (Sl_form.vars post)))); *)
+          (* assert(Tags.is_empty (Tags.inter (Tags.filter Tags.is_exist_var (Sl_form.tags pre)) (Tags.filter Tags.is_exist_var (Sl_form.tags post))));                                   *)
+          (* - that the unversal variables of the post are a subset of those  *)
+          (*   of the pre *)
+          (* assert(Sl_term.Set.subset (Sl_term.Set.filter Sl_term.is_univ_var (Sl_form.terms post)) (Sl_term.Set.filter Sl_term.is_univ_var (Sl_form.terms pre))); *)
+          (* assert(Tags.subset (Tags.filter Tags.is_univ_var (Sl_form.tags post)) (Tags.filter Tags.is_univ_var (Sl_form.tags pre)));                              *)
           return (id, params, pre, post, body)
         end <?> "Procedure" )))))) st
     
@@ -84,6 +102,7 @@ module Proc =
         assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_term.Set.filter f (Sl_form.vars pre)) (Sl_term.Set.filter f (Sl_form.vars post))));
       Cmd.parse >>= 
       (fun body ->
+        let (pre, post) = ensure_tags (pre, post) in
         return (pre, body, post)))) <?> "CmdList") st
     
   end
@@ -101,26 +120,35 @@ module Seq =
     let tagset_one = Tags.singleton 1
 		let tagpairs_one = TagPairs.mk tagset_one
     let form_tags f = if !termination then Sl_form.tags f else tagset_one
-    let tags (pre,_,_) = form_tags pre
-    let tag_pairs seq = TagPairs.mk (tags seq)
+    let tags (pre, _, _) = form_tags pre
+    let all_tags (pre, _, post) = Tags.union (Sl_form.tags pre) (Sl_form.tags post)
+    let tag_pairs (pre, _, _) = TagPairs.mk (form_tags pre)
 
-		(* Do we want the vars from the postcondition as well, or not? *)
-    (* Yes! (NG) *)
-		let vars (pre,_,post) = Sl_term.Set.union (Sl_form.vars pre) (Sl_form.vars post)
-		(* let vars (pre,_,_) = Sl_form.vars pre *)
+		let vars (pre,_,post) = 
+      Sl_term.Set.union (Sl_form.vars pre) (Sl_form.vars post)
+      
+    let all_vars (pre, cmd, post) =
+      Sl_term.Set.union_of_list [
+          Sl_form.vars pre ;
+          Cmd.vars cmd ;
+          Sl_form.vars post ;
+        ]
 		
-		(* Do we want the vars from the postcondition as well, or not? *)
-		let terms (pre,_,post) = Sl_term.Set.union (Sl_form.terms pre) (Sl_form.terms post)
-		(* let terms (pre,_,_) = Sl_form.terms pre *)
+		let terms (pre,_,post) = 
+      Sl_term.Set.union (Sl_form.terms pre) (Sl_form.terms post)
 
 		let subst theta (pre,cmd,post) = 
 			(Sl_form.subst theta pre, cmd, Sl_form.subst theta post)
       
+    let subst_tags tps (pre, cmd, post) =
+      ((Sl_form.subst_tags tps pre), cmd, (Sl_form.subst_tags tps post))
+      
     let param_subst theta (pre, cmd, post) = 
       (Sl_form.subst theta pre, Cmd.subst theta cmd, Sl_form.subst theta post)
       
-    let with_pre (pre, cmd, post) f = (f, cmd, post)
-    let with_post (pre, cmd, post) f = (pre, cmd, f)
+    let with_pre (_, cmd, post) pre = (pre, cmd, post)
+    let with_post (pre, cmd, _) post = (pre, cmd, post)
+    let with_cmd (pre, _, post) cmd = (pre, cmd, post)
     
 		let to_string (pre,cmd,post) =
       symb_turnstile.sep ^ 
@@ -138,7 +166,7 @@ module Seq =
     let subsumed (pre,cmd,post) (pre',cmd',post') = 
       Cmd.equal cmd cmd' &&
       Sl_form.subsumed pre' pre &&
-      Sl_form.subsumed_upto_tags post post' 
+      Sl_form.subsumed post post' 
        
     let subsumed_upto_tags (pre,cmd,post) (pre',cmd',post') = 
       Cmd.equal cmd cmd' &&
@@ -156,15 +184,23 @@ module Seq =
     let equal (pre, cmd, post) (pre', cmd', post') = 
 			Cmd.equal cmd cmd' && 
       Sl_form.equal pre pre' && 
-      Sl_form.equal_upto_tags post post'
+      Sl_form.equal post post'
       
     let equal_upto_tags (pre, cmd, post) (pre', cmd', post') = 
       Cmd.equal cmd cmd' && 
       Sl_form.equal_upto_tags pre pre' && 
       Sl_form.equal_upto_tags post post'
+      
+    let dest (pre, cmd, post) = (Sl_form.dest pre, cmd, Sl_form.dest post)
     
-    let subst_tags tagpairs (pre,cmd,post) = 
-      (Sl_form.subst_tags tagpairs pre, cmd, post)
+    let get_tracepairs (pre, _, _) (pre', _, _) =
+      Sl_form.get_tracepairs pre pre'
+    
+    let frame f (pre, cmd, post) = 
+      ( Sl_form.star ~augment_deqs:false pre f,
+        cmd,
+        Sl_form.star ~augment_deqs:false post f)
+    
   end
 
 let program_vars = ref Sl_term.Set.empty

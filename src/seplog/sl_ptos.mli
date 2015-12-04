@@ -17,11 +17,16 @@ val subsumed : ?total:bool -> Sl_uf.t -> t -> t -> bool
     the second. *)
     
 val unify : 
-  ?total:bool -> ?update_check:Sl_unify.update_check -> t Sl_unify.unifier
+  ?total:bool -> ?update_check:Sl_unify.Unidirectional.update_check 
+    -> t Sl_unify.Unidirectional.unifier
 (** Compute substitution that would make the two multisets equal. 
     If the optional argument [~total=true] is set to [false] then 
     compute a substitution that would make the first multiset a sub(multi)set of 
     the second. *)
+
+val biunify : 
+  ?total:bool -> ?update_check:Sl_unify.Bidirectional.update_check 
+    -> t Sl_unify.Bidirectional.unifier
 
 val norm : Sl_uf.t -> t -> t
 (** Replace all terms with their UF representative. NB this may replace [nil] 

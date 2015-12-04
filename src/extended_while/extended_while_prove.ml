@@ -22,7 +22,7 @@ let () = F.usage := !F.usage ^ " [-D <file>] -P <file>"
 let () = F.speclist := !F.speclist @ [
     ("-D", Arg.Set_string defs_path, 
       ": read inductive definitions from <file>, default is " ^ !defs_path);
-    ("-P", Arg.Set_string prog_path, ": prove termination of program <file>");
+    ("-P", Arg.Set_string prog_path, ": prove safety of program <file>");
     ("-T", Arg.Set termination, ": also prove termination, default is " ^ 
           (string_of_bool !termination));
   ]

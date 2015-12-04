@@ -6,6 +6,8 @@ type ('a, 'b) continuation = 'a -> 'b option
 
 let trivial_continuation : ('a, 'a) continuation = Option.some
 
+type 'a state_update = 'a * 'a
+
 type ('a, 'b) realizer = ('a -> 'b) -> 'b
 
 (** The type of continuation-passing-style unifiers that may

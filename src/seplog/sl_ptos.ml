@@ -26,18 +26,12 @@ let parse st =
 
 let rec unify ?(total=true) ?(update_check=Fun._true)
     ptos ptos' cont init_state =
-  if is_empty ptos then
-    if not total || is_empty ptos' then cont init_state else None
-  else
-    let a = choose ptos in
-    let ptos = remove a ptos in
-    let f a' =
-      Sl_pto.unify ~update_check a a' 
-        (fun state -> 
-          unify ~total ~update_check ptos (remove a' ptos') cont state)
-        init_state in
-    find_map f ptos'
-
+  mk_unifier total true (Sl_pto.unify ~update_check) ptos ptos' cont init_state 
+  
+let rec biunify ?(total=true) ?(update_check=Fun._true)
+    ptos ptos' cont init_state =
+  mk_unifier total true (Sl_pto.biunify ~update_check) ptos ptos' cont init_state 
+  
 let rec subsumed ?(total=true) eqs ptos ptos' =
   if is_empty ptos then not total || is_empty ptos' else
   let pto = choose ptos in

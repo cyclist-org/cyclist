@@ -47,6 +47,8 @@ module type OrderedContainer =
     val del_first : (elt -> bool) -> t -> t
     val all_members_of : t -> t -> bool
     val disjoint : t -> t -> bool
+    val mk_unifier : bool -> bool -> ('a, 'b, elt) Unification.cps_unifier
+          -> ('a, 'b, t) Unification.cps_unifier
   end
 
 module type OrderedMap =
@@ -107,10 +109,44 @@ module MakeFList(T: BasicType) : BasicType with type t = T.t list =
       Format.fprintf fmt "@[[%a]@]" (Blist.pp pp_semicolonsp T.pp) l
   end
 
+module MakeUnifier(
+  T : sig 
+    type t 
+    type elt
+    val empty : t
+    val is_empty : t -> bool
+    val equal : t -> t -> bool
+    val add : elt -> t -> t
+    val choose : t -> elt
+    val remove : elt -> t -> t
+    val find_map : (elt -> 'a option) -> t -> 'a option
+  end) =
+struct
+  let mk_unifier total linear u =
+    let rec unify marked_ys xs ys cont state =
+      if T.is_empty xs then
+        if (not total) || 
+           (linear && T.is_empty ys) ||
+           ((not linear) && (T.equal marked_ys ys)) 
+        then cont state else None
+      else
+        let x = T.choose xs in
+        let xs = T.remove x xs in
+        let f y =
+          let ys = if linear then T.remove y ys else ys in
+          let marked_ys = if not linear then T.add y marked_ys else marked_ys in
+          u x y 
+          (unify marked_ys xs ys cont)
+          state in
+        T.find_map f ys in
+    unify T.empty
+end
+
 module MakeListMultiset(T: BasicType) =
   struct
     type elt = T.t
-    include MakeFList(T)
+    module FList = MakeFList(T)
+    include FList
 
     let empty = []
     let is_empty xs = xs=[]
@@ -232,6 +268,19 @@ module MakeListMultiset(T: BasicType) =
         | n when n < 0 -> disjoint xs (y::ys)
         | _ -> disjoint (x::xs) ys
 
+    include MakeUnifier(
+      struct
+        type t = FList.t
+        type elt = T.t
+        let empty = empty
+        let is_empty = is_empty
+        let equal = equal
+        let add = add
+        let choose = choose
+        let remove = remove
+        let find_map = find_map
+      end)
+
   end
 
 module MakeMultiset(T: BasicType) : OrderedContainer with type elt = T.t =
@@ -275,8 +324,9 @@ module MakeListSet(T: BasicType) : OrderedContainer with type elt = T.t =
 
 module MakeTreeSet(T: BasicType) : OrderedContainer with type elt = T.t =
   struct
-    include Set.Make(T)
-    include Fixpoint(Set.Make(T))
+    module Set = Set.Make(T)
+    include Set
+    include Fixpoint(Set)
 
     let of_list l =
       Blist.fold_left (fun a b -> add b a) empty l
@@ -356,6 +406,19 @@ module MakeTreeSet(T: BasicType) : OrderedContainer with type elt = T.t =
           | _ -> disjoint (x::xs) ys in
       disjoint xs ys
 
+    include MakeUnifier(
+      struct
+        type t = Set.t
+        type elt = T.t
+        let empty = empty
+        let is_empty = is_empty
+        let equal = equal
+        let add = add
+        let choose = choose
+        let remove = remove
+        let find_map = find_map
+      end)
+
   end
 
 module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
@@ -412,6 +475,7 @@ module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
       Blist.for_all (Fun.swap mem ys) xs
 
     let add_bindings bs m = List.fold_left (fun m (k, v) -> add k v m) m bs
+    
   end
 
 module PairTypes(T: BasicType) (S: BasicType) :
@@ -642,19 +706,66 @@ module Tags =
     let anonymous_tag = 0
     let tag_name v = to_string v
 
-    module Elt : BasicType with type t = Int.t = Int
-    include Int.Set
+    module Elt =
+    struct
+      include Int
+      
+      let unify ?(update_check=Fun._true) t t' cont init_state =
+        let pair = Pairing.Set.find_opt (fun p -> equal (fst p) t) init_state in
+        let res =
+          if Option.is_some pair then 
+            Option.mk (equal (snd (Option.get pair)) t') init_state
+          else 
+            Option.mk_lazily 
+              (equal t t' ||
+                update_check (init_state, (Pairing.Set.singleton (t, t')))) 
+              (fun _ -> Pairing.Set.add (t, t') init_state) in
+        Option.bind cont res
+        
+      let biunify 
+          ?(update_check=Fun._true) t t' cont ((subst, subst') as state) =
+        let lpair = Pairing.Set.find_opt (fun p -> equal (fst p) t) subst in
+        let rpair = Pairing.Set.find_opt (fun p -> equal (fst p) t') subst' in
+        let opts = 
+          if Pair.both (Pair.map Option.is_some (lpair, rpair)) then
+            [ Option.mk 
+                (Fun.uncurry equal 
+                  (Pair.map (fun p -> snd (Option.get p)) (lpair, rpair))) 
+                state ]
+          else
+            let lpair' = 
+              (t, if Option.is_some rpair then (snd (Option.get rpair))
+                  else t') in
+            let rpair' = 
+              (t', if Option.is_some lpair then (snd (Option.get lpair))
+                   else t) in
+            [ Option.mk_lazily
+                (Option.is_none lpair &&
+                  (Pair.apply equal lpair' ||
+                   update_check 
+                    (state, (Pairing.Set.singleton lpair', Pairing.Set.empty))))
+                (fun _ -> (Pairing.Set.add lpair' subst, subst')) ;
+              Option.mk_lazily
+                (Option.is_none rpair &&
+                  (Pair.apply equal rpair' ||
+                   update_check 
+                    (state, (Pairing.Set.empty, Pairing.Set.singleton rpair'))))
+                (fun _ -> (subst, Pairing.Set.add rpair' subst')) ] in
+        Blist.find_some (Option.bind cont) opts
+    end
+    
+    include Elt.Set
     let to_string s =
       String.concat "," (map_to_list string_of_int s)
     let to_names s =
       map_to Strng.Set.add Strng.Set.empty tag_name s
 
-    include MakeGenerators(Int.Set)
+    include MakeGenerators(Elt.Set)
   end
 
 module TagPairs =
   struct
-    include Int.Pairing.Set
+    include Tags.Elt.Pairing.Set
     let mk s = Tags.fold (fun i p -> add (i,i) p) s empty
 
     let dest_singleton tps =
@@ -680,10 +791,18 @@ module TagPairs =
         snd (find (fun (t',_) -> t=t') tps)
       with Not_found -> t
       
+    let strip tps = filter (fun (t, t') -> not (Tags.Elt.equal t t')) tps
+    
     let mk_univ_subst avoid ts =
-      let exs = Tags.filter Tags.is_exist_var ts in
-      let univs = Tags.fresh_uvars (Tags.union ts avoid) (Tags.cardinal exs) in
-      of_list (Blist.combine (Tags.to_list exs) univs)
+      let univs = Tags.fresh_uvars (Tags.union ts avoid) (Tags.cardinal ts) in
+      of_list (Blist.combine (Tags.to_list ts) univs)
+      
+    let mk_ex_subst avoid ts =
+      let exs = Tags.fresh_evars (Tags.union ts avoid) (Tags.cardinal ts) in
+      of_list (Blist.combine (Tags.to_list ts) exs)
+      
+    let partition_subst theta =
+      partition (fun tp -> Pair.both (Pair.map Tags.is_univ_var tp)) theta
 
   end
 

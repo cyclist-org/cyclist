@@ -1,6 +1,7 @@
 type 'a predicate = 'a -> bool
 
 let _true _ = true
+let _false _ = false
 
 let neg f x = not (f x)
 let conj f g x = (f x) && (g x)

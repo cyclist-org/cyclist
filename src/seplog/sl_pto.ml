@@ -10,7 +10,13 @@ let subst theta (lv, rvs) =
 
 let unify ?(update_check=Fun._true)
     (x, xs) (y, ys) cont init_state =
-  Sl_unify.unify_trm_list ~update_check (x::xs) (y::ys) cont init_state
+  Sl_unify.Unidirectional.unify_trm_list ~update_check 
+    (x::xs) (y::ys) cont init_state
+
+let biunify ?(update_check=Fun._true)
+    (x, xs) (y, ys) cont init_state =
+  Sl_unify.Bidirectional.unify_trm_list ~update_check 
+    (x::xs) (y::ys) cont init_state
 
 let to_string (x,args) =
   (Sl_term.to_string x) ^ symb_pointsto.str ^ 

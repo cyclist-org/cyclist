@@ -111,7 +111,7 @@ let fold (f, (predsym, args)) h =
   let tags = Sl_heap.tags h in
   let freshtag = 1 + (try Tags.max_elt tags with Not_found -> 0) in 
   let update_check = Fun.list_conj [
-      Sl_unify.trm_check ;
+      Sl_unify.Unidirectional.trm_check ;
       (fun (_, (theta, _)) ->
         Sl_term.Map.for_all 
           (* TODO: What's going on here - why is there a disjunct "true"? *)
@@ -119,7 +119,7 @@ let fold (f, (predsym, args)) h =
         theta) ; 
     ] in 
   let results =
-    Sl_unify.realize
+    Sl_unify.Unidirectional.realize
       (Unification.backtrack 
         (Sl_heap.unify_partial ~tagpairs:true ~update_check) f h
         Unification.trivial_continuation) in

@@ -61,6 +61,8 @@ let subst theta v =
 (* above is significantly faster than exception handling *)
 let pp_subst = Map.pp pp
 
+let strip_subst theta = Map.filter (fun x y -> not (equal x y)) theta
+
 let avoid_theta vars subvars =
   let allvars = Set.union vars subvars in
   let (exist_vars, univ_vars) =
@@ -71,6 +73,19 @@ let avoid_theta vars subvars =
     (Blist.append
       (Blist.combine univ_vars fresh_u_vars)
       (Blist.combine exist_vars fresh_e_vars))
+      
+let mk_univ_subst avoid xs =
+  let univs = fresh_uvars (Set.union xs avoid) (Set.cardinal xs) in
+  Map.of_list (Blist.combine (Set.to_list xs) univs)
+  
+let mk_ex_subst avoid xs =
+  let exs = fresh_evars (Set.union xs avoid) (Set.cardinal xs) in
+  Map.of_list (Blist.combine (Set.to_list xs) exs)
+      
+let partition_subst theta =
+  Map.partition
+    (fun x y -> is_univ_var x && (is_nil y || is_univ_var y))
+    theta
 
 let trm_unify ?(update_check=Fun._true) t t' cont init_state =
   let res =
@@ -78,22 +93,71 @@ let trm_unify ?(update_check=Fun._true) t t' cont init_state =
       Option.mk (equal (Map.find t init_state) t') init_state
     else if is_nil t then
       Option.mk (is_nil t') init_state
-    else if (update_check (init_state, (Map.singleton t t'))) then
+    else if (equal t t' || update_check (init_state, (Map.singleton t t'))) then
       Some (Map.add t t' init_state)
     else
       None in
   Option.bind cont res
+  
+let trm_biunify ?(update_check=Fun._true) t t' cont ((subst, subst') as state) =
+  let mapped = (Map.mem t subst, Map.mem t' subst') in
+  let opts =
+    if Pair.both mapped then
+      [ Option.mk (equal (Map.find t subst) (Map.find t' subst')) state ]
+    else if fst mapped && is_nil t' then
+      [ Option.mk (is_nil (Map.find t subst)) state ]
+    else if fst mapped then
+      let t'' = Map.find t subst in
+      [ Option.mk_lazily
+          (equal t' t'' || 
+            update_check (state, (empty_subst, Map.singleton t' t'')))
+          (fun _ -> (subst, Map.add t' t'' subst')) ]
+    else if snd mapped && is_nil t then
+      [ Option.mk (is_nil (Map.find t' subst')) state ]
+    else if snd mapped then
+      let t'' = Map.find t' subst' in
+      [ Option.mk_lazily
+          (equal t t'' ||
+            update_check (state, (Map.singleton t t'', empty_subst)))
+          (fun _ -> (Map.add t t'' subst, subst')) ]
+    else if is_nil t && is_nil t' then
+      [ Some state ]
+    else
+      [ Option.mk_lazily
+          (not (is_nil t) 
+            && (equal t t' || 
+                update_check (state, (Map.singleton t t', empty_subst))))
+          (fun _ -> (Map.add t t' subst, subst')) ;
+        Option.mk_lazily
+          (not (is_nil t') 
+            && (equal t' t ||
+                update_check (state, (empty_subst, Map.singleton t' t))))
+          (fun _ -> (subst, Map.add t' t subst')) ] in
+  Blist.find_some (Option.bind cont) opts
 
 module FList =
   struct
     include Util.MakeFList(Trm)
-    let rec unify ?(update_check=Fun._true) args args' cont init_state =
+    let mk_unify 
+        (unify:
+          ?update_check:('a Unification.state_update) Fun.predicate 
+            -> ('a, 'b, 'c) Unification.cps_unifier) 
+        ?(update_check=Fun._true) = 
+      let rec u args args' cont init_state =
       match (args, args') with
       | ([], []) -> cont init_state
       | (_, []) | ([], _) -> None
       | (x::xs, y::ys) ->
-          let cont state' = unify ~update_check xs ys cont state' in
-          trm_unify ~update_check x y cont init_state
+          unify ~update_check x y 
+          (u xs ys cont)
+          init_state in
+      u
+    
+    let unify ?(update_check=Fun._true) args args' cont init_state =
+      mk_unify trm_unify ~update_check args args' cont init_state
+      
+    let biunify ?(update_check=Fun._true) args args' cont init_state =
+      mk_unify trm_biunify ~update_check args args' cont init_state
 
     let subst theta xs = Blist.map (fun x -> subst theta x) xs
 
@@ -109,3 +173,4 @@ module FList =
   end
 
 let unify = trm_unify
+let biunify = trm_biunify

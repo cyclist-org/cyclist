@@ -11,8 +11,8 @@ val dest : t -> (Ord_constraints.t * Sl_heap.t) * (Ord_constraints.t * Sl_heap.t
 (** If both LHS and RHS are symbolic heaps then return them else raise
     [Sl_form.Not_symheap]. *)
 
-val parse : (t, 'a) MParser.t
-val of_string : string -> t
+val parse : ?null_is_emp:bool -> (t, 'a) MParser.t
+val of_string : ?null_is_emp:bool -> string -> t
 
 val to_melt : t -> Latex.t
 
@@ -22,7 +22,10 @@ val tags : t -> Util.Tags.t
 (** Only LHS tags are returned. *)
 
 val tag_pairs : t -> Util.TagPairs.t
-(** Only LHS tag pairs are returned. *)
+(** Tag pairs constituting the identity relation on the tags in the LHS. *)
+
+val get_tracepairs : t -> t -> (Util.TagPairs.t * Util.TagPairs.t)
+(** Get the tracepairs between two sequents *)
 
 val subst_tags : Util.TagPairs.t -> t -> t
 (** Substitute tags of the LHS. *)

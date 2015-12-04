@@ -140,7 +140,10 @@ let disequates h x y =
 let find_lval x h =
   Sl_ptos.find_opt (fun (y, _) -> equates h x y) h.ptos
 
-let inconsistent h = Sl_deqs.exists (fun (x, y) -> equates h x y) h.deqs
+let inconsistent h = 
+  Sl_deqs.exists (Fun.uncurry Sl_term.equal) h.deqs
+    ||
+   Sl_deqs.exists (fun (x, y) -> equates h x y) h.deqs
 
 let idents p = Sl_tpreds.idents p.inds
 
@@ -197,14 +200,6 @@ let mk_deq p =
 let mk_ind pred =
   { empty with inds = Sl_tpreds.singleton pred; _terms=None; _vars=None; _tags=None }
 
-let combine h h' =
-  let eqs = Sl_uf.union h.eqs h'.eqs in
-  let deqs = Sl_deqs.union h.deqs h'.deqs in
-  let ptos = Sl_ptos.union h.ptos h'.ptos in
-  let inds = Sl_tpreds.union h.inds h'.inds in
-  mk eqs deqs ptos inds
-
-
 let proj_sp h = mk Sl_uf.empty Sl_deqs.empty h.ptos h.inds
 let proj_pure h = mk h.eqs h.deqs Sl_ptos.empty Sl_tpreds.empty
 
@@ -226,7 +221,7 @@ let complete_tags avoid h =
     with_inds h inds
 
 (* star two formulae together *)
-let star f g =
+let star ?(augment_deqs=true) f g =
   (* computes all deqs due to a list of ptos *)
   let explode_deqs ptos =
     let cp = Blist.cartesian_hemi_square ptos in
@@ -236,7 +231,9 @@ let star f g =
   let newptos = Sl_ptos.union f.ptos g.ptos in
   mk
     (Sl_uf.union f.eqs g.eqs)
-    (Sl_deqs.union_of_list [f.deqs; g.deqs; explode_deqs (Sl_ptos.elements newptos)])
+    (Sl_deqs.union_of_list 
+      (f.deqs :: g.deqs :: 
+        if augment_deqs then [explode_deqs (Sl_ptos.elements newptos)] else []))
     newptos
     (Sl_tpreds.union f.inds g.inds)
 
@@ -279,12 +276,11 @@ let add_ind h ind = with_inds h (Sl_tpreds.add ind h.inds)
 
 let univ s f =
   let vs = vars f in
-  let evs = Sl_term.Set.filter Sl_term.is_exist_var vs in
-  let n = Sl_term.Set.cardinal evs in
-  if n=0 then f else
-  let uvs = Sl_term.fresh_uvars (Sl_term.Set.union s vs) n in
-  let theta = Sl_term.Map.of_list (Blist.combine (Sl_term.Set.elements evs) uvs) in
-  subst theta f
+  let theta = 
+    Sl_term.mk_univ_subst
+      (Sl_term.Set.union s vs)
+      (Sl_term.Set.filter Sl_term.is_exist_var vs) in
+  if Sl_term.Map.is_empty theta then f else subst theta f
   
 let subst_existentials h =
   let aux h' =
@@ -342,7 +338,7 @@ let freshen_tags h' h =
 let subst_tags tagpairs h =
   with_inds h (Sl_tpreds.subst_tags tagpairs h.inds)
 
-let unify_partial ?(tagpairs=false) ?(update_check=Fun._true) h h' cont init_state = 
+let unify_partial ?(tagpairs=true) ?(update_check=Fun._true) h h' cont init_state = 
   (Sl_tpreds.unify ~total:false ~tagpairs ~update_check h.inds h'.inds
   (Sl_ptos.unify ~total:false ~update_check h.ptos h'.ptos
   (Sl_deqs.unify_partial ~update_check h.deqs h'.deqs
@@ -350,7 +346,16 @@ let unify_partial ?(tagpairs=false) ?(update_check=Fun._true) h h' cont init_sta
   (cont)))))
   init_state
 
-let classical_unify ?(inverse=false) ?(tagpairs=false) 
+let biunify_partial ?(tagpairs=true) ?(update_check=Fun._true) 
+    h h' cont init_state = 
+  (Sl_tpreds.biunify ~total:false ~tagpairs ~update_check h.inds h'.inds
+  (Sl_ptos.biunify ~total:false ~update_check h.ptos h'.ptos
+  (Sl_deqs.biunify_partial ~update_check h.deqs h'.deqs
+  (Sl_uf.biunify_partial ~update_check h.eqs h'.eqs 
+  (cont)))))
+  init_state
+
+let classical_unify ?(inverse=false) ?(tagpairs=true) 
     ?(update_check=Fun._true) h h' cont init_state =
   let (h_inv, h'_inv) = Fun.direct inverse Pair.mk h h' in
   (* NB how we don't need an "inverse" version for ptos and inds, since *)
@@ -362,40 +367,14 @@ let classical_unify ?(inverse=false) ?(tagpairs=false)
   (cont)))))
   init_state
 
-let compute_frame ?(freshen_existentials=true) ?(avoid=Sl_term.Set.empty) f f' =
-  Option.flatten
-    ( Option.mk_lazily
-        ((Sl_uf.all_members_of f.eqs f'.eqs)
-          && (Sl_deqs.all_members_of f.deqs f'.deqs)
-          && (Sl_ptos.all_members_of f.ptos f'.ptos)
-          && (Sl_tpreds.all_members_of f.inds f'.inds))
-        (fun _ ->
-          let frame = { eqs = Sl_uf.diff f.eqs f'.eqs;
-                        deqs = Sl_deqs.diff f'.deqs f.deqs;
-                        ptos = Sl_ptos.diff f'.ptos f.ptos;
-                        inds = Sl_tpreds.diff f'.inds f.inds;
-                        _terms=None;
-                        _vars=None;
-                        _tags=None
-                      } in
-          let vs =
-            Sl_term.Set.to_list
-              (Sl_term.Set.inter
-                (Sl_term.Set.filter Sl_term.is_exist_var (terms f))
-                (Sl_term.Set.filter Sl_term.is_exist_var (terms frame))) in
-          Option.mk_lazily
-            ((not freshen_existentials) || (Blist.is_empty vs))
-            (fun _ ->
-              if (freshen_existentials) then
-                let freshvars =
-                  Sl_term.fresh_evars
-                  (Sl_term.Set.union avoid (vars f'))
-                  (Blist.length vs) in
-                let theta =
-                  Sl_term.Map.of_list
-                    (Blist.map2 Pair.mk vs freshvars) in
-                subst theta frame
-              else frame)) )
+let classical_biunify ?(tagpairs=true) ?(update_check=Fun._true) 
+    h h' cont init_state = 
+  (Sl_tpreds.biunify ~tagpairs ~update_check h.inds h'.inds
+  (Sl_ptos.biunify ~update_check h.ptos h'.ptos
+  (Sl_deqs.biunify_partial ~update_check h.deqs h'.deqs
+  (Sl_uf.biunify_partial ~update_check h.eqs h'.eqs 
+  (cont)))))
+  init_state
 
 let all_subheaps h =
   let all_ptos = Sl_ptos.subsets h.ptos in

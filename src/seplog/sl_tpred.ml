@@ -12,16 +12,20 @@ let subst_tag tagpairs (tag, pred) =
   (TagPairs.apply_to_tag tagpairs tag, pred)
 
 let unify ?(tagpairs=false) ?(update_check=Fun._true)
-    (tag, pred) (tag', pred') cont init_state =
-  let tp = (tag, tag') in
-  if (not tagpairs) || 
-      (update_check (init_state, (Sl_term.Map.empty, TagPairs.singleton tp))) 
-  then
-    Sl_pred.unify ~update_check pred pred'
-      (fun (theta, tps) ->
-        cont (theta, if tagpairs then TagPairs.add tp tps else tps))
-      init_state
-  else None
+    (t, pred) (t', pred') cont init_state =
+  Sl_pred.unify ~update_check pred pred'
+  (if tagpairs
+    then Sl_unify.Unidirectional.unify_tag ~update_check t t' cont
+    else cont)
+  init_state
+
+let biunify ?(tagpairs=false) ?(update_check=Fun._true)
+    (t, pred) (t', pred') cont init_state =
+  Sl_pred.biunify ~update_check pred pred'
+  (if tagpairs
+    then Sl_unify.Bidirectional.unify_tag ~update_check t t' cont
+    else cont)
+  init_state
 
 let predsym tpred = Sl_pred.predsym (snd tpred)
 let tag (t, _) = t

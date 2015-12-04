@@ -27,10 +27,10 @@ let to_melt (l, r) =
 let pp fmt (l, r) =
   Format.fprintf fmt "@[%a %s@ %a@]" Sl_form.pp l symb_turnstile.str Sl_form.pp r
 
-let parse st =
-  ( Sl_form.parse >>= (fun l ->
-    parse_symb symb_turnstile >> 
-    Sl_form.parse >>= (fun r ->
+let parse ?(null_is_emp=false) st =
+  ( (Sl_form.parse ~null_is_emp) >>= (fun l ->
+    parse_symb symb_turnstile >> (
+    (Sl_form.parse ~null_is_emp) >>= (fun r ->
     let tags = Tags.union (Sl_form.tags l) (Sl_form.tags r) in
     let l' = Sl_form.complete_tags tags l in
     let inst_subst = 
@@ -38,17 +38,19 @@ let parse st =
         tags 
         (Util.Tags.diff (Sl_form.tags l') tags) in
     let l' = Sl_form.subst_tags inst_subst l' in
-    let r = Sl_form.complete_tags tags r in
-    return (l', r))) <?> "Sequent") st
+    let r' = Sl_form.complete_tags tags r in
+    return (l', r')))) <?> "Sequent") st
 
-let of_string s =
-  handle_reply (MParser.parse_string parse s ())
+let of_string ?(null_is_emp=false) s =
+  handle_reply (MParser.parse_string (parse ~null_is_emp) s ())
 
 let terms (l, r) = Sl_term.Set.union (Sl_form.terms l) (Sl_form.terms r)
 let vars seq = Sl_term.filter_vars (terms seq)
 
 let tags (l, r) = Util.Tags.union (Sl_form.tags l) (Sl_form.tags r)
 let tag_pairs (l, _) = TagPairs.mk (Sl_form.tags l)
+
+let get_tracepairs (l, _) (l', _) = Sl_form.get_tracepairs l l'
 
 let subst theta seq = Pair.map (Sl_form.subst theta) seq
 

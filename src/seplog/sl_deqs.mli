@@ -13,11 +13,16 @@ val to_string_list : t -> string list
 val to_melt : t -> Latex.t
 
 val unify_partial : 
-  ?inverse:bool -> ?update_check:Sl_unify.update_check -> t Sl_unify.unifier
-(** [unify_partial Option.some (Sl_term.empty_subst, ()) d d'] computes a 
-    substitution [theta] such that [d[theta]] is a subset of [d']. 
+  ?inverse:bool -> ?update_check:Sl_unify.Unidirectional.update_check 
+    -> t Sl_unify.Unidirectional.unifier
+(** [unify_partial d d' Unification.trivial_continuation Sl_unify.empty_state] 
+    computes a substitution [theta] such that [d[theta]] is a subset of [d']. 
     If the optional argument [~inverse:false] is set to [true] then a 
     substitution is computed such that [d] is a subset of [d'[theta]]. *)
+
+val biunify_partial : 
+  ?update_check:Sl_unify.Bidirectional.update_check 
+    -> t Sl_unify.Bidirectional.unifier
 
 val subsumed : Sl_uf.t -> t -> t -> bool
 (** [subsumed eqs d d'] is true iff [d] can be rewritten using the equalities

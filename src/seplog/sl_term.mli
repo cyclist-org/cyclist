@@ -40,14 +40,34 @@ val singleton_subst : t -> t -> substitution
 val subst : substitution -> t -> t
 val pp_subst : Format.formatter -> substitution -> unit
 
+val strip_subst : substitution -> substitution
+(** [strip_subst theta] removes all identity bindings from [theta] *)
+
 val avoid_theta : Set.t -> Set.t -> substitution
-(** [avoid_theta vars subvars] *)
-(** returns a substitution that takes all variables in [subvars] to new *)
-(** variables that are outside [vars U subvars], respecting exist/univ   *)
-(** quantification. *)
+(** [avoid_theta vars subvars]
+    returns a substitution that takes all variables in [subvars] to new
+    variables that are outside [vars U subvars], respecting exist/univ
+    quantification.
+*)
+
+val mk_univ_subst : Set.t -> Set.t -> substitution
+val mk_ex_subst : Set.t -> Set.t -> substitution
+
+val partition_subst : substitution -> (substitution * substitution)
+(** [partition_subst theta] will partition [theta] into ([theta_1], [theta_2])
+    such that [theta_1] contains all and only the mappings in [theta] from 
+    a universally quantified (i.e. free) variable to either [nil] or another
+    free variable; that is [theta_1] is the part of [theta] which is a proper
+    (proof-theoretic) substitution.
+*)
 
 val unify : ?update_check: (substitution * substitution) Fun.predicate -> 
   (substitution, 'a, t) Unification.cps_unifier 
+  
+val biunify: 
+  ?update_check:((substitution * substitution) * (substitution * substitution)) 
+    Fun.predicate
+      -> (substitution * substitution, 'a, t) Unification.cps_unifier
 
 module FList : 
   sig
@@ -55,6 +75,11 @@ module FList :
     val unify : 
       ?update_check: (substitution * substitution) Fun.predicate -> 
         (substitution, 'a, t) Unification.cps_unifier
+    val biunify: 
+      ?update_check:
+        ((substitution * substitution) * (substitution * substitution)) 
+          Fun.predicate
+            -> (substitution * substitution, 'a, t) Unification.cps_unifier
     val subst : substitution -> t -> t
     val to_string_sep : string -> t -> string
     val terms : t -> Set.t

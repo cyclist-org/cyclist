@@ -57,10 +57,10 @@ val subsumed_upto_tags : ?total:bool -> t -> t -> bool
     check on the spatial part so that it is included rather than equal to that
     of [b]. *)
 
-val parse : (t, 'a) MParser.t
-val of_string : string -> t
+val parse : ?null_is_emp:bool -> (t, 'a) MParser.t
+val of_string : ?null_is_emp:bool -> string -> t
 
-val star : t -> t -> t
+val star : ?augment_deqs:bool -> t -> t -> t
 (** Star two formulas by distributing [*] through [\/]. *)
 
 val disj : t -> t -> t
@@ -84,3 +84,21 @@ val with_constraints : t -> Ord_constraints.t -> t
 val with_heaps : t -> Sl_heap.t list -> t
 (** [with_heaps hs cs] returns the formula that results by replacing [f]'s
     disjunction of symbolic heaps with [hs] *)
+
+val compute_frame :
+      ?freshen_existentials:bool -> ?avoid:(Util.Tags.t * Sl_term.Set.t)
+        -> t -> t -> t option
+(** [compute_frame f f'], computes the portion of [f'] left over (the 'frame') 
+    from [f] and returns None when [f] is not subsumed by [f']. Any existential 
+    variables occurring in the frame which also occur in the specification [f] 
+    are freshened, avoiding the variables in the optional argument 
+    [~avoid=Sl_term.Set.empty].
+      If the optional argument [~freshen_existentials=true] is set to false, 
+    then None will be returned in case there are existential variables in the 
+    frame which also occur in the specification.
+*)
+
+val get_tracepairs : t -> t -> (Util.TagPairs.t * Util.TagPairs.t)
+(** [get_tracepairs f f'] will return the valid and progressing trace pairs 
+    (t, t') specified by the constraints of [f'] such that [t] occurs in [f]
+*)
