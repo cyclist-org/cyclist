@@ -9,6 +9,14 @@ module Elt : sig
   val subst_tags : Util.TagPairs.t -> t -> t
   val satisfiable : t Fun.predicate
   val valid : t Fun.predicate
+  val unify : 
+    ?update_check:((Util.TagPairs.t Unification.state_update) Fun.predicate) -> 
+      (Util.TagPairs.t, 'a, t) Unification.cps_unifier
+  val biunify : 
+    ?update_check:
+      ( ((Util.TagPairs.t * Util.TagPairs.t) Unification.state_update) 
+          Fun.predicate ) -> 
+      ((Util.TagPairs.t * Util.TagPairs.t), 'a, t) Unification.cps_unifier
 end
 
 include Util.OrderedContainer with type elt = Elt.t
@@ -67,21 +75,32 @@ val prog_pairs : t -> Util.TagPairs.t
 (** [prog_pairs cs] returns all of the tag pairs ([a], [b]) such that [a] <[b]
     is entailed by some constraint in [cs] *)
 
-val subsumed : t -> t -> bool
-(** [subsumed cs cs'] checks whether every constraint in [cs'] also occurs in [cs] *)
+val subsumes : t -> t -> bool
+(** [subsumes cs cs'] checks whether every constraint in [cs'] also occurs in 
+    [cs], ignoring any constraints in [cs'] which are universally valid 
+    (e.g. t <= t)
+*)
 
 val unify : 
-  ?inverse:bool -> 
-    ?update_check:((Util.TagPairs.t * Util.TagPairs.t) Fun.predicate) ->
+  ?total:bool -> ?inverse:bool -> 
+    ?update_check:((Util.TagPairs.t Unification.state_update) Fun.predicate) ->
       (Util.TagPairs.t, 'a, t) Unification.cps_unifier
-(** [unify inverse check cs cs' cont init_state] 
-    calculates a (minimal) extension theta of [init_state] such that 
-    [subsumed cs' (subst_tags theta cs)] returns [true] then passes it to [cont]
-    and returns the resulting (optional) value. 
-    If the value of the optional argument [inverse=false] is set to [true] then 
-    it returns theta such that [subsumed (subst_tags theta cs') cs] returns 
-    [true] instead.
-**)
+(** [unify check cs cs' cont init_state] calculates a (minimal) extension theta 
+    of [init_state] such that [subsumes cs' (subst_tags theta cs)] returns 
+    [true], then passes it to [cont] and returns the resulting (optional) value.
+      If the value of the optional argument [total=false] is set to [true] then
+    [subsumes (subst_tags theta cs) cs'] will be [true] of the result also.
+      If the value of the optional argument [inverse=false] is set to [true] 
+    then theta is returned such that [subsumes (subst_tags theta cs') cs] 
+    is [true] instead.
+*)
+
+val biunify :
+  ?total:bool ->
+    ?update_check:
+      ( ((Util.TagPairs.t * Util.TagPairs.t) Unification.state_update) 
+          Fun.predicate ) ->
+      ((Util.TagPairs.t * Util.TagPairs.t), 'a, t) Unification.cps_unifier
 
 val mk_update_check : 
   (Util.TagPairs.t * (Util.Tags.Elt.t * Util.Tags.Elt.t)) Fun.predicate 

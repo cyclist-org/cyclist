@@ -54,6 +54,23 @@ module Constraint =
       | LTE(t, t') -> Tags.Elt.equal t t'
       | _ -> false
 
+    let mk_unify elt_unify c c' cont init_state =
+      let do_unify (t, t') (t'', t''') =
+        (elt_unify t t'' 
+        (elt_unify t' t''' 
+        (cont)))
+        init_state in
+      match (c, c') with
+      | (LT(tp), LT(tp')) -> do_unify tp tp'
+      | (LTE(tp), LTE(tp')) -> do_unify tp tp'
+      | _ -> None
+
+    let unify ?(update_check=Fun._true) c c' cont init_state =
+      mk_unify (Tags.Elt.unify ~update_check) c c' cont init_state
+
+    let biunify ?(update_check=Fun._true) c c' cont init_state =
+      mk_unify (Tags.Elt.biunify ~update_check) c c' cont init_state
+
   end
   
 module Elt = Constraint
@@ -67,7 +84,8 @@ let to_melt cs = ltx_comma (map_to_list Constraint.to_melt cs)
 let to_string_list cs = map_to_list Constraint.to_string cs
 
 let parse st =
-  ( sep_by Constraint.parse (parse_symb symb_comma) >>= (fun cs ->
+  ( ( attempt (sep_by Constraint.parse (parse_symb symb_comma)) 
+    <|> (return [])) >>= (fun cs ->
     let cs = of_list cs in 
     if (is_empty cs) then return cs
     else Tokens.colon >> (return cs))) st
@@ -156,34 +174,20 @@ let inconsistent cs =
     | _ -> false)
     cs
 
-let subsumed cs cs' = 
+let subsumes cs cs' = 
   let cs' = filter 
     (function | Constraint.LTE(t, t') -> not (Tags.Elt.equal t t') | _ -> true)
     cs' in
   for_all (Fun.swap mem cs) cs'
 
-let unify ?(inverse=false) ?(update_check=Fun._true)
+let unify ?(total=false) ?(inverse=false) ?(update_check=Fun._true)
     cs cs' cont init_state =
-  let (domain, range) = 
-    Pair.map tags (Fun.direct inverse Pair.mk cs cs') in
-  let rec aux theta unmapped =
-    let (cs, cs') = 
-      if inverse then (cs, subst_tags theta cs')
-      else (subst_tags theta cs, cs') in
-    if Tags.is_empty unmapped then 
-      if subsumed cs' cs then cont theta else None
-    else
-      let tag = Tags.choose unmapped in
-      let unmapped = Tags.remove tag unmapped in
-      let valid_mapping img = 
-        let theta' = TagPairs.add (tag, img) theta in
-        if update_check (theta, TagPairs.singleton (tag, img))
-        then aux theta' unmapped
-        else None in
-      Tags.find_map valid_mapping range
-    in
-  let unmapped = TagPairs.map_to Tags.remove domain fst init_state in
-  aux init_state unmapped
+  mk_unifier total false (Fun.direct inverse (Elt.unify ~update_check))
+    cs cs' cont init_state
+  
+let biunify ?(total=false) ?(update_check=Fun._true)
+    cs cs' cont init_state =
+  mk_unifier total false (Elt.biunify ~update_check) cs cs' cont init_state  
   
 let mk_update_check f (state, tps) = 
   Option.pred_dest (Fun.curry f state) (TagPairs.dest_singleton tps)

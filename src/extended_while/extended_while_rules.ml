@@ -361,7 +361,8 @@ let param_subst_rule theta ((_,cmd',_) as seq') ((_,cmd,_) as seq) =
     then 
       [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], 
           "Param Subst" (* ^ (Format.asprintf " %a" Sl_term.pp_subst theta) *) ]
-    else 
+    else
+      let () = debug (fun _ -> "Unsuccessfully tried to apply parameter substitution rule") in 
       []
 
 let subst_rule (theta, tps) ((pre', _, _) as seq') ((pre, _, _) as seq) = 
@@ -392,33 +393,10 @@ let left_or_elim_rule (((_, hs'),cmd',post') as seq') (pre,cmd,post) =
       else
         let () = debug (fun _ -> "Unsuccessfully tried to apply left_or_elim rule!") in
         []
-  with Not_symheap -> []
-      
-(* Rule specialising/splitting existential variables on LHS *)
-let ex_sp_left_rule ((pre, cmd, _) as seq) ((pre', cmd', _) as seq') =
-  try
-    let (pre_cs, pre_f) = Sl_form.dest pre in
-    let (pre_cs', pre_f') = Sl_form.dest pre' in
-    if not (Cmd.equal cmd cmd') then [] else
-      let theta = Sl_unify.Unidirectional.realize 
-        (Sl_heap.classical_unify 
-          ~update_check:Sl_unify.Unidirectional.existentials_only
-          pre_f pre_f'
-        (Sl_unify.Unidirectional.unify_tag_constraints 
-          ~total:true ~update_check:Sl_unify.Unidirectional.existentials_only
-          pre_cs pre_cs'
-        (Sl_unify.Unidirectional.mk_verifier 
-          Sl_unify.Unidirectional.existential_split_check))) in 
-      if Option.is_some theta then
-        let tagpairs =
-          if !termination then TagPairs.reflect (snd (Option.get theta))
-          else Seq.tagpairs_one in 
-        [ [(seq, tagpairs, TagPairs.empty)], "Cut (Ex. Sp.)" ]      
-      else
-        let () = debug (fun _ -> "Failed Ex. Sp. Check:\n\t" ^ (Seq.to_string seq) ^ "\n\t" ^ (Seq.to_string seq')) in
-        []
-  with Not_symheap -> []
-      
+  with Not_symheap -> 
+    let () = debug (fun _ -> "Unsuccessfully tried to apply left_or_elim rule - precondition not a symbolic heap!") in
+    []
+           
 let left_cut_rule ((pre, cmd, post) as seq) ((pre', cmd', post') as seq') =
   if Cmd.equal cmd cmd' && Sl_form.equal post post' 
       && Option.is_some (entails pre' pre) then
@@ -668,7 +646,7 @@ let transform_seq ((pre, cmd, post) as seq) =
 let mk_proc_call_rule_seq 
     ((proc, param_subst), (src_pre, src_cmd, src_post)) 
     ((link_pre, link_cmd, link_post), bridge_rule) = 
-  let ((target_pre, _, _) as target_seq) = Proc.get_seq proc in
+  let target_seq = Proc.get_seq proc in
   let prog_cont = Cmd.get_cont src_cmd in
   assert (Cmd.is_proc_call src_cmd) ;
   assert (let (p, args) = Cmd.dest_proc_call src_cmd in 
@@ -679,27 +657,22 @@ let mk_proc_call_rule_seq
   assert 
     (Cmd.is_empty prog_cont || 
       Cmd.equal (fst (Cmd.split src_cmd)) link_cmd) ; 
-  let seq_newparams = Seq.param_subst param_subst target_seq in
+  let ((inst_pre, _, _) as seq_newparams) = Seq.param_subst param_subst target_seq in
   let (link_rl, cont_rl) =
     if Cmd.is_empty prog_cont
       then (Rule.identity, Blist.empty)
       else (Rule.mk_infrule (seq_rule link_post), [Rule.identity]) in
   let or_elim_rl = 
-    if Sl_form.is_symheap target_pre
+    if Sl_form.is_symheap inst_pre
       then Rule.identity
       else Rule.mk_infrule (left_or_elim_rule seq_newparams) in
   let param_rl = 
     if Seq.equal seq_newparams target_seq
       then Rule.identity
       else Rule.mk_infrule (param_subst_rule param_subst target_seq) in
-  Rule.compose
+  Rule.compose_pairwise
     link_rl
-    (Rule.compose_pairwise
-      bridge_rule
-      ((Rule.sequence [
-          or_elim_rl ;
-          param_rl ;
-        ]) :: cont_rl))
+    ((Rule.compose bridge_rule (Rule.compose or_elim_rl param_rl)) :: cont_rl)
       
 let mk_symex_proc_call procs =
   fun idx prf ->
