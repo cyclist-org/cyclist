@@ -462,7 +462,7 @@ let seq_rule mid ((pre, cmd, post) as src_seq) =
   try
     let (cmd, cont) = Cmd.split cmd in
     let left_seq = (pre, cmd, mid) in
-    let right_seq = (mid, cmd, post) in
+    let right_seq = (mid, cont, post) in
     let (allpairs, progressing) = 
       if !termination then Seq.get_tracepairs src_seq right_seq
       else (Seq.tagpairs_one, TagPairs.empty) in 
@@ -564,6 +564,15 @@ let transform_seq ((pre, cmd, post) as seq) =
         Sl_form.subst_tags 
           post_tag_subst 
           (Sl_form.subst post_trm_subst framed_post) in
+      let subst_avoid_tags = 
+        Tags.union (Sl_form.tags frame) (TagPairs.flatten tag_theta) in
+      let subst_avoid_trms =
+        Sl_term.Set.union 
+          (Sl_form.vars frame) 
+          (Sl_term.Map.fold
+            (fun x y vs -> Sl_term.Set.add x (Sl_term.Set.add y vs))
+            trm_theta
+            Sl_term.Set.empty) in
       let post_transforms =
         if match_post then
           Sl_abduce.abd_bi_substs
@@ -571,14 +580,20 @@ let transform_seq ((pre, cmd, post) as seq) =
             ~update_check:
               (Fun.conj
                 (Sl_unify.Bidirectional.updchk_inj_left
-                  (Fun.conj
-                    (Sl_unify.Unidirectional.is_substitution)
-                    (Sl_unify.Unidirectional.avoid_replacing_trms 
-                      (Sl_term.Set.union prog_vars (Sl_form.vars frame)))))
+                  (Fun.list_conj [
+                      (Sl_unify.Unidirectional.is_substitution) ;
+                      (Sl_unify.Unidirectional.avoid_replacing_trms 
+                        subst_avoid_trms) ;
+                      (Sl_unify.Unidirectional.avoid_replacing_tags
+                        subst_avoid_tags)
+                    ]))
                 (Sl_unify.Bidirectional.updchk_inj_right
                   Sl_unify.Unidirectional.modulo_entl))
             ex_post post
-        else Some ((ex_post, post), [Sl_unify.Bidirectional.empty_state]) in
+        else
+          Some 
+            ((ex_post, post), 
+              [(trm_theta, tag_theta), Sl_unify.Unidirectional.empty_state]) in
       Option.map
         (fun (_, substs) -> 
           (* We just need one, since it does not affect subsequent proof search *)
@@ -590,11 +605,13 @@ let transform_seq ((pre, cmd, post) as seq) =
           let () = debug (fun _ -> "Right-hand sub:") in
           let () = debug (fun _ -> "\tterms: " ^ (Sl_term.Map.to_string Sl_term.to_string (fst (snd subst)))) in
           let () = debug (fun _ -> "\ttags: " ^ (Strng.Pairing.Set.to_string (TagPairs.to_names (snd (snd subst))))) in
-          let trm_theta = Sl_term.Map.union trm_theta (Sl_term.strip_subst (fst theta)) in
-          let tag_theta = TagPairs.union tag_theta (TagPairs.strip (snd theta)) in
+          let trm_theta = 
+            Sl_term.Map.union trm_theta (Sl_term.strip_subst (fst theta)) in
+          let tag_theta = 
+            TagPairs.union tag_theta (TagPairs.strip (snd theta)) in
           let () = debug (fun _ -> "Verified entailment with bud postcondition") in
-          let () = debug (fun _ -> "Added term substitution: " ^ (Sl_term.Map.to_string Sl_term.to_string trm_theta)) in
-          let () = debug (fun _ -> "Added tag substitution: " ^ (Strng.Pairing.Set.to_string (TagPairs.to_names tag_theta))) in
+          let () = debug (fun _ -> "Final term substitution: " ^ (Sl_term.Map.to_string Sl_term.to_string trm_theta)) in
+          let () = debug (fun _ -> "Final tag substitution: " ^ (Strng.Pairing.Set.to_string (TagPairs.to_names tag_theta))) in
           let subst_seq = Seq.subst_tags tag_theta (Seq.subst trm_theta seq') in
           let interpolated_seq = (f, cmd, f') in
           let framed_seq = 

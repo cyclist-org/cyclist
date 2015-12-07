@@ -793,6 +793,9 @@ module TagPairs =
       
     let strip tps = filter (fun (t, t') -> not (Tags.Elt.equal t t')) tps
     
+    let flatten tps =
+      map_to Tags.union Tags.empty (fun (t, t') -> Tags.of_list [t; t']) tps
+    
     let mk_univ_subst avoid ts =
       let univs = Tags.fresh_uvars (Tags.union ts avoid) (Tags.cardinal ts) in
       of_list (Blist.combine (Tags.to_list ts) univs)

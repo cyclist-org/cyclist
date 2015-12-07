@@ -155,14 +155,14 @@ struct
   let avoid_replacing_trms ?(inverse=false) vars (_, (theta, _)) = 
     Sl_term.Map.for_all
       (Fun.direct inverse 
-        (fun x y -> Sl_term.equal x y || not (Sl_term.Set.mem x vars)))
+        (fun x _ -> not (Sl_term.Set.mem x vars)))
       theta
       
   let avoid_replacing_tags ?(inverse=false) tags (_, (_, theta)) = 
     TagPairs.for_all
       (Fun.uncurry 
         (Fun.direct inverse 
-          (fun t t' -> Tags.Elt.equal t t' || not (Tags.mem t tags))))
+          (fun t _ -> not (Tags.mem t tags))))
       theta
       
   let existentials_only (_, (trm_subst, tag_subst)) =
