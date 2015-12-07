@@ -801,7 +801,9 @@ let setup (defs, procs) =
       
       Rule.choice [
         
-        dobackl ;
+        Rule.conditional
+          (fun (_, cmd, _) -> Cmd.is_while cmd || Cmd.is_proc_call cmd)
+          dobackl ;
 
         Rule.first [
           symex_skip_rule ;
@@ -815,11 +817,11 @@ let setup (defs, procs) =
           symex_while_rule ;
           symex_proc_unfold ;
           symex_proc_call ;
+          luf defs ;
         ] ;
         
         (* generalise_while_rule ; *)
         
-        luf defs ;
       ]
     ] ;
   let axioms = 
