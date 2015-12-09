@@ -1,0 +1,38 @@
+fields: next;
+
+proc Ack(x, y, z)
+	precondition: ls[a](x,nil) * ls(y,nil) * z->v';
+	postcondition: ls[a](x,nil) * z->v' * ls(v',nil);
+{
+	if x = nil then
+	
+		a := new();
+		a.next := y;
+		z.next := a
+		
+	else
+	
+		b := new();
+		if y = nil then
+		
+			a := x.next;
+			b.next := nil;
+			Ack(a, b, z)
+		
+		else
+		
+			a := y.next;
+			Ack(x, a, b);
+			a := x.next;
+			Ack(a, b, z)
+		
+		fi
+	
+	fi
+}
+
+precondition: ls(x,nil) * ls(y,nil);
+postcondition: ls(x,nil) * z->v' * ls(v',nil);
+
+z := new();
+Ack(x, y, z)
