@@ -80,6 +80,10 @@ val norm : t -> t
 val with_constraints : t -> Ord_constraints.t -> t
 (** [with_constraints f cs] returns the formula that results by replacing [f]'s
     tag constraints with [cs] *)
+    
+val add_constraints : t -> Ord_constraints.t -> t
+(** [add_constraints f cs] returns the formula the results by adding [cs] to the
+    constraints already in [f] *)
 
 val with_heaps : t -> Sl_heap.t list -> t
 (** [with_heaps hs cs] returns the formula that results by replacing [f]'s

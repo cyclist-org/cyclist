@@ -58,6 +58,12 @@ val remove_schema : t -> Util.Tags.t -> (t * string) option
     tautological schema.
 *)
 
+val verify_schemas : Util.Tags.t -> t -> bool
+(** [verify_schemas ts cs] will return [true] when [cs] consists entirely of
+    tautological schemas. This is computed by repeatedly trying to remove
+    schemas using [remove_schema cs ts] until failure; if [cs] before failure
+    was empty, then [true] is returned, and [false] otherwise. *)
+
 val upper_bounds : ?strict:bool -> Util.Tags.elt -> t -> Util.Tags.t
 (** [upper_bounds ?strict t cs] returns the set of tags [b] such that [cs]
     contains a constraint of the form [t] <= [b]. If the option argument

@@ -142,6 +142,14 @@ let remove_schema cs used =
         None in
     Option.map (Pair.mk cs) ident in
   Tags.find_map get_schema tags
+  
+let verify_schemas used_tags cs =
+  let rec f cs =
+    Option.dest_lazily 
+      (fun _ -> cs) 
+      (fun (cs, _) -> f cs) 
+      (remove_schema cs used_tags) in
+  is_empty (f cs)
     
 let upper_bounds ?(strict=false) t cs =
   let f = function

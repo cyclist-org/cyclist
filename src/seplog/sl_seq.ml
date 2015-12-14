@@ -50,7 +50,9 @@ let vars seq = Sl_term.filter_vars (terms seq)
 let tags (l, r) = Util.Tags.union (Sl_form.tags l) (Sl_form.tags r)
 let tag_pairs (l, _) = TagPairs.mk (Sl_form.tags l)
 
-let get_tracepairs (l, _) (l', _) = Sl_form.get_tracepairs l l'
+let get_tracepairs (l, _) (l', _) = 
+  let tps = Sl_form.get_tracepairs l l' in
+  Pair.map (TagPairs.filter (fun (t, _) -> Tags.is_univ_var t)) tps
 
 let subst theta seq = Pair.map (Sl_form.subst theta) seq
 

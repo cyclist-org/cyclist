@@ -114,6 +114,8 @@ let norm (cs, hs) = (cs, Blist.map Sl_heap.norm hs)
 let with_constraints (_, hs) cs = (cs, hs)
 let with_heaps (cs, _) hs = (cs, hs)
 
+let add_constraints (cs, hs) cs' = (Ord_constraints.union cs cs', hs)
+
 let get_tracepairs f ((cs, _) as f') =
   let cs = Ord_constraints.close cs in
   let id_pairs = 

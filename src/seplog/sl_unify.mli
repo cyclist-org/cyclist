@@ -47,7 +47,7 @@ sig
   val existential_split_check : state_check
   
   val modulo_entl : update_check
-  val existential_intro : (Sl_term.Set.t * Util.Tags.t) -> update_check
+  val existential_intro : update_check
   val is_substitution : update_check
 
   val trm_check : update_check
@@ -62,7 +62,7 @@ sig
       within the given set *)
       
   val avoid_replacing_tags : ?inverse:bool -> Util.Tags.t -> update_check
-      
+  
   val tag_check : update_check
   
   val existentials_only : update_check

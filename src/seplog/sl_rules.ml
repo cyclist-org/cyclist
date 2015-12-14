@@ -24,6 +24,7 @@ let id_axiom =
             ~update_check:Sl_unify.Unidirectional.modulo_entl cs' cs
           (Sl_unify.Unidirectional.mk_verifier
             (fun theta ->
+              (not (Blist.is_empty f')) &&
               Blist.for_all
                 (fun h' ->
                   Option.is_some

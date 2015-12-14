@@ -101,7 +101,7 @@ struct
         &&
     TagPairs.for_all (fun (t, _) -> Tags.is_exist_var t) tag_subst
   
-  let existential_intro (trm_avoid, tag_avoid) 
+  let existential_intro 
       ((trm_subst_old, tag_subst_old), (trm_subst_new, tag_subst_new)) =
     let tag_test theta (t, t') =
       Tags.is_exist_var t && Tags.is_univ_var t' &&

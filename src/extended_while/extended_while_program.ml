@@ -194,7 +194,8 @@ module Seq =
     let dest (pre, cmd, post) = (Sl_form.dest pre, cmd, Sl_form.dest post)
     
     let get_tracepairs (pre, _, _) (pre', _, _) =
-      Sl_form.get_tracepairs pre pre'
+      let tps = Sl_form.get_tracepairs pre pre' in
+      Pair.map (TagPairs.filter (fun (t, _) -> Tags.is_univ_var t)) tps
     
     let frame f (pre, cmd, post) = 
       ( Sl_form.star ~augment_deqs:false pre f,

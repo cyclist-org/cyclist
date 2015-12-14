@@ -416,20 +416,27 @@ let right_cut_rule ((pre, cmd, post) as seq) (pre', cmd', post') =
     let () = debug (fun _ -> "Unsuccessfully tried to apply right cut rule!") in
     []
     
-let ex_intro_rule ((pre, cmd, _) as seq) ((pre', cmd', _) as seq') =
-  if Cmd.equal cmd cmd' then
+let ex_intro_rule ((pre, cmd, post) as seq) ((pre', cmd', post') as seq') =
+  if Cmd.equal cmd cmd' && Sl_form.equal post post' then
     try
       let (cs, h) = Sl_form.dest pre in
       let (cs', h') = Sl_form.dest pre' in
+      let post_utrms = 
+        Sl_term.Set.filter Sl_term.is_univ_var (Sl_form.vars post) in
+      let post_utags = Tags.filter Tags.is_univ_var (Sl_form.tags post) in
       let () = debug (fun _ -> "Testing existential introduction for:\n\t" ^ (Seq.to_string seq) ^ "\n\t" ^ (Seq.to_string seq')) in
       let update_check = 
         (fun ((_, (trm_subst, tag_subst)) as state_update) ->
-          let () = debug (fun _ -> "\tTesting state update:" ^ 
-            "\n\t\tTerms: " ^ (Sl_term.Map.to_string Sl_term.to_string trm_subst) ^
-            "\n\t\tTags: " ^ (Strng.Pairing.Set.to_string (TagPairs.to_names tag_subst))) in
+          let () = debug (fun _ -> "\t" ^ "Testing state update:" ^ 
+            "\n\t\t" ^ "Terms: " ^ (Sl_term.Map.to_string Sl_term.to_string trm_subst) ^
+            "\n\t\t" ^ "Tags: " ^ (Strng.Pairing.Set.to_string (TagPairs.to_names tag_subst))) in
           let result =
-            (Sl_unify.Unidirectional.existential_intro 
-              (Sl_form.vars pre', Sl_form.tags pre')) state_update in
+            (Fun.list_conj [
+                  Sl_unify.Unidirectional.existential_intro ;
+                  Sl_unify.Unidirectional.avoid_replacing_trms ~inverse:true post_utrms ;
+                  Sl_unify.Unidirectional.avoid_replacing_tags ~inverse:true post_utags ;
+                ])
+            state_update in
           let () = debug (fun _ -> "\tResult: " ^ (string_of_bool result)) in
           result) in
       let subst =
@@ -483,14 +490,32 @@ let frame_rule frame ((pre, cmd, post) as seq) ((pre', cmd', post') as seq') =
   else
     let () = debug (fun _ -> "Unsuccessfully tried to apply frame rule!") in
     []
+    
+let schema_intro_rule (((cs, hs), cmd, post) as seq) 
+    ((((cs', hs') as pre'), cmd', post') as seq') =
+  if Cmd.equal cmd cmd' && Ord_constraints.subset cs' cs 
+      && (Blist.equal Sl_heap.equal hs hs')
+      && Sl_form.equal post post' then
+    let schema = Ord_constraints.diff cs cs' in
+    if (Ord_constraints.verify_schemas (Sl_form.tags pre') schema) then
+      let (allpairs, progressing) = 
+        if !termination then Seq.get_tracepairs seq' seq
+        else (Seq.tagpairs_one, TagPairs.empty) in 
+      [ [ (seq, allpairs, progressing) ], "Constraint Schema Intro." ]
+    else
+      let () = debug (fun _ -> "Unsuccessfully tried to apply schema introduction rule - was not a valid schema!") in
+      []
+  else
+    let () = debug (fun _ -> "Unsuccessfully tried to apply schema introduction rule!") in
+    []
       
 let transform_seq ((pre, cmd, post) as seq) = 
   fun ?(match_post=true) ((pre', cmd', post') as seq') ->
     if not (Cmd.equal cmd cmd') then Blist.empty else
     if (Sl_form.equal pre pre') && (Sl_form.equal post post') then
       [ (seq, Rule.identity) ] else
-    let () = debug (fun _ -> "Trying to unify left-hand sides of:" ^ "\n\tbud:" ^
-      (Seq.to_string seq) ^ "\n\tcandidate companion: " ^ (Seq.to_string seq')) in
+    let () = debug (fun _ -> "Trying to unify left-hand sides of:" ^ "\n\t" ^ "bud: " ^
+      (Seq.to_string seq) ^ "\n\t" ^ "candidate companion: " ^ (Seq.to_string seq')) in
     let prog_vars = Cmd.vars cmd in
     let u_tag_theta = 
       TagPairs.mk_univ_subst
@@ -500,14 +525,20 @@ let transform_seq ((pre, cmd, post) as seq) =
       Sl_term.mk_univ_subst
         (Sl_term.Set.union (Seq.all_vars seq) (Seq.all_vars seq'))
         (Sl_term.Set.filter Sl_term.is_exist_var (Sl_form.vars pre)) in
-    let upre =
+    let ((ucs, _) as upre) =
       Sl_form.subst_tags u_tag_theta (Sl_form.subst u_trm_theta pre) in 
     let () = debug (fun _ -> "Instantiated existentials in bud precondition:" ^
       "\n\t" ^ (Sl_form.to_string upre) ^
-      "\n\ttag subst: " ^ (Strng.Pairing.Set.to_string (TagPairs.to_names u_tag_theta)) ^
-      "\n\tvar subst: " ^ (Sl_term.Map.to_string Sl_term.to_string u_trm_theta)) in
+      "\n\t" ^ "tag subst: " ^ (Strng.Pairing.Set.to_string (TagPairs.to_names u_tag_theta)) ^
+      "\n\t" ^ "var subst: " ^ (Sl_term.Map.to_string Sl_term.to_string u_trm_theta)) in
     let pre_transforms =
       Sl_abduce.abd_substs
+        ~used_tags:(Tags.union_of_list [
+            Sl_form.tags upre ;
+            Sl_form.tags post ;
+            Sl_form.tags pre' ;
+            Sl_form.tags post' ;
+          ])
         ~update_check:
           (Fun.disj
             (Sl_unify.Unidirectional.modulo_entl)
@@ -524,16 +555,25 @@ let transform_seq ((pre, cmd, post) as seq) =
       let () = debug (fun _ -> "Found interpolant: (" ^ (Sl_form.to_string g) ^ ", " ^ (Sl_form.to_string g') ^ ")") in
       let () = debug (fun _ -> "Term sub: " ^ (Sl_term.Map.to_string Sl_term.to_string trm_subst)) in
       let () = debug (fun _ -> "Tag sub: " ^ (Strng.Pairing.Set.to_string (TagPairs.to_names tag_subst))) in
-      let f = Sl_form.subst trm_subst (Sl_form.subst_tags tag_subst g') in
+      let ((cs, _) as f) = 
+        Sl_form.subst trm_subst (Sl_form.subst_tags tag_subst g') in
       let (trm_theta, trm_subst) = Sl_term.partition_subst trm_subst in
       let (tag_theta, tag_subst) = TagPairs.partition_subst tag_subst in
       let f' = Sl_form.subst trm_theta (Sl_form.subst_tags tag_theta post') in
       let used_tags = Tags.union (Sl_form.tags f) (Sl_form.tags f') in
       let used_trms = Sl_term.Set.union (Sl_form.vars f) (Sl_form.vars f') in
       let () = debug (fun _ -> "Computing frame left over from: " ^ (Sl_form.to_string f)) in
+      let abd_schema = Ord_constraints.diff cs ucs in
+      let schema_tags = 
+        Tags.filter 
+          Tags.is_univ_var 
+          (Tags.diff 
+            (Ord_constraints.tags abd_schema) 
+            (Sl_form.tags upre)) in
+      let g = Sl_form.add_constraints g abd_schema in
       let frame = Sl_form.compute_frame ~avoid:(used_tags, used_trms) f g in
       assert (Option.is_some frame) ;
-      let frame = Option.get frame in
+      let frame = Sl_form.add_constraints (Option.get frame) abd_schema in
       let clashing_prog_vars =
         Sl_term.Set.inter (Cmd.modifies ~strict:false cmd) (Sl_form.vars frame) in
       let ex_subst = 
@@ -546,11 +586,14 @@ let transform_seq ((pre, cmd, post) as seq) =
       let () = debug (fun _ -> "Companion postcondition after substitution and framing: " ^ (Sl_form.to_string framed_post)) in
       let clashing_utags =
         Tags.inter
-          (TagPairs.map_to Tags.add Tags.empty snd u_tag_theta)
+          (Tags.union
+            (schema_tags)
+            (TagPairs.map_to Tags.add Tags.empty snd u_tag_theta))
           (Sl_form.tags framed_post) in
       let clashing_uvars = 
         Sl_term.Set.inter
-          (Sl_term.Set.of_list (Blist.map snd (Sl_term.Map.bindings u_trm_theta)))
+          (Sl_term.Set.of_list 
+            (Blist.map snd (Sl_term.Map.bindings u_trm_theta)))
           (Sl_form.vars framed_post) in
       let post_tag_subst =
         TagPairs.mk_ex_subst
@@ -564,6 +607,12 @@ let transform_seq ((pre, cmd, post) as seq) =
         Sl_form.subst_tags 
           post_tag_subst 
           (Sl_form.subst post_trm_subst framed_post) in
+      let schema_subst = 
+        TagPairs.mk_ex_subst
+          (Tags.union (Sl_form.tags pre) (Sl_form.tags ex_post))
+          schema_tags in
+      let ex_schema = Ord_constraints.subst_tags schema_subst abd_schema in
+      let pre_with_schema = Sl_form.add_constraints pre ex_schema in
       let subst_avoid_tags = 
         Tags.union (Sl_form.tags frame) (TagPairs.flatten tag_theta) in
       let subst_avoid_trms =
@@ -619,6 +668,7 @@ let transform_seq ((pre, cmd, post) as seq) =
             (framed_pre, cmd, framed_post) in
           let univ_seq = Seq.with_pre framed_seq g in
           let partial_univ_seq = Seq.with_post univ_seq ex_post in
+          let schema_seq = Seq.with_pre partial_univ_seq pre_with_schema in
           let ex_seq = Seq.with_pre partial_univ_seq pre in
           let rule =
             Rule.sequence [
@@ -626,7 +676,11 @@ let transform_seq ((pre, cmd, post) as seq) =
                   then Rule.identity
                   else Rule.mk_infrule (right_cut_rule ex_seq) ;
                 
-                if Seq.equal ex_seq partial_univ_seq
+                if Seq.equal ex_seq schema_seq
+                  then Rule.identity
+                  else Rule.mk_infrule (schema_intro_rule schema_seq) ;
+                
+                if Seq.equal schema_seq partial_univ_seq
                   then Rule.identity
                   else Rule.mk_infrule (ex_intro_rule partial_univ_seq) ;
                   
@@ -648,7 +702,8 @@ let transform_seq ((pre, cmd, post) as seq) =
                   
                 if Seq.equal subst_seq seq'
                   then Rule.identity
-                  else Rule.mk_infrule (subst_rule (trm_theta, tag_theta) seq') ;
+                  else 
+                    Rule.mk_infrule (subst_rule (trm_theta, tag_theta) seq') ;
               ] in
             ((if match_post then seq else ex_seq), rule))
         post_transforms in
