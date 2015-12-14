@@ -232,30 +232,36 @@ module Cmd =
           parse >>= (fun cmd ->
           parse_symb keyw_od >>$ While(cond,cmd))))
   (*   | v = var; FLD_SEL; fld = IDENT; ASSIGN; t = term *)
-      <|> attempt (Sl_term.parse >>= (fun v ->
+      <|> attempt (parse_ident >>= (fun v ->
           parse_symb symb_fld_sel >>
           parse_ident >>= (fun id ->
           parse_symb symb_assign >>
           Sl_term.parse |>> (fun t ->
+          let v = Sl_term.of_string v in
           assert (is_prog_var v) ; Store(v,id,t)))))
   (*   v = var; ASSIGN; NEW; LP; RP { P.Cmd.mk_new v } *)
-      <|> attempt (Sl_term.parse <<
+      <|> attempt (parse_ident <<
           parse_symb symb_assign <<
           parse_symb keyw_new <<
           parse_symb symb_lp <<
           parse_symb symb_rp |>> (fun v ->
+          let v = Sl_term.of_string v in
           assert (is_prog_var v) ; New v))
   (*   | v1 = var; ASSIGN; v2 = var; FLD_SEL; fld = IDENT *)
-      <|> attempt (Sl_term.parse >>= (fun v1 ->
+      <|> attempt (parse_ident >>= (fun v1 ->
           parse_symb symb_assign >>
-          Sl_term.parse >>= (fun v2 ->
+          parse_ident >>= (fun v2 ->
           parse_symb symb_fld_sel >>
           parse_ident |>> (fun id ->
+          let v1 = Sl_term.of_string v1 in
+          let v2 = Sl_term.of_string v2 in
           assert (is_prog_var v1 && is_prog_var v2) ; Load(v1,v2,id)))))
     (* | v = var; ASSIGN; t = term { P.Cmd.mk_assign v t } *)
-      <|> attempt ( Sl_term.parse >>= (fun v -> 
+      <|> attempt ( parse_ident >>= (fun v -> 
           parse_symb symb_assign >> 
-          Sl_term.parse |>> (fun t -> 
+          parse_ident |>> (fun t -> 
+          let v = Sl_term.of_string v in
+          let t = Sl_term.of_string t in
           assert (is_prog_var v) ; Assign(v,t))) )
       <|> (parse_ident >>= (fun p ->
           Tokens.parens (Tokens.comma_sep Sl_term.parse) |>> (fun args ->
