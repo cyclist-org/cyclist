@@ -27,6 +27,11 @@ postcondition: x -> nil * y -> v' * ls(v',nil) * z -> w' * ls(w',nil);
 		
 		fi
 	
+	else
+	
+	  y.next := nil;
+	  z.next := nil
+	
 	fi
 }
 
