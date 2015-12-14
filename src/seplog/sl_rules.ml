@@ -128,7 +128,7 @@ let eq_subst_rule ((lhs, rhs) as seq) =
 (* substitute one equality in RHS involving an existential var *)
 let eq_ex_subst_rule ((lhs, rhs) as seq) =
   try
-    let ((_, l),(_, r)) = Sl_seq.dest seq in
+    let (_, (_, r)) = Sl_seq.dest seq in
     let reqs = Sl_uf.bindings r.SH.eqs in
     let (x,y) as p = Blist.find (fun (x,_) -> Sl_term.is_exist_var x) reqs in
     let reqs = Blist.filter (fun q -> q!=p) reqs in

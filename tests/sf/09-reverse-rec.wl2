@@ -34,7 +34,8 @@ postcondition: x->w' * ls(w', nil);
 		ptr := new();
 		list.next := nil;
 		ptr.next := list;
-		append(x, ptr)
+		append(x, ptr);
+		free(ptr)
 	
 	fi
 }

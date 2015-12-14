@@ -3,6 +3,7 @@ open Util
 
 module Proof = Proof.Make(Sl_seq)
 module Rule = Proofrule.Make(Sl_seq)
+module Seqtactics = Seqtactics.Make(Sl_seq)
 module Prover = Prover.Make(Sl_seq)
 
 exception Not_symheap = Sl_form.Not_symheap
@@ -17,11 +18,14 @@ let mk_axiom unify res =
 
 let ruf_rl = Sl_rules.ruf_rl
 let bounds_intro = Rule.mk_infrule Sl_rules.bounds_intro_rl
+let eq_ex_subst = 
+  Rule.mk_infrule (Seqtactics.relabel "RHS.Ex.Eq." Sl_rules.eq_ex_subst_rule)
 
 let rules = ref Rule.fail
 let set_defs defs = 
   rules := Rule.first [
       bounds_intro ;
+      eq_ex_subst ;
       Rule.mk_infrule (ruf_rl defs) ;
     ]
 
