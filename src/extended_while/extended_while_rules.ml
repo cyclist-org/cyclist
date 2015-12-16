@@ -11,9 +11,11 @@ module Seqtactics = Seqtactics.Make(Extended_while_program.Seq)
 module Proof = Proof.Make(Extended_while_program.Seq)
 module Slprover = Prover.Make(Sl_seq)
 
+let entl_depth = ref Sl_abduce.max_depth
+
 (* Wrapper for the entailment prover *)
 let entails f f' =
-  Slprover.idfs 1 Sl_abduce.max_depth !Sl_rules.axioms !Sl_rules.rules (f, f')
+  Slprover.idfs 1 !entl_depth !Sl_rules.axioms !Sl_rules.rules (f, f')
 
 let tagpairs = Seq.tag_pairs
 
@@ -360,7 +362,11 @@ let assert_rule =
       let f = Cmd.dest_assert cmd in
       let cont = Cmd.get_cont cmd in
       let f = Sl_form.complete_tags Tags.empty f in
-      if Option.is_some (entails pre f) then
+      let default_depth = !entl_depth in
+      entl_depth := 10;
+      let entl_result = entails pre f in
+      entl_depth := default_depth;
+      if Option.is_some (entl_result) then
         let seq' = (f, cont, post) in
         let (allpairs, progressing) = 
           if !termination then Seq.get_tracepairs seq seq'
