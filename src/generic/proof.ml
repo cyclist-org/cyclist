@@ -99,7 +99,7 @@ module Make(Seq : Sigs.SEQUENT) =
     let get_ancestry idx prf =
       let rec aux acc idx (par_idx, n) =
         let parent = get par_idx prf in
-        let acc = (par_idx, n)::acc in
+        let acc = (idx, n)::acc in
         if par_idx=idx then acc else aux acc par_idx parent in
       aux [] idx (get idx prf)
       
