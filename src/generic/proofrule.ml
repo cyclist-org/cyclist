@@ -57,6 +57,11 @@ struct
   let all_nodes srcidx prf = 
     Blist.filter (fun idx -> idx<>srcidx) (Blist.map fst (Proof.to_list prf))
   let ancestor_nodes srcidx prf = Blist.map fst (Proof.get_ancestry srcidx prf)
+  let syntactically_equal_nodes srcidx prf =
+    let seq = Proof.get_seq srcidx prf in
+    Blist.filter
+      (fun idx -> idx<>srcidx && Seq.equal seq (Proof.get_seq idx prf))
+      (Blist.map fst (Proof.to_list prf))
 
   
   let fail _ _ = L.empty

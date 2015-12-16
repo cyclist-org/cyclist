@@ -80,6 +80,7 @@ let keyw_skip = mk_keyw "skip"
 let keyw_while = mk_keyw "while"
 let keyw_do = mk_keyw "do"
 let keyw_od = mk_keyw "od"
+let keyw_assert = mk_keyw "assert"
 
 let ltx_paren l = Latex.concat [symb_lp.melt; l; symb_rp.melt]
 let ltx_comma l = Latex.concat (Latex.list_insert symb_comma.melt l)
@@ -118,7 +119,7 @@ let char_to_greek = function
   | 'z' -> Latex.zeta
   | _ -> raise (Invalid_argument ("Expecting a lowercase roman character"))
 
-let parse_symb s st = Tokens.skip_symbol s.str st
+let parse_symb s st = (spaces >> Tokens.skip_symbol s.str >> spaces) st
 
 let max_tag = ref 0
 let upd_tag tag =

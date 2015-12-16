@@ -13,15 +13,18 @@ proc Ack(x, y, z)
 	else
 	
 		b := new();
+		b.next := nil;
+
 		if y = nil then
 		
+			assert([b'] < [a] : x->w' * ls[b'](w',nil) * z->v' * b->nil);
 			a := x.next;
-			b.next := nil;
 			Ack(a, b, z)
 		
 		else
 		
 			a := y.next;
+			free(y);
 			Ack(x, a, b);
 			a := x.next;
 			Ack(a, b, z)

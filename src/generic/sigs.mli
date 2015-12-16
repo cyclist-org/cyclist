@@ -229,6 +229,7 @@ sig
   (** Ready-made selection functions doing the obvious. *)
   val all_nodes : select_f
   val ancestor_nodes : select_f
+  val syntactically_equal_nodes : select_f
   
   (** The rule that always fails. *)
   val fail : t

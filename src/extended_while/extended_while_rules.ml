@@ -354,6 +354,26 @@ let mk_symex_proc_unfold procs =
     with WrongCmd | Not_found -> [] in
   Rule.mk_infrule rl
 
+let assert_rule =
+  let rl ((pre, cmd, post) as seq) =
+    if Cmd.is_assert cmd then
+      let f = Cmd.dest_assert cmd in
+      let cont = Cmd.get_cont cmd in
+      let f = Sl_form.complete_tags Tags.empty f in
+      if Option.is_some (entails pre f) then
+        let seq' = (f, cont, post) in
+        let (allpairs, progressing) = 
+          if !termination then Seq.get_tracepairs seq seq'
+          else (Seq.tagpairs_one, TagPairs.empty) in
+        [ [ (seq', allpairs, progressing) ], "Assert" ] 
+      else
+        let () = debug (fun _ -> "Unsuccesfully tried to apply the assert rule:" ^
+          "\n\t" ^ (Sl_seq.to_string (pre, f))) in
+        []
+    else
+      [] in
+  Rule.mk_infrule rl
+
 let param_subst_rule theta ((_,cmd',_) as seq') ((_,cmd,_) as seq) =
   if Cmd.is_proc_call cmd && Cmd.is_empty (Cmd.get_cont cmd)
       && Cmd.is_proc_call cmd' && Cmd.is_empty (Cmd.get_cont cmd')
@@ -570,10 +590,10 @@ let transform_seq ((pre, cmd, post) as seq) =
           (Tags.diff 
             (Ord_constraints.tags abd_schema) 
             (Sl_form.tags upre)) in
-      let g = Sl_form.add_constraints g abd_schema in
+      let ((cs_for_frame, _) as g) = Sl_form.add_constraints g abd_schema in
       let frame = Sl_form.compute_frame ~avoid:(used_tags, used_trms) f g in
       assert (Option.is_some frame) ;
-      let frame = Sl_form.add_constraints (Option.get frame) abd_schema in
+      let frame = Sl_form.add_constraints (Option.get frame) cs_for_frame in
       let clashing_prog_vars =
         Sl_term.Set.inter (Cmd.modifies ~strict:false cmd) (Sl_form.vars frame) in
       let ex_subst = 
@@ -781,9 +801,14 @@ let mk_symex_proc_call procs =
       with Not_symheap | WrongCmd | Not_found -> Rule.fail in
     rl idx prf
 
-let dobackl idx prf =
+let dobackl ?(get_targets=Rule.all_nodes) idx prf =
   let src_seq = Proof.get_seq idx prf in
-  let targets = Rule.all_nodes idx prf in
+  let targets = get_targets idx prf in
+  let (ident, rest) = 
+    Blist.partition
+      (fun idx -> Seq.equal src_seq (Proof.get_seq idx prf))
+      targets in
+  let targets = ident @ rest in
   let () = debug (fun _ -> "Beginning calculation of potential backlink targets") in
   let transformations =
     Blist.bind
@@ -856,9 +881,15 @@ let setup (defs, procs) =
       
       Rule.choice [
         
-        Rule.conditional
-          (fun (_, cmd, _) -> Cmd.is_while cmd || Cmd.is_proc_call cmd)
-          dobackl ;
+        Rule.first [
+          Rule.conditional
+            (fun (_, cmd, _) -> 
+              Cmd.is_proc_call cmd && Cmd.is_empty (Cmd.get_cont cmd))
+            (dobackl ~get_targets:Rule.syntactically_equal_nodes) ;
+          Rule.conditional
+            (fun (_, cmd, _) -> Cmd.is_while cmd) 
+            (fun idx prf -> dobackl idx prf) ;
+        ];
 
         Rule.first [
           symex_skip_rule ;
@@ -872,10 +903,9 @@ let setup (defs, procs) =
           symex_while_rule ;
           symex_proc_unfold ;
           symex_proc_call ;
+          assert_rule ;
           luf defs ;
         ] ;
-        
-        (* generalise_while_rule ; *)
         
       ]
     ] ;

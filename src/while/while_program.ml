@@ -138,6 +138,7 @@ module Cmd =
       | IfElse of Cond.t * t * t
       | While of Cond.t * t
       | ProcCall of string * Sl_term.FList.t
+      | Assert of Sl_form.t
     and basic_t = { label:int option; cmd:cmd_t }
     and t = basic_t list
 
@@ -176,6 +177,9 @@ module Cmd =
     let is_proc_call c = is_not_empty c && match get_cmd c with
       | ProcCall(_, _) -> true
       | _ -> false
+    let is_assert c = is_not_empty c && match get_cmd c with
+      | Assert(_) -> true
+      | _ -> false 
     
 
     let is_basic c = is_not_empty c && match get_cmd c with
@@ -202,6 +206,7 @@ module Cmd =
     let mk_stop = mk_basic (Stop)
     let mk_skip = mk_basic (Skip)
     let mk_proc_call p args = mk_basic (ProcCall(p, args))
+    let mk_assert f = mk_basic (Assert(f))
     let mk_if cond cmd = mk_basic (If(cond, cmd))
     let mk_ifelse cond cmd cmd' = mk_basic (IfElse(cond, cmd, cmd'))
     let mk_while cond cmd = mk_basic (While(cond, cmd))
@@ -211,6 +216,9 @@ module Cmd =
     let rec parse_cmd st = 
       (   attempt (parse_symb keyw_stop >>$ Stop)
       <|> attempt (parse_symb keyw_skip >>$ Skip)
+      <|> attempt (parse_symb keyw_assert >>
+          Tokens.parens Sl_form.parse |>> (fun f ->
+          Assert(f)))
       <|> attempt (parse_symb keyw_free >>
           Tokens.parens Sl_term.parse |>> (fun v ->
           assert (is_prog_var v) ; Free v))
@@ -313,6 +321,9 @@ module Cmd =
     let _dest_branching = function
       | While(cond,_) | If(cond,_) | IfElse(cond,_,_) -> cond
       | _ -> raise WrongCmd 
+    let _dest_assert = function
+      | Assert(f) -> f
+      | _ -> raise WrongCmd
 
     let dest_cmd f = fun c -> f (get_cmd c)
 
@@ -329,6 +340,7 @@ module Cmd =
     let dest_while = dest_cmd _dest_while
     let dest_branching = dest_cmd _dest_branching
     let dest_proc_call = dest_cmd _dest_proc_call
+    let dest_assert = dest_cmd _dest_assert
     let dest_empty c = if c=[] then () else raise WrongCmd
 
     let number c =
@@ -341,6 +353,9 @@ module Cmd =
               let c' = { label=Some n; cmd=c.cmd } in
               let (l', n') = aux (n+1) l in
               (c'::l', n')
+            | Assert(_) ->
+              let (l', n') = aux n l in
+              (c::l', n')
             | If(cond, subc) ->
               let (subc', n') = aux (n+1) subc in
               let c' = { label=Some n; cmd=If(cond, subc') } in
@@ -360,9 +375,8 @@ module Cmd =
           end in
       fst (aux 0 c)
 
-
     let rec cmd_terms = function
-      | Stop | Skip -> Sl_term.Set.empty
+      | Stop | Skip | Assert(_) -> Sl_term.Set.empty
       | New(x) | Free(x) -> Sl_term.Set.singleton x
       | Assign(x,e) | Load(x,e,_) | Store(x,_,e) -> Sl_term.Set.of_list [x; e]
       | If(cond,cmd) -> Sl_term.Set.union (Cond.vars cond) (terms cmd)
@@ -378,7 +392,7 @@ module Cmd =
     let locals params cmd = Sl_term.Set.diff (vars cmd) params
 
     let rec cmd_modifies ?(strict=true) cmd = match cmd with
-      | Stop | Skip | Free _ | ProcCall(_, _) -> Sl_term.Set.empty
+      | Stop | Skip | Free _ | Assert(_) | ProcCall(_, _) -> Sl_term.Set.empty
       | New(x) | Assign(x,_) | Load(x,_,_) -> Sl_term.Set.singleton x
       | Store(x,_,_) -> if strict then Sl_term.Set.singleton x else Sl_term.Set.empty 
       | If(_,cmd) | While(_,cmd) -> modifies ~strict cmd
@@ -400,14 +414,22 @@ module Cmd =
         Cond.equal cond cond' && equal cmd cmd'
       | (IfElse(cond,cmd1,cmd2), IfElse(cond',cmd1',cmd2')) ->
         Cond.equal cond cond' && equal cmd1 cmd1' && equal cmd2 cmd2'
+      | (Assert(_), _) | (_, Assert(_)) -> raise WrongCmd
       | _ -> false
     and equal l l' = match (l,l') with
       | ([], []) -> true
-      | ([], _) | (_, []) -> false
-      | (c::tl, c'::tl') -> cmd_equal c.cmd c'.cmd && equal tl tl'
+      | ([], c::tl) -> 
+        (match c.cmd with | Assert(_) -> equal [] tl | _ -> false)  
+      | (c::tl, []) -> 
+        (match c.cmd with | Assert(_) -> equal tl [] | _ -> false)
+      | (c::tl, c'::tl') -> 
+        match (c.cmd, c'.cmd) with
+        | (Assert(_), _) -> equal tl l'
+        | (_, Assert(_)) -> equal l tl'
+        | _ -> cmd_equal c.cmd c'.cmd && equal tl tl'
 
     let rec subst_cmd theta cmd = match cmd with
-      | Stop | Skip -> cmd
+      | Stop | Skip | Assert(_) -> cmd
       | New(x) -> New (Sl_term.subst theta x)
       | Free(x) -> Free (Sl_term.subst theta x)
       | Assign(x, e) -> Assign ((Sl_term.subst theta x), (Sl_term.subst theta e))
@@ -436,6 +458,13 @@ module Cmd =
     let rec pp_cmd ?(abbr=false) indent fmt c = match c.cmd with
       | Stop -> Format.fprintf fmt "%s" keyw_stop.str
       | Skip -> Format.fprintf fmt "%s" keyw_skip.str
+      | Assert(f) -> 
+        if abbr then
+          Format.fprintf fmt "%s%s...%s"
+            keyw_assert.str symb_lp.str symb_rp.str
+        else
+          Format.fprintf fmt "%s%s%a%s"
+            keyw_assert.str symb_lp.str Sl_form.pp f symb_rp.str
       | New(x) ->
         Format.fprintf fmt "%a%s%s%s%s"
           Sl_term.pp x symb_assign.sep keyw_new.str symb_lp.str symb_rp.str
@@ -505,6 +534,9 @@ module Cmd =
     let rec to_melt_cmd c = match c.cmd with
       | Stop -> keyw_stop.melt
       | Skip -> keyw_skip.melt
+      | Assert(f) ->
+        Latex.concat
+          [ keyw_assert.melt; symb_lp.melt; Sl_form.to_melt f; symb_rp.melt ]
       | New(x) ->
         Latex.concat
           [ Sl_term.to_melt x; symb_assign.melt;
