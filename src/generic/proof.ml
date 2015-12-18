@@ -56,6 +56,8 @@ module Make(Seq : Sigs.SEQUENT) =
       P.for_all (fun _ (_,n) -> not (Node.is_open n)) prf
   
     let check p = 
+      let () = debug (fun _ -> "Checking global soundness") in
+      let () = debug (fun _ -> to_string p) in
       Soundcheck.check_proof 
         (P.map (fun (_,n) -> Node.to_abstract_node n) p)
   

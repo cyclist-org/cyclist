@@ -44,24 +44,24 @@ let fathers_grandchild prf idx n =
 
 let pp_proof_node fmt n =
   let aux fmt (tags, subg) =
-    Format.printf "tags=%a " Tags.pp tags ; 
+    Format.fprintf fmt "tags=%a " Tags.pp tags ; 
     if subg=[] then Format.pp_print_string fmt "leaf" else
     Blist.pp pp_semicolonsp 
       (fun fmt (i,tv,tp) ->
-        Format.printf 
+        Format.fprintf fmt 
           "(goal=%a, valid=%a, prog=%a)"
           Format.pp_print_int i
           TagPairs.pp tv
           TagPairs.pp tp
       ) 
       fmt
-      subg in      
+      subg in
   Format.fprintf fmt "@[%a@]" aux n
 
 let pp fmt prf =
   Format.open_vbox 0;
   Int.Map.iter
-    (fun idx n -> Format.fprintf fmt "%i: %a@," idx pp_proof_node n) prf ;
+    (fun idx n -> Format.fprintf fmt "%i: %a@\n" idx pp_proof_node n) prf ;
   Format.close_box ()
 
 
@@ -194,6 +194,7 @@ let check_proof =
         assert false
       end in
     try
+      debug (fun _ -> mk_to_string pp prf) ;
       Stats.MCCache.call () ;
       let r = CheckCache.find ccache aprf in
 			Stats.MCCache.end_call () ;
