@@ -32,11 +32,14 @@ val tag_pairs : t -> Util.TagPairs.t
 
 val subst_tags : Util.TagPairs.t -> t -> t
 
-val generate : Util.Tags.elt -> Util.Tags.t -> t
-(** [generate t ts] returns a constraint set that constitutes an inductive 
+val generate : ?avoid:Util.Tags.t -> ?augment:bool 
+  -> Util.Tags.elt -> Util.Tags.t -> t
+(** [generate avoid t ts] returns a constraint set that constitutes an inductive 
     hypothesis corresponding to a case in the unfolding of a predicate tagged 
     with [t] that recursively depends on predicate instances tagged by labels 
-    in [ts].  
+    in [ts]; any freshly generated labels are not contained in [avoid]. If the
+    optional argumet [augment=true] is set to [false] then, no constraints will
+    be generated in the case that [ts] is empty.
 *)
 
 val remove_schema : t -> Util.Tags.t -> (t * string) option

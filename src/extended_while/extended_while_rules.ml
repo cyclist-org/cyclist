@@ -145,7 +145,7 @@ let luf_rl defs ((pre,cmd,post) as seq) =
       let do_case f =
         let new_cs = 
           Ord_constraints.union cs 
-            (Ord_constraints.generate tag (Sl_heap.tags f)) in
+            (Ord_constraints.generate ~avoid:seq_tags tag (Sl_heap.tags f)) in
         let cclosure = Ord_constraints.close new_cs in
         let (vts, pts) = 
           let collect tps = TagPairs.endomap Pair.swap

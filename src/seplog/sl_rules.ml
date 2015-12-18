@@ -377,7 +377,7 @@ let ruf_rl defs seq =
       let do_case f =
         let cs' = 
           Ord_constraints.union cs' 
-            (Ord_constraints.generate tag (Sl_heap.tags f)) in
+            (Ord_constraints.generate ~augment:false tag (Sl_heap.tags f)) in
         let r' = Sl_heap.star r' f in
         let tps = TagPairs.union (Sl_heap.tag_pairs l) (Ord_constraints.tag_pairs cs) in
         [ (((cs, [l]), (cs', [r'])), tps, TagPairs.empty) ],
@@ -402,7 +402,7 @@ let luf defs =
         let do_case f =
           let new_cs = 
             Ord_constraints.union cs 
-              (Ord_constraints.generate tag (Sl_heap.tags f)) in
+              (Ord_constraints.generate ~avoid:seq_tags tag (Sl_heap.tags f)) in
           let cclosure = Ord_constraints.close new_cs in
           let (vts, pts) = 
             let collect tps = TagPairs.endomap Pair.swap

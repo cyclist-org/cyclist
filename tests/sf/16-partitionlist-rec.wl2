@@ -25,16 +25,15 @@ postcondition: [b'] <= [a], [c'] <= [a] : x -> nil * y -> v' * ls[b'](v',nil) * 
 			list.next := newlist;
 			z.next := list
 		
-		fi;
-
-		assert([b'] <= [a], [c'] <= [a] : x -> nil * y -> v' * ls[b'](v',nil) * z -> w' * ls[c'](w',nil))
-	
+		fi	
 	else
 	
 	  y.next := nil;
 	  z.next := nil
 	
-	fi
+	fi;
+
+	assert([b'] <= [a], [c'] <= [a] : x -> nil * y -> v' * ls[b'](v',nil) * z -> w' * ls[c'](w',nil))
 }
 
 precondition: ls[a](x,nil);

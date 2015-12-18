@@ -99,7 +99,11 @@ let tag_pairs cs = TagPairs.mk (tags cs)
 
 let subst_tags theta cs = endomap (Constraint.subst_tags theta) cs
 
-let generate t ts =
+let generate ?(avoid=Tags.empty) ?(augment=true) t ts =
+  let ts =
+    if augment && Tags.is_empty ts 
+      then Tags.singleton (Tags.fresh_evar avoid) 
+      else ts in
   Tags.map_to add empty (fun t' -> Constraint.LT(t', t)) ts
   
 let infer_constraint = function
