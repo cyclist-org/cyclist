@@ -742,7 +742,8 @@ let transform_seq ((pre, cmd, post) as seq) =
     result
 
 let mk_proc_call_rule_seq 
-    ((proc, param_subst), (src_pre, src_cmd, src_post)) 
+    ((proc, param_subst), 
+      ((src_pre, src_cmd, src_post) as src_seq), tags_instantiated) 
     ((link_pre, link_cmd, link_post), bridge_rule) = 
   let target_seq = Proc.get_seq proc in
   let prog_cont = Cmd.get_cont src_cmd in
@@ -756,6 +757,10 @@ let mk_proc_call_rule_seq
     (Cmd.is_empty prog_cont || 
       Cmd.equal (fst (Cmd.split src_cmd)) link_cmd) ; 
   let ((inst_pre, _, _) as seq_newparams) = Seq.param_subst param_subst target_seq in
+  let tag_inst_rl =
+    if tags_instantiated 
+      then Rule.mk_infrule (ex_intro_rule src_seq)
+      else Rule.identity in
   let (link_rl, cont_rl) =
     if Cmd.is_empty prog_cont
       then (Rule.identity, Blist.empty)
@@ -768,9 +773,11 @@ let mk_proc_call_rule_seq
     if Seq.equal seq_newparams target_seq
       then Rule.identity
       else Rule.mk_infrule (param_subst_rule param_subst target_seq) in
-  Rule.compose_pairwise
-    link_rl
-    ((Rule.compose bridge_rule (Rule.compose or_elim_rl param_rl)) :: cont_rl)
+  Rule.compose
+    (tag_inst_rl)
+    (Rule.compose_pairwise
+      link_rl
+      ((Rule.sequence [ bridge_rule ; or_elim_rl ; param_rl ]) :: cont_rl))
       
 let mk_symex_proc_call procs =
   fun idx prf ->
@@ -792,9 +799,19 @@ let mk_symex_proc_call procs =
         let param_sub = Option.get param_unifier in
         let (((pre_cs', pre_hs'), _, _) as inst_proc_seq) =
           Seq.param_subst param_sub proc_seq in
-        let proc_call_seq = Seq.with_cmd src_seq (Cmd.mk_proc_call p args) in
+        let tag_inst_subst = 
+          TagPairs.mk_univ_subst 
+            (Seq.all_tags src_seq)
+            (Tags.filter Tags.is_exist_var (Sl_form.tags pre)) in
+        let pre_inst_src_seq =
+          Seq.with_pre src_seq (Sl_form.subst_tags tag_inst_subst pre) in
+        let proc_call_seq = 
+          Seq.with_cmd pre_inst_src_seq (Cmd.mk_proc_call p args) in
         let build_rule_seq = 
-          mk_proc_call_rule_seq ((proc, param_sub), src_seq) in
+          mk_proc_call_rule_seq 
+            ( (proc, param_sub), 
+              pre_inst_src_seq, 
+              not (TagPairs.is_empty tag_inst_subst) ) in
         let mk_rules_from_disj h =
           let proc_sh_pre_seq = Seq.with_pre inst_proc_seq (pre_cs', [h]) in
           let transforms = 

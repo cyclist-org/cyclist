@@ -57,15 +57,15 @@ let lhs_disj_to_symheaps =
     )
 
 (* break RHS disjunctions *)
-let rhs_disj_to_symheaps =
-  Rule.mk_infrule
-    (fun ((_, hs) as l, ((_, hs') as r)) -> 
-      if Blist.length hs' < 2 || Blist.length hs <> 1 then [] else
-      Blist.map
-        (fun h -> 
-          [ ((l, (Sl_form.with_heaps r [h])), 
-              Sl_form.tag_pairs l, TagPairs.empty) ], "R. Or" )
-        hs')
+let rhs_disj_to_symheaps_rl ((_, hs) as l, ((_, hs') as r)) = 
+  if Blist.length hs' < 2 || Blist.length hs <> 1 then [] else
+  Blist.map
+    (fun h -> 
+      [ ((l, (Sl_form.with_heaps r [h])), 
+          Sl_form.tag_pairs l, TagPairs.empty) ], "R. Or" )
+    hs'
+    
+let rhs_disj_to_symheaps = Rule.mk_infrule rhs_disj_to_symheaps_rl
         
         
 (* Left Instantiation Rules *)

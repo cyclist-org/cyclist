@@ -20,10 +20,12 @@ let ruf_rl = Sl_rules.ruf_rl
 let bounds_intro = Rule.mk_infrule Sl_rules.bounds_intro_rl
 let eq_ex_subst = 
   Rule.mk_infrule (Seqtactics.relabel "RHS.Ex.Eq." Sl_rules.eq_ex_subst_rule)
+let rhs_disj_to_symheaps = Rule.mk_infrule Sl_rules.rhs_disj_to_symheaps_rl
 
 let rules = ref Rule.fail
 let set_defs defs = 
   rules := Rule.first [
+      rhs_disj_to_symheaps ;
       bounds_intro ;
       eq_ex_subst ;
       Rule.mk_infrule (ruf_rl defs) ;

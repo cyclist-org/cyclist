@@ -1,0 +1,71 @@
+fields: head, tail;
+
+proc create(x)
+	precondition:  x -> v',w';
+	postcondition: Queue(x);
+{
+	x.head := nil;
+	x.tail := nil
+}
+
+proc enq(x)
+	precondition:  Queue[a](x);
+	postcondition: [a] < [b'] : Queue[b'](x);
+{
+	node := new();
+	node.head := nil;
+	node.tail := nil;
+
+	tl := x.tail;
+	if tl = nil then
+	
+		x.tail := node;
+		x.head := node
+	
+	else
+	
+		tl.head := node;
+		x.tail := node;
+		assert([a] < [b'] : Queue[b'](x))
+	
+	fi
+}
+
+proc deq(x)
+	precondition:  Queue[a](x);
+	postcondition: [b'] < [a] : EmptyQueue[a](x) \/ Queue[b'](x);
+{
+	hd := x.head;
+
+	if hd != nil then
+	
+		tl := x.tail;
+		
+		if hd = tl then
+		
+			x.head := nil;
+			x.tail := nil
+		
+		else
+		
+			new_hd := hd.head;
+			x.head := new_hd
+		
+		fi;
+
+		free(hd);
+		assert([b'] < [a] : EmptyQueue[a](x) \/ Queue[b'](x))
+	
+	fi
+}
+
+precondition: Queue(q);
+postcondition: EmptyQueue(q);
+
+enq(q);
+
+head := q.head;
+while head != nil do
+	deq(q);
+	head := q.head
+od

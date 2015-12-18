@@ -78,6 +78,11 @@ ls {
 	x!=y * x->x' * ls(x',y) => ls(x,y) 
 } ;
 
+ls2 {
+	x=y => ls2(x,y) | 
+	x!=y * x->x',v' * ls2(x',y) => ls2(x,y) 
+} ;
+
 rls {
 	x=y => rls(x,y) |
 	x!=y * rls(x,z') * z'->y => rls(x,y)
@@ -105,6 +110,15 @@ lsls {
 lsbt {
 	x=nil => lsbt(x) |
 	x->y',x' * lsbt(x') * bt(y') => lsbt(x)
+} ;
+
+EmptyQueue {
+	x->nil,nil => EmptyQueue(x)
+} ;
+
+Queue {
+	x->nil,nil => Queue(x) |
+	x->head',tail' * ls2(head',tail') * tail'->nil,nil => Queue(x)
 } ;
 
 spTrue {
