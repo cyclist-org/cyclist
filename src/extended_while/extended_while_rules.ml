@@ -10,12 +10,75 @@ module Rule = Proofrule.Make(Extended_while_program.Seq)
 module Seqtactics = Seqtactics.Make(Extended_while_program.Seq)
 module Proof = Proof.Make(Extended_while_program.Seq)
 module Slprover = Prover.Make(Sl_seq)
+module EntlSeqHash = Hashtbl.Make(Sl_seq)
 
 let entl_depth = ref Sl_abduce.max_depth
 
 (* Wrapper for the entailment prover *)
+let entailment_table : (int * (Slprover.Proof.t option)) EntlSeqHash.t = 
+  EntlSeqHash.create 11
 let entails f f' =
-  Slprover.idfs 1 !entl_depth !Sl_rules.axioms !Sl_rules.rules (f, f')
+  let prove seq =
+    Slprover.idfs 1 !entl_depth !Sl_rules.axioms !Sl_rules.rules seq in
+  let seq = (f, f') in
+  if EntlSeqHash.mem entailment_table seq then
+    let (depth, prf) = EntlSeqHash.find entailment_table seq in
+    if (Option.is_some prf) || (!entl_depth <= depth) then prf
+    else
+      let prf = prove seq in
+      EntlSeqHash.replace entailment_table seq (!entl_depth, prf);
+      prf
+  else
+    let prf = prove seq in
+    EntlSeqHash.replace entailment_table seq (!entl_depth, prf);
+    prf
+
+
+(* Wrappers for backlink abducers *)
+module AbdTblElt = ContaineriseType(PairTypes(Tags)(Sl_term.Set))
+module AbdTblMap = AbdTblElt.Hashmap
+let abd_pre_table : 
+  ((int * 
+    (((Sl_form.t * Sl_form.t) * Sl_unify.Unidirectional.state list) option))
+   AbdTblMap.t) 
+      EntlSeqHash.t = 
+  EntlSeqHash.create 11
+let abd_pre_transforms ((used_tags, prog_vars) as key) f f' =
+  let abd f f' =
+    let res =
+      Sl_abduce.abd_substs ~used_tags
+        ~update_check:
+          (Fun.disj
+            (Sl_unify.Unidirectional.modulo_entl)
+            (Fun.conj
+              (Sl_unify.Unidirectional.is_substitution)
+              (Sl_unify.Unidirectional.avoid_replacing_trms prog_vars)))
+        f f' in
+    Option.map 
+      (fun (interpolant, substs) -> 
+        (interpolant, Sl_unify.Unidirectional.remove_dup_substs substs))
+      res in
+  let seq = (f, f') in
+  if EntlSeqHash.mem abd_pre_table seq then
+    let map = EntlSeqHash.find abd_pre_table seq in
+    if AbdTblMap.mem map key then
+      let (depth, res) = AbdTblMap.find map key in
+      if (Option.is_some res) || (Sl_abduce.max_depth <= depth) then res
+      else
+        let res = abd f f' in
+        AbdTblMap.replace map key (Sl_abduce.max_depth, res);
+        res
+    else 
+      let res = abd f f' in
+      AbdTblMap.replace map key (Sl_abduce.max_depth, res);
+      res
+  else
+    let res = abd f f' in
+    let map = AbdTblMap.create 11 in
+    AbdTblMap.replace map key (Sl_abduce.max_depth, res) ; 
+    EntlSeqHash.replace abd_pre_table seq map ;
+    res
+
 
 let tagpairs = Seq.tag_pairs
 
@@ -542,7 +605,6 @@ let transform_seq ((pre, cmd, post) as seq) =
       [ (seq, Rule.identity) ] else
     let () = debug (fun _ -> "Trying to unify left-hand sides of:" ^ "\n\t" ^ "bud: " ^
       (Seq.to_string seq) ^ "\n\t" ^ "candidate companion: " ^ (Seq.to_string seq')) in
-    let prog_vars = Cmd.vars cmd in
     let u_tag_theta = 
       TagPairs.mk_univ_subst
         (Tags.union (Seq.all_tags seq) (Seq.all_tags seq'))
@@ -557,26 +619,15 @@ let transform_seq ((pre, cmd, post) as seq) =
       "\n\t" ^ (Sl_form.to_string upre) ^
       "\n\t" ^ "tag subst: " ^ (Strng.Pairing.Set.to_string (TagPairs.to_names u_tag_theta)) ^
       "\n\t" ^ "var subst: " ^ (Sl_term.Map.to_string Sl_term.to_string u_trm_theta)) in
-    let pre_transforms =
-      Sl_abduce.abd_substs
-        ~used_tags:(Tags.union_of_list [
+    let pre_transforms = 
+      let used_tags = 
+        Tags.union_of_list [
             Sl_form.tags upre ;
             Sl_form.tags post ;
             Sl_form.tags pre' ;
             Sl_form.tags post' ;
-          ])
-        ~update_check:
-          (Fun.disj
-            (Sl_unify.Unidirectional.modulo_entl)
-            (Fun.conj
-              (Sl_unify.Unidirectional.is_substitution)
-              (Sl_unify.Unidirectional.avoid_replacing_trms prog_vars)))
-        upre pre' in
-    let pre_transforms = 
-      Option.map 
-        (fun (interpolant, substs) -> 
-          (interpolant, Sl_unify.Unidirectional.remove_dup_substs substs))
-        pre_transforms in
+          ] in
+      abd_pre_transforms (used_tags, Cmd.vars cmd) upre pre' in
     let mk_transform (g, g') (trm_subst, tag_subst) =
       let () = debug (fun _ -> "Found interpolant: (" ^ (Sl_form.to_string g) ^ ", " ^ (Sl_form.to_string g') ^ ")") in
       let () = debug (fun _ -> "Term sub: " ^ (Sl_term.Map.to_string Sl_term.to_string trm_subst)) in
