@@ -18,17 +18,21 @@ let entl_depth = ref Sl_abduce.max_depth
 let entailment_table : (int * (Slprover.Proof.t option)) EntlSeqHash.t = 
   EntlSeqHash.create 11
 let entails f f' =
+  let () = debug (fun _ -> "Trying to prove entailment:\n\t" ^ (Sl_seq.to_string (f, f')) ^ "\n\t" ^ "with depth " ^ (string_of_int !entl_depth)) in
   let prove seq =
-    Slprover.idfs 1 !entl_depth !Sl_rules.axioms !Sl_rules.rules seq in
+    let depth = if !entl_depth < 1 then max_int else !entl_depth in
+    Slprover.idfs 1 depth !Sl_rules.axioms !Sl_rules.rules seq in
   let seq = (f, f') in
   if EntlSeqHash.mem entailment_table seq then
     let (depth, prf) = EntlSeqHash.find entailment_table seq in
+    let () = debug (fun _ -> "Found result in cache: entailment " ^ (if Option.is_none prf then "not " else "") ^ "proved up to depth " ^ (string_of_int depth)) in
     if (Option.is_some prf) || (!entl_depth <= depth) then prf
     else
       let prf = prove seq in
       EntlSeqHash.replace entailment_table seq (!entl_depth, prf);
       prf
   else
+    let () = debug (fun _ -> "Result not found in cache: attempting to prove") in
     let prf = prove seq in
     EntlSeqHash.replace entailment_table seq (!entl_depth, prf);
     prf
@@ -426,7 +430,7 @@ let assert_rule =
       let cont = Cmd.get_cont cmd in
       let f = Sl_form.complete_tags Tags.empty f in
       let default_depth = !entl_depth in
-      entl_depth := 10;
+      entl_depth := 0;
       let entl_result = entails pre f in
       entl_depth := default_depth;
       if Option.is_some (entl_result) then
