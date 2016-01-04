@@ -15,7 +15,7 @@ module Make(Prover : Sigs.PROVER) =
         (": set starting depth for IDFS to <int>, default is " ^ 
           (string_of_int !minbound)));
       ("-M", Arg.Set_int maxbound, 
-        (": set maximum depth for IDFS to <int>, default is " ^ 
+        (": set maximum depth for IDFS to <int>, 0 disables it, default is " ^ 
           (string_of_int !maxbound)));
       ("-L", Arg.Int 
         (fun n -> minbound := n ; maxbound := n), 
@@ -41,7 +41,8 @@ module Make(Prover : Sigs.PROVER) =
       Format.set_margin (Sys.command "exit $(tput cols)") ;
       Stats.reset () ;
       Stats.Gen.call () ;
-      let call () = Prover.idfs !minbound !maxbound ax r seq in
+      let maxbound = if !maxbound < 1 then max_int else !maxbound in
+      let call () = Prover.idfs !minbound maxbound ax r seq in
       let res = if !timeout<>0 then
 				w_timeout call  !timeout
 			else
