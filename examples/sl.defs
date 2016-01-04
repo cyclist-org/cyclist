@@ -93,6 +93,12 @@ bt {
 	x->y',x' * bt(y') * bt(x') => bt(x)
 } ;
 
+btseg {
+	x=y => btseg(x,y) |
+	x->y',z' * bt(y') * btseg(z',y) => btseg(x,y) |
+	x->y',z' * btseg(y',y) * bt(z') => btseg(x,y)
+} ;
+
 cls {
 	x->y' * ls(y',x) => cls(x) 
 } ;

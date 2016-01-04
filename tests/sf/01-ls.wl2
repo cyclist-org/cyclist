@@ -1,6 +1,7 @@
 fields: next;
-precondition: ls(x,nil); 
-postcondition: spTrue();
+precondition: ls(y, x) * ls[a](x,nil); 
+postcondition: x=nil * ls(y, nil);
 while x!=nil do
-  x := x.next
+  x := x.next;
+  assert([b'] < [a] : ls(y, x) * ls[b'](x,nil))
 od
