@@ -1,8 +1,8 @@
 fields: next;
 
 proc removeLast(x)
-precondition: x' != nil * x -> x' * ls[a](x',nil);
-postcondition: [b'] < [a] : x -> x' * ls[b'](x',nil);
+precondition: x -> x' * ls[a](x',nil);
+postcondition: [b'] < [a] : x->nil \/ x -> x' * ls[b'](x',nil);
 {
 	list := x.next;
 	
@@ -12,20 +12,22 @@ postcondition: [b'] < [a] : x -> x' * ls[b'](x',nil);
 		
 		if tail = nil then
 		
-		  free(list);
-		  x.next := nil
+			free(list);
+			x.next := nil
 		
 		else
 		
-  		x.next := tail;	
+  			x.next := tail;	
 		
-		  removeLast(x);
+			removeLast(x);
 		
-  		tail := x.next;
-  		list.next := tail;
-  		x.next := list
+  			tail := x.next;
+  			list.next := tail;
+  			x.next := list
 		
-		fi
+		fi;
+		
+		assert([b'] < [a] : x->nil \/ x -> x' * ls[b'](x',nil))
 		
 	fi
 }

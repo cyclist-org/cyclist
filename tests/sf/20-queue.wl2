@@ -33,7 +33,7 @@ proc enq(x)
 
 proc deq(x)
 	precondition:  Queue[a](x);
-	postcondition: [b'] < [a] : EmptyQueue[a](x) \/ Queue[b'](x);
+	postcondition: [b'] < [a] : x->nil,nil \/ Queue[b'](x);
 {
 	hd := x.head;
 
@@ -54,7 +54,7 @@ proc deq(x)
 		fi;
 
 		free(hd);
-		assert([b'] < [a] : EmptyQueue[a](x) \/ Queue[b'](x))
+		assert([b'] < [a] : x->nil,nil \/ Queue[b'](x))
 	
 	fi
 }
