@@ -65,7 +65,6 @@ let abd_substs
             (Sl_unify.Unidirectional.unify_tag_constraints ~update_check) inc cs
             (fun (trm_theta, tag_theta) -> 
               let dom = TagPairs.projectl tag_theta in
-              (* let range = TagPairs.map_to Pair.snd Tags.empty tag_theta in *)
               let remaining = Tags.diff (Ord_constraints.tags exc) dom in
               let ex_subst = TagPairs.mk_ex_subst used_tags remaining in
               let tag_theta' = TagPairs.union tag_theta ex_subst in

@@ -127,12 +127,16 @@ let trm_biunify ?(update_check=Fun._true) t t' cont ((subst, subst') as state) =
           (not (is_nil t) 
             && (equal t t' || 
                 update_check (state, (Map.singleton t t', empty_subst))))
-          (fun _ -> (Map.add t t' subst, subst')) ;
+          (fun _ -> 
+            (Map.add t t' subst, 
+              if not (is_nil t') then Map.add t' t' subst' else subst')) ;
         Option.mk_lazily
           (not (is_nil t') 
             && (equal t' t ||
                 update_check (state, (empty_subst, Map.singleton t' t))))
-          (fun _ -> (subst, Map.add t' t subst')) ] in
+          (fun _ -> 
+            ((if not (is_nil t) then Map.add t t subst else subst), 
+              Map.add t' t subst')) ] in
   Blist.find_some (Option.bind cont) opts
 
 module FList =

@@ -732,25 +732,39 @@ module Tags =
                 (Fun.uncurry equal 
                   (Pair.map (fun p -> snd (Option.get p)) (lpair, rpair))) 
                 state ]
-          else
-            let lpair' = 
-              (t, if Option.is_some rpair then (snd (Option.get rpair))
-                  else t') in
-            let rpair' = 
-              (t', if Option.is_some lpair then (snd (Option.get lpair))
-                   else t) in
+          else if Option.is_some lpair then
+            let t'' = snd (Option.get lpair) in
             [ Option.mk_lazily
-                (Option.is_none lpair &&
-                  (Pair.apply equal lpair' ||
-                   update_check 
-                    (state, (Pairing.Set.singleton lpair', Pairing.Set.empty))))
-                (fun _ -> (Pairing.Set.add lpair' subst, subst')) ;
-              Option.mk_lazily
-                (Option.is_none rpair &&
-                  (Pair.apply equal rpair' ||
-                   update_check 
-                    (state, (Pairing.Set.empty, Pairing.Set.singleton rpair'))))
-                (fun _ -> (subst, Pairing.Set.add rpair' subst')) ] in
+                (equal t' t'' ||
+                  update_check 
+                    (state, 
+                      (Pairing.Set.empty, Pairing.Set.singleton (t', t''))))
+                (fun _ -> (subst, Pairing.Set.add (t', t'') subst')) ]
+          else if Option.is_some rpair then
+            let t'' = snd (Option.get rpair) in
+            [ Option.mk_lazily
+                (equal t t'' ||
+                  update_check 
+                    (state, 
+                      (Pairing.Set.singleton (t, t''), Pairing.Set.empty)))
+                (fun _ -> (Pairing.Set.add (t, t'') subst, subst')) ]
+          else
+            [ Option.mk_lazily
+                (equal t t' ||
+                  update_check 
+                    (state, 
+                      (Pairing.Set.singleton (t, t'), Pairing.Set.empty)))
+                (fun _ -> 
+                  (Pairing.Set.add (t, t') subst, 
+                    Pairing.Set.add (t', t') subst')) ;
+               Option.mk_lazily
+                (equal t t' ||
+                  update_check 
+                    (state, 
+                      (Pairing.Set.empty, Pairing.Set.singleton (t', t))))
+                (fun _ -> 
+                  (Pairing.Set.add (t, t) subst, 
+                    Pairing.Set.add (t', t) subst')) ] in
         Blist.find_some (Option.bind cont) opts
     end
     

@@ -42,7 +42,7 @@ val inconsistent : t -> bool
 val subsumed : ?total:bool -> t -> t -> bool
 (** [subsumed a b]: is it the case that 
       i)  the constraints cs of [a] are subsumed by the constraints cs' of [b] 
-          in the sense that [Ord_constraints.subsumed cs' cs] returns [true]
+          in the sense that [Ord_constraints.subsumes cs' cs] returns [true]
       ii) for any disjunct [a'] of [a] there a disjunct [b'] of [b] such [a'] is 
           subsumed by [b']?
     If the optional argument [~total=true] is set to [false] then relax the

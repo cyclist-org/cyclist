@@ -199,6 +199,8 @@ let check_proof =
       let r = CheckCache.find ccache aprf in
 			Stats.MCCache.end_call () ;
       Stats.MCCache.hit () ; 
+      let () = debug (fun _ -> "Found soundness result in the cache: " ^
+        (if r then "OK" else "NOT OK")) in
       r
     with Not_found ->
       Stats.MCCache.end_call () ;

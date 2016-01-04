@@ -98,8 +98,8 @@ module Proc =
     let parse_unnamed st = 
       (parse_precondition >>= (fun pre ->
       parse_postcondition >>= (fun post ->
-      let f v = Sl_term.is_exist_var v in
-        assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_term.Set.filter f (Sl_form.vars pre)) (Sl_term.Set.filter f (Sl_form.vars post))));
+      (* let f v = Sl_term.is_exist_var v in *)
+      (* assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_term.Set.filter f (Sl_form.vars pre)) (Sl_term.Set.filter f (Sl_form.vars post)))); *)
       Cmd.parse >>= 
       (fun body ->
         let (pre, post) = ensure_tags (pre, post) in
