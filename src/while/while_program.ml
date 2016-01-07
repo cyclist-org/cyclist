@@ -183,8 +183,10 @@ module Cmd =
     
 
     let is_basic c = is_not_empty c && match get_cmd c with
-      ProcCall(_, _) | Assign _ | Load _ | Store _ | New _ | Free _ | Stop | Skip -> true
+      | ProcCall(_, _) | Assign _ | Load _ | Store _ | New _ | Free _ | Stop | Skip -> true
       | _ -> false
+
+    let is_final = Fun.disj is_empty is_stop
 
     let is_if c = is_not_empty c && match get_cmd c with
       | If _ -> true
@@ -531,10 +533,18 @@ module Cmd =
         | None -> Latex.empty
         | Some n -> Latex.text ((string_of_int n) ^ " : ")
 
-    let rec to_melt_cmd c = match c.cmd with
+    let rec strip_asserts = function
+      | [] -> []
+      | c::cont -> 
+        (match c.cmd with
+          | Assert(_) -> strip_asserts cont
+          | _ -> c::cont) 
+
+    let rec to_melt_cmd ?(abbr=true) c = match c.cmd with
       | Stop -> keyw_stop.melt
       | Skip -> keyw_skip.melt
       | Assert(f) ->
+        if abbr then Latex.empty else
         Latex.concat
           [ keyw_assert.melt; symb_lp.melt; Sl_form.to_melt f; symb_rp.melt ]
       | New(x) ->
@@ -576,14 +586,20 @@ module Cmd =
           [ keyw_while.melt; ltx_math_space; Cond.to_melt cond; ltx_math_space;
             keyw_do.melt; ltx_math_space; to_melt_label (Blist.hd cmd);
             Latex.ldots; keyw_od.melt ]
-    and to_melt_lcmd c = Latex.concat [to_melt_label c; to_melt_cmd c]
-    and to_melt = function
+    and to_melt_lcmd ?(abbr=true) c = 
+      Latex.concat [to_melt_label c; to_melt_cmd ~abbr c]
+    and to_melt ?(abbr=true) c = 
+      let c = if abbr then strip_asserts c else c in
+      match c with
       | [] -> Latex.epsilon
-      | [ c ] -> to_melt_lcmd c
+      | [ c ] -> to_melt_lcmd ~abbr c
       | hd::tl ->
+        let cont = if abbr then strip_asserts tl else tl in
+        let cont_lbl = 
+          if is_empty cont then Latex.empty 
+            else to_melt_label (Blist.hd cont) in
         Latex.concat
-          [ to_melt_lcmd hd; symb_semicolon.melt;
-          to_melt_label (Blist.hd tl); Latex.ldots ]
+          [ to_melt_lcmd ~abbr hd; symb_semicolon.melt; cont_lbl; Latex.ldots ]
 
   end
 

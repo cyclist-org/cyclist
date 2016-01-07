@@ -12,6 +12,8 @@ module Proof = Proof.Make(Extended_while_program.Seq)
 module Slprover = Prover.Make(Sl_seq)
 module EntlSeqHash = Hashtbl.Make(Sl_seq)
 
+let check_invalid = ref (Sl_invalid.check Sl_defs.empty)
+
 let entl_depth = ref Sl_abduce.max_depth
 
 (* Wrapper for the entailment prover *)
@@ -21,7 +23,9 @@ let entails f f' =
   let () = debug (fun _ -> "Trying to prove entailment:\n\t" ^ (Sl_seq.to_string (f, f')) ^ "\n\t" ^ "with depth " ^ (string_of_int !entl_depth)) in
   let prove seq =
     let depth = if !entl_depth < 1 then max_int else !entl_depth in
-    Slprover.idfs 1 depth !Sl_rules.axioms !Sl_rules.rules seq in
+    if !check_invalid seq
+      then None
+      else Slprover.idfs 1 depth !Sl_rules.axioms !Sl_rules.rules seq in
   let seq = (f, f') in
   if EntlSeqHash.mem entailment_table seq then
     let (depth, prf) = EntlSeqHash.find entailment_table seq in
@@ -102,19 +106,26 @@ let ex_falso_axiom =
     fun (pre, _, _) -> 
       Option.mk (Sl_form.inconsistent pre) "Ex Falso")
 
-(* If the precondition entails the post condition and the command is stop, *)
-(* then we can apply the Stop axiom. *)
-let mk_symex_stop_axiom =
-  Rule.mk_axiom (
-    fun (pre, cmd, post) ->
-      Option.mk (Cmd.is_stop cmd && Option.is_some (entails pre post)) "Stop")
-
-(* If the precondition entails the post condition and the command list is empty, *)
-(* then we can apply the Stop axiom. *)
+(* If the precondition entails the post condition and the command is a final  *)
+(* one possibly preceded by assertions then we can apply the Empty axiom.     *)
 let mk_symex_empty_axiom =
-  Rule.mk_axiom (
-    fun (pre, cmd, post) -> 
-      Option.mk (Cmd.is_empty cmd && Option.is_some (entails pre post)) "Empty")
+  let ax (pre, cmd, post) =
+    let default_depth = !entl_depth in
+    let rec aux f cmd =
+      if Cmd.is_assert cmd then
+        let f' = Cmd.dest_assert cmd in
+        let f' = Sl_form.complete_tags Tags.empty f' in
+        if Option.is_none (entails f f')
+          then None
+          else aux f' (Cmd.get_cont cmd)
+      else
+        let () = entl_depth := default_depth in
+        entails f post in
+    if Cmd.is_final (Cmd.strip_asserts cmd) then
+      let () = entl_depth := 0 in
+      Option.map (fun _ -> "Axiom") (aux pre cmd)
+    else None in
+  Rule.mk_axiom ax
 
 (* simplification rules *)
 
@@ -438,14 +449,15 @@ let assert_rule =
         let (allpairs, progressing) = 
           if !termination then Seq.get_tracepairs seq seq'
           else (Seq.tagpairs_one, TagPairs.empty) in
-        [ [ (seq', allpairs, progressing) ], "Assert" ] 
+        [ [ (seq', allpairs, progressing) ], "LHS.Cons" ] 
       else
         let () = debug (fun _ -> "Unsuccesfully tried to apply the assert rule:" ^
           "\n\t" ^ (Sl_seq.to_string (pre, f))) in
         []
     else
       [] in
-  Rule.mk_infrule rl
+  Rule.mk_infrule
+    (Seqtactics.relabel "LHS.Cons" (Seqtactics.repeat rl))
 
 let param_subst_rule theta ((_,cmd',_) as seq') ((_,cmd,_) as seq) =
   if Cmd.is_proc_call cmd && Cmd.is_empty (Cmd.get_cont cmd)
@@ -950,6 +962,7 @@ let rules = ref Rule.fail
 let setup (defs, procs) =
   let () = Sl_rules.setup defs in
   let () = Sl_abduce.set_defs defs in
+  let () = check_invalid := Sl_invalid.check defs in
   let symex_proc_unfold = mk_symex_proc_unfold procs in
   let symex_proc_call = mk_symex_proc_call procs in
   rules := 
@@ -990,7 +1003,6 @@ let setup (defs, procs) =
   let axioms = 
     Rule.first [
         ex_falso_axiom ; 
-        mk_symex_stop_axiom ; 
-        mk_symex_empty_axiom
+        mk_symex_empty_axiom ;
       ] in
   rules := Rule.combine_axioms axioms !rules
