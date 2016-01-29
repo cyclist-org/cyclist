@@ -59,9 +59,11 @@ proc deq(x)
 	fi
 }
 
-precondition: Queue(q);
+precondition: emp;
 postcondition: EmptyQueue(q);
 
+q := new();
+create(q);
 enq(q);
 
 head := q.head;

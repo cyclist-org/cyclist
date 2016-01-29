@@ -84,9 +84,9 @@ let equal_upto_tags (cs, hs) (cs', hs') =
   Blist.for_all2 Sl_heap.equal_upto_tags hs hs'
 
 
-let parse ?(null_is_emp=false) st =
+let parse ?(null_is_emp=false) ?(augment_deqs=true) st =
   ((option Ord_constraints.parse) >>= (fun cs ->
-  ((attempt (sep_by Sl_heap.parse (parse_symb symb_or) <?> "formula")) 
+  ((attempt (sep_by (Sl_heap.parse ~augment_deqs) (parse_symb symb_or) <?> "formula")) 
     <|> (return [])) >>= (fun hs ->
   return 
     (Option.dest Ord_constraints.empty Fun.id cs, 

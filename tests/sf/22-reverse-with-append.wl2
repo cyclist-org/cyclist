@@ -1,0 +1,52 @@
+fields: next;
+
+proc append(x, y)
+precondition: x -> x' * ls(x', nil) * y -> y' * ls(y', nil);
+postcondition: x -> z' * ls(z', nil) * y -> nil;
+{
+	list := x.next ;
+	if list = nil then
+		tmp := y.next ;
+		x.next := tmp ;
+		y.next := nil
+	else
+		tail := list.next ;
+		x.next := tail;
+		append(x, y) ;
+		newlist := x.next ;
+		list.next := newlist ;
+		x.next := list 
+	fi
+}
+
+proc reverse(x)
+precondition: x->v' * ls(v', nil);
+postcondition: x->w' * ls(w', nil);
+{
+	list := x.next;
+	
+	if list != nil then
+	
+		tail := list.next;
+		x.next := tail;
+		reverse(x);
+		
+		ptr := new();
+		list.next := nil;
+		ptr.next := list;
+		append(x, ptr);
+		free(ptr)
+	
+	fi
+}
+
+precondition: ls(x, nil);
+postcondition: ls(x, nil);
+
+ptr := new();
+ptr.next := x;
+
+reverse(ptr);
+
+x := ptr.next;
+free(ptr)

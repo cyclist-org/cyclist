@@ -1,0 +1,19 @@
+fields: left, right;
+
+proc traversetree(x)
+  precondition: bt[a](x);
+  postcondition: bt[a](x); 
+{
+  if x != nil then
+    if * then
+      y := x.left 
+    else 
+      y := x.right
+    fi ;
+    traversetree(y)
+  fi
+}
+
+precondition: bt[a](x);
+postcondition: bt[a](x); 
+traversetree(x)

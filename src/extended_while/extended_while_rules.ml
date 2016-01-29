@@ -137,14 +137,14 @@ let eq_subst_ex_f ((pre, cmd, post) as s) =
   if Sl_form.equal pre pre' then [] else
   [ [ ((pre', cmd, post), tagpairs s, TagPairs.empty) ], "Eq. subst. ex" ]
 
-(* Tactic which tried to simplify the sequent by normalising: that is, using the *)
+(* Tactic which tries to simplify the sequent by normalising: that is, using the *)
 (* equalities in the formula as a substitution for the disequality, points-to and *)
 (* predicate subformulae *)
 (* TODO: ?make a similar simplification tactic that normalises the postcondition *)
-(* let norm ((pre ,cmd, post) as s) =                                *)
-(*   let pre' = Sl_form.norm pre in                                  *)
-(*   if Sl_form.equal pre pre' then [] else                          *)
-(*   [ [( (pre', cmd, post), tagpairs s, TagPairs.empty)], "Norm" ]  *)
+(* let norm ((pre ,cmd, post) as s) =                               *)
+(*   let pre' = Sl_form.norm pre in                                 *)
+(*   if Sl_form.equal pre pre' then [] else                         *)
+(*   [ [( (pre', cmd, post), tagpairs s, TagPairs.empty)], "Norm" ] *)
 
 let simplify_rules = [ eq_subst_ex_f ]
 
@@ -436,13 +436,15 @@ let mk_symex_proc_unfold procs =
 
 let assert_rule =
   let rl ((pre, cmd, post) as seq) =
-    if Cmd.is_assert cmd then
+    try
       let f = Cmd.dest_assert cmd in
+      let (cs, h) = Sl_form.dest pre in
       let cont = Cmd.get_cont cmd in
+      let h = Sl_heap.explode_deqs h in
       let f = Sl_form.complete_tags Tags.empty f in
       let default_depth = !entl_depth in
       entl_depth := 0;
-      let entl_result = entails pre f in
+      let entl_result = entails (cs, [h]) f in
       entl_depth := default_depth;
       if Option.is_some (entl_result) then
         let seq' = (f, cont, post) in
@@ -454,8 +456,7 @@ let assert_rule =
         let () = debug (fun _ -> "Unsuccesfully tried to apply the assert rule:" ^
           "\n\t" ^ (Sl_seq.to_string (pre, f))) in
         []
-    else
-      [] in
+    with WrongCmd | Not_symheap -> [] in
   Rule.mk_infrule
     (Seqtactics.relabel "LHS.Cons" (Seqtactics.repeat rl))
 

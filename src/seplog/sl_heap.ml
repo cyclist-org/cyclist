@@ -220,22 +220,28 @@ let complete_tags avoid h =
         Sl_tpreds.empty in
     with_inds h inds
 
+(* computes all deqs due to a list of ptos *)
+let explode_deqs h =
+  let ptos = Sl_ptos.elements h.ptos in 
+  let cp = Blist.cartesian_hemi_square ptos in
+  let s1 =
+    Blist.fold_left 
+      (fun s p -> Sl_deqs.add (fst p, Sl_term.nil) s) 
+      Sl_deqs.empty 
+      ptos in
+  let new_deqs = (
+    Blist.fold_left (fun s (p, q) -> Sl_deqs.add (fst p, fst q) s) s1 cp) in 
+  with_deqs h (Sl_deqs.union h.deqs new_deqs) 
+    
+
 (* star two formulae together *)
 let star ?(augment_deqs=true) f g =
-  (* computes all deqs due to a list of ptos *)
-  let explode_deqs ptos =
-    let cp = Blist.cartesian_hemi_square ptos in
-    let s1 =
-      (Blist.fold_left (fun s p -> Sl_deqs.add (fst p, Sl_term.nil) s) Sl_deqs.empty ptos) in
-    (Blist.fold_left (fun s (p, q) -> Sl_deqs.add (fst p, fst q) s) s1 cp) in
-  let newptos = Sl_ptos.union f.ptos g.ptos in
-  mk
-    (Sl_uf.union f.eqs g.eqs)
-    (Sl_deqs.union_of_list 
-      (f.deqs :: g.deqs :: 
-        if augment_deqs then [explode_deqs (Sl_ptos.elements newptos)] else []))
-    newptos
-    (Sl_tpreds.union f.inds g.inds)
+  let h =
+    mk (Sl_uf.union f.eqs g.eqs)
+       (Sl_deqs.union f.deqs g.deqs)
+       (Sl_ptos.union f.ptos g.ptos)
+       (Sl_tpreds.union f.inds g.inds) in
+  if augment_deqs then explode_deqs h else h
 
 let diff h h' =
   mk
@@ -259,9 +265,9 @@ let parse_atom ?(allow_tags=true) st =
     (Sl_ptos.parse |>> mk_pto) <?> "atom"
   ) st
 
-let parse ?(allow_tags=true) st =
+let parse ?(allow_tags=true) ?(augment_deqs=true) st =
   (sep_by1 (parse_atom ~allow_tags) (parse_symb symb_star) >>= (fun atoms ->
-          return (Blist.foldl star empty atoms)) <?> "symheap") st
+          return (Blist.foldl (star ~augment_deqs) empty atoms)) <?> "symheap") st
 
 let of_string s =
   handle_reply (MParser.parse_string parse s ())

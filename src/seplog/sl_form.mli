@@ -57,7 +57,7 @@ val subsumed_upto_tags : ?total:bool -> t -> t -> bool
     check on the spatial part so that it is included rather than equal to that
     of [b]. *)
 
-val parse : ?null_is_emp:bool -> (t, 'a) MParser.t
+val parse : ?null_is_emp:bool -> ?augment_deqs:bool -> (t, 'a) MParser.t
 val of_string : ?null_is_emp:bool -> string -> t
 
 val star : ?augment_deqs:bool -> t -> t -> t

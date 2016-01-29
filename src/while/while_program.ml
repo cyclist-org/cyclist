@@ -215,32 +215,32 @@ module Cmd =
     let mk_seq cmd cmd' = cmd @ cmd'
     let mk_from_list l = Blist.flatten l
 
-    let rec parse_cmd st = 
-      (   attempt (parse_symb keyw_stop >>$ Stop)
-      <|> attempt (parse_symb keyw_skip >>$ Skip)
+    let rec parse_cmd_opt st = 
+      (   attempt (parse_symb keyw_stop >>$ Some Stop)
+      <|> attempt (parse_symb keyw_skip >>$ Some Skip)
       <|> attempt (parse_symb keyw_assert >>
           Tokens.parens Sl_form.parse |>> (fun f ->
-          Assert(f)))
+          Some (Assert(f))))
       <|> attempt (parse_symb keyw_free >>
           Tokens.parens Sl_term.parse |>> (fun v ->
-          assert (is_prog_var v) ; Free v))
+          assert (is_prog_var v) ; Some (Free v)))
       <|> attempt (parse_symb keyw_if >>
           Cond.parse >>= (fun cond ->
           parse_symb keyw_then >>
           parse >>= (fun cmd1 ->
           parse_symb keyw_else >>
           parse >>= (fun cmd2 ->
-          parse_symb keyw_fi >>$ IfElse(cond,cmd1,cmd2)))))
+          parse_symb keyw_fi >>$ Some (IfElse(cond,cmd1,cmd2))))))
       <|> attempt (parse_symb keyw_if >>
           Cond.parse >>= (fun cond ->
           parse_symb keyw_then >>
           parse >>= (fun cmd ->
-          parse_symb keyw_fi >>$ If(cond,cmd))))
+          parse_symb keyw_fi >>$ Some (If(cond,cmd)))))
       <|> attempt (parse_symb keyw_while >>
           Cond.parse >>= (fun cond ->
           parse_symb keyw_do >>
           parse >>= (fun cmd ->
-          parse_symb keyw_od >>$ While(cond,cmd))))
+          parse_symb keyw_od >>$ Some (While(cond,cmd)))))
   (*   | v = var; FLD_SEL; fld = IDENT; ASSIGN; t = term *)
       <|> attempt (parse_ident >>= (fun v ->
           parse_symb symb_fld_sel >>
@@ -248,7 +248,7 @@ module Cmd =
           parse_symb symb_assign >>
           Sl_term.parse |>> (fun t ->
           let v = Sl_term.of_string v in
-          assert (is_prog_var v) ; Store(v,id,t)))))
+          assert (is_prog_var v) ; Some (Store(v,id,t))))))
   (*   v = var; ASSIGN; NEW; LP; RP { P.Cmd.mk_new v } *)
       <|> attempt (parse_ident <<
           parse_symb symb_assign <<
@@ -256,7 +256,7 @@ module Cmd =
           parse_symb symb_lp <<
           parse_symb symb_rp |>> (fun v ->
           let v = Sl_term.of_string v in
-          assert (is_prog_var v) ; New v))
+          assert (is_prog_var v) ; Some (New v)))
   (*   | v1 = var; ASSIGN; v2 = var; FLD_SEL; fld = IDENT *)
       <|> attempt (parse_ident >>= (fun v1 ->
           parse_symb symb_assign >>
@@ -265,22 +265,26 @@ module Cmd =
           parse_ident |>> (fun id ->
           let v1 = Sl_term.of_string v1 in
           let v2 = Sl_term.of_string v2 in
-          assert (is_prog_var v1 && is_prog_var v2) ; Load(v1,v2,id)))))
+          assert (is_prog_var v1 && is_prog_var v2) ; Some (Load(v1,v2,id))))))
     (* | v = var; ASSIGN; t = term { P.Cmd.mk_assign v t } *)
-      <|> attempt ( parse_ident >>= (fun v -> 
+      <|> attempt (parse_ident >>= (fun v -> 
           parse_symb symb_assign >> 
           parse_ident |>> (fun t -> 
           let v = Sl_term.of_string v in
           let t = Sl_term.of_string t in
-          assert (is_prog_var v) ; Assign(v,t))) )
-      <|> (parse_ident >>= (fun p ->
+          assert (is_prog_var v) ; Some (Assign(v,t)))))
+      <|> attempt (parse_ident >>= (fun p ->
           Tokens.parens (Tokens.comma_sep Sl_term.parse) |>> (fun args ->
           (Blist.iter (fun arg -> assert(is_prog_var arg || Sl_term.is_nil arg)) args);
-          ProcCall(p, args))))
+          Some (ProcCall(p, args)))))
+      <|> (spaces >> string "/*" >> 
+          ((many_until any_char_or_nl (string "*/" << spaces)) >>$ None))
       <?> "Cmd") st
     and parse st = 
-      (sep_by1 parse_cmd (parse_symb symb_semicolon) |>> 
-      Blist.map mklc <?> "CmdList") st
+      (sep_by1 parse_cmd_opt (parse_symb symb_semicolon) >>= (fun cmds ->
+      let cmds = Option.list_get cmds in 
+      if Blist.is_empty cmds then zero else 
+      return (Blist.map mklc cmds)) <?> "CmdList") st
 
     let _dest_stop = function
       | Stop -> ()

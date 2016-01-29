@@ -25,12 +25,33 @@ postcondition: [b'] < [a] : l = nil * x->l \/ x->v' * ls[b'](v',l) * l->nil;
   fi
 }
 
+proc shuffle(x)
+	precondition: x->l * ls[a](l, nil);
+	postcondition: x->l * ls[a](l, nil);
+{
+	list := x.next;
+	
+	if list != nil then
+	
+		tail := list.next;
+		x.next := tail;
+		reverse(x);
+		tail := x.next;
+		if tail != nil then
+		  assert([b'] < [c'], [c'] < [a] : l=list * x'!=nil * x'!=x * nil!=x * nil!=list * x!=list * x'->nil * x->tail * list->x' * ls[b'](tail, x'))
+		fi;
+		assert([b'] < [a] : l=list * list!=nil * x!=nil * x!=list * list->v' * x->tail * ls[b'](tail, nil));
+		shuffle(x);
+		list.next := tail;
+		x.next := list
+	
+	fi
+}
+
 precondition: ls[a](l, nil);
 postcondition: ls[a](l, nil);
 
 ptr := new();
 ptr.next := l;
-reverse(ptr);
-l := ptr.next;
-free(ptr);
-assert(ls[a](l, nil))
+shuffle(ptr);
+free(ptr)

@@ -61,9 +61,4 @@ precondition: FunQueue(q);
 postcondition: FunQueue(q);
 
 enq(q);
-
-head := q.datum;
-while head != nil do
-	deq(q);
-	head := q.datum
-od
+deq(q)
