@@ -49,6 +49,9 @@ let mk_to_string pp v =
 
 let id s = s
 
+let rec fixpoint eq f x =
+  let y = f x in if eq x y then x else fixpoint eq f y
+
 let bracket s = "(" ^ s ^ ")"
 let sqbracket s = "[" ^ s ^ "]"
 let latex_bracket = bracket
