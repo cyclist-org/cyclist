@@ -1,5 +1,5 @@
 #OCB := ocamlbuild -use-ocamlfind -ocamlopt "ocamlopt.opt -S" -ocamlmktop "ocamlmktop -custom" -j 8 
-OCB := ocamlbuild -j 8 -ocamlopt "ocamlopt -annot -S"
+OCB := ocamlbuild -j 8 -ocamlopt "ocamlopt -annot" -ocamlc "ocamlc.opt -annot"
 
 TARBALL:=cyclist.tar.gz
 TMPDIR:=$(shell mktemp -d -u)
