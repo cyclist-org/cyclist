@@ -11,7 +11,7 @@ fo_prove:
   examples/fo.defs).
 sl_prove:
   An entailment prover for a fragment of separation logic with inductive
-  defintiions (those used in the tests are in examples/sl.defs).
+  definitions (those used in the tests are in examples/sl.defs).
 goto_prove:
   A termination prover for a heap-manipulating, goto-like programming language
   with specifications in the above fragment of separation logic.

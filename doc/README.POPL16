@@ -29,7 +29,7 @@ BENCHMARK TEST SUITE:
 ---------------------
 
 For details of how to run the tests in our benchmark suite, please see the
-README file in the tests/slmc/ subdirectory.
+README file in the benchmarks/slmc/ subdirectory.
 
 ================================================================================
 THEORY:

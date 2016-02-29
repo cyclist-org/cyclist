@@ -22,7 +22,7 @@ The benchmarks for SLL and UDP can be downloaded from the repository above.
 
 The third class (LEM) is included in this tree, in 
 
-  tests/sl_disproof
+  benchmarks/sl_disproof
   
 The definitions are in "all.defs" and the sequents in "seqs".  The "invbench.sh"
 script will execute the LEM benchmark.

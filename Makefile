@@ -5,6 +5,7 @@ TARBALL:=cyclist.tar.gz
 TMPDIR:=$(shell mktemp -d -u)
 ORIGDIR:=$(PWD)
 CYCDIR:=$(TMPDIR)/cyclist
+BENCHDIR:=benchmarks
 
 FOMAIN:=./src/firstorder/fo_prove.native
 SLMAIN:=./src/seplog/sl_prove.native
@@ -27,22 +28,22 @@ clean:
 	$(OCB) -clean
 
 #fo-tests:
-#	-@for TST in tests/fo/*.tst ; do _build/$(FOMAIN) $(TST_OPTS) -S "`cat $$TST`" ; done
+#	-@for TST in $(BENCHDIR)/fo/*.tst ; do _build/$(FOMAIN) $(TST_OPTS) -S "`cat $$TST`" ; done
 
 sl-tests:
-	-@for TST in tests/sl/*.tst ; do _build/$(SLMAIN) $(TST_OPTS) -S "`cat $$TST`" ; done
+	-@for TST in $(BENCHDIR)/sl/*.tst ; do _build/$(SLMAIN) $(TST_OPTS) -S "`cat $$TST`" ; done
 
 goto-tests:
-	-@for TST in tests/goto/*.tc ; do _build/$(PRMAIN) $(TST_OPTS) -P $$TST ; done
+	-@for TST in $(BENCHDIR)/goto/*.tc ; do _build/$(PRMAIN) $(TST_OPTS) -P $$TST ; done
 
 whl-tests:
-	-@for TST in tests/whl/*.wl ; do echo $$TST: ; _build/$(PR2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
+	-@for TST in $(BENCHDIR)/whl/*.wl ; do echo $$TST: ; _build/$(PR2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
 xsf-tests:
-	-@for TST in tests/sf/*.wl2 ; do echo $$TST: ; _build/$(XTDPRMAIN) $(TST_OPTS) -P $$TST ; echo ; done
+	-@for TST in $(BENCHDIR)/sf/*.wl2 ; do echo $$TST: ; _build/$(XTDPRMAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
 whl_abd-tests:
-	-@for TST in tests/whl_abd/*.wl ; do echo $$TST ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
+	-@for TST in $(BENCHDIR)/whl_abd/*.wl ; do echo $$TST ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
 aplas-tests: sl-tests #goto-tests #fo-tests 
 
