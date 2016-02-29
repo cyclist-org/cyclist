@@ -53,6 +53,7 @@ let symb_ef = make_symb "EF" (Latex.text "EF ")
 let symb_eg = make_symb "EG" (Latex.text "EG")
 let symb_fld_sel = make_symb "." (Latex.text ".")
 
+let keyw_true = mk_keyw "true"
 let keyw_emp = mk_keyw "emp"
 let keyw_free = mk_keyw "free"
 let keyw_new = mk_keyw "new"
