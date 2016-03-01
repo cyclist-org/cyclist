@@ -2,7 +2,6 @@
 
 include Util.OrderedContainer with type elt = Sl_pto.t
 
-val parse : (Sl_pto.t, 'a) MParser.parser
 val subst : Sl_term.substitution -> t -> t
 val terms : t -> Sl_term.Set.t
 val vars : t -> Sl_term.Set.t

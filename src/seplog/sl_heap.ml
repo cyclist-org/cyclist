@@ -244,7 +244,7 @@ let parse_atom st =
     attempt (Sl_tpred.parse |>> mk_ind ) <|>
     attempt (Sl_uf.parse |>> mk_eq) <|>
     attempt (Sl_deqs.parse |>> mk_deq) <|>
-    (Sl_ptos.parse |>> mk_pto) <?> "atom"
+    (Sl_pto.parse |>> mk_pto) <?> "atom"
   ) st
 
 let parse st =
