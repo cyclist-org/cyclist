@@ -1,13 +1,10 @@
 #OCB := ocamlbuild -use-ocamlfind -ocamlopt "ocamlopt.opt -S" -ocamlmktop "ocamlmktop -custom" -j 8 
-OCB := ocamlbuild -j 8 -ocamlopt "ocamlopt -annot" -ocamlc "ocamlc.opt -annot"
+OCB := ocamlbuild -j 8 -ocamlopt "ocamlopt.opt -annot" -ocamlc "ocamlc.opt -annot"
 
 TARBALL:=cyclist.tar.gz
-TMPDIR:=$(shell mktemp -d -u)
-ORIGDIR:=$(PWD)
-CYCDIR:=$(TMPDIR)/cyclist
 BENCHDIR:=benchmarks
 
-FOMAIN:=./src/firstorder/fo_prove.native
+#FOMAIN:=./src/firstorder/fo_prove.native
 SLMAIN:=./src/seplog/sl_prove.native
 PRMAIN:=./src/goto/goto_prove.native
 PR2MAIN:=./src/while/while_prove.native
@@ -17,6 +14,13 @@ TEMPORALMAIN:=./src/temporal/temporal_prove.native
 
 all:
 	$(OCB) all.otarget
+
+.PHONY: tests
+tests:
+	$(OCB) -no-links tests.otarget
+
+check: tests
+	@for TST in _build/tests/test_*.native ; do $$TST ; done
 
 %.native: 
 	$(OCB) "$@"
@@ -52,10 +56,3 @@ tp-tests: sl-tests whl-tests xsf-tests #fo-tests
 abd-tests: whl_abd-tests
 
 all-tests: tp-tests abd-tests
-
-tarball: 
-	@rm -f $(TARBALL)
-	@mkdir -p $(CYCDIR)
-	@cp -a * $(CYCDIR)
-	@cd $(TMPDIR) ; tar zcf $(ORIGDIR)/$(TARBALL) cyclist
-	@rm -rf $(TMPDIR)
