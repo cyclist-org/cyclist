@@ -1,5 +1,4 @@
-#OCB := ocamlbuild -use-ocamlfind -ocamlopt "ocamlopt.opt -S" -ocamlmktop "ocamlmktop -custom" -j 8 
-OCB := ocamlbuild -j 8 -ocamlopt "ocamlopt.opt -annot" -ocamlc "ocamlc.opt -annot"
+OCB := ocamlbuild -j 8
 
 TARBALL:=cyclist.tar.gz
 BENCHDIR:=benchmarks
