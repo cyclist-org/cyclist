@@ -6,6 +6,7 @@ open Lib
 (*   return lhs;                                       *)
 (* }                                                   *)
 
+(* FIXME this should only produce >= 0  *)
 let genhash h v = h lxor (v + (h lsl 5) + (h lsr 2))
 
 module type BasicType =
@@ -68,8 +69,7 @@ module type OrderedMap =
 
 module Fixpoint(T: sig type t val equal : t -> t -> bool end) =
   struct
-    let rec fixpoint f x =
-      let y = f x in if T.equal x y then x else fixpoint f y
+    let rec fixpoint f x = Lib.fixpoint T.equal f x
   end
 
 module MakeFList(T: BasicType) : BasicType with type t = T.t list =

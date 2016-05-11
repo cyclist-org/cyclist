@@ -1,0 +1,27 @@
+lseg {
+  x = y => lseg(x,y) |
+  x != y * x != nil * x->z',v' * lseg(z',y) => lseg(x,y)
+};
+
+lseg2 {
+  x = y => lseg2(x,y,z) |
+  x != nil * x != z * x->n',v' * lseg2(n',y,z) => lseg2(x,y,z)
+};
+
+llist {
+  x != nil * x->f',l' * l'->n',v' * lseg(f',l') => llist(x)
+};
+
+llist_with_node {
+  x != nil * x->f',l' * l'->m',w' * lseg2(f',y,l') * lseg(y,l') => llist_with_node(x,y)
+};
+
+iter {
+  x != nil * x->n' * llist_with_node(y,n') => iter(x,y)
+};
+
+spTrue {
+  emp => spTrue() |
+  x'->y' * spTrue() => spTrue() |
+  x'->y',z' * spTrue() => spTrue()
+}

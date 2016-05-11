@@ -1,0 +1,7 @@
+dispose_set spTrue()
+contains spTrue()
+add spTrue()
+_remove spTrue()
+line_254- spTrue()
+line_318- spTrue()
+line_322- spTrue()

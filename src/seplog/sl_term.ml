@@ -80,8 +80,11 @@ module Map = Util.MakeMap(Trm)
 let is_nil v = v = nil
 let is_var v = not (is_nil v) 
 
-let bound s exist = if exist then Set.min_elt s else Set.max_elt s 
-
+let bound s exist = 
+  if Set.is_empty s then
+    (if exist then -1 else 1) 
+  else
+    (if exist then (min (-1) (Set.min_elt s)) else (max 1 (Set.max_elt s)))
               
 let fresh_varname exist =
   let suffix = if exist then "'" else "" in

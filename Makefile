@@ -1,12 +1,9 @@
-#OCB := ocamlbuild -use-ocamlfind -ocamlopt "ocamlopt.opt -S" -ocamlmktop "ocamlmktop -custom" -j 8 
-OCB := ocamlbuild -j 8 -ocamlopt "ocamlopt -annot -S"
+OCB := ocamlbuild -j 8
 
 TARBALL:=cyclist.tar.gz
-TMPDIR:=$(shell mktemp -d -u)
-ORIGDIR:=$(PWD)
-CYCDIR:=$(TMPDIR)/cyclist
+BENCHDIR:=benchmarks
 
-FOMAIN:=./src/firstorder/fo_prove.native
+#FOMAIN:=./src/firstorder/fo_prove.native
 SLMAIN:=./src/seplog/sl_prove.native
 PRMAIN:=./src/goto/goto_prove.native
 PR2MAIN:=./src/while/while_prove.native
@@ -16,6 +13,13 @@ TEMPORALMAIN:=./src/temporal/temporal_prove.native
 
 all:
 	$(OCB) all.otarget
+
+.PHONY: tests
+tests:
+	$(OCB) -no-links tests.otarget
+
+check: tests
+	@for TST in _build/tests/test_*.native ; do $$TST ; done
 
 %.native: 
 	$(OCB) "$@"
@@ -27,34 +31,27 @@ clean:
 	$(OCB) -clean
 
 #fo-tests:
-#	-@for TST in tests/fo/*.tst ; do _build/$(FOMAIN) $(TST_OPTS) -S "`cat $$TST`" ; done
+#	-@for TST in $(BENCHDIR)/fo/*.tst ; do _build/$(FOMAIN) $(TST_OPTS) -S "`cat $$TST`" ; done
 
 sl-tests:
-	-@for TST in tests/sl/*.tst ; do _build/$(SLMAIN) $(TST_OPTS) -S "`cat $$TST`" ; done
+	-@for TST in $(BENCHDIR)/sl/*.tst ; do _build/$(SLMAIN) $(TST_OPTS) -S "`cat $$TST`" ; done
 
 goto-tests:
-	-@for TST in tests/goto/*.tc ; do _build/$(PRMAIN) $(TST_OPTS) -P $$TST ; done
+	-@for TST in $(BENCHDIR)/goto/*.tc ; do _build/$(PRMAIN) $(TST_OPTS) -P $$TST ; done
 
 whl-tests:
-	-@for TST in tests/whl/*.wl ; do echo $$TST: ; _build/$(PR2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
+	-@for TST in $(BENCHDIR)/whl/*.wl ; do echo $$TST: ; _build/$(PR2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
 xsf-tests:
-	-@for TST in tests/sf/*.wl2 ; do echo $$TST: ; _build/$(XTDPRMAIN) $(TST_OPTS) -P $$TST ; echo ; done
+	-@for TST in $(BENCHDIR)/sf/*.wl2 ; do echo $$TST: ; _build/$(XTDPRMAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
 whl_abd-tests:
-	-@for TST in tests/whl_abd/*.wl ; do echo $$TST ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
+	-@for TST in $(BENCHDIR)/whl_abd/*.wl ; do echo $$TST ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
-aplas-tests: sl-tests goto-tests #fo-tests 
+aplas-tests: sl-tests #goto-tests #fo-tests 
 
-tp-tests: sl-tests pr-tests sf-tests xsf-tests #fo-tests
+tp-tests: sl-tests whl-tests xsf-tests #fo-tests
 
 abd-tests: whl_abd-tests
 
 all-tests: tp-tests abd-tests
-
-tarball: 
-	@rm -f $(TARBALL)
-	@mkdir -p $(CYCDIR)
-	@cp -a * $(CYCDIR)
-	@cd $(TMPDIR) ; tar zcf $(ORIGDIR)/$(TARBALL) cyclist
-	@rm -rf $(TMPDIR)

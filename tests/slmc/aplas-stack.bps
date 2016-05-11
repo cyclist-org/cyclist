@@ -1,3 +1,0 @@
-push s models/aplas-stack-push
-pop s models/aplas-stack-pop
-dispose s models/aplas-stack-dispose

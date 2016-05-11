@@ -18,13 +18,14 @@ let equal_upto_tags (l,r) (l',r') =
 
 let dest seq = Pair.map Sl_form.dest seq
 
-let parse st =
-  ( Sl_form.parse >>= (fun l ->
-          parse_symb symb_turnstile >> Sl_form.parse >>= (fun r ->
+let parse ?(null_is_emp=false) st =
+  ( (Sl_form.parse ~null_is_emp) >>= (fun l ->
+    parse_symb symb_turnstile >> 
+    (Sl_form.parse ~null_is_emp) >>= (fun r ->
                 return (l, r))) <?> "Sequent") st
 
-let of_string s =
-  handle_reply (MParser.parse_string parse s ())
+let of_string ?(null_is_emp=false) s =
+  handle_reply (MParser.parse_string (parse ~null_is_emp) s ())
 
 let to_string (l, r) =
   (Sl_form.to_string l) ^ symb_turnstile.sep ^ (Sl_form.to_string r)

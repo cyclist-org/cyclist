@@ -56,6 +56,7 @@ let symb_f = make_symb "F" (Latex.text "F ")
 let symb_g = make_symb "G" (Latex.text "G ")
 let symb_fld_sel = make_symb "." (Latex.text ".")
 
+let keyw_true = mk_keyw "true"
 let keyw_emp = mk_keyw "emp"
 let keyw_free = mk_keyw "free"
 let keyw_new = mk_keyw "new"
@@ -83,7 +84,7 @@ let ltx_star l = Latex.concat (Latex.list_insert symb_star.melt l)
 let ltx_math_space = Latex.text "\\;"
 
 open MParser
-let parse_symb s st = Tokens.skip_symbol s.str st
+let parse_symb s st = ( spaces >> Tokens.skip_symbol s.str >> spaces ) st
 
 let max_tag = ref 0
 let upd_tag tag = 

@@ -1,4 +1,3 @@
-true: debug,explain
-<**/*.native> or <**/*.byte> or <**/*.top>: use_libsoundness
-<**/*.native> or <**/*.byte> or <**/*.top> or <**/*.ml> or <**/*.mli>:use_unix,use_str,use_latex,use_pcre
+true:debug,explain,annot,asm
+true:use_unix,use_str,use_latex,use_pcre,use_libsoundness
 <src/*>: include

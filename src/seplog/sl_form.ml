@@ -51,10 +51,12 @@ let equal_upto_tags f f' =
   Blist.for_all2 Sl_heap.equal_upto_tags f f'
   
 
-let parse st =
-  (sep_by1 Sl_heap.parse (parse_symb symb_or) <?> "formula") st
-let of_string s =
-  handle_reply (MParser.parse_string parse s ())
+let parse ?(null_is_emp=false) st =
+  ((sep_by Sl_heap.parse (parse_symb symb_or) <?> "formula") >>= (fun hs ->
+    return 
+      (if null_is_emp && Blist.is_empty hs then [ Sl_heap.empty ] else hs))) st
+let of_string ?(null_is_emp=false) s =
+  handle_reply (MParser.parse_string (parse ~null_is_emp) s ())
 
 let star f g =
   Blist.map (fun (f', g') -> Sl_heap.star f' g') (Blist.cartesian_product f g)

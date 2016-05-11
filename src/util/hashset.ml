@@ -133,6 +133,14 @@ let left_union h h' =
   let () = iter (fun x -> add h x) h' in
   h
 
+let filter p h =
+  let d = h.data in
+  let sz = ref 0 in
+  for i = 0 to Array.length d - 1 do
+    d.(i) <- List.filter p d.(i) ;
+    sz := !sz + List.length d.(i)
+  done ;
+  h.size <- !sz
 
 (* Functorial interface *)
 
@@ -157,8 +165,11 @@ module type S =
     val cardinal: t -> int
     val iter: (elt -> unit) -> t -> unit
     val fold: (elt -> 'a -> 'a) -> t -> 'a -> 'a
+    val exists : (elt -> bool) -> t -> bool
+    val for_all : (elt -> bool) -> t -> bool
     val left_union : t -> t -> t
     val is_empty : t -> bool
+    val filter : (elt -> bool) -> t -> unit
     val to_string : t -> string
     val of_list : elt list -> t
     val to_list : t -> elt list
@@ -211,6 +222,8 @@ module Make(H: HashedType): (S with type elt = H.t) =
 
     (* changes by NG *)
     let is_empty h = is_empty h
+    
+    let filter p h = filter p h
 
     let of_list l =
       let s = create (List.length l) in
@@ -223,6 +236,9 @@ module Make(H: HashedType): (S with type elt = H.t) =
     let to_list xs =
       map_to Blist.cons [] Fun.id xs
 
+    let exists f h = fold (fun k acc -> acc || f k) h false
+    let for_all f h = fold (fun k acc -> acc && f k) h true
+    
     (* changes by RR *)
     let to_string h = to_string
       (fun k -> "#" ^ (string_of_int (safehash k)) ^ ": " ^ (H.to_string k))

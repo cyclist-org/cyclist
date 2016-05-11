@@ -126,5 +126,7 @@ struct
   
   let conditional cond r idx prf = 
     if cond (Proof.get_seq idx prf) then r idx prf else []
-  
+
+  let combine_axioms ax rl =
+    first [ ax ; compose rl (attempt ax) ]  
 end

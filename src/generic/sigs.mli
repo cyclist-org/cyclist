@@ -142,6 +142,7 @@ sig
   
   val get_ancestry : int -> t -> (int * node_t) list
 
+  val is_closed_at : t -> int -> bool
   
   val check : t -> bool
   (** Check soundness. Proof does not need to be closed. *)
@@ -251,6 +252,8 @@ sig
   val sequence : t list -> t 
   
   val conditional : (seq_t -> bool) -> t -> t  
+  
+  val combine_axioms : t -> t -> t
 end
 
 module type ABDRULE =
@@ -288,7 +291,10 @@ sig
   module Seq : SEQUENT
   module Proof : PROOF
 
+  val last_search_depth : int ref
+  
   val idfs : int -> int -> rule_t -> rule_t -> Seq.t -> Proof.t option  
+  (* val bfs : int -> rule_t -> rule_t -> Seq.t -> Proof.t option   *)
   val print_proof_stats : Proof.t -> unit
   val melt_proof: out_channel -> Proof.t -> unit 
    

@@ -1,0 +1,3 @@
+tree_add_left node models/composite-tree_add_left
+tree_add_right node models/composite-tree_add_right
+tree_dispose node models/composite-tree_dispose

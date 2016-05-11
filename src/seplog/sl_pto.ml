@@ -30,3 +30,9 @@ let norm eqs (x, xs) =
   (Sl_uf.find x eqs, Blist.map (fun y -> Sl_uf.find y eqs) xs)
 
 let record_type (x, xs) = (x, Blist.length xs)
+
+let parse st =
+  (Sl_term.parse >>= (fun x ->
+          parse_symb symb_pointsto >>
+          Tokens.comma_sep1 Sl_term.parse << spaces |>>
+          (fun l -> (x, l))) <?> "pto") st

@@ -176,3 +176,15 @@ val all_subheaps : t -> t list
         done by using [Sl_uf.remove] to remove subsets of variables from 
         [h.eqs];
     and forming all possible combinations *)
+
+val memory_consuming : t -> bool
+(** [memory_consuming h] returns [true] iff whenever there is an inductive
+    predicate in [h] there is also a points-to. **)
+
+val constructively_valued : t -> bool
+(** [constructively_valued h] returns true if all variables in [h] are
+    c.valued.  A variable [v] in [h] is c.valued iff (recursively) 
+    - it is free, or,
+    - there is a c.valued variable [v'] such that 
+      - [v=v'] is in [h], or,
+      - [v' |-> ys] is in [h] and [v] appears in [ys]. **)

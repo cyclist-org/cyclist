@@ -11,7 +11,7 @@ module Seqtactics = Seqtactics.Make(Sl_seq)
 
 let id_axiom =
   Rule.mk_axiom 
-    (fun (l,r) -> Option.mk (Sl_form.subsumed r l) "Id")
+    (fun (l,r) -> Option.mk (Sl_form.subsumed ~total:true r l) "Id")
 
 let preddefs = ref Sl_defs.empty 
 
@@ -137,6 +137,8 @@ let pto_intro_rule seq =
     let (rx, rys) as p =
       Sl_ptos.find (fun (w,_) -> Option.is_some (Sl_heap.find_lval w l)) r.SH.ptos in
     let (lx, lys) as p' = Option.get (Sl_heap.find_lval rx l) in
+    (* avoid scope jumping *)
+    if Blist.exists Sl_term.is_exist_var lys then [] else
     (* take care to remove only the 1st match *)
     let l' = SH.del_pto l p' in
     let r' = SH.del_pto r p in
@@ -172,10 +174,12 @@ let instantiate_pto =
       let eptos = Blist.filter (fun (x,_) -> Sl_term.is_exist_var x) rptos in
       let match_ls xs ys =
         try
+          (* avoid scope jumping *)
+          not (Blist.exists Sl_term.is_exist_var xs) &&
 					Blist.exists2 (fun x y -> Sl_heap.equates l x y) xs ys
 				with Invalid_argument _ -> false in
       let cp = Blist.cartesian_product eptos lptos in
-      let cp = Blist.filter (fun ((_,ys),(_,zs)) -> match_ls ys zs) cp in
+      let cp = Blist.filter (fun ((_,zs),(_,ys)) -> match_ls ys zs) cp in
       let do_instantiation (((x,ys) as p), ((w,zs) as q)) =
         let l' = SH.del_pto l q in
         let r' = SH.del_pto r p in
@@ -309,7 +313,8 @@ let dobackl idx prf =
     ] in
 	Rule.first (Blist.map f apps) idx prf
 
-let axioms = ref (Rule.first [id_axiom ; ex_falso_axiom])
+(* let axioms = ref (Rule.first [id_axiom ; ex_falso_axiom]) *)
+let axioms = ref Rule.fail
 
 let rules = ref Rule.fail
 
@@ -332,5 +337,7 @@ let setup defs =
         luf defs 
       ] 
     ] ;
+  let axioms = Rule.first [id_axiom ; ex_falso_axiom] in
+  rules := Rule.combine_axioms axioms !rules ;
   if !use_invalidity_heuristic then 
     rules := Rule.conditional (fun s -> not (Sl_invalid.check defs s)) !rules

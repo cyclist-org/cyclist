@@ -36,3 +36,11 @@ val fold : t -> Sl_heap.t -> (Sl_term.substitution * Sl_heap.t) list
     the rule [r] such that its body, when one of these substitutions is applied,
     becomes a subformula of [h]; and the result of removing that subformula from
     [h]. NB the pure part is removed on a best effort basis. *)
+
+val memory_consuming : t -> bool
+(** [memory_consuming r] returns [true] the body of [r] is memory consuming 
+    (see [Sl_heap]). **)
+
+val constructively_valued : t -> bool
+(** [constructively_valued r] returns true iff the body of [r] is 
+    constructively valued (see [Sl_heap]).  **)

@@ -1,0 +1,23 @@
+lseg {
+  x = y => lseg(x,y) |
+  x != y * x != nil * x->z',v' * lseg(z',y) => lseg(x,y)
+};
+
+lseg2 {
+  x != nil * x = y * x->z',v'  => lseg2(x,y) |
+  x != nil * x != y * x->z',v' * lseg2(z',y) => lseg2(x,y)
+};
+
+queue_consumer {
+  x != nil * x->n',f',m',l' * lseg2(f',m') => queue_consumer(x)
+};
+
+queue_state {
+  x != nil * a' != nil * x->f',m',l',w' * a'->n',v' * lseg(l',a') => queue_state(x)
+};
+
+spTrue {
+  emp => spTrue() |
+  x'->z',v' * spTrue() => spTrue() |
+  x'->n',f',m',l' * spTrue() => spTrue()
+}

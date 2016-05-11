@@ -1,0 +1,25 @@
+tree {
+  x = nil * m = nil => tree(x, m) |
+  x = nil * m != nil => tree(x, m) |
+  x != nil * x->m,c',l',r' * tree(l',m) * tree(r',m) => tree(x,m)
+};
+
+stack {
+  x = nil => stack(x) |
+  x != nil * f' != nil * c' = nil * x->f',c',l',r' * stack(l') * tree(r',c') => stack(x) |
+  x != nil * f' != nil * c' != nil * x->f',c',l',r' * stack(r') * tree(l',c') => stack(x)
+};
+
+loop_invariant {
+  t = nil * stack(p) => loop_invariant(t,p) |
+  t != nil * t->f',c',l',r' * tree(l',f') * tree(r',f') * stack(p) => loop_invariant(t,p)
+};
+
+loop_invariant2 {
+  stack(p) * tree(t,m') => loop_invariant2(t,p)
+};
+
+spTrue {
+  emp => spTrue() |
+  t'->f',c',l',r' * spTrue() => spTrue()
+}

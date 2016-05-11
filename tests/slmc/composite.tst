@@ -1,7 +1,0 @@
-subtree_get_count subtree(node,p')
-fixup_ancestors context(n,p)
-tree_add_left node != nil * tree(node)
-tree_add_right node != nil * tree(node)
-tree_get_parent p' != nil * subtree(node,p') * context(node,p')
-subtree_dispose subtree(node,p')
-tree_dispose tree(node)
