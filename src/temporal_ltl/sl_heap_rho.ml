@@ -262,7 +262,7 @@ let parse_atom st =
     attempt (Sl_uf.parse |>> mk_eq) <|>
 (*    attempt (Sl_rho.parse |>> mk_rho) <|> *)
     attempt (Sl_deqs.parse |>> mk_deq) <|>
-    (Sl_ptos.parse |>> mk_pto) <?> "atom"
+    (Sl_pto.parse |>> mk_pto) <?> "atom"
   ) st
 
 let parse st =

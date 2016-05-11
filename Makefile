@@ -9,7 +9,8 @@ PRMAIN:=./src/goto/goto_prove.native
 PR2MAIN:=./src/while/while_prove.native
 XTDPRMAIN:=./src/extended_while/extended_while_prove.native
 ABD2MAIN:=./src/while/while_abduce.native
-TEMPORALMAIN:=./src/temporal/temporal_prove.native
+CTLMAIN:=./src/temporal_ctl/temporal_ctl_prove.native
+LTLMAIN:=./src/temporal_ltl/temporal_ltl_prove.native
 
 all:
 	$(OCB) all.otarget
