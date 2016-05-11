@@ -1,0 +1,55 @@
+fields: next;
+precondition: one->zero * zero->nil * z->z' * acq=zero * k->nil * flag=TRUE * TRUE->true * FALSE->false;
+property: G(\/(acq=zero,F(rel=one)));
+acq:=one;
+acq:=zero;
+while *i do
+      if *j then
+        flag:=TRUE
+      else
+        flag:=FALSE
+      fi;
+      if flag=FALSE then
+        skip
+      else
+        skip;
+        rel:=one;
+        rel:=zero;
+	status:=UNSUCCESSFUL;
+	irp:=nil;
+	lockHeld:=TRUE;
+	acq:=one;
+	acq:=zero;
+	if *k then
+	  irp:=currentIRP;
+	  irpSp:=stackLocation;
+	  bytesToMove:=btm;
+	  if bytesToMove!=zero then
+	    skip
+	  else
+	    rel:=one;
+	    rel:=zero;
+	    lockHeld:=FALSE
+	  fi
+	else
+	  if *l then
+	    rel:=one;
+	    rel:=zero;
+	    lockHeld:=FALSE
+	  else
+	    skip
+	  fi
+	fi;
+	if lockHeld=TRUE then
+	  rel:=one;
+	  rel:=zero
+	else
+	  skip
+	 fi
+      fi
+od;
+rel:=one;
+rel:=zero;
+while one=one do
+      skip
+od

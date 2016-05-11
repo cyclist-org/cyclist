@@ -1,6 +1,6 @@
 fields: next;
-precondition: wakend->nil * sigup->nil * flag->nil * numbers->x' * x'->nil;
-property: EF AG wakend=nil * numbers->x' * x'->nil;
+precondition: wakend->nil * sigup->a' * flag->b';
+property: EF(AG(wakend=nil));
 while flag!=nil do
       if sigup!=nil then
 	 free(sigup);
@@ -15,7 +15,7 @@ while flag!=nil do
        else
          skip
        fi;
-       if flag=nil then
+       if flag!=nil then
            if wakend!=nil then
 	       free(wakend);
 	       wakend:=nil;
@@ -27,7 +27,7 @@ while flag!=nil do
 	   if wakend=nil then
 	       if * then
 		   wakend:=new();
-	           wakend:=numbers.next
+	           wakend.next:=nil
 	       else
 	           skip
 	       fi
@@ -35,6 +35,7 @@ while flag!=nil do
 	       skip
 	   fi;
 	   if * then
+	       free(flag);
 	       flag:=nil
 	   else
 	       skip

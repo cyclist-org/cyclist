@@ -1,0 +1,11 @@
+fields: this;
+precondition: x=y;
+property: F(G(x=y));
+while *i do
+    x:=y
+od;
+x:=z;
+x:=y;
+while x=x do
+      skip
+od

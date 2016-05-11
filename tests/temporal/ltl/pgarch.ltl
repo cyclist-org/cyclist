@@ -1,0 +1,44 @@
+fields: next;
+precondition: wakend=zero * zero->one * one->two * two->three * sigup->a' * flag->b';
+property:G(F(wakend=one));
+wakend:=zero.next;
+while flag!=nil do
+      if sigup!=nil then
+	 free(sigup);
+      	 sigup:=nil;
+	 skip;
+	 if *i then
+	    free(flag);
+	    flag:=nil
+	 else
+	    skip
+	 fi
+       else
+         skip
+       fi;
+       if flag!=nil then
+           if wakend=one then
+	       wakend:=zero;
+	       skip;
+	       skip
+	   else
+	       skip
+	   fi;
+	   if wakend=zero then
+	        wakend:=one
+	   else
+	       skip
+	   fi;
+	   if *j then
+	       free(flag);
+	       flag:=nil
+	   else
+	       skip
+	   fi
+       else
+           skip
+       fi
+od;
+while one=one do
+    skip
+od

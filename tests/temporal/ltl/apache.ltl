@@ -1,0 +1,44 @@
+fields: this;
+precondition: dienow=false * accept=false * false!=true * clean_exit->x';
+property: G(\/(dienow=true,F(accept=true)));
+while dienow=false do
+      current_conn := conn;
+      if ap_max_request=true then
+      	 clean_exit:=safe
+      else
+         skip
+      fi;
+      skip;
+      accept:=true;
+      if num_listensocks=one then
+         lr:=ap_listeners
+      else
+         while break=false do
+	    status := zero;
+	    if status!=seven then
+	       log_error:=true;
+	       clean_exit:=safe
+	    else
+	       skip
+	    fi;
+	    if last_poll_idx=numdesc then
+	       last_poll_idx := zero
+	    else
+	       skip
+	    fi;
+	    break:=true
+	 od
+      fi;
+      if *i then
+      	 dienow:=true
+      else
+         if *j then
+            dienow:=true
+	 else
+	    skip
+	 fi
+      fi
+od;
+while x=x do
+      skip
+od

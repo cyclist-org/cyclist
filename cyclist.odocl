@@ -7,6 +7,7 @@ Proof
 Sl_term
 Sl_tpair
 Sl_uf
+Sl_rho
 Sl_deqs
 Sl_pto
 Sl_ptos
@@ -14,7 +15,10 @@ Sl_pred
 Sl_tpred
 Sl_tpreds
 Sl_heap
+Sl_heap_rho
 Sl_form
+Sl_form_rho
 Sl_seq
 Sl_indrule
 Tl_form
+Tl_form_ltl

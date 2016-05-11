@@ -1,0 +1,112 @@
+fields: next;
+precondition: one->zero * zero->nil * z->z' * acq=zero * rel=zero * aux->aux2 * aux2->aux * flag=TRUE * TRUE->true * FALSE->false;
+property: G(\/(acq=zero,F(rel=one)));
+acq:=one;
+acq:=zero;
+counter:=aux;
+while counter!=aux2 do
+  cromData:=crmD;
+  counter:=counter.next;
+  if *i1 then
+    if *j1 then
+      pool0:=nd
+    else
+      skip
+    fi;
+    if *k1 then
+      skip
+    else
+      skip
+    fi;
+    skip
+  else
+    skip
+  fi
+od;
+rel:=one;
+rel:=zero;
+acq:=one;
+acq:=zero;
+counter:=aux;
+while counter!=aux2 do
+  addressData:=addD;
+  counter:=counter.next;
+  if *i1 then
+    skip
+  else
+    skip
+  fi;
+  if *j1 then
+    skip
+  else
+    skip
+  fi;  
+  if *l1 then
+    skip
+  else
+    skip
+  fi;
+  if *m1 then
+    skip
+  else
+    skip
+  fi
+od;
+rel:=one;
+rel:=zero;
+break:=FALSE;
+while break!=TRUE do
+  acq:=one;
+  acq:=zero;
+  counter:=aux;
+  if counter!=aux2 then
+    detachData:=nd;
+    counter:=counter.next;
+    rel:=one;
+    rel:=zero
+  else
+    rel:=one;
+    rel:=zero;
+    break:=TRUE
+  fi
+od; 
+break:=FALSE;
+while break!=TRUE do
+  acq:=one;
+  acq:=zero;
+  counter:=aux;
+  if counter!=aux2 then
+    detachData:=nd;
+    counter:=counter.next;
+    rel:=one;
+    rel:=zero;
+    if detachData=TRUE then
+      pIrb:=nd;
+      rIrp:=nd;
+      stackSize:=newSize;
+      rIrp:=newIrp;
+      if rIrp!=FALSE then
+        skip
+      else
+        pIrb:=exPool;
+	if pIrb=FALSE then
+	  pIrb:=freepIrb
+	else
+	  stackSize:=pIrbSize;
+	  status:=update;
+	  pIrb:=freepIrb;
+	  rIrp:=freerIrp
+	fi
+      fi
+    else
+      skip
+    fi
+  else
+    rel:=one;
+    rel:=zero;
+    break:=TRUE
+  fi
+od; 
+while one=one do
+  skip
+od

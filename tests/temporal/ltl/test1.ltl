@@ -1,0 +1,6 @@
+fields: this;
+precondition: x=nil;
+property: x=nil;
+while x=nil do
+    skip
+od

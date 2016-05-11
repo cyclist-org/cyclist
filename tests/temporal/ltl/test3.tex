@@ -1,0 +1,530 @@
+\begin{prooftree}
+  % x=y |- 0: x := z; 1: ... : FG_1x=y
+  \[ % x=y |- 0: x := z; 1: ... : XFG_1x=y
+  \[ % nil=y * x=z |- 1: while *i do 2: ... od; 3: ... : FG_1x=y
+  \[ % nil=y * x=z |- 1: while *i do 2: ... od; 3: ... : XFG_1x=y
+  \[ % i=-1 * nil=y * x=z |- 1: while *i do 2: ... od; 3: ... : FG_1x=y
+  \[ % i=-1 * nil=y * x=z |- 1: while *i do 2: ... od; 3: ... : XFG_1x=y
+  \[ % i=-1 * nil=y * x=z |- 2: x := y; 1: ... : FG_1x=y
+  \[ % i=-1 * nil=y * x=z |- 2: x := y; 1: ... : XFG_1x=y
+  \[ % i=-1 * nil=z * x=z * y=z |- 1: while *i do 2: ... od; 3: ... : FG_1x=y
+  \[ % i=-1 * nil=z * x=z * y=z |- 1: while *i do 2: ... od; 3: ... : G_1x=y
+  \[ % i=-1 * nil=z * x=z * y=z |- 1: while *i do 2: ... od; 3: ... : x=y
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  11 : 
+  \begin{gathered}
+    \mathit{i} = -1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{while}}\;\ast \mathit{i}\;\mbox{\texttt{do}}\;2 : \mbox{\ldots }\mbox{\texttt{od}};3 : \mbox{\ldots } : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \]
+  \[ % i=-1 * nil=z * x=z * y=z |- 1: while *i do 2: ... od; 3: ... : XG_1x=y
+  \[ % i=-1 * nil=z * x=z * y=z |- 2: x := y; 1: ... : G_1x=y
+  \[ % i=-1 * nil=z * x=z * y=z |- 2: x := y; 1: ... : x=y
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  14 : 
+  \begin{gathered}
+    \mathit{i} = -1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 2 : \mathit{x}:=\mathit{y};1 : \mbox{\ldots } : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \]
+  \[ % i=-1 * nil=z * x=z * y=z |- 2: x := y; 1: ... : XG_1x=y
+  \[ % i=-1 * nil=z * x=z * y=z |- 1: while *i do 2: ... od; 3: ... : G_1x=y
+  \to 10(\mbox{Backl})
+  \justifies
+  \thickness=0.1em
+  16 : 
+  \begin{gathered}
+    \mathit{i} = -1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{while}}\;\ast \mathit{i}\;\mbox{\texttt{do}}\;2 : \mbox{\ldots }\mbox{\texttt{od}};3 : \mbox{\ldots } : G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  15 : 
+  \begin{gathered}
+    \mathit{i} = -1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 2 : \mathit{x}:=\mathit{y};1 : \mbox{\ldots } : X G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{Assign})
+  \]
+  \justifies
+  \thickness=0.1em
+  13 : 
+  \begin{gathered}
+    \mathit{i} = -1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 2 : \mathit{x}:=\mathit{y};1 : \mbox{\ldots } : G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{UnfoldG})
+  \]
+  \justifies
+  \thickness=0.1em
+  12 : 
+  \begin{gathered}
+    \mathit{i} = -1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{while}}\;\ast \mathit{i}\;\mbox{\texttt{do}}\;2 : \mbox{\ldots }\mbox{\texttt{od}};3 : \mbox{\ldots } : X G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{While - Bot})
+  \]
+  \justifies
+  \thickness=0.1em
+  10 : 
+  \begin{gathered}
+    \mathit{i} = -1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{while}}\;\ast \mathit{i}\;\mbox{\texttt{do}}\;2 : \mbox{\ldots }\mbox{\texttt{od}};3 : \mbox{\ldots } : G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{UnfoldG})
+  \]
+  \justifies
+  \thickness=0.1em
+  9 : 
+  \begin{gathered}
+    \mathit{i} = -1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{while}}\;\ast \mathit{i}\;\mbox{\texttt{do}}\;2 : \mbox{\ldots }\mbox{\texttt{od}};3 : \mbox{\ldots } : F G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{UnfoldF})
+  \]
+  \justifies
+  \thickness=0.1em
+  8 : 
+  \begin{gathered}
+    \mathit{i} = -1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{y}\ast \mathit{x} = \mathit{z}
+  \end{gathered}
+  \vdash 2 : \mathit{x}:=\mathit{y};1 : \mbox{\ldots } : X F G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{Assign})
+  \]
+  \justifies
+  \thickness=0.1em
+  7 : 
+  \begin{gathered}
+    \mathit{i} = -1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{y}\ast \mathit{x} = \mathit{z}
+  \end{gathered}
+  \vdash 2 : \mathit{x}:=\mathit{y};1 : \mbox{\ldots } : F G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{UnfoldF})
+  \]
+  \justifies
+  \thickness=0.1em
+  6 : 
+  \begin{gathered}
+    \mathit{i} = -1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{y}\ast \mathit{x} = \mathit{z}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{while}}\;\ast \mathit{i}\;\mbox{\texttt{do}}\;2 : \mbox{\ldots }\mbox{\texttt{od}};3 : \mbox{\ldots } : X F G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{While - Bot})
+  \]
+  \justifies
+  \thickness=0.1em
+  4 : 
+  \begin{gathered}
+    \mathit{i} = -1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{y}\ast \mathit{x} = \mathit{z}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{while}}\;\ast \mathit{i}\;\mbox{\texttt{do}}\;2 : \mbox{\ldots }\mbox{\texttt{od}};3 : \mbox{\ldots } : F G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{UnfoldF})
+  \]
+  \[ % i=1 * nil=y * x=z |- 1: while *i do 2: ... od; 3: ... : FG_1x=y
+  \[ % i=1 * nil=y * x=z |- 1: while *i do 2: ... od; 3: ... : XFG_1x=y
+  \[ % i=0 * nil=y * x=z |- 2: x := y; 1: ... : FG_1x=y
+  \[ % i=0 * nil=y * x=z |- 2: x := y; 1: ... : XFG_1x=y
+  \[ % i=0 * nil=z * x=z * y=z |- 1: while *i do 2: ... od; 3: ... : FG_1x=y
+  \[ % i=0 * nil=z * x=z * y=z |- 1: while *i do 2: ... od; 3: ... : G_1x=y
+  \[ % i=0 * nil=z * x=z * y=z |- 1: while *i do 2: ... od; 3: ... : x=y
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  22 : 
+  \begin{gathered}
+    \mathit{i} = 0 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{while}}\;\ast \mathit{i}\;\mbox{\texttt{do}}\;2 : \mbox{\ldots }\mbox{\texttt{od}};3 : \mbox{\ldots } : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \]
+  \[ % i=0 * nil=z * x=z * y=z |- 1: while *i do 2: ... od; 3: ... : XG_1x=y
+  \[ % i=1 * nil=z * x=z * y=z |- 3: x := z; 4: ... : G_1x=y
+  \[ % i=1 * nil=z * x=z * y=z |- 3: x := z; 4: ... : x=y
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  25 : 
+  \begin{gathered}
+    \mathit{i} = 1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 3 : \mathit{x}:=\mathit{z};4 : \mbox{\ldots } : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \]
+  \[ % i=1 * nil=z * x=z * y=z |- 3: x := z; 4: ... : XG_1x=y
+  \[ % i=1 * nil=z * x=z * y=z |- 4: x := y; 5: ... : G_1x=y
+  \[ % i=1 * nil=z * x=z * y=z |- 4: x := y; 5: ... : x=y
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  28 : 
+  \begin{gathered}
+    \mathit{i} = 1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 4 : \mathit{x}:=\mathit{y};5 : \mbox{\ldots } : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \]
+  \[ % i=1 * nil=z * x=z * y=z |- 4: x := y; 5: ... : XG_1x=y
+  \[ % i=1 * nil=z * x=z * y=z |- 5: while x=x do 6: ... od : G_1x=y
+  \[ % i=1 * nil=z * x=z * y=z |- 5: while x=x do 6: ... od : x=y
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  31 : 
+  \begin{gathered}
+    \mathit{i} = 1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 5 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;6 : \mbox{\ldots }\mbox{\texttt{od}} : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \]
+  \[ % i=1 * nil=z * x=z * y=z |- 5: while x=x do 6: ... od : XG_1x=y
+  \[ % i=1 * nil=z * x=z * y=z |- 6: skip; 5: ... : G_1x=y
+  \[ % i=1 * nil=z * x=z * y=z |- 6: skip; 5: ... : x=y
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  35 : 
+  \begin{gathered}
+    \mathit{i} = 1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 6 : \mbox{\texttt{skip}};5 : \mbox{\ldots } : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \]
+  \[ % i=1 * nil=z * x=z * y=z |- 6: skip; 5: ... : XG_1x=y
+  \[ % i=1 * nil=z * x=z * y=z |- 5: while x=x do 6: ... od : G_1x=y
+  \to 30(\mbox{Backl})
+  \justifies
+  \thickness=0.1em
+  37 : 
+  \begin{gathered}
+    \mathit{i} = 1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 5 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;6 : \mbox{\ldots }\mbox{\texttt{od}} : G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  36 : 
+  \begin{gathered}
+    \mathit{i} = 1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 6 : \mbox{\texttt{skip}};5 : \mbox{\ldots } : X G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{Skip})
+  \]
+  \justifies
+  \thickness=0.1em
+  33 : 
+  \begin{gathered}
+    \mathit{i} = 1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 6 : \mbox{\texttt{skip}};5 : \mbox{\ldots } : G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{UnfoldG})
+  \]
+  \[ % i=1 * nil=z * x=z * y=z * x!=x |-  : G_1x=y
+  (\mbox{Ex Falso})
+  \justifies
+  \thickness=0.1em
+  34 : 
+  \begin{gathered}
+    \mathit{i} = 1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z} \\ 
+    \mathit{x}\ne \mathit{x}
+  \end{gathered}
+  \vdash \epsilon  : G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  32 : 
+  \begin{gathered}
+    \mathit{i} = 1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 5 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;6 : \mbox{\ldots }\mbox{\texttt{od}} : X G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{While})
+  \]
+  \justifies
+  \thickness=0.1em
+  30 : 
+  \begin{gathered}
+    \mathit{i} = 1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 5 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;6 : \mbox{\ldots }\mbox{\texttt{od}} : G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{UnfoldG})
+  \]
+  \justifies
+  \thickness=0.1em
+  29 : 
+  \begin{gathered}
+    \mathit{i} = 1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 4 : \mathit{x}:=\mathit{y};5 : \mbox{\ldots } : X G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{Assign})
+  \]
+  \justifies
+  \thickness=0.1em
+  27 : 
+  \begin{gathered}
+    \mathit{i} = 1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 4 : \mathit{x}:=\mathit{y};5 : \mbox{\ldots } : G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{UnfoldG})
+  \]
+  \justifies
+  \thickness=0.1em
+  26 : 
+  \begin{gathered}
+    \mathit{i} = 1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 3 : \mathit{x}:=\mathit{z};4 : \mbox{\ldots } : X G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{Assign})
+  \]
+  \justifies
+  \thickness=0.1em
+  24 : 
+  \begin{gathered}
+    \mathit{i} = 1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 3 : \mathit{x}:=\mathit{z};4 : \mbox{\ldots } : G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{UnfoldG})
+  \]
+  \justifies
+  \thickness=0.1em
+  23 : 
+  \begin{gathered}
+    \mathit{i} = 0 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{while}}\;\ast \mathit{i}\;\mbox{\texttt{do}}\;2 : \mbox{\ldots }\mbox{\texttt{od}};3 : \mbox{\ldots } : X G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{While - Zero})
+  \]
+  \justifies
+  \thickness=0.1em
+  21 : 
+  \begin{gathered}
+    \mathit{i} = 0 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{while}}\;\ast \mathit{i}\;\mbox{\texttt{do}}\;2 : \mbox{\ldots }\mbox{\texttt{od}};3 : \mbox{\ldots } : G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{UnfoldG})
+  \]
+  \justifies
+  \thickness=0.1em
+  20 : 
+  \begin{gathered}
+    \mathit{i} = 0 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{z}\ast \mathit{x} = \mathit{z}\ast \mathit{y} = \mathit{z}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{while}}\;\ast \mathit{i}\;\mbox{\texttt{do}}\;2 : \mbox{\ldots }\mbox{\texttt{od}};3 : \mbox{\ldots } : F G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{UnfoldF})
+  \]
+  \justifies
+  \thickness=0.1em
+  19 : 
+  \begin{gathered}
+    \mathit{i} = 0 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{y}\ast \mathit{x} = \mathit{z}
+  \end{gathered}
+  \vdash 2 : \mathit{x}:=\mathit{y};1 : \mbox{\ldots } : X F G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{Assign})
+  \]
+  \justifies
+  \thickness=0.1em
+  18 : 
+  \begin{gathered}
+    \mathit{i} = 0 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{y}\ast \mathit{x} = \mathit{z}
+  \end{gathered}
+  \vdash 2 : \mathit{x}:=\mathit{y};1 : \mbox{\ldots } : F G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{UnfoldF})
+  \]
+  \justifies
+  \thickness=0.1em
+  17 : 
+  \begin{gathered}
+    \mathit{i} = 1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{y}\ast \mathit{x} = \mathit{z}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{while}}\;\ast \mathit{i}\;\mbox{\texttt{do}}\;2 : \mbox{\ldots }\mbox{\texttt{od}};3 : \mbox{\ldots } : X F G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{While - N})
+  \]
+  \justifies
+  \thickness=0.1em
+  5 : 
+  \begin{gathered}
+    \mathit{i} = 1 \\ 
+    \mathit{\mbox{\texttt{nil}}} = \mathit{y}\ast \mathit{x} = \mathit{z}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{while}}\;\ast \mathit{i}\;\mbox{\texttt{do}}\;2 : \mbox{\ldots }\mbox{\texttt{od}};3 : \mbox{\ldots } : F G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{UnfoldF})
+  \]
+  \justifies
+  \thickness=0.1em
+  3 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{y}\ast \mathit{x} = \mathit{z}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{while}}\;\ast \mathit{i}\;\mbox{\texttt{do}}\;2 : \mbox{\ldots }\mbox{\texttt{od}};3 : \mbox{\ldots } : X F G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{Determinise})
+  \]
+  \justifies
+  \thickness=0.1em
+  2 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{y}\ast \mathit{x} = \mathit{z}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{while}}\;\ast \mathit{i}\;\mbox{\texttt{do}}\;2 : \mbox{\ldots }\mbox{\texttt{od}};3 : \mbox{\ldots } : F G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{UnfoldF})
+  \]
+  \justifies
+  \thickness=0.1em
+  1 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \vdash 0 : \mathit{x}:=\mathit{z};1 : \mbox{\ldots } : X F G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{Assign})
+  \]
+  \justifies
+  \thickness=0.1em
+  0 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \vdash 0 : \mathit{x}:=\mathit{z};1 : \mbox{\ldots } : F G 
+  \begin{gathered}
+    \mathit{x} = \mathit{y}
+  \end{gathered}
+  \using(\mbox{UnfoldF})
+\end{prooftree}

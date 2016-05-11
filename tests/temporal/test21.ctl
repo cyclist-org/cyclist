@@ -1,7 +1,7 @@
 fields: next;
-precondition: y=nil * ls(x,nil);
-property: EF y->a;
+precondition: y->a * a->nil * a'->b' * ls(x,nil);
+property: AF y->nil;
 while x!=nil do
   x := x.next
 od;
-y:=b
+y:=y.next

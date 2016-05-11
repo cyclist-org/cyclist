@@ -1,0 +1,19 @@
+fields: this;
+precondition: flag=false * stored=zero * zero!=one * true!=false * x->x';
+property: F(G(stored=zero));
+while flag=false do
+   if *i then
+      skip
+   else
+      stored:=one;
+      flag:=true
+   fi
+od;
+if stored=one then
+   stored:=zero
+else
+   skip
+fi;
+while flag=flag do
+      skip
+od

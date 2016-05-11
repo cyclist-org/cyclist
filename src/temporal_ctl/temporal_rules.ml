@@ -39,6 +39,7 @@ let simplify_rules = [ eq_subst_ex_f ]
 let simplify_seq_rl = 
   Seqtactics.relabel "Simplify" 
     (Seqtactics.repeat (Seqtactics.first  simplify_rules))
+
 let simplify = Rule.mk_infrule simplify_seq_rl  
 
 let wrap r =
@@ -217,26 +218,28 @@ let symex_while_rule =
       let cont = Cmd.get_cont cmd in
       let (sf',sf'') = Cond.fork sf c in 
       if Tl_form.is_box tf then
-	let tf' = Tl_form.a_step tf in
-	fix_tps 
-	  [[ ([sf'], Cmd.mk_seq cmd' cmd, tf') ; ([sf''], cont, tf') ], "While-Box"]
+				let tf' = Tl_form.a_step tf in
+				fix_tps 
+	  			[[ ([sf'], Cmd.mk_seq cmd' cmd, tf') ; ([sf''], cont, tf') ], "While-Box"]
       else if Tl_form.is_diamond tf then
-	let tf' = Tl_form.e_step tf in
-	if Cond.is_non_det c then
-	  fix_tps 
+				let tf' = Tl_form.e_step tf in
+				if Cond.is_non_det c then
+	  			fix_tps 
             [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], 
              "While-<>1" ;
-	     [ ([sf''], cont, tf')],
+	     			[ ([sf''], cont, tf')],
              "While-<>2"
             ]
-	else if Cond.validated_by sf c then
-	  fix_tps [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], "While-<>1"]
-	else
-	  fix_tps [[ ([sf''], cont, tf')], "While-<>2"]
+				else if Cond.validated_by sf c then
+	  			fix_tps [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], "While-<>1"]
+				else
+	  			fix_tps [[ ([sf''], cont, tf')], "While-<>2"]
       else
 	[]
     with Not_symheap | WrongCmd -> [] in
   wrap rl
+
+module Slprover = Prover.Make(Sl_seq)
 
 (* There is also a weird, unsound, interaction between looking for substitutions  *)
 (* that rewrite a sequent under its equalities, as opposed to bona fide           *)
@@ -253,14 +256,20 @@ let symex_while_rule =
 (* the required sequent.                                                          *)
 let matches ((sf,cmd,tf) as seq) ((sf',cmd',tf') as seq') =
   try
+    (* let () = print_endline "At matches with seqs:" in   *)
+    (* let () = print_endline (Seq.to_string seq) in   *)
+    (* let () = print_endline (Seq.to_string seq') in   *)
     if not (Cmd.equal cmd cmd' && Tl_form.equal tf tf'
-	   && (Tl_form.is_ag tf || Tl_form.is_eg tf)
-	   && (Tl_form.is_ag tf' || Tl_form.is_eg tf')) then [] else
+	    && (Tl_form.is_ag tf || Tl_form.is_eg tf)
+	    && (Tl_form.is_ag tf' || Tl_form.is_eg tf')) then 
+      (* let () = print_endline "Seqs are not equal" in   *)
+      [] 
+    else
       let (sf, sf') = Pair.map Sl_form.dest(sf,sf') in
       let sub_check = Sl_term.combine_subst_checks [
-        Sl_term.basic_lhs_down_check ;
-        Sl_term.avoids_replacing_check !program_vars ;
-      ] in
+			  Sl_term.basic_lhs_down_check ;
+			  Sl_term.avoids_replacing_check !program_vars ;
+			] in
       let cont =
 	Sl_term.mk_verifier
           (Sl_term.mk_assert_check
@@ -277,20 +286,41 @@ let matches ((sf,cmd,tf) as seq) ((sf',cmd',tf') as seq') =
 	Sl_term.backtrack 
 	  (Sl_heap.unify_partial ~tagpairs:true)
 	  ~sub_check
-	  ~cont
+	  ~cont 
 	  sf' sf in
+      (* ATTEMPT CUT *)
+      (* let res2 = if Blist.is_empty res then *)
+      (* 		   let olddebug = !Lib.do_debug in *)
+      (* 		   let () = Lib.do_debug := false in *)
+      (* 		   let result =  *)
+      (* 		     Option.is_some (Slprover.idfs 1 11 !Sl_rules.axioms !Sl_rules.rules ([sf], [sf'])) in *)
+      (* 		   let () = Lib.do_debug := olddebug in *)
+      (* 		   let () = debug (fun () -> "CUTLINK3: result: " ^ (string_of_bool result)) in *)
+      (* 		   if result then *)
+      (* 		     Sl_term.backtrack  *)
+      (* 		       (Sl_heap.unify_partial ~tagpairs:true) *)
+      (* 		       ~sub_check *)
+      (* 		       (\* ~cont *\) *)
+      (* 		       sf' sf' *)
+      (* 		   else *)
+      (* 		     [] *)
+      (* 		 else *)
+      (* 		   res in *)
       if Tl_form.is_ag tf && Tl_form.is_ag tf' then
+	(* let () = print_endline "After computer res with AG" in   *)
 	let (t1, _) = Tl_form.dest_ag tf in
 	let (t2, _) = Tl_form.dest_ag tf' in
-	assert (Tags.equal (Tags.singleton t1) (Tags.singleton t2)); Blist.map (fun (t,tp) -> (t, (TagPairs.add (t1,t2) tp))) res
+	assert (Tags.equal (Tags.singleton t1) (Tags.singleton t2));
+	Blist.map (fun (t,tp) -> (t, (TagPairs.add (t1,t2) tp))) res
       else if Tl_form.is_eg tf && Tl_form.is_eg tf' then
 	let (t1, _) = Tl_form.dest_eg tf in
 	let (t2, _) = Tl_form.dest_eg tf' in
-	assert (Tags.equal (Tags.singleton t1) (Tags.singleton t2)); Blist.map (fun (t,tp) -> (t, (TagPairs.add (t1,t2) tp ))) res
+	assert (Tags.equal (Tags.singleton t1) (Tags.singleton t2));
+	Blist.map (fun (t,tp) -> (t, (TagPairs.add (t1,t2) tp ))) res
       else
 	res
   with Not_symheap -> []
-
+			
 (*    seq'     *)
 (* ----------  *)
 (* seq'[theta] *)
@@ -298,8 +328,7 @@ let matches ((sf,cmd,tf) as seq) ((sf',cmd',tf') as seq') =
 let subst_rule theta seq' seq = 
   if Seq.equal (Seq.subst theta seq') seq 
     then 
-      [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], 
-       "Subst "  (* ^ (Format.asprintf "%a" Sl_term.pp_subst theta) *) ]
+      [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], "Subst " ]
     else 
       []
 
@@ -308,7 +337,14 @@ let frame seq' seq =
     [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], "Frame" ]
   else
     []
-      
+
+(* let cut seq' seq =  *)
+(*   let ((sf1,cmd1,tf1),(sf2,cmd2,tf2)) = (seq,seq') in *)
+(*   if Option.is_some (Slprover.idfs 1 11 !Sl_rules.axioms !Sl_rules.rules (sf1, sf2)) then *)
+(*     [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], "Cut" ] *)
+(*   else *)
+(*     [] *)
+
 let unfold_ag_rule = 
   let rl seq =
     try
@@ -354,14 +390,41 @@ let unfold_ef_rule =
     try
       let (sf,cmd,tf) = dest_sh_seq seq in
       if Tl_form.is_ef tf then
-	let (tf1,tf2) = Tl_form.unfold_ef tf in
-	fix_tps
-	  [[([sf],cmd,tf1)], "UnfoldEF" ;
-	   [([sf],cmd,tf2)], "UnfoldEF"]
+				let (tf1,tf2) = Tl_form.unfold_ef tf in
+					fix_tps
+	  				[[([sf],cmd,tf1)], "UnfoldEF" ;
+	   				[([sf],cmd,tf2)], "UnfoldEF"]
       else
-	[]
+				[]
     with Not_symheap -> [] in
   wrap rl
+
+let disjunction_rule = 
+		let rl seq = 
+			try
+				let (sf,cmd,tf) = dest_sh_seq seq in
+				if Tl_form.is_or tf then
+					let (tf1,tf2) = Tl_form.unfold_or tf in
+					fix_tps
+					[[([sf],cmd,tf1)], "Disj1" ;
+	   				[([sf],cmd,tf2)], "Disj2"]
+				else 
+					[]
+			with Not_symheap -> [] in
+			wrap rl	
+			
+let conjunction_rule = 
+		let rl seq = 
+			try
+				let (sf,cmd,tf) = dest_sh_seq seq in
+				if Tl_form.is_and tf then
+					let (tf1,tf2) = Tl_form.unfold_and tf in
+					fix_tps
+					[[([sf],cmd,tf1);([sf],cmd,tf2)], "Conj"]
+				else 
+					[]
+			with Not_symheap -> [] in
+			wrap rl	
 
 (* if there is a backlink achievable through substitution and classical *)
 (* weakening then make the proof steps that achieve it explicit so that *)
@@ -374,34 +437,41 @@ let dobackl idx prf =
       (fun idx' -> 
        Blist.map 
          (fun res -> (idx',res))
-         (matches src_seq (Proof.get_seq idx' prf))) 
+         (matches src_seq (Proof.get_seq idx' prf))
+      ) 
       targets in
   let f (targ_idx, (theta,tagpairs)) =
       let targ_seq = Proof.get_seq targ_idx prf in
       (* [targ_seq'] is as [targ_seq] but with the tags of [src_seq] *)
       let (sf_targ_seq,cmd_targ_seq,tf_targ_seq) = targ_seq in
-      let targ_seq' = 
-        (Sl_form.subst_tags tagpairs sf_targ_seq, 
-        cmd_targ_seq, tf_targ_seq) in 
+      let targ_seq' = (Sl_form.subst_tags tagpairs sf_targ_seq, cmd_targ_seq, tf_targ_seq) in 
       let subst_seq = Seq.subst theta targ_seq' in
       Rule.sequence [
-        if Seq.equal src_seq subst_seq
-          then Rule.identity
-          else Rule.mk_infrule (frame subst_seq);
-          
-        if Sl_term.Map.for_all Sl_term.equal theta
-          then Rule.identity
-          else Rule.mk_infrule (subst_rule theta targ_seq');
-           
+          if Seq.equal src_seq subst_seq
+        then Rule.identity
+        else 
+	  (* if Seq.subsumed src_seq targ_seq then *)
+	    Rule.mk_infrule (frame subst_seq);
+	  (* else *)
+	  (*   Rule.mk_infrule (cut subst_seq); *)
+	
+	if Sl_term.Map.for_all Sl_term.equal theta
+	then Rule.identity
+	else Rule.mk_infrule (subst_rule theta targ_seq');
+        
         Rule.mk_backrule 
           false 
           (fun _ _ -> [targ_idx]) 
           (fun s s' -> 
-            [(TagPairs.reflect tagpairs), "Backl"])
-      ] in
-    Rule.first (Blist.map f apps) idx prf
-
-
+           [(TagPairs.reflect tagpairs), "Backl"])
+	] in
+  (* let () = print_endline "Attempting backlink with source seq:" in   *)
+  (* let () = print_endline (Seq.to_string src_seq) in   *)
+  let rule_list = (Blist.map f apps) in
+  (* let () = print_endline "IS LIST EMPTY? " in *)
+  (* let () = print_endline (string_of_bool (Blist.is_empty rule_list)) in *)
+  Rule.first rule_list idx prf
+	     
 let fold def =
   let fold_rl seq = 
     try 
@@ -413,10 +483,10 @@ let fold def =
         let results = Sl_indrule.fold case sf in
         let process (theta, sf') = 
           let seq' = ([sf'],cmd,tf) in
-          (* let () = print_endline "Fold match:" in         *)
-          (* let () = print_endline (Seq.to_string seq) in   *)
+          (* let () = print_endline "Fold match:" in *)
+          (* let () = print_endline (Seq.to_string seq) in *)
           (* let () = print_endline (Sl_heap.to_string f) in *)
-          (* let () = print_endline (Seq.to_string seq') in  *)
+          (* let () = print_endline (Seq.to_string seq') in *)
             [(
               seq', 
               TagPairs.mk (Tags.inter tags (Seq.tags seq')), 
@@ -460,34 +530,91 @@ let generalise_while_rule =
     with Not_symheap | WrongCmd -> [] in
   Rule.mk_infrule rl 
 
-module Slprover = Prover.Make(Sl_seq)
-
 let backlink_cut defs =
   let rl s1 s2 =
     if !termination then [] else
-    (* let () = incr step in *)
-    let ((sf1,cmd1,tf1),(sf2,cmd2,tf2)) = (s1,s2) in
-    if not (Cmd.is_while cmd1) then [] else
-    (* let () = debug (fun () -> "CUTLINK3: trying: " ^ (Seq.to_string s2)) in   *)
-    (* let () = debug (fun () -> "                  " ^ (Seq.to_string s1)) in   *)
-    (* let () = debug (fun () -> "CUTLINK3: step = " ^ (string_of_int !step)) in *)
-    (* if !step <> 22 then None else *)
-    if not (Cmd.equal cmd1 cmd2) then [] else
-    (* let olddebug = !Lib.do_debug in *)
-    (* let () = Lib.do_debug := true in *)
-    let () = Sl_rules.setup defs in
-    let result = 
-      Option.is_some (Slprover.idfs 1 11 !Sl_rules.axioms !Sl_rules.rules (sf1, sf2)) in
-    (* let () = Lib.do_debug := olddebug in *)
-    (* let () = debug (fun () -> "CUTLINK3: result: " ^ (string_of_bool result)) in *)
-    if result then [ (Seq.tagpairs_one, "Cut/Backl") ] else [] in
+      (* let () = incr step in *)
+      let ((sf1,cmd1,tf1),(sf2,cmd2,tf2)) = (s1,s2) in
+      if not (Cmd.is_while cmd1) then [] else
+	let () = debug (fun () -> "CUTLINK3: trying: " ^ (Seq.to_string s2)) in
+	let () = debug (fun () -> "                  " ^ (Seq.to_string s1)) in
+	(* let () = debug (fun () -> "CUTLINK3: step = " ^ (string_of_int !step)) in *)
+	(* if !step <> 22 then None else *)
+	if not (Cmd.equal cmd1 cmd2) 
+	then [] 
+	else
+	  let olddebug = !Lib.do_debug in
+	  let () = Lib.do_debug := true in
+	  let () = Sl_rules.setup defs in
+	  let result = 
+	    Option.is_some (Slprover.idfs 1 11 !Sl_rules.axioms !Sl_rules.rules (sf1, sf2)) in
+	  let () = Lib.do_debug := olddebug in
+	  let () = debug (fun () -> "CUTLINK3: result: " ^ (string_of_bool result)) in
+	  if result then
+	    let targets = (matches (sf2,cmd1,tf1) s2) in
+	    (* let f (targ_idx, (theta,tagpairs)) = *)
+	    (*   let subst_seq = Seq.subst theta s2 in *)
+	    (*   [ ((TagPairs.reflect tagpairs), "Cut/Backl") ] *)
+	    (* in *)
+	    if Blist.is_empty targets then [] else
+	      	  let () = debug (fun () -> "CUTLINK NON EMPTY TARGETS: " ^ (string_of_bool result)) in
+	      let (_,tagpairs) = List.hd (Blist.to_list targets) in
+	      [ ((TagPairs.reflect tagpairs), "Cut/Backl") ]
+	  (* (Blist(Blist.map (fun (_,tagpairs) -> [ ((TagPairs.reflect tagpairs), "Cut/Backl") ]) targets) *)
+	  else
+	    []
+  in
   Rule.mk_backrule true Rule.all_nodes rl
+  (* (Blist.map (fun rl -> Rule.mk_backrule true Rule.all_nodes rl) rl) *)
+
+
+
+
+    (*     let targ_seq = Proof.get_seq targ_idx prf in *)
+	  (*     (\* [targ_seq'] is as [targ_seq] but with the tags of [src_seq] *\) *)
+	  (*     let (sf_targ_seq,cmd_targ_seq,tf_targ_seq) = targ_seq in *)
+	  (*     let targ_seq' = (Sl_form.subst_tags tagpairs sf_targ_seq, cmd_targ_seq, tf_targ_seq) in  *)
+	  (*     let subst_seq = Seq.subst theta targ_seq' in *)
+	  (*     Rule.sequence [ *)
+	  (* 	  if Seq.equal src_seq subst_seq *)
+	  (* 	  then Rule.identity *)
+	  (* 	  else Rule.mk_infrule (frame subst_seq); *)
+		  
+	  (* 	  if Sl_term.Map.for_all Sl_term.equal theta *)
+	  (* 	  then Rule.identity *)
+	  (* 	  else Rule.mk_infrule (subst_rule theta targ_seq'); *)
+		  
+	  (* 	  Rule.mk_backrule  *)
+	  (* 	    false  *)
+	  (* 	    (fun _ _ -> [targ_idx])  *)
+	  (* 	    (fun s s' ->  *)
+	  (* 	     [(TagPairs.reflect tagpairs), "Backl"]) *)
+	  (* 	] in *)
+	  (*   (\* let () = print_endline "Attempting backlink with source seq:" in   *\) *)
+	  (*   (\* let () = print_endline (Seq.to_string src_seq) in   *\) *)
+	  (*   let rule_list = (Blist.map f apps) in *)
+	  (*   (\* let () = print_endline "IS LIST EMPTY? " in *\) *)
+	  (*   (\* let () = print_endline (string_of_bool (Blist.is_empty rule_list)) in *\) *)
+	  (*   Rule.first rule_list idx prf *)
+	  (* else *)
+	  (*   Rule.identity *)
+		 
+
+  (*   if result then [ (Seq.tagpairs_one, "Cut/Backl") ] else [] in *)
+  (* Rule.mk_backrule true Rule.all_nodes rl *)
+		 
+
+
+  (* 	] in *)
+  (*     [ (Seq.tagpairs_one, "Cut/Backl") ]  *)
+  (*   else [] in *)
+  (* Rule.mk_backrule true Rule.all_nodes rl *)
 
 
 let axioms = 
   let entails f f' =
-    Slprover.idfs 1 5 !Sl_rules.axioms !Sl_rules.rules (f, f') in
-  ref (Rule.first [ex_falso_axiom; symex_check_axiom entails; symex_empty_axiom])
+    Slprover.idfs 1 10 !Sl_rules.axioms !Sl_rules.rules (f, f') in
+  ref (Rule.first [symex_check_axiom entails; symex_empty_axiom])
       
 let rules = ref Rule.fail
 
@@ -499,8 +626,8 @@ let symex =
       symex_store_rule ;
       symex_free_rule ;
       symex_new_rule ;
-      symex_ifelse_rule ;
-      symex_while_rule;
+      (Rule.compose symex_ifelse_rule (Rule.attempt ex_falso_axiom));
+      (Rule.compose symex_while_rule (Rule.attempt ex_falso_axiom));
     ]
 
 let unfold_gs = 
@@ -519,18 +646,19 @@ let setup defs =
   let () = Sl_rules.setup defs in
   (* Program.set_local_vars seq_to_prove ; *)
   rules := Rule.first [
-	       lhs_disj_to_symheaps ;
-	       simplify ;
-	       
 	       Rule.choice [
 		   dobackl;
 		   Rule.choice 
 		     (Blist.map 
 			(fun c -> Rule.compose (fold c) dobackl) 
 			(Sl_defs.to_list defs));
-		   Rule.compose_pairwise unfold_gs [Rule.identity; Rule.attempt symex];
+		   Rule.compose_pairwise unfold_gs [Rule.attempt !axioms; Rule.attempt symex];
 		   unfold_fs;
 		   symex;
 		   luf defs;
-		 ]
+		   disjunction_rule;
+		   conjunction_rule;
+		 ];
+	       lhs_disj_to_symheaps ;
+	       simplify ;
 	     ]

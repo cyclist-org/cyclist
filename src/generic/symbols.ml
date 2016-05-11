@@ -51,6 +51,9 @@ let symb_af = make_symb "AF" (Latex.text "AF ")
 let symb_ag = make_symb "AG" (Latex.text "AG ")
 let symb_ef = make_symb "EF" (Latex.text "EF ")
 let symb_eg = make_symb "EG" (Latex.text "EG")
+let symb_next = make_symb "X" (Latex.text "X ")
+let symb_f = make_symb "F" (Latex.text "F ")
+let symb_g = make_symb "G" (Latex.text "G ")
 let symb_fld_sel = make_symb "." (Latex.text ".")
 
 let keyw_emp = mk_keyw "emp"

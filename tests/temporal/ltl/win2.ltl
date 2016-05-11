@@ -1,0 +1,86 @@
+fields: this;
+precondition: flag=false * accept=false * false!=true * clean_exit->x';
+property: G(\/(flag=false,F(flag=false)));
+if *i then
+   if WarmPollPeriod!=five then
+      WarmPollPeriod:=five
+   else
+     if WarmPollPeriod!=twenty then
+       WarmPollPeriod:=twenty
+     else
+       skip
+     fi
+   fi;
+   if *j then
+     flag:=true;
+     if *k then
+        while break=false do
+	  if powerState=AC then
+	    skip
+	  else
+	    skip
+	  fi;
+          if *k then
+            break:=true
+	  else
+	    if powerState=AC then
+	      if *l then
+	        flag:=false;
+		break:=true
+	      else
+	        skip
+	      fi
+	    else
+	      if status=timeout then
+	        if *l then
+		  if tryAllocatePort=true then
+		    requestRescan:=false;
+		    deviceStatus:=update;
+		    if *m then
+		      skip
+		    else
+		      deviceId:=Ieee1284;
+		      if deviceId=true then
+		         if mfg=true then
+			   if mdl=true then
+			     requestRescan:=true
+			   else
+			     skip
+			   fi
+			 else
+			   skip
+			 fi
+		      else
+		        skip
+		      fi;
+		      if requestRescan=true then
+		         invalidated:=true
+		      else
+		        skip
+		      fi
+		    fi
+		  else
+		    skip
+		  fi
+		else
+		  skip
+		fi
+	      else
+	        skip
+	      fi
+	    fi
+	fi
+      od;
+      flag:=false
+     else
+       flag:=false
+     fi
+   else
+     skip
+   fi
+else
+   skip
+fi;
+while true=true do
+      skip
+od

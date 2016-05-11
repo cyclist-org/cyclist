@@ -1,0 +1,58 @@
+fields: next;
+precondition: count=zero * five->four * four->three * three->two * two->one * one->zero * zero->nil * keWaitForSingleObject->x' * AC->y';
+property: G(\/(count=zero,F(count=zero)));
+    if *i then
+      while count=count do
+        count:=one;
+        while count!=zero do
+	  if powerState=AC then
+	    skip
+	  else
+	    skip
+	  fi;
+	  status:=keWaitForSingleObject;
+	  if *j then
+	    skip
+	  else
+	    skip
+	  fi;
+	  if powerState!=AC then
+	    skip
+	  else
+	    if status=TIMEOUT then
+	      requestRescan:=FALSE;
+	      deviceStatus:=update;
+	      if tryAllocatePort=TRUE then
+	        requestRescan:=FALSE;
+		deviceStatus:=updated
+	      else
+		devId := Ieee1284DeviceId;
+		skip;
+		if mfg=TRUE then
+		  if mdl=TRUE then
+		    requestRescan:=TRUE
+		  else
+		    skip
+		  fi
+		else
+		  skip
+		fi
+	      fi
+	    else
+	      if requestRescan=TRUE then
+	        skip
+	      else
+	        skip
+	      fi
+	    fi
+	  fi;
+          count:=count.next
+        od
+      od
+    else
+      skip
+    fi;
+    while TRUE=TRUE do
+      skip
+    od
+

@@ -1,0 +1,42 @@
+fields: this;
+precondition: true!=false * A=zero * zero!=one * istemp=false;
+property: G(\/(istemp=false,G(A=zero)));
+if istemp=true then
+   while NLocBuffer!=zero do
+   bufHdr:=LocalBufferDescriptors;
+   if bufHdrTarRNode=rNode then
+      if localRefCount!=zero then
+         bufHdrFlags := true;
+	 bufHdrCntxDirty := zero;
+	 bufHdrTagRNodeRelNode := one
+      else
+         skip
+      fi
+   else
+      skip
+   fi
+   od
+else
+   A:=one;
+   while *j do
+      bufHdr:=nondet;
+      if bufHdrTagNode=rNode then
+        if bufHdrFlags=true then
+	   continue:=true
+	else
+	   continue:=false
+	fi;
+	if bufHdrRefCount!=zero then
+	   bufHdrFlags:=true;
+	   bufHdrCntxDisrty:=zero
+	else
+	   skip
+	fi
+      else
+         skip
+      fi
+   od
+fi;
+while true=true do
+      skip
+od

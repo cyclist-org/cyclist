@@ -1,6 +1,10 @@
 fields: this;
 precondition: x=nil;
-property: AG x=nil;
+property: AG(x=nil);
 while x=nil do
-  x := nil
+  if * then
+    x := nil
+  else
+    skip
+  fi
 od
