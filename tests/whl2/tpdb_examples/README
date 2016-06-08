@@ -1,0 +1,7 @@
+The benchmarks in this directory are translations from the Termination Problems
+Database (version 10.3):
+
+	http://termination-portal.org/wiki/TPDB
+	
+The directory structure and filenames mirror that of the database in order that
+one may easily determine which examples the benchmarks correspond to.
