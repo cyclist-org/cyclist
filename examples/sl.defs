@@ -127,6 +127,15 @@ Queue {
 	x->head',tail' * ls2(head',tail') * tail'->nil,nil => Queue(x)
 } ;
 
+uf {
+  z'=y * ls(x,z') * z'->y => uf(x,y)
+} ;
+
+ls_set {
+  emp => ls_set(x) |
+  y'!=nil * ls(y',x) * ls_set(x) => ls_set(x)
+} ;
+
 spTrue {
 	emp => spTrue() |
 	x'->y' * spTrue() => spTrue()
