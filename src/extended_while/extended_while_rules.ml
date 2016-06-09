@@ -23,9 +23,18 @@ let entails f f' =
   let () = debug (fun _ -> "Trying to prove entailment:\n\t" ^ (Sl_seq.to_string (f, f')) ^ "\n\t" ^ "with depth " ^ (string_of_int !entl_depth)) in
   let prove seq =
     let depth = if !entl_depth < 1 then max_int else !entl_depth in
-    if !check_invalid seq
-      then None
-      else Slprover.idfs 1 depth !Sl_rules.axioms !Sl_rules.rules seq in
+    let invalid = 
+      let dbg = !do_debug in 
+      let res = (do_debug := false; !check_invalid seq) in 
+      do_debug := dbg; res in
+    if invalid
+      then 
+        let () = debug (fun _ -> "Entailment is invalid!") in 
+        None
+      else 
+        let prf = Slprover.idfs 1 depth !Sl_rules.axioms !Sl_rules.rules seq in
+        let () = debug (fun _ -> "Entailment was " ^ (Option.dest "not " (fun _ -> "") prf) ^ "proved") in
+        prf in
   let seq = (f, f') in
   if EntlSeqHash.mem entailment_table seq then
     let (depth, prf) = EntlSeqHash.find entailment_table seq in
