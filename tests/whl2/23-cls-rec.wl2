@@ -1,0 +1,26 @@
+fields: next;
+
+proc traverselist(x, end)
+  precondition: ls[a](x, end);
+  postcondition: ls[a](x, end);
+{
+  if x != end then
+  
+    y := x.next;
+    traverselist(y, end)
+  
+  fi
+}
+
+proc traversecycliclist(x)
+  precondition: cls[a](x);
+  postcondition: cls[a](x);
+{
+  y := x.next;
+  traverselist(y, x)
+}
+
+precondition: cls[a](x);
+postcondition: cls[a](x);
+
+traversecycliclist(x)
