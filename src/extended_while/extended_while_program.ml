@@ -17,18 +17,19 @@ exception WrongCmd = While_program.WrongCmd
 module Proc =
   struct
     
-    type t = string * Sl_term.t Blist.t * Sl_form.t * Sl_form.t * Cmd.t
+    type t = string * Sl_term.t Blist.t * (Sl_form.t * Sl_form.t) list * Cmd.t
     
-    let get_name ((id, _, _, _, _) : t) = id
-    let get_params ((_, params, _, _, _) : t) = params
-    let get_precondition ((_, _, pre, _, _) : t) = pre
-    let get_postcondition ((_, _, _, post, _) : t) = post
-    let get_body ((_, _, _, _, body) : t) = body
+    let get_name ((id, _, _, _) : t) = id
+    let get_params ((_, params, _, _) : t) = params
+    let get_spec_list ((_, _, specs, _) : t) = specs
+    (* let get_precondition ((_, _, pre, _, _) : t) = pre    *)
+    (* let get_postcondition ((_, _, _, post, _) : t) = post *)
+    let get_body ((_, _, _, body) : t) = body
     
-    let get_seq ((id, params, pre, post, _) : t) = 
+    let get_seqs ((id, params, specs, _) : t) = 
       let cmd = Cmd.mk_proc_call id params in
-      (pre, cmd, post)
-    
+      Blist.map (fun (pre, post) -> (pre, cmd, post)) specs
+      
     (* precondition: PRECONDITION; COLON; f = formula; SEMICOLON { f } *)
     let parse_precondition st = While_program.parse_precondition st
 
@@ -50,6 +51,22 @@ module Proc =
       let post' = Sl_form.complete_tags tags post in
       (pre', post')
 
+    let check_spec (params, body) (pre, post) =
+      (* - parameters mentioned in the postcondition are not assigned to  *)
+      (*   in the procedure body;                                         *)
+      assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_form.vars post) (Sl_term.Set.inter (Cmd.modifies ~strict:false body) (Sl_term.Set.of_list params))));
+      (* - local variables are not mentioned in the pre/post;             *)
+      assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_form.vars pre) (Cmd.locals (Sl_term.Set.of_list params) body)));
+      assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_form.vars post) (Cmd.locals (Sl_term.Set.of_list params) body)));
+      (* - existential variables are disjoint between pre and post;       *)
+      (* assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_term.Set.filter Sl_term.is_exist_var (Sl_form.vars pre)) (Sl_term.Set.filter Sl_term.is_exist_var (Sl_form.vars post)))); *)
+      (* assert(Tags.is_empty (Tags.inter (Tags.filter Tags.is_exist_var (Sl_form.tags pre)) (Tags.filter Tags.is_exist_var (Sl_form.tags post))));                                   *)
+      (* - that the unversal variables of the post are a subset of those  *)
+      (*   of the pre *)
+      (* assert(Sl_term.Set.subset (Sl_term.Set.filter Sl_term.is_univ_var (Sl_form.terms post)) (Sl_term.Set.filter Sl_term.is_univ_var (Sl_form.terms pre))); *)
+      (* assert(Tags.subset (Tags.filter Tags.is_univ_var (Sl_form.tags post)) (Tags.filter Tags.is_univ_var (Sl_form.tags pre)));                              *)
+      ()
+
     let parse_named st =
       let parse_params st =
       let rec parse_params' acc st =
@@ -70,30 +87,20 @@ module Proc =
       (parse_symb keyw_proc >>
       parse_ident >>= (fun id ->
       (Tokens.parens parse_params) >>= (fun params ->
-      parse_precondition >>= (fun pre ->
-      parse_postcondition >>= (fun post ->
+      let spec_parser st =
+        ( parse_precondition >>= (fun pre ->
+          parse_postcondition >>= (fun post -> return (ensure_tags (pre, post))))) st in
+      many1 spec_parser >>= (fun specs ->
       Tokens.braces
         (expect_before Cmd.parse (parse_symb symb_rb) "Expecting CmdList") >>=
       (fun body ->
-        (* Add any missing tags *)
-        let (pre, post) = ensure_tags (pre, post) in
-        (* Check that:                                                        *)
-        begin
-          (* - parameters mentioned in the postcondition are not assigned to  *)
-          (*   in the procedure body;                                         *)
-          assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_form.vars post) (Sl_term.Set.inter (Cmd.modifies ~strict:false body) (Sl_term.Set.of_list params))));
-          (* - local variables are not mentioned in the pre/post;             *)
-          assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_form.vars pre) (Cmd.locals (Sl_term.Set.of_list params) body)));
-          assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_form.vars post) (Cmd.locals (Sl_term.Set.of_list params) body)));
-          (* - existential variables are disjoint between pre and post;       *)
-          (* assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_term.Set.filter Sl_term.is_exist_var (Sl_form.vars pre)) (Sl_term.Set.filter Sl_term.is_exist_var (Sl_form.vars post)))); *)
-          (* assert(Tags.is_empty (Tags.inter (Tags.filter Tags.is_exist_var (Sl_form.tags pre)) (Tags.filter Tags.is_exist_var (Sl_form.tags post))));                                   *)
-          (* - that the unversal variables of the post are a subset of those  *)
-          (*   of the pre *)
-          (* assert(Sl_term.Set.subset (Sl_term.Set.filter Sl_term.is_univ_var (Sl_form.terms post)) (Sl_term.Set.filter Sl_term.is_univ_var (Sl_form.terms pre))); *)
-          (* assert(Tags.subset (Tags.filter Tags.is_univ_var (Sl_form.tags post)) (Tags.filter Tags.is_univ_var (Sl_form.tags pre)));                              *)
-          return (id, params, pre, post, body)
-        end <?> "Procedure" )))))) st
+      let () = Blist.iter (check_spec (params, body)) specs in
+      (* let specs =                                                        *)
+      (*   Blist.bind                                                       *)
+      (*   (fun (pre, post) ->                                              *)
+      (*     Blist.map (Fun.swap Pair.mk post) (Sl_form.all_symheaps pre))  *)
+      (*   specs in                                                         *)
+      return (id, params, specs, body) <?> "Procedure" ))))) st
     
     let parse_unnamed st = 
       (parse_precondition >>= (fun pre ->
@@ -208,7 +215,7 @@ let program_vars = ref Sl_term.Set.empty
 
 let set_program ((_, cmd, _), procs) =
   program_vars := Blist.foldl 
-    (fun vars (_, _, _, _, body) -> Sl_term.Set.union vars (Cmd.vars body)) 
+    (fun vars (_, _, _, body) -> Sl_term.Set.union vars (Cmd.vars body)) 
     (Cmd.vars cmd) 
     (procs)
 
@@ -234,7 +241,7 @@ let parse_fields st =
 
 (* procedures *)
 let parse_procs st =
-  let sigs_equiv (id, params, _,_,_) (id', params', _,_,_) = id=id' && (Blist.length params) = (Blist.length params') in
+  let sigs_equiv (id, params, _,_) (id', params', _,_) = id=id' && (Blist.length params) = (Blist.length params') in
   ( many Proc.parse_named |>> (fun procs ->
     Blist.foldr
       (fun p ps ->

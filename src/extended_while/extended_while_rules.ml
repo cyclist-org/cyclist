@@ -447,13 +447,18 @@ let mk_symex_proc_unfold procs =
     try
       let (p, args) = Cmd.dest_proc_call cmd in
       if Cmd.is_empty (Cmd.get_cont cmd) then
-        let (_,_,_,_, body) = Blist.find
-          (fun (id, params, pre', post', _) ->
+        let (_,_,_, body) = Blist.find
+          (fun (id, params, specs, _) ->
             try
             id=p
               && Blist.equal Sl_term.equal args params
-              && Sl_form.equal pre pre'
-              && Sl_form.equal post post'
+              && Blist.exists
+                  (fun (pre', post') ->
+                    Sl_form.subsumed pre' pre && Sl_form.equal post post')
+                  specs
+                (* We use subsumption here to handle the case that the        *)
+                (* procedure has a disjunctive precondition which has already *)
+                (* been split and that we now want to unfold                  *)
             with Invalid_argument(_) -> false )
           (procs) in
         fix_tps [ [ (pre, body, post) ], "Proc Unf. " ^ p  ]
@@ -841,15 +846,17 @@ let transform_seq ((pre, cmd, post) as seq) =
     result
 
 let mk_proc_call_rule_seq
-    ((proc, param_subst),
+    (((_, target_cmd, _) as target_seq, param_subst),
       ((src_pre, src_cmd, src_post) as src_seq), tags_instantiated)
     ((link_pre, link_cmd, link_post), bridge_rule) =
-  let target_seq = Proc.get_seq proc in
+  assert (Cmd.is_proc_call target_cmd);
+  assert (Cmd.is_empty (Cmd.get_cont target_cmd));
+  let (proc_id, params) = Cmd.dest_proc_call target_cmd in 
   let prog_cont = Cmd.get_cont src_cmd in
   assert (Cmd.is_proc_call src_cmd) ;
   assert (let (p, args) = Cmd.dest_proc_call src_cmd in
-    p = (Proc.get_name proc) &&
-    (Blist.length args) = (Blist.length (Proc.get_params proc))) ;
+    p = proc_id &&
+    (Blist.length args) = (Blist.length params)) ;
   assert (Sl_form.equal src_pre link_pre) ;
   assert (not (Cmd.is_empty prog_cont) || Sl_form.equal src_post link_post) ;
   assert
@@ -890,36 +897,37 @@ let mk_symex_proc_call procs =
             (Proc.get_name x) = p
             && (Blist.length (Proc.get_params x)) = (Blist.length args))
           (procs) in
-        let proc_seq = Proc.get_seq proc in
         let param_unifier =
           Sl_term.FList.unify (Proc.get_params proc) args
             Unification.trivial_continuation
             Sl_term.empty_subst in
         let param_sub = Option.get param_unifier in
-        let (((pre_cs', pre_hs'), _, _) as inst_proc_seq) =
-          Seq.param_subst param_sub proc_seq in
-        let tag_inst_subst =
-          TagPairs.mk_univ_subst
-            (Seq.all_tags src_seq)
-            (Tags.filter Tags.is_exist_var (Sl_form.tags pre)) in
-        let pre_inst_src_seq =
-          Seq.with_pre src_seq (Sl_form.subst_tags tag_inst_subst pre) in
-        let proc_call_seq =
-          Seq.with_cmd pre_inst_src_seq (Cmd.mk_proc_call p args) in
-        let build_rule_seq =
-          mk_proc_call_rule_seq
-            ( (proc, param_sub),
-              pre_inst_src_seq,
-              not (TagPairs.is_empty tag_inst_subst) ) in
-        let mk_rules_from_disj h =
-          let proc_sh_pre_seq = Seq.with_pre inst_proc_seq (pre_cs', [h]) in
-          let transforms =
-            transform_seq
-              proc_call_seq
-              ~match_post:(Cmd.is_empty (Cmd.get_cont cmd))
-              proc_sh_pre_seq in
-          Blist.map build_rule_seq transforms in
-        Rule.choice (Blist.bind mk_rules_from_disj pre_hs')
+        let mk_rules_from_seq proc_seq =
+          let (((pre_cs', pre_hs'), _, _) as inst_proc_seq) =
+            Seq.param_subst param_sub proc_seq in
+          let tag_inst_subst =
+            TagPairs.mk_univ_subst
+              (Seq.all_tags src_seq)
+              (Tags.filter Tags.is_exist_var (Sl_form.tags pre)) in
+          let pre_inst_src_seq =
+            Seq.with_pre src_seq (Sl_form.subst_tags tag_inst_subst pre) in
+          let proc_call_seq =
+            Seq.with_cmd pre_inst_src_seq (Cmd.mk_proc_call p args) in
+          let build_rule_seq =
+            mk_proc_call_rule_seq
+              ( (proc_seq, param_sub),
+                pre_inst_src_seq,
+                not (TagPairs.is_empty tag_inst_subst) ) in
+          let mk_rules_from_disj h =
+            let proc_sh_pre_seq = Seq.with_pre inst_proc_seq (pre_cs', [h]) in
+            let transforms =
+              transform_seq
+                proc_call_seq
+                ~match_post:(Cmd.is_empty (Cmd.get_cont cmd))
+                proc_sh_pre_seq in
+            Blist.map build_rule_seq transforms in
+          Blist.bind mk_rules_from_disj pre_hs' in
+        Rule.choice (Blist.bind mk_rules_from_seq (Proc.get_seqs proc))
       with Not_symheap | WrongCmd | Not_found -> Rule.fail in
     rl idx prf
 

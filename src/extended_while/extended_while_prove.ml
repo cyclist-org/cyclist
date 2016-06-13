@@ -34,7 +34,7 @@ let () =
   if !prog_path="" then F.die "-P must be specified." ;
   let ((pre, cmd, post), procs) = Extended_while_program.of_channel (open_in !prog_path) in
   let main = (pre, Cmd.number cmd, post) in
-  let procs = Blist.map (fun (id, params, pre, post, body) -> (id, params, pre, post, Cmd.number body)) procs in
+  let procs = Blist.map (fun (id, params, specs, body) -> (id, params, specs, Cmd.number body)) procs in
 	let defs = Sl_defs.of_channel (open_in !defs_path) in
 	(* TODO: Check well-formedness of the program: *)
 	(*   Do all the predicates in the pre/post annotations have the correct arity? *)
