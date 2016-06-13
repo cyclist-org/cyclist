@@ -516,13 +516,17 @@ let subst_rule (theta, tps) ((pre', _, _) as seq') ((pre, _, _) as seq) =
     let () = debug (fun _ -> "Unsuccessfully tried to apply substitution rule!") in
     []
 
-let left_or_elim_rule (((_, hs'),cmd',post') as seq') (pre,cmd,post) =
+let left_or_elim_rule (((_, hs'),cmd',post') as seq') ((pre,cmd,post) as seq) =
   try
     if Cmd.equal cmd cmd' && Sl_form.equal post post'
         && let (_, h) = Sl_form.dest pre in
            Blist.exists (Sl_heap.equal h) hs'
       then
-        [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], "L. Cut (Or Elim.)" ]
+        let vt = 
+          TagPairs.filter 
+            (fun tp -> Pair.both (Pair.map Tags.is_univ_var tp)) 
+            (Seq.tag_pairs seq) in
+        [ [(seq', vt, TagPairs.empty)], "L. Cut (Or Elim.)" ]
       else
         let () = debug (fun _ -> "Unsuccessfully tried to apply left_or_elim rule!") in
         []
