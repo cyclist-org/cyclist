@@ -1,0 +1,51 @@
+fields: next;
+
+proc appE(x, y)
+
+	precondition: x != nil * list[a](x) * y = nil;
+	postcondition: x != nil * list[a](x);
+
+	precondition: x != nil * list[a](x) * y != nil * list[b](y);
+	postcondition: x != nil * x->y' * y' != nil * list(y');
+	
+{
+	tail := x.next;
+	if tail = nil then
+		if y = nil then
+			return
+		else
+			tail := new();
+			tail.next := nil;
+			x.next := tail
+		fi;
+		new_y := y.next;
+		free(y);
+		y := new_y;
+		assert(
+			[c'] < [b] : tail != nil * x->tail * list[d'](tail) * y = nil  
+				\/
+			tail != nil * x->tail * list[d'](tail) * list[c'](y))
+	fi;
+	appE(tail, y)
+}
+
+proc cappE(j)
+	precondition: list(j);
+	postcondition: list(x');
+{
+	x := new();
+	x.next := nil;
+	
+	if j != nil then
+		appE(x, j);
+		tail := x.next;
+		while tail = nil do skip od
+	fi
+}
+
+precondition: list(j);
+postcondition: list(x');
+
+cappE(j)
+
+

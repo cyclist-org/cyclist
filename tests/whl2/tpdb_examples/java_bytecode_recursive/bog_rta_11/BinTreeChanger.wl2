@@ -1,0 +1,44 @@
+fields: left, right;
+
+proc change(t)
+	precondition: t->lc,rc * bt[a](lc) * bt[b](rc);
+	postcondition: t->m',n' * m'->lc,nil * n'->nil,rc * bt[a](lc) * bt[b](rc);
+{
+	l := t.left;
+	r := t.right;
+
+	new_left := new();
+	new_left.left := l;
+	new_left.right := nil;
+
+	new_right := new();
+	new_right.left := nil;
+	new_right.right := r;
+	
+	t.left := new_left;
+	t.right := new_right
+}
+
+proc applyChange(t)
+	precondition: t != nil * bt[a](t);
+	postcondition: bt(t);
+{
+	old_left := t.left;
+	old_right := t.right;
+	
+	change(t);
+	
+	if old_left != nil then
+		applyChange(old_left)
+	fi;
+	
+	if old_right != nil then
+		applyChange(old_right)
+	fi;
+	assert(bt(t))
+}
+
+precondition: x != nil * bt(x);
+postcondition: bt(x);
+
+applyChange(x)

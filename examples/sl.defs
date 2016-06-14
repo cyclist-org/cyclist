@@ -133,12 +133,32 @@ Queue {
 } ;
 
 uf {
-  z'=y * ls(x,z') * z'->y => uf(x,y)
+	z'=y * ls(x,z') * z'->y => uf(x,y)
 } ;
 
 ls_set {
-  emp => ls_set(x) |
-  y'!=nil * ls(y',x) * ls_set(x) => ls_set(x)
+	emp => ls_set(x) |
+	y'!=nil * ls(y',x) * ls_set(x) => ls_set(x)
+} ;
+
+tree {
+	x = nil => tree(x) |
+	x->v',l' * treels(l', nil) => tree(x)
+} ;
+
+treels {
+	x = y => treels(x,y) |
+	x != y * x->n',t' * treels(n',y) * tree(t') => treels(x,y)
+} ;
+
+duptree {
+	x = nil => duptree(x) |
+	x->v',l' * duptreels(l',nil) => duptree(x)
+} ;
+
+duptreels {
+	x = y => duptreels(x,y) |
+	x != y * x->n',t' * n'->m',t' * duptreels(m',y) * duptree(t') => duptreels(x,y)
 } ;
 
 spTrue {

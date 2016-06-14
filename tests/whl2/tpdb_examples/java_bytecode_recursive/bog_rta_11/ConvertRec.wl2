@@ -1,0 +1,35 @@
+fields: across, down;
+
+proc convert(x)
+
+	precondition: x = nil;
+	postcondition: emp;
+
+	precondition: x != nil * x->y',z' * lsls[a](y') * dls[b](z', nil);
+	postcondition: emp;
+
+{
+	if x = nil then return fi;
+	l := x.down;
+	if l = nil then
+		next := x.across;
+		free(x);
+		if next = nil then 
+			assert(next = nil)
+		else
+			assert([c'] < [a] : next != nil * next->y',z' * lsls[c'](y') * dls[d'](z', nil))
+		fi;		
+		convert(next)
+	else
+		tail := l.down;
+		free(l);
+		x.down := tail;
+		convert(x)
+	fi
+}
+
+precondition: lsls(x);
+postcondition: emp;
+
+convert(x)
+ 
