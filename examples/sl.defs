@@ -83,6 +83,11 @@ ls2 {
 	x!=y * x->x',v' * ls2(x',y) => ls2(x,y) 
 } ;
 
+list {
+	x=nil => list(x) |
+	x->y' * list(y') => list(x)
+} ;
+
 rls {
 	x=y => rls(x,y) |
 	x!=y * rls(x,z') * z'->y => rls(x,y)
