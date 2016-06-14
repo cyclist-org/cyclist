@@ -128,6 +128,7 @@ module Cmd =
   struct
     type cmd_t =
       | Stop
+      | Return
       | Skip
       | Assign of Sl_term.t * Sl_term.t
       | Load of Sl_term.t * Sl_term.t * Field.t
@@ -171,6 +172,9 @@ module Cmd =
     let is_stop c = is_not_empty c && match get_cmd c with
       | Stop -> true
       | _ -> false
+    let is_return c = is_not_empty c && match get_cmd c with
+      | Return -> true
+      | _ -> false
     let is_skip c = is_not_empty c && match get_cmd c with
       | Skip -> true
       | _ -> false
@@ -186,7 +190,7 @@ module Cmd =
       | ProcCall(_, _) | Assign _ | Load _ | Store _ | New _ | Free _ | Stop | Skip -> true
       | _ -> false
 
-    let is_final = Fun.disj is_empty is_stop
+    let is_final = Fun.list_disj [ is_empty; is_stop; is_return; ]
 
     let is_if c = is_not_empty c && match get_cmd c with
       | If _ -> true
@@ -206,6 +210,7 @@ module Cmd =
     let mk_new x = mk_basic (New(x))
     let mk_free e = mk_basic (Free(e))
     let mk_stop = mk_basic (Stop)
+    let mk_return = mk_basic (Return)
     let mk_skip = mk_basic (Skip)
     let mk_proc_call p args = mk_basic (ProcCall(p, args))
     let mk_assert f = mk_basic (Assert(f))
@@ -217,6 +222,7 @@ module Cmd =
 
     let rec parse_cmd_opt st = 
       (   attempt (parse_symb keyw_stop >>$ Some Stop)
+      <|> attempt (parse_symb keyw_return >>$ Some Return)
       <|> attempt (parse_symb keyw_skip >>$ Some Skip)
       <|> attempt (parse_symb keyw_assert >>
           Tokens.parens Sl_form.parse |>> (fun f ->
@@ -289,6 +295,9 @@ module Cmd =
     let _dest_stop = function
       | Stop -> ()
       | _ -> raise WrongCmd
+    let _dest_return = function
+      | Return -> ()
+      | _ -> raise WrongCmd
     let _dest_skip = function
       | Skip -> ()
       | _ -> raise WrongCmd
@@ -334,6 +343,7 @@ module Cmd =
     let dest_cmd f = fun c -> f (get_cmd c)
 
     let dest_stop = dest_cmd _dest_stop
+    let dest_return = dest_cmd _dest_return
     let dest_skip = dest_cmd _dest_skip
     let dest_assign = dest_cmd _dest_assign
     let dest_load = dest_cmd _dest_load
@@ -355,7 +365,7 @@ module Cmd =
         | c::l ->
           begin match c.cmd with
             | ProcCall(_,_) | Assign _ | Load _ | Store _ | New _ | Free _ 
-            | Stop | Skip ->
+            | Stop | Return | Skip ->
               let c' = { label=Some n; cmd=c.cmd } in
               let (l', n') = aux (n+1) l in
               (c'::l', n')
@@ -382,7 +392,7 @@ module Cmd =
       fst (aux 0 c)
 
     let rec cmd_terms = function
-      | Stop | Skip | Assert(_) -> Sl_term.Set.empty
+      | Stop | Return | Skip | Assert(_) -> Sl_term.Set.empty
       | New(x) | Free(x) -> Sl_term.Set.singleton x
       | Assign(x,e) | Load(x,e,_) | Store(x,_,e) -> Sl_term.Set.of_list [x; e]
       | If(cond,cmd) -> Sl_term.Set.union (Cond.vars cond) (terms cmd)
@@ -398,7 +408,7 @@ module Cmd =
     let locals params cmd = Sl_term.Set.diff (vars cmd) params
 
     let rec cmd_modifies ?(strict=true) cmd = match cmd with
-      | Stop | Skip | Free _ | Assert(_) | ProcCall(_, _) -> Sl_term.Set.empty
+      | Stop | Return | Skip | Free _ | Assert(_) | ProcCall(_, _) -> Sl_term.Set.empty
       | New(x) | Assign(x,_) | Load(x,_,_) -> Sl_term.Set.singleton x
       | Store(x,_,_) -> if strict then Sl_term.Set.singleton x else Sl_term.Set.empty 
       | If(_,cmd) | While(_,cmd) -> modifies ~strict cmd
@@ -409,7 +419,7 @@ module Cmd =
         (fun s c -> Sl_term.Set.union s (cmd_modifies ~strict c.cmd)) Sl_term.Set.empty l
         
     let rec cmd_equal cmd cmd' = match (cmd, cmd') with
-      | (Stop, Stop) | (Skip, Skip) -> true
+      | (Stop, Stop) | (Return, Return) | (Skip, Skip) -> true
       | (New(x), New(y)) | (Free(x), Free(y)) -> Sl_term.equal x y
       | (Assign(x,e), Assign(x',e')) -> Sl_term.equal x x' && Sl_term.equal e e'
       | (Load(x,e,f), Load(x',e',f')) | (Store(x,f,e), Store(x',f',e')) ->
@@ -435,7 +445,7 @@ module Cmd =
         | _ -> cmd_equal c.cmd c'.cmd && equal tl tl'
 
     let rec subst_cmd theta cmd = match cmd with
-      | Stop | Skip | Assert(_) -> cmd
+      | Stop | Return | Skip | Assert(_) -> cmd
       | New(x) -> New (Sl_term.subst theta x)
       | Free(x) -> Free (Sl_term.subst theta x)
       | Assign(x, e) -> Assign ((Sl_term.subst theta x), (Sl_term.subst theta e))
@@ -463,6 +473,7 @@ module Cmd =
 
     let rec pp_cmd ?(abbr=false) indent fmt c = match c.cmd with
       | Stop -> Format.fprintf fmt "%s" keyw_stop.str
+      | Return -> Format.fprintf fmt "%s" keyw_return.str
       | Skip -> Format.fprintf fmt "%s" keyw_skip.str
       | Assert(f) -> 
         if abbr then
@@ -546,6 +557,7 @@ module Cmd =
 
     let rec to_melt_cmd ?(abbr=true) c = match c.cmd with
       | Stop -> keyw_stop.melt
+      | Return -> keyw_return.melt
       | Skip -> keyw_skip.melt
       | Assert(f) ->
         if abbr then Latex.empty else
@@ -618,7 +630,7 @@ module Seq =
     type t = Sl_form.t * Cmd.t
 
     let tagset_one = Tags.singleton 1
-		let tagpairs_one = TagPairs.mk tagset_one
+    let tagpairs_one = TagPairs.mk tagset_one
     let tags (f,cmd) = if !termination then Sl_form.tags f else tagset_one
     let tag_pairs f = TagPairs.mk (tags f)
     let vars (l,_) = Sl_form.vars l
