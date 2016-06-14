@@ -653,7 +653,7 @@ let schema_intro_rule (((cs, hs), cmd, post) as seq)
 
 let transform_seq ((pre, cmd, post) as seq) =
   fun ?(match_post=true) ((pre', cmd', post') as seq') ->
-    if not (Cmd.equal cmd cmd') then Blist.empty else
+    if Cmd.is_assert cmd' || not (Cmd.equal cmd cmd') then Blist.empty else
     if (Sl_form.equal pre pre') && (Sl_form.equal post post') then
       [ (seq, Rule.identity) ] else
     let () = debug (fun _ -> "Trying to unify left-hand sides of:" ^ "\n\t" ^ "bud: " ^
