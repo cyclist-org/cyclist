@@ -1,0 +1,59 @@
+fields: field, val;
+
+proc copy(source, target)
+	precondition: ls2[a](source, nil) * target->nil,v';
+	postcondition: ls2[a](source, nil) * target != nil * ls2(target, nil);
+{
+	if source = nil then
+		return
+	else
+		cur_val := source.val;
+		newEle := new();
+		newEle.field := nil;
+		newEle.val := cur_val;
+		target.field := newEle;
+		next := source.field;
+		copy(next, newEle)
+	fi
+}
+
+proc appendNewList(x, cnt)
+	precondition: x->v',l * l->nil,w' * ls2[b](cnt, nil);
+	postcondition: x->v',y' * y'->nil,z' * l != y' * ls2(l,y');
+{
+	this := x.val;
+	newEle := new();
+	newEle.field := nil;
+	this.field := newEle;
+	if cnt = nil then
+		x.val := newEle
+	else
+		new_cnt := cnt.field;
+		free(cnt);
+		x.val := newEle;
+		appendNewList(x, new_cnt)
+	fi;
+	assert(x->v',y' * y'->nil,z' * l != y' * ls2(l,y'))
+}
+
+precondition: ls2(cnt, nil);
+postcondition: ls2(w',t3) * ls2(t1,nil) * t3 != nil * ls2(t3,nil);
+
+ptr := new();
+
+t1 := new();
+t1.field := nil;
+
+ptr.val := t1;
+appendNewList(ptr, nil);
+t2 := ptr.val;
+
+appendNewList(ptr, cnt);
+t3 := ptr.val;
+
+t2.field := nil;
+
+assert(ptr->v',t3 * ls2(w',t3) * ls2(t1,nil) * t3->nil,z');
+copy(t1, t3);
+
+free(ptr)

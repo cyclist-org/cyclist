@@ -23,8 +23,8 @@ proc growTree(t)
 }
 
 proc growList(l)
-	precondition: treelist[a](l);
-	postcondition: treelist(l);
+	precondition: treels[a](l, nil);
+	postcondition: treels(l, nil);
 {
 	if l = nil then
 		return
