@@ -46,6 +46,20 @@ FunQueue {
 	x->y',front' * SLL(front', nil) * y'->v',back' * SLL(back',nil) => FunQueue(x)
 } ;
 
+EmptyFunQueue {
+	x->y',nil * y'->v',nil => EmptyFunQueue(x)
+} ;
+
+funQueueLists {
+	front = nil * back = nil => funQueueLists(front, back) |
+	front = nil * back->next',v' * funQueueLists(front, next') => funQueueLists(front, back) |
+	front->next',v' * funQueueLists(next', back) => funQueueLists(front, back)
+} ;
+
+funQueue {
+	q->x',front * x'->v',back * funQueueLists(front, back) => funQueue(q, front, back)
+} ;
+
 BinTree { 
 	emp => BinTree(x) | 
 	x->y',x' * BinTree(y') * BinTree(x') => BinTree(x) 
