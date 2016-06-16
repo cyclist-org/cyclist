@@ -14,6 +14,8 @@ XTDPRMAIN:=./src/extended_while/extended_while_prove.native
 ABD2MAIN:=./src/while/while_abduce.native
 TEMPORALMAIN:=./src/temporal/temporal_prove.native
 
+WHL2_TEST_FILES:=$(shell find ./tests/whl2 -name '*.wl2' | sort)
+
 all:
 	$(OCB) all.otarget
 
@@ -54,7 +56,7 @@ whl-tests:
 	-@for TST in tests/whl/*.wl ; do echo $$TST: ; _build/$(PR2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
 whl2-tests:
-	-@for TST in tests/whl2/*.wl2 ; do echo $$TST: ; _build/$(XTDPRMAIN) $(TST_OPTS) -P $$TST ; echo ; done
+	-@for TST in $(WHL2_TEST_FILES) ; do echo $$TST: ; _build/$(XTDPRMAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
 whl_abd-tests:
 	-@for TST in tests/whl_abd/*.wl ; do echo $$TST ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
