@@ -1,10 +1,15 @@
 #include <cassert>
 #include <map>
-#include <spot/tgba/tgbasafracomplement.hh>
-#include <spot/tgba/tgbaproduct.hh>
-#include <spot/tgbaalgos/gtec/gtec.hh>
-#include <spot/tgbaalgos/dotty.hh>
+#include <spot/twaalgos/determinize.hh>
+#include <spot/twaalgos/complement.hh>
+#include <spot/twaalgos/totgba.hh>
+#include <spot/twaalgos/copy.hh>
+#include <spot/twaalgos/stutter.hh>
+#include <spot/twa/twaproduct.hh>
+#include <spot/twaalgos/gtec/gtec.hh>
+#include <spot/twaalgos/dot.hh>
 #include <iostream>
+
 
 extern "C" {
 #include <memory.h>
@@ -14,14 +19,14 @@ extern "C" {
 #include "proof_aut.hpp"
 #include "trace.hpp"
 
-static ProofAutomaton * proof = 0;
+static std::shared_ptr<ProofAutomaton> proof = 0;
 static std::map< int, Vertex > bdd_map;
 
 extern "C" void create_aut(value max_log2_states) {
 	CAMLparam1(max_log2_states);
 //	std::cerr << "create_aut " << Int_val(max_log2_states) << '\n';
 	assert(proof==0);
-	proof = new ProofAutomaton( Int_val(max_log2_states) );
+	proof = std::make_shared<ProofAutomaton>(Int_val(max_log2_states));
 	CAMLreturn0;
 }
 
@@ -29,7 +34,6 @@ extern "C" void destroy_aut() {
 	CAMLparam0();
 //	std::cerr << "destroy_aut\n";
 	assert(proof);
-	delete proof;
 	proof = 0;
 	bdd_map.clear();
 	CAMLreturn0;
@@ -104,17 +108,19 @@ extern "C" void set_progress_pair(value v1_, value v2_, value t1_, value t2_) {
 extern "C" value check_soundness() {
 	CAMLparam0();
 	CAMLlocal1(v_res);
-//	spot::dotty_reachable(std::cout, proof);
 
-	TraceAutomaton ta(*proof);
-	spot::tgba_safra_complement complement(&ta);
-	spot::tgba_product product(proof, &complement);
-	spot::couvreur99_check ec(&product);
-	spot::emptiness_check_result * res = ec.check();
+	spot::const_twa_ptr ta = std::make_shared<TraceAutomaton>(*proof);
+	spot::twa_graph_ptr graph = copy(ta, spot::twa::prop_set::all());
+	spot::twa_graph_ptr det = to_generalized_buchi(dtwa_complement(tgba_determinize(graph, false, true, true, spot::check_stutter_invariance(graph).is_true())));
+	//spot::print_dot(std::cerr, ta);
+
+	spot::const_twa_ptr product = std::make_shared<spot::twa_product>(proof, det);
+	spot::couvreur99_check ec(product);
+	std::shared_ptr<spot::emptiness_check_result> res = ec.check();
 
 	bool retval = (res == 0);
-
-	if(res) delete res;
+	
+	std:: cout << "retval " << retval << '\n';
 
 	v_res = Val_bool(retval);
 	CAMLreturn(v_res);

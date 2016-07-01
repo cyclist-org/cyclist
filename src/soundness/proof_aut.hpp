@@ -1,7 +1,7 @@
 #ifndef PROOF_AUTOMATON_HH_
 #define PROOF_AUTOMATON_HH_
 
-#include <spot/tgba/tgba.hh>
+#include <spot/twa/twa.hh>
 
 #include "proof.hpp"
 
@@ -25,27 +25,20 @@ public:
 	virtual spot::state* clone() const { return new ProofGhostState(); }
 };
 //==================================================================
-class ProofAutomaton: public spot::tgba, public Proof {
+class ProofAutomaton: public spot::twa, public Proof {
 public:
-	ProofAutomaton(size_t max_vertices_log2) : Proof(max_vertices_log2) {}
+	ProofAutomaton(size_t max_vertices_log2) : Proof(max_vertices_log2), spot::twa(spot::make_bdd_dict()) { set_buchi(); this->dict_ = Proof::get_dict(); register_aps_from_dict(); }
 
 	virtual ~ProofAutomaton() {};
 	virtual spot::state* get_init_state() const { return new ProofGhostState(); }
-	virtual spot::bdd_dict* get_dict() const { return Proof::get_dict(); }
-	virtual spot::tgba_succ_iterator* succ_iter(const spot::state* local_state,
-			const spot::state* global_state = 0, const spot::tgba* global_automaton = 0) const;
+	virtual spot::bdd_dict_ptr get_dict() const { return Proof::get_dict(); }
+	virtual spot::twa_succ_iterator* succ_iter(const spot::state* local_state) const;
 	virtual std::string format_state(const spot::state* state) const;
 //	virtual std::string transition_annotation(const spot::tgba_succ_iterator* t) const;
 //	virtual spot::state* project_state(const spot::state* s, const spot::tgba* t) const;
-	virtual bdd all_acceptance_conditions() const { return bddfalse; }
-	virtual bdd neg_acceptance_conditions() const { return bddtrue; }
-
-protected:
-	virtual bdd compute_support_conditions(const spot::state* state) const { return bddtrue; }
-	virtual bdd compute_support_variables(const spot::state* state) const { return bddtrue; }
 };
 //==================================================================
-class ProofGhostSuccIterator: public spot::tgba_succ_iterator {
+class ProofGhostSuccIterator: public spot::twa_succ_iterator {
 private:
 	const ProofAutomaton & proof;
 	bool finished;
@@ -53,18 +46,18 @@ private:
 public:
 	ProofGhostSuccIterator(const ProofAutomaton & p) : proof(p), finished(false) {}
 
-	virtual void first() { finished = false; }
-	virtual void next() { finished = true; }
+	virtual bool first() { finished = false; return !done(); }
+	virtual bool next() { finished = true; return !done(); }
 	virtual bool done() const { return finished; }
-	virtual spot::state* current_state() const {
+	virtual spot::state* dst() const {
 		Vertex v = proof.get_initial_vertex();
 		return new ProofState(v, proof.get_tags_of_vertex(v) );
 	}
-	virtual bdd current_condition() const { return proof.get_initial_vertex(); }
-	virtual bdd current_acceptance_conditions() const { return bddfalse; }
+	virtual bdd cond() const { return proof.get_initial_vertex(); }
+	virtual spot::acc_cond::mark_t acc() const { return proof.acc().all_sets(); }
 };
 //==================================================================
-class ProofSuccIterator: public spot::tgba_succ_iterator {
+class ProofSuccIterator: public spot::twa_succ_iterator {
 private:
 	const ProofAutomaton & proof;
 	Vertex vertex;
@@ -73,14 +66,14 @@ private:
 public:
 	ProofSuccIterator(const ProofAutomaton & p, const Vertex & v) : proof(p), vertex(v) {}
 
-	virtual void first() { successor = proof.get_successors(vertex).begin(); }
-	virtual void next() { ++successor; }
+	virtual bool first() { successor = proof.get_successors(vertex).begin(); return !done(); }
+	virtual bool next() { ++successor; return !done(); }
 	virtual bool done() const { return successor == proof.get_successors(vertex).end(); }
-	virtual spot::state* current_state() const {
+	virtual spot::state* dst() const {
 		return new ProofState(*successor, proof.get_tags_of_vertex(*successor) );
 	}
-	virtual bdd current_condition() const { return *successor; }
-	virtual bdd current_acceptance_conditions() const { return bddfalse; }
+	virtual bdd cond() const { return *successor; }
+	virtual spot::acc_cond::mark_t acc() const { return proof.acc().all_sets(); }
 };
 //==================================================================
 #endif /* PROOF_AUTOMATON_HH_ */

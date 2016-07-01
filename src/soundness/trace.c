@@ -2,8 +2,8 @@
 
 #include <cassert>
 #include <sstream>
-#include <spot/ltlenv/defaultenv.hh>
-#define ENV (spot::ltl::default_environment::instance())
+#include <spot/tl/defaultenv.hh>
+#define ENV (spot::default_environment::instance())
 
 //==================================================================
 int TraceState::compare(const spot::state *other) const {
@@ -31,7 +31,7 @@ size_t TraceState::hash() const {
 	return seed;
 }
 //==================================================================
-void TraceSuccIterator::first() {
+bool TraceSuccIterator::first() {
 	assert(state_info_vector.empty());
 	const Proof & proof = automaton.proof;
 
@@ -58,9 +58,10 @@ void TraceSuccIterator::first() {
 			state_info_vector.push_back( automaton.get_state( *v, *t ) );
 		}
 	}
+	return !done();
 }
 //------------------------------------------------------------------
-bdd TraceSuccIterator::current_condition() const {
+bdd TraceSuccIterator::cond() const {
 	bdd c = state_info_vector.back()->vertex;
 	if(c==NO_VERTEX)
 		return bddtrue;
@@ -68,23 +69,20 @@ bdd TraceSuccIterator::current_condition() const {
 		return c;
 }
 //------------------------------------------------------------------
-bdd TraceSuccIterator::current_acceptance_conditions() const {
+spot::acc_cond::mark_t TraceSuccIterator::acc() const {
 	TraceState * s = state_info_vector.back();
 	return automaton.proof.progress_pair(
 			state->vertex,
 			s->vertex,
 			state->tag,
-			s->tag) ? automaton.accept : bddfalse;
+			s->tag) ? automaton.acc_set : spot::acc_cond::mark_t();
 }
 //==================================================================
-TraceAutomaton::TraceAutomaton(const Proof & p) : proof(p) {
-	const spot::ltl::formula * f = ENV.require("prog");
-	accept = bdd_ithvar(get_dict()->register_acceptance_variable(f, this));
-	f->destroy();
+TraceAutomaton::TraceAutomaton(const Proof & p) : proof(p), spot::twa(p.get_dict()) {
+	acc_set = set_buchi();
 }
 //------------------------------------------------------------------
 TraceAutomaton::~TraceAutomaton() {
-	get_dict()->unregister_all_my_variables(this);
 	for(StateMap::iterator i=state_map.begin(); i!=state_map.end(); ++i) {
 		delete (i->second);
 	}
@@ -103,9 +101,7 @@ TraceState * TraceAutomaton::get_state(Vertex v, Tag t) const {
 	}
 }
 //------------------------------------------------------------------
-spot::tgba_succ_iterator *TraceAutomaton::succ_iter(
-		const spot::state *local_state, const spot::state *global_state,
-		const spot::tgba *global_automaton) const {
+spot::twa_succ_iterator *TraceAutomaton::succ_iter(const spot::state *local_state) const {
 	const TraceState * ts = dynamic_cast<const TraceState *>(local_state);
 	assert(ts);
 	return new TraceSuccIterator(*this, ts);

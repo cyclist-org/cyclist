@@ -25,8 +25,7 @@ int ProofGhostState::compare(const spot::state *other) const {
 	return 0;
 }
 //==================================================================
-spot::tgba_succ_iterator* ProofAutomaton::succ_iter(const spot::state* local_state,
-		const spot::state* global_state, const spot::tgba* global_automaton) const {
+spot::twa_succ_iterator* ProofAutomaton::succ_iter(const spot::state* local_state) const {
 	const ProofState * ps = dynamic_cast< const ProofState *>(local_state);
 	if(ps) return new ProofSuccIterator(*this, ps->vertex);
 

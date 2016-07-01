@@ -6,7 +6,7 @@
 #include <vector>
 #include <tuple>
 
-#include <spot/tgba/bdddict.hh>
+#include <spot/twa/bdddict.hh>
 
 typedef int Tag;
 #define NO_TAG 0
@@ -74,7 +74,7 @@ namespace std {
 //==================================================================
 class Proof {
 private:
-	spot::bdd_dict * dict;
+	spot::bdd_dict_ptr dict;
 
 	size_t max_vertices_log2;
 	Tag max_tag;
@@ -98,7 +98,7 @@ private:
 
 public:
 	Proof(size_t maxv_l2);
-	virtual ~Proof() { dict->unregister_all_my_variables(this); delete dict; }
+	virtual ~Proof() { dict->unregister_all_my_variables(this); }
 	Vertex get_initial_vertex() const { return initial_vertex; }
 
 	const VertexSet & get_vertices() const { return vertices; }
@@ -116,7 +116,7 @@ public:
 	void set_progress_pair(const Vertex & v1, const Vertex & v2,
 			const Tag & t1, const Tag & t2);
 
-	virtual spot::bdd_dict* get_dict() const { return dict; }
+	virtual spot::bdd_dict_ptr get_dict() const { return dict; }
 
 	virtual bool trace_pair(const Vertex & v1, const Vertex & v2,
 			const Tag & t1, const Tag & t2) const;
