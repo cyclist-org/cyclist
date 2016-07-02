@@ -120,7 +120,7 @@ extern "C" value check_soundness() {
 
 	bool retval = (res == 0);
 	
-	std:: cout << "retval " << retval << '\n';
+	//std:: cout << "retval " << retval << '\n';
 
 	v_res = Val_bool(retval);
 	CAMLreturn(v_res);
