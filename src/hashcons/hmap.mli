@@ -16,7 +16,7 @@
 (*s Maps over hash-consed values, implemented as Patricia trees.
     See the module [Hashcons] and [Ptmap]. *)
 
-type (+'a, +'b) t
+type (+'a, 'b) t
 
 type 'a key = 'a Hashcons.hash_consed
 
