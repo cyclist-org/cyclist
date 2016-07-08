@@ -1,0 +1,3 @@
+[submodule "src/hashcons"]
+	path = src/hashcons
+	url = https://github.com/backtracking/ocaml-hashcons.git
