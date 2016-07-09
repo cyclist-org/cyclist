@@ -1,7 +1,7 @@
 
 (*s An alternative implementation using strings *)
 
-module Bytes = String
+(* module Bytes = String *)
 let byte s i = Char.code (Bytes.unsafe_get s i)
 let set_byte s i x = Bytes.unsafe_set s i (Char.chr x)
 

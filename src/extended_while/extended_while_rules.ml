@@ -415,7 +415,7 @@ let ex_sp_rule ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
           []
     with Not_symheap -> []
       
-let ex_intr_rule ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
+let ex_intr_rule ((pre,cmd,post) as seq) (pre',cmd',post') =
   if not (Cmd.equal cmd cmd')
   then []
   else
