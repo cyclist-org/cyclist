@@ -1,3 +1,3 @@
-true:debug,explain,annot,asm
+true:debug,explain,annot
 true:use_unix,use_str,use_latex,use_pcre,use_libsoundness
 <src/*>: include

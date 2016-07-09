@@ -3,19 +3,18 @@
 #include <sstream>
 #include <cassert>
 
-#include <spot/ltlenv/defaultenv.hh>
-#define ENV (spot::ltl::default_environment::instance())
+#include <spot/tl/defaultenv.hh>
+#define ENV (spot::default_environment::instance())
 
 //==================================================================
-static bdd GET_PROP(spot::bdd_dict *d, const std::string & x, const void * t) {
-	const spot::ltl::formula * f = ENV.require(x);
+static bdd GET_PROP(spot::bdd_dict_ptr d, const std::string & x, const void * t) {
+	const spot::formula f = ENV.require(x);
 	bdd r = bdd_ithvar(d->register_proposition(f, t));
-	f->destroy();
 	return r;
 }
 //==================================================================
 Proof::Proof(size_t maxv_l2) :
-	dict( new spot::bdd_dict() ),
+	dict( spot::make_bdd_dict() ),
 	max_vertices_log2(maxv_l2),
 	max_tag(0),
 	last_vertex(0),
