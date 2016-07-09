@@ -91,8 +91,8 @@ let w_timeout f timeout =
   with Timeout -> (reset_sigalrm () ; None)
 
 open MParser
-let rexp = MParser.make_regexp "[a-zA-Z][_0-9a-zA-Z]*[']?" 
-let parse_ident st = (regexp rexp << spaces <?> "Identifier") st
+let rexp = MParser_PCRE.make_regexp "[a-zA-Z][_0-9a-zA-Z]*[']?" 
+let parse_ident st = (MParser_PCRE.regexp rexp << spaces <?> "Identifier") st
 
 let handle_reply reply = 
   match reply with

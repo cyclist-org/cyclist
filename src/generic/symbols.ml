@@ -86,7 +86,7 @@ let ltx_star l = Latex.concat (Latex.list_insert symb_star.melt l)
 let ltx_math_space = Latex.text "\\;"
 
 open MParser
-let parse_symb s st = ( spaces >> Tokens.skip_symbol s.str >> spaces ) st
+let parse_symb s st = ( spaces >> MParser_PCRE.Tokens.skip_symbol s.str >> spaces ) st
 
 let max_tag = ref 0
 let upd_tag tag = 
@@ -96,4 +96,6 @@ let next_tag () =
 
 let parse_tag st = 
   ( parse_symb symb_caret >> 
-    Tokens.integer |>> (fun tag -> assert (tag>0) ; tag) <?> "tag") st
+    MParser_PCRE.Tokens.integer |>> (fun tag -> assert (tag>0) ; tag) <?> "tag") st
+
+module Tokens = MParser_PCRE.Tokens
