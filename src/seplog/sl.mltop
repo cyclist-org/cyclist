@@ -36,7 +36,9 @@ Soundcheck
 Seqtactics
 Prover
 MParser
-CharStream
+MParser_Char_Stream
+MParser_PCRE
+MParser_Utils
 Fun
 Hashcons
 Hashset
