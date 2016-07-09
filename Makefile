@@ -1,4 +1,4 @@
-OCB := ocamlbuild -j 8
+OCB := ocamlbuild -j 8 -ocamldoc "ocamldoc -hide-warnings"
 
 TARBALL:=cyclist.tar.gz
 BENCHDIR:=benchmarks
