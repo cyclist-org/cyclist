@@ -26,10 +26,11 @@ let subformula_axiom =
     (fun (sf,_,tf) ->
      match Tl_form.is_atom tf with
      | true -> let tf_heap = Tl_form.dest_atom tf in
-	       (Option.mk (Sl_ptos.is_empty tf_heap.ptos &&
-			     Sl_tpreds.is_empty tf_heap.inds &&
+	       let (_,_,ptos,inds) = Sl_heap.dest tf_heap in
+	       (Option.mk (Sl_ptos.is_empty ptos &&
+			     Sl_tpreds.is_empty inds &&
 			       not (Sl_heap.is_empty tf_heap) &&
-			      Sl_form.subsumed ~total:false [tf_heap] sf) "Sub-Check")
+				 Sl_form.subsumed ~total:false [tf_heap] sf) "Sub-Check")
      | false -> None)
 
 let ex_falso_axiom = 

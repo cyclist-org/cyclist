@@ -133,21 +133,23 @@ end
       | F(inner,_) -> (inner, mk_next f)
       | _ -> invalid_arg "unfold_f"
 		
-		let unfold_or f = match f with 
-			| Or(fs,i) -> match (List.length fs) with
-										| 0
-										| 1 -> invalid_arg "unfold_or"
-										| 2 -> (List.hd fs, List.hd (List.tl fs))
-										| _ -> (List.hd fs, mk_or (List.tl fs))
-			| _ -> invalid_arg "unfold_or"	
-
-		let unfold_and f = match f with 
-			| And(fs,i) -> match (List.length fs) with
-										| 0
-										| 1 -> invalid_arg "unfold_or"
-										| 2 -> (List.hd fs, List.hd (List.tl fs))
-										| _ -> (List.hd fs, mk_and (List.tl fs))
-			| _ -> invalid_arg "unfold_or"	
+    let unfold_or f = match f with 
+      | Or(fs,i) -> begin match (List.length fs) with
+		    | 0
+		    | 1 -> invalid_arg "unfold_or"
+		    | 2 -> (List.hd fs, List.hd (List.tl fs))
+		    | _ -> (List.hd fs, mk_or (List.tl fs))
+		    end
+      | _ -> invalid_arg "unfold_or"	
+			 
+    let unfold_and f = match f with 
+      | And(fs,i) -> begin match (List.length fs) with
+		     | 0
+		     | 1 -> invalid_arg "unfold_or"
+		     | 2 -> (List.hd fs, List.hd (List.tl fs))
+		     | _ -> (List.hd fs, mk_and (List.tl fs))
+		     end
+      | _ -> invalid_arg "unfold_or"	
 
     let rec fold f acc g = match g with
       | Atom _ -> f g acc

@@ -471,51 +471,59 @@ module Slprover = Prover.Make(Sl_seq)
 let backlink_cut defs =
   let rl s1 s2 =
     if !termination then [] else
-    (* let () = incr step in *)
-    let ((sf1,cmd1,tf1),(sf2,cmd2,tf2)) = (s1,s2) in
-    if not (Cmd.is_while cmd1) then [] else
-    (* let () = debug (fun () -> "CUTLINK3: trying: " ^ (Seq.to_string s2)) in   *)
-    (* let () = debug (fun () -> "                  " ^ (Seq.to_string s1)) in   *)
-    (* let () = debug (fun () -> "CUTLINK3: step = " ^ (string_of_int !step)) in *)
-    (* if !step <> 22 then None else *)
-    if not (Cmd.equal cmd1 cmd2) then [] else
-    (* let olddebug = !Lib.do_debug in *)
-    (* let () = Lib.do_debug := true in *)
-		let temp_list = Blist.map (fun (rho_form:Sl_heap_rho.t) -> (rho_form.rho,SHNR.mk rho_form.eqs rho_form.deqs rho_form.ptos rho_form.inds)) sf1 in
-		let rho_list1 = Blist.map (fun (x,_) -> x) temp_list in
-		let sl_form1 = Blist.map (fun (_,y) -> y) temp_list in
-		let temp_list2 = Blist.map (fun (rho_form:Sl_heap_rho.t) -> (rho_form.rho,SHNR.mk rho_form.eqs rho_form.deqs rho_form.ptos rho_form.inds)) sf2 in
-		let rho_list2 = Blist.map (fun (x,_) -> x) temp_list2 in
-		let sl_form2 = Blist.map (fun (_,y) -> y) temp_list2 in
-		let rec same_rho r1 r2 = begin match r1,r2 with
-		| [],[] -> true
-		| [],_ -> false
-		| _,[] -> false
-		| h1::tl1,h2::tl2 -> begin match Sl_rho.equal h1 h2 with
-														| true -> same_rho tl1 tl2
-														| _ -> false
-														end
-		end in
-		let () = Sl_rules.setup defs in
-    let result = 
-      Option.is_some (Slprover.idfs 1 11 !Sl_rules.axioms !Sl_rules.rules (sl_form1, sl_form2)) in
-    (* let () = Lib.do_debug := olddebug in *)
-    (* let () = debug (fun () -> "CUTLINK3: result: " ^ (string_of_bool result)) in *)
-    if result && same_rho rho_list1 rho_list2 then [ (Seq.tagpairs_one, "Cut/Backl") ] else [] in
+      (* let () = incr step in *)
+      let ((sf1,cmd1,tf1),(sf2,cmd2,tf2)) = (s1,s2) in
+      if not (Cmd.is_while cmd1) then [] else
+	(* let () = debug (fun () -> "CUTLINK3: trying: " ^ (Seq.to_string s2)) in   *)
+	(* let () = debug (fun () -> "                  " ^ (Seq.to_string s1)) in   *)
+	(* let () = debug (fun () -> "CUTLINK3: step = " ^ (string_of_int !step)) in *)
+	(* if !step <> 22 then None else *)
+	if not (Cmd.equal cmd1 cmd2) then [] else
+	  (* let olddebug = !Lib.do_debug in *)
+	  (* let () = Lib.do_debug := true in *)
+	  let temp_list = Blist.map (fun (rho_form:Sl_heap_rho.t) ->
+				     let (rho,eqs,deqs,ptos,inds) = Sl_heap_rho.dest rho_form in
+				     (rho,SHNR.mk eqs deqs ptos inds)) sf1 in
+	  let rho_list1 = Blist.map (fun (x,_) -> x) temp_list in
+	  let sl_form1 = Blist.map (fun (_,y) -> y) temp_list in
+	  let temp_list2 = Blist.map (fun (rho_form:Sl_heap_rho.t) ->
+				      let (rho,eqs,deqs,ptos,inds) = Sl_heap_rho.dest rho_form in
+				      (rho,SHNR.mk eqs deqs ptos inds)) sf2 in
+	  let rho_list2 = Blist.map (fun (x,_) -> x) temp_list2 in
+	  let sl_form2 = Blist.map (fun (_,y) -> y) temp_list2 in
+	  let rec same_rho r1 r2 = begin match r1,r2 with
+					 | [],[] -> true
+					 | [],_ -> false
+					 | _,[] -> false
+					 | h1::tl1,h2::tl2 -> begin match Sl_rho.equal h1 h2 with
+								    | true -> same_rho tl1 tl2
+								    | _ -> false
+							      end
+				   end in
+	  let () = Sl_rules.setup defs in
+	  let result = 
+	    Option.is_some (Slprover.idfs 1 11 !Sl_rules.axioms !Sl_rules.rules (sl_form1, sl_form2)) in
+	  (* let () = Lib.do_debug := olddebug in *)
+	  (* let () = debug (fun () -> "CUTLINK3: result: " ^ (string_of_bool result)) in *)
+	  if result && same_rho rho_list1 rho_list2 then [ (Seq.tagpairs_one, "Cut/Backl") ] else [] in
   Rule.mk_backrule true Rule.all_nodes rl
-
+		   
 
 let axioms = 
   let entails f f' =
-		let temp_list = Blist.map (fun (rho_form:Sl_heap_rho.t) -> (rho_form.rho,SHNR.mk rho_form.eqs rho_form.deqs rho_form.ptos rho_form.inds)) f in
-		let sl_form1 = Blist.map (fun (_,y) -> y) temp_list in
-		let temp_list2 = Blist.map (fun (rho_form:Sl_heap_rho.t) -> (rho_form.rho,SHNR.mk rho_form.eqs rho_form.deqs rho_form.ptos rho_form.inds)) f' in
-		let sl_form2 = Blist.map (fun (_,y) -> y) temp_list2 in
+    let temp_list = Blist.map (fun (rho_form:Sl_heap_rho.t) ->
+			       let (rho,eqs,deqs,ptos,inds) = Sl_heap_rho.dest rho_form in
+			       (rho,SHNR.mk eqs deqs ptos inds)) f in
+    let sl_form1 = Blist.map (fun (_,y) -> y) temp_list in
+    let temp_list2 = Blist.map (fun (rho_form:Sl_heap_rho.t) ->
+				let (rho,eqs,deqs,ptos,inds) = Sl_heap_rho.dest rho_form in
+				(rho,SHNR.mk eqs deqs ptos inds)) f' in
+    let sl_form2 = Blist.map (fun (_,y) -> y) temp_list2 in
     Slprover.idfs 1 5 !Sl_rules.axioms !Sl_rules.rules (sl_form1, sl_form2) in
   ref (Rule.first [symex_check_axiom entails])
       
 let rules = ref Rule.fail
-
+		
 let symex =       
   Rule.first [
       symex_skip_rule ;
