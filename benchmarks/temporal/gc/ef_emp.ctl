@@ -1,10 +1,8 @@
 fields: next;
-precondition: x->nil;
+precondition: ls(x,nil);
 property: EF(emp);
-temp:=new();
-temp:=x;
 while x!=nil do
+      temp:=x.next;
       free(x);
       x:=temp
-od;
-free(temp)
+od

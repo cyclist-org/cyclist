@@ -6,6 +6,7 @@ open MParser
 module Form : 
 sig
   type t =
+    | Final of int
     | Atom of Sl_heap.t * int
     | Circle of t * int 
     | Diamond of t * int
@@ -17,7 +18,8 @@ sig
     | And of t list * int
     | Or of t list * int
   include BasicType with type t:=t
-				   
+
+  val is_final : t -> bool
   val is_atom : t -> bool
   val is_circle : t -> bool
   val is_diamond : t -> bool
@@ -41,7 +43,8 @@ sig
   val dest_ef : t -> t
   val dest_and : t -> t list
   val dest_or : t -> t list
-		       
+
+  val mk_final : t
   val mk_atom : Sl_heap.t -> t
   val mk_circle : t -> t
   val mk_diamond : t -> t
@@ -85,6 +88,7 @@ end
   struct
     
     type t =
+      | Final of int
       | Atom of Sl_heap.t * int 
       | Circle of t * int
       | Diamond of t * int
@@ -97,12 +101,15 @@ end
       | Or of t list * int
 			    
     let depth = function
-      | Atom(_,d) | Circle(_,d) | Diamond(_,d) 
+      | Final d | Atom(_,d) | Circle(_,d) | Diamond(_,d) 
       | Box(_,d) | AG(_,_,d) | EG(_,_,d) | AF(_,d) | EF(_,d) 
       | And(_,d) | Or(_,d) -> d
 
     let hash = Hashtbl.hash
-		 
+
+    let is_final = function
+      | Final _ -> true
+      | _ -> false
     let is_atom = function
       | Atom _ -> true
       | _ -> false
@@ -165,6 +172,7 @@ end
       | Or(x,_) -> x
       | _ -> invalid_arg "dest_or"
 
+    let mk_final = (Final 1)
     let mk_atom a = Atom(a,1)
     let mk_circle f = Circle(f, 1 + depth f)
     let mk_diamond f = Diamond(f, 1 + depth f)
@@ -211,7 +219,7 @@ end
 			| _ -> invalid_arg "unfold_or"	
 
     let rec fold f acc g = match g with
-      | Atom _ -> f g acc
+      | Atom _ | Final _ -> f g acc
       | Circle(h,_) | Diamond(h,_) | Box(h,_)
       | AG(_,h,_) | EG(_,h,_) | AF(h,_) | EF(h,_) -> f g (f h acc)
       | And(fs,_) | Or(fs,_) ->
@@ -225,7 +233,8 @@ end
 
     let rec _to_string f = 
       (if is_and f || is_or f then bracket else id) (to_string f)
-    and to_string = function 
+    and to_string = function
+      | Final(i) -> "final"
       | Atom(a,_) -> Sl_heap.to_string a  
       | Circle(f,_) -> "()" ^ (_to_string f)
       | Diamond(f,_) -> "<>" ^ (_to_string f)
@@ -245,6 +254,7 @@ end
 
     let rec to_melt f = 
       match f with
+      | Final _ -> symb_final.melt
       | Atom(a,_) -> Sl_heap.to_melt a
       | Circle(f,_) -> Latex.concat [symb_circle.melt; to_melt f]
       | Diamond(f,_) -> Latex.concat [symb_diamond.melt; to_melt f]
@@ -263,6 +273,7 @@ end
       let r = Int.compare (depth f) (depth g) in
       if r<>0 then r else
 	match (f,g) with
+	| Final _ , Final _ -> 0
 	| Atom(a, _), Atom(b, _) -> Sl_heap.compare a b
 	| Circle(a,_), Circle(b,_)
 	| Diamond(a,_), Diamond(b,_)
@@ -306,6 +317,7 @@ end
       let r = Int.compare (depth f) (depth g) in
       if r<>0 then r else
 	match (f,g) with
+	| Final _, Final _ -> 0
 	| Atom(a, _), Atom(b, _) -> Sl_heap.compare a b
 	| Circle(a,_), Circle(b,_)
 	| Diamond(a,_), Diamond(b,_)
@@ -396,6 +408,7 @@ end
 
     let rec to_slformula t = 
       match t with
+      | Final i -> invalid_arg ((string_of_int i) ^"-AND- to_slformula")
       | Atom(g,_) -> [g] 
       | Or(fs,_) -> Blist.flatten (List.map to_slformula fs) 
       | And(fs,i) -> invalid_arg ((string_of_int i) ^"-AND- to_slformula" ^ to_string t)
@@ -439,7 +452,7 @@ end
 	       
     let rec subst_tags tagpairs f = 
       match f with 
-      | Atom _ -> f
+      | Final _ | Atom _ -> f
       | Circle (f,d) -> Circle (subst_tags tagpairs f, d)
       | Diamond (f,d) -> Diamond (subst_tags tagpairs f, d)
       | Box (f,d) -> Box (subst_tags tagpairs f, d)
@@ -477,7 +490,8 @@ end
 	f
 
     let rec parse_atom st =
-      (attempt (parse_symb symb_circle >>
+      (attempt (parse_symb symb_final >>$ mk_final)
+       <|> attempt (parse_symb symb_circle >>
 		  parse_atom|>> (fun inner -> mk_circle inner))
        <|> attempt (parse_symb symb_box >>
 		      parse_atom|>> (fun inner -> mk_box inner))

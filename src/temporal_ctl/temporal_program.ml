@@ -6,7 +6,7 @@ open MParser
 module SH = Sl_heap
 module Tl_form = Tl_form.Form
 
-let termination = ref false
+let termination = ref true
 
 module Field = While_program.Field
 module Cond = While_program.Cond
@@ -62,13 +62,10 @@ module Cmd =
       | _ -> false
     let is_proc_call c = is_not_empty c && match get_cmd c with
       | ProcCall(_, _) -> true
-      | _ -> false
-    
-
+      | _ -> false    
     let is_basic c = is_not_empty c && match get_cmd c with
       ProcCall(_, _) | Assign _ | Load _ | Store _ | New _ | Free _ | Stop | Skip -> true
       | _ -> false
-
     let is_if c = is_not_empty c && match get_cmd c with
       | If _ -> true
       | _ -> false
@@ -450,7 +447,7 @@ module Seq =
     let tagset_one = Tags.singleton 1
     let tagpairs_one = TagPairs.mk tagset_one
     let tags (sf,cmd,tf) = Tags.union (Sl_form.tags sf) (Tl_form.tags tf)
-    let tag_pairs (sf,_,tf) =TagPairs.union (Sl_form.tag_pairs sf) (TagPairs.mk (Tl_form.outermost_tag tf))
+    let tag_pairs (sf,_,tf) = if !termination then TagPairs.union (Sl_form.tag_pairs sf) (TagPairs.mk (Tl_form.outermost_tag tf)) else (TagPairs.mk (Tl_form.outermost_tag tf))
     let sep_vars (sf,_,_) = Sl_form.vars sf
     let temp_vars (_,_,tf) = Tl_form.vars tf
     let vars (sf,_,tf) = Sl_term.Set.union (Sl_form.vars sf) (Tl_form.vars tf)

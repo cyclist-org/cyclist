@@ -1,0 +1,623 @@
+\begin{prooftree}
+  % ls^1(x, nil) |- 0: while * do 1: ... od : AG_3EFls^2(x, nil)
+  \[ % ls^1(x, nil) |- 0: while * do 1: ... od : EFls^2(x, nil)
+  \[ % ls^1(x, nil) |- 0: while * do 1: ... od : ls^2(x, nil)
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  5 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\ast \;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  1 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\ast \;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % ls^1(x, nil) |- 0: while * do 1: ... od : []AG_3EFls^2(x, nil)
+  \[ % ls^1(x, nil) |- 1: y := new(); 2: ... : AG_3EFls^2(x, nil)
+  \[ % ls^1(x, nil) |- 1: y := new(); 2: ... : EFls^2(x, nil)
+  \[ % ls^1(x, nil) |- 1: y := new(); 2: ... : ls^2(x, nil)
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  9 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 1 : \mathit{y}:=\mbox{\texttt{new}}();2 : \mbox{\ldots } : 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  6 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 1 : \mathit{y}:=\mbox{\texttt{new}}();2 : \mbox{\ldots } : EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % ls^1(x, nil) |- 1: y := new(); 2: ... : []AG_3EFls^2(x, nil)
+  \[ % nil!=y * y->a' * ls^1(x, nil) |- 2: y.next := x; 3: ... : AG_3EFls^2(x, nil)
+  \[ % nil!=y * y->a' * ls^1(x, nil) |- 2: y.next := x; 3: ... : EFls^2(x, nil)
+  \[ % nil!=y * y->a' * ls^1(x, nil) |- 2: y.next := x; 3: ... : <>EFls^2(x, nil)
+  \[ % nil!=y * y->x * ls^1(x, nil) |- 3: x := y; 0: ... : EFls^2(x, nil)
+  \[ % nil!=y * y->x * ls^1(x, nil) |- 3: x := y; 0: ... : <>EFls^2(x, nil)
+  \[ % x=y * nil!=y * y->y' * ls^1(y', nil) |- 0: while * do 1: ... od : EFls^2(x, nil)
+  \[ % x=y * nil!=y * y->y' * ls^1(y', nil) |- 0: while * do 1: ... od : ls^2(x, nil)
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  17 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\ast \;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  16 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\ast \;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  15 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 3 : \mathit{x}:=\mathit{y};0 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{Assign})
+  \]
+  \justifies
+  \thickness=0.1em
+  14 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 3 : \mathit{x}:=\mathit{y};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  13 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{a'} \\ 
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mathit{y}.\mbox{\texttt{next}}:=\mathit{x};3 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{Store})
+  \]
+  \justifies
+  \thickness=0.1em
+  10 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{a'} \\ 
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mathit{y}.\mbox{\texttt{next}}:=\mathit{x};3 : \mbox{\ldots } : EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % nil!=y * y->a' * ls^1(x, nil) |- 2: y.next := x; 3: ... : []AG_3EFls^2(x, nil)
+  \[ % nil!=y * y->x * ls^1(x, nil) |- 3: x := y; 0: ... : AG_3EFls^2(x, nil)
+  \[ % nil!=y * y->x * ls^1(x, nil) |- 3: x := y; 0: ... : EFls^2(x, nil)
+  \[ % nil!=y * y->x * ls^1(x, nil) |- 3: x := y; 0: ... : <>EFls^2(x, nil)
+  \[ % x=y * nil!=y * y->y' * ls^1(y', nil) |- 0: while * do 1: ... od : EFls^2(x, nil)
+  \[ % x=y * nil!=y * y->y' * ls^1(y', nil) |- 0: while * do 1: ... od : ls^2(x, nil)
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  23 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\ast \;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  22 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\ast \;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  21 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 3 : \mathit{x}:=\mathit{y};0 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{Assign})
+  \]
+  \justifies
+  \thickness=0.1em
+  18 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 3 : \mathit{x}:=\mathit{y};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % nil!=y * y->x * ls^1(x, nil) |- 3: x := y; 0: ... : []AG_3EFls^2(x, nil)
+  \[ % x=y * nil!=y * y->y' * ls^1(y', nil) |- 0: while * do 1: ... od : AG_3EFls^2(x, nil)
+  \[ % x=y * nil!=y * y->y' * ls^1(y', nil) |- 0: while * do 1: ... od : EFls^2(x, nil)
+  \[ % x=y * nil!=y * y->y' * ls^1(y', nil) |- 0: while * do 1: ... od : ls^2(x, nil)
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  28 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\ast \;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  24 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\ast \;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % x=y * nil!=y * y->y' * ls^1(y', nil) |- 0: while * do 1: ... od : []AG_3EFls^2(x, nil)
+  \[ % x=y * nil!=y * y->y' * ls^1(y', nil) |- 1: y := new(); 2: ... : AG_3EFls^2(x, nil)
+  \[ % x=y * nil!=y * y->y' * ls^1(y', nil) |- 1: y := new(); 2: ... : EFls^2(x, nil)
+  \[ % x=y * nil!=y * y->y' * ls^1(y', nil) |- 1: y := new(); 2: ... : ls^2(x, nil)
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  32 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 1 : \mathit{y}:=\mbox{\texttt{new}}();2 : \mbox{\ldots } : 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  29 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 1 : \mathit{y}:=\mbox{\texttt{new}}();2 : \mbox{\ldots } : EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % x=y * nil!=y * y->y' * ls^1(y', nil) |- 1: y := new(); 2: ... : []AG_3EFls^2(x, nil)
+  \[ % nil!=x * nil!=y * x!=y * x->y' * y->b' * ls^1(y', nil) |- 2: y.next := x; 3: ... : AG_3EFls^2(x, nil)
+  \[ % nil!=y * x!=y * y->b' * ls^2(x, nil) |- 2: y.next := x; 3: ... : AG_3EFls^2(x, nil)
+  \[ % nil!=y * y->b' * ls^2(x, nil) |- 2: y.next := x; 3: ... : AG_3EFls^2(x, nil)
+  \[ % nil!=y * y->a' * ls^2(x, nil) |- 2: y.next := x; 3: ... : AG_3EFls^2(x, nil)
+  \to 8(\mbox{Backl})
+  \justifies
+  \thickness=0.1em
+  35 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{a'} \\ 
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mathit{y}.\mbox{\texttt{next}}:=\mathit{x};3 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  34 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{b'} \\ 
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mathit{y}.\mbox{\texttt{next}}:=\mathit{x};3 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{Subst })
+  \]
+  \justifies
+  \thickness=0.1em
+  33 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y}\ast \mathit{x}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{b'} \\ 
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mathit{y}.\mbox{\texttt{next}}:=\mathit{x};3 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{Frame})
+  \]
+  \justifies
+  \thickness=0.1em
+  31 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x}\ast \mathit{\mbox{\texttt{nil}}}\ne \mathit{y}\ast \mathit{x}\ne \mathit{y} \\ 
+    \mathit{x}\mapsto \mathit{y'}\ast \mathit{y}\mapsto \mathit{b'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mathit{y}.\mbox{\texttt{next}}:=\mathit{x};3 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{ls Fold})
+  \]
+  \justifies
+  \thickness=0.1em
+  30 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 1 : \mathit{y}:=\mbox{\texttt{new}}();2 : \mbox{\ldots } : \Box AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{New/Simplify})
+  \]
+  \justifies
+  \thickness=0.1em
+  26 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 1 : \mathit{y}:=\mbox{\texttt{new}}();2 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \[ % x=y * nil!=y * y->y' * ls^1(y', nil) |-  : AG_3EFls^2(x, nil)
+  \[ % x=y * nil!=y * y->y' * ls^1(y', nil) |-  : EFls^2(x, nil)
+  \[ % x=y * nil!=y * y->y' * ls^1(y', nil) |-  : ls^2(x, nil)
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  38 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash \epsilon  : 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  36 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash \epsilon  : EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % x=y * nil!=y * y->y' * ls^1(y', nil) |-  : []AG_3EFls^2(x, nil)
+  (\mbox{Empty})
+  \justifies
+  \thickness=0.1em
+  37 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash \epsilon  : \Box AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  27 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash \epsilon  : AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \justifies
+  \thickness=0.1em
+  25 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\ast \;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : \Box AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{While-Box})
+  \]
+  \justifies
+  \thickness=0.1em
+  20 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{y} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\ast \;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \justifies
+  \thickness=0.1em
+  19 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 3 : \mathit{x}:=\mathit{y};0 : \mbox{\ldots } : \Box AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{Assign})
+  \]
+  \justifies
+  \thickness=0.1em
+  12 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 3 : \mathit{x}:=\mathit{y};0 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \justifies
+  \thickness=0.1em
+  11 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{a'} \\ 
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mathit{y}.\mbox{\texttt{next}}:=\mathit{x};3 : \mbox{\ldots } : \Box AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{Store})
+  \]
+  \justifies
+  \thickness=0.1em
+  8 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{y} \\ 
+    \mathit{y}\mapsto \mathit{a'} \\ 
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mathit{y}.\mbox{\texttt{next}}:=\mathit{x};3 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \justifies
+  \thickness=0.1em
+  7 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 1 : \mathit{y}:=\mbox{\texttt{new}}();2 : \mbox{\ldots } : \Box AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{New})
+  \]
+  \justifies
+  \thickness=0.1em
+  3 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 1 : \mathit{y}:=\mbox{\texttt{new}}();2 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \[ % ls^1(x, nil) |-  : AG_3EFls^2(x, nil)
+  \[ % ls^1(x, nil) |-  : EFls^2(x, nil)
+  \[ % ls^1(x, nil) |-  : ls^2(x, nil)
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  41 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash \epsilon  : 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  39 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash \epsilon  : EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % ls^1(x, nil) |-  : []AG_3EFls^2(x, nil)
+  (\mbox{Empty})
+  \justifies
+  \thickness=0.1em
+  40 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash \epsilon  : \Box AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  4 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash \epsilon  : AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \justifies
+  \thickness=0.1em
+  2 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\ast \;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : \Box AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{While-Box})
+  \]
+  \justifies
+  \thickness=0.1em
+  0 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\ast \;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : AG EF 
+  \begin{gathered}
+    {\mathit{ls}}_{2}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+\end{prooftree}

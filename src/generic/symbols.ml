@@ -44,6 +44,7 @@ let symb_bang = make_symb "!" Latex.empty
 let symb_caret = make_symb "^" Latex.empty
 let symb_mapsto = make_symb "|->" (ltx_math "\\mapsto")
 (* let symb_underscore = make_symb "_" " " Latex.empty (* FIXME *) *)
+let symb_final = make_symb "final" (Latex.texttt (Latex.text "final"))
 let symb_box = make_symb "[]" Latex.box_
 let symb_diamond = make_symb "<>" Latex.diamond
 let symb_circle = make_symb "()" Latex.circ
@@ -56,6 +57,7 @@ let symb_f = make_symb "F" (Latex.text "F ")
 let symb_g = make_symb "G" (Latex.text "G ")
 let symb_fld_sel = make_symb "." (Latex.text ".")
 
+let keyw_final = mk_keyw "final"
 let keyw_true = mk_keyw "true"
 let keyw_emp = mk_keyw "emp"
 let keyw_free = mk_keyw "free"

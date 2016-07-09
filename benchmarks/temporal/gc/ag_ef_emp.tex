@@ -1,0 +1,1615 @@
+\begin{prooftree}
+  % ls^1(x, nil) |- 0: while x=x do 1: ... od : AG_2EFemp
+  \[ % ls^1(x, nil) |- 0: while x=x do 1: ... od : EFemp
+  \[ % ls^1(x, nil) |- 0: while x=x do 1: ... od : <>EFemp
+  \[ % ls^1(x, nil) |- 1: if * then 2: ... else 7: ... fi; 0: ... : EFemp
+  \[ % ls^1(x, nil) |- 1: if * then 2: ... else 7: ... fi; 0: ... : <>EFemp
+  \[ % ls^1(x, nil) |- 2: while x!=nil do 3: ... od; 0: ... : EFemp
+  \[ % ls^1(x, nil) |- 2: while x!=nil do 3: ... od; 0: ... : <>EFemp
+  \[ % nil=x * ls^1(x, nil) |- 0: while x=x do 1: ... od : EFemp
+  \[ % nil=x * ls^1(x, nil) |- 0: while x=x do 1: ... od : emp
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  11 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  10 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  9 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{While-<>2})
+  \]
+  \justifies
+  \thickness=0.1em
+  8 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  7 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{if}}\;\ast \;\mbox{\texttt{then}}\;2 : \mbox{\ldots }\mbox{\texttt{else}}\;7 : \mbox{\ldots }\mbox{\texttt{fi}};0 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{If-<>1})
+  \]
+  \justifies
+  \thickness=0.1em
+  6 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{if}}\;\ast \;\mbox{\texttt{then}}\;2 : \mbox{\ldots }\mbox{\texttt{else}}\;7 : \mbox{\ldots }\mbox{\texttt{fi}};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  5 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{While-<>1})
+  \]
+  \justifies
+  \thickness=0.1em
+  1 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % ls^1(x, nil) |- 0: while x=x do 1: ... od : []AG_2EFemp
+  \[ % ls^1(x, nil) |- 1: if * then 2: ... else 7: ... fi; 0: ... : AG_2EFemp
+  \[ % ls^1(x, nil) |- 1: if * then 2: ... else 7: ... fi; 0: ... : EFemp
+  \[ % ls^1(x, nil) |- 1: if * then 2: ... else 7: ... fi; 0: ... : <>EFemp
+  \[ % ls^1(x, nil) |- 2: while x!=nil do 3: ... od; 0: ... : EFemp
+  \[ % ls^1(x, nil) |- 2: while x!=nil do 3: ... od; 0: ... : <>EFemp
+  \[ % nil=x * ls^1(x, nil) |- 0: while x=x do 1: ... od : EFemp
+  \[ % nil=x * ls^1(x, nil) |- 0: while x=x do 1: ... od : emp
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  20 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  19 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  18 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{While-<>2})
+  \]
+  \justifies
+  \thickness=0.1em
+  17 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  16 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{if}}\;\ast \;\mbox{\texttt{then}}\;2 : \mbox{\ldots }\mbox{\texttt{else}}\;7 : \mbox{\ldots }\mbox{\texttt{fi}};0 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{If-<>1})
+  \]
+  \justifies
+  \thickness=0.1em
+  12 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{if}}\;\ast \;\mbox{\texttt{then}}\;2 : \mbox{\ldots }\mbox{\texttt{else}}\;7 : \mbox{\ldots }\mbox{\texttt{fi}};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % ls^1(x, nil) |- 1: if * then 2: ... else 7: ... fi; 0: ... : []AG_2EFemp
+  \[ % ls^1(x, nil) |- 2: while x!=nil do 3: ... od; 0: ... : AG_2EFemp
+  \[ % nil=x |- 2: while x!=nil do 3: ... od; 0: ... : AG_2EFemp
+  \[ % nil=x |- 2: while x!=nil do 3: ... od; 0: ... : EFemp
+  \[ % nil=x |- 2: while x!=nil do 3: ... od; 0: ... : emp
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  27 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  23 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % nil=x |- 2: while x!=nil do 3: ... od; 0: ... : []AG_2EFemp
+  \[ % nil=x * nil!=x |- 3: temp := x.next; 4: ... : AG_2EFemp
+  (\mbox{Ex Falso})
+  \justifies
+  \thickness=0.1em
+  25 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x}
+  \end{gathered}
+  \vdash 3 : \mathit{temp}:=\mathit{x}.\mbox{\texttt{next}};4 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \[ % nil=x |- 0: while x=x do 1: ... od : AG_2EFemp
+  \[ % nil=x |- 0: while x=x do 1: ... od : EFemp
+  \[ % nil=x |- 0: while x=x do 1: ... od : emp
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  32 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  28 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % nil=x |- 0: while x=x do 1: ... od : []AG_2EFemp
+  \[ % nil=x |- 1: if * then 2: ... else 7: ... fi; 0: ... : AG_2EFemp
+  \[ % nil=x |- 1: if * then 2: ... else 7: ... fi; 0: ... : EFemp
+  \[ % nil=x |- 1: if * then 2: ... else 7: ... fi; 0: ... : emp
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  37 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{if}}\;\ast \;\mbox{\texttt{then}}\;2 : \mbox{\ldots }\mbox{\texttt{else}}\;7 : \mbox{\ldots }\mbox{\texttt{fi}};0 : \mbox{\ldots } : 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  33 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{if}}\;\ast \;\mbox{\texttt{then}}\;2 : \mbox{\ldots }\mbox{\texttt{else}}\;7 : \mbox{\ldots }\mbox{\texttt{fi}};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % nil=x |- 1: if * then 2: ... else 7: ... fi; 0: ... : []AG_2EFemp
+  \[ % nil=x |- 2: while x!=nil do 3: ... od; 0: ... : AG_2EFemp
+  \to 21(\mbox{Backl})
+  \justifies
+  \thickness=0.1em
+  35 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \[ % nil=x |- 7: skip; 0: ... : AG_2EFemp
+  \[ % nil=x |- 7: skip; 0: ... : EFemp
+  \[ % nil=x |- 7: skip; 0: ... : emp
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  41 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 7 : \mbox{\texttt{skip}};0 : \mbox{\ldots } : 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  38 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 7 : \mbox{\texttt{skip}};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % nil=x |- 7: skip; 0: ... : []AG_2EFemp
+  \[ % nil=x |- 0: while x=x do 1: ... od : AG_2EFemp
+  \to 26(\mbox{Backl})
+  \justifies
+  \thickness=0.1em
+  40 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  39 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 7 : \mbox{\texttt{skip}};0 : \mbox{\ldots } : \Box AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Skip})
+  \]
+  \justifies
+  \thickness=0.1em
+  36 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 7 : \mbox{\texttt{skip}};0 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \justifies
+  \thickness=0.1em
+  34 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{if}}\;\ast \;\mbox{\texttt{then}}\;2 : \mbox{\ldots }\mbox{\texttt{else}}\;7 : \mbox{\ldots }\mbox{\texttt{fi}};0 : \mbox{\ldots } : \Box AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{If-[]})
+  \]
+  \justifies
+  \thickness=0.1em
+  30 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{if}}\;\ast \;\mbox{\texttt{then}}\;2 : \mbox{\ldots }\mbox{\texttt{else}}\;7 : \mbox{\ldots }\mbox{\texttt{fi}};0 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \[ % nil=x * x!=x |-  : AG_2EFemp
+  (\mbox{Ex Falso})
+  \justifies
+  \thickness=0.1em
+  31 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x} \\ 
+    \mathit{x}\ne \mathit{x}
+  \end{gathered}
+  \vdash \epsilon  : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  29 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : \Box AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{While-Box})
+  \]
+  \justifies
+  \thickness=0.1em
+  26 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \justifies
+  \thickness=0.1em
+  24 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : \Box AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{While-Box})
+  \]
+  \justifies
+  \thickness=0.1em
+  21 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \[ % nil!=x * x->y' * ls^1(y', nil) |- 2: while x!=nil do 3: ... od; 0: ... : AG_2EFemp
+  \[ % nil!=x * x->y' * ls^1(y', nil) |- 2: while x!=nil do 3: ... od; 0: ... : EFemp
+  \[ % nil!=x * x->y' * ls^1(y', nil) |- 2: while x!=nil do 3: ... od; 0: ... : <>EFemp
+  \[ % nil!=x * x->y' * ls^1(y', nil) |- 3: temp := x.next; 4: ... : EFemp
+  \[ % nil!=x * x->y' * ls^1(y', nil) |- 3: temp := x.next; 4: ... : <>EFemp
+  \[ % nil!=x * x->temp * ls^1(temp, nil) |- 4: free(x); 5: ... : EFemp
+  \[ % nil!=x * x->temp * ls^1(temp, nil) |- 4: free(x); 5: ... : <>EFemp
+  \[ % nil!=x * ls^1(temp, nil) |- 5: x := temp; 2: ... : EFemp
+  \[ % nil!=x * ls^1(temp, nil) |- 5: x := temp; 2: ... : <>EFemp
+  \[ % x=temp * y'!=nil * ls^1(temp, nil) |- 2: while x!=nil do 3: ... od; 0: ... : EFemp
+  \[ % x=temp * y'!=nil * ls^1(temp, nil) |- 2: while x!=nil do 3: ... od; 0: ... : <>EFemp
+  \[ % nil=temp * x=temp * y'!=nil * ls^1(temp, nil) |- 0: while x=x do 1: ... od : EFemp
+  \[ % nil=temp * x=temp * y'!=nil * ls^1(temp, nil) |- 0: while x=x do 1: ... od : emp
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  56 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{temp}\ast \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  55 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{temp}\ast \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  54 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{While-<>2})
+  \]
+  \justifies
+  \thickness=0.1em
+  53 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  52 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 5 : \mathit{x}:=\mathit{temp};2 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Assign})
+  \]
+  \justifies
+  \thickness=0.1em
+  51 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 5 : \mathit{x}:=\mathit{temp};2 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  50 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{temp} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 4 : \mbox{\texttt{free}}(\mathit{x});5 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Free})
+  \]
+  \justifies
+  \thickness=0.1em
+  49 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{temp} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 4 : \mbox{\texttt{free}}(\mathit{x});5 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  48 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 3 : \mathit{temp}:=\mathit{x}.\mbox{\texttt{next}};4 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Load/Simplify})
+  \]
+  \justifies
+  \thickness=0.1em
+  47 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 3 : \mathit{temp}:=\mathit{x}.\mbox{\texttt{next}};4 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  46 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{While-<>1})
+  \]
+  \justifies
+  \thickness=0.1em
+  42 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % nil!=x * x->y' * ls^1(y', nil) |- 2: while x!=nil do 3: ... od; 0: ... : []AG_2EFemp
+  \[ % nil!=x * x->y' * ls^1(y', nil) |- 3: temp := x.next; 4: ... : AG_2EFemp
+  \[ % nil!=x * x->y' * ls^1(y', nil) |- 3: temp := x.next; 4: ... : EFemp
+  \[ % nil!=x * x->y' * ls^1(y', nil) |- 3: temp := x.next; 4: ... : <>EFemp
+  \[ % nil!=x * x->temp * ls^1(temp, nil) |- 4: free(x); 5: ... : EFemp
+  \[ % nil!=x * x->temp * ls^1(temp, nil) |- 4: free(x); 5: ... : <>EFemp
+  \[ % nil!=x * ls^1(temp, nil) |- 5: x := temp; 2: ... : EFemp
+  \[ % nil!=x * ls^1(temp, nil) |- 5: x := temp; 2: ... : <>EFemp
+  \[ % x=temp * y'!=nil * ls^1(temp, nil) |- 2: while x!=nil do 3: ... od; 0: ... : EFemp
+  \[ % x=temp * y'!=nil * ls^1(temp, nil) |- 2: while x!=nil do 3: ... od; 0: ... : <>EFemp
+  \[ % nil=temp * x=temp * y'!=nil * ls^1(temp, nil) |- 0: while x=x do 1: ... od : EFemp
+  \[ % nil=temp * x=temp * y'!=nil * ls^1(temp, nil) |- 0: while x=x do 1: ... od : emp
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  68 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{temp}\ast \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  67 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{temp}\ast \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  66 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{While-<>2})
+  \]
+  \justifies
+  \thickness=0.1em
+  65 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  64 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 5 : \mathit{x}:=\mathit{temp};2 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Assign})
+  \]
+  \justifies
+  \thickness=0.1em
+  63 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 5 : \mathit{x}:=\mathit{temp};2 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  62 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{temp} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 4 : \mbox{\texttt{free}}(\mathit{x});5 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Free})
+  \]
+  \justifies
+  \thickness=0.1em
+  61 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{temp} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 4 : \mbox{\texttt{free}}(\mathit{x});5 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  60 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 3 : \mathit{temp}:=\mathit{x}.\mbox{\texttt{next}};4 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Load/Simplify})
+  \]
+  \justifies
+  \thickness=0.1em
+  57 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 3 : \mathit{temp}:=\mathit{x}.\mbox{\texttt{next}};4 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % nil!=x * x->y' * ls^1(y', nil) |- 3: temp := x.next; 4: ... : []AG_2EFemp
+  \[ % nil!=x * x->temp * ls^1(temp, nil) |- 4: free(x); 5: ... : AG_2EFemp
+  \[ % nil!=x * x->temp * ls^1(temp, nil) |- 4: free(x); 5: ... : EFemp
+  \[ % nil!=x * x->temp * ls^1(temp, nil) |- 4: free(x); 5: ... : <>EFemp
+  \[ % nil!=x * ls^1(temp, nil) |- 5: x := temp; 2: ... : EFemp
+  \[ % nil!=x * ls^1(temp, nil) |- 5: x := temp; 2: ... : <>EFemp
+  \[ % x=temp * y'!=nil * ls^1(temp, nil) |- 2: while x!=nil do 3: ... od; 0: ... : EFemp
+  \[ % x=temp * y'!=nil * ls^1(temp, nil) |- 2: while x!=nil do 3: ... od; 0: ... : <>EFemp
+  \[ % nil=temp * x=temp * y'!=nil * ls^1(temp, nil) |- 0: while x=x do 1: ... od : EFemp
+  \[ % nil=temp * x=temp * y'!=nil * ls^1(temp, nil) |- 0: while x=x do 1: ... od : emp
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  78 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{temp}\ast \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  77 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{temp}\ast \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  76 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{While-<>2})
+  \]
+  \justifies
+  \thickness=0.1em
+  75 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  74 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 5 : \mathit{x}:=\mathit{temp};2 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Assign})
+  \]
+  \justifies
+  \thickness=0.1em
+  73 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 5 : \mathit{x}:=\mathit{temp};2 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  72 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{temp} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 4 : \mbox{\texttt{free}}(\mathit{x});5 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Free})
+  \]
+  \justifies
+  \thickness=0.1em
+  69 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{temp} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 4 : \mbox{\texttt{free}}(\mathit{x});5 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % nil!=x * x->temp * ls^1(temp, nil) |- 4: free(x); 5: ... : []AG_2EFemp
+  \[ % nil!=x * ls^1(temp, nil) |- 5: x := temp; 2: ... : AG_2EFemp
+  \[ % nil!=x * ls^1(temp, nil) |- 5: x := temp; 2: ... : EFemp
+  \[ % nil!=x * ls^1(temp, nil) |- 5: x := temp; 2: ... : <>EFemp
+  \[ % x=temp * y'!=nil * ls^1(temp, nil) |- 2: while x!=nil do 3: ... od; 0: ... : EFemp
+  \[ % x=temp * y'!=nil * ls^1(temp, nil) |- 2: while x!=nil do 3: ... od; 0: ... : <>EFemp
+  \[ % nil=temp * x=temp * y'!=nil * ls^1(temp, nil) |- 0: while x=x do 1: ... od : EFemp
+  \[ % nil=temp * x=temp * y'!=nil * ls^1(temp, nil) |- 0: while x=x do 1: ... od : emp
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  86 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{temp}\ast \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  85 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{temp}\ast \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  84 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{While-<>2})
+  \]
+  \justifies
+  \thickness=0.1em
+  83 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  82 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 5 : \mathit{x}:=\mathit{temp};2 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Assign})
+  \]
+  \justifies
+  \thickness=0.1em
+  79 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 5 : \mathit{x}:=\mathit{temp};2 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % nil!=x * ls^1(temp, nil) |- 5: x := temp; 2: ... : []AG_2EFemp
+  \[ % x=temp * y'!=nil * ls^1(temp, nil) |- 2: while x!=nil do 3: ... od; 0: ... : AG_2EFemp
+  \[ % x=temp * y'!=nil * ls^1(temp, nil) |- 2: while x!=nil do 3: ... od; 0: ... : EFemp
+  \[ % x=temp * y'!=nil * ls^1(temp, nil) |- 2: while x!=nil do 3: ... od; 0: ... : <>EFemp
+  \[ % nil=temp * x=temp * y'!=nil * ls^1(temp, nil) |- 0: while x=x do 1: ... od : EFemp
+  \[ % nil=temp * x=temp * y'!=nil * ls^1(temp, nil) |- 0: while x=x do 1: ... od : emp
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  93 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{temp}\ast \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  92 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{temp}\ast \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  91 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{While-<>2})
+  \]
+  \justifies
+  \thickness=0.1em
+  87 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % x=temp * y'!=nil * ls^1(temp, nil) |- 2: while x!=nil do 3: ... od; 0: ... : []AG_2EFemp
+  \[ % x=temp * y'!=nil * nil!=x * ls^1(temp, nil) |- 3: temp := x.next; 4: ... : AG_2EFemp
+  \[ % nil=temp * x=temp * y'!=nil * nil!=x |- 3: temp := x.next; 4: ... : AG_2EFemp
+  \[ % nil=x * nil!=x |- 3: temp := x.next; 4: ... : AG_2EFemp
+  \to 25(\mbox{Backl})
+  \justifies
+  \thickness=0.1em
+  96 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x}
+  \end{gathered}
+  \vdash 3 : \mathit{temp}:=\mathit{x}.\mbox{\texttt{next}};4 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  94 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{temp}\ast \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}}\ast \mathit{\mbox{\texttt{nil}}}\ne \mathit{x}
+  \end{gathered}
+  \vdash 3 : \mathit{temp}:=\mathit{x}.\mbox{\texttt{next}};4 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Frame})
+  \]
+  \[ % x=temp * y'!=nil * nil!=x * nil!=temp * temp->a' * ls^1(a', nil) |- 3: temp := x.next; 4: ... : AG_2EFemp
+  \[ % x=temp * y'!=nil * nil!=x * nil!=temp * temp->a' * ls^1(a', nil) |- 3: temp := x.next; 4: ... : EFemp
+  \[ % x=temp * y'!=nil * nil!=x * nil!=temp * temp->a' * ls^1(a', nil) |- 3: temp := x.next; 4: ... : <>EFemp
+  \[ % y'!=nil * nil!=x * x->temp * ls^1(temp, nil) |- 4: free(x); 5: ... : EFemp
+  \[ % y'!=nil * nil!=x * x->temp * ls^1(temp, nil) |- 4: free(x); 5: ... : <>EFemp
+  \[ % y'!=nil * nil!=x * ls^1(temp, nil) |- 5: x := temp; 2: ... : EFemp
+  \[ % y'!=nil * nil!=x * ls^1(temp, nil) |- 5: x := temp; 2: ... : <>EFemp
+  \[ % x=temp * a'!=nil * y'!=nil * ls^1(temp, nil) |- 2: while x!=nil do 3: ... od; 0: ... : EFemp
+  \[ % x=temp * a'!=nil * y'!=nil * ls^1(temp, nil) |- 2: while x!=nil do 3: ... od; 0: ... : <>EFemp
+  \[ % nil=temp * x=temp * a'!=nil * y'!=nil * ls^1(temp, nil) |- 0: while x=x do 1: ... od : EFemp
+  \[ % nil=temp * x=temp * a'!=nil * y'!=nil * ls^1(temp, nil) |- 0: while x=x do 1: ... od : emp
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  108 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{temp}\ast \mathit{x} = \mathit{temp} \\ 
+    \mathit{a'}\ne \mathit{\mbox{\texttt{nil}}}\ast \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  107 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{temp}\ast \mathit{x} = \mathit{temp} \\ 
+    \mathit{a'}\ne \mathit{\mbox{\texttt{nil}}}\ast \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  106 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{a'}\ne \mathit{\mbox{\texttt{nil}}}\ast \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{While-<>2})
+  \]
+  \justifies
+  \thickness=0.1em
+  105 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{a'}\ne \mathit{\mbox{\texttt{nil}}}\ast \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  104 : 
+  \begin{gathered}
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}}\ast \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 5 : \mathit{x}:=\mathit{temp};2 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Assign})
+  \]
+  \justifies
+  \thickness=0.1em
+  103 : 
+  \begin{gathered}
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}}\ast \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 5 : \mathit{x}:=\mathit{temp};2 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  102 : 
+  \begin{gathered}
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}}\ast \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{temp} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 4 : \mbox{\texttt{free}}(\mathit{x});5 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Free})
+  \]
+  \justifies
+  \thickness=0.1em
+  101 : 
+  \begin{gathered}
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}}\ast \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{temp} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 4 : \mbox{\texttt{free}}(\mathit{x});5 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  100 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}}\ast \mathit{\mbox{\texttt{nil}}}\ne \mathit{x}\ast \mathit{\mbox{\texttt{nil}}}\ne \mathit{temp} \\ 
+    \mathit{temp}\mapsto \mathit{a'} \\ 
+    {\mathit{ls}}_{1}(\mathit{a'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 3 : \mathit{temp}:=\mathit{x}.\mbox{\texttt{next}};4 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Load/Simplify})
+  \]
+  \justifies
+  \thickness=0.1em
+  97 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}}\ast \mathit{\mbox{\texttt{nil}}}\ne \mathit{x}\ast \mathit{\mbox{\texttt{nil}}}\ne \mathit{temp} \\ 
+    \mathit{temp}\mapsto \mathit{a'} \\ 
+    {\mathit{ls}}_{1}(\mathit{a'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 3 : \mathit{temp}:=\mathit{x}.\mbox{\texttt{next}};4 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % x=temp * y'!=nil * nil!=x * nil!=temp * temp->a' * ls^1(a', nil) |- 3: temp := x.next; 4: ... : []AG_2EFemp
+  \[ % y'!=nil * nil!=x * x->temp * ls^1(temp, nil) |- 4: free(x); 5: ... : AG_2EFemp
+  \[ % nil!=x * x->temp * ls^1(temp, nil) |- 4: free(x); 5: ... : AG_2EFemp
+  \to 59(\mbox{Backl})
+  \justifies
+  \thickness=0.1em
+  109 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{temp} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 4 : \mbox{\texttt{free}}(\mathit{x});5 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  99 : 
+  \begin{gathered}
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}}\ast \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{temp} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 4 : \mbox{\texttt{free}}(\mathit{x});5 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Frame})
+  \]
+  \justifies
+  \thickness=0.1em
+  98 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}}\ast \mathit{\mbox{\texttt{nil}}}\ne \mathit{x}\ast \mathit{\mbox{\texttt{nil}}}\ne \mathit{temp} \\ 
+    \mathit{temp}\mapsto \mathit{a'} \\ 
+    {\mathit{ls}}_{1}(\mathit{a'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 3 : \mathit{temp}:=\mathit{x}.\mbox{\texttt{next}};4 : \mbox{\ldots } : \Box AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Load/Simplify})
+  \]
+  \justifies
+  \thickness=0.1em
+  95 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}}\ast \mathit{\mbox{\texttt{nil}}}\ne \mathit{x}\ast \mathit{\mbox{\texttt{nil}}}\ne \mathit{temp} \\ 
+    \mathit{temp}\mapsto \mathit{a'} \\ 
+    {\mathit{ls}}_{1}(\mathit{a'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 3 : \mathit{temp}:=\mathit{x}.\mbox{\texttt{next}};4 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \justifies
+  \thickness=0.1em
+  89 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}}\ast \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 3 : \mathit{temp}:=\mathit{x}.\mbox{\texttt{next}};4 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{ls L.Unf.})
+  \]
+  \[ % nil=temp * x=temp * y'!=nil * ls^1(temp, nil) |- 0: while x=x do 1: ... od : AG_2EFemp
+  \[ % nil=x |- 0: while x=x do 1: ... od : AG_2EFemp
+  \to 26(\mbox{Backl})
+  \justifies
+  \thickness=0.1em
+  110 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x}
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  90 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{temp}\ast \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Frame})
+  \]
+  \justifies
+  \thickness=0.1em
+  88 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : \Box AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{While-Box})
+  \]
+  \justifies
+  \thickness=0.1em
+  81 : 
+  \begin{gathered}
+    \mathit{x} = \mathit{temp} \\ 
+    \mathit{y'}\ne \mathit{\mbox{\texttt{nil}}} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \justifies
+  \thickness=0.1em
+  80 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 5 : \mathit{x}:=\mathit{temp};2 : \mbox{\ldots } : \Box AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Assign})
+  \]
+  \justifies
+  \thickness=0.1em
+  71 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 5 : \mathit{x}:=\mathit{temp};2 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \justifies
+  \thickness=0.1em
+  70 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{temp} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 4 : \mbox{\texttt{free}}(\mathit{x});5 : \mbox{\ldots } : \Box AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Free})
+  \]
+  \justifies
+  \thickness=0.1em
+  59 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{temp} \\ 
+    {\mathit{ls}}_{1}(\mathit{temp}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 4 : \mbox{\texttt{free}}(\mathit{x});5 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \justifies
+  \thickness=0.1em
+  58 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 3 : \mathit{temp}:=\mathit{x}.\mbox{\texttt{next}};4 : \mbox{\ldots } : \Box AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Load/Simplify})
+  \]
+  \justifies
+  \thickness=0.1em
+  44 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 3 : \mathit{temp}:=\mathit{x}.\mbox{\texttt{next}};4 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \[ % nil=x * nil!=x * x->y' * ls^1(y', nil) |- 0: while x=x do 1: ... od : AG_2EFemp
+  (\mbox{Ex Falso})
+  \justifies
+  \thickness=0.1em
+  45 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x} \\ 
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  43 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : \Box AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{While-Box})
+  \]
+  \justifies
+  \thickness=0.1em
+  22 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}}\ne \mathit{x} \\ 
+    \mathit{x}\mapsto \mathit{y'} \\ 
+    {\mathit{ls}}_{1}(\mathit{y'}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \justifies
+  \thickness=0.1em
+  14 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{ls L.Unf.})
+  \]
+  \[ % ls^1(x, nil) |- 7: skip; 0: ... : AG_2EFemp
+  \[ % ls^1(x, nil) |- 7: skip; 0: ... : EFemp
+  \[ % ls^1(x, nil) |- 7: skip; 0: ... : <>EFemp
+  \[ % ls^1(x, nil) |- 0: while x=x do 1: ... od : EFemp
+  \[ % ls^1(x, nil) |- 0: while x=x do 1: ... od : <>EFemp
+  \[ % ls^1(x, nil) |- 1: if * then 2: ... else 7: ... fi; 0: ... : EFemp
+  \[ % ls^1(x, nil) |- 1: if * then 2: ... else 7: ... fi; 0: ... : <>EFemp
+  \[ % ls^1(x, nil) |- 2: while x!=nil do 3: ... od; 0: ... : EFemp
+  \[ % ls^1(x, nil) |- 2: while x!=nil do 3: ... od; 0: ... : <>EFemp
+  \[ % nil=x * ls^1(x, nil) |- 0: while x=x do 1: ... od : EFemp
+  \[ % nil=x * ls^1(x, nil) |- 0: while x=x do 1: ... od : emp
+  (\mbox{Check})
+  \justifies
+  \thickness=0.1em
+  122 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  121 : 
+  \begin{gathered}
+    \mathit{\mbox{\texttt{nil}}} = \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  120 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{While-<>2})
+  \]
+  \justifies
+  \thickness=0.1em
+  119 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 2 : \mbox{\texttt{while}}\;\mathit{x}\ne \mathit{\mbox{\texttt{nil}}}\;\mbox{\texttt{do}}\;3 : \mbox{\ldots }\mbox{\texttt{od}};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  118 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{if}}\;\ast \;\mbox{\texttt{then}}\;2 : \mbox{\ldots }\mbox{\texttt{else}}\;7 : \mbox{\ldots }\mbox{\texttt{fi}};0 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{If-<>1})
+  \]
+  \justifies
+  \thickness=0.1em
+  117 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{if}}\;\ast \;\mbox{\texttt{then}}\;2 : \mbox{\ldots }\mbox{\texttt{else}}\;7 : \mbox{\ldots }\mbox{\texttt{fi}};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  116 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{While-<>1})
+  \]
+  \justifies
+  \thickness=0.1em
+  115 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \justifies
+  \thickness=0.1em
+  114 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 7 : \mbox{\texttt{skip}};0 : \mbox{\ldots } : \diamond EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Skip})
+  \]
+  \justifies
+  \thickness=0.1em
+  111 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 7 : \mbox{\texttt{skip}};0 : \mbox{\ldots } : EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldEF})
+  \]
+  \[ % ls^1(x, nil) |- 7: skip; 0: ... : []AG_2EFemp
+  \[ % ls^1(x, nil) |- 0: while x=x do 1: ... od : AG_2EFemp
+  \to 0(\mbox{Backl})
+  \justifies
+  \thickness=0.1em
+  113 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  112 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 7 : \mbox{\texttt{skip}};0 : \mbox{\ldots } : \Box AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{Skip})
+  \]
+  \justifies
+  \thickness=0.1em
+  15 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 7 : \mbox{\texttt{skip}};0 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \justifies
+  \thickness=0.1em
+  13 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{if}}\;\ast \;\mbox{\texttt{then}}\;2 : \mbox{\ldots }\mbox{\texttt{else}}\;7 : \mbox{\ldots }\mbox{\texttt{fi}};0 : \mbox{\ldots } : \Box AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{If-[]})
+  \]
+  \justifies
+  \thickness=0.1em
+  3 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 1 : \mbox{\texttt{if}}\;\ast \;\mbox{\texttt{then}}\;2 : \mbox{\ldots }\mbox{\texttt{else}}\;7 : \mbox{\ldots }\mbox{\texttt{fi}};0 : \mbox{\ldots } : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+  \]
+  \[ % x!=x * ls^1(x, nil) |-  : AG_2EFemp
+  (\mbox{Ex Falso})
+  \justifies
+  \thickness=0.1em
+  4 : 
+  \begin{gathered}
+    \mathit{x}\ne \mathit{x} \\ 
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash \epsilon  : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \]
+  \justifies
+  \thickness=0.1em
+  2 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : \Box AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{While-Box})
+  \]
+  \justifies
+  \thickness=0.1em
+  0 : 
+  \begin{gathered}
+    {\mathit{ls}}_{1}(\mathit{x}, \mathit{\mbox{\texttt{nil}}})
+  \end{gathered}
+  \vdash 0 : \mbox{\texttt{while}}\;\mathit{x} = \mathit{x}\;\mbox{\texttt{do}}\;1 : \mbox{\ldots }\mbox{\texttt{od}} : AG EF 
+  \begin{gathered}
+  \end{gathered}
+  \using(\mbox{UnfoldAG})
+\end{prooftree}
