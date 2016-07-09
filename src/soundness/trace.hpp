@@ -35,7 +35,8 @@ private:
 	StateInfoVector state_info_vector;
 
 public:
-	TraceSuccIterator(const TraceAutomaton & ta, const TraceState * s) : automaton(ta), state(s) { }
+	TraceSuccIterator(const TraceAutomaton & ta, const TraceState * s) :
+		automaton(ta), state(s) {}
 	virtual ~TraceSuccIterator() {}
 
 	virtual bool first();

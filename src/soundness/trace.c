@@ -78,7 +78,8 @@ spot::acc_cond::mark_t TraceSuccIterator::acc() const {
 			s->tag) ? automaton.acc_set : spot::acc_cond::mark_t();
 }
 //==================================================================
-TraceAutomaton::TraceAutomaton(const Proof & p) : proof(p), spot::twa(p.get_dict()) {
+TraceAutomaton::TraceAutomaton(const Proof & p) :
+	spot::twa(p.get_dict()), proof(p) {
 	acc_set = set_buchi();
 }
 //------------------------------------------------------------------

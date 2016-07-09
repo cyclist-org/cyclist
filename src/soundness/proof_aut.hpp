@@ -27,7 +27,7 @@ public:
 //==================================================================
 class ProofAutomaton: public spot::twa, public Proof {
 public:
-	ProofAutomaton(size_t max_vertices_log2) : Proof(max_vertices_log2), spot::twa(spot::make_bdd_dict()) { set_buchi(); this->dict_ = Proof::get_dict(); register_aps_from_dict(); }
+	ProofAutomaton(size_t max_vertices_log2);
 
 	virtual ~ProofAutomaton() {};
 	virtual spot::state* get_init_state() const { return new ProofGhostState(); }
