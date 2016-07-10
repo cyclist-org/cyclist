@@ -44,7 +44,7 @@ module Defs =
 
     let of_formula defs f =
       let counter = ref 0 in
-      let get_ident () = Sl_predsym.mk (Printf.sprintf "P%d" !counter) in
+      let get_ident () = Sl_predsym.of_string (Printf.sprintf "P%d" !counter) in
       let () = while mem (get_ident ()) defs do incr counter done in
       let predsym = get_ident () in
       let formals =

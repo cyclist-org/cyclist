@@ -11,9 +11,9 @@ module HT =
   struct
     type t = T.t Hashcons.hash_consed
     
-    let mk s = H.hashcons predtbl s
-    let of_string = mk
-    let parse st = (parse_ident |>> mk) st
+    let parse st = (parse_ident |>> H.hashcons predtbl) st
+    let of_string s =
+      handle_reply (MParser.parse_string parse s ())
     
     let to_string s = s.Hashcons.node
     let to_melt s = Latex.mathit (Latex.text (to_string s))

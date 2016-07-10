@@ -21,7 +21,7 @@ let dest_sh_seq = While_rules.dest_sh_seq
 
 let last_pred = ref 0
 let get_fresh_ident () = 
-  Sl_predsym.mk (Printf.sprintf "I%.3d" (incr last_pred ; !last_pred))
+  Sl_predsym.of_string (Printf.sprintf "I%.3d" (incr last_pred ; !last_pred))
 
 let get_undefined defs h = Sl_tpreds.filter (Defs.is_undefined defs) h.SH.inds 
 
