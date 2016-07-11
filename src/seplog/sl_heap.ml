@@ -275,10 +275,11 @@ let subst_existentials h =
   let aux h' =
     let (ex_eqs, non_ex_eqs) =
       Blist.partition
-        (fun (x, _) -> Sl_term.is_exist_var x) (Sl_uf.bindings h'.eqs) in
+        (fun p' -> Pair.disj (Pair.map Sl_term.is_exist_var p')) 
+        (Sl_uf.bindings h'.eqs) in
     if ex_eqs =[] then h' else
-      (* NB order of subst is reversed so that the greater variable        *)
-      (* replaces the lesser this maintains universal vars                 *)
+    let ex_eqs = 
+      Blist.map (fun ((x,y) as p) -> if Sl_term.is_exist_var x then p else (y,x)) ex_eqs in
       let h'' = 
         { h' with eqs = Sl_uf.of_list non_ex_eqs; _terms=None; _vars=None; _tags=None } in
       subst (Sl_term.Map.of_list ex_eqs) h'' in

@@ -66,8 +66,10 @@ let eq_ex_subst_rule seq =
   try
     let (l,r) = Sl_seq.dest seq in
 		let reqs = Sl_uf.bindings r.SH.eqs in
-		let (x,y) as p = Blist.find (fun (x,_) -> Sl_term.is_exist_var x) reqs in
+    let (x,y) as p = 
+      Blist.find (fun p' -> Pair.disj (Pair.map Sl_term.is_exist_var p')) reqs in
 		let reqs = Blist.filter (fun q -> q!=p) reqs in
+    let (x,y) = if Sl_term.is_exist_var x then p else (y,x) in
     let r = SH.with_eqs r (Sl_uf.of_list reqs) in
     let r' = Sl_heap.subst (Sl_term.singleton_subst x y) r in
     [ [ (([l], [r']), Sl_heap.tag_pairs l, TagPairs.empty) ], "" ]
