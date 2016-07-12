@@ -18,7 +18,7 @@ sig
   val is_zero : t -> bool
   val is_var : t -> bool
   val is_exist_var : t -> bool
-  val is_univ_var : t -> bool
+  val is_free_var : t -> bool
   val is_fun : t -> bool
   val is_succ : t -> bool
   val is_cons : t -> bool

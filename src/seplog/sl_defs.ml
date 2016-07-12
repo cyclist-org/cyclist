@@ -49,7 +49,7 @@ module Defs =
       let predsym = get_ident () in
       let formals =
         Sl_term.Set.to_list
-          (Sl_term.Set.filter Sl_term.is_univ_var (Sl_form.vars f)) in
+          (Sl_term.Set.filter Sl_term.is_free_var (Sl_form.vars f)) in
       let pred = (predsym, formals) in
       let rules = Blist.map (fun h -> Sl_indrule.mk h pred) f in
       let def = Sl_preddef.mk (rules, predsym) in

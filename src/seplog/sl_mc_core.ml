@@ -675,7 +675,7 @@ module Make (Sig : ValueSig)
     (*     mdl satisfies [constraints]                                *)
     let saturate_univs_one params (eqs, deqs) vs (s, ls) =
       let unmapped_univs = Var.Set.filter
-        (fun x -> (Sl_term.is_univ_var (Var.to_term x)) && not (Var.Map.mem x s))
+        (fun x -> (Sl_term.is_free_var (Var.to_term x)) && not (Var.Map.mem x s))
         (Var.Set.union params
           (Var.Set.of_list
             (List.map Var.of_term

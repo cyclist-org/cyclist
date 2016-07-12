@@ -349,7 +349,7 @@ let abd_assign =
           Blist.exists (fun z -> Sl_heap.equates f e z) params) inds in 
       let fresh_ident = get_fresh_ident () in
       let f (_,(ident, params)) =
-        let outerparams = fresh_uvars (Term.Set.empty) (Blist.length params) in 
+        let outerparams = fresh_fvars (Term.Set.empty) (Blist.length params) in 
         (* allocate one more parameter for x *)
         let x' = fresh_evar (Term.Set.of_list outerparams) in
         let newparams = outerparams @ [ x' ] in
@@ -387,7 +387,7 @@ let abd_deref =
           Blist.exists (fun y' -> Sl_heap.equates f y' y) params) inds in
       let fresh_ident = get_fresh_ident () in 
       let f (_,(ident, params)) =
-        let newparams = fresh_uvars (Term.Set.empty) (Blist.length params) in
+        let newparams = fresh_fvars (Term.Set.empty) (Blist.length params) in
         let head = (ident, newparams) in
         let pto_params = 
           fresh_evars 
@@ -437,7 +437,7 @@ let abd_det_if =
       let inds = inds_filter y inds in
       let (fresh_ident, fresh_ident') = (get_fresh_ident (), get_fresh_ident ()) in
       let f (_,(ident, params)) =
-        let newparams = fresh_uvars (Term.Set.empty) (Blist.length params) in
+        let newparams = fresh_fvars (Term.Set.empty) (Blist.length params) in
         let head = (ident, newparams) in
         let (newx, newy) = Pair.map  
           (fun z -> 
@@ -504,7 +504,7 @@ let abd_back_rule =
         (fun (c,c') -> 
           let (_,(_,params)) = pick_ind c l1 in
           let (_,(_,params')) = pick_ind c' l2 in
-          let newparams = fresh_uvars (Term.Set.empty) (Blist.length params) in
+          let newparams = fresh_fvars (Term.Set.empty) (Blist.length params) in
           let base_clause =  
             { base_clause with inds=Sl_tpreds.singleton (0, (fresh_ident, newparams)) } in
             (* FIXME why choose and not unify *)

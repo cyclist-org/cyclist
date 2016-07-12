@@ -17,10 +17,10 @@ module A :
     val is_nil : t -> bool
     val is_var : t -> bool
     val is_exist_var : t -> bool
-    val is_univ_var : t -> bool
+    val is_free_var : t -> bool
     
-    val fresh_uvar : Set.t -> t
-    val fresh_uvars : Set.t -> int -> t list
+    val fresh_fvar : Set.t -> t
+    val fresh_fvars : Set.t -> int -> t list
     val fresh_evar : Set.t -> t
     val fresh_evars : Set.t -> int -> t list
   end
@@ -55,42 +55,43 @@ module A :
     let is_exist_name s =
       let l = String.length s in l > 1 && s.[l-1] = '\''
     let is_exist_var n = is_var n && is_exist_name n.Hashcons.node
-    let is_univ_var n = is_var n && not (is_exist_name n.Hashcons.node)
+    let is_free_var n = is_var n && not (is_exist_name n.Hashcons.node)
 
-    exception NeedExpansion
     let search_vars =
       let explode s = 
         let rec loop p acc = 
           if p < 0 then acc else loop (p-1) (String.sub s p 1::acc) in
         loop ((String.length s) - 1) [] in
-      let letters = explode "xyzwabcdefghijklmnopqrstuv" in
-      let mk_var lvl acc n = 
+      let letters = Blist.rev (explode "xyzwabcdefghijklmnopqrstuv") in
+      let mk_var free lvl acc n = 
         let n = if lvl=0 then n else (n ^ "_" ^ (string_of_int lvl)) in
-        (mk n) :: (mk (n ^ "'")) :: acc in 
-      let mk_seg lvl = Blist.rev (Blist.fold_left (mk_var lvl) [] letters) in
-      let rec _search s p acc vs n = match vs,n with
-        | _, 0 -> Blist.rev acc
-        | [],_ -> raise NeedExpansion 
+        (if free then (mk n) else (mk (n ^ "'"))) :: acc in 
+      let mk_seg free lvl = 
+         Blist.fold_left (mk_var free lvl) [] letters in
+      let rec _search s acc vs n = match vs,n with
+        | _, 0 -> Some (Blist.rev acc)
+        | [],_ -> None
         | v::vs,n ->
           begin 
             let (acc', n') = 
-              if p v && not (Set.mem v s) then (v::acc, n-1) else (acc, n) in
-            _search s p acc' vs n' 
+              if Set.mem v s then (acc, n) else (v::acc, n-1) in
+            _search s acc' vs n' 
           end in
       let curr_lvl = ref 1 in
-      let _vars = ref (mk_seg 0) in
-      let rec search s p n = 
-        try 
-          _search s p [] !_vars n 
-        with NeedExpansion ->
-          _vars := Blist.concat [!_vars; mk_seg !curr_lvl] ;
+      let _fvars, _evars = ref (mk_seg true 0), ref (mk_seg false 0) in
+      let rec search s free n = 
+        match _search s [] (if free then !_fvars else !_evars) n with
+        | Some vs -> vs
+        | None ->
+          _fvars := !_fvars @ mk_seg true !curr_lvl;
+          _evars := !_evars @ mk_seg false !curr_lvl;
           incr curr_lvl ;
-          search s p n in
+          search s free n in 
       search
   
-    let fresh_uvars s n = search_vars s is_univ_var n
-    let fresh_evars s n = search_vars s is_exist_var n
-    let fresh_uvar s = Blist.hd (fresh_uvars s 1)
+    let fresh_fvars s n = search_vars s true n
+    let fresh_evars s n = search_vars s false n
+    let fresh_fvar s = Blist.hd (fresh_fvars s 1)
     let fresh_evar s = Blist.hd (fresh_evars s 1)
   
   end
@@ -109,10 +110,10 @@ module A :
 (*     val is_nil : t -> bool                                                               *)
 (*     val is_var : t -> bool                                                               *)
 (*     val is_exist_var : t -> bool                                                         *)
-(*     val is_univ_var : t -> bool                                                          *)
+(*     val is_free_var : t -> bool                                                          *)
     
-(*     val fresh_uvar : Set.t -> t                                                          *)
-(*     val fresh_uvars : Set.t -> int -> t list                                             *)
+(*     val fresh_fvar : Set.t -> t                                                          *)
+(*     val fresh_fvars : Set.t -> int -> t list                                             *)
 (*     val fresh_evar : Set.t -> t                                                          *)
 (*     val fresh_evars : Set.t -> int -> t list                                             *)
 (*   end                                                                                    *)
@@ -135,9 +136,9 @@ module A :
             
 (*     let is_var t = t<>0                                                                  *)
 (*     let is_exist_var v = (is_var v) && v<0                                               *)
-(*     let is_univ_var v = (is_var v) && v>0                                                *)
+(*     let is_free_var v = (is_var v) && v>0                                                *)
 (*     let is_valid_var v exist =                                                           *)
-(*       exist && is_exist_var v || not exist && is_univ_var v                              *)
+(*       exist && is_exist_var v || not exist && is_free_var v                              *)
                     
 (*     let is_exist_name n = n.[(String.length n)-1] = '\''                                 *)
 (*     let is_univ_name n = not (is_exist_name n)                                           *)
@@ -153,7 +154,7 @@ module A :
 (*         assert (not (present v) && not (name_present name)) ;                            *)
 (*         assert                                                                           *)
 (*           (is_exist_var v && is_exist_name name ||                                       *)
-(*            is_univ_var v && is_univ_name name);                                          *)
+(*            is_free_var v && is_univ_name name);                                          *)
 (*         Int.Hashmap.add map v name ;                                                     *)
 (*         Strng.Hashmap.add inv_map name v ;                                               *)
 (*         max_var := max !max_var v ;                                                      *)
@@ -232,7 +233,7 @@ module A :
 (*       if abs i <= limit then i else mk_var (fresh_varname exist) exist                   *)
     
 (*     let fresh_evar s = fresh_var (bound s true) true                                     *)
-(*     let fresh_uvar s = fresh_var (bound s false) false                                   *)
+(*     let fresh_fvar s = fresh_var (bound s false) false                                   *)
       
 (*     let rec fresh_vars m i exist = match i with                                          *)
 (*       | 0 -> []                                                                          *)
@@ -241,7 +242,7 @@ module A :
 (*         v::(fresh_vars (m + (get_diff exist)) (n-1) exist)                               *)
     
 (*     let fresh_evars s n = fresh_vars (bound s true) n true                               *)
-(*     let fresh_uvars s n = fresh_vars (bound s false) n false                             *)
+(*     let fresh_fvars s n = fresh_vars (bound s false) n false                             *)
     
 (*   end                                                                                    *)
 
@@ -310,7 +311,7 @@ let avoid_theta vars subvars =
   let allvars = Set.union vars subvars in
   let (exist_vars, univ_vars) =
     Pair.map Set.elements (Set.partition is_exist_var subvars) in
-  let fresh_u_vars = fresh_uvars allvars (Blist.length univ_vars) in
+  let fresh_u_vars = fresh_fvars allvars (Blist.length univ_vars) in
   let fresh_e_vars = fresh_evars allvars (Blist.length exist_vars) in
   Map.of_list
     (Blist.append 
@@ -339,8 +340,8 @@ let mk_verifier check state =
   Option.mk (check state) state
 
 let basic_lhs_down_check theta t t' =
-  is_univ_var t || 
-  is_univ_var t' ||
+  is_free_var t || 
+  is_free_var t' ||
   is_exist_var t && is_nil t' ||
   is_exist_var t && is_exist_var t' &&
     Map.for_all (fun _ t'' -> not (equal t' t'')) theta

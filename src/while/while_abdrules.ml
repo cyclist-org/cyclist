@@ -364,7 +364,7 @@ let abd_deref =
 		  if inds=[] then [] else
       let fresh_ident = get_fresh_ident () in
       let f (_,(ident, params)) =
-        let newparams = fresh_uvars (Sl_term.Set.empty) (Blist.length params) in
+        let newparams = fresh_fvars (Sl_term.Set.empty) (Blist.length params) in
         let head = (ident, newparams) in
         let pto_params =
           fresh_evars (Sl_term.Set.of_list newparams) (Field.get_no_fields ()) in
@@ -408,7 +408,7 @@ let abd_det_guard =
 			if inds=[] then [] else
       let (fresh_ident, fresh_ident') = Pair.map get_fresh_ident ((),()) in
       let f (_,(ident, params)) =
-        let newparams = fresh_uvars (Sl_term.Set.empty) (Blist.length params) in
+        let newparams = fresh_fvars (Sl_term.Set.empty) (Blist.length params) in
         let head = (ident, newparams) in
 				let matches nil_const z =
           if nil_const && Sl_term.is_nil z then [Sl_term.nil] else
@@ -478,7 +478,7 @@ let abd_back_rule =
 			if cp=[] then [] else
       let fresh_ident = get_fresh_ident () in
 			let f ((_,(c,params)),(_,(c',params'))) =
-        let newparams = fresh_uvars Sl_term.Set.empty (Blist.length params) in
+        let newparams = fresh_fvars Sl_term.Set.empty (Blist.length params) in
 				(* does this need generalising like det_guard? *)
 				let matches z =
           if Sl_term.is_var z then
@@ -518,7 +518,7 @@ let matches = Abdrule.lift While_rules.dobackl
 (* 			let gen_vars = Sl_term.Set.inter guard_vars mod_vars in                                *)
 (* 			if Sl_term.Set.cardinal gen_vars <> 1 then [] else                                     *)
 (* 		  let y = Sl_term.Set.choose gen_vars in                                                 *)
-(*   		let eq_y = Sl_term.Set.filter Sl_term.is_univ_var	(Sl_heap.eq_class h y) in                 *)
+(*   		let eq_y = Sl_term.Set.filter Sl_term.is_free_var	(Sl_heap.eq_class h y) in                 *)
 (* 			(* xs are prog vars equal to y now, and unmodified by the loop body *)              *)
 (* 			let xs = Sl_term.Set.diff eq_y mod_vars in                                             *)
 (* 			(* is this always needed ? *)                                                       *)
@@ -537,7 +537,7 @@ let matches = Abdrule.lift While_rules.dobackl
 (* 			if Sl_heap.equal h h' then [] else                                                     *)
 (*       let fresh_ident = get_fresh_ident () in                                             *)
 (*       let f ((_,(ident, params)) as i) =                                                  *)
-(*         let newparams = fresh_uvars Sl_term.Set.empty (Blist.length params) in               *)
+(*         let newparams = fresh_fvars Sl_term.Set.empty (Blist.length params) in               *)
 (* 				let xi = Blist.find_index (fun x -> Sl_term.Set.mem x xs) params in                  *)
 (*         let x = Blist.nth newparams xi in                                                 *)
 (* 				let head = (ident, newparams) in                                                  *)
@@ -576,7 +576,7 @@ let matches = Abdrule.lift While_rules.dobackl
 (* 			let (inds1,inds2) = (f id1 l1, f id2 l2) in                                *)
 (*       let cp = Blist.cartesian_product (Sl_tpreds.to_list inds1) (Sl_tpreds.to_list inds2) in    *)
 (*       let g ((_,(_,params)),(_,(_,params'))) =                                   *)
-(*         let newparams = fresh_uvars Sl_term.Set.empty (Blist.length params) in       *)
+(*         let newparams = fresh_fvars Sl_term.Set.empty (Blist.length params) in       *)
 (*   			(* does this need generalising like det_guard? *)                        *)
 (*   			let matches z =                                                          *)
 (*           (* if Sl_term.is_var z then *)                                            *)

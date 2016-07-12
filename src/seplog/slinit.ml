@@ -57,7 +57,7 @@ Format.set_margin (Sys.command "exit $(tput cols)") ;;
 (* let trm_list =                                                                             *)
 (*   Sl_term.Set.to_list                                                                      *)
 (*     (Sl_term.Set.add Sl_term.nil                                                           *)
-(*       (Sl_term.Set.filter Sl_term.is_univ_var (Sl_seq.vars seq))) ;;                       *)
+(*       (Sl_term.Set.filter Sl_term.is_free_var (Sl_seq.vars seq))) ;;                       *)
 
 (* let (lbps, rbps) = Pair.map (Sl_basepair.pairs_of_form defs) seq ;;                        *)
 

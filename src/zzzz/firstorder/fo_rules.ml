@@ -219,7 +219,7 @@ let instantiate_ex =
     let (uvars, exvars) = 
       Pair.map 
         Term.Set.elements 
-          (Term.Set.partition Term.is_univ_var (Seq.vars seq)) in
+          (Term.Set.partition Term.is_free_var (Seq.vars seq)) in
     let cp = Blist.cartesian_product exvars uvars in
     let t = Seq.tag_pairs seq in
     Blist.map 

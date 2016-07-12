@@ -240,7 +240,7 @@ let set_program p =
   program := p ;
   let cmds = Blist.map snd (snd !program) in
   max_prog_var :=
-    Sl_term.fresh_uvar (Sl_term.Set.union_of_list (Blist.map Cmd.vars cmds)) ;
+    Sl_term.fresh_fvar (Sl_term.Set.union_of_list (Blist.map Cmd.vars cmds)) ;
   let cmds = Blist.map snd (snd !program) in
   program_vars := Sl_term.Set.union_of_list (Blist.map Cmd.vars cmds)
 
@@ -252,8 +252,8 @@ let is_local_var v = Sl_term.Set.mem v !local_vars
 
 
 (* remember prog vars when introducing fresh ones *)
-let fresh_uvar s = Sl_term.fresh_uvar (Sl_term.Set.add !max_prog_var s)
-let fresh_uvars s i = Sl_term.fresh_uvars (Sl_term.Set.add !max_prog_var s) i
+let fresh_fvar s = Sl_term.fresh_fvar (Sl_term.Set.add !max_prog_var s)
+let fresh_fvars s i = Sl_term.fresh_fvars (Sl_term.Set.add !max_prog_var s) i
 let fresh_evar s = Sl_term.fresh_evar (Sl_term.Set.add !max_prog_var s)
 let fresh_evars s i = Sl_term.fresh_evars (Sl_term.Set.add !max_prog_var s) i
 

@@ -287,7 +287,7 @@ let univ s f =
   let evs = Sl_term.Set.filter Sl_term.is_exist_var vs in
   let n = Sl_term.Set.cardinal evs in
   if n=0 then f else
-  let uvs = Sl_term.fresh_uvars (Sl_term.Set.union s vs) n in
+  let uvs = Sl_term.fresh_fvars (Sl_term.Set.union s vs) n in
   let theta = Sl_term.Map.of_list (Blist.combine (Sl_term.Set.elements evs) uvs) in
   subst theta f
 

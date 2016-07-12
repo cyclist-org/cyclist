@@ -198,7 +198,7 @@ module Make (Sig : Sl_mc_core.ValueSig) =
         if Option.is_none eq then [] else
         let (x,y) = Option.get eq in
         let (x,y) = if Sl_term.is_exist_var x then (x,y) else (y,x) in 
-        let z = Sl_term.fresh_uvar allvars in
+        let z = Sl_term.fresh_fvar allvars in
         let theta = Sl_term.singleton_subst x z in
         (* NB we skip removing the equality over x because the UF structure *)
         (* will simply ignore it. *)
@@ -233,7 +233,7 @@ module Make (Sig : Sl_mc_core.ValueSig) =
         let cell = Location.Map.find yloc h in
         let x = Option.get (Blist.find_first in_existvars xs) in
         let xindex = Blist.find_index (Sl_term.equal x) xs in
-        let z = Sl_term.fresh_uvar allvars in
+        let z = Sl_term.fresh_fvar allvars in
         let theta = Sl_term.singleton_subst x z in
         let symheap' = Sl_heap.subst theta symheap in
         let xvalue = Blist.nth cell xindex in
@@ -251,7 +251,7 @@ module Make (Sig : Sl_mc_core.ValueSig) =
       let arity = Sl_indrule.arity (Blist.hd rules) in
       let allvars = 
         Sl_term.Set.union_of_list (Blist.map Sl_indrule.vars rules) in
-      let newformals = Sl_term.fresh_uvars allvars arity in
+      let newformals = Sl_term.fresh_fvars allvars arity in
       let s = 
         Var.Map.of_list (Blist.combine (Blist.map Var.of_term newformals) values) in
       let freshen_rule r = 

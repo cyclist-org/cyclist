@@ -45,8 +45,8 @@ let mk f i =
   let (_, args) = i in
   let v_args = Sl_term.Set.of_list args in
   let v_h = Sl_heap.terms f in
-  let (uv_h, ev_h) = Sl_term.Set.partition Sl_term.is_univ_var v_h in
-  assert (Blist.for_all Sl_term.is_univ_var args) ;
+  let (uv_h, ev_h) = Sl_term.Set.partition Sl_term.is_free_var v_h in
+  assert (Blist.for_all Sl_term.is_free_var args) ;
   assert (Sl_term.Set.cardinal v_args = Blist.length args) ;
   assert (Sl_term.Set.subset uv_h v_args) ;
   assert 
@@ -67,8 +67,8 @@ let subst theta (f, (ident, args)) =
   
   let v_args = Sl_term.Set.of_list args in
   let v_h = Sl_heap.terms f in
-  let (uv_h, ev_h) = Sl_term.Set.partition Sl_term.is_univ_var v_h in
-  assert (Blist.for_all Sl_term.is_univ_var args) ;
+  let (uv_h, ev_h) = Sl_term.Set.partition Sl_term.is_free_var v_h in
+  assert (Blist.for_all Sl_term.is_free_var args) ;
   assert (Sl_term.Set.cardinal v_args = Blist.length args) ;
   assert (Sl_term.Set.subset uv_h v_args) ;
   assert 
