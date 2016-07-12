@@ -1,7 +1,5 @@
-(** Module defining SL terms, which consist of variables (universally *)
-(** or existentially quantified), or the constant [nil]. *)
-(** NB the ordering [compare] makes existential variables least, then [nil], *)
-(** and then universal variables.  *)
+(** Module defining SL terms, which consist of variables (universally 
+    or existentially quantified), or the constant [nil]. *)
 
 include Util.BasicType
 module Set : Util.OrderedContainer with type elt = t
@@ -12,21 +10,38 @@ val parse : (t, 'a) MParser.parser
 val of_string : string -> t
 
 val nil : t
+(** The [nil] constant. This is the only non-variable term. *)
 
 val is_nil : t -> bool
+(** Is the argument [nil]? Equivalent to [equal nil x]. *)
+
 val is_var : t -> bool
+(** Is the argument non-[nil]? Equivalent to [not (equal nil x)]. *)
+
 val is_exist_var : t -> bool
+(** Is the argument an existentially quantified variable? *)
+
 val is_univ_var : t -> bool
+(** Is the argument a universally quantified variable? *)
 
 val filter_vars : Set.t -> Set.t
-
-(** The following functions behave exactly as their namesakes in Var, *) 
-(** but for SL. *)
+(** Remove [nil] from set of terms. *)
 
 val fresh_uvar : Set.t -> t
+(** Return a universally quantified variable that is fresh in the
+    provided set. *)
+
 val fresh_uvars : Set.t -> int -> t list
+(** Return a list of universally quantified variables of length [n] 
+    all of which are fresh in the provided set. *)
+
 val fresh_evar : Set.t -> t
+(** Return an existentially quantified variable that is fresh in the
+    provided set. *)
+
 val fresh_evars : Set.t -> int -> t list
+(** Return a list of existentially quantified variables of length [n] 
+    all of which are fresh in the provided set. *)
 
 type substitution = t Map.t
 (** A substitution is a map from terms to terms but with some restrictions:
@@ -97,11 +112,11 @@ val combine_subst_checks : subst_check list -> subst_check
 (** Combinator which takes a list of substitution pair check functions and
     combines them into a single check function *)
     
-val combine_state_checks : state_check list -> state_check
+(* val combine_state_checks : state_check list -> state_check *)
 (** Combinator which takes a list of unifier state check functions and
     combines them into a single check function *)
     
-val lift_subst_check : subst_check -> state_check
+(* val lift_subst_check : subst_check -> state_check *)
 (** [lift_subst_check c] takes a substitution pair check function [c] and lifts 
     it to a unifier state check function by applying it to each entry in the 
     state's substitution map *)
@@ -118,7 +133,7 @@ val basic_lhs_down_check : subst_check
     ensures that the generated substitution, when applied to [f], produces a
     formula which is subsumed by [f'] *)
 
-val basic_lhs_down_verifier : continuation
+(* val basic_lhs_down_verifier : continuation *)
 (** A continutation generated from the [basic_lhs_down_check] substitution 
     check *)
 
