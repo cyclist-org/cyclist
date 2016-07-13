@@ -2,7 +2,7 @@
 #define TRACE_HH_
 
 #include <tuple>
-#include <spot/tgba/tgba.hh>
+#include <spot/twa/twa.hh>
 
 #include "proof.hpp"
 
@@ -26,7 +26,7 @@ public:
 };
 //==================================================================
 class TraceAutomaton;
-class TraceSuccIterator: public spot::tgba_succ_iterator {
+class TraceSuccIterator: public spot::twa_succ_iterator {
 private:
 	const TraceAutomaton & automaton;
 	const TraceState * state;
@@ -35,15 +35,16 @@ private:
 	StateInfoVector state_info_vector;
 
 public:
-	TraceSuccIterator(const TraceAutomaton & ta, const TraceState * s) : automaton(ta), state(s) {}
+	TraceSuccIterator(const TraceAutomaton & ta, const TraceState * s) :
+		automaton(ta), state(s) {}
 	virtual ~TraceSuccIterator() {}
 
-	virtual void first();
-	virtual void next() { state_info_vector.pop_back(); }
+	virtual bool first();
+	virtual bool next() { state_info_vector.pop_back(); return !done(); }
 	virtual bool done() const { return state_info_vector.empty(); }
-	virtual spot::state* current_state() const { return state_info_vector.back(); }
-	virtual bdd current_condition() const;
-	virtual bdd current_acceptance_conditions() const;
+	virtual spot::state* dst() const { return state_info_vector.back(); }
+	virtual bdd cond() const;
+	virtual spot::acc_cond::mark_t acc() const;
 };
 //==================================================================
 typedef std::pair< Vertex, Tag > StatePair;
@@ -58,10 +59,11 @@ namespace std {
 	};
 }
 //==================================================================
-class TraceAutomaton: public spot::tgba {
+class TraceAutomaton: public spot::twa {
 private:
 	const Proof & proof;
 	bdd accept;
+	spot::acc_cond::mark_t acc_set;
 
 	typedef std::unordered_map< StatePair, TraceState * > StateMap;
 	mutable StateMap state_map;
@@ -72,18 +74,11 @@ public:
 	TraceAutomaton(const Proof & p);
 	virtual ~TraceAutomaton();
 	virtual spot::state* get_init_state() const { return get_state(NO_VERTEX, NO_TAG); }
-	virtual spot::tgba_succ_iterator* succ_iter(const spot::state* local_state,
-			const spot::state* global_state = 0, const spot::tgba* global_automaton = 0) const;
-	virtual spot::bdd_dict* get_dict() const { return proof.get_dict(); }
+	virtual spot::twa_succ_iterator* succ_iter(const spot::state* local_state) const;
+	virtual spot::bdd_dict_ptr get_dict() const { return proof.get_dict(); }
 	virtual std::string format_state(const spot::state* state) const;
 //	virtual std::string transition_annotation(const spot::tgba_succ_iterator* t) const;
 //	virtual spot::state* project_state(const spot::state* s, const spot::tgba* t) const;
-	virtual bdd all_acceptance_conditions() const { return accept; }
-	virtual bdd neg_acceptance_conditions() const { return bdd_not(accept); }
-
-protected:
-	virtual bdd compute_support_conditions(const spot::state* state) const { return bddtrue; }
-	virtual bdd compute_support_variables(const spot::state* state) const { return bddtrue; }
 
 	friend class TraceSuccIterator;
 };

@@ -42,9 +42,9 @@ let freshen_tags inds' inds =
     endomap (fun (tag, head) -> (tag + delta, head)) inds
 
 let rec unify ?(total=true) ?(tagpairs=false) 
-    ?(sub_check=Sl_term.trivial_sub_check)
-    ?(cont=Sl_term.trivial_continuation)
-    ?(init_state=Sl_term.empty_state) inds inds' =
+    ?(sub_check=Sl_subst.trivial_check)
+    ?(cont=Sl_unifier.trivial_continuation)
+    ?(init_state=Sl_unifier.empty_state) inds inds' =
   if is_empty inds then
     if not total || is_empty inds' then cont init_state else None
   else

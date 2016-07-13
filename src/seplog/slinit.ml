@@ -23,7 +23,7 @@ open Util;;
 #install_printer Strng.Pairing.FList.pp;;
 #install_printer Sl_term.pp;;
 #install_printer Sl_term.Set.pp;;
-#install_printer Sl_term.pp_subst ;;
+#install_printer Sl_subst.pp ;;
 #install_printer Sl_term.FList.pp ;;
 #install_printer Sl_tpair.pp ;;
 #install_printer Sl_uf.pp ;;
@@ -57,7 +57,7 @@ Format.set_margin (Sys.command "exit $(tput cols)") ;;
 (* let trm_list =                                                                             *)
 (*   Sl_term.Set.to_list                                                                      *)
 (*     (Sl_term.Set.add Sl_term.nil                                                           *)
-(*       (Sl_term.Set.filter Sl_term.is_univ_var (Sl_seq.vars seq))) ;;                       *)
+(*       (Sl_term.Set.filter Sl_term.is_free_var (Sl_seq.vars seq))) ;;                       *)
 
 (* let (lbps, rbps) = Pair.map (Sl_basepair.pairs_of_form defs) seq ;;                        *)
 

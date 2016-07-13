@@ -78,7 +78,7 @@ let symex_assign_rule_f, symex_assign_rule =
       let cmd = get_cmd i in
       let (x,e) = Cmd.dest_assign cmd in
       let fv = fresh_evar (Sl_heap.vars f) in
-      let theta = Sl_term.singleton_subst x fv in
+      let theta = Sl_subst.singleton x fv in
       let f' = Sl_heap.subst theta f in
       let e' = Sl_term.subst theta e in
       let f' = SH.with_eqs f' (Sl_uf.add (e',x) f'.SH.eqs) in
@@ -96,7 +96,7 @@ let symex_load_rule_f, symex_load_rule =
       let (_,ys) = Sl_ptos.find (fun (l,vs) -> Sl_heap.equates f e l) f.SH.ptos in
       let t = Blist.nth ys (get_sel_index s) in
       let fv = fresh_evar (Sl_heap.vars f) in
-      let theta = Sl_term.singleton_subst x fv in
+      let theta = Sl_subst.singleton x fv in
       let f' = Sl_heap.subst theta f in
       let t' = Sl_term.subst theta t in
       let f' = SH.with_eqs f' (Sl_uf.add (t',x) f'.SH.eqs) in
@@ -145,7 +145,7 @@ let symex_new_rule_f, symex_new_rule =
       let x = Cmd.dest_new cmd in
       let l = fresh_evars (Sl_heap.vars f) (1 + Blist.length (fst !program)) in
       let (fv,fvs) = (Blist.hd l, Blist.tl l) in
-      let f' = Sl_heap.subst (Sl_term.singleton_subst x fv) f in
+      let f' = Sl_heap.subst (Sl_subst.singleton x fv) f in
       let f' = SH.with_ptos f' (Sl_ptos.add (x, fvs) f'.SH.ptos) in
       [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "New" ]
     with Not_symheap | WrongCmd-> [] in
@@ -221,7 +221,7 @@ let matches (l,i) (l',i') =
     let _ =
       Sl_heap.unify_partial ~tagpairs:true
         verify
-        (Sl_term.empty_subst, TagPairs.empty)
+        (Sl_subst.empty, TagPairs.empty)
         l' l in
     !results
   with Not_symheap -> []

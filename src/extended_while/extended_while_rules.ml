@@ -197,7 +197,7 @@ let symex_assign_rule =
       let (x,e) = Cmd.dest_assign cmd in
       (* Does fv need to be fresh in the post condition too? *)
       let fv = fresh_evar (Seq.vars seq) in
-      let theta = Sl_term.singleton_subst x fv in
+      let theta = Sl_subst.singleton x fv in
       let pre' = Sl_heap.subst theta pre in
       let e' = Sl_term.subst theta e in
       [[ SH.add_eq pre' (e',x) ], "Assign"]
@@ -216,7 +216,7 @@ let symex_load_rule =
       let t = Blist.nth ys (Field.get_index f) in
       (* Does fv need to be fresh in the post condition too? *)
       let fv = fresh_evar (Seq.vars seq) in
-      let theta = Sl_term.singleton_subst x fv in
+      let theta = Sl_subst.singleton x fv in
       let pre' = Sl_heap.subst theta pre in
       let t' = Sl_term.subst theta t in
       [[ SH.add_eq pre' (t',x) ], "Load"]
@@ -251,7 +251,7 @@ let symex_new_rule =
       let x = Cmd.dest_new cmd in
       let l = fresh_evars (Seq.vars seq) (1 + (Field.get_no_fields ())) in
       let (fv,fvs) = (Blist.hd l, Blist.tl l) in
-      let pre' = Sl_heap.subst (Sl_term.singleton_subst x fv) pre in
+      let pre' = Sl_heap.subst (Sl_subst.singleton x fv) pre in
       let new_pto = Sl_heap.mk_pto (x, fvs) in
       [[ Sl_heap.star pre' new_pto ], "New"]
     with Not_symheap | WrongCmd -> [] in
@@ -345,7 +345,7 @@ let param_subst_rule theta ((_,cmd',_) as seq') ((_,cmd,_) as seq) =
       && Seq.equal (Seq.param_subst theta seq') seq
     then 
       [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], 
-       "Param Subst"  (* ^ (Format.asprintf " %a" Sl_term.pp_subst theta) *) ]
+       "Param Subst"  (* ^ (Format.asprintf " %a" Sl_subst.pp theta) *) ]
     else 
       []
 
@@ -353,7 +353,7 @@ let subst_rule theta seq' seq =
   if Seq.equal (Seq.subst theta seq') seq 
     then 
       [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], 
-       "Subst"  (* ^ (Format.asprintf " %a" Sl_term.pp_subst theta) *) ]
+       "Subst"  (* ^ (Format.asprintf " %a" Sl_subst.pp theta) *) ]
     else 
       []
 
@@ -387,7 +387,7 @@ let ex_sp_rule ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
       let post' = Sl_form.dest post' in
       let sub_check _ x y =
         Sl_term.equal x y || (Sl_term.is_exist_var x && Sl_term.is_exist_var y) in
-      let verify src target = Sl_term.mk_verifier
+      let verify src target = Sl_unifier.mk_verifier
         (fun (theta, _) ->
           Sl_term.Map.for_all
             (fun k v ->
@@ -397,7 +397,7 @@ let ex_sp_rule ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
                 theta)
             theta &&
             Sl_heap.equal (Sl_heap.subst theta src) target) in
-      let cont = Sl_term.mk_verifier
+      let cont = Sl_unifier.mk_verifier
         (fun state ->
           Option.is_some (verify pre pre' state) &&
           Option.is_some
@@ -415,7 +415,7 @@ let ex_sp_rule ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
           []
     with Not_symheap -> []
       
-let ex_intr_rule ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
+let ex_intr_rule ((pre,cmd,post) as seq) (pre',cmd',post') =
   if not (Cmd.equal cmd cmd')
   then []
   else
@@ -501,9 +501,9 @@ let mk_symex_proc_call procs =
                 1. the substitution produced leads to the procedure 
                    precondition being subsumed by the callsite precondition
                 2. no program variables are replaced *)
-            let sub_check = Sl_term.combine_subst_checks [
-                Sl_term.basic_lhs_down_check ;
-                Sl_term.avoids_replacing_check prog_vars ;
+            let sub_check = Sl_subst.combine_checks [
+                Sl_subst.basic_lhs_down_check ;
+                Sl_subst.avoids_replacing_check prog_vars ;
               ] in
             (* The continuation checks that the resulting substitution allows a frame to be computed.
                Since there is no easy way to pass the computed frame along to the point where we use
@@ -511,11 +511,11 @@ let mk_symex_proc_call procs =
                Experiements show, however, that this does not result in a performance hit - perhaps
                because we do not have to calculate various sequents for constructing the proof in those
                cases where it turns out that the call to Sl_heap.compute_frame fails. *)
-            let cont = Sl_term.mk_verifier
+            let cont = Sl_unifier.mk_verifier
               (fun (theta, tagpairs) ->
                 let f' = Sl_heap.subst_tags tagpairs (Sl_heap.subst theta f) in
                 Option.is_some (Sl_heap.compute_frame f' pre)) in
-            let unifiers = Sl_term.backtrack
+            let unifiers = Sl_unifier.backtrack
                 (Sl_heap.unify_partial ~tagpairs:true)
                 ~sub_check
                 ~cont
@@ -582,12 +582,12 @@ let matches ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
         &&    
         Sl_term.Set.is_empty (Sl_term.Set.inter (exvars pre') (exvars post'))
     then [] else
-    let sub_check = Sl_term.combine_subst_checks [
-        Sl_term.basic_lhs_down_check ;
-        Sl_term.avoids_replacing_check prog_vars ;
+    let sub_check = Sl_subst.combine_checks [
+        Sl_subst.basic_lhs_down_check ;
+        Sl_subst.avoids_replacing_check prog_vars ;
       ] in
-    let verify = Sl_term.mk_verifier
-      (Sl_term.mk_assert_check
+    let verify = Sl_unifier.mk_verifier
+      (Sl_unifier.mk_assert_check
         (fun (theta, tagpairs) ->
           let test = 
             (if !termination then Seq.subsumed else Seq.subsumed_upto_tags) 
@@ -598,14 +598,14 @@ let matches ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
           begin 
             Format.eprintf "%a@." Seq.pp seq;
             Format.eprintf "%a@." Seq.pp seq';
-            Format.eprintf "%a@." Sl_term.pp_subst theta;
+            Format.eprintf "%a@." Sl_subst.pp theta;
             Format.eprintf "%a@." TagPairs.pp tagpairs ;
           end ;
           test)
         ) in
     let cont init_state = 
       Sl_heap.classical_unify ~inverse:true ~sub_check ~cont:verify ~init_state post post' in
-    Sl_term.backtrack 
+    Sl_unifier.backtrack 
       (Sl_heap.classical_unify ~inverse:false ~tagpairs:true)
       ~sub_check
       ~cont
@@ -719,21 +719,21 @@ let infer_frame idx prf =
           let sub_check = 
             (fun theta x y -> Sl_term.equal x y || Sl_term.is_exist_var x) in
           let unifiers = 
-            Sl_term.backtrack
+            Sl_unifier.backtrack
               (Sl_heap.unify_partial ~tagpairs:true)
               ~sub_check
               f pre in
           Blist.map 
             (fun ((theta, tps) as u) -> 
               let () = debug
-                (fun _ -> "Found term substitution = " ^ (Format.asprintf " %a" Sl_term.pp_subst theta) ^ " and tag subsitution = " ^ (Util.TagPairs.to_string tps)) in
+                (fun _ -> "Found term substitution = " ^ (Format.asprintf " %a" Sl_subst.pp theta) ^ " and tag subsitution = " ^ (Util.TagPairs.to_string tps)) in
               (u, f))
             unifiers in
         Blist.bind unify_frame frames in
       (* Auxiliary function to turn valid (unifier, frame) pairs into rule 
          applications *)
       let mk_rl ((theta, tps), frame) = 
-        let () = debug (fun _ -> "Constructing rule for frame: " ^ (Sl_heap.to_string frame) ^ " with term substitution: " ^ (Format.asprintf " %a" Sl_term.pp_subst theta) ^ " and tag subsitution = " ^ (Util.TagPairs.to_string tps)) in
+        let () = debug (fun _ -> "Constructing rule for frame: " ^ (Sl_heap.to_string frame) ^ " with term substitution: " ^ (Format.asprintf " %a" Sl_subst.pp theta) ^ " and tag subsitution = " ^ (Util.TagPairs.to_string tps)) in
         let post' = Sl_heap.diff post frame in
         let frame' = Sl_heap.subst_tags tps (Sl_heap.subst theta frame) in
         let pre' = Sl_heap.diff pre frame' in

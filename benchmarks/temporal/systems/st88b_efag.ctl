@@ -1,6 +1,6 @@
 fields: next,prev;
 precondition: flag1->a' * flag2->b' * flag3->c' * three->nil,two * two->three,one * one->two,nil * WItemsNum->nil,nil;
-property: EF AG WItemsNum->nil,nil;
+property: EF(AG(WItemsNum->nil,nil));
 current:=WItemsNum.next;
 while current=nil do
     skip

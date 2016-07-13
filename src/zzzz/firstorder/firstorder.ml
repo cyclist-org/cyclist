@@ -66,8 +66,8 @@ module Term =
     let is_exist_var = function
       | Var(v) when Var.is_exist_var v -> true
       | _ -> false
-    let is_univ_var = function
-      | Var(v) when Var.is_univ_var v -> true
+    let is_free_var = function
+      | Var(v) when Var.is_free_var v -> true
       | _ -> false
     let is_fun = function
       | Fun _ -> true
@@ -104,9 +104,9 @@ module Term =
             ltx_comma (Blist.map to_melt tl); symb_rp.melt ]))
 
     type substitution = t Map.t
-    let empty_subst = Map.empty
+    let Subst.empty = Map.empty
 
-    let singleton_subst x y = Map.add x y empty_subst
+    let Subst.singleton x y = Map.add x y Subst.empty
 
     let rec subst theta = function
       | Var _ as v when Map.mem v theta -> Map.find v theta
@@ -214,11 +214,11 @@ module Term =
 
     let intset_of_varset s = Set.map_to Int.Set.add Int.Set.empty dest_var s
 
-    let fresh_uvar s = mk_var (Var.fresh_uvar (intset_of_varset s))
+    let fresh_fvar s = mk_var (Var.fresh_fvar (intset_of_varset s))
     let fresh_evar s = mk_var (Var.fresh_evar (intset_of_varset s))
 
-    let fresh_uvars s i =
-      Blist.map mk_var (Var.fresh_uvars (intset_of_varset s) i)
+    let fresh_fvars s i =
+      Blist.map mk_var (Var.fresh_fvars (intset_of_varset s) i)
     let fresh_evars s i =
       Blist.map mk_var (Var.fresh_evars (intset_of_varset s) i)
     
@@ -497,7 +497,7 @@ module Prod =
       let evs = Term.Set.filter Term.is_exist_var vs in
       let n = Term.Set.cardinal evs in
       if n=0 then f else
-      let uvs = Term.fresh_uvars (Term.Set.union s vs) n in
+      let uvs = Term.fresh_fvars (Term.Set.union s vs) n in
       let theta = Term.Map.of_list (Blist.combine (Term.Set.elements evs) uvs) in
       subst theta f
   end
@@ -646,7 +646,7 @@ module Case =
       let (exist_vars, univ_vars) =
         Pair.map
           Term.Set.elements (Term.Set.partition Term.is_exist_var casevars) in
-      let fresh_u_vars = Term.fresh_uvars allvars (Blist.length univ_vars) in
+      let fresh_u_vars = Term.fresh_fvars allvars (Blist.length univ_vars) in
       let fresh_e_vars = Term.fresh_evars allvars (Blist.length exist_vars) in
       let theta = Term.Map.of_list
         ((Blist.combine univ_vars fresh_u_vars) @

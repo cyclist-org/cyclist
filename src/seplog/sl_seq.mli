@@ -27,7 +27,7 @@ val tag_pairs : t -> Util.TagPairs.t
 val subst_tags : Util.TagPairs.t -> t -> t
 (** Substitute tags of the LHS. *)
 
-val subst : Sl_term.substitution -> t -> t
+val subst : Sl_subst.t -> t -> t
 
 val subsumed : t -> t -> bool
 (** [subsumed (l,r) (l',r')] is true iff [Sl_form.subsumed l' l] and

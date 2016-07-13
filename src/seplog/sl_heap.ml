@@ -267,7 +267,7 @@ let univ s f =
   let evs = Sl_term.Set.filter Sl_term.is_exist_var vs in
   let n = Sl_term.Set.cardinal evs in
   if n=0 then f else
-  let uvs = Sl_term.fresh_uvars (Sl_term.Set.union s vs) n in
+  let uvs = Sl_term.fresh_fvars (Sl_term.Set.union s vs) n in
   let theta = Sl_term.Map.of_list (Blist.combine (Sl_term.Set.elements evs) uvs) in
   subst theta f
 
@@ -275,10 +275,11 @@ let subst_existentials h =
   let aux h' =
     let (ex_eqs, non_ex_eqs) =
       Blist.partition
-        (fun (x, _) -> Sl_term.is_exist_var x) (Sl_uf.bindings h'.eqs) in
+        (fun p' -> Pair.disj (Pair.map Sl_term.is_exist_var p')) 
+        (Sl_uf.bindings h'.eqs) in
     if ex_eqs =[] then h' else
-      (* NB order of subst is reversed so that the greater variable        *)
-      (* replaces the lesser this maintains universal vars                 *)
+    let ex_eqs = 
+      Blist.map (fun ((x,y) as p) -> if Sl_term.is_exist_var x then p else (y,x)) ex_eqs in
       let h'' = 
         { h' with eqs = Sl_uf.of_list non_ex_eqs; _terms=None; _vars=None; _tags=None } in
       subst (Sl_term.Map.of_list ex_eqs) h'' in
@@ -307,7 +308,7 @@ let project f xs =
       let y_nin_lst = trm_nin_lst y in
       if not (x_nin_lst || y_nin_lst) then h' else
       let (x', y') = if x_nin_lst then (y, x) else (x, y) in
-      let theta = Sl_term.singleton_subst y' x' in
+      let theta = Sl_subst.singleton y' x' in
       subst theta h' in
     Sl_uf.fold do_eq h.eqs h in
   let proj_deqs g =
@@ -328,18 +329,18 @@ let subst_tags tagpairs h =
   with_inds h (Sl_tpreds.subst_tags tagpairs h.inds)
 
 let unify_partial ?(tagpairs=false) 
-    ?(sub_check=Sl_term.trivial_sub_check)
-    ?(cont=Sl_term.trivial_continuation)
-    ?(init_state=Sl_term.empty_state) h h' =
+    ?(sub_check=Sl_subst.trivial_check)
+    ?(cont=Sl_unifier.trivial_continuation)
+    ?(init_state=Sl_unifier.empty_state) h h' =
   let f1 theta' = Sl_uf.unify_partial ~sub_check ~cont ~init_state:theta' h.eqs h'.eqs in
   let f2 theta' = Sl_deqs.unify_partial ~sub_check ~cont:f1 ~init_state:theta' h.deqs h'.deqs in
   let f3 theta' = Sl_ptos.unify ~total:false ~sub_check ~cont:f2 ~init_state:theta' h.ptos h'.ptos in
   Sl_tpreds.unify ~total:false ~tagpairs ~sub_check ~cont:f3 ~init_state h.inds h'.inds
 
 let classical_unify ?(inverse=false) ?(tagpairs=false)
-    ?(sub_check=Sl_term.trivial_sub_check)
-    ?(cont=Sl_term.trivial_continuation)
-    ?(init_state=Sl_term.empty_state) h h' =
+    ?(sub_check=Sl_subst.trivial_check)
+    ?(cont=Sl_unifier.trivial_continuation)
+    ?(init_state=Sl_unifier.empty_state) h h' =
   let f1 theta' = Sl_uf.unify_partial ~inverse ~sub_check ~cont ~init_state:theta' h.eqs h'.eqs in 
   let f2 theta' = Sl_deqs.unify_partial ~inverse ~sub_check ~cont:f1 ~init_state:theta' h.deqs h'.deqs in
   (* NB how we don't need an "inverse" version for ptos and inds, since *)
@@ -413,7 +414,7 @@ let memory_consuming h =
   Sl_tpreds.is_empty h.inds || not (Sl_ptos.is_empty h.ptos)
 
 let constructively_valued h =
-  let freevars = Sl_term.Set.filter Sl_term.is_univ_var (vars h) in
+  let freevars = Sl_term.Set.filter Sl_term.is_free_var (vars h) in
   let existvars = Sl_term.Set.filter Sl_term.is_exist_var (vars h) in
   let is_cvalued cvalued v =
     Sl_term.Set.exists (equates h v) cvalued ||

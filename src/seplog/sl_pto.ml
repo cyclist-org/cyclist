@@ -8,9 +8,9 @@ include PairTypes(Sl_term)(Sl_term.FList)
 let subst theta (lv, rvs) =
   (Sl_term.subst theta lv, Sl_term.FList.subst theta rvs)
 
-let unify ?(sub_check=Sl_term.trivial_sub_check)
-    ?(cont=Sl_term.trivial_continuation)
-    ?(init_state=Sl_term.empty_state) (x, xs) (y, ys) =
+let unify ?(sub_check=Sl_subst.trivial_check)
+    ?(cont=Sl_unifier.trivial_continuation)
+    ?(init_state=Sl_unifier.empty_state) (x, xs) (y, ys) =
   Sl_term.FList.unify ~sub_check ~cont ~init_state (x::xs) (y::ys)
 
 let to_string (x,args) =

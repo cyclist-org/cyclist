@@ -25,8 +25,14 @@ int ProofGhostState::compare(const spot::state *other) const {
 	return 0;
 }
 //==================================================================
-spot::tgba_succ_iterator* ProofAutomaton::succ_iter(const spot::state* local_state,
-		const spot::state* global_state, const spot::tgba* global_automaton) const {
+ProofAutomaton::ProofAutomaton(size_t max_vertices_log2) :
+	spot::twa(spot::make_bdd_dict()), Proof(max_vertices_log2) {
+	set_buchi();
+	this->dict_ = Proof::get_dict();
+	register_aps_from_dict();
+}
+//------------------------------------------------------------------
+spot::twa_succ_iterator* ProofAutomaton::succ_iter(const spot::state* local_state) const {
 	const ProofState * ps = dynamic_cast< const ProofState *>(local_state);
 	if(ps) return new ProofSuccIterator(*this, ps->vertex);
 

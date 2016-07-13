@@ -27,9 +27,9 @@ let parse st =
           parse_symb symb_deq >>
           Sl_term.parse << spaces |>> (fun y -> (x, y))) <?> "deq") st
 
-let unify_partial ?(inverse=false) ?(sub_check=Sl_term.trivial_sub_check)
-    ?(cont=Sl_term.trivial_continuation) 
-    ?(init_state=Sl_term.empty_state) d d' =
+let unify_partial ?(inverse=false) ?(sub_check=Sl_subst.trivial_check)
+    ?(cont=Sl_unifier.trivial_continuation) 
+    ?(init_state=Sl_unifier.empty_state) d d' =
   Sl_tpair.FList.unify_partial 
     ~inverse ~sub_check ~cont ~init_state (to_list d) (to_list d')
 

@@ -29,3 +29,7 @@ _build/
 # Python-related Files #
 ########################
 *.pyc
+
+# Local temporal files on Gadi's working copy
+*[#]*
+*~

@@ -1,0 +1,34 @@
+fields: next,prev;
+precondition: flag1->a' * flag2->false * flag3->c' * five->four,nil * four->five,three * three->nil,two * two->three,one * one->two,nil * WItemsNum=one;
+property: F(G(WItemsNum!=one));
+current:=WItemsNum.next;
+while flag1=flag1 do
+  while *i do
+    while WItemsNum!=five do
+	current:=WItemsNum.next;
+        if current=nil then
+	    skip
+	else
+	    skip;
+	    nNum:=WItemsNum.next;
+	    nnNum:=nNum.next;
+	    WItemsNum.next:=nnum;
+	    WItemsNum.prev:=nNum
+	fi
+    od
+  od;  
+  while flag2!=false do
+	current:=WItemsNum.prev;
+	if current=one then
+	    skip
+	else
+	    pNum:=WItemsNum.prev;
+	    ppNum:=pNum.prev;
+            WItemsNum.next:=pNum;
+	    WItemsNum.prev:=ppNum
+	fi
+  od
+od;
+while flag1=flag1 do
+    skip
+od

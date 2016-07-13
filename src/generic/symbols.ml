@@ -44,6 +44,7 @@ let symb_bang = make_symb "!" Latex.empty
 let symb_caret = make_symb "^" Latex.empty
 let symb_mapsto = make_symb "|->" (ltx_math "\\mapsto")
 (* let symb_underscore = make_symb "_" " " Latex.empty (* FIXME *) *)
+let symb_final = make_symb "final" (Latex.texttt (Latex.text "final"))
 let symb_box = make_symb "[]" Latex.box_
 let symb_diamond = make_symb "<>" Latex.diamond
 let symb_circle = make_symb "()" Latex.circ
@@ -51,10 +52,14 @@ let symb_af = make_symb "AF" (Latex.text "AF ")
 let symb_ag = make_symb "AG" (Latex.text "AG ")
 let symb_ef = make_symb "EF" (Latex.text "EF ")
 let symb_eg = make_symb "EG" (Latex.text "EG")
+let symb_next = make_symb "X" (Latex.text "X ")
+let symb_f = make_symb "F" (Latex.text "F ")
+let symb_g = make_symb "G" (Latex.text "G ")
 let symb_fld_sel = make_symb "." (Latex.text ".")
 let symb_dot = symb_fld_sel
 
 let keyw_exists = mk_keyw "Ex"
+let keyw_final = mk_keyw "final"
 let keyw_true = mk_keyw "true"
 let keyw_emp = mk_keyw "emp"
 let keyw_free = mk_keyw "free"
@@ -83,7 +88,7 @@ let ltx_star l = Latex.concat (Latex.list_insert symb_star.melt l)
 let ltx_math_space = Latex.text "\\;"
 
 open MParser
-let parse_symb s st = ( spaces >> Tokens.skip_symbol s.str >> spaces ) st
+let parse_symb s st = ( spaces >> MParser_PCRE.Tokens.skip_symbol s.str >> spaces ) st
 
 let max_tag = ref 0
 let upd_tag tag = 
@@ -93,4 +98,6 @@ let next_tag () =
 
 let parse_tag st = 
   ( parse_symb symb_caret >> 
-    Tokens.integer |>> (fun tag -> assert (tag>0) ; tag) <?> "tag") st
+    MParser_PCRE.Tokens.integer |>> (fun tag -> assert (tag>0) ; tag) <?> "tag") st
+
+module Tokens = MParser_PCRE.Tokens

@@ -178,8 +178,8 @@ let set_program ((_, cmd, _), procs) =
 let vars_of_program () = !program_vars
 
 (* remember prog vars when introducing fresh ones *)
-let fresh_uvar s = Sl_term.fresh_uvar (Sl_term.Set.union !program_vars s)
-let fresh_uvars s i = Sl_term.fresh_uvars (Sl_term.Set.union !program_vars s) i
+let fresh_fvar s = Sl_term.fresh_fvar (Sl_term.Set.union !program_vars s)
+let fresh_fvars s i = Sl_term.fresh_fvars (Sl_term.Set.union !program_vars s) i
 let fresh_evar s = Sl_term.fresh_evar (Sl_term.Set.union !program_vars s)
 let fresh_evars s i = Sl_term.fresh_evars (Sl_term.Set.union !program_vars s) i
 

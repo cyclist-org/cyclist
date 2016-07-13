@@ -29,7 +29,7 @@ let headers =
   ] 
 
 (* you shouldn't normally have to change anything below this point *)
-let spot_include_path = spot_path ^ "/include/spot"
+let spot_include_path = spot_path ^ "/include"
 
 let _ = dispatch begin function
   | After_rules ->
@@ -51,7 +51,7 @@ let _ = dispatch begin function
         (* the relative path to the .a file is necessary *)
         "src/soundness/libsoundness.a";
         "libspot.a";
-        "libbdd.a";
+        "libbddx.a";
       ];
     (* how to link everything together that uses libsoundness *)
     flag ["link"; "ocaml"; "use_libsoundness"]
@@ -62,7 +62,7 @@ let _ = dispatch begin function
         A"-cclib"; A"-lstdc++";
         A"src/soundness/libsoundness.a";
         A"libspot.a";
-        A"libbdd.a";
+        A"libbddx.a";
         ]);
 
     (* symbolically link in place the two static libraries needed for spot *)
@@ -73,8 +73,8 @@ let _ = dispatch begin function
       (fun env _ -> Cmd(S[P"ln"; A"-s"; A(spot_path ^ "/lib/libspot.a"); A"."]));
 
     rule "libbdd"
-      ~prod:"libbdd.a"
-      (fun env _ -> Cmd(S[P"ln"; A"-s"; A(spot_path ^ "/lib/libbdd.a"); A"."]));
+      ~prod:"libbddx.a"
+      (fun env _ -> Cmd(S[P"ln"; A"-s"; A(spot_path ^ "/lib/libbddx.a"); A"."]));
     
     flag ["link"; "ocaml"; "byte"] (A"-custom");
     

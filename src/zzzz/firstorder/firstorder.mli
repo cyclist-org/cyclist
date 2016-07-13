@@ -7,8 +7,8 @@ sig
   module Map : Util.OrderedMap with type key = term
 
   type substitution = t Map.t
-  val empty_subst : substitution
-  val singleton_subst : t -> t -> substitution
+  val Subst.empty : substitution
+  val Subst.singleton : t -> t -> substitution
   val subst : substitution -> t -> t
 
   val pp : Format.formatter -> t -> unit
@@ -18,7 +18,7 @@ sig
   val is_zero : t -> bool
   val is_var : t -> bool
   val is_exist_var : t -> bool
-  val is_univ_var : t -> bool
+  val is_free_var : t -> bool
   val is_fun : t -> bool
   val is_succ : t -> bool
   val is_cons : t -> bool

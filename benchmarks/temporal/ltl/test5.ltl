@@ -1,0 +1,14 @@
+fields: this;
+precondition: x=y * y!=z * z->z';
+property: F(G(x=y));
+while x=y do
+      skip
+od;
+if x=z then
+   x:=y
+else
+   skip
+fi;
+while x=x do
+      skip
+od

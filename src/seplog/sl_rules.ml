@@ -55,7 +55,7 @@ let eq_subst_rule seq =
 		let leqs = Blist.filter (fun q -> q!=p) leqs in
 		let l = SH.with_eqs l (Sl_uf.of_list leqs) in
 		let (x,y) = if Sl_term.is_var x then p else (y,x) in
-		let theta = Sl_term.singleton_subst x y in
+		let theta = Sl_subst.singleton x y in
     let (l',r') = Pair.map (Sl_heap.subst theta) (l,r) in
     [ [ (([l'], [r']), Sl_heap.tag_pairs l, TagPairs.empty) ], "" ]
   with Not_symheap | Not_found -> []
@@ -66,10 +66,12 @@ let eq_ex_subst_rule seq =
   try
     let (l,r) = Sl_seq.dest seq in
 		let reqs = Sl_uf.bindings r.SH.eqs in
-		let (x,y) as p = Blist.find (fun (x,_) -> Sl_term.is_exist_var x) reqs in
+    let (x,y) as p = 
+      Blist.find (fun p' -> Pair.disj (Pair.map Sl_term.is_exist_var p')) reqs in
 		let reqs = Blist.filter (fun q -> q!=p) reqs in
+    let (x,y) = if Sl_term.is_exist_var x then p else (y,x) in
     let r = SH.with_eqs r (Sl_uf.of_list reqs) in
-    let r' = Sl_heap.subst (Sl_term.singleton_subst x y) r in
+    let r' = Sl_heap.subst (Sl_subst.singleton x y) r in
     [ [ (([l], [r']), Sl_heap.tag_pairs l, TagPairs.empty) ], "" ]
   with Not_symheap | Not_found -> []
 
@@ -240,18 +242,18 @@ let matches seq seq' =
   try
     let (l,r), (l',r') = Pair.map Sl_seq.dest (seq, seq') in
     let verify = 
-      Sl_term.mk_verifier
-        (Sl_term.mk_assert_check
+      Sl_unifier.mk_verifier
+        (Sl_unifier.mk_assert_check
           (fun (theta, _) -> 
             Sl_seq.subsumed_upto_tags seq (Sl_seq.subst theta seq'))) in 
     let cont state = 
       Sl_heap.classical_unify 
-        ~inverse:true ~sub_check:Sl_term.basic_lhs_down_check ~cont:verify 
+        ~inverse:true ~sub_check:Sl_subst.basic_lhs_down_check ~cont:verify 
         ~init_state:state r r' in
     let results =
-      Sl_term.backtrack  
+      Sl_unifier.backtrack  
         (Sl_heap.classical_unify ~inverse:false ~tagpairs:true)
-        ~sub_check:Sl_term.basic_lhs_down_check
+        ~sub_check:Sl_subst.basic_lhs_down_check
         ~cont:cont 
         l' l in
     results

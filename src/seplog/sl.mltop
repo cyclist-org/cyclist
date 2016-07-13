@@ -17,6 +17,8 @@ Sl_preddef
 Sl_indrule
 Sl_seq
 Sl_invalid
+Sl_subst
+Sl_unifier
 While_program
 While_rules
 Parsers
@@ -36,7 +38,9 @@ Soundcheck
 Seqtactics
 Prover
 MParser
-CharStream
+MParser_Char_Stream
+MParser_PCRE
+MParser_Utils
 Fun
 Hashcons
 Hashset

@@ -46,7 +46,7 @@ let deterministic (rules, _) =
   let arity = Sl_indrule.arity (Blist.hd rules) in
   let allvars = 
     Sl_term.Set.union_of_list (Blist.map Sl_indrule.vars rules) in
-  let newformals = Sl_term.fresh_uvars allvars arity in
+  let newformals = Sl_term.fresh_fvars allvars arity in
   let freshen_rule r = 
     let formals = Sl_indrule.formals r in
     let theta = Sl_term.Map.of_list (Blist.combine formals newformals) in

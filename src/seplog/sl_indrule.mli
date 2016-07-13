@@ -16,7 +16,7 @@ val freshen : Sl_term.Set.t -> t -> t
 (** Replace all variables in rule such that they are disjoint with the set 
     provided. *)
 
-val subst : Sl_term.substitution -> t -> t
+val subst : Sl_subst.t -> t -> t
 val parse : (t, 'a) MParser.t
 
 val unfold : 
@@ -31,7 +31,7 @@ val unfold :
   pair [(tag,tag')] will be returned.
 *)  
     
-val fold : t -> Sl_heap.t -> (Sl_term.substitution * Sl_heap.t) list
+val fold : t -> Sl_heap.t -> (Sl_subst.t * Sl_heap.t) list
 (** [fold r h] returns a list of pairs of substitutions over the formal parameters of 
     the rule [r] such that its body, when one of these substitutions is applied,
     becomes a subformula of [h]; and the result of removing that subformula from

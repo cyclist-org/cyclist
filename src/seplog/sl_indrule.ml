@@ -11,7 +11,7 @@ let vars (f, (_, vs)) =
 (* private version that does not go through mk *)
 let _freshen varset ((h, (pred, args)) as case) =
   let casevars = vars case in
-  let theta = Sl_term.avoid_theta varset casevars in
+  let theta = Sl_subst.avoid varset casevars in
   (Sl_heap.subst theta h, (pred, Sl_term.FList.subst theta args))
 
 (* normalize vars in rules to a fixed set *)
@@ -45,8 +45,8 @@ let mk f i =
   let (_, args) = i in
   let v_args = Sl_term.Set.of_list args in
   let v_h = Sl_heap.terms f in
-  let (uv_h, ev_h) = Sl_term.Set.partition Sl_term.is_univ_var v_h in
-  assert (Blist.for_all Sl_term.is_univ_var args) ;
+  let (uv_h, ev_h) = Sl_term.Set.partition Sl_term.is_free_var v_h in
+  assert (Blist.for_all Sl_term.is_free_var args) ;
   assert (Sl_term.Set.cardinal v_args = Blist.length args) ;
   assert (Sl_term.Set.subset uv_h v_args) ;
   assert 
@@ -67,8 +67,8 @@ let subst theta (f, (ident, args)) =
   
   let v_args = Sl_term.Set.of_list args in
   let v_h = Sl_heap.terms f in
-  let (uv_h, ev_h) = Sl_term.Set.partition Sl_term.is_univ_var v_h in
-  assert (Blist.for_all Sl_term.is_univ_var args) ;
+  let (uv_h, ev_h) = Sl_term.Set.partition Sl_term.is_free_var v_h in
+  assert (Blist.for_all Sl_term.is_free_var args) ;
   assert (Sl_term.Set.cardinal v_args = Blist.length args) ;
   assert (Sl_term.Set.subset uv_h v_args) ;
   assert 
@@ -78,7 +78,7 @@ let subst theta (f, (ident, args)) =
   
 let freshen varset case =
   let casevars = vars case in
-  let theta = Sl_term.avoid_theta varset casevars in
+  let theta = Sl_subst.avoid varset casevars in
   subst theta case
 
 let pp fmt (f, (ident, vs)) =
@@ -116,12 +116,12 @@ let fold (f, (predsym, args)) h =
   let vars = Sl_term.Set.of_list args in
   let tags = Sl_heap.tags h in
   let freshtag = 1 + (try Tags.max_elt tags with Not_found -> 0) in 
-  let sub_check = Sl_term.combine_subst_checks [
-      Sl_term.basic_lhs_down_check ;
+  let sub_check = Sl_subst.combine_checks [
+      Sl_subst.basic_lhs_down_check ;
       (fun _ x y -> Sl_term.Set.mem x vars || Sl_term.is_exist_var y || true) ; 
     ] in 
   let results = 
-    Sl_term.backtrack 
+    Sl_unifier.backtrack 
       (Sl_heap.unify_partial ~tagpairs:true)
       ~sub_check
       f h in
