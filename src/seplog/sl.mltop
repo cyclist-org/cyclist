@@ -17,6 +17,8 @@ Sl_preddef
 Sl_indrule
 Sl_seq
 Sl_invalid
+Sl_subst
+Sl_unifier
 While_program
 While_rules
 Parsers

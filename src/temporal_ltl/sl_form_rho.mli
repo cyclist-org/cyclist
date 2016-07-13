@@ -54,7 +54,7 @@ val star : t -> t -> t
 val disj : t -> t -> t
 (** Or two formulas (list-append). *)
 
-val subst : Sl_term.substitution -> t -> t
+val subst : Sl_subst.t -> t -> t
 
 val subst_existentials : t -> t
 (** Like [Sl_heap_rho.subst_existentials] applied to all disjuncts. *)

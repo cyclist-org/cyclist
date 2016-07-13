@@ -8,7 +8,7 @@ include Util.OrderedContainer with type elt = Sl_tpred.t
 val equal_upto_tags : t -> t -> bool
 (** Test whether the two arguments are the equal ignoring tags. *) 
 
-val subst : Sl_term.substitution -> t -> t
+val subst : Sl_subst.t -> t -> t
 
 val subst_tags : Util.TagPairs.t -> t -> t
 (** Substitute tags according to the function represented by the set of 
@@ -42,7 +42,7 @@ val subsumed : ?total:bool -> Sl_uf.t -> t -> t -> bool
     If the optional argument [~total=true] is set to [false] then 
     check if the first multiset is a subset of the second modulo equalities. *)
 
-val unify : ?total:bool -> ?tagpairs:bool -> t Sl_term.unifier
+val unify : ?total:bool -> ?tagpairs:bool -> t Sl_unifier.t
 (** Compute substitution that makes the two multisets equal up to tags. 
 - If the optional argument [~total=true] is set to [false] then 
   compute substitution that makes the first multiset a subset of the second.

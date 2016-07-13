@@ -7,8 +7,8 @@ sig
   module Map : Util.OrderedMap with type key = term
 
   type substitution = t Map.t
-  val empty_subst : substitution
-  val singleton_subst : t -> t -> substitution
+  val Subst.empty : substitution
+  val Subst.singleton : t -> t -> substitution
   val subst : substitution -> t -> t
 
   val pp : Format.formatter -> t -> unit

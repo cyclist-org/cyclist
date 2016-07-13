@@ -191,7 +191,7 @@ let symex_assign_rule_f seq =
     let (x,e) = Cmd.dest_assign cmd in
     (* if is_fresh_in x f then [] else *)
     let fv = fresh_evar (Sl_heap.vars f) in
-    let theta = Term.singleton_subst x fv in
+    let theta = Term.Subst.singleton x fv in
     let f' = Sl_heap.subst theta f in
     let e' = Term.subst theta e in
     let f' = { f' with eqs=Sl_uf.add (e',x) f'.eqs } in
@@ -213,7 +213,7 @@ let post_abd_assign_rule_f seq =
       ) feqs in
     let neweqs = Blist.filter ((!=)eq) feqs in
     let f' = { f with eqs=Sl_uf.add (e,x) f.eqs } in
-    let f'' = Sl_heap.subst (Term.singleton_subst y x) 
+    let f'' = Sl_heap.subst (Term.Subst.singleton y x) 
       { f with eqs=Sl_uf.of_list neweqs } in
     [ 
       [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Post Abd Assign";

@@ -199,7 +199,7 @@ module Make (Sig : Sl_mc_core.ValueSig) =
         let (x,y) = Option.get eq in
         let (x,y) = if Sl_term.is_exist_var x then (x,y) else (y,x) in 
         let z = Sl_term.fresh_fvar allvars in
-        let theta = Sl_term.singleton_subst x z in
+        let theta = Sl_subst.singleton x z in
         (* NB we skip removing the equality over x because the UF structure *)
         (* will simply ignore it. *)
         let symheap' = Sl_heap.subst theta symheap in
@@ -234,7 +234,7 @@ module Make (Sig : Sl_mc_core.ValueSig) =
         let x = Option.get (Blist.find_first in_existvars xs) in
         let xindex = Blist.find_index (Sl_term.equal x) xs in
         let z = Sl_term.fresh_fvar allvars in
-        let theta = Sl_term.singleton_subst x z in
+        let theta = Sl_subst.singleton x z in
         let symheap' = Sl_heap.subst theta symheap in
         let xvalue = Blist.nth cell xindex in
         let s' = Var.Map.add (Var.of_term z) xvalue s in

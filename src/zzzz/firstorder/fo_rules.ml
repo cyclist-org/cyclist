@@ -58,7 +58,7 @@ let eq_subst_rule seq =
       (fun (x',y') -> 
         not (Term.equal x' y') && ((Term.is_var x') || (Term.is_var y'))) eqs in
     let (x,y) = if Term.is_var y then (x,y) else (y,x) in
-    let theta = Term.singleton_subst y x in 
+    let theta = Term.Subst.singleton y x in 
     [ [ ((Seq.subst theta seq), Seq.tag_pairs seq, TagPairs.empty) ], "" ]
   with Not_product | Not_found -> [] 
 
@@ -125,7 +125,7 @@ let eq_ex_subst_rule (l,r) =
           Term.is_exist_var x' || Term.is_exist_var y') 
           eqs in
       let (x,y) = if Term.is_exist_var y then (x,y) else (y,x) in
-      let theta = Term.singleton_subst y x in 
+      let theta = Term.Subst.singleton y x in 
         Some (Form.add (Prod.subst theta rp) (Form.remove rp r))
     with Not_found -> None in
   match Form.find_map eq_ex_subst_product r with
@@ -224,7 +224,7 @@ let instantiate_ex =
     let t = Seq.tag_pairs seq in
     Blist.map 
       (fun (exv,trm) -> 
-        [ (Seq.subst (Term.singleton_subst exv trm) seq, t, TagPairs.empty) ], 
+        [ (Seq.subst (Term.Subst.singleton exv trm) seq, t, TagPairs.empty) ], 
         "Inst. ex"
       ) cp
     end
@@ -405,7 +405,7 @@ let fold (ident,defs) =
         (* let (f, vs) = (Prod.univ f, Blist.map Term.univ vs) in  *)
         let results : Term.substitution list ref = ref [] in
         let hook sub = results := sub :: !results ; None in 
-        let () = ignore (Prod.left_subsumption hook Term.empty_subst f lp) in
+        let () = ignore (Prod.left_subsumption hook Term.Subst.empty f lp) in
         let process_sub theta = 
           let (f, vs) = (Prod.subst theta f, Blist.map (Term.subst theta) vs) in
           let (fpreds, fnonpreds) = Prod.partition Atom.is_ipred f in

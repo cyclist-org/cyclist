@@ -11,9 +11,9 @@ let _unify sub_check cont state (x, y) (x', y') =
   Sl_term.unify ~sub_check ~cont:(fun state' -> Sl_term.unify ~sub_check ~cont ~init_state:state' y y') ~init_state:state x x'
    
 let unify ?(order=false) 
-    ?(sub_check=Sl_term.trivial_sub_check) 
-    ?(cont=Sl_term.trivial_continuation)
-    ?(init_state=Sl_term.empty_state) p p' =
+    ?(sub_check=Sl_subst.trivial_check) 
+    ?(cont=Sl_unifier.trivial_continuation)
+    ?(init_state=Sl_unifier.empty_state) p p' =
   if order then 
     _unify sub_check cont init_state p p'
   else
@@ -34,9 +34,9 @@ module FList =
     include Util.MakeFList(TPair)
     
     let rec unify_partial ?(order=false) ?(inverse=false) 
-        ?(sub_check=Sl_term.trivial_sub_check)
-        ?(cont=Sl_term.trivial_continuation)
-        ?(init_state=Sl_term.empty_state) xs ys =
+        ?(sub_check=Sl_subst.trivial_check)
+        ?(cont=Sl_unifier.trivial_continuation)
+        ?(init_state=Sl_unifier.empty_state) xs ys =
       match (xs, ys) with
       | ([], _) -> cont init_state
       | (_, []) -> None

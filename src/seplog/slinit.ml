@@ -23,7 +23,7 @@ open Util;;
 #install_printer Strng.Pairing.FList.pp;;
 #install_printer Sl_term.pp;;
 #install_printer Sl_term.Set.pp;;
-#install_printer Sl_term.pp_subst ;;
+#install_printer Sl_subst.pp ;;
 #install_printer Sl_term.FList.pp ;;
 #install_printer Sl_tpair.pp ;;
 #install_printer Sl_uf.pp ;;

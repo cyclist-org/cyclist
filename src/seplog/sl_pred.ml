@@ -22,9 +22,9 @@ end
 
 include IndSubf
 
-let unify ?(sub_check=Sl_term.trivial_sub_check)
-    ?(cont=Sl_term.trivial_continuation)
-    ?(init_state=Sl_term.empty_state) (p, args) (p', args') =
+let unify ?(sub_check=Sl_subst.trivial_check)
+    ?(cont=Sl_unifier.trivial_continuation)
+    ?(init_state=Sl_unifier.empty_state) (p, args) (p', args') =
   if not (Sl_predsym.equal p p') then None else
   Sl_term.FList.unify ~sub_check ~cont ~init_state args args'
 

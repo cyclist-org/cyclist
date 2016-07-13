@@ -31,7 +31,7 @@ val bindings : t -> (Sl_term.t * int) list
 *)
 val of_list : (Sl_term.t * int) list -> t
 
-val subst : Sl_term.substitution -> t -> t
+val subst : Sl_subst.t -> t -> t
 
 val terms : t -> Sl_term.Set.t
 val vars : t -> Sl_term.Set.t
@@ -42,8 +42,8 @@ val equates : t -> Sl_term.t -> int -> bool
 val subsumed : t -> t -> bool
 (** [subsumed rho rho'] is true iff uf' |- uf using the normal equality rules. *)
 
-(*val unify_partial : ?inverse:bool -> t Sl_term.unifier *)
-(** [unify_partial Option.some (Sl_term.empty_subst, ()) u u'] computes a 
+(*val unify_partial : ?inverse:bool -> t Sl_unifier.t *)
+(** [unify_partial Option.some (Sl_subst.empty, ()) u u'] computes a 
     substitution [theta] such that [u'] |- [u[theta]]. 
     If the optional argument [~inverse:false] is set to [true] then a substitution
     is computed such that [u'[theta]] |- [u]. *)

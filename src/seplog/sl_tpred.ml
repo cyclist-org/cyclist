@@ -12,8 +12,8 @@ let subst_tag tagpairs (tag, pred) =
   let (_, tag'') = TagPairs.find (fun (tag',_) -> tag=tag') tagpairs in
   (tag'', pred) 
 
-let unify ?(tagpairs=false) ?(sub_check=Sl_term.trivial_sub_check)
-    ?(cont=Sl_term.trivial_continuation) ?(init_state=Sl_term.empty_state)
+let unify ?(tagpairs=false) ?(sub_check=Sl_subst.trivial_check)
+    ?(cont=Sl_unifier.trivial_continuation) ?(init_state=Sl_unifier.empty_state)
     (tag, pred) (tag', pred') = 
   Sl_pred.unify 
     ~sub_check 

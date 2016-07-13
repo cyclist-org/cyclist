@@ -11,11 +11,11 @@ val args : t -> Sl_term.t list
 val terms : t -> Sl_term.Set.t
 val vars : t -> Sl_term.Set.t
 
-val subst : Sl_term.substitution -> t -> t
+val subst : Sl_subst.t -> t -> t
 val parse : (t, 'a) MParser.parser
 val of_string : string -> t
 
-val unify : t Sl_term.unifier
+val unify : t Sl_unifier.t
 (** Compute substitution that unifies two predicates. *)
 
 val norm : Sl_uf.t -> t -> t

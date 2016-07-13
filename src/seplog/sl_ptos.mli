@@ -2,7 +2,7 @@
 
 include Util.OrderedContainer with type elt = Sl_pto.t
 
-val subst : Sl_term.substitution -> t -> t
+val subst : Sl_subst.t -> t -> t
 val terms : t -> Sl_term.Set.t
 val vars : t -> Sl_term.Set.t
 val to_string_list : t -> string list
@@ -15,7 +15,7 @@ val subsumed : ?total:bool -> Sl_uf.t -> t -> t -> bool
     check if rewriting could make the first multiset a sub(multi)set of 
     the second. *)
     
-val unify : ?total:bool -> t Sl_term.unifier
+val unify : ?total:bool -> t Sl_unifier.t
 (** Compute substitution that would make the two multisets equal. 
     If the optional argument [~total=true] is set to [false] then 
     compute a substitution that would make the first multiset a sub(multi)set of 

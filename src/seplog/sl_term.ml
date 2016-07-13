@@ -3,7 +3,7 @@ open Util
 open Symbols
 open MParser
 
-module A :
+module Trm :
   sig
     include Util.BasicType
     module Set : Util.OrderedContainer with type elt = t
@@ -246,7 +246,6 @@ module A :
     
 (*   end                                                                                    *)
 
-module Trm = A
 include Trm
 
 let of_string s =
@@ -254,36 +253,131 @@ let of_string s =
 
 let filter_vars s = Set.filter is_var s
  
-type substitution = t Map.t
+type term_t = t
 
-let empty_subst : substitution = Map.empty
-let singleton_subst x y = Map.add x y empty_subst
+module type SubstSig =
+sig
+  type t = term_t Map.t
+  type check = t -> term_t -> term_t -> bool
+  val empty : t
+  val singleton : term_t -> term_t -> t
+  val avoid : Set.t -> Set.t -> t
+  val pp : Format.formatter -> t -> unit
+  val trivial_check : check
+  val basic_lhs_down_check : check
+  val avoids_replacing_check : ?inverse:bool -> Set.t -> check
+  val combine_checks : check list -> check
+end
+
+module Subst =
+  struct
+    type t = term_t Map.t
+    type check = t -> term_t -> term_t -> bool
+
+    let empty = Map.empty
+    let singleton x y = Map.add x y empty
+    let avoid vars subvars =
+      let allvars = Set.union vars subvars in
+      let (exist_vars, free_vars) =
+        Pair.map Set.elements (Set.partition is_exist_var subvars) in
+      let fresh_f_vars = fresh_fvars allvars (Blist.length free_vars) in
+      let fresh_e_vars = fresh_evars allvars (Blist.length exist_vars) in
+      Map.of_list
+        (Blist.append 
+          (Blist.combine free_vars fresh_f_vars)
+          (Blist.combine exist_vars fresh_e_vars))
+    
+    let pp = Map.pp pp
+    let trivial_check _ _ _ = true
+    let basic_lhs_down_check theta t t' =
+      is_free_var t || 
+      is_free_var t' ||
+      is_exist_var t && is_nil t' ||
+      is_exist_var t && is_exist_var t' &&
+        Map.for_all (fun _ t'' -> not (equal t' t'')) theta
+    let avoids_replacing_check ?(inverse=false) vars =
+      fun _ -> Fun.direct inverse (fun x y -> equal x y || not (Set.mem x vars)) 
+    let rec combine_checks cs theta x y =
+      match cs with
+      | [] -> true
+      | c::rest -> (c theta x y) && (combine_checks rest theta x y)
+  end
+
 let subst theta v =
-  if not (is_nil v) && Map.mem v theta then Map.find v theta else v
+  if is_var v && Map.mem v theta then Map.find v theta else v
 (* above is significantly faster than exception handling *)
-let pp_subst = Map.pp pp
 
-type unifier_state = substitution * TagPairs.t
+module type UnifierSig =
+  sig
+    type state = Subst.t * Util.TagPairs.t
+    val empty_state : state
+    type continuation = state -> state option 
+    val trivial_continuation : continuation
+    val basic_lhs_down_verifier : continuation
+    type 'a t = 
+      ?sub_check:Subst.check ->
+        ?cont:continuation ->
+          ?init_state:state -> 'a -> 'a ->
+            state option
+  
+    val backtrack : 
+      'a t -> 
+        ?sub_check:Subst.check -> ?cont:continuation -> ?init_state:state -> 
+          'a -> 'a -> state list
+    type state_check = state -> bool
+    val mk_assert_check : state_check -> state_check
+    val mk_verifier : state_check -> continuation
+    val combine_state_checks : state_check list -> state_check
+    val lift_subst_check : Subst.check -> state_check
+  end
 
-let empty_state = empty_subst, TagPairs.empty
+module Unifier =
+  struct
+    type state = Subst.t * TagPairs.t
+    let empty_state = Subst.empty, TagPairs.empty
 
-type subst_check = t Map.t -> Map.key -> t -> bool
+    type continuation = state -> state option 
+    let trivial_continuation state = Some state
+  
 
-let trivial_sub_check _ _ _ = true
+    type 'a t = 
+      ?sub_check:Subst.check ->
+        ?cont:continuation ->
+          ?init_state:state -> 'a -> 'a ->
+            state option
+  
+    let backtrack (u:'a t)
+        ?(sub_check=Subst.trivial_check) 
+        ?(cont=trivial_continuation) ?(init_state=empty_state) x y =
+      let res = ref [] in
+      let valid state' =
+        match cont state' with
+        | None -> None
+        | Some state'' -> res := state'' :: !res ; None in
+      let _ = u ~sub_check ~cont:valid ~init_state x y in !res;;
+  
+    type state_check = state -> bool
+    let mk_assert_check c state =
+      let v = (c state) in 
+      assert (v); v
 
-type continuation = unifier_state -> unifier_state option 
-
-let trivial_continuation state = Some state
-
-type 'a unifier = 
-  ?sub_check:subst_check ->
-    ?cont:continuation ->
-      ?init_state:unifier_state -> 'a -> 'a ->
-        unifier_state option
+    let mk_verifier check state =
+      Option.mk (check state) state
+  
+    let rec combine_state_checks cs state =
+      match cs with
+      | [] -> true
+      | c::rest -> (c state) && (combine_state_checks rest state)
+    
+    let lift_subst_check c (theta, _) = Map.for_all (c theta) theta
+      
+    let basic_lhs_down_verifier = 
+      mk_verifier (lift_subst_check Subst.basic_lhs_down_check)
+  end
 
 let trm_unify 
-    ?(sub_check=trivial_sub_check)
-    ?(cont=trivial_continuation) ?(init_state=empty_state) t t' =
+    ?(sub_check=Subst.trivial_check)
+    ?(cont=Unifier.trivial_continuation) ?(init_state=Unifier.empty_state) t t' =
   let (theta, rest) = init_state in
   let res = 
     if Map.mem t theta then
@@ -296,66 +390,11 @@ let trm_unify
       None in
   Option.bind cont res
     
-let backtrack (u:'a unifier)
-    ?(sub_check=trivial_sub_check) 
-    ?(cont=trivial_continuation) ?(init_state=empty_state) x y =
-  let res = ref [] in
-  let valid state' =
-    match cont state' with
-    | None -> None
-    | Some state'' -> res := state'' :: !res ; None in
-  let _ = u ~sub_check ~cont:valid ~init_state x y in !res;;
-
-
-let avoid_theta vars subvars =
-  let allvars = Set.union vars subvars in
-  let (exist_vars, univ_vars) =
-    Pair.map Set.elements (Set.partition is_exist_var subvars) in
-  let fresh_u_vars = fresh_fvars allvars (Blist.length univ_vars) in
-  let fresh_e_vars = fresh_evars allvars (Blist.length exist_vars) in
-  Map.of_list
-    (Blist.append 
-      (Blist.combine univ_vars fresh_u_vars)
-      (Blist.combine exist_vars fresh_e_vars))
-      
-type state_check = unifier_state -> bool
-
-let rec combine_subst_checks cs theta x y =
-  match cs with
-  | [] -> true
-  | c::rest -> (c theta x y) && (combine_subst_checks rest theta x y)
-
-(* let rec combine_state_checks cs state =                       *)
-(*   match cs with                                               *)
-(*   | [] -> true                                                *)
-(*   | c::rest -> (c state) && (combine_state_checks rest state) *)
-
-(* let lift_subst_check c (theta, _) = Map.for_all (c theta) theta *)
-
-let mk_assert_check c state =
-  let v = (c state) in 
-  assert (v); v
-
-let mk_verifier check state =
-  Option.mk (check state) state
-
-let basic_lhs_down_check theta t t' =
-  is_free_var t || 
-  is_free_var t' ||
-  is_exist_var t && is_nil t' ||
-  is_exist_var t && is_exist_var t' &&
-    Map.for_all (fun _ t'' -> not (equal t' t'')) theta
-  
-(* let basic_lhs_down_verifier = mk_verifier (lift_subst_check basic_lhs_down_check) *)
-
-let avoids_replacing_check ?(inverse=false) vars =
-  fun _ -> Fun.direct inverse (fun x y -> equal x y || not (Set.mem x vars)) 
-
 module FList =
   struct
     include Util.MakeFList(Trm)
-    let rec unify ?(sub_check=trivial_sub_check) ?(cont=trivial_continuation) 
-        ?(init_state=empty_state) args args' =
+    let rec unify ?(sub_check=Subst.trivial_check) ?(cont=Unifier.trivial_continuation) 
+        ?(init_state=Unifier.empty_state) args args' =
       match (args, args') with
       | ([], []) -> cont init_state
       | (_, []) | ([], _) -> None

@@ -104,9 +104,9 @@ module Term =
             ltx_comma (Blist.map to_melt tl); symb_rp.melt ]))
 
     type substitution = t Map.t
-    let empty_subst = Map.empty
+    let Subst.empty = Map.empty
 
-    let singleton_subst x y = Map.add x y empty_subst
+    let Subst.singleton x y = Map.add x y Subst.empty
 
     let rec subst theta = function
       | Var _ as v when Map.mem v theta -> Map.find v theta

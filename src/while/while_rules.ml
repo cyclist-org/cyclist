@@ -99,7 +99,7 @@ let symex_assign_rule =
       let (f,cmd) = dest_sh_seq seq in
       let (x,e) = Cmd.dest_assign cmd in
       let fv = fresh_evar (Sl_heap.vars f) in
-      let theta = Sl_term.singleton_subst x fv in
+      let theta = Sl_subst.singleton x fv in
       let f' = Sl_heap.subst theta f in
       let e' = Sl_term.subst theta e in
       [[ SH.add_eq f' (e',x) ], "Assign"]
@@ -117,7 +117,7 @@ let symex_load_rule =
       let (_,ys) = find_pto_on f e in
       let t = Blist.nth ys (Field.get_index s) in
       let fv = fresh_evar (Sl_heap.vars f) in
-      let theta = Sl_term.singleton_subst x fv in
+      let theta = Sl_subst.singleton x fv in
       let f' = Sl_heap.subst theta f in
       let t' = Sl_term.subst theta t in
       [[ SH.add_eq f' (t',x) ], "Load"]
@@ -152,7 +152,7 @@ let symex_new_rule =
       let x = Cmd.dest_new cmd in
       let l = fresh_evars (Sl_heap.vars f) (1 + (Field.get_no_fields ())) in
       let (fv,fvs) = (Blist.hd l, Blist.tl l) in
-      let f' = Sl_heap.subst (Sl_term.singleton_subst x fv) f in
+      let f' = Sl_heap.subst (Sl_subst.singleton x fv) f in
 			let f'' = Sl_heap.mk_pto (x, fvs) in
       [[ Sl_heap.star f' f'' ], "New"]
     with Not_symheap | WrongCmd-> [] in
@@ -219,23 +219,23 @@ let matches ((l,cmd) as seq) ((l',cmd') as seq') =
   try
     if not (Cmd.equal cmd cmd') then [] else
     let (l,l') = Pair.map Sl_form.dest (l,l') in
-    let sub_check = Sl_term.combine_subst_checks [
-        Sl_term.basic_lhs_down_check ;
-        Sl_term.avoids_replacing_check !program_vars ;
+    let sub_check = Sl_subst.combine_checks [
+        Sl_subst.basic_lhs_down_check ;
+        Sl_subst.avoids_replacing_check !program_vars ;
       ] in
     let cont =
-      Sl_term.mk_verifier
-        (Sl_term.mk_assert_check
+      Sl_unifier.mk_verifier
+        (Sl_unifier.mk_assert_check
           (fun (theta, tagpairs) -> 
             let subst_seq = (Seq.subst_tags tagpairs (Seq.subst theta seq')) in
-            let () = debug (fun _ -> "term substitution: " ^ ((Format.asprintf " %a" Sl_term.pp_subst theta))) in 
+            let () = debug (fun _ -> "term substitution: " ^ ((Format.asprintf " %a" Sl_subst.pp theta))) in 
             let () = debug (fun _ -> "tag substitution: " ^ (TagPairs.to_string tagpairs)) in 
             let () = debug (fun _ -> "source seq: " ^ (Seq.to_string seq)) in
             let () = debug (fun _ -> "target seq: " ^ (Seq.to_string seq')) in
             let () = debug (fun _ -> "substituted target seq: " ^ (Seq.to_string subst_seq)) in
             Seq.subsumed seq subst_seq)
         ) in
-    Sl_term.backtrack 
+    Sl_unifier.backtrack 
       (Sl_heap.unify_partial ~tagpairs:true)
       ~sub_check
       ~cont
@@ -250,7 +250,7 @@ let subst_rule theta seq' seq =
   if Seq.equal (Seq.subst theta seq') seq 
     then 
       [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], 
-       "Subst "  (* ^ (Format.asprintf "%a" Sl_term.pp_subst theta) *) ]
+       "Subst "  (* ^ (Format.asprintf "%a" Sl_subst.pp theta) *) ]
     else 
       []
 

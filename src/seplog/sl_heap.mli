@@ -115,7 +115,7 @@ val diff : t -> t -> t
 
 val fixpoint : (t -> t) -> t -> t
 
-val subst : Sl_term.substitution -> t -> t
+val subst : Sl_subst.t -> t -> t
 
 val univ : Sl_term.Set.t -> t -> t
 (** Replace all existential variables with fresh universal variables. *)
@@ -135,13 +135,13 @@ val subst_tags : Util.TagPairs.t -> t -> t
 (** Substitute tags according to the function represented by the set of 
     tag pairs provided. *)
 
-val unify_partial : ?tagpairs:bool -> t Sl_term.unifier
+val unify_partial : ?tagpairs:bool -> t Sl_unifier.t
 (** Unify two heaps such that the first becomes a subformula of the second.
 - If the optional argument [~tagpairs=false] is set to [true] then in addition 
   to the substitution found, also return the set of pairs of tags of 
   predicates unified. *)
 
-val classical_unify : ?inverse:bool -> ?tagpairs:bool -> t Sl_term.unifier
+val classical_unify : ?inverse:bool -> ?tagpairs:bool -> t Sl_unifier.t
 (** Unify two heaps, by using [unify_partial] for the pure (classical) part whilst
     using [unify] for the spatial part.
 - If the optional argument [~inverse=false] is set to [true] then compute the 
