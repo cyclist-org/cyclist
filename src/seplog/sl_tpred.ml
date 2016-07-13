@@ -51,3 +51,6 @@ let parse st =
   return (tag, (pred, arg_list))))) <?> "ind") st
 
 let norm eqs (t, pred) = (t, Sl_pred.norm eqs pred)
+
+let of_string s =
+  handle_reply (MParser.parse_string parse s ())

@@ -59,22 +59,30 @@ type term_t = t
 module type SubstSig =
 sig
   type t = term_t Map.t
+  (** The type of a substitution is a map from terms to terms. *)
+  
+  val empty : t
+  (** The empty substitution, which has no effect when applied. *)
+
+  val singleton : term_t -> term_t -> t
+  (** Constructor for a substitution mapping one variable to a term. *)
+  
+  val avoid : Set.t -> Set.t -> t
+  (** [avoid vars subvars] 
+      returns a substitution that takes all variables in [subvars] to  
+      variables fresh in [vars U subvars], respecting existential   
+      quantification / free variables. *)
+  
+  val pp : Format.formatter -> t -> unit
+  (** Pretty printer. *)
   
   type check = t -> term_t -> term_t -> bool
   (** The type of functions that check the validity of a single substitution pair
       within the context of the whole substitution to which it is being added. *)
   
-  val empty : t
-  val singleton : term_t -> term_t -> t
-  val avoid : Set.t -> Set.t -> t
-  (** [avoid vars subvars] 
-      returns a substitution that takes all variables in [subvars] to new 
-      variables that are outside [vars U subvars], respecting existential   
-      quantification / free variables. *)
-  
-  val pp : Format.formatter -> t -> unit
-  
   val trivial_check : check
+  (** The check that is always true. *)
+
   val basic_lhs_down_check : check
   (** When used as [subst_check] in the call [Sl_heap.unify subst_check f f'], 
       ensures that the generated substitution, when applied to [f], produces a

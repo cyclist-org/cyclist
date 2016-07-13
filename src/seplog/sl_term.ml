@@ -298,9 +298,7 @@ module Subst =
     let avoids_replacing_check ?(inverse=false) vars =
       fun _ -> Fun.direct inverse (fun x y -> equal x y || not (Set.mem x vars)) 
     let rec combine_checks cs theta x y =
-      match cs with
-      | [] -> true
-      | c::rest -> (c theta x y) && (combine_checks rest theta x y)
+      Blist.for_all (fun f -> f theta x y) cs
   end
 
 let subst theta v =
@@ -354,7 +352,8 @@ module Unifier =
         match cont state' with
         | None -> None
         | Some state'' -> res := state'' :: !res ; None in
-      let _ = u ~sub_check ~cont:valid ~init_state x y in !res;;
+      let _ = u ~sub_check ~cont:valid ~init_state x y in 
+      !res
   
     type state_check = state -> bool
     let mk_assert_check c state =
@@ -365,9 +364,7 @@ module Unifier =
       Option.mk (check state) state
   
     let rec combine_state_checks cs state =
-      match cs with
-      | [] -> true
-      | c::rest -> (c state) && (combine_state_checks rest state)
+      Blist.for_all (fun f -> f state) cs 
     
     let lift_subst_check c (theta, _) = Map.for_all (c theta) theta
       
@@ -405,11 +402,7 @@ module FList =
     
     let to_string_sep sep xs = Blist.to_string sep Trm.to_string xs
     
-    let terms xs = 
-      Blist.foldl 
-        (fun a x -> Set.add x a) 
-        Set.empty 
-        xs 
+    let terms xs = Set.of_list xs 
         
     let vars xs = filter_vars (terms xs)
   end 

@@ -5,6 +5,8 @@ Soundcheck
 Proofnode
 Proof
 Sl_term
+Sl_subst
+Sl_unifier
 Sl_tpair
 Sl_uf
 Sl_rho
