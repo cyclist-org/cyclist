@@ -1,52 +1,87 @@
-<!DOCTYPE html>
-<html>
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.12: http://docutils.sourceforge.net/" />
+<title>The Cyclist Prover</title>
+<link rel="stylesheet" href="styles.css" type="text/css" />
+</head>
+<body>
+<div class="document" id="the-cyclist-prover">
+<h1 class="title">The Cyclist Prover</h1>
 
-  <head>
-    <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="Cyclist : A cyclic theorem prover framework.">
+<!-- .. image:: pic.jpg
+:scale: 30
+:alt: Photo -->
+<p><tt class="docutils literal">Cyclist</tt> is two things:</p>
+<ul>
+<li><p class="first">A generic, cyclic theorem prover <em>framework</em> written in OCaml and C++.</p>
+</li>
+<li><p class="first">A collection of <em>provers</em> and other tools, with a focus on <em>Separation Logic with inductive definitions</em>, hereafter <strong>SL</strong>.</p>
+</li>
+</ul>
+<div class="section" id="actively-maintained-tools-in-cyclist">
+<h1>Actively maintained tools in Cyclist</h1>
+<ol class="arabic">
+<li><p class="first"><tt class="docutils literal">sl_prove</tt> is a prover for entailments in SL.</p>
+</li>
+<li><p class="first"><tt class="docutils literal">sl_satcheck</tt> implements a decision procedure for satisfiability of SL formulas.</p>
+</li>
+<li><p class="first"><tt class="docutils literal">sl_disprove</tt> is a heuristic for <em>disproving</em> entailments in SL.</p>
+</li>
+<li><p class="first"><tt class="docutils literal">sl_modelcheck</tt> decides whether the given SL formula is satisfied by a provided program state.</p>
+</li>
+<li><p class="first"><tt class="docutils literal">while_prove</tt>: A termination and/or safety prover for simple while-programs with pointers
+and dynamic allocation specified by SL formulas.</p>
+</li>
+<li><p class="first"><tt class="docutils literal">while_abduce</tt>: A prover like <tt class="docutils literal">while_prove</tt>, but which attempts
+to infer a suitable precondition in SL such that the target
+program will terminate/execute safely, <em>including inferring the
+inductive definitions themselves</em>.</p>
+</li>
+</ol>
+</div>
+<div class="section" id="no-longer-maintained-tools">
+<h1>No longer maintained tools</h1>
+<ol class="arabic">
+<li><p class="first"><tt class="docutils literal">fo_prove</tt>: A cyclic prover for (for all-exists) first order logic with
+inductive definitions.</p>
+</li>
+<li><p class="first"><tt class="docutils literal">goto_prove</tt>: A cyclic prover for a program logic like while_prove
+above, but for a go-to language.</p>
+</li>
+</ol>
+</div>
+<div class="section" id="compiling-cyclist-from-scratch">
+<h1>Compiling Cyclist from scratch</h1>
+<p><tt class="docutils literal">Cyclist</tt> is hosted on GitHub at <a class="reference external" href="https://github.com/ngorogiannis/cyclist">https://github.com/ngorogiannis/cyclist</a> .</p>
+<p>To compile things from scratch you will need the following:</p>
+<ul>
+<li><p class="first">OCaml (tested with 4.01) [Debian packages: ocaml-nox, ocaml-native-compilers]</p>
+</li>
+<li><p class="first">g++ and headers (tested with 4.8) [Debian packages: g++, libstdc++-4.8-dev]</p>
+</li>
+<li><p class="first">Melt (tested with 1.4.0) [Debian package: ocaml-melt]</p>
+</li>
+<li><p class="first">Spot (tested with 2.0.2) [sources at <a class="reference external" href="https://spot.lrde.epita.fr">https://spot.lrde.epita.fr</a> ]</p>
+</li>
+<li><p class="first">PCRE bindings for OCaml (tested with 7.0.4) [Debian package: libpcre-ocaml-dev]</p>
+</li>
+</ul>
+<p>In non-standard installations you may need to change the paths in the top
+of <tt class="docutils literal">myocamlbuild.ml</tt>.</p>
+<p>Then, just run <tt class="docutils literal">make</tt> and hopefully it should work :)</p>
+</div>
+<div class="section" id="contact">
+<h1>Contact</h1>
+<p>Email : <a class="reference external" href="mailto:nikos.gorogiannis+www&#64;gmail.com">nikos.gorogiannis+www&#64;gmail.com</a></p>
+</div>
+</div>
+<div class="footer">
+<hr class="footer" />
+Generated on: 2016-07-14 14:12 UTC.
 
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
-
-    <title>Cyclist</title>
-  </head>
-
-  <body>
-
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/ngorogiannis/cyclist">View on GitHub</a>
-
-          <h1 id="project_title">Cyclist</h1>
-          <h2 id="project_tagline">A cyclic theorem prover framework.</h2>
-
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/ngorogiannis/cyclist/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/ngorogiannis/cyclist/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <h3>
-<a id="welcome-to-the-cyclist-prover-project" class="anchor" href="#welcome-to-the-cyclist-prover-project" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Welcome to the Cyclist Prover project.</h3>
-
-<p>This is a placeholder</p>
-      </section>
-    </div>
-
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">Cyclist maintained by <a href="https://github.com/ngorogiannis">ngorogiannis</a></p>
-        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
-      </footer>
-    </div>
-
-    
-
-  </body>
+</div>
+</body>
 </html>
