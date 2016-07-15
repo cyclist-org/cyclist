@@ -1,6 +1,7 @@
 ---
 layout: index
 ---
+[Installation]: /installation
 [APLAS12 paper]: http://dx.doi.org/10.1007/978-3-642-35182-2_25
 {:target="_blank"}
 
@@ -34,8 +35,8 @@ THEORY:
 
 The theory/design behind Cyclist and the three provers above is described in the [APLAS12 paper].
 
-  *J. Brotherston, N. Gorogiannis, and R. L. Petersen. A generic cyclic theorem
-  prover. In Proc. APLAS-10, pages 350-367. Springer, 2012.*
+>  J. Brotherston, N. Gorogiannis, and R. L. Petersen. A generic cyclic theorem
+>  prover. In Proc. APLAS-10, pages 350-367. Springer, 2012.
 
 The grammar for SL sequents is roughly as follows.
 
@@ -59,7 +60,7 @@ QUICKSTART:
 If you want to use the separation logic prover and you downloaded a tarball then 
 the executables in the archive will have been linked in such a way that they 
 should work without any additional dependencies on an x86_64 Linux system.
-Otherwise consult README.compiling for building instructions.
+Otherwise consult [Installation] for building instructions.
 
 As the two other provers are not under active development, if you want to try
 them out your best option is to check out an older revision:

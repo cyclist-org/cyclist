@@ -1,7 +1,10 @@
 ---
 layout: index
 ---
+[Installation]: /installation
 [POPL'16 paper]: http://dx.doi.org/10.1145/2914770.2837621
+{:target="_blank"}
+[binary release]: https://github.com/ngorogiannis/cyclist/releases/tag/POPL16
 {:target="_blank"}
 
 A model checker for SL with arbitrary inductive predicates.
@@ -9,15 +12,15 @@ A model checker for SL with arbitrary inductive predicates.
 
 The tool is described in the [POPL'16 paper]:
 
-  *J. Brotherston, N. Gorogiannis, M. Kanovich, R. Rowe.
-  Model Checking for Symbolic-Heap Separation Logic with Inductive Predicates*
+>  J. Brotherston, N. Gorogiannis, M. Kanovich, R. Rowe.
+>  Model Checking for Symbolic-Heap Separation Logic with Inductive Predicates
 
 
 QUICKSTART:
 -----------------------------------
-If you downloaded the binary release from GitHub a x64 binary
+If you downloaded the [binary release] from GitHub a x64 binary
 sl_modelcheck.native should be already present in the project directory.
-If you do not have such a binary, look at the file README.compiling.
+If you do not have such a binary, look at [Installation].
 
 Running
   	`sl_modelcheck.native`
@@ -42,7 +45,7 @@ TEST SUITE DESCRIPTION:
 -----------------------
 
 The benchmarks/slmc/ subdirectory contains all the necessary resources for running the benchmarks
-described in the POPL'16 paper. Below this, there are two further sub-
+described in the [POPL'16 paper]. Below this, there are two further sub-
 directories. The models/ subdirectory contains *.mdl files, each of which
 describes a model which can be parsed by the model checker. The programs/ sub-
 directory contains the source code of the 7 test programs from which models

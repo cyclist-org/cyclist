@@ -1,7 +1,10 @@
 ---
 layout: index
 ---
+[Installation]: /installation
 [SAS'14 paper]: http://dx.doi.org/10.1007/978-3-319-10936-7_5
+{:target="_blank"}
+[Virtual Machine]: https://github.com/ngorogiannis/cyclist/releases/tag/SAS14
 {:target="_blank"}
 
 A heuristic procedure for disproving SL entailments.
@@ -11,16 +14,16 @@ OVERVIEW:
 ----------------------------------------------------
 The tool is described in the [SAS'14 paper].
 
-  *J. Brotherston and N. Gorogiannis.
-  Cyclic Abduction of Inductively Defined 
-  Safety and Termination Preconditions*
+>  J. Brotherston and N. Gorogiannis.
+>  Cyclic Abduction of Inductively Defined 
+>  Safety and Termination Preconditions
 
 QUICKSTART:
 ----------------------------------------------------
-If you downloaded the Virtual Machine from the SAS website
+If you downloaded the [Virtual Machine] from the SAS website
 you will find the executable `while_abduce.native` which
 implements the algorithm described in the paper.  If you 
-do not have such a binary, look at the file README.compiling.
+do not have such a binary, look at [Installation].
 
 Running the executable without options will produce some help 
 text explaining its usage.
