@@ -1,6 +1,8 @@
 ---
 layout: index
 ---
+[APLAS12 paper]: http://dx.doi.org/10.1007/978-3-642-35182-2_25
+{:target="_blank"}
 
 An entailment prover for a fragment of first-order logic with inductive definitions.
 ====================================================================================
@@ -11,7 +13,7 @@ OVERVIEW:
 Cyclist is a framework for building cyclic theorem provers based on a sequent
 calculus.
 
-Three provers were included in the [APLAS12 paper](http://dx.doi.org/10.1007/978-3-642-35182-2_25).
+Three provers were included in the [APLAS12 paper].
 These are (binaries end in ".native" omitted below):
 
 fo_prove
@@ -30,26 +32,26 @@ with specifications in the above fragment of separation logic.
 THEORY:
 --------------------------------------------------------------------------------
 
-The theory/design behind Cyclist and the three provers above is described in the [APLAS12 paper](http://dx.doi.org/10.1007/978-3-642-35182-2_25).
+The theory/design behind Cyclist and the three provers above is described in the [APLAS12 paper].
 
   *J. Brotherston, N. Gorogiannis, and R. L. Petersen. A generic cyclic theorem
   prover. In Proc. APLAS-10, pages 350-367. Springer, 2012.*
 
 The grammar for SL sequents is roughly as follows.
 
-		sequent ::= form "|-" form
-		form ::= heap | heap "\/" form
-		heap ::= atomic | atomic "*" heap
-		atomic ::= "emp" | "true" | eq | deq | pointsto | pred
-		eq ::= term "=" term
-		deq ::= term "!=" term
-		pointsto ::= var "->" termlist
-		termlist ::= term | term "," termlist
-		term ::= var | "nil"
-		pred ::= identifier "(" termlist ")"
+	sequent ::= form "|-" form
+	form ::= heap | heap "\/" form
+	heap ::= atomic | atomic "*" heap
+	atomic ::= "emp" | "true" | eq | deq | pointsto | pred
+	eq ::= term "=" term
+	deq ::= term "!=" term
+	pointsto ::= var "->" termlist
+	termlist ::= term | term "," termlist
+	term ::= var | "nil"
+	pred ::= identifier "(" termlist ")"
 
-where var matches any word over letters and numbers possibly postfixed by a
-quote ', and identifier matches any word over letters and numbers.
+where *var* matches any word over letters and numbers possibly postfixed by a
+quote ', and *identifier* matches any word over letters and numbers.
 
 QUICKSTART:
 --------------------------------------------------------------------------------

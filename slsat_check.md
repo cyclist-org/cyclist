@@ -1,6 +1,8 @@
 ---
 layout: index
 ---
+[CSL-LICS, 2014 paper]: http://dx.doi.org/10.1145/2603088.2603091
+{:target="_blank"}
 
 Satisfiability checker for separation logic with inductive definitions.
 =======================================================================
@@ -8,11 +10,11 @@ Satisfiability checker for separation logic with inductive definitions.
 THEORY:
 -----------------------------------
 
-The algorithm, its soundness and its complexity are described in the [CSL-LICS, 2014 paper](http://dx.doi.org/10.1145/2603088.2603091):
+The algorithm, its soundness and its complexity are described in the [CSL-LICS, 2014 paper]:
 
   *James Brotherston, Carsten Fuhs, Nikos Gorogiannis, and Juan Navarro Pérez.
   A decision procedure for satisfiability in separation logic with inductive
-  predicates. To appear at CSL-LICS, 2014.*
+  predicates.*
 
 
 QUICKSTART:

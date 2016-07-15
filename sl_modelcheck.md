@@ -1,11 +1,13 @@
 ---
 layout: index
 ---
+[POPL'16 paper]: http://dx.doi.org/10.1145/2914770.2837621
+{:target="_blank"}
 
 A model checker for SL with arbitrary inductive predicates.
 ===========================================================
 
-The tool is described in the [POPL'16 paper](http://dx.doi.org/10.1145/2914770.2837621):
+The tool is described in the [POPL'16 paper]:
 
   *J. Brotherston, N. Gorogiannis, M. Kanovich, R. Rowe.
   Model Checking for Symbolic-Heap Separation Logic with Inductive Predicates*
@@ -152,4 +154,4 @@ of model files each time, since these are deterministic programs. However the
 lcset and queue programs are concurrent and so running the model-harvesting 
 target for these programs will, in general, produce different sets of model 
 files each time. The Cyclist source tree contains the set of .mdl files that 
-were used to produce the benchmark results in the POPL'16 paper.*
+were used to produce the benchmark results in the [POPL'16 paper].*
