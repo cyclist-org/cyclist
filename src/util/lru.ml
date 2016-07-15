@@ -17,12 +17,14 @@ module Make(T : Util.BasicType) =
           let rec n = { prev=n; data=d; next=n } in n
         
         let remove n =
-          if n.next == n then failwith "Empty dll" else
-          n.prev.next <- n.next;
-          n.next.prev <- n.prev;
-          n.next <- n;
-          n.prev <- n;
-          n
+          if n.next != n then 
+            begin
+              n.prev.next <- n.next;
+              n.next.prev <- n.prev;
+              n.next <- n;
+              n.prev <- n
+            end ;
+            n
         
         let splice node1 node2 =
           let next = node1.next in
@@ -43,65 +45,79 @@ module Make(T : Util.BasicType) =
       end
     
     module HT = Hashtbl.Make(T)
-          
-    let lru_cache gen cap =
+  
+    let lru_cache_rec gen cap =
+      assert (cap > 0) ;  
       let entries = ref None in
       let auxentries = HT.create cap in
       let len = ref 0 in
-      let entry_gen k v =
-        incr len;
-        let n = Dll.create (k, v) in HT.add auxentries k n; n
-      in
-      let entry_find k dll =
-        try 
-          let n = HT.find auxentries k in ignore (Dll.remove n) ; n
-        with Not_found -> entry_gen k (gen k)
-      in
-      let entry_remove n =
-        let lru = Dll.prev n in
-        let k = Dll.get lru |> fst in
-        HT.remove auxentries k; ignore (Dll.remove lru); decr len
-      in
-      let get k =
-        match !entries with 
-        | Some dll -> (* not at head of list *)
-          (* Format.fprintf Format.std_formatter "BEFORE: %a @." Dll.pp dll ; *)
-          let (k0,v) = Dll.get dll in
-          if T.equal k k0 then v (* special case head of list *)
-          else begin
-            let n = entry_find k dll in
-            (* Put n at the head of the list *)
-            Dll.splice n dll; entries := Some n;
-            (* Remove the tail if over capacity *)
-            if !len > cap then entry_remove n;
-            (* return the value *)
-            let res = Dll.get n |> snd in
-            (* Format.fprintf Format.std_formatter "AFTER: %a @." Dll.pp n ;  *)
-            res
-          end
-        | None -> (* no list - generate it *)
-          let v = gen k in entries := Some (entry_gen k v); v
+      let rec get k =
+        (* Format.fprintf Format.std_formatter "ASKING for %a@." T.pp k ; *)
+        let (n, v) =
+          (* if Option.is_some !entries then                                                     *)
+          (*   Format.fprintf Format.std_formatter "BEFORE: %a @." Dll.pp (Option.get !entries)  *)
+          (* else                                                                                *)
+          (*   Format.fprintf Format.std_formatter "BEFORE: <empty> @." ;                        *)
+          try 
+            let n = HT.find auxentries k in (* success means non-empty *)
+            (* Format.fprintf Format.std_formatter "FOUND. @." ; *)
+            let v = Dll.get n |> snd in
+            let dll = Option.get !entries in
+            let _ = Dll.remove n in (* remove n from current position *)
+            Dll.splice n dll; (* Put n at the head of the list *)
+            (n, v)
+          with Not_found -> 
+            (* Format.fprintf Format.std_formatter "NOT FOUND. @." ; *)
+            let v = gen get k in (* this may recursively call us *)
+            incr len;
+            let n = Dll.create (k, v) in 
+            HT.add auxentries k n ;
+            (* Put n at the head of the list, if non-empty *)
+            Option.iter (fun dll -> Dll.splice n dll) !entries ;
+            (n, v)
+          in
+          if !len > cap then 
+            begin
+              let lru = Dll.prev n in
+              HT.remove auxentries (Dll.get lru |> fst); 
+              ignore (Dll.remove lru); 
+              decr len
+            end ;
+          entries := Some n; 
+          (* Format.fprintf Format.std_formatter "AFTER: %a @." Dll.pp n ; *)
+          v            
       in
       get
+ 
+    let lru_cache gen cap =
+      lru_cache_rec (fun _ x -> gen x) cap
   end
 
-(* module M = Make(Util.Int)                                                     *)
-(* let id (x:int) = x                                                            *)
-(* let cache = M.lru_cache id 9                                                  *)
-(* let print i = let _ = Format.fprintf Format.std_formatter "i=%i@." i in () ;; *)
-(* print (cache 1) ;                                                             *)
-(* print (cache 2) ;                                                             *)
-(* print (cache 3) ;                                                             *)
-(* print (cache 4) ;                                                             *)
-(* print (cache 5) ;                                                             *)
-(* print (cache 6) ;                                                             *)
-(* print (cache 7) ;                                                             *)
-(* print (cache 8) ;                                                             *)
-(* print (cache 9) ;                                                             *)
-(* print (cache 10) ;                                                            *)
-(* print (cache 11) ;                                                            *)
-(* print (cache 5) ;                                                             *)
-(* print (cache 7) ;                                                             *)
-(* print (cache 9) ;                                                             *)
+(* module M = Make(Util.Int)  *)
+(* let id (x:int) = x                                              *)
+(* let cache = M.lru_cache id 9                                    *)
+(* let print i = Format.fprintf Format.std_formatter "i=%i@." i ;; *)
+(* print (cache 1) ;                                               *)
+(* print (cache 1) ;                                               *)
+(* print (cache 2) ;                                               *)
+(* print (cache 3) ;                                               *)
+(* print (cache 4) ;                                               *)
+(* print (cache 5) ;                                               *)
+(* print (cache 6) ;                                               *)
+(* print (cache 7) ;                                               *)
+(* print (cache 8) ;                                               *)
+(* print (cache 9) ;                                               *)
+(* print (cache 10) ;                                              *)
+(* print (cache 11) ;                                              *)
+(* print (cache 5) ;                                               *)
+(* print (cache 7) ;                                               *)
+(* print (cache 9) ;                                               *)
+(* print (cache 15) ;;                                             *)
 
- 
+(* let fib f = function                                             *)
+(*  | 0 -> 0                                                        *)
+(*  | 1 -> 1                                                        *)
+(*  | n -> f (n-1) + f (n-2)                                        *)
+(* let cache = M.lru_cache_rec fib 6                                *)
+(* let print i = Format.fprintf Format.std_formatter "i=%i@." i  ;; *)
+(* print (cache 10)                                                 *)
