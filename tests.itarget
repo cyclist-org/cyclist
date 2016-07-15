@@ -1,3 +1,3 @@
-tests/test_slterm_bug1.native
-tests/test_slterm_bug2.native
-#tests/test_sl_core.native
+#tests/test_slterm_bug1.native
+#tests/test_slterm_bug2.native
+tests/test_v2.native

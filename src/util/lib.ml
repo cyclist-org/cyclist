@@ -121,3 +121,6 @@ let runtest name tst =
   Printexc.record_backtrace bt
 
     
+let mk_of_string parse =
+  fun s -> handle_reply (MParser.parse_string parse s ())
+  
