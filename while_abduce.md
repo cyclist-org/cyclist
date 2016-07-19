@@ -7,8 +7,8 @@ layout: index
 [Virtual Machine]: https://github.com/ngorogiannis/cyclist/releases/tag/SAS14
 {:target="_blank"}
 
-A heuristic procedure for disproving SL entailments.
-====================================================
+A termination and/or safety prover for simple while-programs.
+=============================================================
 
 OVERVIEW:
 ----------------------------------------------------

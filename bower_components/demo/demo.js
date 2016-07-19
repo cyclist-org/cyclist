@@ -10,7 +10,7 @@ $(document).ready(function() {
             $("#sequent").parent().removeClass("has-error");
             $(".alert").remove();
         }
-        if(trimfield($("#sequent").val()) == '') {
+        if(trimfield($("#sequent").val()) == '') { //if input is empty on submit
             var parent = $("#sequent").parent();
             parent.addClass("has-error");
             parent.append("<div style=\"margin: 5px 0; padding: 3px;\"class=\"alert alert-danger\" role=\"alert\">Insert sequent!</div>");
@@ -33,7 +33,7 @@ $(document).ready(function() {
             success: function(data) {
                 $("#submitBtn").unwrap();
                 var json_obj = $.parseJSON(JSON.stringify(data));//parse JSON
-                if(json_obj.entailment == null) {
+                if(json_obj.entailment == null) { //no std output: error, invalid sequent
                     var parent = $("#sequent").parent();
                     parent.addClass("has-error");
                     parent.append("<div style=\"margin: 5px 0; padding: 3px;\"class=\"alert alert-danger\" role=\"alert\">Invalid sequent!</div>");
@@ -73,9 +73,9 @@ function visualise(u,data){
     $.each(data,function(n,v){
         $('#params').append('<input type="hidden" name="'+n+'" value="'+ v.replace(/"/g, '&quot;') +'" />');
     });
-    $('#params').append('<input type="hidden" name="url" value="'+ u +'" />');
+    $('#params').append('<input type="hidden" name="url" value="'+ u +'" />'); //needed by proxy: where to redirect request
 
-    // Handle form submit.
+    //UCL-CS webserver acts as a proxy in order to make CORS request possible
     proxy = 'https://students.cs.ucl.ac.uk/2015/group33/prover/proxy.php';
 
     // Make JSON request.
@@ -88,7 +88,7 @@ function visualise(u,data){
             if(json.contents === undefined) {
                 return;
             }
-            $("#prover").append('<img id=\"visualisation\" src="http://sciencesoft.at/image/latex?index='+ json.contents.idx +'&id='+ json.contents.id + '" alt="Smiley face">');
+            $("#prover").append('<img id=\"visualisation\" class=\"center-block\" src="http://sciencesoft.at/image/latex?index='+ json.contents.idx +'&id='+ json.contents.id + '" alt="Proof Graph">');
         },
         dataType: 'text'
         /*error: function(a, b, c) {
