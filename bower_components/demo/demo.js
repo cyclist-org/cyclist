@@ -1,13 +1,16 @@
 $(document).ready(function() {
     $("#submitBtn").click(function() {
+        if($("#visualisation").length) { //remove previous image if any
+            $("#visualisation").remove();
+        }
+        if($("#output").length) { //remove previous output if any
+            $("#output").remove();
+        }
         if ($("#sequent").parent().hasClass("has-error")) {
             $("#sequent").parent().removeClass("has-error");
             $(".alert").remove();
         }
         if(trimfield($("#sequent").val()) == '') {
-            if($("#output").length) {
-                $("#output").remove();
-            }
             var parent = $("#sequent").parent();
             parent.addClass("has-error");
             parent.append("<div style=\"margin: 5px 0; padding: 3px;\"class=\"alert alert-danger\" role=\"alert\">Insert sequent!</div>");
@@ -36,10 +39,26 @@ $(document).ready(function() {
                     parent.append("<div style=\"margin: 5px 0; padding: 3px;\"class=\"alert alert-danger\" role=\"alert\">Invalid sequent!</div>");
                     return;
                 }
+                style = "";
+                if(json_obj.entailment.match("^Proved")) {
+                    style = "color: green;"
+                } else if(json_obj.entailment.match("^NOT")){
+                    style = "color: red;"
+                }
                 if($("#output").length) {
-                    $("#output").replaceWith("<p id=\"output\">" + json_obj.entailment + "</p>")
+                    $("#output").replaceWith("<div id=\"output\"><p "+ "style=\"margin: 20px 0; "+ style +"\">" + json_obj.entailment + "</p></div>")
                 } else {     
-                    $("#proverForm").append("<p id=\"output\">" + json_obj.entailment + "</p>");
+                    $("#prover").append("<div id=\"output\"><p id=\"output\" "+ "style=\"margin: 20px 0; "+ style +"\">" + json_obj.entailment + "</p></div>");
+                }
+                if(json_obj.entailment.match("^Proved") && !(json_obj.visualisation === undefined)) {
+                    visualise('http://sciencesoft.at/latex/compile', { ochem: 'false',
+                                runexample: 'false',
+                                src: json_obj.visualisation,
+                                dpi: '120',
+                                utf8: 'on',
+                                template: '0en',
+                                device: '0',
+                                papersize: '0' });
                 }
                 if(!(json_obj.latex === undefined)) {
                     download("proof.tex", json_obj.latex);
@@ -48,6 +67,36 @@ $(document).ready(function() {
         });
     });
 });
+
+function visualise(u,data){
+    $('body').append('<form method="post" id="params"></form>');
+    $.each(data,function(n,v){
+        $('#params').append('<input type="hidden" name="'+n+'" value="'+ v.replace(/"/g, '&quot;') +'" />');
+    });
+    $('#params').append('<input type="hidden" name="url" value="'+ u +'" />');
+
+    // Handle form submit.
+    proxy = 'https://students.cs.ucl.ac.uk/2015/group33/prover/proxy.php';
+
+    // Make JSON request.
+    $.ajax({
+        type: "POST",
+        url: proxy,
+        data: $('#params').serialize(),
+        success: function(response) {
+            var json = $.parseJSON(response);//parse JSON
+            if(json.contents === undefined) {
+                return;
+            }
+            $("#prover").append('<img id=\"visualisation\" src="http://sciencesoft.at/image/latex?index='+ json.contents.idx +'&id='+ json.contents.id + '" alt="Smiley face">');
+        },
+        dataType: 'text'
+        /*error: function(a, b, c) {
+            alert(b + c);
+        }*/
+    });
+}
+
 
 function trimfield(str) 
 { 

@@ -10,12 +10,12 @@ layout: default
     <div class="col-lg-12">
         <div class="panel panel-default">
             <div class="panel-heading">
-                Basic Form Elements
+                Demo
             </div>
             <div class="panel-body">
                 <div class="row">
-                    <div class="col-lg-12">
-                        <form id="proverForm" role="form">
+                    <div id="prover" class="col-lg-12">
+                        <form style="display: inline;" id="proverForm" role="form">
                             <div class="form-group">
                                 <label>SL sequent:</label>
                                 <textarea id="sequent" name="sequent" style="resize: none;" class="form-control" rows="3" placeholder="List(x, y) * List(y, z)  |-  List(x, z)"></textarea>
@@ -35,9 +35,9 @@ layout: default
                                     <input name="latex" type="checkbox"> Yes
                                 </label>
                             </div>
+                            <button type="reset" class="btn btn-default">Reset</button>
                         </form>
-                        <button type="reset" class="btn btn-default">Reset Button</button>
-                        <button id="submitBtn" class="btn btn-default">Submit Button</button>
+                        <button id="submitBtn" class="btn btn-default">Submit</button>
                     </div>
                 </div>
                 <!-- /.row (nested) -->

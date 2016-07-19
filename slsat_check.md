@@ -67,4 +67,4 @@ running the benchmark will take a long time.
 make sure Perl and the Perl libraries Math::Random and String::Urandom are
 installed. Then, do
 
-  	`cd benchmarks/slsat/syn ; rm *.dat ; make`
+	`cd benchmarks/slsat/syn ; rm *.dat ; make`
