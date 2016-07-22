@@ -28,6 +28,9 @@ check: tests
 %.byte:
 	$(OCB) "$@"
 
+%.otarget:
+	$(OCB) "$@"
+
 clean:
 	$(OCB) -clean
 
