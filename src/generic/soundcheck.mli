@@ -16,6 +16,9 @@ type t = abstract_node Util.Int.Map.t
 (** The type of abstracted proof as a map from ints to nodes. 
     NB the root is always at 0. *)
 
+val build_proof : 
+  (int * int list * (int * (int * int) list * (int * int) list) list) list -> t
+
 val check_proof : t -> bool
 (** Validate, minimise, check soundness of proof/graph and memoise. *)
 
