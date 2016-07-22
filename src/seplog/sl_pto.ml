@@ -36,3 +36,8 @@ let parse st =
           parse_symb symb_pointsto >>
           Tokens.comma_sep1 Sl_term.parse << spaces |>>
           (fun l -> (x, l))) <?> "pto") st
+
+let pp fmt (x,ys) = 
+  Format.fprintf fmt "@[%a%s%a@]" 
+    Sl_term.pp x symb_pointsto.str (Blist.pp pp_comma Sl_term.pp) ys
+  
