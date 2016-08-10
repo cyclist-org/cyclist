@@ -1,3 +1,7 @@
 _site
 .sass-cache
 .jekyll-metadata
+.paths
+.project
+.projectSettings
+.settings/
