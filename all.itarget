@@ -1,5 +1,5 @@
 #src/firstorder/fo_prove.native  
-src/generic/soundcheck.native
+src/generic/checkproof.native
 src/seplog/sl_prove.native
 src/seplog/sl_disprove.native
 src/seplog/sl_modelcheck.native
