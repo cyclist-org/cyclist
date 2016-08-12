@@ -1,5 +1,6 @@
 open Lib
 open Util
+open Parsers
 
 external create_aut : int -> unit = "create_aut" ;;
 external destroy_aut: unit -> unit = "destroy_aut" ;;
@@ -24,6 +25,18 @@ let index_of_child child (_,subg) =
   Blist.find_index (fun (i,_,_) -> i=child) subg
 
 let mk_abs_node tags subg = (tags, subg)
+
+let build_proof nodes =
+  Int.Map.of_list
+    (List.map
+      (fun (id, tags, premises) ->
+        let premises = 
+          List.map
+            (fun (target, allpairs, progpairs) ->
+              (target, TagPairs.of_list allpairs, TagPairs.of_list progpairs))
+            premises in
+        (id, mk_abs_node (Tags.of_list tags) premises))
+      nodes)
 
 
 (* has one child and is not a self loop *)
@@ -68,13 +81,13 @@ let pp fmt prf =
 let remove_dead_nodes prf' =
   let prf = ref prf' in
   let process_node child par_idx n =
-		if not (in_children child n) then () else
+    if not (in_children child n) then () else
     let newparent = 
       let (tags, subg) = n in
-				begin match subg with
-  				| [_] -> (tags, [])
-  				| _ -> (tags, Blist.remove_nth (index_of_child child n) subg)
-				end in
+        begin match subg with
+          | [_] -> (tags, [])
+          | _ -> (tags, Blist.remove_nth (index_of_child child n) subg)
+        end in
     prf := Int.Map.add par_idx newparent !prf in
   let remove_dead_node idx n =
     let () = prf := Int.Map.remove idx !prf in
@@ -90,7 +103,7 @@ let remove_dead_nodes prf' =
 let fuse_single_nodes prf' =
   let prf = ref prf' in
   let process_node child grand_child tv tp par_idx n =
-		if not (in_children child n) then () else
+    if not (in_children child n) then () else
     let (par_tags, par_subg) = n in
     let pos = index_of_child child n in
     let (_, par_tv, par_tp) = List.nth par_subg pos in
@@ -115,7 +128,7 @@ let fuse_single_nodes prf' =
   (* if a parent points to the child of the node to be fused then *)
   (* we would run into difficulties when updating that parent to point *)
   (* directly to the grandchild, so we avoid that altogether *)
-	let p idx n = idx<>0 && is_single_node idx n && not (fathers_grandchild !prf idx n) in
+  let p idx n = idx<>0 && is_single_node idx n && not (fathers_grandchild !prf idx n) in
   while !cont do
     match Int.Map.find_some p !prf with
       | Some (idx, n) -> fuse_node idx n
@@ -194,7 +207,7 @@ let check_proof =
     try
       Stats.MCCache.call () ;
       let r = CheckCache.find ccache aprf in
-			Stats.MCCache.end_call () ;
+      Stats.MCCache.end_call () ;
       Stats.MCCache.hit () ; 
       r
     with Not_found ->
@@ -211,3 +224,52 @@ let check_proof =
       (*   end ;                                                                            *)
       r in
   f
+
+let usage = "usage: " ^ Sys.argv.(0) ^ " [abstract proof]"
+
+open MParser
+open MParser_PCRE
+
+let parse_proof st = 
+  let parse_node st =
+    ( Tokens.parens (
+      Tokens.integer >>= (fun id ->
+      spaces >> Tokens.comma >> spaces >>
+      (parse_list Tokens.integer) >>= (fun tags ->
+      spaces >> Tokens.comma >> spaces >>
+      (parse_list (
+        Tokens.parens (
+        Tokens.integer >>= (fun target ->
+        spaces >> Tokens.comma >> spaces >>
+        (parse_list 
+          (parse_pair Tokens.integer Tokens.integer)) >>= (fun all_pairs ->
+        spaces >> Tokens.comma >> spaces >>
+        (parse_list (parse_pair Tokens.integer Tokens.integer)) |>> 
+        (fun prog_pairs -> (target, all_pairs, prog_pairs))))))) |>>
+      (fun children -> (id, tags, children))))) ) st in
+  ( parse_list parse_node ) st
+
+let () = 
+  gc_setup() ;
+  Format.set_margin (Sys.command "exit $(tput cols)") ;
+  if Array.length Sys.argv <> 2 then 
+    begin
+      print_endline usage ;
+      exit 1
+    end
+  else
+  let prf_string = Sys.argv.(1) in
+  let prf = handle_reply (parse_string parse_proof prf_string ()) in
+  let prf = build_proof prf in
+  let res = check_proof prf in
+  if res then 
+    begin
+      print_endline "Proof is valid" ;
+      exit 0 ;
+    end
+  else 
+    begin
+      print_endline "Proof is NOT valid" ;
+      exit 1 ;
+    end 
+  
