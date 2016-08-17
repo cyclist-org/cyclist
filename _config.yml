@@ -6,13 +6,12 @@
 # 'jekyll serve'. If you change this file, please restart the server process.
 
 # Site settings
-title: The Cyclist Prover
+title: Cyclist
 email: nikos.gorogiannis+www@gmail.com
 description: > # this means to ignore newlines until "baseurl:"
-  Cyclist is a framework for building cyclic theorem provers based on a sequent
-  calculus.
-  However, over the years auxiliary decision procedures or algorithms have been
-  integrated.
+  Cyclist is a framework for building cyclic theorem provers.
+  Several such provers are included 
+  focusing on Separation Logic with inductively defined predicates.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "http://www.cyclist-prover.org" # the base hostname & protocol for your site
 

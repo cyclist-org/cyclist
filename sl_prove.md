@@ -2,41 +2,33 @@
 layout: index
 ---
 [Installation]: /installation
-[APLAS12 paper]: http://dx.doi.org/10.1007/978-3-642-35182-2_25
+[APLAS12]: http://dx.doi.org/10.1007/978-3-642-35182-2_25
 {:target="_blank"}
 
-An entailment prover for a fragment of first-order logic with inductive definitions.
+``sl_prove``
 ====================================================================================
 
-OVERVIEW:
---------------------------------------------------------------------------------
+``sl_prove`` is an automatic entailment prover for separation logic with inductive definitions.
 
-Cyclist is a framework for building cyclic theorem provers based on a sequent
-calculus.
+Here is an example. Suppose a list linked segment from address ``x`` to address ``y`` 
+is defined as follows:
 
-Three provers were included in the [APLAS12 paper].
-These are (binaries end in ".native" omitted below):
+	ls { 
+	    x=y => ls(x,y) | 
+	    x!=y * x->x' * ls(x',y) => ls(x,y) 
+	} 
 
-fo_prove
-: An entailment prover for a fragment of first-order logic with inductive
-definitions (definitions needed for the test cases in the paper are in
-examples/fo.defs).
+This means that either the list segment is empty (hence ``x=y``) or it is not
+empty (``x!=y``) and there is a cell allocated at ``x`` containing some value ``x'`` 
+(``x->x'``) from which there is a list segment up to ``y`` (``ls(x',y)``).
 
-sl_prove
-: An entailment prover for a fragment of separation logic with inductive
-definitions (those used in the tests are in examples/sl.defs).
+Now we can ask whether a chain of list segments from ``x`` through ``y`` to ``nil``
+(``nil`` is a special, always non-allocatable address, much like C's' ``NULL``)
+forms a proper list segment from ``x`` to ``nil``. This is how we pose the query:
 
-goto_prove
-: A termination prover for a heap-manipulating, goto-like programming language
-with specifications in the above fragment of separation logic.
+	$ ./sl_prove.native -S "ls(x,y) * ls(y,nil) |- ls(x,nil)"
 
-THEORY:
---------------------------------------------------------------------------------
-
-The theory/design behind Cyclist and the three provers above is described in the [APLAS12 paper].
-
->  J. Brotherston, N. Gorogiannis, and R. L. Petersen. A generic cyclic theorem
->  prover. In Proc. APLAS-10, pages 350-367. Springer, 2012.
+The theory/design behind *Cyclist* and ``sl_prove`` in [[APLAS12]].
 
 The grammar for SL sequents is roughly as follows.
 
