@@ -11,6 +11,24 @@ layout: index
 ``sl_prove`` is an automatic entailment prover for separation logic with inductive definitions.
 The theory/design behind ``sl_prove`` appears in [[APLAS12]].
 
+Compiling 
+--------------------------------------------------------------------------------
+If you are simply looking for the latest version of ``sl_prove``, have a look at [Installation].
+
+The original version of ``sl_prove`` in [[APLAS12]] is not stored on GitHub.  To try the closest possible, 
+you can checkout a very early commit.
+
+~~~~~~~~~~
+git clone https://github.com/ngorogiannis/cyclist.git cyclist
+cd cyclist 
+git checkout b289f39a6a46b4f57da3585aa7fd71f3ca8601fc
+~~~~~~~~~~
+
+Then consult the README included, which contains building instructions
+relevant to that version.
+
+Example
+-----------------------------------
 Here is an example. A linked-list segment from address ``x`` to address ``y`` 
 can be defined as follows:
 
@@ -26,7 +44,7 @@ empty (``x!=y``) and there is a cell allocated at ``x`` containing some value ``
 Now we can ask whether, for instance, a chain of two segments from ``x`` through ``y`` to ``nil``
 (``nil`` is a special, always non-allocatable address, much like C's' ``NULL``)
 forms a proper list segment from ``x`` to ``nil``. This is how we pose the query
-and *Cyclist*'s output:
+and the output we obtain:
 
 	$ ./sl_prove.native -S "ls(x,y) * ls(y,nil) |- ls(x,nil)"
 	Proved: ls^1(x, y) * ls^2(y, nil) |- ls^3(x, nil)
@@ -42,14 +60,18 @@ This means ``sl_prove`` found a proof for the above sequent.  Let's inspect this
           5: nil!=x * y!=x * ls^2(y, nil) * ls^3(z, y) |- ls^1(z, nil) (Weaken) [6]
             6: ls^2(y, nil) * ls^3(z, y) |- ls^3(z, nil) (Subst) [7]
               7: ls^2(y, nil) * ls^3(x, y) |- ls^3(x, nil) (Backl) [0] <pre={(2, 2), (3, 1)}>
-    
+
 The ``-p`` argument lets us see the proof found. This proof is cyclic (node 7 is a back-link to node 0).
 There are several other options, which are listed when ``sl_prove`` is run without arguments.
 
+Benchmarks in [[APLAS12]]
+----------------------------
 To run a fixed set of entailment queries (including the sequents appearing in [[APLAS12]]), run
 
     $ make sl-tests
 
+SL grammar
+---------------------
 The grammar for SL sequents is roughly as follows.
 
 	sequent ::= form "|-" form
@@ -67,17 +89,3 @@ where *var* matches any word over letters and numbers possibly postfixed by a
 quote ', and *identifier* matches any word over letters and numbers.
 Variables ending in a quote are implicitly existentially quantified.
 
-Compiling the original version in [[APLAS12]]
---------------------------------------------------------------------------------
-
-The original version of ``sl_prove`` is not stored on GitHub.  To try the closest possible, 
-you can checkout a very early commit.
-
-~~~~~~~~~~
-git clone https://github.com/ngorogiannis/cyclist.git cyclist
-cd cyclist 
-git checkout b289f39a6a46b4f57da3585aa7fd71f3ca8601fc
-~~~~~~~~~~
-
-Then consult the README included, which contains building instructions
-relevant to that version.
