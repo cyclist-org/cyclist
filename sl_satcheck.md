@@ -88,3 +88,4 @@ Benchmarks in [[CSL-LICS14]]
    installed. Then, do
 
 	$ cd benchmarks/slsat/syn ; rm *.dat ; make
+

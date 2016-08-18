@@ -2,56 +2,56 @@
 layout: index
 ---
 [Installation]: /installation
-[POPL'16 paper]: http://dx.doi.org/10.1145/2914770.2837621
-{:target="_blank"}
-[binary release]: https://github.com/ngorogiannis/cyclist/releases/tag/POPL16
+[POPL16]: http://dx.doi.org/10.1145/2914770.2837621
 {:target="_blank"}
 
-A model checker for SL with arbitrary inductive predicates.
+``sl_modelcheck``
 ===========================================================
+``sl_modelcheck``
+is a model checker for SL with arbitrary inductive predicates.
+The tool and the theory behind it is described in the [[POPL16]] paper.
 
-The tool is described in the [POPL'16 paper]:
-
->  J. Brotherston, N. Gorogiannis, M. Kanovich, R. Rowe.
->  Model Checking for Symbolic-Heap Separation Logic with Inductive Predicates
-
-
-QUICKSTART:
+Compiling
 -----------------------------------
-If you downloaded the [binary release] from GitHub a x64 binary
-sl_modelcheck.native should be already present in the project directory.
-If you do not have such a binary, look at [Installation].
+If you are simply looking for the latest version of ``sl_modelcheck``, have a look at [Installation].
+
+If you want to try out the original version underpinning the [[POPL16]] paper, then you can
+download an archive including x86_64 binaries and the original benchmark suite at the 
+[POPL16 GitHub release](https://github.com/ngorogiannis/cyclist/releases/tag/POPL16).
+
 
 Running
-  	`sl_modelcheck.native`
+
+    sl_modelcheck.native
+
 will print out instructions for use.
 
 Our tool also includes a script that may be used to harvest models from programs
-at runtime using the Archer extension that enables python scripting of GDB. Our
-harvester script harvest_heap.py may be found in the utils/ and
-utils/gdb_harvester subdirectories.
+at runtime using the *Archer* extension that enables python scripting of GDB. Our
+harvester script ``harvest_heap.py`` may be found in the ``utils/`` and
+``utils/gdb_harvester subdirectories``.
 
 Running the script without options will produce some help text explaining its
 usage.
 The script expects as its first argument the path to an executable file
 from which models are to harvested. It then expects subsequent argument triples
 which are to consist of:
+
 1. a breakpoint description;
-2. a comma-separated list
-of variables from which to start walking the heap;
+2. a comma-separated list of variables from which to start walking the heap;
 3. a path where the files containing the harvested models are to saved.
 
-TEST SUITE DESCRIPTION:
------------------------
+Benchmarks in [[POPL16]]
+-------------------------
 
-The benchmarks/slmc/ subdirectory contains all the necessary resources for running the benchmarks
-described in the [POPL'16 paper]. Below this, there are two further sub-
-directories. The models/ subdirectory contains *.mdl files, each of which
-describes a model which can be parsed by the model checker. The programs/ sub-
+The ``benchmarks/slmc/`` subdirectory contains all the necessary resources for running the benchmarks
+described in the [[POPL16]]. Below this, there are two further sub-
+directories. The ``models/`` subdirectory contains ``*.mdl`` files, each of which
+describes a model which can be parsed by the model checker. The ``programs/`` sub-
 directory contains the source code of the 7 test programs from which models
 were harvested at runtime, along with binary versions of these programs,
 compiled using gcc 4.2.2 on Ubuntu Linux 12.04LTS. These programs have been
-taken from the test suite of the Verifast tool; they have been modified slightly
+taken from the test suite of the *Verifast* tool; they have been modified slightly
 in order to successfully compile them and for our tool to be able to harvest
 an appropriate selection of runtime models.
 
@@ -64,7 +64,7 @@ checks the models harvested from the appropriate program.
 *.tst
 : these files contains descriptors for the benchmark tests to be run;
 the descriptors consist of a filename prefix for selecting
-appropriate *.mdl files, and a separation logic assertion (formula)
+appropriate ``*.mdl`` files, and a separation logic assertion (formula)
 against which to test the models.
 
 *.bps
@@ -96,14 +96,14 @@ the PTIME fragment.
 
 [make spatial-true-tests]
 : will model check a substantial selection of the
-models against encodings of the spatial truth constant T*, which every
+models against encodings of the spatial truth constant ``T``, which every
 model satisfies. The results (with info of running times) are displayed
 to standard output.
 
 [make binary-counter-tests]
 : will run the model checker against predicate
 definitions encoding 1-bit, 2-bit and 3-bit binary counters, which fall
-within the EXPTIME-complete general fragment. The results (with info of
+within the *EXPTIME*-complete general fragment. The results (with info of
 running times) are displayed to standard output.
 
 [make all-tests]
@@ -117,8 +117,8 @@ binary-counter-tests targets in turn.
 : will call the appropriate [{Target}-tests] target (as
 described above) and pipe the output through a script that extracts the
 running time statics for each benchmark test and saves it in a .csv file in
-the stats/ subdirectory. The statistics for each set of tests described by
-one of the *.tst files (see above) is saved in a correspondingly named .csv
+the ``stats/`` subdirectory. The statistics for each set of tests described by
+one of the ``*.tst`` files (see above) is saved in a correspondingly named ``.csv``
 file, which also contains a timestamp; thus tests may be run multiple times
 and the running time statistics easily collected for each run individually.
 
@@ -127,7 +127,7 @@ target) will take a long time. The [spatial-true-tests] are the longest single
 set of benchmark tests, followed by [lcset-tests] and [schorr-waite-tests]
 
 
-RUNTIME HARVESTING OF MODELS:
+Runtime harvesting of models
 -----------------------------
 
 The makefile in this directory contains targets for running the harvester tool 
@@ -135,20 +135,20 @@ on the benchmark suite test programs.
 
 [make {TEST}-models]
 : will run the model harvester over the {TEST} program using
-the descriptors found in the appropriate *.bps files. The resulting .mdl
-files will be placed in the models/ subdirectory. The script does not 
-overwrite any .mdl files it finds, but where files with the same filename 
+the descriptors found in the appropriate ``*.bps`` files. The resulting ``.mdl``
+files will be placed in the ``models/`` subdirectory. The script does not 
+overwrite any ``.mdl`` files it finds, but where files with the same filename 
 prefix exist it will instead append a new numerical suffix to the newly 
 generated files.
 
 Note that when running the tests using the makefile [*-tests] targets the
-tests specified by the .tst configuration files will be run over ALL the
-.mdl files in the models/ subdirectory. Therefore running the tests AFTER
+tests specified by the ``.tst`` configuration files will be run over ALL the
+``.mdl`` files in the ``models/`` subdirectory. Therefore running the tests AFTER
 generating model files will cause the tests to be run over these new models
 as well.
 
 [make clean-{TEST}]
-: will remove all of the model files within the models/ sub-
+: will remove all of the model files within the ``models/`` sub-
 directory whose filenames are prefixed with {TEST}.
 
 *N.B. Running the model-harvesting targets, i.e. [make {TEST}-stats] with {TEST}
@@ -156,5 +156,5 @@ in { aplas-stack, composite, iter, schorr-waite }, should result in the same set
 of model files each time, since these are deterministic programs. However the 
 lcset and queue programs are concurrent and so running the model-harvesting 
 target for these programs will, in general, produce different sets of model 
-files each time. The Cyclist source tree contains the set of .mdl files that 
-were used to produce the benchmark results in the [POPL'16 paper].*
+files each time. The Cyclist source tree contains the set of ``.mdl`` files that 
+were used to produce the benchmark results in [[POPL16]].*

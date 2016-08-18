@@ -1,42 +1,47 @@
 ---
 layout: index
 ---
-[Installation]: /installation
-[TABLEAUX'15 paper]: http://dx.doi.org/10.1007/978-3-319-24312-2_20
+[TABLEAUX15]: http://dx.doi.org/10.1007/978-3-319-24312-2_20
 {:target="_blank"}
 [binary release]: https://github.com/ngorogiannis/cyclist/releases/tag/TABLEAUX15
 {:target="_blank"}
 
-A heuristic procedure for disproving SL entailments.
+``sl_disprove``
 ====================================================
+``sl_disprove`` is a heuristic procedure for *disproving* SL entailments.
+The tool and the theory behind it is described in the [[TABLEAUX15]] paper.
 
-OVERVIEW:
+Compiling
 ----------------------------------------------------
-The tool is described in the [TABLEAUX'15 paper]:
+If you are simply looking for the latest version of ``sl_disprove``, have a look at [Installation](installation).
 
->  J. Brotherston and N. Gorogiannis.
->  Disproving Inductive Entailments in Separation Logic 
->  via Base Pair Approximation
+If you want to try out the original version underpinning the [[TABLEAUX15]] paper, then you can
+download an archive including x86_64 binaries and the original benchmark suite at the 
+[TABLEAUX15 GitHub release](https://github.com/ngorogiannis/cyclist/releases/tag/TABLEAUX15).
 
-QUICKSTART:
-----------------------------------------------------
-If you downloaded the [binary release] from GitHub a x64 binary
-should be already present in this directory.  If you 
-do not have such a binary, look at the [Installation].
+Running
 
-Running the executable `sl_disprove.native` without options will produce 
-some help text explaining its usage.
+    $ sl_disprove.native 
 
-TEST SUITE:
+will print out instructions for use.
+
+Example
+-------------------
+Is a linked-list segment from ``x`` to ``y`` also a linked-list segment from ``y`` to ``x``?
+
+    $ ./sl_disprove.native -S "ls(x,y) |- ls(y,x)"
+    INVALID: ls^1(x, y) |- ls^2(y, x)
+
+No, because the chain of pointers from ``x`` to ``y`` isn't (in general) a chain from ``y`` to ``x``.
+
+Benchmarks in [TABLEAUX15]
 ----------------------------------------------------
 There are three classes of benchmarks described in the paper.  The classes
-SLL and UDP are from the SL-COMP14 competition:
+SLL and UDP are from the [SL-COMP14](https://www.irif.univ-paris-diderot.fr/~sighirea/slcomp14/) 
+competition and can be obtained from the
+[SL-COMP14 GitHub repository](https://github.com/mihasighi/smtcomp14-sl).
 
-  https://github.com/mihasighi/smtcomp14-sl
+The third class, LEM, is included in the *Cyclist* repository, under ``benchmarks/sl_disproof``.
 
-The benchmarks for SLL and UDP can be downloaded from the repository above.
-
-The third class (LEM) is included in this tree, in *benchmarks/sl_disproof*.
-  
-The definitions are in "all.defs" and the sequents in "seqs".  The "invbench.sh"
+The definitions are in ``all.defs`` and the sequents in ``seqs``.  The ``invbench.sh``
 script will execute the LEM benchmark.
