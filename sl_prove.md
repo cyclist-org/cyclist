@@ -67,13 +67,8 @@ Variables ending in a quote are implicitly existentially quantified.
 Compiling the original version in [[APLAS12]]
 --------------------------------------------------------------------------------
 
-If you want to use the separation logic prover and you downloaded a tarball then 
-the executables in the archive will have been linked in such a way that they 
-should work without any additional dependencies on an x86_64 Linux system.
-Otherwise consult [Installation] for building instructions.
-
-As the two other provers are not under active development, if you want to try
-them out your best option is to check out an older revision:
+The original version of ``sl_prove`` is not stored on GitHub.  To try the closest possible, 
+you can checkout a very early commit.
 
 ~~~~~~~~~~
 git clone https://github.com/ngorogiannis/cyclist.git cyclist
@@ -81,5 +76,5 @@ cd cyclist
 git checkout b289f39a6a46b4f57da3585aa7fd71f3ca8601fc
 ~~~~~~~~~~
 
-Then consult the README of that revision, it contains building instructions
+Then consult the README included, which contains building instructions
 relevant to that version.
