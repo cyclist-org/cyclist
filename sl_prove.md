@@ -9,6 +9,7 @@ layout: index
 ====================================================================================
 
 ``sl_prove`` is an automatic entailment prover for separation logic with inductive definitions.
+The theory/design behind ``sl_prove`` appears in [[APLAS12]].
 
 Here is an example. A linked-list segment from address ``x`` to address ``y`` 
 can be defined as follows:
@@ -45,7 +46,9 @@ This means ``sl_prove`` found a proof for the above sequent.  Let's inspect this
 The ``-p`` argument lets us see the proof found. This proof is cyclic (node 7 is a back-link to node 0).
 There are several other options, which are listed when ``sl_prove`` is run without arguments.
 
-The theory/design behind *Cyclist* and ``sl_prove`` appears in [[APLAS12]].
+To run a fixed set of entailment queries (including the sequents appearing in [[APLAS12]]), run
+
+    $ make sl-tests
 
 The grammar for SL sequents is roughly as follows.
 
