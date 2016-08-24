@@ -8,5 +8,5 @@ focusing on Separation Logic with inductively defined predicates.
 For information on building *Cyclist*, the available tools included and the papers 
 underpinning those tools, visit
 
-[www.cyclist-prover.org](www.cyclist-prover.org)
+[www.cyclist-prover.org](http://www.cyclist-prover.org)
 
