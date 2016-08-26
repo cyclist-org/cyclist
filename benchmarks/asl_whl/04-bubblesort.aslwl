@@ -1,0 +1,16 @@
+precondition: array(a, b) * (a+n) = (b+1);
+s := 1;
+while s = 1 do
+	s := 0;
+	i := 0;
+	while (i+1) < n do
+		t := a[(i+1)];
+		u := a[i];
+		if t < u then
+			a[(i+1)] := u;
+			a[i] := t;
+			s := 1
+		fi;
+		i := (i+1)
+	od
+od

@@ -1,0 +1,28 @@
+--  Binary search.
+	Note: the first if loop inside the loop is not meaningful for the program but it helps the
+	prover to identify the loop invariant and retain that r <= n. The "stop" inside the inner loop should be a break.--
+
+precondition: array(a, b) * key = x' * (a+n) = (b+1);
+l := 0;
+r := n;
+while l < r do
+	if n < r then
+		stop
+	fi;
+	m := 0;
+	while 2(m) != (r+l) do
+		if (2(m)+1) = (r+l) then
+			stop
+		fi;
+		m := (m+1)
+	od;
+	t := a[m];
+	if key = t then
+		stop
+	fi;
+	if key < t then
+		r := m
+	else
+		l := m
+	fi
+od

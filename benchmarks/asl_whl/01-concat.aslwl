@@ -1,0 +1,19 @@
+-- Concat two arrays --
+
+precondition: array(a, b) * (n + a) = (b + 1) * array(c, d) * (m +c) = (d + 1);
+s := (n + m);
+x := new array[s];
+i := 0;
+while i < n do
+	temp := a[i];
+	x[i] := temp;
+	i := (i+1)
+od;
+i := 0;
+while i < m do
+	temp := c[i];
+	x[(i+n)] := temp;
+	i := (i+1)
+od;
+free(a, n);
+free(c, m)
