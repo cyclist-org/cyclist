@@ -25,10 +25,17 @@ let symb_ampersand = make_symb "&" Latex.empty (* FIXME *)
 let symb_emp = make_symb "emp" (Latex.texttt (Latex.text "emp"))
 let symb_star = make_symb "*" Latex.ast
 let symb_pointsto = make_symb "->" Latex.mapsto
+let symb_array = make_symb "array" (Latex.texttt (Latex.text "array"))
 let symb_eq = make_symb "=" (ltx_math " = ")
 let symb_deq = make_symb "!=" Latex.neq
+let symb_lt = make_symb "<" (ltx_math " < ")
+let symb_le = make_symb "<=" Latex.leq
+let symb_plus = make_symb "+" (ltx_math " + ")
+let symb_times = make_symb "x" Latex.times
 let symb_lp = make_symb "(" (Latex.text "(")
 let symb_rp = make_symb ")" (Latex.text ")")
+let symb_ls = make_symb "[" (Latex.text "[")
+let symb_rs = make_symb "]" (Latex.text "]")
 let symb_lb = make_symb "{" (Latex.text "\\left\\{")
 let symb_rb = make_symb "}" (Latex.text "\\right\\}")
 let symb_semicolon = make_symb ";" (Latex.text ";")

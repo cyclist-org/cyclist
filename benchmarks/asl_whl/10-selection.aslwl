@@ -1,0 +1,30 @@
+-- Partial selection sort (selection algorithm: finding the kth smallest number).
+   Can't determine loop invariant at the end of inner loop, therefore added if statement in order to
+   retain any information about minIndex (that a<=minIndex<n) --
+
+precondition: array(a, b) * (a+n) = (b+1);
+if n <= k then
+	stop
+fi;
+i := 1;
+while i <= k do
+	minIndex := i;
+	minValue := a[i];
+	j := (i+1);
+	while j < n do
+		t := a[j];
+		if t < minValue then
+			minIndex := j;
+			minValue := t
+		fi;
+		j := (j+1)
+	od;
+	if n <= minIndex then
+		stop
+	fi;
+	t := a[i];
+	s := a[minIndex];
+	a[minIndex] := t;
+	a[i] := s;
+	i := (i+1)
+od

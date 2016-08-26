@@ -1,0 +1,26 @@
+--  Delete element k from array assuming at least 1 such element exists.
+	Note: the first if loop inside the loop is not meaningful for the program but it helps the
+	prover to identify the loop invariant and retain that j < n. --
+
+precondition: array(a, b) * (b+1) = (a+n) * (n+1) = m \/ emp * n = 0;
+if n = 0 then
+	stop
+fi;
+x := new array[m];
+i := 0;
+j := 0;
+while (i+1) < n do
+	if n <= j then
+		stop
+	fi;
+	t := a[j];
+	if t = k then
+		if i = j then
+			j := (j+1)
+		fi
+	fi;
+	x[i] := t;
+	i := (i+1);
+	j := (j+1)
+od;
+free(a, n)

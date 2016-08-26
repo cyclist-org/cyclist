@@ -1,0 +1,35 @@
+-- Merging two arrays: "if m<=j" inside the first if is not necessary for the program logic, but it is
+   for the prover in order to be able to determine the loop invariant. --
+
+precondition: array(a, a') * (a+m) = (a'+1) * array(b, b') * (b+n)=(b'+1);
+j := 0;
+k := 0;
+i := 0;
+c := new array[(m+n)];
+while i<(m+n) do
+	if n<=k then
+		if m<=j then
+			stop
+		fi;
+		t := a[j];
+		c[i] := t;
+		j := (j+1)
+	else
+		if j<m then
+			t := a[j];
+			s := b[k];
+			if t<s then
+				c[i] := t;
+				j := (j+1)
+			else
+				c[i] := s;
+				k := (k+1)
+			fi
+		else
+			s := b[k];
+			c[i] := s;
+			k := (k+1)
+		fi
+	fi;
+	i := (i+1)
+od

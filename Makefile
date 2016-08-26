@@ -8,11 +8,13 @@ SLMAIN:=./src/seplog/sl_prove.native
 PRMAIN:=./src/goto/goto_prove.native
 PR2MAIN:=./src/while/while_prove.native
 XTDPRMAIN:=./src/extended_while/extended_while_prove.native
+ASLMAIN:=./src/asl_while/asl_while_prove.native
 ABD2MAIN:=./src/while/while_abduce.native
 CTLMAIN:=./src/temporal_ctl/temporal_ctl_prove.native
 LTLMAIN:=./src/temporal_ltl/temporal_ltl_prove.native
+Z3INSTALL:=./_build/z3
 
-all:
+all: _build/z3
 	$(OCB) all.otarget
 
 .PHONY: tests
@@ -52,6 +54,9 @@ xsf-tests:
 whl_abd-tests:
 	-@for TST in $(BENCHDIR)/whl_abd/*.wl ; do echo $$TST ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
+asl_whl-tests:
+	-@for TST in $(BENCHDIR)/asl_whl/*.aslwl ; do echo $$TST: ; _build/$(ASLMAIN) $(TST_OPTS) -P $$TST ; echo ; done
+
 aplas-tests: sl-tests #goto-tests #fo-tests 
 
 tp-tests: sl-tests whl-tests xsf-tests #fo-tests
@@ -59,3 +64,14 @@ tp-tests: sl-tests whl-tests xsf-tests #fo-tests
 abd-tests: whl_abd-tests
 
 all-tests: tp-tests abd-tests
+
+_build/z3:
+	if [ ! -d $(Z3INSTALL) ]; \
+	then \
+		git clone https://github.com/Z3Prover/z3.git $(Z3INSTALL); \
+	fi
+	cd $(Z3INSTALL)                                      && \
+		python scripts/mk_make.py --prefix=../..         && \
+		cd build                                         && \
+		$(MAKE)                                          && \
+		$(MAKE) install
