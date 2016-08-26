@@ -1,3 +1,5 @@
+(** Implementation of an LRU cache for memoising functions. *)
+    
 module Make(T : Util.BasicType) :
 sig
   val lru_cache : (T.t -> 'a) -> int -> (T.t -> 'a)

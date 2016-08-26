@@ -13,10 +13,10 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(* (* This module implements imperative sets as hash tables.                    *)
-(*    Operations like union, intersection or difference are not provided,       *)
-(*    since there is no way to implement them easily (i.e. more easily than     *)
-(*    iterating over sets). *)                                                  *)
+(** This module implements imperative sets as hash tables.
+   Operations like union, intersection or difference are not provided,
+   since there is no way to implement them easily (i.e. more easily than
+   iterating over sets). *)
 
 (* (*s Generic interface *)                                                     *)
 
@@ -72,12 +72,12 @@
 module type HashedType =
   sig
     type t
-      (* The type of the elements. *)
+      (** The type of the elements. *)
     val equal : t -> t -> bool
-      (* The equality predicate used to compare elements. *)
+      (** The equality predicate used to compare elements. *)
     val to_string : t -> string
     val hash : t -> int
-      (* A hashing function on elements. It must be such that if two elements are
+      (** A hashing function on elements. It must be such that if two elements are
           equal according to [equal], then they have identical hash values
           as computed by [hash].
           Examples: suitable ([equal], [hash]) pairs for arbitrary element
@@ -87,7 +87,7 @@ module type HashedType =
           (e.g. for mutable or cyclic keys). *)
    end
 
-(* The input signature of the functor {!Hashset.Make}. *)
+(** The input signature of the functor {!Hashset.Make}. *)
 
 module type S =
   sig
@@ -113,10 +113,10 @@ module type S =
     (* val choose : (elt list -> unit) -> t list ->  unit *)
     val map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b) -> t -> 'a
   end
-(* The output signature of the functor {!Hashset.Make}. *)
+(** The output signature of the functor {!Hashset.Make}. *)
 
 module Make (H : HashedType) : S with type elt = H.t
-(* Functor building an implementation of the hashtable structure.
+(** Functor building an implementation of the hashtable structure.
     The functor [Hashset.Make] returns a structure containing
     a type [elt] of elements and a type [t] of hash sets.
     The operations perform similarly to those of the generic
