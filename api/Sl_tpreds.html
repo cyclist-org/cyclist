@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Sl_tpred.html">
+<link rel="next" href="Sl_heap.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Blist" rel="Chapter" href="Blist.html">
+<link title="Hashset" rel="Chapter" href="Hashset.html">
+<link title="Lru" rel="Chapter" href="Lru.html">
+<link title="Sigs" rel="Chapter" href="Sigs.html">
+<link title="Soundcheck" rel="Chapter" href="Soundcheck.html">
+<link title="Proofnode" rel="Chapter" href="Proofnode.html">
+<link title="Proofrule" rel="Chapter" href="Proofrule.html">
+<link title="Proof" rel="Chapter" href="Proof.html">
+<link title="Prover" rel="Chapter" href="Prover.html">
+<link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
+<link title="Abdrule" rel="Chapter" href="Abdrule.html">
+<link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Sl_term" rel="Chapter" href="Sl_term.html">
+<link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
+<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
+<link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
+<link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
+<link title="Sl_deqs" rel="Chapter" href="Sl_deqs.html">
+<link title="Sl_pto" rel="Chapter" href="Sl_pto.html">
+<link title="Sl_ptos" rel="Chapter" href="Sl_ptos.html">
+<link title="Sl_pred" rel="Chapter" href="Sl_pred.html">
+<link title="Sl_tpred" rel="Chapter" href="Sl_tpred.html">
+<link title="Sl_tpreds" rel="Chapter" href="Sl_tpreds.html">
+<link title="Sl_heap" rel="Chapter" href="Sl_heap.html">
+<link title="Sl_heap_rho" rel="Chapter" href="Sl_heap_rho.html">
+<link title="Sl_form" rel="Chapter" href="Sl_form.html">
+<link title="Sl_form_rho" rel="Chapter" href="Sl_form_rho.html">
+<link title="Sl_seq" rel="Chapter" href="Sl_seq.html">
+<link title="Sl_indrule" rel="Chapter" href="Sl_indrule.html">
+<link title="Tl_form" rel="Chapter" href="Tl_form.html">
+<link title="Tl_form_ltl" rel="Chapter" href="Tl_form_ltl.html"><title>Sl_tpreds</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="Sl_tpred.html" title="Sl_tpred">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="Sl_heap.html" title="Sl_heap">Next</a>
+</div>
+<h1>Module <a href="type_Sl_tpreds.html">Sl_tpreds</a></h1>
+
+<pre><span class="keyword">module</span> Sl_tpreds: <code class="code">sig</code> <a href="Sl_tpreds.html">..</a> <code class="code">end</code></pre><div class="info module top">
+Multiset of tagged predicates. 
+    NB no check is made for the uniqueness of tags within set. 
+    However, that uniqueness is required if <code class="code">tagged_unify_partial</code> is to return
+    a set of tag pairs that describes an injective function.<br>
+</div>
+<hr width="100%">
+
+<pre><span class="keyword">include</span> Util.OrderedContainer</pre>
+
+<pre><span id="VALequal_upto_tags"><span class="keyword">val</span> equal_upto_tags</span> : <code class="type">t -> t -> bool</code></pre><div class="info ">
+Test whether the two arguments are the equal ignoring tags.<br>
+</div>
+
+<pre><span id="VALsubst"><span class="keyword">val</span> subst</span> : <code class="type">Sl_subst.t -> t -> t</code></pre>
+<pre><span id="VALsubst_tags"><span class="keyword">val</span> subst_tags</span> : <code class="type">Util.TagPairs.t -> t -> t</code></pre><div class="info ">
+Substitute tags according to the function represented by the set of 
+    tag pairs provided.<br>
+</div>
+
+<pre><span id="VALterms"><span class="keyword">val</span> terms</span> : <code class="type">t -> Sl_term.Set.t</code></pre>
+<pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type">t -> Sl_term.Set.t</code></pre>
+<pre><span id="VALtags"><span class="keyword">val</span> tags</span> : <code class="type">t -> Util.Tags.t</code></pre>
+<pre><span id="VALidents"><span class="keyword">val</span> idents</span> : <code class="type">t -> Sl_predsym.MSet.t</code></pre><div class="info ">
+Return multiset of identifiers present.<br>
+</div>
+
+<pre><span id="VALstrip_tags"><span class="keyword">val</span> strip_tags</span> : <code class="type">t -> Sl_pred.MSet.t</code></pre><div class="info ">
+Remove tags.<br>
+</div>
+
+<pre><span id="VALto_string_list"><span class="keyword">val</span> to_string_list</span> : <code class="type">t -> string list</code></pre>
+<pre><span id="VALto_melt"><span class="keyword">val</span> to_melt</span> : <code class="type">t -> Latex.t</code></pre>
+<pre><span id="VALfreshen_tags"><span class="keyword">val</span> freshen_tags</span> : <code class="type">t -> t -> t</code></pre><div class="info ">
+Rename tags in second argument so that they are disjoint to those in the first.<br>
+</div>
+
+<pre><span id="VALsubsumed_upto_tags"><span class="keyword">val</span> subsumed_upto_tags</span> : <code class="type">?total:bool -> Sl_uf.t -> t -> t -> bool</code></pre><div class="info ">
+Test whether the two arguments are the same modulo the provided equalities. 
+    NB the comparison ignores tags.  
+    If the optional argument <code class="code">~total=true</code> is set to <code class="code">false</code> then 
+    check if the first multiset is a subset of the second modulo equalities.<br>
+</div>
+
+<pre><span id="VALsubsumed"><span class="keyword">val</span> subsumed</span> : <code class="type">?total:bool -> Sl_uf.t -> t -> t -> bool</code></pre><div class="info ">
+Test whether the two arguments are the same modulo the provided equalities. 
+    Contrary to <code class="code">subsumed</code> this includes tags. 
+    If the optional argument <code class="code">~total=true</code> is set to <code class="code">false</code> then 
+    check if the first multiset is a subset of the second modulo equalities.<br>
+</div>
+
+<pre><span id="VALunify"><span class="keyword">val</span> unify</span> : <code class="type">?total:bool -> ?tagpairs:bool -> t Sl_unifier.t</code></pre><div class="info ">
+Compute substitution that makes the two multisets equal up to tags. <ul>
+<li>If the optional argument <code class="code">~total=true</code> is set to <code class="code">false</code> then 
+  compute substitution that makes the first multiset a subset of the second.</li>
+<li>If the optional argument <code class="code">~tagpairs=false</code> is set to <code class="code">true</code> then return 
+  in addition to the substitution the pairs of tags of predicates unified.</li>
+</ul>
+<br>
+</div>
+
+<pre><span id="VALnorm"><span class="keyword">val</span> norm</span> : <code class="type">Sl_uf.t -> t -> t</code></pre><div class="info ">
+Replace all terms with their UF representative. NB this may replace <code class="code">nil</code> 
+    with a variable.<br>
+</div>
+</body></html>

@@ -1,0 +1,92 @@
+<html><head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Blist" rel="Chapter" href="Blist.html">
+<link title="Hashset" rel="Chapter" href="Hashset.html">
+<link title="Lru" rel="Chapter" href="Lru.html">
+<link title="Sigs" rel="Chapter" href="Sigs.html">
+<link title="Soundcheck" rel="Chapter" href="Soundcheck.html">
+<link title="Proofnode" rel="Chapter" href="Proofnode.html">
+<link title="Proofrule" rel="Chapter" href="Proofrule.html">
+<link title="Proof" rel="Chapter" href="Proof.html">
+<link title="Prover" rel="Chapter" href="Prover.html">
+<link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
+<link title="Abdrule" rel="Chapter" href="Abdrule.html">
+<link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Sl_term" rel="Chapter" href="Sl_term.html">
+<link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
+<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
+<link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
+<link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
+<link title="Sl_deqs" rel="Chapter" href="Sl_deqs.html">
+<link title="Sl_pto" rel="Chapter" href="Sl_pto.html">
+<link title="Sl_ptos" rel="Chapter" href="Sl_ptos.html">
+<link title="Sl_pred" rel="Chapter" href="Sl_pred.html">
+<link title="Sl_tpred" rel="Chapter" href="Sl_tpred.html">
+<link title="Sl_tpreds" rel="Chapter" href="Sl_tpreds.html">
+<link title="Sl_heap" rel="Chapter" href="Sl_heap.html">
+<link title="Sl_heap_rho" rel="Chapter" href="Sl_heap_rho.html">
+<link title="Sl_form" rel="Chapter" href="Sl_form.html">
+<link title="Sl_form_rho" rel="Chapter" href="Sl_form_rho.html">
+<link title="Sl_seq" rel="Chapter" href="Sl_seq.html">
+<link title="Sl_indrule" rel="Chapter" href="Sl_indrule.html">
+<link title="Tl_form" rel="Chapter" href="Tl_form.html">
+<link title="Tl_form_ltl" rel="Chapter" href="Tl_form_ltl.html"><title>Tl_form_ltl.Form</title>
+</head>
+<body>
+<code class="code"><span class="keyword">sig</span><br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;t&nbsp;=<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Atom</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Sl_heap_rho</span>.t&nbsp;*&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Next</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;*&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">G</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Util</span>.<span class="constructor">Tags</span>.elt&nbsp;*&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;*&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">F</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;*&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">And</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;list&nbsp;*&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Or</span>&nbsp;<span class="keyword">of</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;list&nbsp;*&nbsp;int<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compare&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;hash&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;pp&nbsp;:&nbsp;<span class="constructor">Format</span>.formatter&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;is_atom&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;is_next&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;is_g&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;is_f&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;is_and&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;is_or&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;is_slformula&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;is_checkable&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dest_atom&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Sl_heap_rho</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dest_next&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dest_g&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Util</span>.<span class="constructor">Tags</span>.elt&nbsp;*&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dest_f&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dest_and&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;dest_or&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mk_atom&nbsp;:&nbsp;<span class="constructor">Sl_heap_rho</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mk_next&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mk_g&nbsp;:&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mk_f&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mk_and&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mk_or&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;unfold_g&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;*&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;unfold_f&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;*&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;unfold_or&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;*&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;unfold_and&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;*&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_string&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_melt&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Latex</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parse&nbsp;:&nbsp;(<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t,&nbsp;<span class="keywordsign">'</span>a)&nbsp;<span class="constructor">MParser</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_string&nbsp;:&nbsp;string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_slformula&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Sl_form_rho</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;extract_checkable_slformula&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Sl_form_rho</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;tags&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Util</span>.<span class="constructor">Tags</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;outermost_tag&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Util</span>.<span class="constructor">Tags</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;subst_tags&nbsp;:&nbsp;<span class="constructor">Util</span>.<span class="constructor">TagPairs</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;vars&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Sl_term</span>.<span class="constructor">Set</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;equal&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;equal_upto_tags&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;step&nbsp;:&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Tl_form_ltl</span>.<span class="keywordsign">??.</span>t<br>
+<span class="keyword">end</span></code></body></html>

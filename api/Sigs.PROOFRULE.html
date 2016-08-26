@@ -1,0 +1,161 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Sigs.SEQTACTICS.html">
+<link rel="next" href="Sigs.ABDRULE.html">
+<link rel="Up" href="Sigs.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Blist" rel="Chapter" href="Blist.html">
+<link title="Hashset" rel="Chapter" href="Hashset.html">
+<link title="Lru" rel="Chapter" href="Lru.html">
+<link title="Sigs" rel="Chapter" href="Sigs.html">
+<link title="Soundcheck" rel="Chapter" href="Soundcheck.html">
+<link title="Proofnode" rel="Chapter" href="Proofnode.html">
+<link title="Proofrule" rel="Chapter" href="Proofrule.html">
+<link title="Proof" rel="Chapter" href="Proof.html">
+<link title="Prover" rel="Chapter" href="Prover.html">
+<link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
+<link title="Abdrule" rel="Chapter" href="Abdrule.html">
+<link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Sl_term" rel="Chapter" href="Sl_term.html">
+<link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
+<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
+<link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
+<link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
+<link title="Sl_deqs" rel="Chapter" href="Sl_deqs.html">
+<link title="Sl_pto" rel="Chapter" href="Sl_pto.html">
+<link title="Sl_ptos" rel="Chapter" href="Sl_ptos.html">
+<link title="Sl_pred" rel="Chapter" href="Sl_pred.html">
+<link title="Sl_tpred" rel="Chapter" href="Sl_tpred.html">
+<link title="Sl_tpreds" rel="Chapter" href="Sl_tpreds.html">
+<link title="Sl_heap" rel="Chapter" href="Sl_heap.html">
+<link title="Sl_heap_rho" rel="Chapter" href="Sl_heap_rho.html">
+<link title="Sl_form" rel="Chapter" href="Sl_form.html">
+<link title="Sl_form_rho" rel="Chapter" href="Sl_form_rho.html">
+<link title="Sl_seq" rel="Chapter" href="Sl_seq.html">
+<link title="Sl_indrule" rel="Chapter" href="Sl_indrule.html">
+<link title="Tl_form" rel="Chapter" href="Tl_form.html">
+<link title="Tl_form_ltl" rel="Chapter" href="Tl_form_ltl.html"><title>Sigs.PROOFRULE</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="Sigs.SEQTACTICS.html" title="Sigs.SEQTACTICS">Previous</a>
+&nbsp;<a class="up" href="Sigs.html" title="Sigs">Up</a>
+&nbsp;<a class="post" href="Sigs.ABDRULE.html" title="Sigs.ABDRULE">Next</a>
+</div>
+<h1>Module type <a href="type_Sigs.PROOFRULE.html">Sigs.PROOFRULE</a></h1>
+
+<pre><span class="keyword">module type</span> PROOFRULE = <code class="code">sig</code> <a href="Sigs.PROOFRULE.html">..</a> <code class="code">end</code></pre><hr width="100%">
+
+<pre><span id="TYPEseq_t"><span class="keyword">type</span> <code class="type"></code>seq_t</span> </pre>
+
+
+<pre><span id="TYPEproof_t"><span class="keyword">type</span> <code class="type"></code>proof_t</span> </pre>
+
+
+<pre><span id="TYPEaxiom_f"><span class="keyword">type</span> <code class="type"></code>axiom_f</span> = <code class="type"><a href="Sigs.PROOFRULE.html#TYPEseq_t">seq_t</a> -> string option</code> </pre>
+
+
+<pre><span id="TYPEinfrule_app"><span class="keyword">type</span> <code class="type"></code>infrule_app</span> = <code class="type">(<a href="Sigs.PROOFRULE.html#TYPEseq_t">seq_t</a> * Util.TagPairs.t * Util.TagPairs.t) list * string</code> </pre>
+
+
+<pre><span id="TYPEinfrule_f"><span class="keyword">type</span> <code class="type"></code>infrule_f</span> = <code class="type"><a href="Sigs.PROOFRULE.html#TYPEseq_t">seq_t</a> -> <a href="Sigs.PROOFRULE.html#TYPEinfrule_app">infrule_app</a> list</code> </pre>
+
+
+<pre><span id="TYPEbackrule_f"><span class="keyword">type</span> <code class="type"></code>backrule_f</span> = <code class="type"><a href="Sigs.PROOFRULE.html#TYPEseq_t">seq_t</a> -><br>       <a href="Sigs.PROOFRULE.html#TYPEseq_t">seq_t</a> -> (Util.TagPairs.t * string) list</code> </pre>
+
+
+<pre><span id="TYPEselect_f"><span class="keyword">type</span> <code class="type"></code>select_f</span> = <code class="type">int -> <a href="Sigs.PROOFRULE.html#TYPEproof_t">proof_t</a> -> int list</code> </pre>
+
+
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = <code class="type">int -> <a href="Sigs.PROOFRULE.html#TYPEproof_t">proof_t</a> -> (int list * <a href="Sigs.PROOFRULE.html#TYPEproof_t">proof_t</a>) <a href="Blist.html#TYPEt">Blist.t</a></code> </pre>
+<div class="info ">
+The type of proof rules:
+        Proof rules are functions that take an open node in a proof (i.e. an int
+				identifying the node, and the proof structure containing the node) and
+				return a list of new proofs that are obtained by applying the rule in all
+				applicable ways to the open node in the provided proof, along with a list
+				for each new proof of the newly added open nodes (i.e. the premises) 
+  *<br>
+</div>
+
+
+<pre><span id="VALmk_axiom"><span class="keyword">val</span> mk_axiom</span> : <code class="type"><a href="Sigs.PROOFRULE.html#TYPEaxiom_f">axiom_f</a> -> <a href="Sigs.PROOFRULE.html#TYPEt">t</a></code></pre><div class="info ">
+Axioms are modeled as functions that return <code class="code">Some string</code> when the 
+      input sequent is an instance of an axiom described by <code class="code">string</code>, else
+      <code class="code">None</code>.<br>
+</div>
+
+<pre><span id="VALmk_infrule"><span class="keyword">val</span> mk_infrule</span> : <code class="type"><a href="Sigs.PROOFRULE.html#TYPEinfrule_f">infrule_f</a> -> <a href="Sigs.PROOFRULE.html#TYPEt">t</a></code></pre><div class="info ">
+Rules are functions that break down a sequent to a choice of applications
+      where each application is a list of premises, including tag information,
+      and a description.<br>
+</div>
+
+<pre><span id="VALmk_backrule"><span class="keyword">val</span> mk_backrule</span> : <code class="type">bool -><br>       <a href="Sigs.PROOFRULE.html#TYPEselect_f">select_f</a> -> <a href="Sigs.PROOFRULE.html#TYPEbackrule_f">backrule_f</a> -> <a href="Sigs.PROOFRULE.html#TYPEt">t</a></code></pre><div class="info ">
+Backlink rules take:<ul>
+<li>a boolean <code class="code">eager</code> </li>
+<li>a selection function <code class="code">s</code></li>
+<li>a matching function <code class="code">m</code>
+      The selection function is applied on the current subgoal and proof, and
+      a list of goal indices is returned that represents possible back-link
+      targets. This allows flexibility e.g., in changing from ancestral-only
+      back-links to general ones.  </li>
+</ul>
+
+      Next, <code class="code">m</code> is applied to every pair consisting of the current subgoal
+      and a goal returned from the selection function. <code class="code">m</code> returns a list of
+      tag information and string descriptions, each describing a different
+      way to form a back-link.
+<p>
+
+      If <code class="code">eager</code> is true then the first result in this iteration will be chosen
+      and no back-tracking will even happen over later possible matches. 
+      Otherwise all possible matches are returned as different choices.<br>
+</div>
+
+<pre><span id="VALall_nodes"><span class="keyword">val</span> all_nodes</span> : <code class="type"><a href="Sigs.PROOFRULE.html#TYPEselect_f">select_f</a></code></pre><div class="info ">
+Ready-made selection functions doing the obvious.<br>
+</div>
+
+<pre><span id="VALancestor_nodes"><span class="keyword">val</span> ancestor_nodes</span> : <code class="type"><a href="Sigs.PROOFRULE.html#TYPEselect_f">select_f</a></code></pre>
+<pre><span id="VALfail"><span class="keyword">val</span> fail</span> : <code class="type"><a href="Sigs.PROOFRULE.html#TYPEt">t</a></code></pre><div class="info ">
+The rule that always fails.
+<p>
+Return current subgoal and proof as application.<br>
+</div>
+
+<pre><span id="VALidentity"><span class="keyword">val</span> identity</span> : <code class="type"><a href="Sigs.PROOFRULE.html#TYPEt">t</a></code></pre>
+<pre><span id="VALattempt"><span class="keyword">val</span> attempt</span> : <code class="type"><a href="Sigs.PROOFRULE.html#TYPEt">t</a> -> <a href="Sigs.PROOFRULE.html#TYPEt">t</a></code></pre><div class="info ">
+Try a rule and if it fails act as <code class="code">identity</code>.
+<p>
+Apply the second rule on all premises generated by applying the first.<br>
+</div>
+
+<pre><span id="VALcompose"><span class="keyword">val</span> compose</span> : <code class="type"><a href="Sigs.PROOFRULE.html#TYPEt">t</a> -> <a href="Sigs.PROOFRULE.html#TYPEt">t</a> -> <a href="Sigs.PROOFRULE.html#TYPEt">t</a></code></pre><div class="info ">
+Apply the list of rules in the second argument in a pairwise fashion to 
+      the premises generated by applying the first rule<br>
+</div>
+
+<pre><span id="VALcompose_pairwise"><span class="keyword">val</span> compose_pairwise</span> : <code class="type"><a href="Sigs.PROOFRULE.html#TYPEt">t</a> -> <a href="Sigs.PROOFRULE.html#TYPEt">t</a> list -> <a href="Sigs.PROOFRULE.html#TYPEt">t</a></code></pre>
+<pre><span id="VALchoice"><span class="keyword">val</span> choice</span> : <code class="type"><a href="Sigs.PROOFRULE.html#TYPEt">t</a> list -> <a href="Sigs.PROOFRULE.html#TYPEt">t</a></code></pre><div class="info ">
+Apply a list of rules on current subgoal and return all applications.
+<p>
+Try rules from a list until the first rule is found that has some 
+      applications on current sugboal and return only those.<br>
+</div>
+
+<pre><span id="VALfirst"><span class="keyword">val</span> first</span> : <code class="type"><a href="Sigs.PROOFRULE.html#TYPEt">t</a> list -> <a href="Sigs.PROOFRULE.html#TYPEt">t</a></code></pre><div class="info ">
+Apply a sequence of rules iteratively through <code class="code">compose</code>.<br>
+</div>
+
+<pre><span id="VALsequence"><span class="keyword">val</span> sequence</span> : <code class="type"><a href="Sigs.PROOFRULE.html#TYPEt">t</a> list -> <a href="Sigs.PROOFRULE.html#TYPEt">t</a></code></pre>
+<pre><span id="VALconditional"><span class="keyword">val</span> conditional</span> : <code class="type">(<a href="Sigs.PROOFRULE.html#TYPEseq_t">seq_t</a> -> bool) -> <a href="Sigs.PROOFRULE.html#TYPEt">t</a> -> <a href="Sigs.PROOFRULE.html#TYPEt">t</a></code></pre>
+<pre><span id="VALcombine_axioms"><span class="keyword">val</span> combine_axioms</span> : <code class="type"><a href="Sigs.PROOFRULE.html#TYPEt">t</a> -> <a href="Sigs.PROOFRULE.html#TYPEt">t</a> -> <a href="Sigs.PROOFRULE.html#TYPEt">t</a></code></pre></body></html>

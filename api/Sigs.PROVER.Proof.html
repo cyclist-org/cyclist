@@ -1,0 +1,116 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Sigs.PROVER.Seq.html">
+<link rel="Up" href="Sigs.PROVER.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Blist" rel="Chapter" href="Blist.html">
+<link title="Hashset" rel="Chapter" href="Hashset.html">
+<link title="Lru" rel="Chapter" href="Lru.html">
+<link title="Sigs" rel="Chapter" href="Sigs.html">
+<link title="Soundcheck" rel="Chapter" href="Soundcheck.html">
+<link title="Proofnode" rel="Chapter" href="Proofnode.html">
+<link title="Proofrule" rel="Chapter" href="Proofrule.html">
+<link title="Proof" rel="Chapter" href="Proof.html">
+<link title="Prover" rel="Chapter" href="Prover.html">
+<link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
+<link title="Abdrule" rel="Chapter" href="Abdrule.html">
+<link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Sl_term" rel="Chapter" href="Sl_term.html">
+<link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
+<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
+<link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
+<link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
+<link title="Sl_deqs" rel="Chapter" href="Sl_deqs.html">
+<link title="Sl_pto" rel="Chapter" href="Sl_pto.html">
+<link title="Sl_ptos" rel="Chapter" href="Sl_ptos.html">
+<link title="Sl_pred" rel="Chapter" href="Sl_pred.html">
+<link title="Sl_tpred" rel="Chapter" href="Sl_tpred.html">
+<link title="Sl_tpreds" rel="Chapter" href="Sl_tpreds.html">
+<link title="Sl_heap" rel="Chapter" href="Sl_heap.html">
+<link title="Sl_heap_rho" rel="Chapter" href="Sl_heap_rho.html">
+<link title="Sl_form" rel="Chapter" href="Sl_form.html">
+<link title="Sl_form_rho" rel="Chapter" href="Sl_form_rho.html">
+<link title="Sl_seq" rel="Chapter" href="Sl_seq.html">
+<link title="Sl_indrule" rel="Chapter" href="Sl_indrule.html">
+<link title="Tl_form" rel="Chapter" href="Tl_form.html">
+<link title="Tl_form_ltl" rel="Chapter" href="Tl_form_ltl.html"><title>Sigs.PROVER.Proof</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="Sigs.PROVER.Seq.html" title="Sigs.PROVER.Seq">Previous</a>
+&nbsp;<a class="up" href="Sigs.PROVER.html" title="Sigs.PROVER">Up</a>
+&nbsp;</div>
+<h1>Module <a href="type_Sigs.PROVER.Proof.html">Sigs.PROVER.Proof</a></h1>
+
+<pre><span class="keyword">module</span> Proof: <code class="type"><a href="Sigs.PROOF.html">Sigs.PROOF</a></code><code class="type"> </code></pre><hr width="100%">
+
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
+<div class="info ">
+Proof type. Invariants are:<ul>
+<li>Graph (all indices point to existing nodes).</li>
+<li>Non-empty. </li>
+<li>Rooted at 0. </li>
+<li>Connected.</li>
+<li>Leaves are open nodes, axioms or backlinks.</li>
+</ul>
+<br>
+</div>
+
+
+<pre><span id="TYPEseq_t"><span class="keyword">type</span> <code class="type"></code>seq_t</span> </pre>
+
+
+<pre><span id="TYPEnode_t"><span class="keyword">type</span> <code class="type"></code>node_t</span> </pre>
+
+
+<pre><span id="VALmk"><span class="keyword">val</span> mk</span> : <code class="type"><a href="Sigs.PROOF.html#TYPEseq_t">seq_t</a> -> <a href="Sigs.PROOF.html#TYPEt">t</a></code></pre><div class="info ">
+Constructor.  Takes a sequent and makes an open node at the root (0).<br>
+</div>
+<br>
+Other constructors, which return the indices of new
+      subgoals, if any, which are new, open nodes, and the new proof.
+<p>
+
+      All of these take an index to an open node, and a description plus
+      more arguments appropriate to the type of constructor.  The open
+      node will be replaced by another node with the same index, and its
+      description set to the parameter value.      
+<p>
+
+      Back-links *must* have equal sequents to their targets, otherwise
+      an exception will be thrown.`<br>
+
+<pre><span id="VALadd_axiom"><span class="keyword">val</span> add_axiom</span> : <code class="type">int -> string -> <a href="Sigs.PROOF.html#TYPEt">t</a> -> <a href="Sigs.PROOF.html#TYPEt">t</a></code></pre>
+<pre><span id="VALadd_backlink"><span class="keyword">val</span> add_backlink</span> : <code class="type">int -> string -> int -> Util.TagPairs.t -> <a href="Sigs.PROOF.html#TYPEt">t</a> -> <a href="Sigs.PROOF.html#TYPEt">t</a></code></pre>
+<pre><span id="VALadd_inf"><span class="keyword">val</span> add_inf</span> : <code class="type">int -><br>       string -><br>       (<a href="Sigs.PROOF.html#TYPEseq_t">seq_t</a> * Util.TagPairs.t * Util.TagPairs.t) list -><br>       <a href="Sigs.PROOF.html#TYPEt">t</a> -> int list * <a href="Sigs.PROOF.html#TYPEt">t</a></code></pre><br>
+Accessor functions.<br>
+
+<pre><span id="VALfind"><span class="keyword">val</span> find</span> : <code class="type">int -> <a href="Sigs.PROOF.html#TYPEt">t</a> -> <a href="Sigs.PROOF.html#TYPEnode_t">node_t</a></code></pre>
+<pre><span id="VALget_seq"><span class="keyword">val</span> get_seq</span> : <code class="type">int -> <a href="Sigs.PROOF.html#TYPEt">t</a> -> <a href="Sigs.PROOF.html#TYPEseq_t">seq_t</a></code></pre>
+<pre><span id="VALsize"><span class="keyword">val</span> size</span> : <code class="type"><a href="Sigs.PROOF.html#TYPEt">t</a> -> int</code></pre>
+<pre><span id="VALfresh_idx"><span class="keyword">val</span> fresh_idx</span> : <code class="type"><a href="Sigs.PROOF.html#TYPEt">t</a> -> int</code></pre>
+<pre><span id="VALfresh_idxs"><span class="keyword">val</span> fresh_idxs</span> : <code class="type">'a list -> <a href="Sigs.PROOF.html#TYPEt">t</a> -> int list</code></pre>
+<pre><span id="VALget_ancestry"><span class="keyword">val</span> get_ancestry</span> : <code class="type">int -> <a href="Sigs.PROOF.html#TYPEt">t</a> -> (int * <a href="Sigs.PROOF.html#TYPEnode_t">node_t</a>) list</code></pre>
+<pre><span id="VALis_closed_at"><span class="keyword">val</span> is_closed_at</span> : <code class="type"><a href="Sigs.PROOF.html#TYPEt">t</a> -> int -> bool</code></pre>
+<pre><span id="VALcheck"><span class="keyword">val</span> check</span> : <code class="type"><a href="Sigs.PROOF.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+Check soundness. Proof does not need to be closed.<br>
+</div>
+
+<pre><span id="VALis_closed"><span class="keyword">val</span> is_closed</span> : <code class="type"><a href="Sigs.PROOF.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+Are all nodes not open?<br>
+</div>
+
+<pre><span id="VALto_list"><span class="keyword">val</span> to_list</span> : <code class="type"><a href="Sigs.PROOF.html#TYPEt">t</a> -> (int * <a href="Sigs.PROOF.html#TYPEnode_t">node_t</a>) list</code></pre><br>
+Output functions.<br>
+
+<pre><span id="VALpp"><span class="keyword">val</span> pp</span> : <code class="type">Format.formatter -> <a href="Sigs.PROOF.html#TYPEt">t</a> -> unit</code></pre>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="Sigs.PROOF.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALto_melt"><span class="keyword">val</span> to_melt</span> : <code class="type"><a href="Sigs.PROOF.html#TYPEt">t</a> -> Latex.t</code></pre></body></html>

@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="next" href="Sl_term.UnifierSig.html">
+<link rel="Up" href="Sl_term.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Blist" rel="Chapter" href="Blist.html">
+<link title="Hashset" rel="Chapter" href="Hashset.html">
+<link title="Lru" rel="Chapter" href="Lru.html">
+<link title="Sigs" rel="Chapter" href="Sigs.html">
+<link title="Soundcheck" rel="Chapter" href="Soundcheck.html">
+<link title="Proofnode" rel="Chapter" href="Proofnode.html">
+<link title="Proofrule" rel="Chapter" href="Proofrule.html">
+<link title="Proof" rel="Chapter" href="Proof.html">
+<link title="Prover" rel="Chapter" href="Prover.html">
+<link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
+<link title="Abdrule" rel="Chapter" href="Abdrule.html">
+<link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Sl_term" rel="Chapter" href="Sl_term.html">
+<link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
+<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
+<link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
+<link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
+<link title="Sl_deqs" rel="Chapter" href="Sl_deqs.html">
+<link title="Sl_pto" rel="Chapter" href="Sl_pto.html">
+<link title="Sl_ptos" rel="Chapter" href="Sl_ptos.html">
+<link title="Sl_pred" rel="Chapter" href="Sl_pred.html">
+<link title="Sl_tpred" rel="Chapter" href="Sl_tpred.html">
+<link title="Sl_tpreds" rel="Chapter" href="Sl_tpreds.html">
+<link title="Sl_heap" rel="Chapter" href="Sl_heap.html">
+<link title="Sl_heap_rho" rel="Chapter" href="Sl_heap_rho.html">
+<link title="Sl_form" rel="Chapter" href="Sl_form.html">
+<link title="Sl_form_rho" rel="Chapter" href="Sl_form_rho.html">
+<link title="Sl_seq" rel="Chapter" href="Sl_seq.html">
+<link title="Sl_indrule" rel="Chapter" href="Sl_indrule.html">
+<link title="Tl_form" rel="Chapter" href="Tl_form.html">
+<link title="Tl_form_ltl" rel="Chapter" href="Tl_form_ltl.html"><title>Sl_term.SubstSig</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="Sl_term.html" title="Sl_term">Up</a>
+&nbsp;<a class="post" href="Sl_term.UnifierSig.html" title="Sl_term.UnifierSig">Next</a>
+</div>
+<h1>Module type <a href="type_Sl_term.SubstSig.html">Sl_term.SubstSig</a></h1>
+
+<pre><span class="keyword">module type</span> SubstSig = <code class="code">sig</code> <a href="Sl_term.SubstSig.html">..</a> <code class="code">end</code></pre><hr width="100%">
+
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = <code class="type"><a href="Sl_term.html#TYPEterm_t">Sl_term.term_t</a> Sl_term.Map.t</code> </pre>
+<div class="info ">
+The type of a substitution is a map from terms to terms.<br>
+</div>
+
+
+<pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type"><a href="Sl_term.SubstSig.html#TYPEt">t</a></code></pre><div class="info ">
+The empty substitution, which has no effect when applied.<br>
+</div>
+
+<pre><span id="VALsingleton"><span class="keyword">val</span> singleton</span> : <code class="type"><a href="Sl_term.html#TYPEterm_t">Sl_term.term_t</a> -> <a href="Sl_term.html#TYPEterm_t">Sl_term.term_t</a> -> <a href="Sl_term.SubstSig.html#TYPEt">t</a></code></pre><div class="info ">
+Constructor for a substitution mapping one variable to a term.<br>
+</div>
+
+<pre><span id="VALavoid"><span class="keyword">val</span> avoid</span> : <code class="type">Sl_term.Set.t -> Sl_term.Set.t -> <a href="Sl_term.SubstSig.html#TYPEt">t</a></code></pre><div class="info ">
+<code class="code">avoid vars subvars</code> 
+      returns a substitution that takes all variables in <code class="code">subvars</code> to  
+      variables fresh in <code class="code">vars U subvars</code>, respecting existential   
+      quantification / free variables.<br>
+</div>
+
+<pre><span id="VALpp"><span class="keyword">val</span> pp</span> : <code class="type">Format.formatter -> <a href="Sl_term.SubstSig.html#TYPEt">t</a> -> unit</code></pre><div class="info ">
+Pretty printer.<br>
+</div>
+
+<pre><span id="TYPEcheck"><span class="keyword">type</span> <code class="type"></code>check</span> = <code class="type"><a href="Sl_term.SubstSig.html#TYPEt">t</a> -> <a href="Sl_term.html#TYPEterm_t">Sl_term.term_t</a> -> <a href="Sl_term.html#TYPEterm_t">Sl_term.term_t</a> -> bool</code> </pre>
+<div class="info ">
+The type of functions that check the validity of a single substitution pair
+      within the context of the whole substitution to which it is being added.<br>
+</div>
+
+
+<pre><span id="VALtrivial_check"><span class="keyword">val</span> trivial_check</span> : <code class="type"><a href="Sl_term.SubstSig.html#TYPEcheck">check</a></code></pre><div class="info ">
+The check that is always true.<br>
+</div>
+
+<pre><span id="VALbasic_lhs_down_check"><span class="keyword">val</span> basic_lhs_down_check</span> : <code class="type"><a href="Sl_term.SubstSig.html#TYPEcheck">check</a></code></pre><div class="info ">
+When used as <code class="code">subst_check</code> in the call <code class="code">Sl_heap.unify subst_check f f'</code>, 
+      ensures that the generated substitution, when applied to <code class="code">f</code>, produces a
+      formula which is subsumed by <code class="code">f'</code><br>
+</div>
+
+<pre><span id="VALavoids_replacing_check"><span class="keyword">val</span> avoids_replacing_check</span> : <code class="type">?inverse:bool -> Sl_term.Set.t -> <a href="Sl_term.SubstSig.html#TYPEcheck">check</a></code></pre><div class="info ">
+A substitution check which prevents replacements of variables within the
+      given set of terms<br>
+</div>
+
+<pre><span id="VALcombine_checks"><span class="keyword">val</span> combine_checks</span> : <code class="type"><a href="Sl_term.SubstSig.html#TYPEcheck">check</a> list -> <a href="Sl_term.SubstSig.html#TYPEcheck">check</a></code></pre><div class="info ">
+Combinator which takes a list of substitution pair check functions and
+      combines them into a single check function<br>
+</div>
+</body></html>

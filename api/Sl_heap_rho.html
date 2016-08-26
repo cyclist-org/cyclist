@@ -1,0 +1,308 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Sl_heap.html">
+<link rel="next" href="Sl_form.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Blist" rel="Chapter" href="Blist.html">
+<link title="Hashset" rel="Chapter" href="Hashset.html">
+<link title="Lru" rel="Chapter" href="Lru.html">
+<link title="Sigs" rel="Chapter" href="Sigs.html">
+<link title="Soundcheck" rel="Chapter" href="Soundcheck.html">
+<link title="Proofnode" rel="Chapter" href="Proofnode.html">
+<link title="Proofrule" rel="Chapter" href="Proofrule.html">
+<link title="Proof" rel="Chapter" href="Proof.html">
+<link title="Prover" rel="Chapter" href="Prover.html">
+<link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
+<link title="Abdrule" rel="Chapter" href="Abdrule.html">
+<link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Sl_term" rel="Chapter" href="Sl_term.html">
+<link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
+<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
+<link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
+<link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
+<link title="Sl_deqs" rel="Chapter" href="Sl_deqs.html">
+<link title="Sl_pto" rel="Chapter" href="Sl_pto.html">
+<link title="Sl_ptos" rel="Chapter" href="Sl_ptos.html">
+<link title="Sl_pred" rel="Chapter" href="Sl_pred.html">
+<link title="Sl_tpred" rel="Chapter" href="Sl_tpred.html">
+<link title="Sl_tpreds" rel="Chapter" href="Sl_tpreds.html">
+<link title="Sl_heap" rel="Chapter" href="Sl_heap.html">
+<link title="Sl_heap_rho" rel="Chapter" href="Sl_heap_rho.html">
+<link title="Sl_form" rel="Chapter" href="Sl_form.html">
+<link title="Sl_form_rho" rel="Chapter" href="Sl_form_rho.html">
+<link title="Sl_seq" rel="Chapter" href="Sl_seq.html">
+<link title="Sl_indrule" rel="Chapter" href="Sl_indrule.html">
+<link title="Tl_form" rel="Chapter" href="Tl_form.html">
+<link title="Tl_form_ltl" rel="Chapter" href="Tl_form_ltl.html"><title>Sl_heap_rho</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="Sl_heap.html" title="Sl_heap">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="Sl_form.html" title="Sl_form">Next</a>
+</div>
+<h1>Module <a href="type_Sl_heap_rho.html">Sl_heap_rho</a></h1>
+
+<pre><span class="keyword">module</span> Sl_heap_rho: <code class="code">sig</code> <a href="Sl_heap_rho.html">..</a> <code class="code">end</code></pre><div class="info module top">
+Symbolic heaps.<br>
+</div>
+<hr width="100%">
+
+<pre><span id="TYPEabstract1"><span class="keyword">type</span> <code class="type"></code>abstract1</span> </pre>
+
+
+<pre><span id="TYPEabstract2"><span class="keyword">type</span> <code class="type"></code>abstract2</span> </pre>
+
+
+<pre><code><span id="TYPEsymheap"><span class="keyword">type</span> <code class="type"></code>symheap</span> = private {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTsymheap.rho">rho</span>&nbsp;: <code class="type">Sl_rho.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTsymheap.eqs">eqs</span>&nbsp;: <code class="type">Sl_uf.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTsymheap.deqs">deqs</span>&nbsp;: <code class="type">Sl_deqs.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTsymheap.ptos">ptos</span>&nbsp;: <code class="type">Sl_ptos.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTsymheap.inds">inds</span>&nbsp;: <code class="type">Sl_tpreds.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span class="keyword">mutable&nbsp;</span><span id="TYPEELTsymheap._terms">_terms</span>&nbsp;: <code class="type"><a href="Sl_heap_rho.html#TYPEabstract1">abstract1</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span class="keyword">mutable&nbsp;</span><span id="TYPEELTsymheap._vars">_vars</span>&nbsp;: <code class="type"><a href="Sl_heap_rho.html#TYPEabstract1">abstract1</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span class="keyword">mutable&nbsp;</span><span id="TYPEELTsymheap._tags">_tags</span>&nbsp;: <code class="type"><a href="Sl_heap_rho.html#TYPEabstract2">abstract2</a></code>;</code></td>
+
+</tr></table>
+}
+
+
+
+<pre><span class="keyword">include</span> Util.BasicType</pre>
+
+<pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type">t</code></pre><br>
+Accessor functions.<br>
+
+<pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type">t -> Sl_term.Set.t</code></pre>
+<pre><span id="VALterms"><span class="keyword">val</span> terms</span> : <code class="type">t -> Sl_term.Set.t</code></pre>
+<pre><span id="VALtags"><span class="keyword">val</span> tags</span> : <code class="type">t -> Util.Tags.t</code></pre><div class="info ">
+Return set of tags assigned to predicates in heap.<br>
+</div>
+
+<pre><span id="VALtag_pairs"><span class="keyword">val</span> tag_pairs</span> : <code class="type">t -> Util.TagPairs.t</code></pre><div class="info ">
+Return a set of pairs representing the identity function over the tags 
+    of the formula.  This is to be used (as the preserving tag pairs) 
+    whenever the inductive predicates 
+    of a formula (in terms of occurences) are untouched by an inference rule.
+    This includes rules of substitution, rewriting under equalities and 
+    manipulating all other parts apart from <code class="code">inds</code>.<br>
+</div>
+
+<pre><span id="VALto_melt"><span class="keyword">val</span> to_melt</span> : <code class="type">t -> Latex.t</code></pre>
+<pre><span id="VALequates"><span class="keyword">val</span> equates</span> : <code class="type">t -> Sl_term.t -> Sl_term.t -> bool</code></pre><div class="info ">
+Does a symbolic heap entail the equality of two terms?<br>
+</div>
+
+<pre><span id="VALdisequates"><span class="keyword">val</span> disequates</span> : <code class="type">t -> Sl_term.t -> Sl_term.t -> bool</code></pre><div class="info ">
+Does a symbolic heap entail the disequality of two terms?<br>
+</div>
+
+<pre><span id="VALfind_lval"><span class="keyword">val</span> find_lval</span> : <code class="type">Sl_term.t -> t -> Sl_pto.t option</code></pre><div class="info ">
+Find pto whose address is provably equal to given term.<br>
+</div>
+
+<pre><span id="VALidents"><span class="keyword">val</span> idents</span> : <code class="type">t -> Sl_predsym.MSet.t</code></pre><div class="info ">
+Get multiset of predicate identifiers.<br>
+</div>
+
+<pre><span id="VALinconsistent"><span class="keyword">val</span> inconsistent</span> : <code class="type">t -> bool</code></pre><div class="info ">
+Trivially false if x=y * x!=y is provable for any x,y.
+    NB only equalities and disequalities are used for this check.<br>
+</div>
+
+<pre><span id="VALsubsumed"><span class="keyword">val</span> subsumed</span> : <code class="type">?total:bool -> t -> t -> bool</code></pre><div class="info ">
+<code class="code">subsumed h h'</code> is true iff <code class="code">h</code> can be rewritten using the equalities
+    in <code class="code">h'</code> such that its spatial part becomes equal to that of <code class="code">h'</code>
+    and the pure part becomes a subset of that of <code class="code">h'</code>. 
+    If the optional argument <code class="code">~total=true</code> is set to <code class="code">false</code> then check whether
+    both pure and spatial parts are subsets of those of <code class="code">h'</code> modulo the equalities
+    of <code class="code">h'</code>.<br>
+</div>
+
+<pre><span id="VALsubsumed_upto_tags"><span class="keyword">val</span> subsumed_upto_tags</span> : <code class="type">?total:bool -> t -> t -> bool</code></pre><div class="info ">
+Like <code class="code">subsumed</code> but ignoring tag assignment.
+    If the optional argument <code class="code">~total=true</code> is set to <code class="code">false</code> then check whether
+    both pure and spatial parts are subsets of those of <code class="code">h'</code> modulo the equalities
+    of <code class="code">h'</code>.<br>
+</div>
+
+<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type">t -> t -> bool</code></pre><div class="info ">
+Checks whether two symbolic heaps are equal.<br>
+</div>
+
+<pre><span id="VALequal_upto_tags"><span class="keyword">val</span> equal_upto_tags</span> : <code class="type">t -> t -> bool</code></pre><div class="info ">
+Like <code class="code">equal</code> but ignoring tag assignment.<br>
+</div>
+
+<pre><span id="VALis_empty"><span class="keyword">val</span> is_empty</span> : <code class="type">t -> bool</code></pre><div class="info ">
+<code class="code">is_empty h</code> tests whether <code class="code">h</code> is equal to the empty heap.<br>
+</div>
+<br>
+Constructors.<br>
+
+<pre><span id="VALparse"><span class="keyword">val</span> parse</span> : <code class="type">(t, 'a) MParser.t</code></pre>
+<pre><span id="VALof_string"><span class="keyword">val</span> of_string</span> : <code class="type">string -> t</code></pre>
+<pre><span id="VALmk_rho"><span class="keyword">val</span> mk_rho</span> : <code class="type">Sl_term.t * int -> t</code></pre>
+<pre><span id="VALmk_pto"><span class="keyword">val</span> mk_pto</span> : <code class="type">Sl_pto.t -> t</code></pre>
+<pre><span id="VALmk_eq"><span class="keyword">val</span> mk_eq</span> : <code class="type">Sl_tpair.t -> t</code></pre>
+<pre><span id="VALmk_deq"><span class="keyword">val</span> mk_deq</span> : <code class="type">Sl_tpair.t -> t</code></pre>
+<pre><span id="VALmk_ind"><span class="keyword">val</span> mk_ind</span> : <code class="type">Sl_tpred.t -> t</code></pre>
+<pre><span id="VALmk"><span class="keyword">val</span> mk</span> : <code class="type">Sl_rho.t -> Sl_uf.t -> Sl_deqs.t -> Sl_ptos.t -> Sl_tpreds.t -> t</code></pre>
+<pre><span id="VALdest"><span class="keyword">val</span> dest</span> : <code class="type">t -> Sl_rho.t * Sl_uf.t * Sl_deqs.t * Sl_ptos.t * Sl_tpreds.t</code></pre>
+<pre><span id="VALcombine"><span class="keyword">val</span> combine</span> : <code class="type">t -> t -> t</code></pre><br>
+Functions <code class="code">with_*</code> accept a heap <code class="code">h</code> and a heap component <code class="code">c</code> and 
+    return the heap that results by replacing <code class="code">h</code>'s appropriate component 
+    with <code class="code">c</code>.<br>
+
+<pre><span id="VALwith_rho"><span class="keyword">val</span> with_rho</span> : <code class="type">t -> Sl_rho.t -> t</code></pre>
+<pre><span id="VALwith_eqs"><span class="keyword">val</span> with_eqs</span> : <code class="type">t -> Sl_uf.t -> t</code></pre>
+<pre><span id="VALwith_deqs"><span class="keyword">val</span> with_deqs</span> : <code class="type">t -> Sl_deqs.t -> t</code></pre>
+<pre><span id="VALwith_ptos"><span class="keyword">val</span> with_ptos</span> : <code class="type">t -> Sl_ptos.t -> t</code></pre>
+<pre><span id="VALwith_inds"><span class="keyword">val</span> with_inds</span> : <code class="type">t -> Sl_tpreds.t -> t</code></pre>
+<pre><span id="VALdel_deq"><span class="keyword">val</span> del_deq</span> : <code class="type">t -> Sl_tpair.t -> t</code></pre>
+<pre><span id="VALdel_pto"><span class="keyword">val</span> del_pto</span> : <code class="type">t -> Sl_pto.t -> t</code></pre>
+<pre><span id="VALdel_ind"><span class="keyword">val</span> del_ind</span> : <code class="type">t -> Sl_tpred.t -> t</code></pre>
+<pre><span id="VALadd_eq"><span class="keyword">val</span> add_eq</span> : <code class="type">t -> Sl_tpair.t -> t</code></pre>
+<pre><span id="VALadd_eq"><span class="keyword">val</span> add_eq</span> : <code class="type">t -> Sl_tpair.t -> t</code></pre>
+<pre><span id="VALadd_deq"><span class="keyword">val</span> add_deq</span> : <code class="type">t -> Sl_tpair.t -> t</code></pre>
+<pre><span id="VALadd_pto"><span class="keyword">val</span> add_pto</span> : <code class="type">t -> Sl_pto.t -> t</code></pre>
+<pre><span id="VALadd_ind"><span class="keyword">val</span> add_ind</span> : <code class="type">t -> Sl_tpred.t -> t</code></pre>
+<pre><span id="VALproj_sp"><span class="keyword">val</span> proj_sp</span> : <code class="type">t -> t</code></pre>
+<pre><span id="VALproj_pure"><span class="keyword">val</span> proj_pure</span> : <code class="type">t -> t</code></pre>
+<pre><span id="VALstar"><span class="keyword">val</span> star</span> : <code class="type">t -> t -> t</code></pre>
+<pre><span id="VALdiff"><span class="keyword">val</span> diff</span> : <code class="type">t -> t -> t</code></pre>
+<pre><span id="VALfixpoint"><span class="keyword">val</span> fixpoint</span> : <code class="type">(t -> t) -> t -> t</code></pre>
+<pre><span id="VALsubst"><span class="keyword">val</span> subst</span> : <code class="type">Sl_subst.t -> t -> t</code></pre>
+<pre><span id="VALuniv"><span class="keyword">val</span> univ</span> : <code class="type">Sl_term.Set.t -> t -> t</code></pre><div class="info ">
+Replace all existential variables with fresh universal variables.<br>
+</div>
+
+<pre><span id="VALsubst_existentials"><span class="keyword">val</span> subst_existentials</span> : <code class="type">t -> t</code></pre><div class="info ">
+For all equalities x'=t, remove the equality and do the substitution <code class="code">t/x'</code><br>
+</div>
+
+<pre><span id="VALproject"><span class="keyword">val</span> project</span> : <code class="type">t -> Sl_term.t list -> t</code></pre><div class="info ">
+See CSL-LICS paper for explanation.  Intuitively, do existential 
+    quantifier elimination for all variables not in parameter list.<br>
+</div>
+
+<pre><span id="VALfreshen_tags"><span class="keyword">val</span> freshen_tags</span> : <code class="type">t -> t -> t</code></pre><div class="info ">
+<code class="code">freshen_tags f g</code> will rename all tags in <code class="code">g</code> such that they are disjoint
+    from those of <code class="code">f</code>.<br>
+</div>
+
+<pre><span id="VALsubst_tags"><span class="keyword">val</span> subst_tags</span> : <code class="type">Util.TagPairs.t -> t -> t</code></pre><div class="info ">
+Substitute tags according to the function represented by the set of 
+    tag pairs provided.<br>
+</div>
+
+<pre><span id="VALunify_partial"><span class="keyword">val</span> unify_partial</span> : <code class="type">?tagpairs:bool -> t Sl_unifier.t</code></pre><div class="info ">
+Unify two heaps such that the first becomes a subformula of the second.<ul>
+<li>If the optional argument <code class="code">~tagpairs=false</code> is set to <code class="code">true</code> then in addition 
+  to the substitution found, also return the set of pairs of tags of 
+  predicates unified.</li>
+</ul>
+<br>
+</div>
+
+<pre><span id="VALclassical_unify"><span class="keyword">val</span> classical_unify</span> : <code class="type">?inverse:bool -> ?tagpairs:bool -> t Sl_unifier.t</code></pre><div class="info ">
+Unify two heaps, by using <code class="code">unify_partial</code> for the pure (classical) part whilst
+    using <code class="code">unify</code> for the spatial part.<ul>
+<li>If the optional argument <code class="code">~inverse=false</code> is set to <code class="code">true</code> then compute the 
+  required substitution for the *second* argument as opposed to the first. </li>
+<li>If the optional argument <code class="code">~tagpairs=false</code> is set to <code class="code">true</code> then in addition 
+  to the substitution found, also return the set of pairs of tags of 
+  predicates unified.</li>
+</ul>
+<br>
+</div>
+
+<pre><span id="VALcompute_frame"><span class="keyword">val</span> compute_frame</span> : <code class="type">?freshen_existentials:bool -> ?avoid:Sl_term.Set.t -> t -> t -> t option</code></pre><div class="info ">
+<code class="code">compute_frame f f'</code> computes the portion of <code class="code">f'</code> left over (the 'frame') 
+    after subtracting all the atomic formulae in the specification <code class="code">f</code>. Returns 
+    None when there are atomic formulae in <code class="code">f</code> which are not also in <code class="code">f'</code> (i.e.
+    <code class="code">f</code> is not subsumed by <code class="code">f'</code>). Any existential variables occurring in the
+    frame which also occur in the specification <code class="code">f</code> are freshened, avoiding the
+    variables in the optional argument <code class="code">~avoid=Sl_term.Set.empty</code>.<ul>
+<li>If the optional argument <code class="code">~freshen_existentials=true</code> is set to false, then
+  None will be returned in case there are existential variables in the frame
+  which also occur in the specification.</li>
+</ul>
+<br>
+</div>
+
+<pre><span id="VALnorm"><span class="keyword">val</span> norm</span> : <code class="type">t -> t</code></pre><div class="info ">
+Replace all terms with their UF representative (the UF in the heap).<br>
+</div>
+
+<pre><span id="VALall_subheaps"><span class="keyword">val</span> all_subheaps</span> : <code class="type">t -> t list</code></pre><div class="info ">
+<code class="code">all_subheaps h</code> returns a list of all the subheaps of <code class="code">h</code>. These are
+    constructed by taking:<ul>
+<li>all the subsets of the disequalities of <code class="code">h</code>;</li>
+<li>all the subsets of the points-tos of <code class="code">h</code>;</li>
+<li>all the subsets of the predicates of <code class="code">h</code>;</li>
+<li>the equivalence classes of each subset of variables in the equalities of
+        <code class="code">h</code> that also respect the equalities of <code class="code">h</code> are constructed - this is
+        done by using <code class="code">Sl_uf.remove</code> to remove subsets of variables from 
+        <code class="code">h.eqs</code>;
+    and forming all possible combinations</li>
+</ul>
+<br>
+</div>
+</body></html>

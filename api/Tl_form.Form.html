@@ -1,0 +1,190 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="Up" href="Tl_form.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Blist" rel="Chapter" href="Blist.html">
+<link title="Hashset" rel="Chapter" href="Hashset.html">
+<link title="Lru" rel="Chapter" href="Lru.html">
+<link title="Sigs" rel="Chapter" href="Sigs.html">
+<link title="Soundcheck" rel="Chapter" href="Soundcheck.html">
+<link title="Proofnode" rel="Chapter" href="Proofnode.html">
+<link title="Proofrule" rel="Chapter" href="Proofrule.html">
+<link title="Proof" rel="Chapter" href="Proof.html">
+<link title="Prover" rel="Chapter" href="Prover.html">
+<link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
+<link title="Abdrule" rel="Chapter" href="Abdrule.html">
+<link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Sl_term" rel="Chapter" href="Sl_term.html">
+<link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
+<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
+<link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
+<link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
+<link title="Sl_deqs" rel="Chapter" href="Sl_deqs.html">
+<link title="Sl_pto" rel="Chapter" href="Sl_pto.html">
+<link title="Sl_ptos" rel="Chapter" href="Sl_ptos.html">
+<link title="Sl_pred" rel="Chapter" href="Sl_pred.html">
+<link title="Sl_tpred" rel="Chapter" href="Sl_tpred.html">
+<link title="Sl_tpreds" rel="Chapter" href="Sl_tpreds.html">
+<link title="Sl_heap" rel="Chapter" href="Sl_heap.html">
+<link title="Sl_heap_rho" rel="Chapter" href="Sl_heap_rho.html">
+<link title="Sl_form" rel="Chapter" href="Sl_form.html">
+<link title="Sl_form_rho" rel="Chapter" href="Sl_form_rho.html">
+<link title="Sl_seq" rel="Chapter" href="Sl_seq.html">
+<link title="Sl_indrule" rel="Chapter" href="Sl_indrule.html">
+<link title="Tl_form" rel="Chapter" href="Tl_form.html">
+<link title="Tl_form_ltl" rel="Chapter" href="Tl_form_ltl.html"><title>Tl_form.Form</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="Tl_form.html" title="Tl_form">Up</a>
+&nbsp;</div>
+<h1>Module <a href="type_Tl_form.Form.html">Tl_form.Form</a></h1>
+
+<pre><span class="keyword">module</span> Form: <code class="code">sig</code> <a href="Tl_form.Form.html">..</a> <code class="code">end</code></pre><hr width="100%">
+
+<pre><code><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.Final"><span class="constructor">Final</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.Atom"><span class="constructor">Atom</span></span> <span class="keyword">of</span> <code class="type">Sl_heap.t * int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.Circle"><span class="constructor">Circle</span></span> <span class="keyword">of</span> <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> * int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.Diamond"><span class="constructor">Diamond</span></span> <span class="keyword">of</span> <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> * int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.Box"><span class="constructor">Box</span></span> <span class="keyword">of</span> <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> * int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.AG"><span class="constructor">AG</span></span> <span class="keyword">of</span> <code class="type">Util.Tags.elt * <a href="Tl_form.Form.html#TYPEt">t</a> * int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.EG"><span class="constructor">EG</span></span> <span class="keyword">of</span> <code class="type">Util.Tags.elt * <a href="Tl_form.Form.html#TYPEt">t</a> * int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.AF"><span class="constructor">AF</span></span> <span class="keyword">of</span> <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> * int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.EF"><span class="constructor">EF</span></span> <span class="keyword">of</span> <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> * int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.And"><span class="constructor">And</span></span> <span class="keyword">of</span> <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> list * int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.Or"><span class="constructor">Or</span></span> <span class="keyword">of</span> <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> list * int</code></code></td>
+
+</tr></table>
+
+
+
+<pre><span id="VALhash"><span class="keyword">val</span> hash</span> : <code class="type">'a -> int</code></pre>
+<pre><span id="VALis_final"><span class="keyword">val</span> is_final</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALis_atom"><span class="keyword">val</span> is_atom</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALis_circle"><span class="keyword">val</span> is_circle</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALis_diamond"><span class="keyword">val</span> is_diamond</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALis_box"><span class="keyword">val</span> is_box</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALis_ag"><span class="keyword">val</span> is_ag</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALis_eg"><span class="keyword">val</span> is_eg</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALis_af"><span class="keyword">val</span> is_af</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALis_ef"><span class="keyword">val</span> is_ef</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALis_and"><span class="keyword">val</span> is_and</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALis_or"><span class="keyword">val</span> is_or</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALdest_atom"><span class="keyword">val</span> dest_atom</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> Sl_heap.t</code></pre>
+<pre><span id="VALdest_circle"><span class="keyword">val</span> dest_circle</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALdest_diamond"><span class="keyword">val</span> dest_diamond</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALdest_box"><span class="keyword">val</span> dest_box</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALdest_ag"><span class="keyword">val</span> dest_ag</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> Util.Tags.elt * <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALdest_eg"><span class="keyword">val</span> dest_eg</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> Util.Tags.elt * <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALdest_af"><span class="keyword">val</span> dest_af</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALdest_ef"><span class="keyword">val</span> dest_ef</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALdest_and"><span class="keyword">val</span> dest_and</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a> list</code></pre>
+<pre><span id="VALdest_or"><span class="keyword">val</span> dest_or</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a> list</code></pre>
+<pre><span id="VALmk_final"><span class="keyword">val</span> mk_final</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_atom"><span class="keyword">val</span> mk_atom</span> : <code class="type">Sl_heap.t -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_circle"><span class="keyword">val</span> mk_circle</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_diamond"><span class="keyword">val</span> mk_diamond</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_box"><span class="keyword">val</span> mk_box</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_ag"><span class="keyword">val</span> mk_ag</span> : <code class="type">Util.Tags.elt -> <a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_eg"><span class="keyword">val</span> mk_eg</span> : <code class="type">Util.Tags.elt -> <a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_af"><span class="keyword">val</span> mk_af</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_ef"><span class="keyword">val</span> mk_ef</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_and"><span class="keyword">val</span> mk_and</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> list -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_or"><span class="keyword">val</span> mk_or</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> list -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALunfold_ag"><span class="keyword">val</span> unfold_ag</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a> * <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALunfold_eg"><span class="keyword">val</span> unfold_eg</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a> * <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALunfold_af"><span class="keyword">val</span> unfold_af</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a> * <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALunfold_ef"><span class="keyword">val</span> unfold_ef</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a> * <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALunfold_or"><span class="keyword">val</span> unfold_or</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a> * <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALunfold_and"><span class="keyword">val</span> unfold_and</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a> * <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALto_melt"><span class="keyword">val</span> to_melt</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> Latex.t</code></pre>
+<pre><span id="VALpp"><span class="keyword">val</span> pp</span> : <code class="type">Format.formatter -> <a href="Tl_form.Form.html#TYPEt">t</a> -> unit</code></pre>
+<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a> -> int</code></pre>
+<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALequal_upto_tags"><span class="keyword">val</span> equal_upto_tags</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALis_slformula"><span class="keyword">val</span> is_slformula</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALis_checkable"><span class="keyword">val</span> is_checkable</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALto_slformula"><span class="keyword">val</span> to_slformula</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> Sl_heap.t <a href="Blist.html#TYPEt">Blist.t</a></code></pre>
+<pre><span id="VALextract_checkable_slformula"><span class="keyword">val</span> extract_checkable_slformula</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> Sl_heap.t <a href="Blist.html#TYPEt">Blist.t</a></code></pre>
+<pre><span id="VALtags"><span class="keyword">val</span> tags</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> Util.Tags.t</code></pre>
+<pre><span id="VALoutermost_tag"><span class="keyword">val</span> outermost_tag</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> Util.Tags.t</code></pre>
+<pre><span id="VALsubst_tags"><span class="keyword">val</span> subst_tags</span> : <code class="type">Util.TagPairs.t -> <a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALe_step"><span class="keyword">val</span> e_step</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALa_step"><span class="keyword">val</span> a_step</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre>
+<pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type"><a href="Tl_form.Form.html#TYPEt">t</a> -> Sl_term.Set.t</code></pre>
+<pre><span id="VALparse"><span class="keyword">val</span> parse</span> : <code class="type">'a MParser.state -> (<a href="Tl_form.Form.html#TYPEt">t</a>, 'a) MParser.reply</code></pre>
+<pre><span id="VALof_string"><span class="keyword">val</span> of_string</span> : <code class="type">string -> <a href="Tl_form.Form.html#TYPEt">t</a></code></pre></body></html>

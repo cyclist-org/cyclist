@@ -1,0 +1,139 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Sl_form.html">
+<link rel="next" href="Sl_seq.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Blist" rel="Chapter" href="Blist.html">
+<link title="Hashset" rel="Chapter" href="Hashset.html">
+<link title="Lru" rel="Chapter" href="Lru.html">
+<link title="Sigs" rel="Chapter" href="Sigs.html">
+<link title="Soundcheck" rel="Chapter" href="Soundcheck.html">
+<link title="Proofnode" rel="Chapter" href="Proofnode.html">
+<link title="Proofrule" rel="Chapter" href="Proofrule.html">
+<link title="Proof" rel="Chapter" href="Proof.html">
+<link title="Prover" rel="Chapter" href="Prover.html">
+<link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
+<link title="Abdrule" rel="Chapter" href="Abdrule.html">
+<link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Sl_term" rel="Chapter" href="Sl_term.html">
+<link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
+<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
+<link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
+<link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
+<link title="Sl_deqs" rel="Chapter" href="Sl_deqs.html">
+<link title="Sl_pto" rel="Chapter" href="Sl_pto.html">
+<link title="Sl_ptos" rel="Chapter" href="Sl_ptos.html">
+<link title="Sl_pred" rel="Chapter" href="Sl_pred.html">
+<link title="Sl_tpred" rel="Chapter" href="Sl_tpred.html">
+<link title="Sl_tpreds" rel="Chapter" href="Sl_tpreds.html">
+<link title="Sl_heap" rel="Chapter" href="Sl_heap.html">
+<link title="Sl_heap_rho" rel="Chapter" href="Sl_heap_rho.html">
+<link title="Sl_form" rel="Chapter" href="Sl_form.html">
+<link title="Sl_form_rho" rel="Chapter" href="Sl_form_rho.html">
+<link title="Sl_seq" rel="Chapter" href="Sl_seq.html">
+<link title="Sl_indrule" rel="Chapter" href="Sl_indrule.html">
+<link title="Tl_form" rel="Chapter" href="Tl_form.html">
+<link title="Tl_form_ltl" rel="Chapter" href="Tl_form_ltl.html"><title>Sl_form_rho</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="Sl_form.html" title="Sl_form">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="Sl_seq.html" title="Sl_seq">Next</a>
+</div>
+<h1>Module <a href="type_Sl_form_rho.html">Sl_form_rho</a></h1>
+
+<pre><span class="keyword">module</span> Sl_form_rho: <code class="code">sig</code> <a href="Sl_form_rho.html">..</a> <code class="code">end</code></pre><div class="info module top">
+SL formula, basically a list of symbolic heaps, denoting their disjunction. 
+    NB no attempt to enforce variable or tag hygiene is made.  For example,
+    if <code class="code">f</code> and <code class="code">g</code> both use an existential variable <code class="code">x'</code> then <code class="code">[f;g]</code> would
+    mean the bound variable is shared.<br>
+</div>
+<hr width="100%">
+
+<pre><span class="keyword">include</span> Util.BasicType</pre>
+
+<pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type">t</code></pre><div class="info ">
+The formula <code class="code">emp</code>. NB this is not the same as <code class="code">[]</code>, which is equivalent to 
+    false.<br>
+</div>
+
+<pre><span id="EXCEPTIONNot_symheap"><span class="keyword">exception</span> Not_symheap</span></pre>
+
+<pre><span id="VALis_symheap"><span class="keyword">val</span> is_symheap</span> : <code class="type">t -> bool</code></pre><div class="info ">
+Returns true iff the formula has a single disjunct only<br>
+</div>
+
+<pre><span id="VALdest"><span class="keyword">val</span> dest</span> : <code class="type">t -> Sl_heap_rho.t</code></pre><div class="info ">
+Return the single disjunct, if there is exactly one, else raise <code class="code">Not_symheap</code>.<br>
+</div>
+
+<pre><span id="VALequal_upto_tags"><span class="keyword">val</span> equal_upto_tags</span> : <code class="type">t -> t -> bool</code></pre><div class="info ">
+Whilst <code class="code">equal</code> demands syntactic equality including tags, this version 
+    ignores tag assignment.<br>
+</div>
+
+<pre><span id="VALto_melt"><span class="keyword">val</span> to_melt</span> : <code class="type">t -> Latex.t</code></pre>
+<pre><span id="VALterms"><span class="keyword">val</span> terms</span> : <code class="type">t -> Sl_term.Set.t</code></pre>
+<pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type">t -> Sl_term.Set.t</code></pre>
+<pre><span id="VALtags"><span class="keyword">val</span> tags</span> : <code class="type">t -> Util.Tags.t</code></pre><div class="info ">
+NB no attempt is made to ensure that tags are disjoint between disjuncts. 
+    This is not necessarily unsound.<br>
+</div>
+
+<pre><span id="VALtag_pairs"><span class="keyword">val</span> tag_pairs</span> : <code class="type">t -> Util.TagPairs.t</code></pre><div class="info ">
+The proviso on tags applies here too.<br>
+</div>
+
+<pre><span id="VALinconsistent"><span class="keyword">val</span> inconsistent</span> : <code class="type">t -> bool</code></pre><div class="info ">
+Do all disjuncts entail false in the sense of <code class="code">Sl_heap_rho.inconsistent</code>?<br>
+</div>
+
+<pre><span id="VALsubsumed"><span class="keyword">val</span> subsumed</span> : <code class="type">?total:bool -> t -> t -> bool</code></pre><div class="info ">
+<code class="code">subsumed a b</code>: is it the case that for any disjunct <code class="code">a'</code> of <code class="code">a</code> there a 
+    disjunct <code class="code">b'</code> of <code class="code">b</code> such <code class="code">a'</code> is subsumed by <code class="code">b'</code>?
+    If the optional argument <code class="code">~total=true</code> is set to <code class="code">false</code> then relax the 
+    check on the spatial part so that it is included rather than equal to that
+    of <code class="code">b</code>.
+    NB this includes matching the tags exactly.<br>
+</div>
+
+<pre><span id="VALsubsumed_upto_tags"><span class="keyword">val</span> subsumed_upto_tags</span> : <code class="type">?total:bool -> t -> t -> bool</code></pre><div class="info ">
+As above but ignoring tags.
+    If the optional argument <code class="code">~total=true</code> is set to <code class="code">false</code> then relax the 
+    check on the spatial part so that it is included rather than equal to that
+    of <code class="code">b</code>.<br>
+</div>
+
+<pre><span id="VALparse"><span class="keyword">val</span> parse</span> : <code class="type">(t, 'a) MParser.t</code></pre>
+<pre><span id="VALof_string"><span class="keyword">val</span> of_string</span> : <code class="type">string -> t</code></pre>
+<pre><span id="VALstar"><span class="keyword">val</span> star</span> : <code class="type">t -> t -> t</code></pre><div class="info ">
+Star two formulas by distributing <code class="code">*</code> through <code class="code">\/</code>.<br>
+</div>
+
+<pre><span id="VALdisj"><span class="keyword">val</span> disj</span> : <code class="type">t -> t -> t</code></pre><div class="info ">
+Or two formulas (list-append).<br>
+</div>
+
+<pre><span id="VALsubst"><span class="keyword">val</span> subst</span> : <code class="type">Sl_subst.t -> t -> t</code></pre>
+<pre><span id="VALsubst_existentials"><span class="keyword">val</span> subst_existentials</span> : <code class="type">t -> t</code></pre><div class="info ">
+Like <code class="code">Sl_heap_rho.subst_existentials</code> applied to all disjuncts.<br>
+</div>
+
+<pre><span id="VALsubst_tags"><span class="keyword">val</span> subst_tags</span> : <code class="type">Util.TagPairs.t -> t -> t</code></pre><div class="info ">
+Like <code class="code">Sl_heap_rho.subst_tags</code> applied to all disjuncts.<br>
+</div>
+
+<pre><span id="VALnorm"><span class="keyword">val</span> norm</span> : <code class="type">t -> t</code></pre><div class="info ">
+Replace all terms with their UF representatives in the respective heaps.<br>
+</div>
+</body></html>
