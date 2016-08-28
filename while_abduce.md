@@ -27,7 +27,6 @@ If you want to try out the original version underpinning the [[SAS14]] paper, th
 2. You can download a 
    [virtual machine](http://cs.uni-muenster.de/sev/sas14/artifacts.php)
    virtual machine from the SAS-14 website. You can run this VM using Virtual Box.
-   (**NB the link is currently dead, so much for preserving artefacts.**)
 
 Running ``while_abduce.native`` without options will produce some help text explaining its usage.
 
