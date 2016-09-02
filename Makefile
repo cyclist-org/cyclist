@@ -1,11 +1,10 @@
 OCB := ocamlbuild -j 8 -ocamldoc "ocamldoc -hide-warnings"
 
-TARBALL:=cyclist.tar.gz
 BENCHDIR:=benchmarks
 
 #FOMAIN:=./src/firstorder/fo_prove.native
 SLMAIN:=./src/seplog/sl_prove.native
-PRMAIN:=./src/goto/goto_prove.native
+#PRMAIN:=./src/goto/goto_prove.native
 PR2MAIN:=./src/while/while_prove.native
 XTDPRMAIN:=./src/extended_while/extended_while_prove.native
 ABD2MAIN:=./src/while/while_abduce.native
@@ -21,6 +20,9 @@ tests:
 
 check: tests
 	@for TST in _build/tests/test_*.native ; do $$TST ; done
+
+docs: 
+	$(OCB) src/cyclist.docdir/index.html
 
 %.native: 
 	$(OCB) "$@"
