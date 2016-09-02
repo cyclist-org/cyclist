@@ -52,8 +52,11 @@ let compare f g = Pervasives.compare f.hkey g.hkey
 let equal f g = f==g 
 let hash f = f.Hashcons.hkey
 
-let mk_true () = HForm.hashcons ft (True)
-let mk_emp () =  HForm.hashcons ft (Emp)
+let true_val = HForm.hashcons ft (True)
+let emp_val = HForm.hashcons ft (Emp)
+
+let mk_true () = true_val
+let mk_emp () = emp_val
 let mk_eq p =    HForm.hashcons ft (Eq p)
 let mk_deq p =   HForm.hashcons ft (Deq p)
 let mk_pto pto = HForm.hashcons ft (Pto pto)
@@ -219,97 +222,85 @@ let rec subst theta f = match f.node with
 (* enfore the variable convention *)
 (* i.e. all quantifies bind distinct variables and these *)
 (* are in addition distinct to all free variables *)
-let enforce_vc f = 
-  let rec alphanorm a v = match a.node with
-    | True | Emp | Eq _ | Deq _ | Pto _ | Pred _ -> (a, v)
-    | Star(f, g) -> 
-      let (f', v') = alphanorm f v in
-      let (g', v'') = alphanorm g v' in 
-      (mk_star f' g', v'') 
-    | Or(f, g) ->  
-      let (f', v') = alphanorm f v in
-      let (g', v'') = alphanorm g v' in 
-      (mk_or f' g', v'') 
-    | Exists(x, f) ->
-      if Sl_term.Set.mem x v then
-        let y = Sl_term.fresh_fvar v in
-        let f' = subst (Sl_subst.singleton x y) f in
-        let (f', v') = alphanorm f' (Sl_term.Set.add y v) in
-        (mk_exists y f', v')
-      else 
-        let (f', v') = alphanorm f (Sl_term.Set.add x v) in
-        (mk_exists x f', v')
-  in
-  fst (alphanorm f (free_vars f))
+(* let enforce_vc f =                                           *)
+(*   let rec alphanorm a v = match a.node with                  *)
+(*     | True | Emp | Eq _ | Deq _ | Pto _ | Pred _ -> (a, v)   *)
+(*     | Star(f, g) ->                                          *)
+(*       let (f', v') = alphanorm f v in                        *)
+(*       let (g', v'') = alphanorm g v' in                      *)
+(*       (mk_star f' g', v'')                                   *)
+(*     | Or(f, g) ->                                            *)
+(*       let (f', v') = alphanorm f v in                        *)
+(*       let (g', v'') = alphanorm g v' in                      *)
+(*       (mk_or f' g', v'')                                     *)
+(*     | Exists(x, f) ->                                        *)
+(*       if Sl_term.Set.mem x v then                            *)
+(*         let y = Sl_term.fresh_fvar v in                      *)
+(*         let f' = subst (Sl_subst.singleton x y) f in         *)
+(*         let (f', v') = alphanorm f' (Sl_term.Set.add y v) in *)
+(*         (mk_exists y f', v')                                 *)
+(*       else                                                   *)
+(*         let (f', v') = alphanorm f (Sl_term.Set.add x v) in  *)
+(*         (mk_exists x f', v')                                 *)
+(*   in                                                         *)
+(*   fst (alphanorm f (free_vars f))                            *)
 
-let is_symheap f =
-  let rec body h = match h.node with
-    | Star(f, g) -> is_atom f && body g
-    | True | Emp | Eq _ | Deq _ | Pto _ | Pred _ -> true
-    | Or _ | Exists _ -> false
-  in
-  let rec exists h = match h.node with 
-    | Exists(_, k) -> exists k
-    | True | Emp | Eq _ | Deq _ | Pto _ | Pred _ | Star _ -> body h
-    | Or _ -> false
-  in
-  exists f
     
-let is_dsh f =
-  let rec disj h = match h.node with
-    | Or(f, g) -> is_symheap f && disj g
-    | _ -> is_symheap h
-  in
-  is_symheap f || disj f     
+(* let is_dsh f =                           *)
+(*   let rec disj h = match h.node with     *)
+(*     | Or(f, g) -> is_symheap f && disj g *)
+(*     | _ -> is_symheap h                  *)
+(*   in                                     *)
+(*   is_symheap f || disj f                 *)
 
 
-let to_dsh f =
-  let rec norm a = match a.node with
-    (* (f \/ g) \/ h = f \/ (g \/ h) *)
-    | Or({node=Or(f, g)}, h) -> mk_or f (mk_or g h)
+(* let to_dsh f =                                                     *)
+(*   let rec norm a = match a.node with                               *)
+(*     (* (f \/ g) \/ h = f \/ (g \/ h) *)                            *)
+(*     | Or({node=Or(f, g)}, h) -> mk_or f (mk_or g h)                *)
     
-    (* (f * g) * h = f * (g * h) *)
-    | Star({node=Star(f, g)}, h) ->  mk_star f (mk_star g h)
+(*     (* (f * g) * h = f * (g * h) *)                                *)
+(*     | Star({node=Star(f, g)}, h) ->  mk_star f (mk_star g h)       *)
     
-    (* \exists x. (f \/ g) = (\exists x.f) \/ (\exists x.g) *)
-    | Exists(x, {node=Or(f,  g)}) -> 
-      mk_or (mk_exists x f) (mk_exists x g)
+(*     (* \exists x. (f \/ g) = (\exists x.f) \/ (\exists x.g) *)     *)
+(*     | Exists(x, {node=Or(f,  g)}) ->                               *)
+(*       mk_or (mk_exists x f) (mk_exists x g)                        *)
       
-    (* f * (g \/ h) = (f*g) \/ (f*h) *)
-    | Star(f, {node=Or(g, h)}) -> 
-      mk_or (mk_star f g) (mk_star f h)
-    (* (f \/ g) * h) = (f*h) \/ (g*h) *)
-    | Star({node=Or(f, g)}, h) -> 
-      mk_or (mk_star f h) (mk_star g h)
+(*     (* f * (g \/ h) = (f*g) \/ (f*h) *)                            *)
+(*     | Star(f, {node=Or(g, h)}) ->                                  *)
+(*       mk_or (mk_star f g) (mk_star f h)                            *)
+(*     (* (f \/ g) * h) = (f*h) \/ (g*h) *)                           *)
+(*     | Star({node=Or(f, g)}, h) ->                                  *)
+(*       mk_or (mk_star f h) (mk_star g h)                            *)
     
-    (* (\exists x.f) * f' = \exists x .(f*f') *)
-    (* whenever x \notin free_vars f' *)
-    | Star({node=Exists(x, f)}, f') ->
-      if Sl_term.Set.mem x (free_vars f') then a else 
-        mk_exists x (mk_star f f')
-    | Star(f, {node=Exists(x, f')}) ->
-      if Sl_term.Set.mem x (free_vars f) then a else 
-        mk_exists x (mk_star f f')
+(*     (* (\exists x.f) * f' = \exists x .(f*f') *)                   *)
+(*     (* whenever x \notin free_vars f' *)                           *)
+(*     | Star({node=Exists(x, f)}, f') ->                             *)
+(*       if Sl_term.Set.mem x (free_vars f') then a else              *)
+(*         mk_exists x (mk_star f f')                                 *)
+(*     | Star(f, {node=Exists(x, f')}) ->                             *)
+(*       if Sl_term.Set.mem x (free_vars f) then a else               *)
+(*         mk_exists x (mk_star f f')                                 *)
     
-    (* | Exists(x, {node=Exists(y,f)}) ->           *)
-    (*   if (Sl_term.compare x y) <= 0 then a else  *)
-    (*     mk_exists y (mk_exists x f)              *)
+(*     (* | Exists(x, {node=Exists(y,f)}) ->           *)             *)
+(*     (*   if (Sl_term.compare x y) <= 0 then a else  *)             *)
+(*     (*     mk_exists y (mk_exists x f)              *)             *)
     
-    | Exists(x, f) -> mk_exists x (norm f)
-    | Or(f, g) -> mk_or (norm f) (norm g)
-    | Star(f, g) -> mk_star (norm f) (norm g)
+(*     | Exists(x, f) -> mk_exists x (norm f)                         *)
+(*     | Or(f, g) -> mk_or (norm f) (norm g)                          *)
+(*     | Star(f, g) -> mk_star (norm f) (norm g)                      *)
     
-    (* | Eq(x,y) ->                                             *)
-    (*   if (Sl_term.compare x y) <= 0 then a else mk_eq (y,x)  *)
-    (* | Deq(x,y) ->                                            *)
-    (*   if (Sl_term.compare x y) <= 0 then a else mk_deq (y,x) *)
-    | _ -> a
-  in
-  let res = Lib.fixpoint equal norm (enforce_vc f) in
-  assert (is_dsh res) ; res 
+(*     (* | Eq(x,y) ->                                             *) *)
+(*     (*   if (Sl_term.compare x y) <= 0 then a else mk_eq (y,x)  *) *)
+(*     (* | Deq(x,y) ->                                            *) *)
+(*     (*   if (Sl_term.compare x y) <= 0 then a else mk_deq (y,x) *) *)
+(*     | _ -> a                                                       *)
+(*   in                                                               *)
+(*   let res = Lib.fixpoint equal norm (enforce_vc f) in              *)
+(*   assert (is_dsh res) ; res                                        *)
 
-let to_symheap f =
-  if not (is_symheap f) then failwith "to_symheap" else f
+(* let to_symheap f =                                        *)
+(*   if not (is_symheap f) then failwith "to_symheap" else f *)
 
 let rec fold_atoms fn g a =
   match g.node with
@@ -337,26 +328,48 @@ let rec map_atoms fn g =
     | Star(l, r) -> mk_star (map_atoms fn l) (map_atoms fn r) 
     | Or(l, r) -> mk_or (map_atoms fn l) (map_atoms fn r)
     | Exists(x, f) -> mk_exists x (map_atoms fn f) 
-  
 
-(* type path =                                 *)
-(*   | Top                                     *)
-(*   | StarL of path * _t                      *)
-(*   | StarR of _t * path                      *)
-(*   | OrL of path * _t                        *)
-(*   | OrR of _t * path                        *)
-(*   | ExistsD of Sl_term.t * path             *)
+let unify_atoms 
+  ?(sub_check=Sl_subst.trivial_check)
+  ?(cont=Sl_unifier.trivial_continuation) 
+  ?(init_state=Sl_unifier.empty_state) f g =
+  match (f.node, g.node) with
+  | True, True | Emp, Emp -> cont init_state
+  | Eq p, Eq p' | Deq p, Deq p' -> 
+    Sl_tpair.unify ~sub_check ~cont ~init_state p p'
+  | Pto(pto), Pto(pto') -> 
+    Sl_pto.unify ~sub_check ~cont ~init_state pto pto'
+  | Pred(pred), Pred(pred') -> 
+    Sl_tpred.unify ~sub_check ~cont ~init_state pred pred'
+  | _, _ -> None
 
-(* type location = _t * path                   *)
+module Zipper =
+  struct
+    type path =
+      | Top
+      | StarL of path * _t
+      | StarR of _t * path
+      | OrL of path * _t
+      | OrR of _t * path
+      | ExistsD of Sl_term.t * path
 
-(* let change (_, p) f = (f, p)                *)
-(* let rec zip (f, p) = match p with           *)
-(*   | Top -> f                                *)
-(*   | StarL(q, r) -> zip (mk_star f r, q)     *)
-(*   | StarR(l, q) -> zip (mk_star l f, q)     *)
-(*   | OrL(q, r) -> zip (mk_or f r, q)         *)
-(*   | OrR(l, q) -> zip (mk_or l f, q)         *)
-(*   | ExistsD(x, q) -> zip (mk_exists x f, q) *)
+    type t = _t * path
+
+    let change (_, p) f = (f, p)
+
+    let rec zip (f, p) = match p with
+      | Top -> f
+      | StarL(q, r) -> zip (mk_star f r, q)
+      | StarR(l, q) -> zip (mk_star l f, q)
+      | OrL(q, r) -> zip (mk_or f r, q)
+      | OrR(l, q) -> zip (mk_or l f, q)
+      | ExistsD(x, q) -> zip (mk_exists x f, q)
+
+    let rec remove ?(empty=true_val) = function
+      | Top -> empty
+      | ExistsD(_, q) -> remove ~empty q
+      | StarL(q, f) | OrL(q, f) | StarR(f, q) | OrR(f, q) -> zip (f, q)
+    
 
 (* let fold f g a =                                                        *)
 (*   let rec aux f ((g, path) as loc) a =                                  *)
@@ -400,6 +413,29 @@ let rec map_atoms fn g =
 (*       | Exists(x, g) -> search pred (g, ExistsD(x, p))     *)
 (*   in                                                       *)
 (*   search p (f, Top)                                        *)
+
+    (* let find_atom pred f =                                 *)
+    (*   let rec search pred ((f, p) as loc) =                *)
+    (*     match f.node with                                  *)
+    (*       | True | Emp | Eq _ | Deq _ | Pto _ | Pred _ ->  *)
+    (*         if pred f then Some loc else None              *)
+    (*       | Star(l, r) ->                                  *)
+    (*         begin                                          *)
+    (*           match search pred (l, StarL(p, r)) with      *)
+    (*           | None -> search pred (r, StarR(l, p))       *)
+    (*           | res -> res                                 *)
+    (*         end                                            *)
+    (*       | Or(l, r) ->                                    *)
+    (*         begin                                          *)
+    (*           match search pred (l, OrL(p, r)) with        *)
+    (*           | None -> search pred (r, OrR(l, p))         *)
+    (*           | res -> res                                 *)
+    (*         end                                            *)
+    (*       | Exists(x, g) -> search pred (g, ExistsD(x, p)) *)
+    (*   in                                                   *)
+    (*   search pred (f, Top)                                 *)
+  
+  end
 
 module CommonImplementation = 
   struct
@@ -455,6 +491,19 @@ module Atom =
 module SymHeap =
   struct
     include CommonImplementation
+
+    let is_symheap f =
+      let rec body h = match h.node with
+        | Star(f, g) -> is_atom f && body g
+        | True | Emp | Eq _ | Deq _ | Pto _ | Pred _ -> true
+        | Or _ | Exists _ -> false
+      in
+      let rec exists h = match h.node with 
+        | Exists(_, k) -> exists k
+        | True | Emp | Eq _ | Deq _ | Pto _ | Pred _ | Star _ -> body h
+        | Or _ -> false
+      in
+      exists f
     
     let parse st =
       (parse >>= 
@@ -558,6 +607,13 @@ module SymHeap =
             g
         )
         f
+    
+    (* let rec unify                                *)
+    (*   ?(sub_check=Sl_subst.trivial_check)        *)
+    (*   ?(cont=Sl_unifier.trivial_continuation)    *)
+    (*   ?(init_state=Sl_unifier.empty_state) f g = *)
+       
+    
     
     (* let norm f =                                       *)
     (*   let uf = _build_uf f in                          *)
