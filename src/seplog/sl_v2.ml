@@ -4,6 +4,8 @@ open MParser
 open Lib
 open Util
 
+let always_parenthesise = ref false
+
 type _t = node hash_consed
 and node =
   | True
@@ -48,9 +50,18 @@ module HForm = Make(Form)
 
 let ft = HForm.create 251
 
-let compare f g = Pervasives.compare f.hkey g.hkey
+let compare f g = Pervasives.compare f.tag g.tag
 let equal f g = f==g 
 let hash f = f.Hashcons.hkey
+
+let rec equal_upto_tags x y = match (x.node,y.node) with
+  | True,_ | Emp,_ | Eq _,_ | Deq _,_ | Pto _,_ -> equal x y
+  | Pred(pred), Pred(pred') -> Sl_tpred.equal_upto_tags pred pred'
+  | Star(f, g), Star(f', g') 
+  | Or(f, g), Or(f', g') -> equal_upto_tags f f' && equal_upto_tags g g'
+  | Exists(x, f), Exists(x', f') -> Sl_term.equal x x' && equal_upto_tags f f'
+  | _, _ -> false
+
 
 let true_val = HForm.hashcons ft (True)
 let emp_val = HForm.hashcons ft (Emp)
@@ -129,7 +140,7 @@ let dest_exists f = match f.node with
 
 let rec pp fmt f = 
   let paren p fmt f =
-    if is_atom f || is_star f || p f then 
+    if (not !always_parenthesise) && (is_atom f || is_star f || p f) then 
       pp fmt f 
     else 
       Format.fprintf fmt "@[%s%a%s@]" symb_lp.str pp f symb_rp.str 
@@ -308,13 +319,17 @@ let rec fold_atoms fn g a =
     | Star(l, r) | Or(l, r) -> fold_atoms fn r (fold_atoms fn l a) 
     | Exists(_, f) -> fold_atoms fn f a 
 
-let rec find_atoms pred g = 
+let rec find_map_atoms fn g =
   match g.node with
-    | True | Emp | Eq _ | Deq _ | Pto _ | Pred _ -> Option.pred pred g
+    | True | Emp | Eq _ | Deq _ | Pto _ | Pred _ -> fn g
+    | Exists(_, f) -> find_map_atoms fn f
     | Star(l, r) | Or(l, r) ->
-      let l' = find_atoms pred l in
-      if Option.is_some l' then l' else find_atoms pred r
-    | Exists(_, f) -> find_atoms pred f 
+      match find_map_atoms fn l with
+      | None -> find_map_atoms fn r
+      | v -> v
+
+let find_atoms pred f = 
+  find_map_atoms (fun g -> Option.pred pred g) f
 
 let rec exists_atoms pred g =
   match g.node with
@@ -328,20 +343,6 @@ let rec map_atoms fn g =
     | Star(l, r) -> mk_star (map_atoms fn l) (map_atoms fn r) 
     | Or(l, r) -> mk_or (map_atoms fn l) (map_atoms fn r)
     | Exists(x, f) -> mk_exists x (map_atoms fn f) 
-
-let unify_atoms 
-  ?(sub_check=Sl_subst.trivial_check)
-  ?(cont=Sl_unifier.trivial_continuation) 
-  ?(init_state=Sl_unifier.empty_state) f g =
-  match (f.node, g.node) with
-  | True, True | Emp, Emp -> cont init_state
-  | Eq p, Eq p' | Deq p, Deq p' -> 
-    Sl_tpair.unify ~sub_check ~cont ~init_state p p'
-  | Pto(pto), Pto(pto') -> 
-    Sl_pto.unify ~sub_check ~cont ~init_state pto pto'
-  | Pred(pred), Pred(pred') -> 
-    Sl_tpred.unify ~sub_check ~cont ~init_state pred pred'
-  | _, _ -> None
 
 module Zipper =
   struct
@@ -414,26 +415,25 @@ module Zipper =
 (*   in                                                       *)
 (*   search p (f, Top)                                        *)
 
-    (* let find_atom pred f =                                 *)
-    (*   let rec search pred ((f, p) as loc) =                *)
-    (*     match f.node with                                  *)
-    (*       | True | Emp | Eq _ | Deq _ | Pto _ | Pred _ ->  *)
-    (*         if pred f then Some loc else None              *)
-    (*       | Star(l, r) ->                                  *)
-    (*         begin                                          *)
-    (*           match search pred (l, StarL(p, r)) with      *)
-    (*           | None -> search pred (r, StarR(l, p))       *)
-    (*           | res -> res                                 *)
-    (*         end                                            *)
-    (*       | Or(l, r) ->                                    *)
-    (*         begin                                          *)
-    (*           match search pred (l, OrL(p, r)) with        *)
-    (*           | None -> search pred (r, OrR(l, p))         *)
-    (*           | res -> res                                 *)
-    (*         end                                            *)
-    (*       | Exists(x, g) -> search pred (g, ExistsD(x, p)) *)
-    (*   in                                                   *)
-    (*   search pred (f, Top)                                 *)
+    let search_atom fn f =
+      let rec search fn ((f, p) as loc) =
+        match f.node with
+          | True | Emp | Eq _ | Deq _ | Pto _ | Pred _ -> fn loc
+          | Exists(x, g) -> search fn (g, ExistsD(x, p))
+          | Star(l, r) ->
+            begin
+              match search fn (l, StarL(p, r)) with
+              | None -> search fn (r, StarR(l, p))
+              | res -> res
+            end
+          | Or(l, r) ->
+            begin
+              match search fn (l, OrL(p, r)) with
+              | None -> search fn (r, OrR(l, p))
+              | res -> res
+            end
+      in
+      search fn (f, Top)
   
   end
 
@@ -443,6 +443,7 @@ module CommonImplementation =
     
     let hash = hash
     let equal = equal
+    let equal_upto_tags = equal_upto_tags
     let compare = compare
     let pp = pp
     let to_string = to_string
@@ -479,6 +480,20 @@ module CommonImplementation =
 module Atom =
   struct
     include CommonImplementation
+    
+    let unify
+      ?(sub_check=Sl_subst.trivial_check)
+      ?(cont=Sl_unifier.trivial_continuation) 
+      ?(init_state=Sl_unifier.empty_state) f g =
+      match (f.node, g.node) with
+      | True, True | Emp, Emp -> cont init_state
+      | Eq p, Eq p' | Deq p, Deq p' -> 
+        Sl_tpair.unify ~sub_check ~cont ~init_state p p'
+      | Pto(pto), Pto(pto') -> 
+        Sl_pto.unify ~sub_check ~cont ~init_state pto pto'
+      | Pred(pred), Pred(pred') -> 
+        Sl_tpred.unify ~sub_check ~cont ~init_state pred pred'
+      | _, _ -> None
     
     let parse st =
       (parse >>= 
@@ -608,11 +623,40 @@ module SymHeap =
         )
         f
     
-    (* let rec unify                                *)
-    (*   ?(sub_check=Sl_subst.trivial_check)        *)
-    (*   ?(cont=Sl_unifier.trivial_continuation)    *)
-    (*   ?(init_state=Sl_unifier.empty_state) f g = *)
+    let rec unify
+      ?(sub_check=Sl_subst.trivial_check)
+      ?(cont=Sl_unifier.trivial_continuation)
+      ?(init_state=Sl_unifier.empty_state) f g =
+        let foreach_g (f_atom, f_path) (g_atom, g_path) =
+          let newcont state =
+            let f' = Zipper.remove f_path in
+            let g' = Zipper.remove g_path in
+            match (f'.node, g'.node) with
+            | True, True -> cont state
+            | _ -> unify ~sub_check ~cont ~init_state:state f' g' in
+          Atom.unify ~sub_check ~cont:newcont ~init_state f_atom g_atom in
+        let foreach_f f_loc =
+          Zipper.search_atom (fun g_loc -> foreach_g f_loc g_loc) g in 
+        Zipper.search_atom foreach_f f
        
+    (* let rec unify                                                                                                   *)
+    (* (* ?(total=true) ?(tagpairs=false)  *)                                                                          *)
+    (*     ?(sub_check=Sl_subst.trivial_check)                                                                         *)
+    (*     ?(cont=Sl_unifier.trivial_continuation)                                                                     *)
+    (*     ?(init_state=Sl_unifier.empty_state) f g =                                                                  *)
+    (*   if is_true f then                                                                                             *)
+    (*     if (* not total ||*) is_true g then cont init_state else None                                               *)
+    (*   else if is_emp f then                                                                                         *)
+    (*     if (* not total ||*) is_true g then cont init_state else None                                               *)
+    (*   else                                                                                                          *)
+    (*     let a = choose inds in                                                                                      *)
+    (*     let inds = remove a inds in                                                                                 *)
+    (*     let f a' =                                                                                                  *)
+    (*       Sl_tpred.unify ~tagpairs                                                                                  *)
+    (*         ~sub_check                                                                                              *)
+    (*         ~cont:(fun state' -> unify ~total ~tagpairs ~sub_check ~cont ~init_state:state' inds (remove a' inds')) *)
+    (*         ~init_state a a' in                                                                                     *)
+    (*     find_map f inds'                                                                                            *)
     
     
     (* let norm f =                                       *)
@@ -635,6 +679,7 @@ module SymHeap =
 module type CommonInterface = 
   sig
     include Util.BasicType
+    val equal_upto_tags : t -> t -> bool
     val parse : (t, 'a) MParser.parser
     val of_string : string -> t
     

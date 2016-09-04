@@ -1,6 +1,7 @@
 module type CommonInterface = 
   sig
     include Util.BasicType
+    val equal_upto_tags : t -> t -> bool
     val parse : (t, 'a) MParser.parser
     val of_string : string -> t
     
@@ -35,6 +36,8 @@ module type CommonInterface =
 module Atom : 
 sig
   include CommonInterface
+  
+  val unify : t Sl_unifier.t
 end
 
 module SymHeap :
@@ -56,6 +59,8 @@ sig
   val inconsistent : t -> bool
   val memory_consuming : t -> bool
   val constructively_valued : t -> bool
+  
+  val unify: t Sl_unifier.t
   
 (*   val to_melt : t -> Latex.t                           *)
 (*   val of_dsh : DSH.t -> t                              *)  
