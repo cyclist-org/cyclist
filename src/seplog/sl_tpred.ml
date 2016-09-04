@@ -8,6 +8,8 @@ include TPred
 
 let subst theta (tag, pred) = (tag, Sl_pred.subst theta pred)
 
+let equal_upto_tags (_, p1) (_, p2) = Sl_pred.equal p1 p2
+
 let subst_tag tagpairs (tag, pred) =
   let (_, tag'') = TagPairs.find (fun (tag',_) -> tag=tag') tagpairs in
   (tag'', pred) 
@@ -54,5 +56,13 @@ let parse st =
 let norm eqs (t, pred) = (t, Sl_pred.norm eqs pred)
 
 let of_string = mk_of_string parse
-
-let pp fmt (_, pred) = Sl_pred.pp fmt pred
+  
+let pp fmt (tag, pred) =
+  Format.fprintf fmt "@[%a%s%d%s%s%s@]"
+    Sl_predsym.pp (Sl_pred.predsym pred)
+    symb_caret.str
+    tag 
+    symb_lp.str 
+    (Sl_term.FList.to_string_sep symb_comma.sep (Sl_pred.args pred)) 
+    symb_rp.str
+  

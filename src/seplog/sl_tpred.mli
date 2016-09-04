@@ -1,6 +1,9 @@
 (** Tagged predicate, as a pair of an integer and a predicate. *)
 include Util.BasicType with type t = int * Sl_pred.t
 
+val equal_upto_tags : t -> t -> bool
+(** Compare for equality two tagged predicates while ignoring tags. *)
+
 val subst : Sl_subst.t -> t -> t
 
 val subst_tag : Util.TagPairs.t -> t -> t
