@@ -67,6 +67,8 @@ sig
   val singleton : term_t -> term_t -> t
   (** Constructor for a substitution mapping one variable to a term. *)
   
+  val of_list : (term_t * term_t) list -> t
+  
   val avoid : Set.t -> Set.t -> t
   (** [avoid vars subvars] 
       returns a substitution that takes all variables in [subvars] to  
@@ -113,6 +115,7 @@ module type UnifierSig =
     val empty_state : state
     (** The unifier state consisting of the empty substitution and the empty set of
         tag pairs *)
+    val pp_state : Format.formatter -> state -> unit
   
     type continuation = state -> state option 
     val trivial_continuation : continuation
