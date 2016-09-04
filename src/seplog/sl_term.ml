@@ -261,6 +261,7 @@ sig
   type check = t -> term_t -> term_t -> bool
   val empty : t
   val singleton : term_t -> term_t -> t
+  val of_list : (term_t * term_t) list -> t
   val avoid : Set.t -> Set.t -> t
   val pp : Format.formatter -> t -> unit
   val trivial_check : check
@@ -276,6 +277,7 @@ module Subst =
 
     let empty = Map.empty
     let singleton x y = Map.add x y empty
+    let of_list = Map.of_list
     let avoid vars subvars =
       let allvars = Set.union vars subvars in
       let (exist_vars, free_vars) =
@@ -286,6 +288,8 @@ module Subst =
         (Blist.append 
           (Blist.combine free_vars fresh_f_vars)
           (Blist.combine exist_vars fresh_e_vars))
+    
+    
     
     let pp = Map.pp pp
     let trivial_check _ _ _ = true
@@ -309,6 +313,8 @@ module type UnifierSig =
   sig
     type state = Subst.t * Util.TagPairs.t
     val empty_state : state
+    val pp_state : Format.formatter -> state -> unit
+    
     type continuation = state -> state option 
     val trivial_continuation : continuation
     val basic_lhs_down_verifier : continuation
@@ -333,7 +339,9 @@ module Unifier =
   struct
     type state = Subst.t * TagPairs.t
     let empty_state = Subst.empty, TagPairs.empty
-
+    let pp_state fmt (theta, tagpairs) = 
+      Format.fprintf fmt "@[(%a,@ %a)@]" Subst.pp theta TagPairs.pp tagpairs
+    
     type continuation = state -> state option 
     let trivial_continuation state = Some state
   
