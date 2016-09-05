@@ -324,7 +324,9 @@ module CommonImplementation =
     let terms f = _terms false f
     let free_vars f = Sl_term.filter_vars (_terms true f)
     
-    (* capture avoiding substitution *)
+    
+    (* substitution *)
+    (* can lead to capture if the target terms are not free in all scopes *)
     let rec subst theta f = match f.node with
       | True | Emp -> f
       | Eq p -> mk_eq (Sl_tpair.subst theta p)
@@ -334,6 +336,39 @@ module CommonImplementation =
       | Star(f, g) -> mk_star (subst theta f) (subst theta g)
       | Or(f, g) -> mk_or (subst theta f) (subst theta g) 
       | Exists(x, f) -> mk_exists x (subst (Sl_term.Map.remove x theta) f)
+    
+    let rec substitutable x t f = match f.node with 
+      | True | Emp | Eq _ | Deq _ | Pto _ | Pred _ -> true
+      | Star(g, h) | Or(g, h) -> substitutable x t g && substitutable x t h 
+      | Exists(y, g) -> 
+        not (Sl_term.Set.mem x (free_vars f)) ||
+        not (Sl_term.equal y t) && substitutable x t g
+    
+    let subst theta f = 
+      assert (Sl_term.Map.for_all (fun x t -> substitutable x t f) theta) ;
+      subst theta f     
+    
+    (* alpha renaming *)
+    (* let alpha theta f =                                                         *)
+    (*   let rec aux active inactive f =                                           *)
+    (*     if Sl_subst.is_empty active && Sl_subst.is_empty inactive then f else   *)
+    (*     match f.node with                                                       *)
+    (*     | True | Emp | Eq _ | Deq _ | Pto _ | Pred _ -> subst active f          *)
+    (*     | Star(f, g) -> mk_star (aux active inactive f) (aux active inactive g) *)
+    (*     | Or(f, g) -> mk_or (aux active inactive f) (aux active inactive g)     *)
+    (*     | Exists(x, f) ->                                                       *)
+    (*       if Sl_term.Map.mem x active then                                      *)
+    (*         let active' = Sl_term.Map.remove x active in                        *)
+    (*         mk_exists x (aux active' inactive f)                                *)
+    (*       else if Sl_term.Map.mem x inactive then                               *)
+    (*         let x' = Sl_term.Map.find x inactive in                             *)
+    (*         let active' = Sl_term.Map.add x x' active in                        *)
+    (*         let inactive' = Sl_term.Map.remove x inactive in                    *)
+    (*         mk_exists x' (aux active' inactive' f)                              *)
+    (*       else                                                                  *)
+    (*         mk_exists x (aux active inactive f)                                 *)
+    (*   in                                                                        *)
+    (*   aux Sl_subst.empty theta f                                                *)
     
     let tags f = 
       fold_atoms
@@ -444,7 +479,15 @@ module Atom =
     let check a  = assert (is_atom a)
     let check_fun f a = check a ; f a
     let check_res f a = let res = f a in check res ; res
-    
+
+    (* substitution *)
+    let subst theta a = match a.node with
+      | Eq p -> mk_eq (Sl_tpair.subst theta p)
+      | Deq p -> mk_deq (Sl_tpair.subst theta p)
+      | Pto p -> mk_pto (Sl_pto.subst theta p)
+      | Pred p -> mk_pred (Sl_tpred.subst theta p)
+      | _ -> a
+
     let unify
       ?(sub_check=Sl_subst.trivial_check)
       ?(cont=Sl_unifier.trivial_continuation) 
@@ -473,7 +516,7 @@ module Atom =
     let to_string = check_fun to_string
     let pp fmt = check_fun (pp fmt)
     let of_string = check_res of_string
-    
+    let subst theta = check_res (check_fun (subst theta))
     let terms = check_fun terms
     let free_vars = check_fun free_vars
     let subst theta = check_res (check_fun (subst theta))
@@ -492,12 +535,13 @@ module SymHeap =
         | True | Emp | Eq _ | Deq _ | Pto _ | Pred _ -> true
         | Or _ | Exists _ -> false
       in
-      let rec exists h = match h.node with 
-        | Exists(_, k) -> exists k
+      let rec exists bound h = match h.node with 
+        | Exists(x, k) -> 
+          not (Sl_term.Set.mem x bound) && exists (Sl_term.Set.add x bound) k
         | True | Emp | Eq _ | Deq _ | Pto _ | Pred _ | Star _ -> body h
         | Or _ -> false
       in
-      exists f
+      exists Sl_term.Set.empty f
 
     let check a  = assert (is_symheap a)
     let check_fun f a = check a ; f a
