@@ -13,6 +13,7 @@ val subst_tag : Util.TagPairs.t -> t -> t
 val predsym : t -> Sl_predsym.t
 val arity : t -> int
 val args : t -> Sl_term.t list
+val tag : t -> Util.Tags.elt
 val tags : t -> Util.Tags.t
 
 val terms : t -> Sl_term.Set.t
