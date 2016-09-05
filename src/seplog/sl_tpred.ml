@@ -26,6 +26,7 @@ let unify ?(tagpairs=false) ?(sub_check=Sl_subst.trivial_check)
 let predsym tpred = Sl_pred.predsym (snd tpred)
 let args tpred = Sl_pred.args (snd tpred)
 let arity tpred = Sl_pred.arity (snd tpred)
+let tag (t, _) = t
 let tags (tag, _) = Tags.singleton tag
 
 let terms tpred = Sl_pred.terms (snd tpred)
