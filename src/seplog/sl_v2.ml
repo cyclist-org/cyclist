@@ -341,7 +341,7 @@ module CommonImplementation =
       | True | Emp | Eq _ | Deq _ | Pto _ | Pred _ -> true
       | Star(g, h) | Or(g, h) -> substitutable x t g && substitutable x t h 
       | Exists(y, g) -> 
-        not (Sl_term.Set.mem x (free_vars f)) ||
+        not (Sl_term.Set.mem x (free_vars g)) ||
         not (Sl_term.equal y t) && substitutable x t g
     
     let subst theta f = 
