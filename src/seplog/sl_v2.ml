@@ -326,7 +326,6 @@ module CommonImplementation =
     
     
     (* substitution *)
-    (* can lead to capture if the target terms are not free in all scopes *)
     let rec subst theta f = match f.node with
       | True | Emp -> f
       | Eq p -> mk_eq (Sl_tpair.subst theta p)
@@ -343,7 +342,8 @@ module CommonImplementation =
       | Exists(y, g) -> 
         not (Sl_term.Set.mem x (free_vars g)) ||
         not (Sl_term.equal y t) && substitutable x t g
-    
+
+		(* capture avoiding, no touching existential quantifiers *)    
     let subst theta f = 
       assert (Sl_term.Map.for_all (fun x t -> substitutable x t f) theta) ;
       subst theta f     
@@ -479,14 +479,6 @@ module Atom =
     let check a  = assert (is_atom a)
     let check_fun f a = check a ; f a
     let check_res f a = let res = f a in check res ; res
-
-    (* substitution *)
-    let subst theta a = match a.node with
-      | Eq p -> mk_eq (Sl_tpair.subst theta p)
-      | Deq p -> mk_deq (Sl_tpair.subst theta p)
-      | Pto p -> mk_pto (Sl_pto.subst theta p)
-      | Pred p -> mk_pred (Sl_tpred.subst theta p)
-      | _ -> a
 
     let unify
       ?(sub_check=Sl_subst.trivial_check)
@@ -652,7 +644,6 @@ module SymHeap =
       ?(sub_check=Sl_subst.trivial_check)
       ?(cont=Sl_unifier.trivial_continuation)
       ?(init_state=Sl_unifier.empty_state) f g =
-        check f ; check g;
         let foreach_g (f_atom, f_path) (g_atom, g_path) =
           let newcont state =
             let f' = Zipper.remove f_path in
@@ -664,6 +655,32 @@ module SymHeap =
         let foreach_f f_loc =
           Zipper.search_atom (fun g_loc -> foreach_g f_loc g_loc) g in 
         Zipper.search_atom foreach_f f
+
+		let rec strip_quantifiers f = match f.node with
+      | Exists(_, g) -> strip_quantifiers g
+      | _ -> f
+      
+		
+    let rec unify
+      ?(sub_check=Sl_subst.trivial_check)
+      ?(cont=Sl_unifier.trivial_continuation)
+      ?(init_state=Sl_unifier.empty_state) f g =
+        check f ; check g;
+				let f',g' = Pair.map strip_quantifiers (f,g) in
+        let f_exs,g_exs = Pair.map bound_vars (f,g) in
+        let unicheck theta t t' = 
+          sub_check theta t t' && 
+          (
+            not (Sl_term.Set.mem t f_exs) ||
+            not (Sl_term.Set.mem t' g_exs) ||
+            Sl_term.Set.mem t f_exs && 
+            ( Sl_term.is_nil t' ||
+              Sl_term.Set.mem t' g_exs && 
+              Sl_term.Map.for_all (fun _ t'' -> not (Sl_term.equal t' t'')) theta
+            )
+          )
+        in
+        unify ~sub_check:unicheck ~cont ~init_state f' g' 
 
     let equal = check_fun (check_fun equal)
     let compare = check_fun (check_fun compare)
