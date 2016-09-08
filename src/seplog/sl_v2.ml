@@ -661,7 +661,7 @@ module SymHeap =
       | _ -> f
       
 		
-    let rec unify
+    let unify
       ?(sub_check=Sl_subst.trivial_check)
       ?(cont=Sl_unifier.trivial_continuation)
       ?(init_state=Sl_unifier.empty_state) f g =
@@ -681,6 +681,18 @@ module SymHeap =
           )
         in
         unify ~sub_check:unicheck ~cont ~init_state f' g' 
+
+    let alpha_rename theta f =
+      let rec aux g = match g.node with
+        | Exists(x, h) -> mk_exists (Sl_term.subst theta x) (aux h)
+        | _ -> subst theta g
+      in
+      let qs = bound_vars f in
+      let xs = Sl_term.Map.fold (fun x _ a -> Sl_term.Set.add x a) theta Sl_term.Set.empty in
+      let ts = Sl_term.Map.fold (fun _ t a -> Sl_term.Set.add t a) theta Sl_term.Set.empty in
+      assert (Sl_term.Set.subset xs qs) ;
+      assert (Sl_term.Set.cardinal ts = Sl_term.Map.cardinal theta) ;
+      aux f 
 
     let equal = check_fun (check_fun equal)
     let compare = check_fun (check_fun compare)
