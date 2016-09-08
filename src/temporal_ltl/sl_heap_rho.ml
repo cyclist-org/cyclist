@@ -373,9 +373,9 @@ let compute_frame ?(freshen_existentials=true) ?(avoid=Sl_term.Set.empty) f f' =
     ( Option.mk_lazily
         ((Sl_rho.all_members_of f.rho f'.rho)
 					&& (Sl_uf.all_members_of f.eqs f'.eqs)
-          && (Sl_deqs.all_members_of f.deqs f'.deqs)
-          && (Sl_ptos.all_members_of f.ptos f'.ptos)
-          && (Sl_tpreds.all_members_of f.inds f'.inds))
+          && (Sl_deqs.subset f.deqs f'.deqs)
+          && (Sl_ptos.subset f.ptos f'.ptos)
+          && (Sl_tpreds.subset f.inds f'.inds))
         (fun _ -> 
           let frame = { rho = Sl_rho.diff f.rho f'.rho;
 												eqs = Sl_uf.diff f.eqs f'.eqs;

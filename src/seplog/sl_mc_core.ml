@@ -624,7 +624,7 @@ module Make (Sig : ValueSig)
     (* Note: some efficiency savings to be made here possibly along the *)
     (* lines of fusing the operation of [f] with the generation of the *)
     (* set of possible valuations - in the case of when this is called from *)
-    (* exs_satisfiable with [f] being passed List.find_some it would be *)
+    (* exs_satisfiable with [f] being passed List.find_map it would be *)
     (* nice to call [test_exn] as soon as a possible valuation is computed *)
     (* and then stop the generation of further valuations and return *)
     (* immediately. *)
@@ -740,7 +740,7 @@ module Make (Sig : ValueSig)
                 (Sl_term.Set.to_list (Sl_deqs.vars deqs))))) in
       (Var.Set.is_empty unmapped_exs) ||
       Option.is_some
-        (valid_extns (eqs, deqs) vs unmapped_exs s List.find_some)
+        (valid_extns (eqs, deqs) vs unmapped_exs s List.find_map)
 
     (**
       [mk_ptos_base defs h] creates a hashtable which stores a hashset

@@ -17,7 +17,7 @@ let unify ?(order=false)
   if order then 
     _unify sub_check cont init_state p p'
   else
-    Blist.find_some (_unify sub_check cont init_state p) [ p'; Pair.swap p' ]
+    Blist.find_map (_unify sub_check cont init_state p) [ p'; Pair.swap p' ]
 
 let order ((x,y) as pair) =
   if Sl_term.compare x y <= 0 then pair else (y,x)
@@ -41,7 +41,7 @@ module FList =
       | ([], _) -> cont init_state
       | (_, []) -> None
       | (p::ps, _) ->
-        Blist.find_some 
+        Blist.find_map 
           (fun q ->
             let (x,y) = if inverse then (q,p) else (p,q) in  
             unify ~order ~sub_check

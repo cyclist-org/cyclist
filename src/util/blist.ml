@@ -65,13 +65,13 @@ let rec drop n = function
 
 let indexes xs = range 0 xs
 
-let rec find_some f = function
+let rec find_map f = function
   | [] -> None
   | x::xs -> match f x with
-    | None -> find_some f xs
+    | None -> find_map f xs
     | y -> y
 
-let find_first p l = find_some (fun x -> if p x then Some x else None) l
+let find_opt p l = find_map (fun x -> if p x then Some x else None) l
 
 let find_index p l =
   let rec aux p n = function

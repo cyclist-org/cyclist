@@ -381,12 +381,12 @@ val zip3 : 'a t -> 'b t -> 'c t -> ('a * 'b * 'c) t
 
 (** {6 Searching lists} *)
 
-val find_first : ('a -> bool) -> 'a t -> 'a option
-(** [find_first pred l] returns [Some x] for the first [x] in [l] such that [pred x = true], or [None]. *)
+val find_opt : ('a -> bool) -> 'a t -> 'a option
+(** [find_opt pred l] returns [Some x] for the first [x] in [l] such that [pred x = true], or [None]. *)
 
-val find_some : ('a -> 'b option) -> 'a t -> 'b option
-(** Optimisation for finding and converting at the same time. [find_some f l]
-will return [f l] for the first [x] in [l] such that [f l] is not [None]. *)
+val find_map : ('a -> 'b option) -> 'a t -> 'b option
+(** Optimisation for finding and converting at the same time. [find_map f l]
+will return [f x] for the first [x] in [l] such that [f x] is not [None], or [None]. *)
 
 (** {6 Combinatorial functions } *)
 

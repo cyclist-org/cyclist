@@ -11,7 +11,7 @@ let hash m = Sl_term.Map.hash Sl_term.hash m
 let bindings m = Sl_term.Map.bindings m
 let empty = Sl_term.Map.empty
 let is_empty = Sl_term.Map.is_empty
-let all_members_of = Sl_term.Map.all_members_of Sl_term.equal
+let all_members_of = Sl_term.Map.submap Sl_term.equal
 
 let to_string_list v = 
   Blist.map (Sl_tpair.to_string_sep symb_eq.str) (bindings v)

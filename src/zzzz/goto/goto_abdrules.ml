@@ -107,11 +107,11 @@ let find_unused_arg defs =
         Some (ident, pos) 
       else 
         None in
-    Blist.find_some check_pos (Blist.range 0 (snd (snd (Case.dest (Blist.hd clauses))))) in
+    Blist.find_map check_pos (Blist.range 0 (snd (snd (Case.dest (Blist.hd clauses))))) in
   if Blist.length defs=1 then 
     None 
   else 
-    Blist.find_some check_def (Blist.but_last defs)
+    Blist.find_map check_def (Blist.but_last defs)
 
 let eliminate (ident, pos) defs =
   let elim_clause case =
