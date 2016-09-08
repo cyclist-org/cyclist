@@ -5,6 +5,20 @@ open Symbols
 
 module List = Blist
 
+module type NaturalType =
+  sig
+    include BasicType
+    val zero : t
+    val succ : t -> t
+  end
+
+module NatType : NaturalType with type t = int =
+  struct
+    include IntType
+    let zero = 0
+    let succ i = i + 1
+  end
+
 module Var :
   sig
     include BasicType

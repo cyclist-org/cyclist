@@ -19,13 +19,6 @@ module type BasicType =
     val pp : Format.formatter -> t -> unit
   end
 
-module type NaturalType =
-  sig
-    include BasicType
-    val zero : t
-    val succ : t -> t
-  end
-
 module type OrderedContainer =
   sig
     include Set.S
@@ -504,13 +497,6 @@ module IntType : BasicType with type t = int =
     let hash (i:t) = Hashtbl.hash i
     let to_string = string_of_int
     let pp = Format.pp_print_int
-  end
-
-module NatType : NaturalType with type t = int =
-  struct
-    include IntType
-    let zero = 0
-    let succ i = i + 1
   end
 
 module StringType : BasicType with type t = string =
