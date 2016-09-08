@@ -480,13 +480,13 @@ module Prod =
       let to_match = elements (filter_by_kind a p') in
       let g theta' = uni_subsumption left hook theta' p p' in
       let f a' = match a with
-        | Eq _ -> Blist.find_some g (direct Atom.unify_eqs theta a a')
-        | Deq _ -> Blist.find_some g (direct Atom.unify_deqs theta a a')
+        | Eq _ -> Blist.find_map g (direct Atom.unify_eqs theta a a')
+        | Deq _ -> Blist.find_map g (direct Atom.unify_deqs theta a a')
         | IndPred _ ->
           match direct Atom.unify_ipreds theta a a' with
             | None -> None
             | Some theta' -> g theta' in
-      Blist.find_some f to_match
+      Blist.find_map f to_match
 
     let left_subsumption hook theta p p' = uni_subsumption true hook theta p p'
 
@@ -548,7 +548,7 @@ module Form =
       let hook' theta' =
         uni_subsumption left fhook theta' f f' in
       let g p = Prod.uni_subsumption left hook' theta p p' in
-      Blist.find_some g (elements f)
+      Blist.find_map g (elements f)
 
     let left_subsumption fhook theta f f' =
       uni_subsumption true fhook theta f f'

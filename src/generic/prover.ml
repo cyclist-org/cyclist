@@ -30,9 +30,9 @@ module Make(Seq: Sigs.SEQUENT) =
           (Proof.to_string prf) ^ "\n"
           ) in
         let res = 
-          Option.map snd (L.find_first (fun (ss', _) -> ss'=[]) (ax idx prf)) in
+          Option.map snd (L.find_opt (fun (ss', _) -> ss'=[]) (ax idx prf)) in
         if Option.is_some res then res else
-        L.find_some
+        L.find_map
           (fun (subgoals', prf') -> 
             Blist.fold_left
               (fun optprf idx' -> Option.bind (dfs (bound-1) idx') optprf)

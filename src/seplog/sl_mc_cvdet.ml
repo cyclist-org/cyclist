@@ -194,7 +194,7 @@ module Make (Sig : Sl_mc_core.ValueSig) =
         let cvalued (x,y) = 
           Sl_term.Set.mem x existvars && not (Sl_term.Set.mem y existvars) in
         let cvalued (x,y) = cvalued (x,y) || cvalued (y,x) in
-        let eq = Blist.find_first cvalued eqs in
+        let eq = Blist.find_opt cvalued eqs in
         if Option.is_none eq then [] else
         let (x,y) = Option.get eq in
         let (x,y) = if Sl_term.is_exist_var x then (x,y) else (y,x) in 
@@ -231,7 +231,7 @@ module Make (Sig : Sl_mc_core.ValueSig) =
         let yloc = get_location yvalue in
         if not (Location.Map.mem yloc h) then [] else
         let cell = Location.Map.find yloc h in
-        let x = Option.get (Blist.find_first in_existvars xs) in
+        let x = Option.get (Blist.find_opt in_existvars xs) in
         let xindex = Blist.find_index (Sl_term.equal x) xs in
         let z = Sl_term.fresh_fvar allvars in
         let theta = Sl_subst.singleton x z in
@@ -262,7 +262,7 @@ module Make (Sig : Sl_mc_core.ValueSig) =
       let bodies = Blist.map Sl_indrule.body freshrules in
       let projbodies = Blist.map (fun b -> Sl_heap.project b newformals) bodies in
       let satisfied = 
-        Blist.find_first 
+        Blist.find_opt 
           (fun sh -> Stack.satisfies (sh.Sl_heap.eqs, sh.Sl_heap.deqs) s) 
           projbodies in
       if Option.is_none satisfied then None else

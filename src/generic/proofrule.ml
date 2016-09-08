@@ -49,7 +49,7 @@ struct
       L.map (mk trgidx) (L.of_list (br_f srcseq trgseq)) in
     let apps = L.bind apply trgidxs in
     if greedy then
-      Option.dest L.empty L.singleton (L.find_first check apps) 
+      Option.dest L.empty L.singleton (L.find_opt check apps) 
     else  
       L.filter check apps
     

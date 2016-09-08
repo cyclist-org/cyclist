@@ -11,7 +11,7 @@ let hash m = Sl_term.Map.hash Int.hash m
 let bindings m = Sl_term.Map.bindings m
 let empty = Sl_term.Map.empty
 let is_empty = Sl_term.Map.is_empty
-let all_members_of = Sl_term.Map.all_members_of Int.equal
+let all_members_of = Sl_term.Map.submap Int.equal
 
 let to_string_sep sep t v =
    Sl_term.to_string t ^ sep ^ (string_of_int v)

@@ -52,10 +52,10 @@ let rec to_list l = match Lazy.force l with
   | Empty -> []
   | Node(x,xs) -> x::(to_list xs)
 
-let rec find_some f l = match Lazy.force l with
+let rec find_map f l = match Lazy.force l with
   | Empty -> None
   | Node(x,xs) -> match f x with
-    | None -> find_some f xs
+    | None -> find_map f xs
     | y -> y
 
 let rec from_while f = lazy (
@@ -89,7 +89,7 @@ let rec choose (l : 'a t t) : 'a t t = lazy (
       Lazy.force (bind (fun y -> map (cons y) cs) x)
   )
 
-let find_first p (l : 'a t) = find_some (Option.pred p) l
+let find_opt p (l : 'a t) = find_map (Option.pred p) l
 
 let rec fold f ys a = match Lazy.force ys with
   | Empty -> a

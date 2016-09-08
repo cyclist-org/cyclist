@@ -13,23 +13,7 @@ module type BasicType = Utilsigs.BasicType
 
 module type OrderedContainer = Utilsigs.OrderedContainer
 
-module type OrderedMap =
-  sig
-    include Map.S
-    val of_list : (key * 'a) list -> 'a t
-    val to_list : 'a t -> (key * 'a) list
-    val endomap : ((key * 'a) -> (key * 'a)) -> 'a t -> 'a t
-    val union : 'a t -> 'a t -> 'a t
-    val find_some : (key -> 'a -> bool) -> 'a t -> (key * 'a) option
-    val fixpoint : ('a -> 'a -> bool) -> ('a t -> 'a t) -> 'a t -> 'a t
-    val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit
-    val to_string : ('a -> string) -> 'a t -> string
-    val hash : ('a -> int) -> 'a t -> int
-(*    val map_to : ('b -> 'c -> 'c) -> 'c -> (key -> 'v -> 'b) -> 'v t -> 'c *)
-(*    val map_to_list : (key -> 'b -> 'a) -> 'b t -> 'a list                 *)
-    val all_members_of : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
-    val add_bindings : (key * 'a) list -> 'a t -> 'a t
-  end
+module type OrderedMap = Utilsigs.OrderedMap
 
 module Fixpoint(T: sig type t val equal : t -> t -> bool end) =
   struct
@@ -182,7 +166,7 @@ module MakeListMultiset(T: BasicType) =
       let xxs = subsets xs in
       xxs @ (Blist.map (fun y -> add x y) xxs)
 
-    let all_members_of xs ys = for_all (Fun.swap mem ys) xs
+    let submap xs ys = for_all (Fun.swap mem ys) xs
 
     let rec disjoint xs ys = match (xs, ys) with
       | ([], ys) -> true
@@ -299,8 +283,6 @@ module MakeTreeSet(T: BasicType) : OrderedContainer with type elt = T.t =
       | None -> s
       | Some x -> remove x s
 
-    let all_members_of xs ys = for_all (Fun.swap mem ys) xs
-
     let disjoint xs ys =
       let xs = to_list xs in
       let ys = to_list ys in
@@ -345,7 +327,7 @@ module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
     let to_list = bindings
 
     exception Found
-    let find_some f (m : 'a t) =
+    let find_map f (m : 'a t) =
       let found = ref None in
       try
         iter (fun k v -> if f k v then (found:=Some(k,v) ; raise Found)) m ; None
@@ -362,11 +344,8 @@ module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
       let pp_val fmt v = Format.pp_print_string fmt (val_to_string v) in
       Format.asprintf "%a" (pp pp_val) m
 
-    let all_members_of eq m m' =
-      let mem (k, v) s = Blist.exists (fun (k', v') -> (T.equal k k') && (eq v v')) s in
-      let xs = to_list m in
-      let ys = to_list m' in
-      Blist.for_all (Fun.swap mem ys) xs
+    let submap eq m m' =
+      for_all (fun k v -> mem k m' && eq v (find k m')) m
 
     let add_bindings bs m = List.fold_left (fun m (k, v) -> add k v m) m bs
   end
