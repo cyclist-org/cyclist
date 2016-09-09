@@ -3,7 +3,7 @@ open Util
 open Symbols
 open MParser
 
-include PairTypes(MakeFList(Sl_indrule))(Sl_predsym)
+include Pair.Make(Flist.Make(Sl_indrule))(Sl_predsym)
 
 let dest d = d
 let predsym = snd

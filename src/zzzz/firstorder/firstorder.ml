@@ -12,7 +12,7 @@ module rec TermT : BasicType with type t = term =
   struct
     type t = term
 
-    module TermList = MakeFList(TermT)
+    module TermList = Flist.Make(TermT)
 
     let compare t t' = match (t,t') with
       | (Var(n), Var(n')) | (Const(n), Const(n')) -> Int.compare n n'
@@ -441,7 +441,7 @@ module Prod =
 
     let tag_of_ipred ip = Option.get (Atom.tag ip)
 
-    module IndSubf = MakeComplexType(PairTypes(Strng.T)(Term.FList))
+    module IndSubf = MakeComplexType(Pair.Make(Strng.T)(Term.FList))
     module IndSubfs = IndSubf.Set
     let subsumed_wrt_tags tags p1 p2 =
       let ((p1_ips, p1_nips), (p2_ips, p2_nips)) =

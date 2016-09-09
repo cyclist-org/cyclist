@@ -10,6 +10,13 @@ Prover
 Seqtactics
 Abdrule
 Abducer
+Utilsigs
+Flist
+Multiset
+Listset
+Treemap
+Pair
+Treeset
 Sl_term
 Sl_subst
 Sl_unifier

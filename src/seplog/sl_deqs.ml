@@ -3,7 +3,7 @@ open Util
 open Symbols
 open MParser
 
-include MakeListSet(Sl_tpair)
+include Listset.Make(Sl_tpair)
 
 let add p deqs = add (Sl_tpair.order p) deqs
 let singleton p = singleton (Sl_tpair.order p)

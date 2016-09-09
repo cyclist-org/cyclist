@@ -3,7 +3,7 @@ open Util
 open Symbols
 open MParser
 
-module TPred = PairTypes(Int.T)(Sl_pred)
+module TPred = Pair.Make(Int.T)(Sl_pred)
 include TPred
 
 let subst theta (tag, pred) = (tag, Sl_pred.subst theta pred)

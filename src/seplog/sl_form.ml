@@ -3,7 +3,7 @@ open Util
 open Symbols
 open MParser
 
-include MakeFList(Sl_heap)
+include Flist.Make(Sl_heap)
 
 let empty = [ Sl_heap.empty ]
 

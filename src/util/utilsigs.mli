@@ -113,4 +113,4 @@ module type OrderedMap =
     (** Add all bindings in provided list to map.  Bindings already in the map
         have precedence. *)
   end
-
+(** An ordered map, extending the standard [Map] module. *)

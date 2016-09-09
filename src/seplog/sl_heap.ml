@@ -37,7 +37,7 @@ let equal_upto_tags h h' =
   Sl_ptos.equal h.ptos h'.ptos &&
   Sl_tpreds.equal_upto_tags h.inds h'.inds
 
-include Fixpoint(struct type t = symheap let equal = equal end)
+include Fixpoint.Make(struct type t = symheap let equal = equal end)
 
 let compare f g =
   if f == g then 0 else

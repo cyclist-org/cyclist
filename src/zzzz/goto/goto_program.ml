@@ -193,7 +193,7 @@ type program_t = fields * lab_cmds
 
 module Seq =
   struct
-    include PairTypes(Sl_form)(Int.T)
+    include Pair.Make(Sl_form)(Int.T)
     
     let tags (f,_) = Sl_form.tags f
     let vars (l,_) = Sl_form.vars l

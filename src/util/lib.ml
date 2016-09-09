@@ -1,6 +1,9 @@
 let do_debug = ref false
 let debug f = if !do_debug then print_endline (f ()) else ()
 
+(* FIXME this should only produce >= 0  *)
+let genhash h v = h lxor (v + (h lsl 5) + (h lsr 2))
+
 module HashtablePrinter =
   struct
     module type S =

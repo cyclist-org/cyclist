@@ -5,10 +5,10 @@ open MParser
 
 module SH = Sl_heap
 
-module AllocatedT = PairTypes(Sl_term)(Int.T)  
+module AllocatedT = Pair.Make(Sl_term)(Int.T)  
 module Allocated = 
   struct
-    include MakeTreeSet(AllocatedT)
+    include Treeset.Make(AllocatedT)
     
     let terms s = map_to Sl_term.Set.add Sl_term.Set.empty fst s
     let vars s = Sl_term.filter_vars (terms s)
@@ -18,7 +18,7 @@ module Allocated =
 
 module BasePair =
 struct
-  module T = PairTypes(Allocated)(Sl_heap)
+  module T = Pair.Make(Allocated)(Sl_heap)
   include T
   include ContaineriseType(T)
   
@@ -138,7 +138,7 @@ end
 
 module BaseAndRule = 
 struct
-  module T = PairTypes(BasePair)(Sl_term.FList)
+  module T = Pair.Make(BasePair)(Sl_term.FList)
   include T
   include ContaineriseType(T)
 end
@@ -147,8 +147,8 @@ module Attempted = Hashset.Make(BaseAndRule.FList)
 
 include BasePair
 
-module RuleMap = MakeMap(Sl_indrule)
-module PredMap = MakeMap(Sl_predsym)
+module RuleMap = Treemap.Make(Sl_indrule)
+module PredMap = Treemap.Make(Sl_predsym)
 
 
 let gen_pair case cbps s s' att = 

@@ -44,3 +44,10 @@ MParser_Utils
 Fun
 Hashcons
 Hashset
+Multiset
+Listmultiset
+Listset
+Flist
+Treeset
+Fixpoint
+Treemap

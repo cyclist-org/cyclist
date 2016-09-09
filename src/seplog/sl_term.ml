@@ -40,8 +40,8 @@ module Trm :
       end
     include T'
     
-    module Set = Util.MakeTreeSet(T')
-    module Map = Util.MakeMap(T')
+    module Set = Treeset.Make(T')
+    module Map = Treemap.Make(T')
     
     let termtbl = H.create 997
     let mk s = H.hashcons termtbl s
@@ -189,8 +189,8 @@ module Trm :
     
 (*     include Trm                                                                          *)
     
-(*     module Set = Util.MakeListSet(Trm)                                                   *)
-(*     module Map = Util.MakeMap(Trm)                                                       *)
+(*     module Set = Util.Listset.Make(Trm)                                                   *)
+(*     module Map = Treemap.Make(Trm)                                                       *)
     
 (*     let is_nil v = v = nil                                                               *)
 (*     let is_var v = not (is_nil v)                                                        *)
@@ -397,7 +397,7 @@ let trm_unify
     
 module FList =
   struct
-    include Util.MakeFList(Trm)
+    include Flist.Make(Trm)
     let rec unify ?(sub_check=Subst.trivial_check) ?(cont=Unifier.trivial_continuation) 
         ?(init_state=Unifier.empty_state) args args' =
       match (args, args') with

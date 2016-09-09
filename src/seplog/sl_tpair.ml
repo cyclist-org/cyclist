@@ -3,7 +3,7 @@ open Util
 open Symbols
 open MParser
 
-module TPair = PairTypes(Sl_term)(Sl_term)
+module TPair = Pair.Make(Sl_term)(Sl_term)
 
 include TPair
 
@@ -31,7 +31,7 @@ let to_melt_sep sep p =
 
 module FList =
   struct
-    include Util.MakeFList(TPair)
+    include Flist.Make(TPair)
     
     let rec unify_partial ?(order=false) ?(inverse=false) 
         ?(sub_check=Sl_subst.trivial_check)

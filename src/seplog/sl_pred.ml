@@ -5,7 +5,7 @@ open MParser
 
 module IndSubf = 
   struct
-    include PairTypes(Sl_predsym)(Sl_term.FList)
+    include Pair.Make(Sl_predsym)(Sl_term.FList)
     
     let to_string (p, args) = 
       (Sl_predsym.to_string p) ^ symb_lp.str ^ 
@@ -45,4 +45,4 @@ let of_string s =
 
 let norm eqs (ident, args) = (ident, Blist.map (fun x -> Sl_uf.find x eqs) args)
 
-module MSet = MakeMultiset(IndSubf)
+module MSet = Multiset.Make(IndSubf)

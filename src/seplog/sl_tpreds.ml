@@ -3,7 +3,7 @@ open Util
 open Symbols
 open MParser
 
-include MakeMultiset(Sl_tpred)
+include Multiset.Make(Sl_tpred)
 
 let subst theta elts = endomap (Sl_tpred.subst theta) elts
 

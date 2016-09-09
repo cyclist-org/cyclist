@@ -3,7 +3,7 @@ open Util
 open Symbols
 open MParser
 
-include PairTypes(Sl_heap)(Sl_pred)
+include Pair.Make(Sl_heap)(Sl_pred)
 
 let vars (f, (_, vs)) =
   Sl_term.Set.union (Sl_term.Set.of_list vs) (Sl_heap.vars f)

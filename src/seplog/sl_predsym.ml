@@ -26,6 +26,6 @@ module HT =
 
 include HT
 
-module Set = Util.MakeTreeSet(HT)
-module MSet = Util.MakeMultiset(HT)
-module Map = Util.MakeMap(HT)
+module Set = Treeset.Make(HT)
+module MSet = Multiset.Make(HT)
+module Map = Treemap.Make(HT)

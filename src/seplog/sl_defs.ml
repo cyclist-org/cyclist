@@ -7,7 +7,7 @@ module SH = Sl_heap
 
 module Defs =
   struct
-    include MakeFList(Sl_preddef)
+    include Flist.Make(Sl_preddef)
 
     let mem ident defs =
       Blist.exists
@@ -142,6 +142,6 @@ module Defs =
       Blist.for_all Sl_preddef.deterministic defs
   end
 include Defs
-include Fixpoint(Defs)
+include Fixpoint.Make(Defs)
 
 

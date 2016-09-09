@@ -6,376 +6,13 @@ open Lib
 (*   return lhs;                                       *)
 (* }                                                   *)
 
-(* FIXME this should only produce >= 0  *)
-let genhash h v = h lxor (v + (h lsl 5) + (h lsr 2))
-
 module type BasicType = Utilsigs.BasicType
-
 module type OrderedContainer = Utilsigs.OrderedContainer
-
 module type OrderedMap = Utilsigs.OrderedMap
-
-module Fixpoint(T: sig type t val equal : t -> t -> bool end) =
-  struct
-    let rec fixpoint f x = Lib.fixpoint T.equal f x
-  end
-
-module MakeFList(T: BasicType) : BasicType with type t = T.t list =
-  struct
-    type t = T.t list
-
-    let rec compare l l' =
-      if l==l' then 0 else
-      match (l,l') with
-      | ([], []) -> 0
-      | ([], _) -> -1
-      | (_, []) -> 1
-      | (hd::tl, hd'::tl') -> match T.compare hd hd' with
-        | 0 -> compare tl tl'
-        | n -> n
-
-    let rec equal l l' =
-      l==l' ||
-      match (l,l') with
-      | ([], []) -> true
-      | (hd::tl, hd'::tl') -> T.equal hd hd' && equal tl tl'
-      | ([], _) | (_, []) -> false
-
-    let hash l = Blist.fold_left (fun h v -> genhash h (T.hash v)) 0x9e3779b9 l
-    (* let hash l =                                    *)
-    (*   let rec aux h = function                      *)
-    (*     | [] -> h                                   *)
-    (*     | x::xs -> aux (genhash h (T.hash x)) xs in *)
-    (*   aux 0x9e3779b9 l                              *)
-    (* let hash = Hashtbl.hash *)
-
-    let to_string (l:t) = Format.sprintf "(%s)" (String.concat ", " (Blist.map T.to_string l))
-    let pp fmt l =
-      Format.fprintf fmt "@[[%a]@]" (Blist.pp pp_semicolonsp T.pp) l
-  end
-
-module MakeListMultiset(T: BasicType) =
-  struct
-    type elt = T.t
-    include MakeFList(T)
-
-    let empty = []
-    let is_empty xs = xs=[]
-    let singleton x = [x]
-
-    let of_list l = Blist.fast_sort T.compare l
-    let to_list xs = xs
-
-    let min_elt = Blist.hd
-    let elements = to_list
-
-    let rec add x = function
-      | [] -> [x]
-      | (y::ys) as zs -> match T.compare x y with
-        | n when n <= 0 -> x::zs
-        | _ -> y::(add x ys)
-
-    let fold f xs a = Blist.fold_left (fun y a' -> f a' y) a xs
-    let cardinal = Blist.length
-    let choose = min_elt
-    let union xs ys = Blist.merge T.compare xs ys
-    let union_of_list l = Blist.fold_left union [] l
-    let endomap f xs = of_list (Blist.map f xs)
-    let partition = Blist.partition
-    let find = Blist.find
-    let filter = Blist.filter
-    let exists = Blist.exists
-    let for_all = Blist.for_all
-    let iter = Blist.iter
-
-    let rec mem x = function
-      | [] -> false
-      | y::ys -> match T.compare x y with
-        | 0 -> true
-        | n -> n > 0 && mem x ys
-
-    let rec max_elt = function
-      | [] -> raise Not_found
-      | [x] -> x
-      | _::xs -> max_elt xs
-
-    let rec del_first p = function
-      | [] -> []
-      | y::ys -> if p y then ys else y::(del_first p ys)
-
-    (* only removes first occurence *)
-    let rec remove x = function
-      | [] -> []
-      | (y::ys) as zs -> match T.compare x y with
-        | 0 -> ys
-        | n when n > 0 -> y::(remove x ys)
-        | _ -> zs
-
-    let rec inter xs ys = match (xs,ys) with
-      | ([], _) | (_, []) -> []
-      | (w::ws, z::zs) -> match T.compare w z with
-        | 0 -> w::(inter ws zs)
-        | n when n > 0 -> inter xs zs
-        | _ -> inter ws ys
-
-    let rec subset xs ys = match (xs,ys) with
-      | ([], _) -> true
-      | (_, []) -> false
-      | (w::ws, z::zs) -> match T.compare w z with
-        | 0 -> subset ws zs
-        | n when n > 0 -> subset xs zs
-        | _ -> false
-
-    let rec diff xs ys = match (xs,ys) with
-      | ([], _) -> []
-      | (_, []) -> xs
-      | (w::ws, z::zs) -> match T.compare w z with
-        | 0 -> diff ws zs
-        | n when n < 0 -> w::(diff ws ys)
-        | _ -> diff xs zs
-
-    let split x xs =
-      let rec div ys = function
-        | [] -> (ys, false, [])
-        | (z::zs) as ws -> match T.compare x z with
-          | 0 -> (ys, true, ws)
-          | n when n > 0 -> div (z::ys) zs
-          | _ -> (ys, false, ws) in
-      let (l, f, r) = div [] xs in (Blist.rev l, f, r)
-
-    let map_to oadd oempty f xs =
-      fold (fun z ys -> oadd (f z) ys) xs oempty
-
-    let map_to_list f xs = Blist.map f xs
-
-    let weave = Blist.weave
-
-    let rec find_map f = function
-      | [] -> None
-      | x::xs -> match f x with
-        | None -> find_map f xs
-        | r -> r
-
-    let find_opt f xs =
-      find_map (fun x -> if f x then Some x else None) xs
-
-    let rec subsets xs =
-      if is_empty xs then [empty] else
-      let x = choose xs in
-      let xs = remove x xs in
-      let xxs = subsets xs in
-      xxs @ (Blist.map (fun y -> add x y) xxs)
-
-    let submap xs ys = for_all (Fun.swap mem ys) xs
-
-    let rec disjoint xs ys = match (xs, ys) with
-      | ([], ys) -> true
-      | (xs, []) -> true
-      | (x::xs, y::ys) -> match T.compare x y with
-        | 0 -> false
-        | n when n < 0 -> disjoint xs (y::ys)
-        | _ -> disjoint (x::xs) ys
-
-  end
-
-module MakeMultiset(T: BasicType) : OrderedContainer with type elt = T.t =
-  struct
-    include MakeListMultiset(T)
-    include Fixpoint(MakeListMultiset(T))
-  end
-
-module MakeListSet(T: BasicType) : OrderedContainer with type elt = T.t =
-  struct
-    include MakeListMultiset(T)
-    include Fixpoint(MakeListMultiset(T))
-
-    let rec uniq = function
-      | [] | [_] as l -> l
-      | x::((x'::_) as tl) -> match T.compare x x' with
-        | 0 -> uniq tl
-        | i when i<0 -> x::(uniq tl)
-        | _ -> failwith "uniq"
-
-    let of_list l = uniq (Blist.fast_sort T.compare l)
-    let union xs ys = uniq (Blist.merge T.compare xs ys)
-    let union_of_list l = uniq (Blist.fold_left union [] l)
-    let endomap f xs = of_list (Blist.map f xs)
-
-    let rec add x = function
-      | [] -> [x]
-      | (y::ys) as zs -> match T.compare x y with
-        | 0 -> zs
-        | n when n < 0 -> x::zs
-        | _ -> y::(add x ys)
-
-    let rec subsets s =
-      if is_empty s then [empty] else
-      let x = choose s in
-      let s = remove x s in
-      let xxs = subsets s in
-      xxs @ (Blist.map (fun y -> add x y) xxs)
-
-  end
-
-module MakeTreeSet(T: BasicType) : OrderedContainer with type elt = T.t =
-  struct
-    include Set.Make(T)
-    include Fixpoint(Set.Make(T))
-
-    let of_list l =
-      Blist.fold_left (fun a b -> add b a) empty l
-
-    let map_to oadd oempty f s =
-      fold (fun el s' -> oadd (f el) s') s oempty
-
-    let map_to_list f s =
-      Blist.rev (map_to Blist.cons [] f s)
-
-    let endomap f s =
-      map_to add empty f s
-
-    let weave split tie join xs acc =
-      Blist.weave split tie join (elements xs) acc
-
-    let union_of_list l =
-      Blist.fold_left (fun s i -> union s i) empty l
-
-    exception Found of elt
-    let find f s =
-      try
-        iter (fun x -> if f x then raise (Found(x))) s ; raise Not_found
-      with Found(x) -> x
-
-    exception FoundMap
-    let find_map f s =
-      let elem = ref None in
-      try
-        iter
-          (fun e -> match f e with
-            | None -> ()
-            | Some _ as r -> elem := r ; raise FoundMap)
-          s ;
-          None
-      with FoundMap -> !elem
-
-    let find_opt f s =
-      find_map (fun e -> if f e then Some e else None) s
-
-    let to_list = elements
-
-    let pp fmt s =
-      Format.fprintf fmt "@[{%a}@]" (Blist.pp pp_commasp T.pp) (to_list s)
-
-    let to_string s = "{" ^ (Blist.to_string ", " T.to_string (to_list s)) ^ "}"
-
-    let hash s = 
-      fold (fun x h -> genhash (T.hash x) h) s 0x9e3779b9
-
-    let rec subsets s =
-      if is_empty s then [empty] else
-      let x = choose s in
-      let s = remove x s in
-      let xxs = subsets s in
-      xxs @ (Blist.map (add x) xxs)
-
-    let del_first p s =
-      match find_opt p s with
-      | None -> s
-      | Some x -> remove x s
-
-    let disjoint xs ys =
-      let xs = to_list xs in
-      let ys = to_list ys in
-      let rec disjoint xs ys = match (xs, ys) with
-        | ([], ys) -> true
-        | (xs, []) -> true
-        | (x::xs, y::ys) -> match T.compare x y with
-          | 0 -> false
-          | n when n < 0 -> disjoint xs (y::ys)
-          | _ -> disjoint (x::xs) ys in
-      disjoint xs ys
-
-  end
-
-module MakeMap(T: BasicType) : OrderedMap with type key = T.t =
-  struct
-    include Map.Make(T)
-
-    let equal eq m m' = m==m' || equal eq m m'
-
-    let compare comp m m' =
-      if m==m' then 0 else compare comp m m'
-    
-    let hash h m = 
-      fold 
-        (fun k v a -> genhash a (genhash (T.hash k) (h v))) 
-        m 
-        0x9e3779b9
-
-    let rec fixpoint eq f x =
-      let y = f x in if equal eq x y then x else fixpoint eq f y
-
-    let endomap f m =
-      fold (fun k v m' -> let (k', v') = f (k,v) in add k' v' m') m empty
-
-    (* NB this prioritises bindings of the first argument *)
-    let union m m' = fold add m m'
-
-    let of_list l =
-      Blist.fold_left (fun m (k,v) -> add k v m) empty l
-
-    let to_list = bindings
-
-    exception Found
-    let find_map f (m : 'a t) =
-      let found = ref None in
-      try
-        iter (fun k v -> if f k v then (found:=Some(k,v) ; raise Found)) m ; None
-      with Found -> !found
-
-    let pp pp_val fmt m =
-      Format.fprintf fmt "@[@ ";
-      iter
-        (fun k v -> Format.fprintf fmt "@[(%a->%a);@]@ " T.pp k pp_val v)
-        m;
-      Format.fprintf fmt "@]"
-
-    let to_string val_to_string m =
-      let pp_val fmt v = Format.pp_print_string fmt (val_to_string v) in
-      Format.asprintf "%a" (pp pp_val) m
-
-    let submap eq m m' =
-      for_all (fun k v -> mem k m' && eq v (find k m')) m
-
-    let add_bindings bs m = List.fold_left (fun m (k, v) -> add k v m) m bs
-  end
-
-module PairTypes(T: BasicType) (S: BasicType) :
-  BasicType with type t = T.t * S.t =
-  struct
-    type t = T.t * S.t
-
-    let compare i j =
-      if i==j then 0 else
-      match T.compare (fst i) (fst j) with
-        | 0 -> S.compare (snd i) (snd j)
-        | n -> n
-
-    let equal i j =
-      i==j || T.equal (fst i) (fst j) && S.equal (snd i) (snd j)
-
-    let hash (i:t) = genhash (T.hash (fst i)) (S.hash (snd i))
-
-    let to_string i =
-      "(" ^ (T.to_string (fst i)) ^ "," ^ (S.to_string (snd i)) ^ ")"
-
-    let pp fmt (i,j) =
-      Format.fprintf fmt "@[(%a,@ %a)@]" T.pp i S.pp j
-  end
-
 
 module type CTsig =
   sig
+    
     module Set : OrderedContainer
     module Map : OrderedMap
     module Hashmap : Hashtbl.S
@@ -393,13 +30,13 @@ module ContaineriseType(T: BasicType) : CTsig
   with type FList.t=T.t list
   =
   struct
-    (* module Set = MakeListSet(T) *)
-    module Set = MakeTreeSet(T)
-    module Map = MakeMap(T)
+    (* module Set = Listset.Make(T) *)
+    module Set = Treeset.Make(T)
+    module Map = Treemap.Make(T)
     module Hashmap = Hashtbl.Make(T)
     module Hashset = Hashset.Make(T)
-    module MSet = MakeMultiset(T)
-    module FList = MakeFList(T)
+    module MSet = Multiset.Make(T)
+    module FList = Flist.Make(T)
   end
 
 module type MCTsig =
@@ -407,8 +44,6 @@ module type MCTsig =
     include BasicType
     module T : BasicType
     include CTsig
-    module Pairing : CTsig
-    (* val set_cross : Set.t -> Set.t -> Pairing.Set.t *)
   end
 
 module MakeComplexType(T: BasicType) : MCTsig
@@ -420,23 +55,16 @@ module MakeComplexType(T: BasicType) : MCTsig
   with type Hashset.elt=T.t
   with type MSet.elt=T.t
   with type FList.t=T.t list
-  with type Pairing.Set.elt=T.t * T.t
-  with type Pairing.Map.key=T.t * T.t
-  with type Pairing.Hashmap.key=T.t * T.t
-  with type Pairing.Hashset.elt=T.t * T.t
-  with type Pairing.MSet.elt=T.t * T.t
-  with type Pairing.FList.t=(T.t * T.t) list
   =
   struct
     include T
     module T = T
-    include ContaineriseType(T)
-    module Pairing = ContaineriseType(PairTypes(T)(T))
-    (* let set_cross ss ss' =                                      *)
-    (*   Set.map_to Pairing.Set.union Pairing.Set.empty            *)
-    (*     (fun s -> Set.map_to Pairing.Set.add Pairing.Set.empty  *)
-    (*       (fun s' -> (s, s')) ss')                              *)
-    (*     ss                                                      *)
+    module Set = Treeset.Make(T)
+    module Map = Treemap.Make(T)
+    module Hashmap = Hashtbl.Make(T)
+    module Hashset = Hashset.Make(T)
+    module MSet = Multiset.Make(T)
+    module FList = Flist.Make(T)
   end
 
 module IntType : BasicType with type t = int =
@@ -462,16 +90,12 @@ module StringType : BasicType with type t = string =
 module Int = MakeComplexType(IntType)
 module Strng = MakeComplexType(StringType)
 
-module Tags =
-  struct
-    include Int.Set
-    let to_string s =
-      String.concat "," (map_to_list string_of_int s)
-  end
+module Tags = Int.Set
 
 module TagPairs =
   struct
-    include Int.Pairing.Set
+    module Pairing = MakeComplexType(Pair.Make(Int)(Int))
+    include Pairing.Set
     let mk s = Tags.fold (fun i p -> add (i,i) p) s empty
 
     let compose t1 t2 : t =

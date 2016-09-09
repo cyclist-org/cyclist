@@ -3,7 +3,7 @@ open Util
 open Symbols
 open MParser
 
-include PairTypes(Sl_term)(Sl_term.FList)
+include Pair.Make(Sl_term)(Sl_term.FList)
 
 let subst theta (lv, rvs) =
   (Sl_term.subst theta lv, Sl_term.FList.subst theta rvs)

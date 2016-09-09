@@ -375,7 +375,7 @@ module Make (Sig : ValueSig)
 
     let model_of_string parse s = handle_reply (MParser.parse_string parse s ())
 
-    module Interpretant = MakeComplexType(PairTypes(Value.FList)(Heap))
+    module Interpretant = MakeComplexType(Pair.Make(Value.FList)(Heap))
 
     module SetBase =
       struct
@@ -482,17 +482,15 @@ module Make (Sig : ValueSig)
       end
         = BitvBase
 
-    module InterpretantBase = MakeComplexType(PairTypes(Value.FList)(HeapBase))
+    module InterpretantBase = MakeComplexType(Pair.Make(Value.FList)(HeapBase))
 
-    let baseSetPair_to_string bp =
-      Pair.to_string 
-        InterpretantBase.Hashset.to_string 
-        InterpretantBase.Hashset.to_string
-        bp
+    let baseSetPair_to_string (x,x') =
+      "(" ^ (InterpretantBase.Hashset.to_string x) ^ ", " ^
+       (InterpretantBase.Hashset.to_string x') ^ ")"
     
     module SymHeapHash = Hashtbl.Make(Sl_heap)
     module SymHeapHashPrinter = HashtablePrinter.Make(SymHeapHash)
-    module ModelBase = MakeComplexType(PairTypes(Stack)(HeapBase))
+    module ModelBase = MakeComplexType(Pair.Make(Stack)(HeapBase))
 
     let empty_base () = InterpretantBase.Hashset.create 11
 
