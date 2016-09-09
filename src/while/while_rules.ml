@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 open While_program
 
 module SH = Sl_heap
@@ -14,7 +14,7 @@ let tagpairs s =
 
 (* following is for symex only *)
 let progpairs () = 
-	if !termination then TagPairs.empty else Seq.tagpairs_one
+	if !termination then Tagpairs.empty else Seq.tagpairs_one
 
 let dest_sh_seq (l,cmd) = (Sl_form.dest l, cmd)
 
@@ -33,7 +33,7 @@ let symex_empty_axiom =
 let eq_subst_ex_f ((l,cmd) as s) =
   let l' = Sl_form.subst_existentials l in
   if Sl_form.equal l l' then [] else
-  [ [ ((l', cmd), tagpairs s, TagPairs.empty) ], "Eq. subst. ex" ]
+  [ [ ((l', cmd), tagpairs s, Tagpairs.empty) ], "Eq. subst. ex" ]
 
 let simplify_rules = [ eq_subst_ex_f ]
 
@@ -52,7 +52,7 @@ let lhs_disj_to_symheaps =
   let rl (l,cmd) =
     if Blist.length l < 2 then [] else
     [ Blist.map 
-        (fun sh -> let s' = ([sh],cmd) in (s', tagpairs s', TagPairs.empty ) ) 
+        (fun sh -> let s' = ([sh],cmd) in (s', tagpairs s', Tagpairs.empty ) ) 
         l,
       "L.Or"
     ] in
@@ -70,7 +70,7 @@ let luf_rl seq defs =
         ( 
 					([l'],cmd), 
 					(if !termination then tagpairs else Seq.tagpairs_one), 
-					(if !termination then tagpairs else TagPairs.empty)
+					(if !termination then tagpairs else Tagpairs.empty)
 				) in
       Blist.map do_case clauses, ((Sl_predsym.to_string ident) ^ " L.Unf.") in
     Sl_tpreds.map_to_list 
@@ -229,7 +229,7 @@ let matches ((l,cmd) as seq) ((l',cmd') as seq') =
           (fun (theta, tagpairs) -> 
             let subst_seq = (Seq.subst_tags tagpairs (Seq.subst theta seq')) in
             let () = debug (fun _ -> "term substitution: " ^ ((Format.asprintf " %a" Sl_subst.pp theta))) in 
-            let () = debug (fun _ -> "tag substitution: " ^ (TagPairs.to_string tagpairs)) in 
+            let () = debug (fun _ -> "tag substitution: " ^ (Tagpairs.to_string tagpairs)) in 
             let () = debug (fun _ -> "source seq: " ^ (Seq.to_string seq)) in
             let () = debug (fun _ -> "target seq: " ^ (Seq.to_string seq')) in
             let () = debug (fun _ -> "substituted target seq: " ^ (Seq.to_string subst_seq)) in
@@ -249,14 +249,14 @@ let matches ((l,cmd) as seq) ((l',cmd') as seq') =
 let subst_rule theta seq' seq = 
   if Seq.equal (Seq.subst theta seq') seq 
     then 
-      [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], 
+      [ [(seq', Seq.tag_pairs seq', Tagpairs.empty)], 
        "Subst "  (* ^ (Format.asprintf "%a" Sl_subst.pp theta) *) ]
     else 
       []
 
 let frame seq' seq = 
   if Seq.subsumed seq seq' then
-    [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], "Frame" ]
+    [ [(seq', Seq.tag_pairs seq', Tagpairs.empty)], "Frame" ]
   else
     []
 
@@ -293,7 +293,7 @@ let dobackl idx prf =
           false 
           (fun _ _ -> [targ_idx]) 
           (fun s s' -> 
-            [(if !termination then TagPairs.reflect tagpairs else Seq.tagpairs_one), "Backl"])
+            [(if !termination then Tagpairs.reflect tagpairs else Seq.tagpairs_one), "Backl"])
       ] in
     Rule.first (Blist.map f apps) idx prf
 
@@ -314,8 +314,8 @@ let fold def =
           (* let () = print_endline (Seq.to_string seq') in  *)
             [(
               seq', 
-              TagPairs.mk (Tags.inter tags (Seq.tags seq')), 
-              TagPairs.empty 
+              Tagpairs.mk (Tags.inter tags (Seq.tags seq')), 
+              Tagpairs.empty 
             )], ((Sl_predsym.to_string ident) ^ " Fold")  in
         Blist.map process results in
       Blist.bind do_case (Sl_preddef.rules def)
@@ -350,7 +350,7 @@ let generalise_while_rule =
             let f' = generalise m' f in
             if Sl_heap.equal f f' then None else
             let s' = ([f'], cmd) in
-            Some ([ (s', tagpairs s', TagPairs.empty) ], "Gen.While")
+            Some ([ (s', tagpairs s', Tagpairs.empty) ], "Gen.While")
           end
           subs)
     with Not_symheap | WrongCmd -> [] in

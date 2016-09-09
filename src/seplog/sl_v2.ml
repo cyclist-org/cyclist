@@ -2,7 +2,7 @@ open Hashcons
 open Symbols
 open MParser
 open Lib
-open Util
+
 
 let always_parenthesise = ref false
 
@@ -376,7 +376,7 @@ module CommonImplementation =
         f
         Tags.empty
 
-    let tag_pairs f = TagPairs.mk (tags f)
+    let tag_pairs f = Tagpairs.mk (tags f)
   
     module Zipper =
       struct
@@ -630,11 +630,11 @@ module SymHeap =
             (Sl_term.Set.diff rest new_cvalued) in
       aux freevars existvars
     
-    let subst_tags tagpairs f =
+    let subst_tags Tagpairs f =
       map_atoms
         (fun g -> 
           if is_pred g then 
-            mk_pred (Sl_tpred.subst_tag tagpairs (dest_pred g))
+            mk_pred (Sl_tpred.subst_tag Tagpairs (dest_pred g))
           else
             g
         )
@@ -729,7 +729,7 @@ module SymHeap =
 
 module type CommonInterface = 
   sig
-    include Util.BasicType
+    include Utilsigs.BasicType
     val equal_upto_tags : t -> t -> bool
     val parse : (t, 'a) MParser.parser
     val of_string : string -> t
@@ -759,6 +759,6 @@ module type CommonInterface =
     val free_vars : t -> Sl_term.Set.t
     val subst : Sl_subst.t -> t -> t
     val tags : t -> Tags.t
-    val tag_pairs : t -> Util.TagPairs.t
+    val tag_pairs : t -> Tagpairs.t
   end
     

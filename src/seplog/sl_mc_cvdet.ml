@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 open Symbols
 open MParser
 
@@ -108,7 +108,7 @@ module Make (Sig : Sl_mc_core.ValueSig) =
           (fun (subgoals, descr) ->
             let subgoals' = 
               Blist.map 
-                (fun g -> (g, TagPairs.empty, TagPairs.empty)) 
+                (fun g -> (g, Tagpairs.empty, Tagpairs.empty)) 
                 subgoals in 
             (subgoals', descr)) 
             (r red) in

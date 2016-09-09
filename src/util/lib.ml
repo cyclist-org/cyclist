@@ -1,6 +1,11 @@
 let do_debug = ref false
 let debug f = if !do_debug then print_endline (f ()) else ()
 
+(* boost::hash_combine *)
+(* size_t hash_combine( size_t lhs, size_t rhs ) {     *)
+(*   lhs^= rhs + 0x9e3779b9 + (lhs << 6) + (lhs >> 2); *)
+(*   return lhs;                                       *)
+(* }                                                   *)
 (* FIXME this should only produce >= 0  *)
 let genhash h v = h lxor (v + (h lsl 5) + (h lsr 2))
 

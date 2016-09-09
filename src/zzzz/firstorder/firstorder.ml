@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 open Symbols
 open MParser
 
@@ -458,7 +458,7 @@ module Prod =
       IndSubfs.subset p1_ips p2_ips
 
     let hash = Hashtbl.hash
-    let tag_pairs f = TagPairs.mk (tags f)
+    let tag_pairs f = Tagpairs.mk (tags f)
 
     let filter_by_kind a p =
       let f = match a with
@@ -533,7 +533,7 @@ module Form =
       (sep_by1 Prod.parse (parse_symb symb_or) |>> of_list <?> "Form") st
 
     let terms f = map_to Term.Set.union Term.Set.empty Prod.terms f
-    let tag_pairs f = TagPairs.mk (tags f)
+    let tag_pairs f = Tagpairs.mk (tags f)
 
     (* f2 |- f1 *)
     let subsumed_wrt_tags t f1 f2 =
@@ -584,7 +584,7 @@ module Seq =
         
     let terms s = Term.Set.union (Form.terms (fst s)) (Form.terms (snd s))
     let vars s = Term.filter_vars (terms s)
-    let tag_pairs f = TagPairs.mk (tags f)
+    let tag_pairs f = Tagpairs.mk (tags f)
     (* s2 entails s1 *)
     let subsumed_wrt_tags t s1 s2 =
       Form.subsumed_wrt_tags t (fst s2) (fst s1) &&

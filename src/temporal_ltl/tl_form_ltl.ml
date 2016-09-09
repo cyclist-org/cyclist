@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 open Symbols
 open MParser
        
@@ -8,11 +8,11 @@ sig
   type t =
     | Atom of Sl_heap_rho.t * int
     | Next of t * int 
-    | G of Util.Tags.elt * t * int
+    | G of Tags.elt * t * int
     | F of t * int
     | And of t list * int
     | Or of t list * int
-  include BasicType with type t:=t
+  include Utilsigs.BasicType with type t:=t
 				   
   val is_atom : t -> bool
   val is_next : t -> bool
@@ -25,7 +25,7 @@ sig
 					 
   val dest_atom : t -> Sl_heap_rho.t
   val dest_next : t -> t
-  val dest_g : t -> Util.Tags.elt * t
+  val dest_g : t -> Tags.elt * t
   val dest_f : t -> t
   val dest_and : t -> t list
   val dest_or : t -> t list
@@ -52,9 +52,9 @@ sig
   (* val norm : t -> t *)
   val to_slformula : t -> Sl_form_rho.t
   val extract_checkable_slformula : t -> Sl_form_rho.t
-  val tags : t -> Util.Tags.t
-  val outermost_tag : t -> Util.Tags.t
-  val subst_tags : TagPairs.t -> t -> t
+  val tags : t -> Tags.t
+  val outermost_tag : t -> Tags.t
+  val subst_tags : Tagpairs.t -> t -> t
   val vars : t -> Sl_term.Set.t
   val equal : t -> t -> bool
   val equal_upto_tags : t -> t -> bool
@@ -68,7 +68,7 @@ end
     type t =
       | Atom of Sl_heap_rho.t * int 
       | Next of t * int
-      | G of Util.Tags.elt * t * int
+      | G of Tags.elt * t * int
       | F of t * int
       | And of t list * int
       | Or of t list * int
@@ -350,7 +350,7 @@ end
       | And (fs,d) -> And (List.map (subst_tags tagpairs) fs, d)
       | Or (fs,d) -> Or (List.map (subst_tags tagpairs) fs, d)
       | G (tag,f,d) ->
-	 let (_, tag'') = TagPairs.find (fun (tag',_) -> tag=tag') tagpairs in
+	 let (_, tag'') = Tagpairs.find (fun (tag',_) -> tag=tag') tagpairs in
 	 G (tag'',subst_tags tagpairs f, d)
 	
 

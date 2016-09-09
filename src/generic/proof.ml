@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 
 module Make(Seq : Sigs.SEQUENT) =
   struct

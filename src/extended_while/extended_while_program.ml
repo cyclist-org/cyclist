@@ -1,4 +1,4 @@
-open Util
+
 open Lib
 open Symbols
 open MParser
@@ -99,10 +99,10 @@ module Seq =
     type t = Sl_form.t * Cmd.t * Sl_form.t
 
     let tagset_one = Tags.singleton 1
-		let tagpairs_one = TagPairs.mk tagset_one
+		let tagpairs_one = Tagpairs.mk tagset_one
     let form_tags f = if !termination then Sl_form.tags f else tagset_one
     let tags (pre,_,_) = form_tags pre
-    let tag_pairs seq = TagPairs.mk (tags seq)
+    let tag_pairs seq = Tagpairs.mk (tags seq)
 
 		(* Do we want the vars from the postcondition as well, or not? *)
     (* Yes! (NG) *)

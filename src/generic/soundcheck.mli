@@ -8,11 +8,11 @@ type abstract_node
     progressing tag transitions. *) 
 
 val mk_abs_node :   
-  Util.Tags.t -> ((int * Util.TagPairs.t* Util.TagPairs.t ) list) -> 
+  Tags.t -> ((int * Tagpairs.t* Tagpairs.t ) list) -> 
     abstract_node 
 (** Constructor for nodes. *)
 
-type t = abstract_node Util.Int.Map.t
+type t = abstract_node Int.Map.t
 (** The type of abstracted proof as a map from ints to nodes. 
     NB the root is always at 0. *)
 

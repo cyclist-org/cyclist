@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 
 module SH = Sl_heap
 
@@ -27,7 +27,7 @@ let lhs_disj_to_symheaps =
   Rule.mk_infrule 
     (fun (l,r) -> if Blist.length l < 2 then [] else
       [ 
-        Blist.map (fun h -> (([h],r), Sl_heap.tag_pairs h, TagPairs.empty)) l,
+        Blist.map (fun h -> (([h],r), Sl_heap.tag_pairs h, Tagpairs.empty)) l,
          "L. Or" 
       ]
     )
@@ -38,7 +38,7 @@ let rhs_disj_to_symheaps =
   Rule.mk_infrule 
     (fun (l,r) -> if Blist.length r < 2 || Blist.length l <> 1 then [] else
       Blist.map 
-        (fun s -> [ ((l,[s]), Sl_form.tag_pairs l, TagPairs.empty) ], "R. Or") 
+        (fun s -> [ ((l,[s]), Sl_form.tag_pairs l, Tagpairs.empty) ], "R. Or") 
         r)
 
 (* simplification rules *)
@@ -57,7 +57,7 @@ let eq_subst_rule seq =
 		let (x,y) = if Sl_term.is_var x then p else (y,x) in
 		let theta = Sl_subst.singleton x y in
     let (l',r') = Pair.map (Sl_heap.subst theta) (l,r) in
-    [ [ (([l'], [r']), Sl_heap.tag_pairs l, TagPairs.empty) ], "" ]
+    [ [ (([l'], [r']), Sl_heap.tag_pairs l, Tagpairs.empty) ], "" ]
   with Not_symheap | Not_found -> []
 
 
@@ -72,7 +72,7 @@ let eq_ex_subst_rule seq =
     let (x,y) = if Sl_term.is_exist_var x then p else (y,x) in
     let r = SH.with_eqs r (Sl_uf.of_list reqs) in
     let r' = Sl_heap.subst (Sl_subst.singleton x y) r in
-    [ [ (([l], [r']), Sl_heap.tag_pairs l, TagPairs.empty) ], "" ]
+    [ [ (([l], [r']), Sl_heap.tag_pairs l, Tagpairs.empty) ], "" ]
   with Not_symheap | Not_found -> []
 
 (* remove all RHS eqs that can be discharged *)
@@ -87,7 +87,7 @@ let eq_simplify seq =
       [ 
         (([l], [ SH.with_eqs r (Sl_uf.of_list reqs) ] ), 
         Sl_heap.tag_pairs l, 
-        TagPairs.empty) 
+        Tagpairs.empty) 
       ], "" 
     ]
   with Not_symheap -> []
@@ -103,7 +103,7 @@ let deq_simplify seq =
       [ 
         (([l], [ SH.with_deqs r rdeqs ] ), 
         Sl_heap.tag_pairs l, 
-        TagPairs.empty) 
+        Tagpairs.empty) 
       ], "" 
     ]
   with Not_symheap -> []
@@ -111,7 +111,7 @@ let deq_simplify seq =
 let norm seq =
   let seq' = Sl_seq.norm seq in
   if Sl_seq.equal seq seq' then [] else 
-  [ [ (seq', Sl_seq.tag_pairs seq', TagPairs.empty) ], "" ]
+  [ [ (seq', Sl_seq.tag_pairs seq', Tagpairs.empty) ], "" ]
 
 let simplify_rules = [
   eq_subst_rule ;
@@ -145,7 +145,7 @@ let pto_intro_rule seq =
     let l' = SH.del_pto l p' in
     let r' = SH.del_pto r p in
     let r' = SH.with_eqs r' (Sl_uf.union r'.SH.eqs (Sl_uf.of_list (Blist.combine rys lys))) in
-    [ [ ( ([l'], [r']), Sl_heap.tag_pairs l, TagPairs.empty ) ], "Pto Intro" ]
+    [ [ ( ([l'], [r']), Sl_heap.tag_pairs l, Tagpairs.empty ) ], "Pto Intro" ]
   with Not_symheap | Not_found | Invalid_argument _ -> []
 
 (* do the following transformation for the first i,j such that *)
@@ -162,7 +162,7 @@ let pred_intro_rule seq =
 					Blist.for_all2 (fun x y -> Sl_heap.equates l x y) vs vs') cp in
     let l' = SH.del_ind l p in
     let r' = SH.del_ind r q in
-    [ [ ( ([l'], [r']), Sl_heap.tag_pairs l', TagPairs.empty ) ], "Pred Intro" ]
+    [ [ ( ([l'], [r']), Sl_heap.tag_pairs l', Tagpairs.empty ) ], "Pred Intro" ]
   with Not_symheap | Not_found -> []
 
 (* x->ys * A |- e->zs * B if  A |- ys=zs * B[x/e] where e existential *)
@@ -187,7 +187,7 @@ let instantiate_pto =
         let r' = SH.del_pto r p in
         let r' =
           SH.with_eqs r' (Sl_uf.union r'.SH.eqs (Sl_uf.of_list ((x,w)::(Blist.combine ys zs)))) in
-        [ ( ([l'], [r']), Sl_heap.tag_pairs l, TagPairs.empty ) ], "Inst ->"
+        [ ( ([l'], [r']), Sl_heap.tag_pairs l, Tagpairs.empty ) ], "Inst ->"
       in Blist.map do_instantiation cp
     with Not_symheap | Invalid_argument _ -> [] in
   wrap rl 
@@ -204,7 +204,7 @@ let ruf defs =
         let do_case c = 
           let (f', _) = Sl_indrule.unfold seq_vars r' p c in
           let f' = Sl_heap.freshen_tags r' f' in
-          [ (([l], [Sl_heap.star r' f']), Sl_heap.tag_pairs l, TagPairs.empty) ],
+          [ (([l], [Sl_heap.star r' f']), Sl_heap.tag_pairs l, Tagpairs.empty) ],
           ((Sl_predsym.to_string ident) ^ " R.Unf.") in
         Blist.map do_case cases in
       Blist.flatten (Sl_tpreds.map_to_list right_unfold r.SH.inds)  
@@ -223,7 +223,7 @@ let luf defs =
         let do_case (f, tagpairs) =
           let l' = Sl_heap.star l f in
 					let l' = Sl_heap.univ (Sl_heap.vars r) l' in
-          (([l'], [r]), TagPairs.union (Sl_heap.tag_pairs l) tagpairs, tagpairs) in
+          (([l'], [r]), Tagpairs.union (Sl_heap.tag_pairs l) tagpairs, tagpairs) in
         Blist.map do_case cases, ((Sl_predsym.to_string ident) ^ " L.Unf.") in
       Sl_tpreds.map_to_list left_unfold l.SH.inds
     with Not_symheap -> [] in
@@ -267,7 +267,7 @@ let matches seq seq' =
 let subst_rule theta seq' seq = 
   if Sl_seq.equal (Sl_seq.subst theta seq') seq 
 	then 
-		[ [(seq', Sl_seq.tag_pairs seq', TagPairs.empty)], "Subst" ]
+		[ [(seq', Sl_seq.tag_pairs seq', Tagpairs.empty)], "Subst" ]
 	else 
 		[]
 
@@ -277,7 +277,7 @@ let subst_rule theta seq' seq =
 (* where seq' = F |- G * Pi' and seq = Pi * F |- G *)     
 let weaken seq' seq = 
   if Sl_seq.subsumed seq seq' then
-    [ [(seq', Sl_seq.tag_pairs seq', TagPairs.empty)], "Weaken" ]
+    [ [(seq', Sl_seq.tag_pairs seq', Tagpairs.empty)], "Weaken" ]
   else
     []
 
@@ -311,7 +311,7 @@ let dobackl idx prf =
       Rule.mk_backrule 
         true 
         (fun _ _ -> [targ_idx]) 
-        (fun s s' -> [TagPairs.reflect tagpairs, "Backl"])
+        (fun s s' -> [Tagpairs.reflect tagpairs, "Backl"])
     ] in
 	Rule.first (Blist.map f apps) idx prf
 

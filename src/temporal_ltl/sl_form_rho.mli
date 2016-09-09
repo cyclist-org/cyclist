@@ -3,7 +3,7 @@
     if [f] and [g] both use an existential variable [x'] then [[f;g]] would
     mean the bound variable is shared. *)
 
-include Util.BasicType with type t = Sl_heap_rho.t list
+include Utilsigs.BasicType with type t = Sl_heap_rho.t list
 
 val empty : t
 (** The formula [emp]. NB this is not the same as [[]], which is equivalent to 
@@ -23,10 +23,10 @@ val to_melt : t -> Latex.t
 val terms : t -> Sl_term.Set.t
 val vars : t -> Sl_term.Set.t
 
-val tags : t -> Util.Tags.t
+val tags : t -> Tags.t
 (** NB no attempt is made to ensure that tags are disjoint between disjuncts. 
     This is not necessarily unsound. *)
-val tag_pairs : t -> Util.TagPairs.t
+val tag_pairs : t -> Tagpairs.t
 (** The proviso on tags applies here too. *)
 
 val inconsistent : t -> bool
@@ -59,7 +59,7 @@ val subst : Sl_subst.t -> t -> t
 val subst_existentials : t -> t
 (** Like [Sl_heap_rho.subst_existentials] applied to all disjuncts. *)
 
-val subst_tags : Util.TagPairs.t -> t -> t
+val subst_tags : Tagpairs.t -> t -> t
 (** Like [Sl_heap_rho.subst_tags] applied to all disjuncts. *)
 
 val norm : t -> t

@@ -1,6 +1,6 @@
 (** Points-to atom, consisting of a pair of a term and a list of terms. *)
 
-include Util.BasicType with type t = Sl_term.t * Sl_term.FList.t
+include Utilsigs.BasicType with type t = Sl_term.t * Sl_term.FList.t
 
 val subst : Sl_subst.t -> t -> t
 val to_melt : t -> Latex.t

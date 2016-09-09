@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 open Symbols
 
 (* module L = Zlist *)

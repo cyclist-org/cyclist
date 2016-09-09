@@ -1,11 +1,11 @@
 open Lib
-open Util
+
 open Symbols
 open MParser
 
 module SH = Sl_heap
 
-module AllocatedT = Pair.Make(Sl_term)(Int.T)  
+module AllocatedT = Pair.Make(Sl_term)(Int)  
 module Allocated = 
   struct
     include Treeset.Make(AllocatedT)
@@ -20,7 +20,7 @@ module BasePair =
 struct
   module T = Pair.Make(Allocated)(Sl_heap)
   include T
-  include ContaineriseType(T)
+  include Containers.Make(T)
   
   let to_string (v, g) =
     symb_lp.str ^
@@ -140,7 +140,7 @@ module BaseAndRule =
 struct
   module T = Pair.Make(BasePair)(Sl_term.FList)
   include T
-  include ContaineriseType(T)
+  include Containers.Make(T)
 end
 
 module Attempted = Hashset.Make(BaseAndRule.FList)

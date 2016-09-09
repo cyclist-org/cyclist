@@ -1,6 +1,6 @@
 module type CommonInterface = 
   sig
-    include Util.BasicType
+    include Utilsigs.BasicType
     val equal_upto_tags : t -> t -> bool
     val parse : (t, 'a) MParser.parser
     val of_string : string -> t
@@ -29,8 +29,8 @@ module type CommonInterface =
     val terms : t -> Sl_term.Set.t
     val free_vars : t -> Sl_term.Set.t
     val subst : Sl_subst.t -> t -> t
-    val tags : t -> Util.Tags.t
-    val tag_pairs : t -> Util.TagPairs.t
+    val tags : t -> Tags.t
+    val tag_pairs : t -> Tagpairs.t
   end
 
 module Atom : 
@@ -70,7 +70,7 @@ end
 
 (* module Formula :                                       *)
 (* sig                                                    *)
-(*   include Util.BasicType                               *)
+(*   include Utilsigs.BasicType                               *)
 (*   val is_dsh : t -> bool                               *)
 (* end                                                    *)
 

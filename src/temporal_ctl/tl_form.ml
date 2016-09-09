@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 open Symbols
 open MParser
        
@@ -11,13 +11,13 @@ sig
     | Circle of t * int 
     | Diamond of t * int
     | Box of t * int
-    | AG of Util.Tags.elt * t * int
-    | EG of Util.Tags.elt * t * int
+    | AG of Tags.elt * t * int
+    | EG of Tags.elt * t * int
     | AF of t * int
     | EF of t * int
     | And of t list * int
     | Or of t list * int
-  include BasicType with type t:=t
+  include Utilsigs.BasicType with type t:=t
 
   val is_final : t -> bool
   val is_atom : t -> bool
@@ -37,8 +37,8 @@ sig
   val dest_circle : t -> t
   val dest_diamond : t -> t
   val dest_box : t -> t
-  val dest_ag : t -> Util.Tags.elt * t
-  val dest_eg : t -> Util.Tags.elt * t
+  val dest_ag : t -> Tags.elt * t
+  val dest_eg : t -> Tags.elt * t
   val dest_af : t -> t
   val dest_ef : t -> t
   val dest_and : t -> t list
@@ -73,9 +73,9 @@ sig
   (* val norm : t -> t *)
   val to_slformula : t -> Sl_form.t
   val extract_checkable_slformula : t -> Sl_form.t
-  val tags : t -> Util.Tags.t
-  val outermost_tag : t -> Util.Tags.t
-  val subst_tags : TagPairs.t -> t -> t
+  val tags : t -> Tags.t
+  val outermost_tag : t -> Tags.t
+  val subst_tags : Tagpairs.t -> t -> t
   val vars : t -> Sl_term.Set.t
   val equal : t -> t -> bool
   val equal_upto_tags : t -> t -> bool
@@ -93,8 +93,8 @@ end
       | Circle of t * int
       | Diamond of t * int
       | Box of t * int
-      | AG of Util.Tags.elt * t * int
-      | EG of Util.Tags.elt * t * int
+      | AG of Tags.elt * t * int
+      | EG of Tags.elt * t * int
       | AF of t * int
       | EF of t * int
       | And of t list * int
@@ -463,10 +463,10 @@ end
       | And (fs,d) -> And (List.map (subst_tags tagpairs) fs, d)
       | Or (fs,d) -> Or (List.map (subst_tags tagpairs) fs, d)
       | AG (tag,f,d) ->
-	 let (_, tag'') = TagPairs.find (fun (tag',_) -> tag=tag') tagpairs in
+	 let (_, tag'') = Tagpairs.find (fun (tag',_) -> tag=tag') tagpairs in
 	 AG (tag'',subst_tags tagpairs f, d)
       | EG (tag,f,d) ->
-	 let (_, tag'') = TagPairs.find (fun (tag',_) -> tag=tag') tagpairs in
+	 let (_, tag'') = Tagpairs.find (fun (tag',_) -> tag=tag') tagpairs in
 	 EG (tag'',subst_tags tagpairs f, d)
 
     let e_step tf = match tf with

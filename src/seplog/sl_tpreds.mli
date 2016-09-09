@@ -3,21 +3,21 @@
     However, that uniqueness is required if [tagged_unify_partial] is to return
     a set of tag pairs that describes an injective function.
     *)
-include Util.OrderedContainer with type elt = Sl_tpred.t
+include Utilsigs.OrderedContainer with type elt = Sl_tpred.t
 
 val equal_upto_tags : t -> t -> bool
 (** Test whether the two arguments are the equal ignoring tags. *) 
 
 val subst : Sl_subst.t -> t -> t
 
-val subst_tags : Util.TagPairs.t -> t -> t
+val subst_tags : Tagpairs.t -> t -> t
 (** Substitute tags according to the function represented by the set of 
     tag pairs provided. *)
 
 
 val terms : t -> Sl_term.Set.t
 val vars : t -> Sl_term.Set.t
-val tags : t -> Util.Tags.t
+val tags : t -> Tags.t
 
 val idents : t -> Sl_predsym.MSet.t
 (** Return multiset of identifiers present. *)

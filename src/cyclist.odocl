@@ -17,6 +17,9 @@ Listset
 Treemap
 Pair
 Treeset
+Containers
+Strng
+Int
 Sl_term
 Sl_subst
 Sl_unifier

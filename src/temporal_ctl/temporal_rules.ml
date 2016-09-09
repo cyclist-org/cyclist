@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 open Temporal_program
 
 module SH = Sl_heap
@@ -46,7 +46,7 @@ let symex_empty_axiom =
 let eq_subst_ex_f ((sf,cmd,tf) as s) =
   let sf' = Sl_form.subst_existentials sf in
   if Sl_form.equal sf sf' then [] else
-    [ [ ((sf', cmd, tf), tagpairs s, TagPairs.empty) ], "Eq. subst. ex" ]
+    [ [ ((sf', cmd, tf), tagpairs s, Tagpairs.empty) ], "Eq. subst. ex" ]
 
 let final_axiom =
   Rule.mk_axiom (fun (_,cmd,tf) -> Option.mk (Cmd.is_empty cmd && Tl_form.is_final tf) "Final")
@@ -69,7 +69,7 @@ let lhs_disj_to_symheaps =
   let rl (sf,cmd,tf) =
     if Blist.length sf < 2 then [] else
       [ Blist.map 
-          (fun sh -> let s' = ([sh],cmd,tf) in (s', tagpairs s', TagPairs.empty ) ) 
+          (fun sh -> let s' = ([sh],cmd,tf) in (s', tagpairs s', Tagpairs.empty ) ) 
           sf,
       "L.Or"
       ] in
@@ -97,7 +97,7 @@ let luf_rl seq defs =
 	  ([l'],cmd,tf), 
 	  (if !termination then tagpairs else Seq.tagpairs_one),
 	  (* Seq.tag_pairs ([l'],cmd,tf), *)
-	  (if !termination then tagpairs else TagPairs.empty)
+	  (if !termination then tagpairs else Tagpairs.empty)
 	) in
       Blist.map do_case clauses, ((Sl_predsym.to_string ident) ^ " L.Unf.") in
     Sl_tpreds.map_to_list 
@@ -111,7 +111,7 @@ let fix_ts l =
   Blist.map
     (fun (g,d) ->
      Blist.map
-       (fun s -> (s, tagpairs s, TagPairs.empty ))
+       (fun s -> (s, tagpairs s, Tagpairs.empty ))
        g, d)
     l 
     
@@ -306,7 +306,7 @@ let matches ((sf,cmd,tf) as seq) ((sf',cmd',tf') as seq') =
              (fun (theta, tagpairs) -> 
               let subst_seq = (Seq.subst_tags tagpairs (Seq.subst theta seq')) in
               let () = debug (fun _ -> "term substitution: " ^ ((Format.asprintf " %a" Sl_subst.pp theta))) in 
-              let () = debug (fun _ -> "tag substitution: " ^ (TagPairs.to_string tagpairs)) in 
+              let () = debug (fun _ -> "tag substitution: " ^ (Tagpairs.to_string tagpairs)) in 
               let () = debug (fun _ -> "source seq: " ^ (Seq.to_string seq)) in
               let () = debug (fun _ -> "target seq: " ^ (Seq.to_string seq')) in
               let () = debug (fun _ -> "substituted target seq: " ^ (Seq.to_string subst_seq)) in
@@ -342,12 +342,12 @@ let matches ((sf,cmd,tf) as seq) ((sf',cmd',tf') as seq') =
 	let (t1, _) = Tl_form.dest_ag tf in
 	let (t2, _) = Tl_form.dest_ag tf' in
 	assert (Tags.equal (Tags.singleton t1) (Tags.singleton t2));
-	Blist.map (fun (t,tp) -> (t, (TagPairs.add (t1,t2) tp))) res2
+	Blist.map (fun (t,tp) -> (t, (Tagpairs.add (t1,t2) tp))) res2
       else if Tl_form.is_eg tf && Tl_form.is_eg tf' then
 	let (t1, _) = Tl_form.dest_eg tf in
 	let (t2, _) = Tl_form.dest_eg tf' in
 	assert (Tags.equal (Tags.singleton t1) (Tags.singleton t2));
-	Blist.map (fun (t,tp) -> (t, (TagPairs.add (t1,t2) tp ))) res2
+	Blist.map (fun (t,tp) -> (t, (Tagpairs.add (t1,t2) tp ))) res2
       else
 	res2
   with Not_symheap -> []
@@ -359,13 +359,13 @@ let matches ((sf,cmd,tf) as seq) ((sf',cmd',tf') as seq') =
 let subst_rule theta seq' seq = 
   if Seq.equal (Seq.subst theta seq') seq 
     then 
-      [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], "Subst " ]
+      [ [(seq', Seq.tag_pairs seq', Tagpairs.empty)], "Subst " ]
     else 
       []
 
 let frame seq' seq = 
   if Seq.subsumed seq seq' then
-    [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], "Frame" ]
+    [ [(seq', Seq.tag_pairs seq', Tagpairs.empty)], "Frame" ]
   else
     []
 
@@ -374,9 +374,9 @@ let cut seq' seq =
   (* if Option.is_some (Slprover.idfs 1 11 !Sl_rules.axioms !Sl_rules.rules (sf1, sf2)) then *)
   if !use_cut then
     [ [(seq',
-        TagPairs.union (TagPairs.mk (Tl_form.outermost_tag tf1)) (TagPairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')))
-	(* TagPairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')) *) (*Seq.tag_pairs seq*),
-       TagPairs.empty (* TagPairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')) *) (*Seq.tag_pairs seq*))], "Cut" ]
+        Tagpairs.union (Tagpairs.mk (Tl_form.outermost_tag tf1)) (Tagpairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')))
+	(* Tagpairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')) *) (*Seq.tag_pairs seq*),
+       Tagpairs.empty (* Tagpairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')) *) (*Seq.tag_pairs seq*))], "Cut" ]
   else
     []
 
@@ -498,8 +498,8 @@ let dobackl idx prf =
           false 
           (fun _ _ -> [targ_idx]) 
           (fun (_,_,tf) s' -> 
-           [(if !termination then TagPairs.reflect tagpairs else TagPairs.mk (Tl_form.outermost_tag tf)
-	    (*TagPairs.empty *) (* Seq.tagpairs_one *)), "Backl"])
+           [(if !termination then Tagpairs.reflect tagpairs else Tagpairs.mk (Tl_form.outermost_tag tf)
+	    (*Tagpairs.empty *) (* Seq.tagpairs_one *)), "Backl"])
 	] in
   (* let () = print_endline "Attempting backlink with source seq:" in   *)
   (* let () = print_endline (Seq.to_string src_seq) in   *)
@@ -525,8 +525,8 @@ let fold def =
           (* let () = print_endline (Seq.to_string seq') in *)
             [(
               seq', 
-              (* TagPairs.empty *) TagPairs.mk (Tags.inter tags (Seq.tags seq')), 
-              TagPairs.empty 
+              (* Tagpairs.empty *) Tagpairs.mk (Tags.inter tags (Seq.tags seq')), 
+              Tagpairs.empty 
             )], ((Sl_predsym.to_string ident) ^ " Fold")  in
         Blist.map process results in
       Blist.bind do_case (Sl_preddef.rules def)
@@ -560,7 +560,7 @@ let generalise_while_rule =
             let sf' = generalise m' sf in
             if Sl_heap.equal sf sf' then None else
             let s' = ([sf'], cmd,tf) in
-            Some ([ (s', tagpairs s', TagPairs.empty) ], "Gen.While")
+            Some ([ (s', tagpairs s', Tagpairs.empty) ], "Gen.While")
           end
           subs)
     with Not_symheap | WrongCmd -> [] in
@@ -577,7 +577,7 @@ let generalise_while_rule =
 (*       (\* let () = print_endline "Seqs are not equal" in   *\) *)
 (*       []  *)
 (*     else if Option.is_some (Slprover.idfs 1 11 !Sl_rules.axioms !Sl_rules.rules (sf, sf')) then *)
-(*          [TagPairs.mk (Tl_form.outermost_tag tf)] *)
+(*          [Tagpairs.mk (Tl_form.outermost_tag tf)] *)
 (*        else *)
 (* 	 [] *)
 (*   with Not_symheap -> [] *)
@@ -601,14 +601,14 @@ let generalise_while_rule =
 (*       let targ_seq' = (Sl_form.subst_tags tagpairs sf_targ_seq, cmd_targ_seq, tf_targ_seq) in  *)
 (*       (\* let subst_seq = Seq.subst theta targ_seq' in *\) *)
 (*       Rule.sequence [ *)
-(* 	  Rule.mk_infrule (fun seq -> [ [(targ_seq', TagPairs.mk (Tl_form.outermost_tag tf_targ_seq), *)
-(* 					  TagPairs.empty)], "Cut" ]); *)
+(* 	  Rule.mk_infrule (fun seq -> [ [(targ_seq', Tagpairs.mk (Tl_form.outermost_tag tf_targ_seq), *)
+(* 					  Tagpairs.empty)], "Cut" ]); *)
 	  
 (*           Rule.mk_backrule  *)
 (*             false  *)
 (*             (fun _ _ -> [targ_idx])  *)
 (*             (fun s s' ->  *)
-(*              [(if !termination then TagPairs.reflect tagpairs else TagPairs.empty (\* Seq.tagpairs_one *\)), "Backl"]) *)
+(*              [(if !termination then Tagpairs.reflect tagpairs else Tagpairs.empty (\* Seq.tagpairs_one *\)), "Backl"]) *)
 (* 	] in *)
 (*   (\* let () = print_endline "Attempting backlink with source seq:" in   *\) *)
 (*   (\* let () = print_endline (Seq.to_string src_seq) in   *\) *)
@@ -635,10 +635,10 @@ let generalise_while_rule =
 (* 	let () = Lib.do_debug := olddebug in *)
 (* 	let () = debug (fun () -> "CUTLINK3: result: " ^ (string_of_bool result)) in *)
 (* 	if result then *)
-(* 	  [ ((TagPairs.mk (Tl_form.outermost_tag tf1)), "Cut/Backl") ] *)
+(* 	  [ ((Tagpairs.mk (Tl_form.outermost_tag tf1)), "Cut/Backl") ] *)
 (* 	else [] in *)
 (*   Rule.sequence [ *)
-(*       Rule.mk_infrule ([[((sf2,cmd2,tf2), (TagPairs.mk (Tl_form.outermost_tag tf1)),TagPairs.empty)], "Cut" ]); *)
+(*       Rule.mk_infrule ([[((sf2,cmd2,tf2), (Tagpairs.mk (Tl_form.outermost_tag tf1)),Tagpairs.empty)], "Cut" ]); *)
 (*       Rule.mk_backrule true Rule.all_nodes rl] *)
 (* (Blist.map (fun rl -> Rule.mk_backrule true Rule.all_nodes rl) rl) *)
 		   
@@ -663,7 +663,7 @@ let generalise_while_rule =
 	  (* 	    false  *)
 	  (* 	    (fun _ _ -> [targ_idx])  *)
 	  (* 	    (fun s s' ->  *)
-	  (* 	     [(TagPairs.reflect tagpairs), "Backl"]) *)
+	  (* 	     [(Tagpairs.reflect tagpairs), "Backl"]) *)
 	  (* 	] in *)
 	  (*   (\* let () = print_endline "Attempting backlink with source seq:" in   *\) *)
 	  (*   (\* let () = print_endline (Seq.to_string src_seq) in   *\) *)

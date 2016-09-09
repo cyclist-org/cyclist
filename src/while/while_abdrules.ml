@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 open While_program
 
 module SH = Sl_heap
@@ -192,7 +192,7 @@ let simpl_deqs seq =
     let f' = SH.with_deqs f newdeqs in
     if Sl_heap.equal f f' then [] else
 		let s = ([f'], cmd) in
-    [ [ (s, While_rules.tagpairs s, TagPairs.empty) ], "Simpl Deqs" ]
+    [ [ (s, While_rules.tagpairs s, Tagpairs.empty) ], "Simpl Deqs" ]
   with Not_symheap -> []
 
 
@@ -346,7 +346,7 @@ let generalise_while_rule =
       		let f' = generalise m' f in
       		if Sl_heap.equal f f' then None else
 					let s' = ([f'], cmd) in
-          Some ([ (s', While_rules.tagpairs s', TagPairs.empty) ], "Gen.While")
+          Some ([ (s', While_rules.tagpairs s', Tagpairs.empty) ], "Gen.While")
 			  end
 				subs)
     with Not_symheap | WrongCmd -> [] in
@@ -551,7 +551,7 @@ let matches = Abdrule.lift While_rules.dobackl
 (* 				let h' = { h' with inds=Sl_tpreds.union h'.inds (Sl_tpreds.of_list [newpred;newpred']) } in *)
 (* 				let () = debug (fun () -> "Heap: " ^ (Sl_heap.to_string h')) in                      *)
 (* 				let () = debug (fun () -> "Clause: " ^ (Sl_heap.to_string clause)) in                *)
-(*         Some ([ (([h'], cmd), While_rules.symex_tagpairs, TagPairs.empty) ], new_defs) in *)
+(*         Some ([ (([h'], cmd), While_rules.symex_tagpairs, Tagpairs.empty) ], new_defs) in *)
 (*       Option.list_get (Blist.map f (Sl_tpreds.to_list inds))                                   *)
 (*     with Not_symheap | WrongCmd -> [] in                                                  *)
 (*   mk_gen_rule rl "Abd. segment"                                                           *)

@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 open Extended_while_program
 
 module SH = Sl_heap
@@ -15,7 +15,7 @@ let tagpairs = Seq.tag_pairs
 
 (* following is for symex only *)
 let progpairs () = 
-  if !termination then TagPairs.empty else Seq.tagpairs_one
+  if !termination then Tagpairs.empty else Seq.tagpairs_one
 
 let dest_sh_seq (pre, cmd, post) = (Sl_form.dest pre, cmd, post)
 
@@ -51,7 +51,7 @@ let mk_symex_empty_axiom entails =
 let eq_subst_ex_f ((pre, cmd, post) as s) =
   let pre' = Sl_form.subst_existentials pre in
   if Sl_form.equal pre pre' then [] else
-  [ [ ((pre', cmd, post), tagpairs s, TagPairs.empty) ], "Eq. subst. ex" ]
+  [ [ ((pre', cmd, post), tagpairs s, Tagpairs.empty) ], "Eq. subst. ex" ]
 
 (* Tactic which tried to simplify the sequent by normalising: that is, using the *)
 (* equalities in the formula as a substitution for the disequality, points-to and *)
@@ -60,7 +60,7 @@ let eq_subst_ex_f ((pre, cmd, post) as s) =
 (* let norm ((pre ,cmd, post) as s) =                                *)
 (*   let pre' = Sl_form.norm pre in                                  *)
 (*   if Sl_form.equal pre pre' then [] else                          *)
-(*   [ [( (pre', cmd, post), tagpairs s, TagPairs.empty)], "Norm" ]  *)
+(*   [ [( (pre', cmd, post), tagpairs s, Tagpairs.empty)], "Norm" ]  *)
 
 let simplify_rules = [ eq_subst_ex_f ]
 
@@ -83,7 +83,7 @@ let lhs_disj_to_symheaps =
   let rl ((pre, cmd, post) : Seq.t) =
     if Blist.length pre < 2 then [] else
     [ Blist.map 
-        (fun sh -> let s' = ([sh], cmd, post) in (s', tagpairs s', TagPairs.empty ) ) 
+        (fun sh -> let s' = ([sh], cmd, post) in (s', tagpairs s', Tagpairs.empty ) ) 
         pre,
       "L.Or"
     ] in
@@ -115,8 +115,8 @@ let lhs_disj_to_symheaps =
 (*           let pre' = Sl_heap.star pre' f' in                                           *)
 (*           (                                                                            *)
 (*             ([pre'], cmd, post),                                                       *)
-(*             (if !termination then TagPairs.mk ts else Seq.tagpairs_one),               *)
-(*             (if !termination then TagPairs.singleton (id,id) else TagPairs.empty)      *)
+(*             (if !termination then Tagpairs.mk ts else Seq.tagpairs_one),               *)
+(*             (if !termination then Tagpairs.singleton (id,id) else Tagpairs.empty)      *)
 (*           )) in                                                                        *)
 (*       let subgoals = Option.list_get (Blist.map do_case def) in                        *)
 (*       Option.mk (not (Blist.is_empty subgoals)) (subgoals, (ident ^ " L.Unf.")) in     *)
@@ -138,7 +138,7 @@ let luf_rl defs ((pre,cmd,post) as seq) =
         ( 
           ([pre'],cmd,post), 
           (if !termination then tagpairs else Seq.tagpairs_one), 
-          (if !termination then tagpairs else TagPairs.empty)
+          (if !termination then tagpairs else Tagpairs.empty)
         ) in
       let () = debug (fun () -> "L. Unfolding " ^ (Sl_predsym.to_string ident)) in 
       Blist.map do_case clauses, ((Sl_predsym.to_string ident) ^ " L.Unf.") in
@@ -160,7 +160,7 @@ let ruf_rl defs ((pre,cmd,post) as seq) =
       (* Note we do not care about the tag pairs when dealing with postconditions *)
       let post' = Sl_heap.star post' clause in
       let seq' = (pre,cmd,[post']) in
-        [ (seq', tagpairs seq', TagPairs.empty) ],
+        [ (seq', tagpairs seq', Tagpairs.empty) ],
         (Sl_predsym.to_string ident) ^ " R.Unf."
       in
     let () = debug (fun () -> "R. Unfolding " ^ (Sl_predsym.to_string ident)) in 
@@ -344,7 +344,7 @@ let param_subst_rule theta ((_,cmd',_) as seq') ((_,cmd,_) as seq) =
       && Cmd.is_proc_call cmd' && Cmd.is_empty (Cmd.get_cont cmd')
       && Seq.equal (Seq.param_subst theta seq') seq
     then 
-      [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], 
+      [ [(seq', Seq.tag_pairs seq', Tagpairs.empty)], 
        "Param Subst"  (* ^ (Format.asprintf " %a" Sl_subst.pp theta) *) ]
     else 
       []
@@ -352,7 +352,7 @@ let param_subst_rule theta ((_,cmd',_) as seq') ((_,cmd,_) as seq) =
 let subst_rule theta seq' seq = 
   if Seq.equal (Seq.subst theta seq') seq 
     then 
-      [ [(seq', Seq.tag_pairs seq', TagPairs.empty)], 
+      [ [(seq', Seq.tag_pairs seq', Tagpairs.empty)], 
        "Subst"  (* ^ (Format.asprintf " %a" Sl_subst.pp theta) *) ]
     else 
       []
@@ -360,7 +360,7 @@ let subst_rule theta seq' seq =
 let weaken seq' seq = 
   if Seq.subsumed seq seq' 
     then
-      [ [(seq', Seq.tag_pairs seq', TagPairs.empty)],
+      [ [(seq', Seq.tag_pairs seq', Tagpairs.empty)],
        "Weaken" ]
     else
       []
@@ -370,7 +370,7 @@ let left_or_elim_rule ((pre',cmd',post') as seq') (pre,cmd,post) =
       && Sl_form.is_symheap pre
       && Blist.exists (Sl_heap.equal (Sl_form.dest pre)) pre'
     then
-      [ [(seq', Seq.tag_pairs seq', TagPairs.empty)],
+      [ [(seq', Seq.tag_pairs seq', Tagpairs.empty)],
        "L. Cut (Or Elim.)" ]
     else
       []
@@ -408,7 +408,7 @@ let ex_sp_rule ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
       let theta = Sl_heap.unify_partial ~sub_check ~cont pre pre' in
       if Option.is_some theta
         then
-          [ [(seq, Seq.tag_pairs seq, TagPairs.empty)],
+          [ [(seq, Seq.tag_pairs seq, Tagpairs.empty)],
            "Cut (Ex. Sp.)" ]      
         else
           let () = debug (fun _ -> "Failed Ex. Sp. Check:\n" ^ (Seq.to_string seq) ^ "\n" ^ (Seq.to_string seq')) in
@@ -419,7 +419,7 @@ let ex_intr_rule ((pre,cmd,post) as seq) (pre',cmd',post') =
   if not (Cmd.equal cmd cmd')
   then []
   else
-        [ [(seq, Seq.tag_pairs seq, TagPairs.empty)],
+        [ [(seq, Seq.tag_pairs seq, Tagpairs.empty)],
          "Ex.Intr./Rename" ]      
 
 let frame_rule f ((pre,cmd,post) as seq) seq' =
@@ -428,7 +428,7 @@ let frame_rule f ((pre,cmd,post) as seq) seq' =
     let post = Sl_form.dest post in
     let framed_seq = ([Sl_heap.star pre f], cmd, [Sl_heap.star post f]) in
     if (Seq.equal framed_seq seq') then
-      [ [(seq, Seq.tag_pairs seq, TagPairs.empty)],
+      [ [(seq, Seq.tag_pairs seq, Tagpairs.empty)],
         "Frame" ]
     else []
   with Not_symheap -> []
@@ -458,8 +458,8 @@ let proc_call_rule frame ((pre, cmd, post) as proc_seq) ((pre', cmd', post') as 
                 ([Sl_heap.combine (Sl_heap.freshen_tags frame (Sl_heap.subst theta post)) frame], 
                  Cmd.get_cont cmd', 
                  post') in
-              [ [ (proc_seq, tagpairs proc_seq, TagPairs.empty) ;
-                  (cont_seq, TagPairs.mk (Seq.form_tags [frame]), progpairs()) ;
+              [ [ (proc_seq, tagpairs proc_seq, Tagpairs.empty) ;
+                  (cont_seq, Tagpairs.mk (Seq.form_tags [frame]), progpairs()) ;
                 ], "Proc. Call " ^  procname]
           | _ -> []
       else
@@ -599,7 +599,7 @@ let matches ((pre,cmd,post) as seq) ((pre',cmd',post') as seq') =
             Format.eprintf "%a@." Seq.pp seq;
             Format.eprintf "%a@." Seq.pp seq';
             Format.eprintf "%a@." Sl_subst.pp theta;
-            Format.eprintf "%a@." TagPairs.pp tagpairs ;
+            Format.eprintf "%a@." Tagpairs.pp tagpairs ;
           end ;
           test)
         ) in
@@ -643,7 +643,7 @@ let dobackl idx prf =
         false 
         (fun _ _ -> [targ_idx]) 
         (fun s s' -> 
-          [(if !termination then TagPairs.reflect tagpairs else Seq.tagpairs_one), "Backl"])
+          [(if !termination then Tagpairs.reflect tagpairs else Seq.tagpairs_one), "Backl"])
     ] in
   Rule.first (Blist.map f apps) idx prf
 
@@ -664,8 +664,8 @@ let fold def =
           (* let () = print_endline (Seq.to_string seq') in  *)
             [(
               seq', 
-              TagPairs.mk (Tags.inter tags (Seq.tags seq')), 
-              TagPairs.empty 
+              Tagpairs.mk (Tags.inter tags (Seq.tags seq')), 
+              Tagpairs.empty 
             )], ((Sl_predsym.to_string ident) ^ " Fold")  in
         Blist.map process results in
       Blist.bind do_case (Sl_preddef.rules def)
@@ -726,14 +726,14 @@ let infer_frame idx prf =
           Blist.map 
             (fun ((theta, tps) as u) -> 
               let () = debug
-                (fun _ -> "Found term substitution = " ^ (Format.asprintf " %a" Sl_subst.pp theta) ^ " and tag subsitution = " ^ (Util.TagPairs.to_string tps)) in
+                (fun _ -> "Found term substitution = " ^ (Format.asprintf " %a" Sl_subst.pp theta) ^ " and tag subsitution = " ^ (Tagpairs.to_string tps)) in
               (u, f))
             unifiers in
         Blist.bind unify_frame frames in
       (* Auxiliary function to turn valid (unifier, frame) pairs into rule 
          applications *)
       let mk_rl ((theta, tps), frame) = 
-        let () = debug (fun _ -> "Constructing rule for frame: " ^ (Sl_heap.to_string frame) ^ " with term substitution: " ^ (Format.asprintf " %a" Sl_subst.pp theta) ^ " and tag subsitution = " ^ (Util.TagPairs.to_string tps)) in
+        let () = debug (fun _ -> "Constructing rule for frame: " ^ (Sl_heap.to_string frame) ^ " with term substitution: " ^ (Format.asprintf " %a" Sl_subst.pp theta) ^ " and tag subsitution = " ^ (Tagpairs.to_string tps)) in
         let post' = Sl_heap.diff post frame in
         let frame' = Sl_heap.subst_tags tps (Sl_heap.subst theta frame) in
         let pre' = Sl_heap.diff pre frame' in
@@ -812,7 +812,7 @@ let generalise_while_rule =
             let pre' = generalise m' pre in
             if Sl_heap.equal pre pre' then None else
             let s' = ([pre'], cmd, post) in
-            Some ([ (s', tagpairs s', TagPairs.empty) ], "Gen.While")
+            Some ([ (s', tagpairs s', Tagpairs.empty) ], "Gen.While")
           end
           subs)
     with Not_symheap | WrongCmd -> [] in

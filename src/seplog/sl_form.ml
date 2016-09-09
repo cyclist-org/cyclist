@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 open Symbols
 open MParser
 
@@ -35,7 +35,7 @@ let to_melt d =
 let terms d = Sl_term.Set.union_of_list (Blist.map Sl_heap.terms d)
 let vars d = Sl_term.filter_vars (terms d)
 let tags d = Tags.union_of_list (Blist.map Sl_heap.tags d)
-let tag_pairs f = TagPairs.mk (tags f)
+let tag_pairs f = Tagpairs.mk (tags f)
 let inconsistent f = Blist.for_all Sl_heap.inconsistent f
 
 let subsumed ?(total=true) f1 f2 =

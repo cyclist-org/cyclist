@@ -1,4 +1,4 @@
-include Util.BasicType 
+include Utilsigs.BasicType 
 
 val mk : Sl_indrule.t list * Sl_predsym.t -> t
 val dest : t -> Sl_indrule.t list * Sl_predsym.t

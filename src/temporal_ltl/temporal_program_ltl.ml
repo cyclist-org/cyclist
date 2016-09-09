@@ -1,4 +1,4 @@
-open Util
+
 open Lib
 open Symbols
 open MParser
@@ -570,9 +570,9 @@ module Seq =
     type t = Sl_form_rho.t * Cmd.t * Tl_form_ltl.t
 
     let tagset_one = Tags.singleton 1
-    let tagpairs_one = TagPairs.mk tagset_one
+    let tagpairs_one = Tagpairs.mk tagset_one
     let tags (sf,cmd,tf) = Tags.union (Sl_form_rho.tags sf) (Tl_form_ltl.tags tf)
-    let tag_pairs (sf,_,tf) =TagPairs.union (Sl_form_rho.tag_pairs sf) (TagPairs.mk (Tl_form_ltl.outermost_tag tf))
+    let tag_pairs (sf,_,tf) =Tagpairs.union (Sl_form_rho.tag_pairs sf) (Tagpairs.mk (Tl_form_ltl.outermost_tag tf))
     let sep_vars (sf,_,_) = Sl_form_rho.vars sf
     let temp_vars (_,_,tf) = Tl_form_ltl.vars tf
     let vars (sf,_,tf) = Sl_term.Set.union (Sl_form_rho.vars sf) (Tl_form_ltl.vars tf)

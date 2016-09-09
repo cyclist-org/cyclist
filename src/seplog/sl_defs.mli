@@ -1,4 +1,4 @@
-include Util.BasicType
+include Utilsigs.BasicType
 
 val empty : t
 val add : Sl_preddef.t -> t -> t
@@ -27,7 +27,7 @@ val of_channel : in_channel -> t
 val of_string : string -> t
 
 val unfold : Sl_term.Set.t -> Sl_heap.t -> Sl_tpred.t -> t ->
-  (Sl_heap.t * Util.TagPairs.t) list
+  (Sl_heap.t * Tagpairs.t) list
 
 val of_formula : t -> Sl_form.t -> t
 (** Convert a formula to a set of rules and add it to the provided set of

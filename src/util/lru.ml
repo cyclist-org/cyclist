@@ -1,4 +1,4 @@
-module Make(T : Util.BasicType) = 
+module Make(T : Utilsigs.BasicType) = 
   struct
     module Dll =
       struct
@@ -93,7 +93,7 @@ module Make(T : Util.BasicType) =
       lru_cache_rec (fun _ x -> gen x) cap
   end
 
-(* module M = Make(Util.Int)  *)
+(* module M = Make(Int)  *)
 (* let id (x:int) = x                                              *)
 (* let cache = M.lru_cache id 9                                    *)
 (* let print i = Format.fprintf Format.std_formatter "i=%i@." i ;; *)

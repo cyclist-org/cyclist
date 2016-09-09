@@ -1,13 +1,13 @@
 open Lib
-open Util
+
 open Symbols
 open MParser
 
 module Trm :
   sig
-    include Util.BasicType
-    module Set : Util.OrderedContainer with type elt = t
-    module Map : Util.OrderedMap with type key = t
+    include Utilsigs.BasicType
+    module Set : Utilsigs.OrderedContainer with type elt = t
+    module Map : Utilsigs.OrderedMap with type key = t
     
     val to_melt : t -> Latex.t
     val parse : (t, 'a) MParser.parser
@@ -26,7 +26,7 @@ module Trm :
   end
   =
   struct
-    module T = Util.Strng
+    module T = Strng
     module H = Hashcons.Make(T)
 
     module T' = 
@@ -98,9 +98,9 @@ module Trm :
 
 (* module B :                                                                               *)
 (*   sig                                                                                    *)
-(*     include Util.BasicType                                                               *)
-(*     module Set : Util.OrderedContainer with type elt = t                                 *)
-(*     module Map : Util.OrderedMap with type key = t                                       *)
+(*     include Utilsigs.BasicType                                                               *)
+(*     module Set : Utilsigs.OrderedContainer with type elt = t                                 *)
+(*     module Map : Utilsigs.OrderedMap with type key = t                                       *)
     
 (*     val to_melt : t -> Latex.t                                                           *)
 (*     val parse : (t, 'a) MParser.parser                                                   *)
@@ -311,7 +311,7 @@ let subst theta v =
 
 module type UnifierSig =
   sig
-    type state = Subst.t * Util.TagPairs.t
+    type state = Subst.t * Tagpairs.t
     val empty_state : state
     val pp_state : Format.formatter -> state -> unit
     
@@ -337,10 +337,10 @@ module type UnifierSig =
 
 module Unifier =
   struct
-    type state = Subst.t * TagPairs.t
-    let empty_state = Subst.empty, TagPairs.empty
+    type state = Subst.t * Tagpairs.t
+    let empty_state = Subst.empty, Tagpairs.empty
     let pp_state fmt (theta, tagpairs) = 
-      Format.fprintf fmt "@[(%a,@ %a)@]" Subst.pp theta TagPairs.pp tagpairs
+      Format.fprintf fmt "@[(%a,@ %a)@]" Subst.pp theta Tagpairs.pp tagpairs
     
     type continuation = state -> state option 
     let trivial_continuation state = Some state

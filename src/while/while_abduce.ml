@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 
 let show_proof = ref false 
 let show_defs = ref false

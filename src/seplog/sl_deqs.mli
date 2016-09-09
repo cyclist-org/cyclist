@@ -1,7 +1,7 @@
 (** Sets of disequalities over terms. *)
 (** it is guaranteed that for any pair (x,y) in the set, x<=y re [Sl_term.compare].*)
 
-include Util.OrderedContainer with type elt = Sl_tpair.t
+include Utilsigs.OrderedContainer with type elt = Sl_tpair.t
 
 val parse : (Sl_tpair.t, 'a) MParser.parser
 val subst : Sl_subst.t -> t -> t

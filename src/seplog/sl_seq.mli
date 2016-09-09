@@ -2,7 +2,7 @@
     NB [equal] ignores RHS tags.
 *)
 
-include Util.BasicType with type t = Sl_form.t * Sl_form.t
+include Utilsigs.BasicType with type t = Sl_form.t * Sl_form.t
 
 val equal_upto_tags : t -> t -> bool
 (** Like [equal] but ignoring LHS tags as well as RHS ones. *)
@@ -18,13 +18,13 @@ val to_melt : t -> Latex.t
 
 val vars : t -> Sl_term.Set.t
 
-val tags : t -> Util.Tags.t
+val tags : t -> Tags.t
 (** Only LHS tags are returned. *)
 
-val tag_pairs : t -> Util.TagPairs.t
+val tag_pairs : t -> Tagpairs.t
 (** Only LHS tag pairs are returned. *)
 
-val subst_tags : Util.TagPairs.t -> t -> t
+val subst_tags : Tagpairs.t -> t -> t
 (** Substitute tags of the LHS. *)
 
 val subst : Sl_subst.t -> t -> t

@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 open Symheap
 open Goto_program
 
@@ -195,7 +195,7 @@ let symex_assign_rule_f seq =
     let f' = Sl_heap.subst theta f in
     let e' = Term.subst theta e in
     let f' = { f' with eqs=Sl_uf.add (e',x) f'.eqs } in
-    [ [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Assign" ]
+    [ [ (([f'], i+1), Sl_heap.tag_pairs f, Tagpairs.empty) ], "Assign" ]
   with WrongCmd | Not_symheap -> []
   
 let symex_assign_rule = Abdrule.lift (Rule.mk_infrule symex_assign_rule_f)
@@ -216,8 +216,8 @@ let post_abd_assign_rule_f seq =
     let f'' = Sl_heap.subst (Term.Subst.singleton y x) 
       { f with eqs=Sl_uf.of_list neweqs } in
     [ 
-      [ (([f'], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Post Abd Assign";
-      [ (([f''], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ], "Post Abd Assign"
+      [ (([f'], i+1), Sl_heap.tag_pairs f, Tagpairs.empty) ], "Post Abd Assign";
+      [ (([f''], i+1), Sl_heap.tag_pairs f, Tagpairs.empty) ], "Post Abd Assign"
     ]
   with WrongCmd | Not_symheap | Not_found -> []
  
@@ -235,7 +235,7 @@ let post_abd_assign_rule = Abdrule.lift (Rule.mk_infrule post_abd_assign_rule_f)
 (*      let f ((x,y) as eq) =                                                      *)
 (*        let new_eqs = (removeq eq eqs) @ rest in                                 *)
 (*        let l' = Sl_heap.norm { l with eqs=Sl_uf.of_list new_eqs } in                  *)
-(*        [ (([l'], i), Sl_heap.tag_pairs l, TagPairs.empty) ] in                     *)
+(*        [ (([l'], i), Sl_heap.tag_pairs l, Tagpairs.empty) ] in                     *)
 (*      Blist.map f eqs                                                             *)
 (*    with Not_symheap -> [] in                                                    *)
 (*  rl, Apr.mk_inf_rule rl "Gen"                                                   *)
@@ -253,7 +253,7 @@ let wrap r = Abdrule.compose r (Abdrule.attempt simplify)
 (*      let (x,e) = Cmd.dest_assign cmd in                      *)
 (*      let (x,e) = Pair.map (fun z -> Sl_uf.find z f.eqs) (x,e) in*)
 (*      if Term.equal x e then                                  *)
-(*        [ [ (([f], i+1), Sl_heap.tag_pairs f, TagPairs.empty) ] ]*)
+(*        [ [ (([f], i+1), Sl_heap.tag_pairs f, Tagpairs.empty) ] ]*)
 (*      else []                                                 *)
 (*    with Not_symheap | WrongCmd -> [] in                      *)
 (*  rl, Apr.mk_inf_rule rl "Assign"                             *)
@@ -271,23 +271,23 @@ let symex_det_if_rule =
       match (Cmd.is_deq c, Sl_heap.equates f x y) with
         | (false , true) ->
           (* cmd wants equality and formula provides it so take the branch *) 
-          [ [ (([f], j), t, TagPairs.empty) ], "If(det)" ]
+          [ [ (([f], j), t, Tagpairs.empty) ], "If(det)" ]
         | (false, false) -> 
           (* cmd wants equality *)
           if Sl_heap.disequates f x y then
             (* and formula forbids it so take other branch *) 
-            [ [ (([f], i+1), t, TagPairs.empty) ], "If(det)" ] 
+            [ [ (([f], i+1), t, Tagpairs.empty) ], "If(det)" ] 
           else 
             (* formula allows either fact so fail *) 
             []
         | (true, true) ->
           (* cmd wants disequality and formula forbids it so take other branch *) 
-          [ [ (([f], i+1), t, TagPairs.empty) ], "If(det)" ]
+          [ [ (([f], i+1), t, Tagpairs.empty) ], "If(det)" ]
         | (true, false) -> 
           (* cmd wants disequality *)
           if Sl_heap.disequates f x y then
             (* formula provides it so take branch *) 
-            [ [ (([f], j), t, TagPairs.empty) ], "If(det)" ] 
+            [ [ (([f], j), t, Tagpairs.empty) ], "If(det)" ] 
           else 
             (* otherwise don't know so fail *)
             []

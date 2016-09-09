@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 open Symbols
 open MParser
 
@@ -40,7 +40,7 @@ let terms (l, r) = Sl_term.Set.union (Sl_form.terms l) (Sl_form.terms r)
 let vars seq = Sl_term.filter_vars (terms seq)
 
 let tags seq = Sl_form.tags (fst seq)
-let tag_pairs f = TagPairs.mk (tags f)
+let tag_pairs f = Tagpairs.mk (tags f)
 
 let subst theta seq = Pair.map (Sl_form.subst theta) seq
 

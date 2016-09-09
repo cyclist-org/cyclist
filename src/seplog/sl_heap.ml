@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 open Symbols
 open MParser
 
@@ -90,7 +90,7 @@ let tags h =
     h._tags <- Some tgs;
     tgs
 
-let tag_pairs f = TagPairs.mk (tags f)
+let tag_pairs f = Tagpairs.mk (tags f)
 
 let to_string f =
   let res = String.concat symb_star.sep

@@ -1,9 +1,9 @@
-open Util
+
 
 module Make(Seq: Sigs.SEQUENT) =
 struct
   type seq_t = Seq.t
-  type ruleapp_t = (seq_t * Util.TagPairs.t * Util.TagPairs.t) list * string
+  type ruleapp_t = (seq_t * Tagpairs.t * Tagpairs.t) list * string
   type t = seq_t -> ruleapp_t list
   
   let relabel descr rl seq = 
@@ -12,18 +12,18 @@ struct
   let attempt rl seq =
     match rl seq with
     | [] ->
-      [ ([(seq, TagPairs.mk (Seq.tags seq), TagPairs.empty)], "") ]
+      [ ([(seq, Tagpairs.mk (Seq.tags seq), Tagpairs.empty)], "") ]
     | apps -> apps
         
   let apply_to_subgoal r (seq,tv,tp) =
     let fix_subgoal (seq', tv', tp') =
       (seq',
-      TagPairs.compose tv tv',
-      TagPairs.union_of_list
+      Tagpairs.compose tv tv',
+      Tagpairs.union_of_list
         [
-          TagPairs.compose tp tp';
-          TagPairs.compose tv tp';
-          TagPairs.compose tp tv'
+          Tagpairs.compose tp tp';
+          Tagpairs.compose tv tp';
+          Tagpairs.compose tp tv'
         ]
       ) in
     Blist.map (fun (l,d) -> (Blist.map fix_subgoal l, d)) (r seq)

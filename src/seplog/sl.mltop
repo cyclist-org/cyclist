@@ -28,7 +28,6 @@ Stats
 Blist
 Lib
 Option
-Util
 Symbols
 Pair
 Proof
@@ -51,3 +50,8 @@ Flist
 Treeset
 Fixpoint
 Treemap
+Containers
+Strng
+Int
+Tags
+Tagpairs

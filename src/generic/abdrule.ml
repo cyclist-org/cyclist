@@ -1,4 +1,4 @@
-open Util
+
 
 (* using L should allow switching between Blist and Zlist easily *)
 module L = Blist
@@ -14,7 +14,7 @@ struct
   type rule_t = Rule.t
   
   type select_f = int -> proof_t -> int list
-  type infrule_app = (seq_t * Util.TagPairs.t * Util.TagPairs.t) list * string
+  type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * string
   
   type abdinfrule_f = seq_t -> defs_t -> defs_t list
   type abdbackrule_f = seq_t -> seq_t -> defs_t -> defs_t list

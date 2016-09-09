@@ -1,7 +1,7 @@
 open Lib
 open MParser 
 
-module T = Util.Strng
+module T = Strng
 
 module H = Hashcons.Make(T)
 

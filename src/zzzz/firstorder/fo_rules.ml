@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 open Firstorder
 
 module FOP = Prover.Make(Firstorder.Seq)
@@ -59,7 +59,7 @@ let eq_subst_rule seq =
         not (Term.equal x' y') && ((Term.is_var x') || (Term.is_var y'))) eqs in
     let (x,y) = if Term.is_var y then (x,y) else (y,x) in
     let theta = Term.Subst.singleton y x in 
-    [ [ ((Seq.subst theta seq), Seq.tag_pairs seq, TagPairs.empty) ], "" ]
+    [ [ ((Seq.subst theta seq), Seq.tag_pairs seq, Tagpairs.empty) ], "" ]
   with Not_product | Not_found -> [] 
 
 let simplify_eqs seq =
@@ -72,7 +72,7 @@ let simplify_eqs seq =
   let seq' = Pair.map (Form.endomap (Prod.filter non_triv_eq)) seq in
   debug (fun () -> "simpl_eqs done") ;
   if not !progress then [] else
-  [ [ (seq', Seq.tag_pairs seq, TagPairs.empty) ], "" ] 
+  [ [ (seq', Seq.tag_pairs seq, Tagpairs.empty) ], "" ] 
 
 let bijections = Strng.Set.of_list ["s"; "cons"]
 
@@ -93,7 +93,7 @@ let bij_eqs (l,r) =
   let g p = Prod.find_map (f p) p in
   match Form.find_map g l with
     | None -> []
-    | Some l' -> [ [ ((l', r), Form.tag_pairs l, TagPairs.empty) ], "" ] 
+    | Some l' -> [ [ ((l', r), Form.tag_pairs l, Tagpairs.empty) ], "" ] 
 
 (* cut using x=y |- f(x)=f(y) on the rhs *)
 let func_eqs (l,r) = 
@@ -112,7 +112,7 @@ let func_eqs (l,r) =
   let g p = Prod.find_map (f p) p in
   match Form.find_map g r with
     | None -> [] 
-    | Some r' -> [ [ ((l, r'), Form.tag_pairs l, TagPairs.empty) ], "" ] 
+    | Some r' -> [ [ ((l, r'), Form.tag_pairs l, Tagpairs.empty) ], "" ] 
 
 (* substitute one equality between an exist var and a term in RHS *)
 let eq_ex_subst_rule (l,r) =
@@ -130,7 +130,7 @@ let eq_ex_subst_rule (l,r) =
     with Not_found -> None in
   match Form.find_map eq_ex_subst_product r with
     | None -> []
-    | Some r' -> [ [ ((l, r'), Form.tag_pairs l, TagPairs.empty) ], "" ] 
+    | Some r' -> [ [ ((l, r'), Form.tag_pairs l, Tagpairs.empty) ], "" ] 
   
 (* remove all RHS atoms that can be discharged *)
 let simpl_rhs (l,r) =
@@ -150,7 +150,7 @@ let simpl_rhs (l,r) =
             if not res then prog := true ; res  
           )) r in
     if not !prog then [] else 
-    [ [ ((l, r'), Prod.tag_pairs lp, TagPairs.empty) ], "" ]
+    [ [ ((l, r'), Prod.tag_pairs lp, Tagpairs.empty) ], "" ]
   with Not_product -> [] 
 
 let simplify_rules = [ 
@@ -179,7 +179,7 @@ let lhs_disj_to_products =
       if Form.cardinal l < 2 then [] else 
         [ Form.map_to_list 
           (fun p -> 
-            ( (Form.singleton p, r), TagPairs.mk (Prod.tags p), TagPairs.empty) ) 
+            ( (Form.singleton p, r), Tagpairs.mk (Prod.tags p), Tagpairs.empty) ) 
           l,
           "L.Or" 
         ]
@@ -203,7 +203,7 @@ let rhs_conj_to_atoms =
         let t = Form.tag_pairs l in
         [ Blist.map 
           (fun at -> 
-            ( (l, Form.singleton (Prod.singleton at)), t, TagPairs.empty ) ) rp,
+            ( (l, Form.singleton (Prod.singleton at)), t, Tagpairs.empty ) ) rp,
           "R.And" 
         ] 
       with Not_product -> []
@@ -224,7 +224,7 @@ let instantiate_ex =
     let t = Seq.tag_pairs seq in
     Blist.map 
       (fun (exv,trm) -> 
-        [ (Seq.subst (Term.Subst.singleton exv trm) seq, t, TagPairs.empty) ], 
+        [ (Seq.subst (Term.Subst.singleton exv trm) seq, t, Tagpairs.empty) ], 
         "Inst. ex"
       ) cp
     end
@@ -274,7 +274,7 @@ let gen_right_rules (ident,def) =
       let case = Case.freshen (Seq.vars seq) case in
       let tag_pairs = Seq.tag_pairs seq in
         Blist.map 
-          (fun r' -> [ ((l,r'), tag_pairs, TagPairs.empty) ], (ident ^ " R.Unf.") ) 
+          (fun r' -> [ ((l,r'), tag_pairs, Tagpairs.empty) ], (ident ^ " R.Unf.") ) 
           ( (ruf_formula true (Case.dest case) seq) (*@ (ruf_formula true case seq)*) )
       end in
   Blist.map wrap (Blist.map right_rule def)
@@ -310,8 +310,8 @@ let gen_left_rules (ident, def) =
           let f' = Prod.repl_tags id f' in
           let l'' = Prod.union f' l'' in
           ((Form.singleton l'', r), 
-            (if contr then (TagPairs.add (id,new_tag) tag_pairs) else tag_pairs), 
-            TagPairs.singleton (id, id))
+            (if contr then (Tagpairs.add (id,new_tag) tag_pairs) else tag_pairs), 
+            Tagpairs.singleton (id, id))
         in Blist.map do_case def, (ident ^ " L.Unf.") 
       in (*(Blist.map (left_unfold false) (Prod.elements preds)) 
           @ *)
@@ -337,7 +337,7 @@ let matches_fun s1 s2 =
       if Seq.subsumed_wrt_tags new_acc s1 s2' then new_acc else acc
     ) tags Tags.empty in
   let () = assert (not (Tags.is_empty tags')) in
-  [ ((TagPairs.mk tags', "Backl"), theta) ]
+  [ ((Tagpairs.mk tags', "Backl"), theta) ]
 
 
 (*    seq'     *)
@@ -347,7 +347,7 @@ let matches_fun s1 s2 =
 let subst_rule theta seq' seq = 
   if Seq.equal (Seq.subst theta seq') seq 
     then 
-        [ [(seq', TagPairs.mk (Seq.tags seq'), TagPairs.empty)], "Subst" ]
+        [ [(seq', Tagpairs.mk (Seq.tags seq'), Tagpairs.empty)], "Subst" ]
     else 
         []
 
@@ -357,7 +357,7 @@ let subst_rule theta seq' seq =
 (* where seq' = F |- G * Pi' and seq = Pi * F |- G *)     
 let weaken seq' seq = 
   if Seq.subsumed_wrt_tags Tags.empty seq seq' then
-    [ [(seq', TagPairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')), TagPairs.empty)], "Weaken" ]
+    [ [(seq', Tagpairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')), Tagpairs.empty)], "Weaken" ]
   else
     []
 
@@ -419,8 +419,8 @@ let fold (ident,defs) =
           let seq' = (l',r) in
             [(
               seq', 
-              TagPairs.mk (Tags.inter tags (Seq.tags seq')), 
-              TagPairs.empty 
+              Tagpairs.mk (Tags.inter tags (Seq.tags seq')), 
+              Tagpairs.empty 
             )], (ident ^ " Fold")  in
         Blist.map process_sub !results in
       Blist.bind do_case defs

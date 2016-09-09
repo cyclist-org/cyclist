@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 open Parsers
 
 external create_aut : int -> unit = "create_aut" ;;
@@ -13,7 +13,7 @@ external check_soundness : unit -> bool = "check_soundness" ;;
 external set_initial_vertex : int -> unit = "set_initial_vertex" ;;
 
 type abstract_node =
-  Util.Tags.t * ((int * Util.TagPairs.t * Util.TagPairs.t) list)
+  Tags.t * ((int * Tagpairs.t * Tagpairs.t) list)
 type t = abstract_node Int.Map.t
 
 let get_tags n = fst n
@@ -33,7 +33,7 @@ let build_proof nodes =
         let premises = 
           List.map
             (fun (target, allpairs, progpairs) ->
-              (target, TagPairs.of_list allpairs, TagPairs.of_list progpairs))
+              (target, Tagpairs.of_list allpairs, Tagpairs.of_list progpairs))
             premises in
         (id, mk_abs_node (Tags.of_list tags) premises))
       nodes)
@@ -64,8 +64,8 @@ let pp_proof_node fmt n =
         Format.printf 
           "(goal=%a, valid=%a, prog=%a)"
           Format.pp_print_int i
-          TagPairs.pp tv
-          TagPairs.pp tp
+          Tagpairs.pp tv
+          Tagpairs.pp tp
       ) 
       fmt
       subg in      
@@ -110,11 +110,11 @@ let fuse_single_nodes prf' =
     let newsubg = 
       Blist.replace_nth 
         (grand_child, 
-        TagPairs.compose par_tv tv,
-        TagPairs.union_of_list
-          [TagPairs.compose par_tp tp;
-          TagPairs.compose par_tv tp;
-          TagPairs.compose par_tp tv]
+        Tagpairs.compose par_tv tv,
+        Tagpairs.union_of_list
+          [Tagpairs.compose par_tp tp;
+          Tagpairs.compose par_tv tp;
+          Tagpairs.compose par_tp tv]
         )
         pos par_subg in
     prf :=
@@ -149,8 +149,8 @@ let check_proof p =
     Blist.iter (fun (j,_,_) -> set_successor i j) l in
   let create_trace_pairs i (_, l) =
     let do_tag_transitions (j,tvs,tps) =
-      TagPairs.iter (fun (k,m) -> set_trace_pair i j k m) tvs ;
-      TagPairs.iter (fun (k,m) -> set_progress_pair i j k m) tps in
+      Tagpairs.iter (fun (k,m) -> set_trace_pair i j k m) tvs ;
+      Tagpairs.iter (fun (k,m) -> set_progress_pair i j k m) tps in
     Blist.iter do_tag_transitions l in
   let size = Int.Map.cardinal p in
   let log2size = 1 + int_of_float (ceil ((log (float_of_int size)) /. (log 2.0))) in
@@ -176,12 +176,12 @@ let valid prf =
     (fun _ n -> 
       Blist.for_all (fun (i,tv,tp) -> 
         Int.Map.mem i prf &&
-        TagPairs.subset tp tv &&
-        Tags.subset (TagPairs.projectl tv) (get_tags n) &&
-        (* Tags.subset (TagPairs.projectl tp) (get_tags n) && *) (* trivially true whenever tp a subset of tv *)
-        Tags.subset (TagPairs.projectr tv) (get_tags (Int.Map.find i prf)) 
+        Tagpairs.subset tp tv &&
+        Tags.subset (Tagpairs.projectl tv) (get_tags n) &&
+        (* Tags.subset (Tagpairs.projectl tp) (get_tags n) && *) (* trivially true whenever tp a subset of tv *)
+        Tags.subset (Tagpairs.projectr tv) (get_tags (Int.Map.find i prf)) 
         (*   &&                                                                 *)  (* trivially true whenever tp a subset of tv *)
-        (* Tags.subset (TagPairs.projectr tp) (get_tags (Int.Map.find i prf))  *)
+        (* Tags.subset (Tagpairs.projectr tp) (get_tags (Int.Map.find i prf))  *)
         )
      (get_subg n))
     prf

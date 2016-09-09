@@ -1,4 +1,4 @@
-open Util
+
 open Lib
 open MParser
 open Symbols
@@ -7,23 +7,23 @@ module List = Blist
 
 module type NaturalType =
   sig
-    include BasicType
+    include Utilsigs.BasicType
     val zero : t
     val succ : t -> t
   end
 
 module NatType : NaturalType with type t = int =
   struct
-    include IntType
+    include Int
     let zero = 0
     let succ i = i + 1
   end
 
 module Var :
   sig
-    include BasicType
-    module Set : OrderedContainer with type elt = t
-    module Map : OrderedMap with type key = t
+    include Utilsigs.BasicType
+    module Set : Utilsigs.OrderedContainer with type elt = t
+    module Map : Utilsigs.OrderedMap with type key = t
     val of_term : Sl_term.t -> t
     val to_term : t -> Sl_term.t
     val parse : (t, 'a) MParser.t
@@ -58,7 +58,7 @@ module type S =
 
     module Heap :
       sig
-        include BasicType
+        include Utilsigs.BasicType
         module MakeParser (T : sig
             val parse_scalar : (Value.t, 'a) MParser.t
             val parse_location : (Location.t, 'a) MParser.t
@@ -68,7 +68,7 @@ module type S =
 
     module Stack :
       sig
-        include BasicType
+        include Utilsigs.BasicType
         module MakeParser (T : sig
             val parse_scalar : (Value.t, 'a) MParser.t
           end) : ParserSig with type t = t
@@ -101,7 +101,7 @@ module Make (Sig : ValueSig)
     module Location =
       struct
         include Sig.HeapLocation
-        include ContaineriseType(Sig.HeapLocation)
+        include Containers.Make(Sig.HeapLocation) 
       end
     module Scalar = Sig.ScalarValue
 
@@ -143,7 +143,7 @@ module Make (Sig : ValueSig)
               | Scalar(v) -> Scalar(Sig.ScalarValue.succ v)
           end
         include T
-        include ContaineriseType(T)
+        include Containers.Make(T)
         let mk_loc_val l = Location(l)
         let mk_scalar_val v = Scalar(v)
         let nil = zero
@@ -375,8 +375,6 @@ module Make (Sig : ValueSig)
 
     let model_of_string parse s = handle_reply (MParser.parse_string parse s ())
 
-    module Interpretant = MakeComplexType(Pair.Make(Value.FList)(Heap))
-
     module SetBase =
       struct
         include Location.Set
@@ -473,7 +471,7 @@ module Make (Sig : ValueSig)
 
     module HeapBase :
       sig
-        include BasicType
+        include Utilsigs.BasicType
         val empty : t
         val inj : Heap.t -> Heap.t -> t
         val proj : Heap.t -> t -> Heap.t
@@ -482,17 +480,17 @@ module Make (Sig : ValueSig)
       end
         = BitvBase
 
-    module InterpretantBase = MakeComplexType(Pair.Make(Value.FList)(HeapBase))
+    module InterpretantBase = Hashset.Make(Pair.Make(Value.FList)(HeapBase))
 
     let baseSetPair_to_string (x,x') =
-      "(" ^ (InterpretantBase.Hashset.to_string x) ^ ", " ^
-       (InterpretantBase.Hashset.to_string x') ^ ")"
+      "(" ^ (InterpretantBase.to_string x) ^ ", " ^
+       (InterpretantBase.to_string x') ^ ")"
     
     module SymHeapHash = Hashtbl.Make(Sl_heap)
     module SymHeapHashPrinter = HashtablePrinter.Make(SymHeapHash)
-    module ModelBase = MakeComplexType(Pair.Make(Stack)(HeapBase))
+    module ModelBase = Containers.Make(Pair.Make(Stack)(HeapBase))
 
-    let empty_base () = InterpretantBase.Hashset.create 11
+    let empty_base () = InterpretantBase.create 11
 
     (** [itp_emp] is the minimal set of model bases of the formula emp,
           i.e. the singleton set containing the model base consisting of
@@ -511,7 +509,7 @@ module Make (Sig : ValueSig)
     
     let decorate h itp =
       let f (ancestors, parents) =
-        InterpretantBase.Hashset.left_union ancestors parents in
+        InterpretantBase.left_union ancestors parents in
       Sl_predsym.Map.map f itp
 
     let add_spares n vs =
@@ -548,12 +546,12 @@ module Make (Sig : ValueSig)
 
     let generate_models ts constraints itpts =
       let models =
-        ModelBase.Hashset.create (InterpretantBase.Hashset.cardinal itpts) in
+        ModelBase.Hashset.create (InterpretantBase.cardinal itpts) in
       let f itpt =
         Option.iter
           (fun mdl -> ModelBase.Hashset.add models mdl) 
           (generate_model ts constraints itpt )in
-      InterpretantBase.Hashset.iter f itpts ;
+      InterpretantBase.iter f itpts ;
       models
 
     (**
@@ -778,12 +776,12 @@ module Make (Sig : ValueSig)
             let pto =
               ((Value.mk_loc_val loc)::cell,
                 mk_heap_base (Location.Map.singleton loc cell)) in
-            InterpretantBase.Hashset.add base pto ;
+            InterpretantBase.add base pto ;
             Int.Map.add cell_size base ptos in
           Location.Map.fold f h Int.Map.empty in
         let () = debug (fun _ ->
           "Hashmap of Points-to interpretants: " ^
-          Int.Map.to_string InterpretantBase.Hashset.to_string all_ptos_itpts) in
+          Int.Map.to_string InterpretantBase.to_string all_ptos_itpts) in
         let num_buckets =
           let test_and_incr n rl =
             let body = Sl_indrule.body rl in
@@ -838,7 +836,7 @@ module Make (Sig : ValueSig)
           let vs = List.map
             (fun x -> let x = Var.of_term x in Var.Map.find x s)
             params in
-            InterpretantBase.Hashset.add itpts (vs, ls)
+            InterpretantBase.add itpts (vs, ls)
         )
         mdls
         
@@ -853,8 +851,8 @@ module Make (Sig : ValueSig)
       if (Sl_heap.inconsistent body) || (
          (Sl_tpreds.is_empty inds) &&
            let (ancestors, parents) = Sl_predsym.Map.find predsym itp in
-           (not (InterpretantBase.Hashset.is_empty ancestors)) ||
-           not (InterpretantBase.Hashset.is_empty parents)) then
+           (not (InterpretantBase.is_empty ancestors)) ||
+           not (InterpretantBase.is_empty parents)) then
         let () = debug (fun _ -> "Skipping over rule " ^ (Sl_indrule.to_string rl)) in
         (* stop rule_gen here *)
         ()
@@ -880,7 +878,7 @@ module Make (Sig : ValueSig)
             let p_sym = Sl_tpred.predsym p in
             let p_args = Sl_tpred.args p in
             let (ancestors, parents) = 
-              Pair.map InterpretantBase.Hashset.to_list (Sl_predsym.Map.find p_sym itp) in
+              Pair.map InterpretantBase.to_list (Sl_predsym.Map.find p_sym itp) in
             let parent_mdls = generate_models_ls p_args constraints parents in
             let prod_from_parents = cross_models_ls constraints ms parent_mdls in
             let ls = [prod_from_parents] in
@@ -909,9 +907,9 @@ module Make (Sig : ValueSig)
           let seed = (ptos_models, false) in
           Sl_tpreds.weave split tie join inds seed ;
           let () = debug (fun _ -> "Generated the following interpretants: " ^
-            (InterpretantBase.Hashset.to_string prev_itpts)) in
+            (InterpretantBase.to_string prev_itpts)) in
           debug (fun _ -> "New interpretation after adding new interpretants: " ^
-            (Sl_predsym.Map.to_string InterpretantBase.Hashset.to_string itp_acc))
+            (Sl_predsym.Map.to_string InterpretantBase.to_string itp_acc))
         end 
       end
       
@@ -946,29 +944,29 @@ module Make (Sig : ValueSig)
         (* Generate the new interpretants for each rule *)
         Sl_defs.rule_iter (rule_gen ptos_base valset itp new_itp) defs ;
         let () = debug (fun _ -> "New interpretants after iteration: " ^
-          (Sl_predsym.Map.to_string InterpretantBase.Hashset.to_string new_itp)) in
+          (Sl_predsym.Map.to_string InterpretantBase.to_string new_itp)) in
         
         (* Add the new interpretants to the old ones *)
         Sl_predsym.Map.iter
           (fun p zs ->
             let (xs,ys) = Sl_predsym.Map.find p itp in
-            let _ = InterpretantBase.Hashset.left_union xs ys in
-            InterpretantBase.Hashset.clear ys ;
-            InterpretantBase.Hashset.iter
+            let _ = InterpretantBase.left_union xs ys in
+            InterpretantBase.clear ys ;
+            InterpretantBase.iter
               (fun z ->
-                if not (InterpretantBase.Hashset.mem xs z) then
-                  InterpretantBase.Hashset.add ys z)
+                if not (InterpretantBase.mem xs z) then
+                  InterpretantBase.add ys z)
               zs ;
-            InterpretantBase.Hashset.clear zs            
+            InterpretantBase.clear zs            
           ) 
           new_itp ;
         
         debug (fun _ -> "result of iteration: " ^
-          (Sl_predsym.Map.to_string InterpretantBase.Hashset.to_string new_itp)) ;
+          (Sl_predsym.Map.to_string InterpretantBase.to_string new_itp)) ;
           
         (* if all "new" sets of interpretants are empty then stop else recurse *)
         if Sl_predsym.Map.for_all
-          (fun _ (_, itpts) -> InterpretantBase.Hashset.is_empty itpts)
+          (fun _ (_, itpts) -> InterpretantBase.is_empty itpts)
           itp
         then
           itp
@@ -1006,11 +1004,11 @@ module Make (Sig : ValueSig)
       let interp = mk (defs, (vals, h)) in
       let heapbase = HeapBase.inj h h in
       if intuitionistic then
-        InterpretantBase.Hashset.exists
+        InterpretantBase.exists
           (fun (vals',_) -> Value.FList.equal vals vals')
           (Sl_predsym.Map.find new_predsym interp)
       else
-        InterpretantBase.Hashset.mem
+        InterpretantBase.mem
           (Sl_predsym.Map.find new_predsym interp)
           (vals, heapbase)
 

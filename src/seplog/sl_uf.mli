@@ -1,6 +1,6 @@
 (** A union-find structure for SL terms. *)
 
-include Util.BasicType
+include Utilsigs.BasicType
 
 val parse : (Sl_tpair.t, 'a) MParser.parser
 val to_melt : t -> Latex.t

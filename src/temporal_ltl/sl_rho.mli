@@ -1,6 +1,6 @@
 (** A stack structure for prophecy variables. *)
 
-include Util.BasicType
+include Utilsigs.BasicType
 
 val parse : (Sl_term.t * int, 'a) MParser.parser
 val to_melt : t -> Latex.t

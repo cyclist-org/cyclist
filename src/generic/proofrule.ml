@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 
 (* using L should allow switching between Blist and Zlist easily *)
 module L = Blist
@@ -11,10 +11,10 @@ struct
   type seq_t = Seq.t
   type proof_t = Proof.t
   type axiom_f = seq_t -> string option
-  type infrule_app = (seq_t * Util.TagPairs.t * Util.TagPairs.t) list * string
+  type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * string
   type infrule_f = seq_t -> infrule_app list
   type t = int -> Proof.t -> (int list * Proof.t) L.t
-  type backrule_f = seq_t -> seq_t -> (Util.TagPairs.t * string) list
+  type backrule_f = seq_t -> seq_t -> (Tagpairs.t * string) list
   type select_f = int -> Proof.t -> int list
   
 	(* Apply the sequent in the open node identified by idx in prf to the

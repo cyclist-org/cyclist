@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 open Symbols
 
 let ltx_axiom ax = ltx_paren (ltx_text ax)
@@ -14,8 +14,8 @@ struct
   type proof_subnode =
     | OpenNode
     | AxiomNode
-    | InfNode of (int * TagPairs.t * TagPairs.t) list
-    | BackNode of int * TagPairs.t
+    | InfNode of (int * Tagpairs.t * Tagpairs.t) list
+    | BackNode of int * Tagpairs.t
   
   type t =
     {
@@ -76,7 +76,7 @@ struct
     | InfNode(subg) ->
         Soundcheck.mk_abs_node (Seq.tags n.seq) subg
     | BackNode(child, tv) ->
-        Soundcheck.mk_abs_node (Seq.tags n.seq) [(child, tv, TagPairs.empty)]
+        Soundcheck.mk_abs_node (Seq.tags n.seq) [(child, tv, Tagpairs.empty)]
     
   let pp fmt n = match n.node with
     | OpenNode ->
@@ -86,14 +86,14 @@ struct
     | BackNode(i, tps) ->
         Format.fprintf fmt "@[%a (%s) [%i] <pre=%a>@]" 
           Seq.pp n.seq n.descr i
-          TagPairs.pp tps
+          Tagpairs.pp tps
     | InfNode(p) ->
         Format.fprintf fmt "@[%a (%s) [%a]@]" 
           Seq.pp n.seq n.descr
           (Blist.pp pp_commasp 
             (fun fmt (i,pres,prog) -> 
               Format.fprintf fmt "%i" i)) p
-              (* Format.fprintf fmt "@[%i <%a/%a>@]" i TagPairs.pp pres TagPairs.pp prog)) p *)
+              (* Format.fprintf fmt "@[%i <%a/%a>@]" i Tagpairs.pp pres Tagpairs.pp prog)) p *)
   
   let justify = Latex.text "\n\\justifies\n\\thickness=0.1em\n"
   let using = Latex.text "\\using"

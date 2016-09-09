@@ -1,6 +1,6 @@
 (** Inductive rule type consisting of a symbolic heap and a predicate head. *)
 
-include Util.BasicType
+include Utilsigs.BasicType
 
 val mk : Sl_heap.t -> Sl_pred.t -> t
 val dest: t -> Sl_heap.t * Sl_pred.t
@@ -20,7 +20,7 @@ val subst : Sl_subst.t -> t -> t
 val parse : (t, 'a) MParser.t
 
 val unfold : 
-  Sl_term.Set.t -> Sl_heap.t -> Sl_tpred.t -> t -> (Sl_heap.t * Util.TagPairs.t)
+  Sl_term.Set.t -> Sl_heap.t -> Sl_tpred.t -> t -> (Sl_heap.t * Tagpairs.t)
 (** [unfold vars h p r] does the following:
 - Removes the (tagged) occurrence of [p] in [h].
 - Inlines the body of [r] in [h], taking care to pick existential variables

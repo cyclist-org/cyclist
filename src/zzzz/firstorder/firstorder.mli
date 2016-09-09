@@ -2,9 +2,9 @@ type term
 
 module Term :
 sig
-  include Util.BasicType with type t = term
-  module Set : Util.OrderedContainer with type elt=term
-  module Map : Util.OrderedMap with type key = term
+  include Utilsigs.BasicType with type t = term
+  module Set : Utilsigs.OrderedContainer with type elt=term
+  module Map : Utilsigs.OrderedMap with type key = term
 
   type substitution = t Map.t
   val Subst.empty : substitution
@@ -61,17 +61,17 @@ end
 
 module Prod :
 sig
-  include Util.OrderedContainer with type elt=Atom.t
+  include Utilsigs.OrderedContainer with type elt=Atom.t
 
   val get_eqs : t -> (term * term) list
   val get_deqs : t -> (term * term) list
   val filter_by_kind : Atom.t -> t -> t
 
-  val tags : t -> Util.Tags.t
+  val tags : t -> Tags.t
   val univ : Term.Set.t -> t -> t
   val repl_tags : int -> t -> t
-  val subsumed_wrt_tags : Util.Tags.t -> t -> t -> bool
-  val tag_pairs : t -> Util.TagPairs.t
+  val subsumed_wrt_tags : Tags.t -> t -> t -> bool
+  val tag_pairs : t -> Tagpairs.t
   val subst : Term.substitution -> t -> t
   val to_string : t -> string
   val pp : Format.formatter -> t -> unit
@@ -82,10 +82,10 @@ end
 
 module Form :
 sig
-  include Util.OrderedContainer with type elt=Prod.t
+  include Utilsigs.OrderedContainer with type elt=Prod.t
   val dest : t -> Prod.t
-  val tags : t -> Util.Tags.t
-  val tag_pairs : t -> Util.TagPairs.t
+  val tags : t -> Tags.t
+  val tag_pairs : t -> Tagpairs.t
   val pp : Format.formatter -> t -> unit
   val is_prod : t -> bool
 end
@@ -102,13 +102,13 @@ sig
   val pp : Format.formatter -> t -> unit
   val of_string : string -> t
 
-  val tags : t -> Util.Tags.t
+  val tags : t -> Tags.t
   val dest : t -> Prod.t * Prod.t
   val terms : t -> Term.Set.t
   val vars : t -> Term.Set.t
-  val tag_pairs : t -> Util.TagPairs.t
+  val tag_pairs : t -> Tagpairs.t
   val uni_subsumption : t -> t -> Term.substitution option
-  val subsumed_wrt_tags : Util.Tags.t -> t -> t -> bool
+  val subsumed_wrt_tags : Tags.t -> t -> t -> bool
   val subst : Term.substitution -> t -> t
 end
 

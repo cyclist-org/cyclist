@@ -1,5 +1,5 @@
 open Lib
-open Util
+
 open Symbols
 open MParser
 
@@ -105,8 +105,8 @@ let unfold vars h (tag, (ident, args)) case =
   let f = Sl_heap.freshen_tags h f in 
   let tagpairs = 
     Tags.map_to 
-      TagPairs.add 
-      TagPairs.empty 
+      Tagpairs.add 
+      Tagpairs.empty 
       (fun tag' -> (tag,tag')) 
       (Sl_heap.tags f) in 
   let theta = Sl_term.Map.of_list (Blist.combine formals args) in

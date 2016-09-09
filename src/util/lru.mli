@@ -1,6 +1,6 @@
 (** Implementation of an LRU cache for memoising functions. *)
     
-module Make(T : Util.BasicType) :
+module Make(T : Utilsigs.BasicType) :
 sig
   val lru_cache : (T.t -> 'a) -> int -> (T.t -> 'a)
   (** [lru_cache f n] memoises the non-recursive function [f], using an LRU cache

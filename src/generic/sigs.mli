@@ -11,7 +11,7 @@ sig
   (** As [equal] but ignoring tags.  Used to check that the target of a 
       backlink [NODE] is equal to that marking it, ignoring tags.*)
   
-  val tags : t -> Util.Tags.t
+  val tags : t -> Tags.t
   (** Returns set of tags in sequent. *)
 
   val to_string : t -> string
@@ -45,13 +45,13 @@ sig
   (** [mk_axiom seq descr] creates an axiom node labelled by 
       sequent [seq] and description [descr].*) 
   
-  val mk_backlink : seq_t -> string -> int -> Util.TagPairs.t -> t
+  val mk_backlink : seq_t -> string -> int -> Tagpairs.t -> t
   (** [mk_backlink seq descr target vtts] creates a back-link node labelled by 
       sequent [seq], description [descr], target index [target] and set of 
       valid tag transitions (as pairs) [vtts].*) 
   
   val mk_inf :
-    seq_t -> string -> (int * Util.TagPairs.t * Util.TagPairs.t) list -> t
+    seq_t -> string -> (int * Tagpairs.t * Tagpairs.t) list -> t
   (** [mk_inf seq descr subgoals back] creates an inference node labelled by 
       sequent [seq], description [descr], a list of triples consisting of
       subgoal index, valid tag transitions and progressing tag transitions 
@@ -62,11 +62,11 @@ sig
   val dest : t -> seq_t * string
   (** [dest n] returns (sequent, description). This works with all Proof.t nodes. *)
    
-  val dest_backlink : t -> seq_t * string * int * Util.TagPairs.t
+  val dest_backlink : t -> seq_t * string * int * Tagpairs.t
   (** [dest_backlink n] destroys a back-link node [n], otherwise raises [Invalid_arg].*)
 
   val dest_inf : t -> 
-    seq_t * string * (int * Util.TagPairs.t * Util.TagPairs.t) list
+    seq_t * string * (int * Tagpairs.t * Tagpairs.t) list
   (** [dest_inf n] destroys an inference node [n], otherwise raises [Invalid_arg].*)
 
   (** Functions for checking the sort of a node. *)
@@ -125,10 +125,10 @@ sig
       *)
 
   val add_axiom : int -> string -> t -> t
-  val add_backlink : int -> string -> int -> Util.TagPairs.t -> t -> t
+  val add_backlink : int -> string -> int -> Tagpairs.t -> t -> t
   val add_inf : 
     int -> string -> 
-    (seq_t * Util.TagPairs.t * Util.TagPairs.t) list -> t -> 
+    (seq_t * Tagpairs.t * Tagpairs.t) list -> t -> 
     (int list * t)
 
   (** Accessor functions. *)
@@ -164,7 +164,7 @@ module type SEQTACTICS =
 sig
   type seq_t
 
-  type ruleapp_t = (seq_t * Util.TagPairs.t * Util.TagPairs.t) list * string
+  type ruleapp_t = (seq_t * Tagpairs.t * Tagpairs.t) list * string
   type t = seq_t -> ruleapp_t list
   
   val relabel : string -> t -> t
@@ -181,9 +181,9 @@ sig
   type proof_t
   
   type axiom_f = seq_t -> string option
-  type infrule_app = (seq_t * Util.TagPairs.t * Util.TagPairs.t) list * string
+  type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * string
   type infrule_f = seq_t -> infrule_app list
-  type backrule_f = seq_t -> seq_t -> (Util.TagPairs.t * string) list
+  type backrule_f = seq_t -> seq_t -> (Tagpairs.t * string) list
   type select_f = int -> proof_t -> int list
 
   (** The type of proof rules:
@@ -264,7 +264,7 @@ sig
   type rule_t
   
   type select_f = int -> proof_t -> int list
-  type infrule_app = (seq_t * Util.TagPairs.t * Util.TagPairs.t) list * string
+  type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * string
   
   type abdinfrule_f = seq_t -> defs_t -> defs_t list
   type abdbackrule_f = seq_t -> seq_t -> defs_t -> defs_t list

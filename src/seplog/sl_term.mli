@@ -3,12 +3,12 @@
     The focus on fresh variable generation is human readable formulas,
     not speed. *)
 
-include Util.BasicType
+include Utilsigs.BasicType
 
-module Set : Util.OrderedContainer with type elt = t
+module Set : Utilsigs.OrderedContainer with type elt = t
 (** An ordered set of terms. *)
 
-module Map : Util.OrderedMap with type key = t
+module Map : Utilsigs.OrderedMap with type key = t
 (** An ordered map with terms as keys. *)
 
 val to_melt : t -> Latex.t
@@ -110,7 +110,7 @@ val subst : Subst.t -> t -> t
 
 module type UnifierSig =
   sig
-    type state = Subst.t * Util.TagPairs.t
+    type state = Subst.t * Tagpairs.t
     (** State maintained by unifiers. *)
     val empty_state : state
     (** The unifier state consisting of the empty substitution and the empty set of
@@ -176,7 +176,7 @@ val unify : t Unifier.t
 
 module FList : 
   sig
-    include Util.BasicType with type t = t list
+    include Utilsigs.BasicType with type t = t list
     val unify : t Unifier.t
     val subst : Subst.t -> t -> t
     val to_string_sep : string -> t -> string

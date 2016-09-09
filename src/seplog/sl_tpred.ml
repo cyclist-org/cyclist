@@ -1,9 +1,9 @@
 open Lib
-open Util
+
 open Symbols
 open MParser
 
-module TPred = Pair.Make(Int.T)(Sl_pred)
+module TPred = Pair.Make(Int)(Sl_pred)
 include TPred
 
 let subst theta (tag, pred) = (tag, Sl_pred.subst theta pred)
@@ -11,7 +11,7 @@ let subst theta (tag, pred) = (tag, Sl_pred.subst theta pred)
 let equal_upto_tags (_, p1) (_, p2) = Sl_pred.equal p1 p2
 
 let subst_tag tagpairs (tag, pred) =
-  let (_, tag'') = TagPairs.find (fun (tag',_) -> tag=tag') tagpairs in
+  let (_, tag'') = Tagpairs.find (fun (tag',_) -> tag=tag') tagpairs in
   (tag'', pred) 
 
 let unify ?(tagpairs=false) ?(sub_check=Sl_subst.trivial_check)
@@ -20,7 +20,7 @@ let unify ?(tagpairs=false) ?(sub_check=Sl_subst.trivial_check)
   Sl_pred.unify 
     ~sub_check 
     ~cont:(fun (theta, tps) -> 
-      cont (theta, if tagpairs then TagPairs.add (tag,tag') tps else tps))
+      cont (theta, if tagpairs then Tagpairs.add (tag,tag') tps else tps))
     ~init_state pred pred'
 
 let predsym tpred = Sl_pred.predsym (snd tpred)

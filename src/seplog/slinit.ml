@@ -7,7 +7,7 @@
 #directory "_build/src/while";;
 #directory "_buld/src/extended_while";;
 #directory "_build/src/mparser";;
-open Util;;
+;;
 #install_printer Format.pp_print_string;;
 #install_printer Int.Set.pp;;
 #install_printer Int.MSet.pp;;

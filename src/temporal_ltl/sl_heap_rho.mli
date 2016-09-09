@@ -14,7 +14,7 @@ type symheap = private {
   mutable _tags : abstract2
 }
 
-include Util.BasicType with type t = symheap
+include Utilsigs.BasicType with type t = symheap
 
 val empty : t
 
@@ -23,10 +23,10 @@ val empty : t
 val vars : t -> Sl_term.Set.t
 val terms : t -> Sl_term.Set.t
 
-val tags : t -> Util.Tags.t
+val tags : t -> Tags.t
 (** Return set of tags assigned to predicates in heap. *)
 
-val tag_pairs : t -> Util.TagPairs.t
+val tag_pairs : t -> Tagpairs.t
 (** Return a set of pairs representing the identity function over the tags 
     of the formula.  This is to be used (as the preserving tag pairs) 
     whenever the inductive predicates 
@@ -135,7 +135,7 @@ val freshen_tags : t -> t -> t
 (** [freshen_tags f g] will rename all tags in [g] such that they are disjoint
     from those of [f]. *)
 
-val subst_tags : Util.TagPairs.t -> t -> t
+val subst_tags : Tagpairs.t -> t -> t
 (** Substitute tags according to the function represented by the set of 
     tag pairs provided. *)
 
