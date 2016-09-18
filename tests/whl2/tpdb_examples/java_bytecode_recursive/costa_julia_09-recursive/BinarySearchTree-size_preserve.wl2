@@ -2,7 +2,7 @@ fields: left, right;
 
 proc copy(t, ret)
 	precondition: bt[a](t) * ret->v',w';
-	postcondition: bt[a](t) * ret->v',w' * bt(v');
+	postcondition: bt[a](t) * ret->v',w' * bt[a](v');
 {
 	if t = nil then
 		ret.left := nil
@@ -27,7 +27,7 @@ proc copy(t, ret)
 		fi; 
 		free(ptr);
 		ret.left := node;
-		assert(bt[a](t) * ret->v',w' * bt(v'))
+		assert(bt[a](t) * ret->v',w' * bt[a](v'))
 	fi
 }
 
