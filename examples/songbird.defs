@@ -1,0 +1,69 @@
+ls {
+  x = y * emp => ls(x, y) |
+  x->y' * ls(y',z) => ls(x, z)
+};
+
+ls2 {
+  x = y * emp => ls2(x, y) |
+  x->v' * ls2(v', y) => ls2(x, y) |
+  x->v' * v'->w' * ls2(w', y) => ls2(x, y)
+};
+
+elseg {
+  x = y * emp => elseg(x, y) |
+  x->v' * v'->w' * elseg(w', y) => elseg(x, y)
+};
+
+olseg {
+  x->y => olseg(x, y) |
+  x->v' * v'->w' * olseg(w', y) => olseg(x, y)
+};
+
+ls_all {
+  elseg(x, y) => ls_all(x, y) |
+  olseg(x, y) => ls_all(x, y)
+};
+
+ls_nonrec {
+  x = y * emp => ls_nonrec(x, y) |
+  x->v' * ls(v', y) => ls_nonrec(x, y) |
+  x->v' * v'->w' * ls(w', y) => ls_nonrec(x, y)
+};
+
+ls_even {
+  x = y * emp => ls_even(x, y) |
+  x->v' * ls_odd(v', y) => ls_even(x, y)
+};
+
+ls_odd {
+  x->y => ls_odd(x, y) |
+  x->v' * ls_even(v', y) => ls_odd(x, y)
+}; 
+
+ls_all2 {
+  ls_even(x, y) => ls_all2(x, y) |
+  ls_odd(x, y) => ls_all2(x, y)
+};
+
+lsl {
+  x = y * emp => lsl(x, y) |
+  x->v' * lsl(v', y) => lsl(x, y)
+};
+
+lsr {
+  x = y * emp => lsr(x, y) |
+  lsr(x, v') * v'->y => lsr(x, y)
+};
+
+lslr {
+  x = y * emp => lslr(x, y) |
+  x->v' * lslr(v', y) => lslr(x, y) |
+  lslr(x, v') * v'->y => lslr(x, y)
+};
+
+lsa {
+  lsl(x, y) => lsa(x, y) |
+  lsr(x, y) => lsa(x, y)
+}
+
+

@@ -49,6 +49,15 @@ sl-atva-tests:
 		done < $$TST; \
 	done
 
+sl-songbird-tests:
+	-@for TST in tests/sl/songbird/*.tst ; do \
+		echo "$$TST"; \
+		while read -r SEQ; do \
+			echo -n "\t"; \
+			_build/$(SLMAIN) $(TST_OPTS) -D examples/songbird.defs -S "$$SEQ"; \
+		done < $$TST; \
+	done
+
 goto-tests:
 	-@for TST in tests/goto/*.tc ; do _build/$(PRMAIN) $(TST_OPTS) -P $$TST ; done
 
