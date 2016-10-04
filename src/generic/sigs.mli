@@ -14,6 +14,9 @@ sig
   val tags : t -> Util.Tags.t
   (** Returns set of tags in sequent. *)
 
+  val pc : t -> int
+  (** Returns sequent label *)
+		    
   val to_string : t -> string
   val to_melt: t -> Latex.t
   val pp : Format.formatter -> t -> unit
@@ -85,6 +88,9 @@ sig
 
   (** Convert Proof.t node to abstract node as in {!Soundcheck}. *)
   val to_abstract_node : t -> Soundcheck.abstract_node
+
+  (** Convert Proof.t node to fair abstract node as in {!Fair_soundcheck}. *)
+  val to_fair_abstract_node : t -> Fair_soundcheck.fair_abstract_node
       
   (** Pretty printing and Latex conversion. *)
 
@@ -146,6 +152,9 @@ sig
   
   val check : t -> bool
   (** Check soundness. Proof does not need to be closed. *)
+
+  val fair_check : t -> bool
+  (** Check fair soundness. Proof does not need to be closed. *)
   
   val is_closed : t -> bool
   (** Are all nodes not open? *)
@@ -224,7 +233,7 @@ sig
       and no back-tracking will even happen over later possible matches. 
       Otherwise all possible matches are returned as different choices.
       *) 
-  val mk_backrule : bool -> select_f -> backrule_f -> t
+  val mk_backrule : ?fair:bool -> bool -> select_f -> backrule_f -> t
   
   (** Ready-made selection functions doing the obvious. *)
   val all_nodes : select_f

@@ -38,12 +38,12 @@ struct
       Proof.add_inf idx d l prf in
     L.map mk (L.of_list (r_f seq))
 
-  let mk_backrule greedy sel_f br_f srcidx prf =
+  let mk_backrule ?(fair=true) greedy sel_f br_f srcidx prf =
     let srcseq = Proof.get_seq srcidx prf in
     let trgidxs = L.of_list (sel_f srcidx prf) in
     let mk trgidx (vtts,d) = 
       ([], Proof.add_backlink srcidx d trgidx vtts prf) in
-    let check (_,p) = Proof.check p in
+    let check (_,p) = if fair then Proof.fair_check p else Proof.check p in
     let apply trgidx = 
       let trgseq = Proof.get_seq trgidx prf in
       L.map (mk trgidx) (L.of_list (br_f srcseq trgseq)) in

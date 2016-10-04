@@ -4,7 +4,7 @@
 #include <tuple>
 #include <spot/twa/twa.hh>
 
-#include "proof.hpp"
+#include "fair_proof.hpp"
 
 //==================================================================
 class TraceState: public spot::state {
@@ -60,9 +60,8 @@ namespace std {
 //==================================================================
 class FairTraceAutomaton: public spot::twa {
 private:
-	const Proof & proof;
+	const FairProof & proof;
 	bdd accept;
-	spot::acc_cond::mark_t acc_set;
 
 	typedef std::unordered_map< StatePair, TraceState * > StateMap;
 	mutable StateMap state_map;
@@ -70,7 +69,7 @@ private:
 	TraceState * get_state(Vertex v, Tag t) const;
 
 public:
-	FairTraceAutomaton(const Proof & p);
+	FairTraceAutomaton(const FairProof & p);
 	virtual ~FairTraceAutomaton();
 	virtual spot::state* get_init_state() const { return get_state(NO_VERTEX, NO_TAG); }
 	virtual spot::twa_succ_iterator* succ_iter(const spot::state* local_state) const;

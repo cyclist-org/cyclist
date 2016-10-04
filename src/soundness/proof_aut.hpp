@@ -8,21 +8,21 @@
 //==================================================================
 class ProofState: public spot::state {
 public:
-	const Vertex vertex;
-	const TagVector & tags;
+  const Vertex vertex;
+  const TagVector & tags;
 
-	ProofState(const Vertex & v, const TagVector & ts) : vertex(v), tags(ts) {}
-
-    virtual int compare(const spot::state* other) const;
-	virtual size_t hash() const { return vertex.id(); }
-	virtual spot::state* clone() const { return new ProofState(vertex, tags); }
+  ProofState(const Vertex & v, const TagVector & ts) : vertex(v), tags(ts) {}
+  
+  virtual int compare(const spot::state* other) const;
+  virtual size_t hash() const { return vertex.id(); }
+  virtual spot::state* clone() const { return new ProofState(vertex, tags); }
 };
 //==================================================================
 class ProofGhostState: public spot::state {
 public:
-    virtual int compare(const spot::state* other) const;
-	virtual size_t hash() const { return 0; }
-	virtual spot::state* clone() const { return new ProofGhostState(); }
+  virtual int compare(const spot::state* other) const;
+  virtual size_t hash() const { return 0; }
+  virtual spot::state* clone() const { return new ProofGhostState(); }
 };
 //==================================================================
 class ProofAutomaton: public spot::twa, public Proof {

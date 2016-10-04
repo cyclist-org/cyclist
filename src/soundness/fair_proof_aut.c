@@ -2,28 +2,8 @@
 
 #include <sstream>
 
-//==================================================================
-int ProofState::compare(const spot::state *other) const {
-	const ProofGhostState * gs = dynamic_cast< const ProofGhostState * >(other);
-	if(gs) return 1;
+// GhostState and ProofState functions removed because of duplication
 
-	const ProofState * ps = dynamic_cast< const ProofState * >(other);
-	assert(ps);
-
-	if(vertex.id() < ps->vertex.id()) return -1;
-	if(vertex.id() > ps->vertex.id()) return 1;
-	return 0;
-}
-//==================================================================
-int ProofGhostState::compare(const spot::state *other) const {
-	const ProofState * ps = dynamic_cast< const ProofState * >(other);
-	if(ps) return -1;
-
-	const ProofGhostState * gs = dynamic_cast< const ProofGhostState * >(other);
-	assert(gs);
-
-	return 0;
-}
 //==================================================================
 spot::twa_succ_iterator* FairProofAutomaton::succ_iter(const spot::state* local_state) const {
 	const ProofState * ps = dynamic_cast< const ProofState *>(local_state);
@@ -50,4 +30,12 @@ std::string FairProofAutomaton::format_state(const spot::state* state) const {
 	}
 
 	return ss.str();
+}
+
+//------------------------------------------------------------------
+spot::acc_cond::mark_t ProofSuccIterator::acc() const {
+  Label lbl = proof.get_label_of_vertex(vertex);
+  if(lbl==30) return spot::acc_cond::mark_t(1);
+  else if (lbl==40) return spot::acc_cond::mark_t(2);
+  return spot::acc_cond::mark_t();
 }

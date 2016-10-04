@@ -10,11 +10,15 @@ let ocaml_headers_path = "/usr/lib/ocaml/caml"
 
 (* base path for melt *)
 (* on Debian/Ubuntu this is in package ocaml-melt *)
-let ocaml_melt_lib_path = "/usr/lib/ocaml/melt"
+let ocaml_melt_lib_path = "/home/gadi/.opam/4.01.0/lib/melt"
 
 (* base path for pcre *)
 (* on Debian/Ubuntu this is in package libpcre-ocaml-dev *)
-let ocaml_pcre_lib_path = "/usr/lib/ocaml/pcre"
+let ocaml_pcre_lib_path = "/home/gadi/.opam/4.01.0/lib/pcre"
+
+(* base path for bytes *)
+(* on Debian/Ubuntu this is in package libpcre-ocaml-dev *)
+let ocaml_bytes_lib_path = "/home/gadi/.opam/4.01.0/lib/bytes"
 
 (* base path for spot library *) 
 let spot_path = "/usr/local"
@@ -24,8 +28,11 @@ let spot_path = "/usr/local"
 let headers = 
   [ 
     "src/soundness/proof_aut.hpp"; 
-    "src/soundness/proof.hpp"; 
-    "src/soundness/trace.hpp" 
+    "src/soundness/proof.hpp";
+    "src/soundness/trace.hpp";
+    "src/soundness/fair_proof_aut.hpp";
+    "src/soundness/fair_proof.hpp"; 
+    "src/soundness/fair_trace.hpp";
   ] 
 
 (* you shouldn't normally have to change anything below this point *)
@@ -33,7 +40,8 @@ let spot_include_path = spot_path ^ "/include"
 
 let _ = dispatch begin function
   | After_rules ->
-    (* declare melt as external OCaml library *)
+     (* declare melt as external OCaml library *)
+     ocaml_lib ~extern:true ~dir:ocaml_bytes_lib_path "bytes";
     ocaml_lib ~extern:true ~dir:ocaml_melt_lib_path "latex";
     ocaml_lib ~extern:true ~dir:ocaml_pcre_lib_path "pcre";
     

@@ -4,6 +4,7 @@ open Util
 external create_aut : int -> unit = "create_aut" ;;
 external destroy_aut: unit -> unit = "destroy_aut" ;;
 external create_vertex : int -> unit = "create_vertex" ;;
+external create_fair_vertex : int -> int -> unit = "create_fair_vertex" ;;
 external tag_vertex : int -> int -> unit = "tag_vertex" ;;
 external set_successor : int -> int -> unit = "set_successor" ;;
 external set_trace_pair : int -> int -> int -> int -> unit = "set_trace_pair" ;;
@@ -24,7 +25,7 @@ let index_of_child child (_,subg) =
   Blist.find_index (fun (i,_,_) -> i=child) subg
 
 let mk_abs_node tags subg = (tags, subg)
-
+let mk_fair_abs_node pc tags subg = (pc, tags, subg)
 
 (* has one child and is not a self loop *)
 let is_single_node idx n = 
@@ -68,64 +69,62 @@ let pp fmt prf =
 let remove_dead_nodes prf' =
   let prf = ref prf' in
   let process_node child par_idx n =
-		if not (in_children child n) then () else
-    let newparent = 
-      let (tags, subg) = n in
-				begin match subg with
-  				| [_] -> (tags, [])
-  				| _ -> (tags, Blist.remove_nth (index_of_child child n) subg)
-				end in
-    prf := Int.Map.add par_idx newparent !prf in
+    if not (in_children child n) then () else
+      let newparent = 
+	let (tags, subg) = n in
+	begin match subg with
+  	      | [_] -> (tags, [])
+  	      | _ -> (tags, Blist.remove_nth (index_of_child child n) subg)
+	end in
+      prf := Int.Map.add par_idx newparent !prf in
   let remove_dead_node idx n =
     let () = prf := Int.Map.remove idx !prf in
     Int.Map.iter (fun p n -> process_node idx p n) !prf in
   let cont = ref true in
   while !cont do
     match Int.Map.find_some (fun idx n -> idx<>0 && is_leaf n) !prf with
-      | Some (idx, n) -> remove_dead_node idx n
-      | None -> cont := false
+    | Some (idx, n) -> remove_dead_node idx n
+    | None -> cont := false
   done ;
   !prf
-
+   
 let fuse_single_nodes prf' =
   let prf = ref prf' in
   let process_node child grand_child tv tp par_idx n =
-		if not (in_children child n) then () else
-    let (par_tags, par_subg) = n in
-    let pos = index_of_child child n in
-    let (_, par_tv, par_tp) = List.nth par_subg pos in
-    let newsubg = 
-      Blist.replace_nth 
-        (grand_child, 
-        TagPairs.compose par_tv tv,
-        TagPairs.union_of_list
-          [TagPairs.compose par_tp tp;
-          TagPairs.compose par_tv tp;
-          TagPairs.compose par_tp tv]
-        )
-        pos par_subg in
-    prf :=
-      Int.Map.add par_idx (par_tags, newsubg) !prf in
+    if not (in_children child n) then () else
+      let (par_tags, par_subg) = n in
+      let pos = index_of_child child n in
+      let (_, par_tv, par_tp) = List.nth par_subg pos in
+      let newsubg = 
+	Blist.replace_nth 
+          (grand_child, 
+           TagPairs.compose par_tv tv,
+           TagPairs.union_of_list
+             [TagPairs.compose par_tp tp;
+              TagPairs.compose par_tv tp;
+              TagPairs.compose par_tp tv]
+          )
+          pos par_subg in
+      prf :=
+	Int.Map.add par_idx (par_tags, newsubg) !prf in
   let fuse_node idx = function 
     | (tags, [(child, tv, tp)]) ->
-      Int.Map.iter (fun p n -> process_node idx child tv tp p n) !prf ;
-      prf := Int.Map.remove idx !prf  
+       Int.Map.iter (fun p n -> process_node idx child tv tp p n) !prf ;
+       prf := Int.Map.remove idx !prf  
     | _ -> invalid_arg "fuse_node" in
   let cont = ref true in
   (* if a parent points to the child of the node to be fused then *)
   (* we would run into difficulties when updating that parent to point *)
   (* directly to the grandchild, so we avoid that altogether *)
-	let p idx n = idx<>0 && is_single_node idx n && not (fathers_grandchild !prf idx n) in
+  let p idx n = idx<>0 && is_single_node idx n && not (fathers_grandchild !prf idx n) in
   while !cont do
     match Int.Map.find_some p !prf with
-      | Some (idx, n) -> fuse_node idx n
-      | None -> cont := false
+    | Some (idx, n) -> fuse_node idx n
+    | None -> cont := false
   done ;
   !prf
-
+   
 let minimize_abs_proof prf = fuse_single_nodes (remove_dead_nodes prf)
-
-
 
 (* check global soundness condition on proof *)
 let check_proof p =

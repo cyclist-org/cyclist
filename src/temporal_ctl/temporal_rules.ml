@@ -10,7 +10,9 @@ module Seqtactics = Seqtactics.Make(Temporal_program.Seq)
 module Proof = Proof.Make(Temporal_program.Seq)
 
 let use_cut = ref true
-			 
+
+let use_fairness = ref false
+		  
 let tagpairs s =
   Seq.tag_pairs s
 		
@@ -449,17 +451,17 @@ let disjunction_rule =
   wrap rl	
        
 let conjunction_rule = 
-		let rl seq = 
-			try
-				let (sf,cmd,tf) = dest_sh_seq seq in
-				if Tl_form.is_and tf then
-					let (tf1,tf2) = Tl_form.unfold_and tf in
-					fix_tps
-					[[([sf],cmd,tf1);([sf],cmd,tf2)], "Conj"]
-				else 
-					[]
-			with Not_symheap -> [] in
-			wrap rl	
+  let rl seq = 
+    try
+      let (sf,cmd,tf) = dest_sh_seq seq in
+      if Tl_form.is_and tf then
+	let (tf1,tf2) = Tl_form.unfold_and tf in
+	fix_tps
+	  [[([sf],cmd,tf1);([sf],cmd,tf2)], "Conj"]
+      else 
+	[]
+    with Not_symheap -> [] in
+  wrap rl	
 
 (* if there is a backlink achievable through substitution and classical *)
 (* weakening then make the proof steps that achieve it explicit so that *)
@@ -494,7 +496,8 @@ let dobackl idx prf =
 	then Rule.identity
 	else Rule.mk_infrule (subst_rule theta targ_seq');
         
-        Rule.mk_backrule 
+        Rule.mk_backrule
+	  ~fair:!use_fairness
           false 
           (fun _ _ -> [targ_idx]) 
           (fun (_,_,tf) s' -> 
@@ -747,4 +750,3 @@ let setup defs =
 		   conjunction_rule;
 		 ];
 	     ]
-		      

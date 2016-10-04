@@ -39,6 +39,8 @@ let pp fmt (l, r) =
 let terms (l, r) = Sl_term.Set.union (Sl_form.terms l) (Sl_form.terms r)
 let vars seq = Sl_term.filter_vars (terms seq)
 
+let pc seq = 0 (* TODO: remove after finding better solution *)
+				   
 let tags seq = Sl_form.tags (fst seq)
 let tag_pairs f = TagPairs.mk (tags f)
 

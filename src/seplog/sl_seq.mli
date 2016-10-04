@@ -18,6 +18,9 @@ val to_melt : t -> Latex.t
 
 val vars : t -> Sl_term.Set.t
 
+val pc : t -> int
+(** TODO: remove after better solution *)
+		  
 val tags : t -> Util.Tags.t
 (** Only LHS tags are returned. *)
 

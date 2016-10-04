@@ -13,6 +13,7 @@ let () = F.speclist := !F.speclist @ [
     ("-D", Arg.Set_string defs_path, 
       ": read inductive definitions from <file>, default is " ^ !defs_path);
     ("-P", Arg.Set_string prog_path, ": prove temporal property of program <file>");
+    ("-F", Arg.Set Temporal_rules.use_fairness, ": restrict to fair execution paths");
     ("-IT", Arg.Set Sl_rules.use_invalidity_heuristic, 
      ": run invalidity heuristic during check, default is " ^ 
        (string_of_bool !Sl_rules.use_invalidity_heuristic));

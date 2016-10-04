@@ -5,35 +5,12 @@
 #include <spot/tl/defaultenv.hh>
 #define ENV (spot::default_environment::instance())
 
-//==================================================================
-int TraceState::compare(const spot::state *other) const {
-  // was dynamic_cast; caveat emptor
-  const TraceState * s = reinterpret_cast<const TraceState *>(other);
-  assert(s);
+//TraceState functions removed becuase of duplication
 
-  // initial state is less than any other apart from itself
-  if( initial() ) return s->initial() ? 0 : -1;
-
-  // ditto in the opposite direction
-  if( s->initial() ) return 1;
-
-  if(vertex.id() < s->vertex.id()) return -1;
-  if(vertex.id() > s->vertex.id()) return  1;
-  if(tag < s->tag) return -1;
-  if(tag > s->tag) return  1;
-  return 0;
-}
-//------------------------------------------------------------------
-size_t TraceState::hash() const {
-  int seed = 0;
-  HASH_VAL(seed, Vertex, vertex);
-  HASH_VAL(seed, Tag, tag);
-  return seed;
-}
 //==================================================================
 bool FairTraceSuccIterator::first() {
   assert(state_info_vector.empty());
-  const Proof & proof = automaton.proof;
+  const FairProof & proof = automaton.proof;
 
   const VertexSet & successors =
     (state->initial()) ?
@@ -61,7 +38,7 @@ bool FairTraceSuccIterator::first() {
   return !done();
 }
 //------------------------------------------------------------------
-bdd FairTraceSuccIterator::cond() const { // TODO: REVISE!!!
+bdd FairTraceSuccIterator::cond() const {
   bdd c = state_info_vector.back()->vertex;
   if(c==NO_VERTEX)
     return bddtrue;
@@ -69,18 +46,27 @@ bdd FairTraceSuccIterator::cond() const { // TODO: REVISE!!!
     return c;
 }
 //------------------------------------------------------------------
-spot::acc_cond::mark_t FairTraceSuccIterator::acc() const { // TODO: SET CORRECT ACCEPTANCE CONDITION BASED ON FAIRNESS
+spot::acc_cond::mark_t FairTraceSuccIterator::acc() const {
+
+  std::vector<int> accepting_sets;
+  
   TraceState * s = state_info_vector.back();
-  return automaton.proof.progress_pair(
-				       state->vertex,
-				       s->vertex,
-				       state->tag,
-				       s->tag) ? automaton.acc_set : spot::acc_cond::mark_t();
+  if (automaton.proof.progress_pair(state->vertex,
+				s->vertex,
+				state->tag,
+				    s->tag))
+    accepting_sets.push_back(2);
+
+  Label lbl = automaton.proof.get_label_of_vertex(state->vertex);
+  if(lbl==30) accepting_sets.push_back(0);
+  else if (lbl==40) accepting_sets.push_back(1);
+
+  return spot::acc_cond::mark_t(std::begin(accepting_sets),std::end(accepting_sets));
+  
 }
 //==================================================================
-FairTraceAutomaton::FairTraceAutomaton(const Proof & p) : proof(p), spot::twa(p.get_dict()) {
-  // acc_set = set_buchi();
-  set_generalized_buchi(); // TODO: this will most likely change to a more complex condition
+FairTraceAutomaton::FairTraceAutomaton(const FairProof & p) : proof(p), spot::twa(p.get_dict()) {
+  set_generalized_buchi(3); // TODO: this will most likely change to a more complex condition
 }
 //------------------------------------------------------------------
 FairTraceAutomaton::~FairTraceAutomaton() {

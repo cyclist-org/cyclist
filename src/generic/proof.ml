@@ -44,20 +44,24 @@ module Make(Seq : Sigs.SEQUENT) =
             (Blist.pp Format.pp_print_cut pp_aux) (Node.get_succs n);
         Format.pp_close_box fmt () in
       Format.fprintf fmt "@[%a@]@." pp_aux 0
-  
+		     
     let to_string prf = mk_to_string pp prf
-    
+
     let to_melt proof =
       let rec melt_proof_node first id =
         Node.to_melt first id (find id proof) melt_proof_node in
       melt_proof_node true 0
-   
+		      
     let is_closed prf =
       P.for_all (fun _ (_,n) -> not (Node.is_open n)) prf
   
     let check p = 
       Soundcheck.check_proof 
         (P.map (fun (_,n) -> Node.to_abstract_node n) p)
+	
+    let fair_check p =
+      Fair_soundcheck.check_proof
+	(P.map (fun (_,n) -> Node.to_fair_abstract_node n) p)
   
     let to_list m = Blist.map (fun (i,(_,n)) -> (i,n)) (P.bindings m)
   

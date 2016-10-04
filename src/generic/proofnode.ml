@@ -77,7 +77,15 @@ struct
         Soundcheck.mk_abs_node (Seq.tags n.seq) subg
     | BackNode(child, tv) ->
         Soundcheck.mk_abs_node (Seq.tags n.seq) [(child, tv, TagPairs.empty)]
-    
+
+  let to_fair_abstract_node n = match n.node with
+    | OpenNode | AxiomNode ->
+       Fair_soundcheck.mk_fair_abs_node (Seq.pc n.seq) (Seq.tags n.seq) []
+    | InfNode(subg) ->
+       Fair_soundcheck.mk_fair_abs_node (Seq.pc n.seq) (Seq.tags n.seq) subg
+    | BackNode(child, tv) ->
+       Fair_soundcheck.mk_fair_abs_node (Seq.pc n.seq) (Seq.tags n.seq) [(child, tv, TagPairs.empty)]	
+			      
   let pp fmt n = match n.node with
     | OpenNode ->
         Format.fprintf fmt "@[%a (Open)@]" Seq.pp n.seq
