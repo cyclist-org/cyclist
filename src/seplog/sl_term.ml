@@ -252,8 +252,19 @@ let of_string s =
   handle_reply (MParser.parse_string parse s ())
 
 let filter_vars s = Set.filter is_var s
- 
+
+let partition_subst theta =
+  Map.partition
+    (fun x y -> is_free_var x && (is_nil y || is_free_var y))
+    theta
+
+let mk_ex_subst avoid xs =
+  let exs = fresh_evars (Set.union xs avoid) (Set.cardinal xs) in
+  Map.of_list (Blist.combine (Set.to_list xs) exs)
+
 type term_t = t
+
+let term_pp = pp
 
 module type SubstSig =
 sig
@@ -264,6 +275,7 @@ sig
   val of_list : (term_t * term_t) list -> t
   val avoid : Set.t -> Set.t -> t
   val pp : Format.formatter -> t -> unit
+  val to_string : t -> string
   val trivial_check : check
   val basic_lhs_down_check : check
   val avoids_replacing_check : ?inverse:bool -> Set.t -> check
@@ -289,9 +301,15 @@ module Subst =
           (Blist.combine free_vars fresh_f_vars)
           (Blist.combine exist_vars fresh_e_vars))
     
-    
-    
-    let pp = Map.pp pp
+    let pp fmt m =
+      Format.fprintf fmt "@[@ ";
+      Map.iter
+        (fun k v -> Format.fprintf fmt "@[(%a->%a);@]@ " term_pp k term_pp v)
+        m;
+      Format.fprintf fmt "@]"
+    let to_string m =
+      let pp_val fmt v = Format.pp_print_string fmt (to_string v) in
+      Format.asprintf "%a" pp m
     let trivial_check _ _ _ = true
     let basic_lhs_down_check theta t t' =
       is_free_var t || 

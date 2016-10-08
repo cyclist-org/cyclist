@@ -53,6 +53,7 @@ val fresh_evars : Set.t -> int -> t list
 (** [fresh_evars s n] returns a list of existentially quantified variables 
     of length [n] all of which are fresh in [s]. *)
 
+
 (* to allow reference from within Subst *)
 type term_t = t
 
@@ -77,6 +78,9 @@ sig
   
   val pp : Format.formatter -> t -> unit
   (** Pretty printer. *)
+
+  val to_string : t -> string
+  (** Convert a substitution to a string *)
   
   type check = t -> term_t -> term_t -> bool
   (** The type of functions that check the validity of a single substitution pair
@@ -107,6 +111,15 @@ or [nil].
 val subst : Subst.t -> t -> t
 (** Apply a substitution on the given term. *)
 
+val partition_subst : Subst.t -> (Subst.t * Subst.t)
+(** [partition_subst theta] will partition [theta] into ([theta_1], [theta_2])
+    such that [theta_1] contains all and only the mappings in [theta] from 
+    a universally quantified (i.e. free) variable to either [nil] or another
+    free variable; that is [theta_1] is the part of [theta] which is a proper
+    (proof-theoretic) substitution.
+*)
+
+val mk_ex_subst : Set.t -> Set.t -> Subst.t
 
 module type UnifierSig =
   sig
