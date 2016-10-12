@@ -9,10 +9,32 @@ module Proof = Proof.Make(Sl_seq)
 module Rule = Proofrule.Make(Sl_seq)
 module Seqtactics = Seqtactics.Make(Sl_seq)
 
+(* This is a flag which switches the behaviour of the lemma application  *)
+(* functionality. Permissive lemma application allows matching to back-  *)
+(* links which would require an left existential introduction step. This *)
+(* is sound only if we also ensure there is a corresponding right exist- *)
+(* ential introduction step when the variables appear in the succedent.  *)
+(* Experiments show that allowing permissive lemma application does not  *)
+(* actually prove more entailments in practice, so we make turn this     *)
+(* flag off by default.                                                  *) 
+let permissive_lemma_application = false
+
 let id_axiom =
   Rule.mk_axiom 
-    (fun (l,r) -> Option.mk (Sl_form.subsumed ~total:true r l) "Id")
-
+    (fun (l,r) -> 
+      Option.mk
+        (Blist.for_all
+          (fun h -> 
+            Blist.exists
+              (fun h' ->
+                Option.is_some
+                  (Sl_heap.classical_unify
+                    ~sub_check:(fun _ t _ -> Sl_term.is_exist_var t)
+                    h' h)) 
+              r)
+          l)
+        "Id") 
+    
 let preddefs = ref Sl_defs.empty 
 
 let ex_falso_axiom =
@@ -31,7 +53,6 @@ let lhs_disj_to_symheaps =
          "L. Or" 
       ]
     )
-    
 
 (* break RHS disjunctions *)
 let rhs_disj_to_symheaps =
@@ -40,6 +61,20 @@ let rhs_disj_to_symheaps =
       Blist.map 
         (fun s -> [ ((l,[s]), Sl_form.tag_pairs l, Tagpairs.empty) ], "R. Or") 
         r)
+
+(* Instantiate LHS existential variables *)
+let lhs_instantiate_ex_vars =
+  Rule.mk_infrule
+    (fun seq ->
+      try
+        let (l, r) = Sl_seq.dest seq in 
+        let ex_vars = Sl_term.Set.filter Sl_term.is_exist_var (Sl_heap.vars l) in
+        if Sl_term.Set.is_empty ex_vars then [] else 
+        [ [ ( [Sl_heap.univ (Sl_heap.vars r) l], [r] ), 
+              Sl_heap.tag_pairs l, 
+              Tagpairs.empty ], 
+            "Inst. LHS Vars" ]
+      with Not_symheap -> [])
 
 (* simplification rules *)
 
@@ -249,11 +284,26 @@ let matches seq seq' =
     let cont ((theta, _) as state) = 
 			let l' = Sl_heap.subst theta  l' in
       assert (Sl_heap.subsumed_upto_tags ~total:false l' l) ;
-      if not (Sl_heap.subsumed_upto_tags l' l) then Option.some state
-      else			
-      Sl_heap.classical_unify 
-        ~inverse:true ~sub_check:Sl_subst.basic_lhs_down_check ~cont:verify 
-        ~init_state:state r r' in
+      if not (Sl_heap.subsumed_upto_tags l' l) then 
+        if permissive_lemma_application then
+          Some state
+        else
+          (* If we are not allowing permissive lemma application then *)
+          (* we must check any free variable that is mapped to an     *)
+          (* existential is not also present in the succedent         *)
+          let succ_fvs = Sl_term.Set.filter Sl_term.is_free_var (Sl_heap.terms r) in
+          Option.mk
+            (Sl_term.Map.for_all
+              (fun t t' ->
+                Sl_term.is_exist_var t ||
+                Sl_term.is_free_var t' ||
+                not (Sl_term.Set.mem t succ_fvs))
+              theta)
+            state
+      else
+        Sl_heap.classical_unify 
+          ~inverse:true ~sub_check:Sl_subst.basic_lhs_down_check ~cont:verify 
+          ~init_state:state r r' in
     let results =
       Sl_unifier.backtrack  
         (Sl_heap.unify_partial ~tagpairs:true)
@@ -317,7 +367,6 @@ let apply_lemma (lemma_seq, ((lhs, rhs) as cont_seq)) ((lhs', rhs') as seq) =
         (Sl_heap.with_inds l (Sl_tpreds.union l.SH.inds (Sl_tpreds.diff h.SH.inds r.SH.inds))) 
         (Sl_ptos.union l.SH.ptos (Sl_ptos.diff h.SH.ptos r.SH.ptos)) in
     let _ = debug (fun _ -> "After") in
-    (* let () = debug (fun _ -> "Constraints match: " ^ (string_of_bool (Ord_constraints.equal lcs cs'))) in *)
     (* let () = debug (fun _ -> "Heap as expected: " ^ (string_of_bool (Sl_heap.equal h' expected))) in      *)
     (* let () = debug (fun _ -> "RHS match: " ^ (string_of_bool (Sl_form.equal rhs rhs'))) in                *)
     if (Sl_heap.equal h' expected) && (Sl_form.equal rhs rhs') then
@@ -363,7 +412,30 @@ let mk_lemma_rule_seq (trm_subst, tag_subst) (src_lhs, src_rhs)
   let _ = debug (fun _ -> "\t" ^ (Sl_term.Subst.to_string trm_theta)) in
   let _ = debug (fun _ -> "\t" ^ (Sl_term.Subst.to_string var_theta)) in
   let subst_lhs = Sl_form.subst trm_subst (Sl_form.subst_tags tag_subst lhs) in
-  let subst_rhs = Sl_form.subst trm_theta rhs in
+  let subst_rhs = 
+    if not permissive_lemma_application then 
+      Sl_form.subst trm_theta rhs
+    else
+      (* If we allow permissive lemma application, then we must make sure *)
+      (* there is right existential introduction where it is required     *)
+      let rhs_ex_tx = Sl_term.Map.filter (fun k v -> Sl_term.is_free_var k && Sl_term.is_exist_var v) var_theta in
+      let rhs_free_to_nil = Sl_term.Map.filter (fun k v -> Sl_term.is_free_var k && Sl_term.is_nil v) var_theta in
+      let (_, rhs_free_to_nil) =
+        Sl_term.Map.fold
+          (fun t _ (fresh, theta) -> ((Blist.tl fresh), Sl_term.Map.add t (Blist.hd fresh) theta))
+          (rhs_free_to_nil)
+          ((Sl_term.fresh_evars
+              (Sl_term.Set.union (Sl_form.terms rhs) (Sl_form.terms src_lhs))
+              (Sl_term.Map.cardinal rhs_free_to_nil)),
+            rhs_free_to_nil) in
+      let rhs_var_theta =
+        Sl_term.Map.of_list
+          ((Sl_term.Map.bindings trm_theta)
+            @ (Sl_term.Map.bindings rhs_ex_tx)
+            @ (Sl_term.Map.bindings rhs_free_to_nil)) in
+      let _ = debug (fun _ -> "Generated RHS existential substitution is:") in
+      let _ = debug (fun _ -> "\t" ^ (Sl_term.Subst.to_string rhs_var_theta)) in
+      Sl_form.subst rhs_var_theta rhs in
   let subst_seq = (subst_lhs, subst_rhs) in
   (* let () = debug (fun _ -> "substituted seq is " ^ (Sl_seq.to_string subst_seq)) in *)
   let subst_h = Sl_form.dest (subst_lhs) in
@@ -467,6 +539,7 @@ let setup defs =
     Rule.first [
       lhs_disj_to_symheaps;
       rhs_disj_to_symheaps;
+      lhs_instantiate_ex_vars;
       simplify;
       
       Rule.choice [
