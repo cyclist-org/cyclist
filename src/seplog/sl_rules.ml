@@ -17,7 +17,30 @@ module Seqtactics = Seqtactics.Make(Sl_seq)
 (* Experiments show that allowing permissive lemma application does not  *)
 (* actually prove more entailments in practice, so we make turn this     *)
 (* flag off by default.                                                  *) 
-let permissive_lemma_application = false
+let permissive_lemma_application = ref false
+
+type t_lemma_level = 
+    NO_LEMMAS
+  | ONLY_WITH_PREDICATES
+  | NON_EMPTY
+  | ANY
+
+let lemma_level = ref ONLY_WITH_PREDICATES
+
+let set_lemma_level level = 
+  lemma_level := 
+    match level with
+      | 0 -> NO_LEMMAS
+      | 1 -> ONLY_WITH_PREDICATES
+      | 2 -> NON_EMPTY
+      | 3 -> ANY
+      | _ -> raise (Arg.Bad "Unrecognised value for lemma application level")
+
+let lemma_option_descr_str =
+  "0 -- do not attempt to apply any lemmas" ^ "\n\t" ^
+  "1 -- only apply lemmas containing predicate instances (default)" ^ "\n\t" ^
+  "2 -- only apply lemmas with non-empty spatial components" ^ "\n\t" ^
+  "3 -- attempt all applicable lemmas"
 
 let id_axiom =
   Rule.mk_axiom 
@@ -63,18 +86,18 @@ let rhs_disj_to_symheaps =
         r)
 
 (* Instantiate LHS existential variables *)
-let lhs_instantiate_ex_vars =
-  Rule.mk_infrule
-    (fun seq ->
-      try
-        let (l, r) = Sl_seq.dest seq in 
-        let ex_vars = Sl_term.Set.filter Sl_term.is_exist_var (Sl_heap.vars l) in
-        if Sl_term.Set.is_empty ex_vars then [] else 
-        [ [ ( [Sl_heap.univ (Sl_heap.vars r) l], [r] ), 
-              Sl_heap.tag_pairs l, 
-              Tagpairs.empty ], 
-            "Inst. LHS Vars" ]
-      with Not_symheap -> [])
+let lhs_instantiate_ex_vars_rl seq =
+  try
+    let (l, r) = Sl_seq.dest seq in 
+    let ex_vars = Sl_term.Set.filter Sl_term.is_exist_var (Sl_heap.vars l) in
+    if Sl_term.Set.is_empty ex_vars then [] else 
+    [ [ ( [Sl_heap.univ (Sl_heap.vars r) l], [r] ), 
+          Sl_heap.tag_pairs l, 
+          Tagpairs.empty ], 
+        "Inst. LHS Vars" ]
+  with Not_symheap -> []
+  
+let lhs_instantiate_ex_vars = Rule.mk_infrule lhs_instantiate_ex_vars_rl
 
 (* simplification rules *)
 
@@ -262,7 +285,9 @@ let luf defs =
         Blist.map do_case cases, ((Sl_predsym.to_string ident) ^ " L.Unf.") in
       Sl_tpreds.map_to_list left_unfold l.SH.inds
     with Not_symheap -> [] in
-  wrap rl
+  wrap
+    (Seqtactics.compose rl
+      (Seqtactics.attempt lhs_instantiate_ex_vars_rl))
 
 (* seq' = (l',r') *)
 (* ------------   *)
@@ -285,7 +310,13 @@ let matches seq seq' =
 			let l' = Sl_heap.subst theta  l' in
       assert (Sl_heap.subsumed_upto_tags ~total:false l' l) ;
       if not (Sl_heap.subsumed_upto_tags l' l) then 
-        if permissive_lemma_application then
+        if !lemma_level = NO_LEMMAS then
+          None
+        else if !lemma_level = ONLY_WITH_PREDICATES && Tags.is_empty (Sl_heap.tags l') then
+          None
+        else if !lemma_level = NON_EMPTY && Sl_heap.subsumed Sl_heap.empty l' then
+          None
+        else if !permissive_lemma_application then
           Some state
         else
           (* If we are not allowing permissive lemma application then *)
@@ -413,7 +444,7 @@ let mk_lemma_rule_seq (trm_subst, tag_subst) (src_lhs, src_rhs)
   let _ = debug (fun _ -> "\t" ^ (Sl_term.Subst.to_string var_theta)) in
   let subst_lhs = Sl_form.subst trm_subst (Sl_form.subst_tags tag_subst lhs) in
   let subst_rhs = 
-    if not permissive_lemma_application then 
+    if not !permissive_lemma_application then 
       Sl_form.subst trm_theta rhs
     else
       (* If we allow permissive lemma application, then we must make sure *)
@@ -491,9 +522,11 @@ let cmp_taggedrule r r' =
   | _ -> 0
 
 
-(* if there is a backlink achievable through substitution and classical *)
-(* weakening then make the proof steps that achieve it explicit so that *)
-(* actual backlinking can be done on Sl_seq.equal sequents *) 
+(** if there is a backlink achievable through substitution and
+    classical weakening or lemma application then make the proof
+    steps that achieve it explicit so that actual backlinking can
+    be done on Sl_seq.equal sequents
+ **) 
 let dobackl idx prf =
   let ((src_lhs, src_rhs) as src_seq) = Proof.get_seq idx prf in
 	let targets = Rule.all_nodes idx prf in

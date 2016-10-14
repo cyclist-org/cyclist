@@ -31,6 +31,10 @@ let () = F.speclist := !F.speclist @ [
     ("-IP", Arg.Set Sl_invalid.partition_strengthening, 
       ": use partition strengthening in invalidity heuristic, default is " ^ 
       (string_of_bool !Sl_invalid.partition_strengthening));
+    ("-Lem", Arg.Int Sl_rules.set_lemma_level,
+      ": specify the permissiveness of the lemma application strategy" ^ "\n\t" ^ Sl_rules.lemma_option_descr_str);
+    ("--permissive-lemma-application", Arg.Set Sl_rules.permissive_lemma_application, 
+      ": Allow lemma application requiring existential introduction in the succedent");
     ("-SLCOMP", Arg.Set slcomp_mode, ": change output to sat/unsat/unknown for SLCOMP");
   ]
 
