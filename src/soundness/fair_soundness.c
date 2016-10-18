@@ -170,12 +170,13 @@ extern "C" value check_fair_soundness() {
 	spot::twa_graph_ptr proof_graph = copy(proof, spot::twa::prop_set::all());
 	custom_print(std::cout,proof_graph);
 	spot::const_twa_ptr ta = std::make_shared<FairTraceAutomaton>(*proof);
+	spot::twa_graph_ptr proof_cpy = copy(proof, spot::twa::prop_set::all());
 	spot::twa_graph_ptr graph = copy(ta, spot::twa::prop_set::all());
 	custom_print(std::cout,graph);
 	spot::twa_graph_ptr det = to_generalized_buchi(dtwa_complement(tgba_determinize(graph, false, true, true, spot::check_stutter_invariance(graph).is_true())));
 	//spot::print_dot(std::cerr, ta);
-
-	spot::const_twa_ptr product = std::make_shared<spot::twa_product>(proof, det);
+	spot::twa_graph_ptr proof_tgba = to_generalized_buchi(proof_cpy);
+	spot::const_twa_ptr product = std::make_shared<spot::twa_product>(proof_tgba, det);
 	spot::couvreur99_check ec(product);
 	std::shared_ptr<spot::emptiness_check_result> res = ec.check();
 

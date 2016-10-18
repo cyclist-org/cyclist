@@ -29,7 +29,7 @@ create_fair_vertex v2 c2 ;;
 tag_fair_vertex v2 t2 ;;
 
 let v3 = 3 ;;
-create_fair_vertex v3 c3;; 
+  create_fair_vertex v3 c3;; 
 tag_fair_vertex v3 t1 ;;
 tag_fair_vertex v3 t2 ;;
 

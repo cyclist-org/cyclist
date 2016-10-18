@@ -60,8 +60,9 @@ namespace std {
 //==================================================================
 class FairTraceAutomaton: public spot::twa {
 private:
-	const FairProof & proof;
-	bdd accept;
+  const FairProof & proof;
+  bdd accept;
+  spot::acc_cond::mark_t acc_set;
 
 	typedef std::unordered_map< StatePair, TraceState * > StateMap;
 	mutable StateMap state_map;

@@ -28,7 +28,11 @@ public:
 //==================================================================
 class FairProofAutomaton: public spot::twa, public FairProof {
 public:
-  FairProofAutomaton(size_t max_vertices_log2) : FairProof(max_vertices_log2), spot::twa(spot::make_bdd_dict()) { set_generalized_buchi(2); this->dict_ = FairProof::get_dict(); register_aps_from_dict(); }
+  FairProofAutomaton(size_t max_vertices_log2) : FairProof(max_vertices_log2), spot::twa(spot::make_bdd_dict()) {
+    set_acceptance(2,spot::acc_cond::acc_code("(Fin(0) | Inf(1))"));
+    this->dict_ = FairProof::get_dict();
+    register_aps_from_dict();
+  }
   
   virtual ~FairProofAutomaton() {};
   virtual spot::state* get_init_state() const { return new ProofGhostState(); }

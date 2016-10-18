@@ -47,26 +47,18 @@ bdd FairTraceSuccIterator::cond() const {
 }
 //------------------------------------------------------------------
 spot::acc_cond::mark_t FairTraceSuccIterator::acc() const {
-
-  std::vector<int> accepting_sets;
-  
   TraceState * s = state_info_vector.back();
-  if (automaton.proof.progress_pair(state->vertex,
-				s->vertex,
-				state->tag,
-				    s->tag))
-    accepting_sets.push_back(2);
-
-  Label lbl = automaton.proof.get_label_of_vertex(state->vertex);
-  if(lbl==30) accepting_sets.push_back(0);
-  else if (lbl==40) accepting_sets.push_back(1);
-
-  return spot::acc_cond::mark_t(std::begin(accepting_sets),std::end(accepting_sets));
+  return automaton.proof.progress_pair(
+				       state->vertex,
+				       s->vertex,
+				       state->tag,
+				       s->tag) ? automaton.acc_set : spot::acc_cond::mark_t();
   
 }
 //==================================================================
 FairTraceAutomaton::FairTraceAutomaton(const FairProof & p) : proof(p), spot::twa(p.get_dict()) {
-  set_generalized_buchi(3); // TODO: this will most likely change to a more complex condition
+  acc_set = set_buchi();
+  /* set_acceptance(3,spot::acc_cond::acc_code("(Inf(0)")); */
 }
 //------------------------------------------------------------------
 FairTraceAutomaton::~FairTraceAutomaton() {
