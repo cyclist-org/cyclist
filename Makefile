@@ -6,7 +6,7 @@ BENCHDIR:=benchmarks
 SLMAIN:=./src/seplog/sl_prove.native
 #PRMAIN:=./src/goto/goto_prove.native
 PR2MAIN:=./src/while/while_prove.native
-XTDPRMAIN:=./src/extended_while/extended_while_prove.native
+XTDPRMAIN:=./src/procedure/procedure_prove.native
 ABD2MAIN:=./src/while/while_abduce.native
 CTLMAIN:=./src/temporal_ctl/temporal_ctl_prove.native
 LTLMAIN:=./src/temporal_ltl/temporal_ltl_prove.native
@@ -74,7 +74,7 @@ goto-tests:
 whl-tests:
 	-@for TST in $(BENCHDIR)/whl/*.wl ; do echo $$TST: ; _build/$(PR2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
-whl2-tests:
+proc-tests:
 	-@for TST in $(WHL2_TEST_FILES) ; do echo $$TST: ; _build/$(XTDPRMAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
 whl_abd-tests:

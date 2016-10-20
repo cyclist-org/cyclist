@@ -1,10 +1,10 @@
-open Extended_while_program
-open Extended_while_rules
+open Procedure_program
+open Procedure_rules
 
 let defs_path = ref "examples/sl.defs"
 let prog_path = ref ""
 
-module Prover = Prover.Make(Extended_while_program.Seq)
+module Prover = Prover.Make(Procedure_program.Seq)
 module F = Frontend.Make(Prover)
 
 (* let () =                                                      *)
@@ -39,16 +39,16 @@ let () =
   let spec_list = !F.speclist() in
   Arg.parse spec_list (fun _ -> raise (Arg.Bad "Stray argument found.")) !F.usage ;
   if !prog_path="" then F.die "-P must be specified." spec_list !F.usage ;
-  let ((pre, cmd, post), procs) = Extended_while_program.of_channel (open_in !prog_path) in
+  let ((pre, cmd, post), procs) = Procedure_program.of_channel (open_in !prog_path) in
   let main = (pre, Cmd.number cmd, post) in
   let procs = Blist.map (fun (id, params, specs, body) -> (id, params, specs, Cmd.number body)) procs in
 	let defs = Sl_defs.of_channel (open_in !defs_path) in
 	(* TODO: Check well-formedness of the program: *)
 	(*   Do all the predicates in the pre/post annotations have the correct arity? *)
 	(*   If not While_program.well_formed defs prog then F.die !While_program.error_msg *)
-  Extended_while_program.set_program (main, procs); 
-  Extended_while_rules.setup (defs, procs) ;
-  exit (F.prove_seq !Extended_while_rules.axioms !Extended_while_rules.rules main)
+  Procedure_program.set_program (main, procs); 
+  Procedure_rules.setup (defs, procs) ;
+  exit (F.prove_seq !Procedure_rules.axioms !Procedure_rules.rules main)
     
 
 

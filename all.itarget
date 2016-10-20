@@ -8,7 +8,7 @@ src/seplog/sl_prove.native
 #src/goto/goto_prove.native
 #src/while/while_prove.native  
 #src/while/while_abduce.native
-src/extended_while/extended_while_prove.native  
+src/procedure/procedure_prove.native  
 #src/temporal_ctl/temporal_ctl_prove.native
 #src/temporal_ltl/temporal_ltl_prove.native
 #src/cyclist.docdir/index.html

@@ -1,14 +1,14 @@
 open Lib
 
-open Extended_while_program
+open Procedure_program
 
 module SH = Sl_heap
 
 exception Not_symheap = Sl_form.Not_symheap
 
-module Rule = Proofrule.Make(Extended_while_program.Seq)
-module Seqtactics = Seqtactics.Make(Extended_while_program.Seq)
-module Proof = Proof.Make(Extended_while_program.Seq)
+module Rule = Proofrule.Make(Procedure_program.Seq)
+module Seqtactics = Seqtactics.Make(Procedure_program.Seq)
+module Proof = Proof.Make(Procedure_program.Seq)
 module Slprover = Prover.Make(Sl_seq)
 module EntlSeqHash = Hashtbl.Make(Sl_seq)
 
