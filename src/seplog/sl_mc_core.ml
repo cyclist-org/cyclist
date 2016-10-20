@@ -981,7 +981,7 @@ module Make (Sig : ValueSig)
       decorate h base
 
     let check_model intuitionistic defs (sh, (stk, h)) =
-      let f = [sh] in
+      let f = (Ord_constraints.empty, [sh]) in
       let defs = Sl_defs.relevant_defs defs f in
       let () = Sl_defs.check_form_wf defs f in
       let defs = Sl_defs.of_formula defs f in

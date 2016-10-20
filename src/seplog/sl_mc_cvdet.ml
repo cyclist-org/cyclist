@@ -315,7 +315,7 @@ module IntSigModelChecker = Make(Sl_mc_core.IntSig)
 module Prover = Prover.Make(IntSigModelChecker.Reduction)
 
 let check_model intuitionistic defs (sh, (stk, h)) =
-  let defs = Sl_defs.relevant_defs defs [sh] in
+  let defs = Sl_defs.relevant_defs defs (Ord_constraints.empty, [sh]) in
   assert (Sl_defs.deterministic defs) ;
   assert (Sl_defs.constructively_valued defs) ;
   IntSigModelChecker.defs := defs ;
