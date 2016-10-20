@@ -1,14 +1,9 @@
-module VMKernel =
-  struct
-    let map = Int.Hashmap.create 997
-    let inv_map = Strng.Hashmap.create 997
-    let max_var = ref 0
-    let min_var = ref 0
-    let default_varname exist = if exist then "x" else "w"
-    let unnamed_varname = ""
-  end
-
-module VM = VarManager.Make(VMKernel)
+let classify_varname s =
+  let l = String.length s in 
+  assert (String.length s > 0);
+  if l > 1 && s.[l-1] = '\'' then VarManager.BOUND
+  else VarManager.FREE
+module VM = (val (VarManager.mk "nil" classify_varname) : VarManager.S)
 
 module Elt =
   struct
@@ -75,5 +70,3 @@ module Elt =
 
 include Elt.Set
 include VM
-
-let point = unnamed

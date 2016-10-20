@@ -629,7 +629,7 @@ module Seq =
   struct
     type t = Sl_form.t * Cmd.t
 
-    let tagset_one = Tags.singleton Tags.point
+    let tagset_one = Tags.singleton Tags.anonymous
 		let tagpairs_one = Tagpairs.mk tagset_one
     let tags (f,cmd) = if !termination then Sl_form.tags f else tagset_one
     let tag_pairs f = Tagpairs.mk (tags f)

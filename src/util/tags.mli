@@ -25,5 +25,5 @@ end
 include Utilsigs.OrderedContainer with type elt = Elt.t
 include VarManager.I with type var := elt and type var_container = t
 
-val point : elt
+val anonymous : elt
 val to_ints : t -> Int.Set.t

@@ -41,7 +41,7 @@ let vars tpred = Sl_term.filter_vars (terms tpred)
 
 let tag_is_free (x, _) = Tags.is_free_var x
 let tag_is_exist (x, _) = Tags.is_exist_var x
-let is_tagged (x, _) = not (Tags.is_unnamed x)
+let is_tagged (x, _) = not (Tags.is_anonymous x)
 
 let to_string (tag, (pred, args)) =
   (Sl_predsym.to_string pred) ^
@@ -59,7 +59,7 @@ let parse ?(allow_tags=true) st =
   (Sl_predsym.parse >>= (fun pred ->
   (if allow_tags then option parse_tag else (return None)) >>= (fun opt_tag ->
   Tokens.parens (Tokens.comma_sep Sl_term.parse) << spaces >>= (fun arg_list ->
-  let tag = Option.dest Tags.unnamed Fun.id opt_tag in
+  let tag = Option.dest Tags.anonymous Fun.id opt_tag in
   return (tag, (pred, arg_list))))) <?> "ind") st
 
 let norm eqs (t, pred) = (t, Sl_pred.norm eqs pred)

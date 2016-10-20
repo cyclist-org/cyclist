@@ -141,18 +141,17 @@ let parse_symb s st = (spaces >> Tokens.skip_symbol s.str >> spaces) st
 let parse_tag st =
   (   Tokens.squares
         ((regexp (make_regexp "[a-z][0-9]*[']?") << spaces) >>=
-          (fun name ->
-            return (Tags.mk_var name (Tags.is_exist_name name))))
+          (fun name -> return (Tags.mk name)))
   <?> "Tag") st
 
 let tag_to_string v =
-  if Tags.is_unnamed v then "" else sqbracket (Tags.Elt.to_string v)
+  if Tags.is_anonymous v then "" else sqbracket (Tags.Elt.to_string v)
 
 let tag_to_melt v =
-  if Tags.is_unnamed v then Latex.empty
+  if Tags.is_anonymous v then Latex.empty
   else
   let name = Tags.Elt.to_string v in
-  let is_exist = Tags.is_exist_name name in
+  let is_exist = Tags.is_exist_var v in
   let min_len = if is_exist then 2 else 1 in
   let ltx = char_to_greek name.[0] in
   let ltx = if is_exist then ltx_prime ltx else ltx in

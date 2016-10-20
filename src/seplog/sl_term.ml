@@ -3,15 +3,14 @@ open Lib
 open Symbols
 open MParser
 
-include VarManager.Make(
-  struct
-    let map = Int.Hashmap.create 997
-    let inv_map = Strng.Hashmap.create 997
-    let max_var = ref 0
-    let min_var = ref 0
-    let default_varname exist = if exist then "v" else "u"
-    let unnamed_varname = "nil"
-  end)
+let classify_varname s =
+  let l = String.length s in 
+  assert (String.length s > 0);
+  if s="nil" then VarManager.ANONYMOUS else
+  if l > 1 && s.[l-1] = '\'' then VarManager.BOUND
+  else VarManager.FREE
+
+include (val (VarManager.mk "nil" classify_varname) : VarManager.S)
 
 (* BasicType signature *)
 type t = Var.t
@@ -24,8 +23,8 @@ let to_string = Var.to_string
 module Set = Var.Set
 module Map = Var.Map
 
-let nil = unnamed
-let is_nil = is_unnamed
+let nil = anonymous
+let is_nil = is_anonymous
 let is_var t = not (is_nil t) 
 
 let to_melt v =
@@ -34,9 +33,7 @@ let to_melt v =
       (if is_nil v then keyw_nil.melt else Latex.text (to_string v)))
 
 let parse st =
-  (   attempt (parse_symb keyw_nil >>$ nil <?> "nil")
-  <|> (parse_ident >>= (fun name -> return (mk_var name (is_exist_name name))))
-  <?> "Sl_term") st
+  ( (parse_ident >>= (fun name -> return (mk name))) <?> "Sl_term") st
 let of_string s =
   handle_reply (MParser.parse_string parse s ())
 
