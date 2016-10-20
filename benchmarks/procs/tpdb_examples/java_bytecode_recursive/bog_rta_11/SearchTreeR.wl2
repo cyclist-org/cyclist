@@ -1,0 +1,40 @@
+fields: left, right;
+
+proc insert(t)
+	precondition: t != nil * bt[a](t);
+	postcondition: t != nil * bt(t);
+{
+	if * then
+		l := t.left;
+		if l = nil then
+			new_t := new();
+			new_t.left := nil;
+			new_t.right := nil;
+			t.left := new_t;
+			assert(t != nil * bt(t))
+		else
+			insert(l)
+		fi
+	else
+		r := t.right;
+		if r = nil then
+			new_t := new();
+			new_t.left := nil;
+			new_t.right := nil;
+			t.right := new_t;
+			assert(t != nil * bt(t))
+		else
+			insert(r)
+		fi
+	fi
+}
+
+precondition: t != nil * bt(t) * ls2[a](elems, nil);
+postcondition: t != nil * bt(t);
+
+while elems != nil do
+	tmp := elems.left;
+	free(elems);
+	elems := tmp;
+	insert(t)
+od

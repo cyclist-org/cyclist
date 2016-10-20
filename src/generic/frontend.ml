@@ -10,31 +10,32 @@ module Make(Prover : Sigs.PROVER) =
     let minbound = ref 1
     let maxbound = ref 11
 
-    let speclist = ref [
-      ("-m", Arg.Set_int minbound, 
-        (": set starting depth for IDFS to <int>, default is " ^ 
-          (string_of_int !minbound)));
-      ("-M", Arg.Set_int maxbound, 
-        (": set maximum depth for IDFS to <int>, 0 disables it, default is " ^ 
-          (string_of_int !maxbound)));
-      ("-L", Arg.Int 
-        (fun n -> minbound := n ; maxbound := n), 
-        ": set both depths to <int>.");
-      ("-p", Arg.Set show_proof,": show proof");
-      ("-d", Arg.Set do_debug,": print debug messages");
-      ("-s", Arg.Set Stats.do_statistics,": print statistics");
-      ("-l", Arg.Set_string latex_path, ": write proofs to <file>");
-      ("-t", Arg.Set_int timeout, 
-        (": set timeout in seconds to <int>, 0 disables it, default is " ^ 
-          (string_of_int !timeout)));
-    ]
+    let speclist = 
+      ref (fun () -> [
+        ("-m", Arg.Set_int minbound, 
+          (": set starting depth for IDFS to <int>, default is " ^ 
+            (string_of_int !minbound)));
+        ("-M", Arg.Set_int maxbound, 
+          (": set maximum depth for IDFS to <int>, 0 disables it, default is " ^ 
+            (string_of_int !maxbound)));
+        ("-L", Arg.Int 
+          (fun n -> minbound := n ; maxbound := n), 
+          ": set both depths to <int>.");
+        ("-p", Arg.Set show_proof,": show proof");
+        ("-d", Arg.Set do_debug,": print debug messages");
+        ("-s", Arg.Set Stats.do_statistics,": print statistics");
+        ("-l", Arg.Set_string latex_path, ": write proofs to <file>");
+        ("-t", Arg.Set_int timeout, 
+          (": set timeout in seconds to <int>, 0 disables it, default is " ^ 
+            (string_of_int !timeout)));
+      ])
 
     let usage = 
-      ref ("usage: " ^ Sys.argv.(0) ^ " [-p/d/s] [-l <file>] [-t/m/M/L <int>] <sequent>")
+      ref ("usage: " ^ Sys.argv.(0) ^ " [-p/d/s] [-l <file>] [-t/m/M/L <int>]")
 
-    let die msg =
+    let die msg spec_list usage =
       print_endline msg ;
-      print_endline (Arg.usage_string !speclist !usage) ;
+      print_endline (Arg.usage_string spec_list usage) ;
       exit 1
 
     let prove_seq ax r seq =

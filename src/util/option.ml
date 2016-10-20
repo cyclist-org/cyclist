@@ -27,6 +27,14 @@ let dest none some = function
   | None -> none
   | Some x -> some x
 
+let dest_lazily none some = function
+  | None -> none ()
+  | Some x -> some x
+
+let pred_dest p = function
+  | None -> false
+  | Some x -> p x
+
 let flatten = function
   | Some (Some x) -> Some x
   | _ -> None

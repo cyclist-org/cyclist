@@ -1,0 +1,11 @@
+fields: left, right;
+precondition: btseg(y, x) * bt[a](x);
+postcondition: x=nil * bt(y); 
+while x!=nil do
+  if * then
+    x := x.left 
+  else 
+    x := x.right
+  fi ;
+  assert([b'] < [a] : btseg(y, x) * bt[b'](x))
+od

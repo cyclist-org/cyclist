@@ -12,8 +12,17 @@ external set_progress_pair : int -> int -> int -> int -> unit = "set_progress_pa
 external check_soundness : unit -> bool = "check_soundness" ;;
 external set_initial_vertex : int -> unit = "set_initial_vertex" ;;
 
+module IntPairSet = Treeset.Make(Pair.Make(Int)(Int))
+
+(* computes the composition of two sets of pairs *)
+let compose t1 t2 =
+  IntPairSet.fold
+    (fun (x,y) a ->
+      IntPairSet.fold (fun (w,z) b -> if y=w then IntPairSet.add (x,z) b else b) t2 a)
+    t1 IntPairSet.empty
+
 type abstract_node =
-  Tags.t * ((int * Tagpairs.t * Tagpairs.t) list)
+  Int.Set.t * ((int * IntPairSet.t * IntPairSet.t) list)
 type t = abstract_node Int.Map.t
 
 let get_tags n = fst n
@@ -24,8 +33,19 @@ let in_children child n = Blist.exists (fun (i,_,_) -> i=child) (get_subg n)
 let index_of_child child (_,subg) = 
   Blist.find_index (fun (i,_,_) -> i=child) subg
 
-let mk_abs_node tags subg = (tags, subg)
-
+let mk_abs_node tags subg = 
+  let tags = Tags.to_ints tags in
+  let subg = 
+    List.map 
+      (fun (i, tps, tps') -> 
+        let (tps, tps') = 
+          Pair.map 
+          (Tagpairs.map_to IntPairSet.add IntPairSet.empty (Pair.map Tags.Elt.to_int)) 
+          (tps, tps') in
+        (i, tps, tps')) 
+      subg in 
+  (tags, subg)
+  
 let build_proof nodes =
   Int.Map.of_list
     (List.map
@@ -33,9 +53,9 @@ let build_proof nodes =
         let premises = 
           List.map
             (fun (target, allpairs, progpairs) ->
-              (target, Tagpairs.of_list allpairs, Tagpairs.of_list progpairs))
+              (target, IntPairSet.of_list allpairs, IntPairSet.of_list progpairs))
             premises in
-        (id, mk_abs_node (Tags.of_list tags) premises))
+        (id, ((Int.Set.of_list tags), premises)))
       nodes)
 
 
@@ -57,24 +77,24 @@ let fathers_grandchild prf idx n =
 
 let pp_proof_node fmt n =
   let aux fmt (tags, subg) =
-    Format.printf "tags=%a " Tags.pp tags ; 
+    Format.fprintf fmt "tags=%a " Int.Set.pp tags ; 
     if subg=[] then Format.pp_print_string fmt "leaf" else
     Blist.pp pp_semicolonsp 
       (fun fmt (i,tv,tp) ->
-        Format.printf 
+        Format.fprintf fmt 
           "(goal=%a, valid=%a, prog=%a)"
           Format.pp_print_int i
-          Tagpairs.pp tv
-          Tagpairs.pp tp
+          IntPairSet.pp tv
+          IntPairSet.pp tp
       ) 
       fmt
-      subg in      
+      subg in
   Format.fprintf fmt "@[%a@]" aux n
 
 let pp fmt prf =
   Format.open_vbox 0;
   Int.Map.iter
-    (fun idx n -> Format.fprintf fmt "%i: %a@," idx pp_proof_node n) prf ;
+    (fun idx n -> Format.fprintf fmt "%i: %a@\n" idx pp_proof_node n) prf ;
   Format.close_box ()
 
 
@@ -110,11 +130,11 @@ let fuse_single_nodes prf' =
     let newsubg = 
       Blist.replace_nth 
         (grand_child, 
-        Tagpairs.compose par_tv tv,
-        Tagpairs.union_of_list
-          [Tagpairs.compose par_tp tp;
-          Tagpairs.compose par_tv tp;
-          Tagpairs.compose par_tp tv]
+        compose par_tv tv,
+        IntPairSet.union_of_list
+          [ compose par_tp tp;
+            compose par_tv tp;
+            compose par_tp tv; ]
         )
         pos par_subg in
     prf :=
@@ -144,13 +164,13 @@ let minimize_abs_proof prf = fuse_single_nodes (remove_dead_nodes prf)
 let check_proof p =
   Stats.MC.call ();
   let create_tags i n =
-    Tags.iter (tag_vertex i) (get_tags n) in
+    Int.Set.iter (tag_vertex i) (get_tags n) in
   let create_succs i (_, l) = 
     Blist.iter (fun (j,_,_) -> set_successor i j) l in
   let create_trace_pairs i (_, l) =
     let do_tag_transitions (j,tvs,tps) =
-      Tagpairs.iter (fun (k,m) -> set_trace_pair i j k m) tvs ;
-      Tagpairs.iter (fun (k,m) -> set_progress_pair i j k m) tps in
+      IntPairSet.iter (fun (k,m) -> set_trace_pair i j k m) tvs ;
+      IntPairSet.iter (fun (k,m) -> set_progress_pair i j k m) tps in
     Blist.iter do_tag_transitions l in
   let size = Int.Map.cardinal p in
   let log2size = 1 + int_of_float (ceil ((log (float_of_int size)) /. (log 2.0))) in
@@ -171,17 +191,21 @@ let check_proof p =
 
 
 let valid prf = 
+  let projectl = IntPairSet.map_to Int.Set.add Int.Set.empty Pair.left in
+  let projectr = IntPairSet.map_to Int.Set.add Int.Set.empty Pair.right in
   Int.Map.mem 0 prf &&
   Int.Map.for_all 
     (fun _ n -> 
       Blist.for_all (fun (i,tv,tp) -> 
         Int.Map.mem i prf &&
-        Tagpairs.subset tp tv &&
-        Tags.subset (Tagpairs.projectl tv) (get_tags n) &&
-        (* Tags.subset (Tagpairs.projectl tp) (get_tags n) && *) (* trivially true whenever tp a subset of tv *)
-        Tags.subset (Tagpairs.projectr tv) (get_tags (Int.Map.find i prf)) 
-        (*   &&                                                                 *)  (* trivially true whenever tp a subset of tv *)
-        (* Tags.subset (Tagpairs.projectr tp) (get_tags (Int.Map.find i prf))  *)
+        IntPairSet.subset tp tv &&
+        Int.Set.subset (projectl tv) (get_tags n) &&
+        (* Int.Set.subset (projectl tp) (get_tags n) &&                          *) 
+        (* trivially true, given the previous clause, whenever tp a subset of tv *)
+        Int.Set.subset (projectr tv) (get_tags (Int.Map.find i prf)) 
+        (*   &&  *)
+        (* Int.Set.subset (projectr tp) (get_tags (Int.Map.find i prf))          *)
+        (* trivially true, given the previous clause, whenever tp a subset of tv *)
         )
      (get_subg n))
     prf
@@ -205,10 +229,13 @@ let check_proof =
         assert false
       end in
     try
+      debug (fun _ -> mk_to_string pp prf) ;
       Stats.MCCache.call () ;
       let r = CheckCache.find ccache aprf in
       Stats.MCCache.end_call () ;
       Stats.MCCache.hit () ; 
+      let () = debug (fun _ -> "Found soundness result in the cache: " ^
+        (if r then "OK" else "NOT OK")) in
       r
     with Not_found ->
       Stats.MCCache.end_call () ;

@@ -8,7 +8,7 @@ type abstract_node
     progressing tag transitions. *) 
 
 val mk_abs_node :   
-  Tags.t -> ((int * Tagpairs.t* Tagpairs.t ) list) -> 
+  Tags.t -> ((int * Tagpairs.t * Tagpairs.t) list) -> 
     abstract_node 
 (** Constructor for nodes. *)
 

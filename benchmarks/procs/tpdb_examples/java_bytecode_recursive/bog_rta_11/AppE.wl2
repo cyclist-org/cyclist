@@ -1,0 +1,27 @@
+fields: next;
+
+proc appE(x, y)
+	precondition: x != nil * list[a](x) * list[b](y);
+	postcondition: list(x);
+{
+	tail := x.next;
+	if tail = nil then
+		if y = nil then
+			return
+		else
+			tail := new();
+			tail.next := nil;
+			x.next := tail
+		fi;
+		new_y := y.next;
+		free(y);
+		y := new_y;
+		assert([c'] < [b] : tail != nil * x->tail * list[d'](tail) * list[c'](y))
+	fi;
+	appE(tail, y)
+}
+
+precondition: x != nil * list[a](x) * list[b](y);
+postcondition: list(x);
+
+appE(x, y)

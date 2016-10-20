@@ -10,6 +10,9 @@ module Make(T: Utilsigs.BasicType) : Utilsigs.OrderedContainer with type elt = T
 
     let map_to oadd oempty f s =
       fold (fun el s' -> oadd (f el) s') s oempty
+      
+    let opt_map_to oadd oempty f s =
+      map_to (Option.dest Fun.id oadd) oempty f s
 
     let map_to_list f s =
       Blist.rev (map_to Blist.cons [] f s)
@@ -77,5 +80,18 @@ module Make(T: Utilsigs.BasicType) : Utilsigs.OrderedContainer with type elt = T
           | n when n < 0 -> disjoint xs (y::ys)
           | _ -> disjoint (x::xs) ys in
       disjoint xs ys
+
+    include Unification.MakeUnifier(
+      struct
+        type t = Set.Make(T).t
+        type elt = T.t
+        let empty = empty
+        let is_empty = is_empty
+        let equal = equal
+        let add = add
+        let choose = choose
+        let remove = remove
+        let find_map = find_map
+      end)
 
   end

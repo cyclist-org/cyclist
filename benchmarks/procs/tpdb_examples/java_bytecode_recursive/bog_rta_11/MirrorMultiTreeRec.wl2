@@ -1,0 +1,27 @@
+fields: across, down;
+
+proc mirror(x)
+	precondition: x->w',l * treels[a](l, nil);
+	postcondition: 
+		x->w',l * l = nil 
+			\/
+		x->w',v' * treels(v',l) * l->nil,z' * tree(z');
+{
+	list := x.down;
+	if list = nil then return fi;
+	next := list.across;
+	if next != nil then
+		x.down := next;
+		mirror(x);
+		list.across := nil;
+		next.across := list
+	fi;
+	assert(x->w',v' * treels(v',l) * l->nil,z' * tree(z'))
+}
+
+precondition: tree(t);
+postcondition: tree(t);
+
+if t = nil then return fi;
+mirror(t);
+assert(t->w',children' * treels(children', nil))

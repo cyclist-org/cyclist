@@ -1,6 +1,0 @@
-fields: next;
-precondition: ls(x,nil); 
-postcondition: spTrue();
-while x!=nil do
-  x := x.next
-od

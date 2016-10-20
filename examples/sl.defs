@@ -3,6 +3,11 @@ RList {
 	RList(x,x') * x'->y => RList(x,y) 
 } ;
 
+EvenList {
+	x=y => EvenList(x,y) |
+	x!=y * x->v' * v'->w' * EvenList(w',y) => EvenList(x,y)
+} ;
+
 List { 
 	x->y => List(x,y) | 
 	x->x' * List(x',y) => List(x,y) 
@@ -37,6 +42,24 @@ BSLL {
 	BSLL(x,x') * x'->y',y => BSLL(x,y) 
 } ;
 
+FunQueue {
+	x->y',front' * SLL(front', nil) * y'->v',back' * SLL(back',nil) => FunQueue(x)
+} ;
+
+EmptyFunQueue {
+	x->y',nil * y'->v',nil => EmptyFunQueue(x)
+} ;
+
+funQueueLists {
+	front = nil * back = nil => funQueueLists(front, back) |
+	front = nil * back->next',v' * funQueueLists(front, next') => funQueueLists(front, back) |
+	front->next',v' * funQueueLists(next', back) => funQueueLists(front, back)
+} ;
+
+funQueue {
+	q->x',front * x'->v',back * funQueueLists(front, back) => funQueue(q, front, back)
+} ;
+
 BinTree { 
 	emp => BinTree(x) | 
 	x->y',x' * BinTree(y') * BinTree(x') => BinTree(x) 
@@ -65,8 +88,23 @@ BinPath {
 } ;
 
 ls { 
-    x=y => ls(x,y) | 
-    x!=y * x->x' * ls(x',y) => ls(x,y) 
+	x=y => ls(x,y) | 
+	x!=y * x->x' * ls(x',y) => ls(x,y) 
+} ;
+
+ls2 {
+	x=y => ls2(x,y) | 
+	x!=y * x->x',v' * ls2(x',y) => ls2(x,y) 
+} ;
+
+list {
+	x=nil => list(x) |
+	x->y' * list(y') => list(x)
+} ;
+
+rls {
+	x=y => rls(x,y) |
+	x!=y * rls(x,z') * z'->y => rls(x,y)
 } ;
 
 bt {
@@ -74,23 +112,67 @@ bt {
 	x->y',x' * bt(y') * bt(x') => bt(x)
 } ;
 
+btseg {
+	x=y => btseg(x,y) |
+	x->y',z' * bt(y') * btseg(z',y) => btseg(x,y) |
+	x->y',z' * btseg(y',y) * bt(z') => btseg(x,y)
+} ;
+
 cls {
-        x->y' * ls(y',x) => cls(x) 
+	x->y' * ls(y',x) => cls(x) 
 } ;
 
 dls { 
-        x=y => dls(x,y) | 
-        x!=y * x-> y',x' * dls(x',y) => dls(x,y) 
+	x=y => dls(x,y) | 
+	x!=y * x-> y',x' * dls(x',y) => dls(x,y) 
 } ;
 
 lsls {
-  x=nil => lsls(x) |
-  x->y',x' * lsls(y') * dls(x',nil) => lsls(x)
+	x=nil => lsls(x) |
+	x->y',x' * lsls(y') * dls(x',nil) => lsls(x)
 } ;
 
 lsbt {
-  x=nil => lsbt(x) |
-  x->y',x' * lsbt(x') * bt(y') => lsbt(x)
+	x=nil => lsbt(x) |
+	x->y',x' * lsbt(x') * bt(y') => lsbt(x)
+} ;
+
+EmptyQueue {
+	x->nil,nil => EmptyQueue(x)
+} ;
+
+Queue {
+	x->nil,nil => Queue(x) |
+	x->head',tail' * ls2(head',tail') * tail'->nil,nil => Queue(x)
+} ;
+
+uf {
+	z'=y * ls(x,z') * z'->y => uf(x,y)
+} ;
+
+ls_set {
+	emp => ls_set(x) |
+	y'!=nil * ls(y',x) * ls_set(x) => ls_set(x)
+} ;
+
+tree {
+	x = nil => tree(x) |
+	x->v',l' * treels(l', nil) => tree(x)
+} ;
+
+treels {
+	x = y => treels(x,y) |
+	x != y * x->n',t' * treels(n',y) * tree(t') => treels(x,y)
+} ;
+
+duptree {
+	x = nil => duptree(x) |
+	x->v',l' * duptreels(l',nil) => duptree(x)
+} ;
+
+duptreels {
+	x = y => duptreels(x,y) |
+	x != y * x->n',t' * n'->m',t' * duptreels(m',y) * duptree(t') => duptreels(x,y)
 } ;
 
 spTrue {

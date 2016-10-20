@@ -1,0 +1,55 @@
+fields: parent;
+
+proc makeSet(x)
+  precondition: x->w';
+  postcondition: p' = x * uf(x,p');
+{
+  x.parent := x
+}
+
+proc find(x, ret)
+  precondition: uf[a](x,p) * ret->w';
+  postcondition: uf(x,p) * ret->p;
+{
+  par := x.parent;
+  if par = x then
+    ret.parent := x
+  else
+    find(par, ret);
+    assert(uf(x,p) * ret->p)
+  fi
+}
+
+proc union(x, y)
+  precondition: uf(x,px) * uf(y,py);
+  postcondition: ls(x, py) * uf(y,py);
+{
+  ptr := new();
+  find(x, ptr);
+  x_root := ptr.parent;
+  
+  find(y, ptr);
+  y_root := ptr.parent;
+  
+  x_root.parent := y_root;
+  
+  free(ptr);
+  
+  assert(ls(x, py) * uf(y,py))
+}
+
+
+precondition: list[a](x);
+postcondition: ls_set(y) * uf(y,y);
+
+y := new();
+makeSet(y);
+
+assert(list[a](x) * ls_set(y) * uf(y,y));
+while x != nil do
+  next := x.parent;
+  makeSet(x);
+  union(x, y);
+  x:= next;
+  assert([b'] < [a] : list[b'](x) * ls_set(y) * uf(y,y))
+od

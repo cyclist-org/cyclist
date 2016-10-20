@@ -2,6 +2,10 @@
 
 val mk : 'a -> 'b -> 'a * 'b
 (** Pair constructor. *)
+val left : 'a * 'b -> 'a
+(** Pair destructor. *)
+val right : 'a * 'b -> 'b
+(** Pair destructor. *)
 val map : ('a -> 'b) -> 'a * 'a -> 'b * 'b
 (** Apply a function to both members individually and put results in a new pair. *)
 val apply : ('a -> 'b -> 'c) -> 'a * 'b -> 'c 
@@ -14,6 +18,11 @@ val swap : 'a * 'b -> 'b * 'a
 (** Swap around the members of a pair. *)
 val fold : ('a -> 'b -> 'b) -> 'a * 'a -> 'b -> 'b
 (** Fold a function over the members of a pair. *)
+
+val both : bool * bool -> bool
+(** Alias for [conj] *)
+val either : bool * bool -> bool
+(** Alias for [disj] *)
 
 module Make(T: Utilsigs.BasicType) (S: Utilsigs.BasicType) :
   Utilsigs.BasicType with type t = T.t * S.t

@@ -1,0 +1,109 @@
+fields: next, datum;
+
+proc create(x)
+  precondition: x->a',b';
+  postcondition: funQueue(x, front', back');
+{
+  x.datum := nil;
+  next := new();
+  next.datum := nil;
+  x.next := next
+}
+
+proc enq(x)
+	precondition:  funQueue(x, f, b);
+	postcondition: funQueue(x, f, b');
+{
+	y := x.next;
+	back := y.datum;
+	new_hd := new();
+	new_hd.next := back;
+	y.datum := new_hd;
+	assert(funQueue(x, f, b'))
+}
+
+proc reverse(x)
+precondition: x->a',l * SLL[a](l, nil);
+postcondition: [b'] < [a] : l = nil * x->a',l \/ x->a',v' * SLL[b'](v',l) * l->nil,w';
+{
+  list := x.datum;
+  
+  if list != nil then
+  
+    tail := list.next;
+    
+    if tail != nil then
+    
+      x.datum := tail;
+      reverse(x);
+      list.next := nil;
+      tail.next := list;
+      
+      assert([b'] < [c'], [c'] < [a] : nil!=x * nil!=l * nil!=tail * x!=l * x!=tail * l!=tail * x->a',v' * l->nil,w' * tail->l,x' * SLL[b'](v', tail));
+      assert([b'] < [a] : x->a',v' * SLL[b'](v',l) * l->nil,w')
+    
+    fi
+  
+  fi
+}
+
+proc deq(x)
+	precondition:  funQueue[a](x, front', back');
+	postcondition: 
+	  [b'] < [a] : 
+	    front'=nil * back'=nil * funQueue(x, front', back') 
+	      \/
+	    funQueue[b'](x, front', back');
+{
+	front := x.datum;
+	
+	if front != nil then
+	
+		tmp := front.next;
+		free(front);
+		x.datum := tmp
+
+	else
+	
+		y := x.next;
+		back := y.datum;
+		
+		if back != nil then
+		
+			assert([b'] < [a] : x->y,front * y->v',back * front=nil * back!=nil * SLL[b'](back,nil));
+			reverse(y);
+			assert(x->y,front * y->v',back' * front=nil * back'!=nil * SLL[a](back',nil));
+			front := y.datum;
+			new_front := front.next;
+			x.datum := new_front;
+			y.datum := nil;
+			free(front)
+	
+		fi;
+		
+		assert([b'] < [a] : front'=nil * back'=nil * funQueue(x, front', back') \/ funQueue[b'](x, front', back'))
+	
+	fi
+}
+
+precondition: emp;
+postcondition: funQueue(q, nil, nil);
+
+q := new();
+
+create(q);
+enq(q);
+
+is_empty := q.datum;
+if is_empty = nil then
+  back := q.next;
+  is_empty := back.datum
+fi;
+while is_empty != nil do
+	deq(q);
+  is_empty := q.datum;
+  if is_empty = nil then
+    back := q.next;
+    is_empty := back.datum
+  fi
+od

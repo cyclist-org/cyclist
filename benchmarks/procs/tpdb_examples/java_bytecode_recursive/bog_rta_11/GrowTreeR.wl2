@@ -1,0 +1,42 @@
+fields: across, down;
+
+proc growTree(t)
+	precondition: tree[a](t);
+	postcondition: tree(t);
+{
+	if t = nil then
+		return
+	else
+		children := t.down;
+		if children = nil then
+			new_t := new();
+			new_t.down := nil;
+			children := new();
+			children.down := new_t;
+			children.across := nil;
+			t.down := children;
+			assert(tree(t))
+		else
+			growList(children)
+		fi
+	fi
+}
+
+proc growList(l)
+	precondition: treels[a](l, nil);
+	postcondition: treels(l, nil);
+{
+	if l = nil then
+		return
+	else
+		t := l.down;
+		next := l.across;
+		growTree(t);
+		growList(next)
+	fi
+}
+
+precondition: tree(t);
+postcondition: tree(t);
+
+growTree(t)

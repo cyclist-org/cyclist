@@ -33,6 +33,11 @@ module type OrderedContainer =
     (** [map_to add empty f set] converts every element of [set] using [f], 
         and then folds over the new collection of elements using as starting
         value [empty] and folding operation [add]. *)
+    val opt_map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b option) -> t -> 'a
+    (** [opt_map_to add empty f set] converts every element of [set] using [f], 
+        and then folds over the elements of the new collection which are Some
+        using as starting value [empty] and folding operation [add]. That is,
+        it is equivalent to calling [map_to (Option.dest Fun.id add) empty f set]. *)
     val map_to_list : (elt -> 'a) -> t -> 'a list
     (** [map_to_list f set] applies [f] to every element and constructs a list
         of results.  The list is ordered just like the container. *)
@@ -72,6 +77,14 @@ module type OrderedContainer =
     (** Remove first element satisfying the given predicate. *)
     val disjoint : t -> t -> bool
     (** Decide if there are no common elements. *)
+    val mk_unifier : bool -> bool -> ('a, 'b, elt) Unification.cps_unifier
+          -> ('a, 'b, t) Unification.cps_unifier
+    (** [mk_unifier total linear elt_unifier] produces a unifier [u] for a set of elements
+        using the unifier [elt_unifier] for a single element. If [total] is set to true
+        then the unifier should ensure that if [u] succeeds in unifying a set [xs] with a
+        set [ys] then all elements of [ys] match with an element of [xs]; if [linear] is
+        set to true, then [u] must additionally ensure that in calculating a unifying
+        subsitution no element of [ys] is used more than once. *)
   end
 (** A (persistent) ordered container, generalising the standard [Set] container. *)
 

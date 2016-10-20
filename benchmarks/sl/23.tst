@@ -1,0 +1,5 @@
+RList(x,y) |- List(x,y)
+RList[a](x,y) |- List[a](x,y)
+RList[a](x,y) |- [a] < [b'] : List[b'](x,y)
+[a] < [b] : RList[a](x,y) |- List[b](x,y)
+RList[a](x,y) |- [b'] <= [a] : List[b'](x,y)

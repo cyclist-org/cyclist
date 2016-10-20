@@ -1,0 +1,59 @@
+fields: next, data;
+
+proc copy(l, ret)
+	precondition: ls2[a](l, nil) * ret->v',w';
+	postcondition: ls2[a](l, nil) * ret->v',w' * ls2[a](w', nil);
+{
+	if l = nil then
+		ret.data := nil
+	else
+		datum := l.data;
+		tl := l.next;
+		copy(tl, ret);
+		new_hd := new();
+		new_tl := ret.data;
+		new_hd.next := new_tl;
+		new_hd.data := datum;
+		ret.data := new_hd
+	fi
+}
+
+proc sort(x, cnt)
+	precondition: ls2[a](x, nil) * ls2[b](cnt, nil);
+	postcondition: ls2[a](x, nil);
+{
+	if cnt != nil then
+		bubble(x);
+		new_cnt := cnt.next;
+		free(cnt);
+		sort(x, new_cnt)
+	fi
+}
+
+proc bubble(x)
+	precondition: ls2[a](x, nil);
+	postcondition: ls2[a](x, nil);
+{
+	if x != nil then
+		tail := x.next;
+		if tail != nil then
+			dat1 := x.data;
+			dat2 := tail.data;
+			if * then
+				x.data := dat2;
+				tail.data := dat1
+			fi;
+			bubble(tail)
+		fi
+	fi
+}
+
+precondition: ls2[a](l, nil);
+postcondition: ls2[a](l, nil);
+
+ptr := new();
+copy(l, ptr);
+cnt := ptr.data;
+sort(l, cnt);
+free(ptr)
+

@@ -1,3 +1,8 @@
+open Lib
+open MParser
+open MParser_PCRE
+module Tokens = MParser_PCRE.Tokens
+
 let ltx_mk_math l = Latex.mode Latex.M l
 let ltx_mk_text l = Latex.mode Latex.T l
 let ltx_math s = ltx_mk_math (Latex.text s)
@@ -17,6 +22,8 @@ let mk_keyw s =
     melt=ltx_mk_math (Latex.texttt (Latex.text s))
   }
 
+let symb_nullstr = { str=""; sep=""; melt=Latex.empty }
+
 let symb_false = make_symb "F" Latex.bot
 let symb_true = make_symb "T" Latex.top
 let symb_or = make_symb "\\/" Latex.lor_
@@ -27,6 +34,8 @@ let symb_star = make_symb "*" Latex.ast
 let symb_pointsto = make_symb "->" Latex.mapsto
 let symb_eq = make_symb "=" (ltx_math " = ")
 let symb_deq = make_symb "!=" Latex.neq
+let symb_lt = make_symb "<" (ltx_math "<")
+let symb_leq = make_symb "<=" Latex.leq
 let symb_lp = make_symb "(" (Latex.text "(")
 let symb_rp = make_symb ")" (Latex.text ")")
 let symb_lb = make_symb "{" (Latex.text "\\left\\{")
@@ -70,6 +79,7 @@ let keyw_fi = mk_keyw "fi"
 let keyw_then = mk_keyw "then"
 let keyw_else = mk_keyw "else"
 let keyw_stop = mk_keyw "stop"
+let keyw_return = mk_keyw "return"
 let keyw_nil = mk_keyw "nil"
 let keyw_fields = mk_keyw "fields"
 let keyw_judgement = mk_keyw "judgement"
@@ -81,23 +91,75 @@ let keyw_skip = mk_keyw "skip"
 let keyw_while = mk_keyw "while"
 let keyw_do = mk_keyw "do"
 let keyw_od = mk_keyw "od"
+let keyw_assert = mk_keyw "assert"
 
 let ltx_paren l = Latex.concat [symb_lp.melt; l; symb_rp.melt]
 let ltx_comma l = Latex.concat (Latex.list_insert symb_comma.melt l)
 let ltx_star l = Latex.concat (Latex.list_insert symb_star.melt l)
 let ltx_math_space = Latex.text "\\;"
+let ltx_prime l = Latex.concat [l; (Latex.text "'")]
 
-open MParser
-let parse_symb s st = ( spaces >> MParser_PCRE.Tokens.skip_symbol s.str >> spaces ) st
+(** Convert a (lowercase) roman character to a corresponding (lowercase) greek
+    character according to the mapping used by the qsymbols Latex package *)
+let char_to_greek = function
+  | 'a' -> Latex.alpha
+  | 'b' -> Latex.beta
+  | 'c' -> Latex.chi
+  | 'd' -> Latex.delta
+  | 'e' -> Latex.epsilon
+  | 'f' -> Latex.phi
+  | 'g' -> Latex.gamma
+  | 'h' -> Latex.eta
+  | 'i' -> Latex.iota
+  | 'j' -> Latex.psi
+  | 'k' -> Latex.kappa
+  | 'l' -> Latex.lambda
+  | 'm' -> Latex.mu
+  | 'n' -> Latex.nu
+  | 'o' -> ltx_math "o"
+  | 'p' -> Latex.pi
+  | 'q' -> Latex.theta
+  | 'r' -> Latex.rho
+  | 's' -> Latex.sigma
+  | 't' -> Latex.tau
+  | 'u' -> Latex.varrho
+  | 'v' -> Latex.varphi
+  | 'w' -> Latex.omega
+  | 'x' -> Latex.xi
+  | 'y' -> Latex.upsilon
+  | 'z' -> Latex.zeta
+  | _ -> raise (Invalid_argument ("Expecting a lowercase roman character"))
 
-let max_tag = ref 0
-let upd_tag tag = 
-  max_tag := max !max_tag tag ; tag
-let next_tag () =
-  incr max_tag ; !max_tag 
+let parse_symb s st = (spaces >> Tokens.skip_symbol s.str >> spaces) st
 
-let parse_tag st = 
-  ( parse_symb symb_caret >> 
-    MParser_PCRE.Tokens.integer |>> (fun tag -> assert (tag>0) ; tag) <?> "tag") st
+(* let max_tag = ref 0                 *)
+(* let upd_tag tag =                   *)
+(*   max_tag := max !max_tag tag ; tag *)
+(* let next_tag () =                   *)
+(*   incr max_tag ; !max_tag           *)
 
-module Tokens = MParser_PCRE.Tokens
+let parse_tag st =
+  (   Tokens.squares
+        ((regexp (make_regexp "[a-z][0-9]*[']?") << spaces) >>=
+          (fun name ->
+            return (Tags.mk_var name (Tags.is_exist_name name))))
+  <?> "Tag") st
+
+let tag_to_string v =
+  if Tags.is_unnamed v then "" else sqbracket (Tags.Elt.to_string v)
+
+let tag_to_melt v =
+  if Tags.is_unnamed v then Latex.empty
+  else
+  let name = Tags.Elt.to_string v in
+  let is_exist = Tags.is_exist_name name in
+  let min_len = if is_exist then 2 else 1 in
+  let ltx = char_to_greek name.[0] in
+  let ltx = if is_exist then ltx_prime ltx else ltx in
+  let ltx =
+    if (String.length name) = min_len then ltx
+    else
+      Latex.index
+        ltx
+        (Latex.text (String.sub name 1 ((String.length name)-min_len))) in
+  ltx_mk_math ltx

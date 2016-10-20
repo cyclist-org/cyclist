@@ -1,0 +1,31 @@
+fields: across, down;
+
+proc dupTree(t)
+	precondition: tree[a](t);
+	postcondition: duptree(t);
+{
+	if t != nil then
+		children := t.down;
+		dupList(children)
+	fi
+}
+
+proc dupList(l)
+	precondition: treels[a](l,nil);
+	postcondition: duptreels(l,nil);
+{
+	if l = nil then return fi;
+	t := l.down;
+	next := l.across;
+	dupTree(t);
+	new_l := new();
+	new_l.down := t;
+	new_l.across := next;
+	l.across := new_l;
+	dupList(next)
+}
+
+precondition: tree(t);
+postcondition: duptree(t);
+
+dupTree(t)

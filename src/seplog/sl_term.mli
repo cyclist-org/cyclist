@@ -54,147 +54,47 @@ val fresh_evars : Set.t -> int -> t list
     of length [n] all of which are fresh in [s]. *)
 
 
-(* to allow reference from within Subst *)
-type term_t = t
+module Subst : VarManager.SubstSig
+  with type t = t Map.t
+  with type var = t
+  with type var_container = Set.t
+(** Substitutions over terms *)
 
-module type SubstSig =
-sig
-  type t = term_t Map.t
-  (** The type of a substitution is a map from terms to terms. *)
+val unify : ?update_check: (Subst.t * Subst.t) Fun.predicate -> 
+  (Subst.t, 'a, t) Unification.cps_unifier 
+(** Unifies two terms by producing a substitution to act on the first term *)
   
-  val empty : t
-  (** The empty substitution, which has no effect when applied. *)
-
-  val singleton : term_t -> term_t -> t
-  (** Constructor for a substitution mapping one variable to a term. *)
-  
-  val of_list : (term_t * term_t) list -> t
-  
-  val avoid : Set.t -> Set.t -> t
-  (** [avoid vars subvars] 
-      returns a substitution that takes all variables in [subvars] to  
-      variables fresh in [vars U subvars], respecting existential   
-      quantification / free variables. *)
-  
-  val pp : Format.formatter -> t -> unit
-  (** Pretty printer. *)
-
-  val to_string : t -> string
-  (** Convert a substitution to a string *)
-  
-  type check = t -> term_t -> term_t -> bool
-  (** The type of functions that check the validity of a single substitution pair
-      within the context of the whole substitution to which it is being added. *)
-  
-  val trivial_check : check
-  (** The check that is always true. *)
-
-  val basic_lhs_down_check : check
-  (** When used as [subst_check] in the call [Sl_heap.unify subst_check f f'], 
-      ensures that the generated substitution, when applied to [f], produces a
-      formula which is subsumed by [f'] *)
-  val avoids_replacing_check : ?inverse:bool -> Set.t -> check
-  (** A substitution check which prevents replacements of variables within the
-      given set of terms *)
-  val combine_checks : check list -> check
-  (** Combinator which takes a list of substitution pair check functions and
-      combines them into a single check function *)
-end
-
-module Subst : SubstSig
-(** A substitution is a map from terms to terms but with some restrictions:
-- Only variables can be in the domain of the map.
-- An existentially quantified variable can only be mapped to an existential one,
-or [nil].
-*)
-
-val subst : Subst.t -> t -> t
-(** Apply a substitution on the given term. *)
-
-val partition_subst : Subst.t -> (Subst.t * Subst.t)
-(** [partition_subst theta] will partition [theta] into ([theta_1], [theta_2])
-    such that [theta_1] contains all and only the mappings in [theta] from 
-    a universally quantified (i.e. free) variable to either [nil] or another
-    free variable; that is [theta_1] is the part of [theta] which is a proper
-    (proof-theoretic) substitution.
-*)
-
-val mk_ex_subst : Set.t -> Set.t -> Subst.t
-
-module type UnifierSig =
-  sig
-    type state = Subst.t * Tagpairs.t
-    (** State maintained by unifiers. *)
-    val empty_state : state
-    (** The unifier state consisting of the empty substitution and the empty set of
-        tag pairs *)
-    val pp_state : Format.formatter -> state -> unit
-  
-    type continuation = state -> state option 
-    val trivial_continuation : continuation
-    val basic_lhs_down_verifier : continuation
-    (** A continutation generated from the [basic_lhs_down_check] substitution 
-        check *)
-  
-    type 'a t = 
-      ?sub_check:Subst.check ->
-        ?cont:continuation ->
-          ?init_state:state -> 'a -> 'a ->
-            state option
-  
-    val backtrack : 
-      'a t -> 
-        ?sub_check:Subst.check -> ?cont:continuation -> ?init_state:state -> 
-          'a -> 'a -> state list
-    (** Wrap a unifier into a function that always backtracks, collecting all 
-        states such that [cont state] is not [None] and returning that list. *)
-  
-    type state_check = state -> bool
-    (** The type of functions that check the validity of a whole unifier state *)
-  
-    val mk_assert_check : state_check -> state_check
-    (** Takes a state check and wraps it in an assert *)
-  
-    val mk_verifier : state_check -> continuation
-    (** Takes a state checking function and converts it into a continuation which
-        returns None if the check fails *)
-  
-    val combine_state_checks : state_check list -> state_check
-    (** Combinator which takes a list of unifier state check functions and
-        combines them into a single check function *)
-      
-    val lift_subst_check : Subst.check -> state_check
-    (** [lift_subst_check c] takes a substitution pair check function [c] and lifts
-        it to a unifier state check function by applying it to each entry in the
-        state's substitution map *)
-  end
-
-module Unifier : UnifierSig
-
-val unify : t Unifier.t 
-(** [unify check cont state o o'] should try to extend [state] so that [o] is 
-    unified with [o'], extending the variable substitution inside [state]. 
-    If this is impossible, then [unify] must return [None].  Otherwise, the 
-    new [state'] is to be passed to the continuation function [cont], which
-    may carry on with the unification of other objects, validate the state in
-    various ways or even record it and return [None] in which case back-tracking
-    should occur. The [check] predicate should be applied to each individual 
-    term replacement as it is computed, causing the unification to fail if the
-    result is false.
-    
-    Some unifiers may add to the tag pairs in [state], or may not, depending on
-    their function. *)
-
-
+val biunify: 
+  ?update_check:((Subst.t * Subst.t) * (Subst.t * Subst.t)) 
+    Fun.predicate
+      -> (Subst.t * Subst.t, 'a, t) Unification.cps_unifier
+(** Unifies two terms by producing substitutions to act on each term respectively *)
 
 module FList : 
   sig
     include Utilsigs.BasicType with type t = t list
-    val unify : t Unifier.t
-    val subst : Subst.t -> t -> t
-    val to_string_sep : string -> t -> string
+    
     val terms : t -> Set.t
+    (** Convenience function converting the list to a set. *)
     val vars : t -> Set.t
-  end
-(** A list of terms. *)
+    (** Returns the set of all elements of the list that are not nil *)
 
+    val to_string_sep : string -> t -> string
+    (** [to_string_sep sep ts] converts [ts] to a string with each element separated by [sep]. *)
+
+    val subst : Subst.t -> t -> t
+    (** Applies a substitution to the list *)
+
+    val unify : 
+      ?update_check: (Subst.t * Subst.t) Fun.predicate -> 
+        (Subst.t, 'a, t) Unification.cps_unifier
+    (** Unifies two lists of terms by producing a substitution to act on the first list *)
+
+    val biunify: 
+      ?update_check:
+        ((Subst.t * Subst.t) * (Subst.t * Subst.t)) 
+          Fun.predicate
+            -> (Subst.t * Subst.t, 'a, t) Unification.cps_unifier
+    (** Unifies two lists of terms by producing substitutions to act on each list respectively *)
+
+  end

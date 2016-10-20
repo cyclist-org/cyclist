@@ -1,0 +1,37 @@
+fields: left, right;
+
+proc rotateEachNode(x)
+	precondition: x->t,v' * bt[a](t);
+	postcondition: x->new_t',v' * bt(new_t');
+{
+	tree := x.left;
+	if tree != nil then
+		l := tree.left;
+		if l = nil then return fi;
+		leftRight := l.right;
+		l.right := tree;
+
+		x.left := leftRight;
+		rotateEachNode(x);
+		leftRight := x.left;
+		tree.left := leftRight;
+		
+		r := tree.right;
+		x.left := r;
+		rotateEachNode(x);
+		r := x.left;
+		tree.right := r;
+		
+		x.left := l;
+		assert(x->new_t',v' * bt(new_t'))
+	fi
+}
+
+precondition: bt(t);
+postcondition: bt(t);
+
+ptr := new();
+ptr.left := t;
+rotateEachNode(ptr);
+t := ptr.left;
+free(ptr)

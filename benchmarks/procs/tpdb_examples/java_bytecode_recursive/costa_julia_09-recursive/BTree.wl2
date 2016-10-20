@@ -1,0 +1,23 @@
+fields: left, right;
+
+proc height(t)
+	precondition: bt(t);
+	postcondition: bt(t);
+{
+	if t != nil then
+		l := t.left;
+		if l != nil then
+			height(l)
+		else
+			r := t.right;
+			if r != nil then
+				height(r)
+			fi
+		fi
+	fi
+}
+
+precondition: bt(x);
+postcondition: bt(x);
+
+height(x)

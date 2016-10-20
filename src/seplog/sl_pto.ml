@@ -6,12 +6,17 @@ open MParser
 include Pair.Make(Sl_term)(Sl_term.FList)
 
 let subst theta (lv, rvs) =
-  (Sl_term.subst theta lv, Sl_term.FList.subst theta rvs)
+  (Sl_subst.apply theta lv, Sl_term.FList.subst theta rvs)
 
-let unify ?(sub_check=Sl_subst.trivial_check)
-    ?(cont=Sl_unifier.trivial_continuation)
-    ?(init_state=Sl_unifier.empty_state) (x, xs) (y, ys) =
-  Sl_term.FList.unify ~sub_check ~cont ~init_state (x::xs) (y::ys)
+let unify ?(update_check=Fun._true)
+    (x, xs) (y, ys) cont init_state =
+  Sl_unify.Unidirectional.unify_trm_list ~update_check 
+    (x::xs) (y::ys) cont init_state
+
+let biunify ?(update_check=Fun._true)
+    (x, xs) (y, ys) cont init_state =
+  Sl_unify.Bidirectional.unify_trm_list ~update_check 
+    (x::xs) (y::ys) cont init_state
 
 let to_string (x,args) =
   (Sl_term.to_string x) ^ symb_pointsto.str ^ 

@@ -22,7 +22,12 @@ let to_melt v =
   ltx_star (Blist.map Sl_tpred.to_melt (elements v))
 
 
-let tags inds = Tags.of_list (Blist.map fst (to_list inds))
+let tags inds = 
+  Tags.of_list 
+    (Option.list_get 
+      (Blist.map 
+        (fun p -> Option.mk (Sl_tpred.is_tagged p) (fst p)) 
+        (to_list inds)))
 
 let strip_tags inds = 
   map_to Sl_pred.MSet.add Sl_pred.MSet.empty snd inds
@@ -35,27 +40,31 @@ let subst_tags tagpairs inds =
   
 
 let freshen_tags inds' inds =
-  if is_empty inds || is_empty inds' then inds else
-    let maxtag = Tags.max_elt (tags inds') in
-    let mintag = fold (fun (tag, _) a -> min tag a) inds max_int in
-    let delta = 1 + maxtag - mintag in
-    endomap (fun (tag, head) -> (tag + delta, head)) inds
-
-let rec unify ?(total=true) ?(tagpairs=false) 
-    ?(sub_check=Sl_subst.trivial_check)
-    ?(cont=Sl_unifier.trivial_continuation)
-    ?(init_state=Sl_unifier.empty_state) inds inds' =
-  if is_empty inds then
-    if not total || is_empty inds' then cont init_state else None
+  if is_empty inds || is_empty inds' then 
+    inds
   else
-    let a = choose inds in
-    let inds = remove a inds in
-    let f a' =
-      Sl_tpred.unify ~tagpairs
-        ~sub_check
-        ~cont:(fun state' -> unify ~total ~tagpairs ~sub_check ~cont ~init_state:state' inds (remove a' inds'))
-        ~init_state a a' in
-    find_map f inds'
+    let (ts, ts') = Pair.map tags (inds, inds') in
+    let clashing = Tags.inter ts ts' in
+    if Tags.is_empty clashing then 
+      inds
+    else
+      let all_tags = Tags.union ts ts' in
+      let (free, ex) = Tags.partition Tags.is_free_var clashing in
+      let subst = 
+        Tagpairs.union 
+          (Tagpairs.mk_free_subst all_tags free) 
+          (Tagpairs.mk_ex_subst all_tags ex) in
+      endomap (fun (tag, head) -> ((Tagpairs.apply_to_tag subst tag), head)) inds
+
+let unify ?(total=true) ?(tagpairs=true) ?(update_check=Fun._true)
+    inds inds' cont init_state =
+  mk_unifier total true (Sl_tpred.unify ~tagpairs ~update_check)
+    inds inds' cont init_state
+
+let biunify ?(total=true) ?(tagpairs=true) ?(update_check=Fun._true)
+    inds inds' cont init_state =
+  mk_unifier total true (Sl_tpred.biunify ~tagpairs ~update_check)
+    inds inds' cont init_state
 
 let subsumed_upto_tags ?(total=true) eqs inds inds' =
   let rec aux uinds uinds' = 

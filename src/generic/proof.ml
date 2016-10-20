@@ -56,6 +56,8 @@ module Make(Seq : Sigs.SEQUENT) =
       P.for_all (fun _ (_,n) -> not (Node.is_open n)) prf
   
     let check p = 
+      let () = debug (fun _ -> "Checking global soundness") in
+      let () = debug (fun _ -> to_string p) in
       Soundcheck.check_proof 
         (P.map (fun (_,n) -> Node.to_abstract_node n) p)
   
@@ -99,7 +101,7 @@ module Make(Seq : Sigs.SEQUENT) =
     let get_ancestry idx prf =
       let rec aux acc idx (par_idx, n) =
         let parent = get par_idx prf in
-        let acc = (par_idx, n)::acc in
+        let acc = (idx, n)::acc in
         if par_idx=idx then acc else aux acc par_idx parent in
       aux [] idx (get idx prf)
       

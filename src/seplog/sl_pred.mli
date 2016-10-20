@@ -15,8 +15,12 @@ val subst : Sl_subst.t -> t -> t
 val parse : (t, 'a) MParser.parser
 val of_string : string -> t
 
-val unify : t Sl_unifier.t
+val unify : ?update_check:Sl_unify.Unidirectional.update_check 
+  -> t Sl_unify.Unidirectional.unifier
 (** Compute substitution that unifies two predicates. *)
+
+val biunify : ?update_check:Sl_unify.Bidirectional.update_check 
+  -> t Sl_unify.Bidirectional.unifier
 
 val norm : Sl_uf.t -> t -> t
 (** Replace all terms with their UF representative. NB this may replace [nil] 

@@ -163,6 +163,8 @@ let rec pairs = function
 let map_to oadd oempty f xs =
   foldl (fun ys z -> oadd (f z) ys) oempty xs
 
+let opt_map_to oadd oempty f xs =
+  map_to (function | None -> Fun.id | Some x -> oadd x) oempty f xs
 
 (* tail rec versions, generally slower *)
 

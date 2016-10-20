@@ -1,0 +1,10 @@
+
+Benchmarks from the Songbird prover, described in the paper
+
+Quang-Trung Ta, Ton Chanh Le, Siau-Cheng Khoo and Wei-Ngan Chin.
+Automated Mutual Explicit Induction Proof in Separation Logic
+In Proceedings of FM 2016, 21st International Symposium on Formal Methods, 7-11 November 2016, Limassol, Cyprus
+
+The Songbird prover is hosted at the following location:
+
+http://loris-5.d2.comp.nus.edu.sg/songbird/

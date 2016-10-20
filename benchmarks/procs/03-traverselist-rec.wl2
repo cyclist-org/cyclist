@@ -1,0 +1,19 @@
+fields: next;
+
+proc traverselist(x)
+	precondition: ls[a](x, nil);
+	postcondition: ls[a](x, nil);
+{
+	if x != nil then
+	
+		y := x.next;
+		traverselist(y);
+		traverselist(y)
+	
+	fi
+}
+
+precondition: ls(x, nil);
+postcondition: ls(x, nil);
+
+traverselist(x)

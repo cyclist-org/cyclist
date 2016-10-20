@@ -1,0 +1,52 @@
+DLL {
+  hd = tl * hd->nxt,prv => DLL(hd,prv,tl,nxt) |
+  hd->x',prv * DLL(x',hd,tl,nxt) => DLL(hd,prv,tl,nxt)
+} ;
+
+DLL_rev {
+  hd = tl * hd->nxt,prv => DLL_rev(hd,prv,tl,nxt) |
+  tl->nxt,x' * DLL_rev(hd,prv,x',tl) => DLL_rev(hd,prv,tl,nxt)
+} ;
+
+DLL_mid {
+  hd = tl * hd->nxt,prv => DLL_mid(hd,prv,tl,nxt) |
+  hd->tl,prv * tl->nxt,hd => DLL_mid(hd,prv,tl,nxt) |
+  x'->y',z' * DLL(y',x',tl,nxt) * DLL_rev(hd,prv,z',x') => DLL_mid(hd,prv,tl,nxt)
+} ;
+
+TLL {
+  root = ll * root->nil,nil,lr => TLL(root,ll,lr) |
+  root->x',y',nil * TLL(x',ll,z') * TLL(y',z',lr) => TLL(root,ll,lr)
+} ;
+
+TLLpp {
+  root = ll * root->nil,nil,p,lr => TLLpp(root,p,ll,lr) |
+  root->x',y',p,nil * TLLpp(x',root,ll,z') * TLLpp(y',root,z',lr) => TLLpp(root,p,ll,lr)
+} ;
+
+TLLpp_rev {
+  ll = leaf * ll->nil,nil,p,lr => TLLpp_rev(leaf,p,ll,lr) |
+  ll->nil,nil,up',z' * TLLpp_aux(leaf,p,up',ll,z',lr) => TLLpp_rev(leaf,p,ll,lr)
+} ;
+
+TLLpp_aux {
+  x = leaf * x->ll,root',p,nil * TLLpp(root',x,z,lr) => TLLpp_aux(leaf,p,x,ll,z,lr) |
+  x->ll,root',up',nil * TLLpp_aux(leaf,p,up',x,q',lr) * TLLpp(root',x,z,q') => TLLpp_aux(leaf,p,x,ll,z,lr)
+} ;
+
+TREEpp {
+  x->nil,nil,b => TREEpp(x,b) |
+  x->l',r',b * TREEpp(l',x) * TREEpp(r',x) => TREEpp(x,b)
+} ;
+
+TREEpp_rev {
+  t->nil,nil,b => TREEpp_rev(t,b) |
+  x'->nil,nil,up' * TREEpp_aux(t,b,up',x') => TREEpp_rev(t,b)
+} ;
+
+TREEpp_aux {
+  x = t * x->d,r',b * TREEpp(r',x) => TREEpp_aux(t,b,x,d) |
+  x = t * x->l',d,b * TREEpp(l',x) => TREEpp_aux(t,b,x,d) |
+  x->d,r',up' * TREEpp_aux(t,b,up',x) * TREEpp(r',x) => TREEpp_aux(t,b,x,d) |
+  x->l',d,up' * TREEpp_aux(t,b,up',x) * TREEpp(l',x) => TREEpp_aux(t,b,x,d)
+} 

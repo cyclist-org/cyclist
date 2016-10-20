@@ -1,0 +1,64 @@
+fields: next, datum;
+
+proc reverse(x, acc)
+precondition: x -> a',v' * SLL(v', nil) * acc -> b',w' * SLL(w', nil);
+postcondition: x -> c',nil * acc -> d',z' * SLL(z', nil);
+{
+	list := x.datum;
+	if list != nil then
+	
+		rest := list.next;
+		x.datum := rest;
+		
+		accumulator := acc.datum;
+		list.next := accumulator;
+		acc.datum := list;
+		
+		reverse(x, acc)
+		
+	fi
+}
+
+proc enq(x)
+	precondition:  FunQueue(x);
+	postcondition: FunQueue(x);
+{
+	y := x.next;
+	back := y.datum;
+	new_hd := new();
+	new_hd.next := back;
+	y.datum := new_hd
+}
+
+proc deq(x)
+	precondition:  FunQueue(x);
+	postcondition: FunQueue(x);
+{
+	front := x.datum;
+	
+	if front != nil then
+	
+		tmp := front.next;
+		free(front);
+		x.datum := tmp
+
+	else
+	
+		y := x.next;
+		back := y.datum;
+		
+		if back != nil then
+		
+			reverse(y, x);
+			x.next := y
+	
+		fi
+	
+	fi
+}
+
+precondition: FunQueue(q);
+postcondition: FunQueue(q);
+
+enq(q);
+deq(q)

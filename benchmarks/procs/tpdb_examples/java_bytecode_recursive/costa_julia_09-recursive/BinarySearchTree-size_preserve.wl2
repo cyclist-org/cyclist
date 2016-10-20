@@ -1,0 +1,41 @@
+fields: left, right;
+
+proc copy(t, ret)
+	precondition: bt[a](t) * ret->v',w';
+	postcondition: bt[a](t) * ret->v',w' * bt[a](v');
+{
+	if t = nil then
+		ret.left := nil
+	else
+		ptr := new();
+		node := new();
+		lc := t.left;
+		if lc = nil then 
+			node.left := nil
+		else
+			copy(lc, ptr);
+			new_t := ptr.left;
+			node.left := new_t
+		fi; 
+		rc := t.right;
+		if rc = nil then 
+			node.right := nil
+		else
+			copy(rc, ptr);
+			new_t := ptr.left;
+			node.right := new_t
+		fi; 
+		free(ptr);
+		ret.left := node;
+		assert(bt[a](t) * ret->v',w' * bt[a](v'))
+	fi
+}
+
+precondition: bt(x);
+postcondition: bt(x) * bt(y);
+
+ptr := new();
+
+copy(x, ptr);
+y := ptr.left;
+free(ptr)

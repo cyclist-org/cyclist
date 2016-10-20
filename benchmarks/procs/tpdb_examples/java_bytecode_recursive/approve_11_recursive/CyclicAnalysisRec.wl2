@@ -1,0 +1,70 @@
+fields: field;
+
+proc length(x)
+	precondition: ls[a](x, nil);
+	postcondition: ls[a](x, nil);
+{
+	if x = nil then
+		return
+	else
+		next := x.field;
+		length(next)
+	fi
+}
+
+proc appendNewList(x, cnt)
+	precondition: x->l * l->v * PeList[a](v,w) * ls[b](cnt, nil);
+	postcondition: x->y' * y'->nil * l != y' * ls(l,y') * PeList[a](v,w);
+{
+	this := x.field;
+	newEle := new();
+	newEle.field := nil;
+	this.field := newEle;
+	if cnt = nil then
+		x.field := newEle
+	else
+		new_cnt := cnt.field;
+		free(cnt);
+		x.field := newEle;
+		assert([c'] < [b] : l=this * x->newEle * newEle->nil * l->newEle * 
+			PeList(nil, nil) * PeList[a](v,w) * ls[c'](new_cnt, nil));
+		appendNewList(x, new_cnt)
+	fi;
+	assert(x->y' * y'->nil * l != y' * ls(l,y') * PeList[a](v,w))
+}
+
+proc appendNewCyclicList(this, cnt)
+	precondition: this->nil * ls(cnt, nil);
+	postcondition: PeList(this, this);
+{
+	ptr := new();
+	ptr.field := this;
+	assert(ptr->this * this->nil * ls(cnt, nil) * PeList(nil,nil)); 
+	appendNewList(ptr, cnt);
+	last := ptr.field;
+	free(ptr);
+	last.field := this;
+	assert(PeList(this, this))
+}
+
+precondition: ls(cnt1, nil) * ls(cnt2, nil);
+postcondition: ls(t,nil) * PeList(t_field,t_field);
+
+ptr := new();
+
+t := new();
+t_field := new();
+t.field := t_field;
+t_field.field := nil;
+
+appendNewCyclicList(t_field, cnt1);
+
+ptr.field := t;
+
+appendNewList(ptr, cnt2);
+
+assert(ptr->y' * ls(t,nil) * PeList(t_field,t_field));
+
+length(t);
+
+free(ptr)

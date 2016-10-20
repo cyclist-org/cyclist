@@ -1,8 +1,8 @@
 fields: next;
 
 proc partition(x, y, z)
-precondition: x -> x' * ls(x',nil) * y -> y' * z -> z';
-postcondition: x -> nil * y -> v' * ls(v',nil) * z -> w' * ls(w',nil);
+precondition: x -> x' * ls[a](x',nil) * y -> y' * z -> z';
+postcondition: x -> nil * y -> v' * ls[b'](v',nil) * z -> w' * ls[c'](w',nil);
 {
 	list := x.next;
 	
@@ -25,13 +25,17 @@ postcondition: x -> nil * y -> v' * ls(v',nil) * z -> w' * ls(w',nil);
 			list.next := newlist;
 			z.next := list
 		
-		fi
+		fi	
+	else
+	
+	  y.next := nil;
+	  z.next := nil
 	
 	fi
 }
 
-precondition: ls(x,nil);
-postcondition: ls(y,nil) * ls(z,nil);
+precondition: ls[a](x,nil);
+postcondition: ls[b'](y,nil) * ls[c'](z,nil);
 
 ptr1 := new();
 ptr1.next := x;

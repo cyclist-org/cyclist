@@ -1,0 +1,73 @@
+fields: left, right;
+
+proc copy(x, res)
+	precondition: x->v,a' * bt[a](v) * res->b',c';
+	postcondition: x->v,a' * bt[a](v) * res->b',c' * bt[a](b');
+{
+	old := x.left;
+	res.left := nil;
+	if old != nil then
+		l := old.left;
+		r := old.right;
+		
+		x.left := l;
+		copy(x, res);
+		new_left := res.left;
+		
+		x.left := r;
+		copy(x, res);
+		new_right := res.left;
+		
+		new_root := new();
+		new_root.left := new_left;
+		new_root.right := new_right;
+
+		res.left := new_root;
+		x.left := old;
+		assert(x->v,a' * bt[a](v) * res->b',c' * bt[a](b'))
+	fi
+}
+
+proc alternate(x, y, res)
+	precondition: x->v,a' * bt(v) * y->w,b' * bt(w) * res->c',d';
+	postcondition: x->v,a' * bt(v) * y->w,b' * bt(w) * res->c',d' * bt(c');
+{
+	t := x.left;
+	if t = nil then
+		copy(y, res)
+	else
+		left_tree := t.left;
+		right_tree := t.right;
+		
+		new_tree := new();
+		
+		x.left := left_tree;
+		copy(x, res);
+		tmp := res.left;
+		new_tree.left := tmp;
+		
+		x.left := right_tree;
+		alternate(y, x, res);
+		tmp := res.left;
+		new_tree.right := tmp;
+		
+		x.left := t;
+		res.left := new_tree;
+		assert(x->v,a' * bt(v) * y->w,b' * bt(w) * res->c',d' * bt(c'))
+	fi
+}
+
+precondition: bt(x) * bt(y);
+postcondition: bt(x) * bt(y) * res->v',w' * bt(v');
+
+ptr1 := new();
+ptr2 := new();
+res := new();
+
+ptr1.left := x;
+ptr2.left := y;
+
+alternate(ptr1, ptr2, res);
+
+free(ptr1);
+free(ptr2)

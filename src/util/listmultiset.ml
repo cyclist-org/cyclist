@@ -89,6 +89,9 @@ module Make(T: Utilsigs.BasicType) =
 
     let map_to oadd oempty f xs =
       fold (fun z ys -> oadd (f z) ys) xs oempty
+      
+    let opt_map_to oadd oempty f xs =
+      map_to (Option.dest Fun.id oadd) oempty f xs
 
     let map_to_list f xs = Blist.map f xs
 
@@ -110,8 +113,6 @@ module Make(T: Utilsigs.BasicType) =
       let xxs = subsets xs in
       xxs @ (Blist.map (fun y -> add x y) xxs)
 
-    let submap xs ys = for_all (Fun.swap mem ys) xs
-
     let rec disjoint xs ys = match (xs, ys) with
       | ([], ys) -> true
       | (xs, []) -> true
@@ -119,5 +120,18 @@ module Make(T: Utilsigs.BasicType) =
         | 0 -> false
         | n when n < 0 -> disjoint xs (y::ys)
         | _ -> disjoint (x::xs) ys
+
+    include Unification.MakeUnifier(
+      struct
+        type t = Flist.Make(T).t
+        type elt = T.t
+        let empty = empty
+        let is_empty = is_empty
+        let equal = equal
+        let add = add
+        let choose = choose
+        let remove = remove
+        let find_map = find_map
+      end)
 
   end

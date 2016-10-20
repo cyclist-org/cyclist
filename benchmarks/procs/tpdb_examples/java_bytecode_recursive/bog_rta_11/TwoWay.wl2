@@ -1,0 +1,21 @@
+fields: next;
+
+proc twoWay(term, x)
+	precondition: term != nil * list[a](x);
+	postcondition: term != nil * list[a](x);
+{
+	if x != nil then
+		if term != nil then
+			y := x.next
+		else
+			y := new();
+			y.next := x
+		fi;
+		twoWay(term, y)
+	fi
+}
+
+precondition: term != nil * list[a](x);
+postcondition: term != nil * list(x);
+
+twoWay(term, x)

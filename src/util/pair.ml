@@ -1,12 +1,17 @@
 open Lib
 
 let mk x y = (x,y)
+let left (x,y) = x
+let right (x,y) = y
 let map f p = (f (fst p), f (snd p))
 let apply f p = f (fst p) (snd p)
 let conj p = apply (&&) p
 let disj p = apply (||) p
 let swap (x,y) = (y,x)
 let fold f (x,y) a = f y (f x a)
+
+let both = conj
+let either = disj
 
 module Make(T: Utilsigs.BasicType) (S: Utilsigs.BasicType) :
   Utilsigs.BasicType with type t = T.t * S.t =

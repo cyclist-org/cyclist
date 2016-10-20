@@ -11,7 +11,6 @@ let hash m = Sl_term.Map.hash Sl_term.hash m
 let bindings m = Sl_term.Map.bindings m
 let empty = Sl_term.Map.empty
 let is_empty = Sl_term.Map.is_empty
-let all_members_of = Sl_term.Map.submap Sl_term.equal
 
 let to_string_list v = 
   Blist.map (Sl_tpair.to_string_sep symb_eq.str) (bindings v)
@@ -94,11 +93,20 @@ let saturate m =
   let pairs = Blist.cartesian_product ts ts in
   Blist.filter (Fun.uncurry (equates m)) pairs 
 
-let unify_partial ?(inverse=false) 
-    ?(sub_check=Sl_subst.trivial_check)
-    ?(cont=Sl_unifier.trivial_continuation)
-    ?(init_state=Sl_unifier.empty_state) m m' =
-  Sl_tpair.FList.unify_partial ~inverse ~sub_check ~cont ~init_state (bindings m) (saturate m')
+let unify_partial ?(inverse=false) ?(update_check=Fun._true)
+    m m' cont init_state =
+  let eqs = Sl_tpair.ListSet.of_list (bindings m) in
+  let eqs' = Sl_tpair.ListSet.of_list (saturate m') in
+  Sl_tpair.ListSet.mk_unifier 
+    false false (Fun.direct inverse (Sl_tpair.unify ~update_check)) 
+    eqs eqs' cont init_state
+
+let biunify_partial ?(update_check=Fun._true) m m' cont init_state =
+  let eqs = Sl_tpair.ListSet.of_list (bindings m) in
+  let eqs' = Sl_tpair.ListSet.of_list (saturate m') in
+  Sl_tpair.ListSet.mk_unifier 
+    false false (Sl_tpair.biunify ~update_check) 
+    eqs eqs' cont init_state
 
 let subst_subsumed eqs ((theta,_) as state) = 
   Option.mk (Sl_term.Map.for_all (equates eqs) theta) state

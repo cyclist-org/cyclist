@@ -1,0 +1,48 @@
+fields: next;
+
+proc removeLast(x)
+precondition: x -> x' * ls[a](x',nil);
+postcondition: [b'] < [a] : x->nil \/ x -> x' * ls[b'](x',nil);
+{
+	list := x.next;
+	
+	if list != nil then
+
+		tail := list.next;
+		
+		if tail = nil then
+		
+			free(list);
+			x.next := nil
+		
+		else
+		
+  			x.next := tail;	
+		
+			removeLast(x);
+		
+  			tail := x.next;
+  			list.next := tail;
+  			x.next := list
+		
+		fi;
+		
+		assert([b'] < [a] : x->nil \/ x -> x' * ls[b'](x',nil))
+		
+	fi
+}
+
+precondition: ls(x,nil);
+postcondition: x = nil;
+
+ptr1 := new();
+ptr1.next := x;
+
+while x!=nil do
+
+  removeLast(ptr1);
+  x := ptr1.next
+
+od;
+
+free(ptr1)

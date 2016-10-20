@@ -1,0 +1,105 @@
+fields: next;
+
+proc iter(x)
+	precondition: list[a](x);
+	postcondition: list[a](x);
+{
+	if x != nil then
+		y := x.next;
+		iter(y)
+	fi
+}
+
+proc append(x, y, ret)
+	precondition: x != nil * list[a](x) * PeList[b](y, z) * ret->v';
+	postcondition: x != nil * list[a](x) * PeList[b](y, z) * ret->v' * PeList[a](v',y) * v' != nil;
+{
+	head := new();
+	tail := x.next;
+	if tail = nil then
+		head.next := y
+	else
+		append(tail, y, ret);
+		tail := ret.next;
+		head.next := tail
+	fi;
+	ret.next := head;
+	assert(x != nil * list[a](x) * PeList[b](y, z) * ret->v' * PeList[a](v',y) * v' != nil)
+}
+
+proc reverseAcc(x, acc, ret)
+	precondition: x != nil * list[a](x) * list[b](acc) * ret->v';
+	postcondition: x != nil * list[a](x) * ret->v' * list(v');
+{
+	head := new();
+	head.next := acc;
+	tail := x.next;
+	if tail = nil then
+		ret.next := head
+	else
+		reverseAcc(tail, head, ret)
+	fi
+}
+
+proc destroy(x)
+	precondition: list(x);
+	postcondition: emp;
+{
+	if x != nil then
+		tail := x.next;
+		free(x);
+		destroy(tail)
+	fi
+}
+
+proc reverse(x, ret)
+	precondition: x != nil * list[a](x) * ret->v';
+	postcondition: ret->v' * list(v') * v' != nil;
+{
+	tail := x.next;
+	if tail = nil then
+		ret.next := x
+	else
+		reverse(tail, ret);
+		rev_list := ret.next;
+		x.next := nil;
+		append(rev_list, x, ret);
+		destroy(rev_list);
+		assert(ret->v' * list(v') * v'!=nil)
+	fi
+}
+
+proc alternate(x, y, ret)
+	precondition: x != nil * list[a](x) * list[b](y) * ret->w';
+	postcondition: x != nil * list[a](x) * list[b](y) * ret->w' * PeList(w',v');
+{
+	if y = nil then
+		ret.next := x
+	else
+		a := x.next;
+		alternate(y, a, ret);
+		res := ret.next;
+		l := new();
+		l.next := res;
+		ret.next := l;
+		assert(x != nil * list[a](x) * list[b](y) * ret->w' * PeList(w',v'))
+	fi
+}
+
+precondition: x != nil * list[a](x) * list[b](y);
+postcondition: list[b](y) * PeList(w',v') * PeList(z, z) * PeList(c', z) * list(d') * list(e');
+
+ptr := new();
+alternate(x, y, ptr);
+
+z := new();
+tail := new();
+z.next := tail;
+tail.next := z;
+
+append(x, z, ptr);
+iter(x);
+reverseAcc(x, nil, ptr);
+reverse(x, ptr);
+
+free(ptr)
