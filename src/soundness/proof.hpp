@@ -73,7 +73,7 @@ namespace std {
 //}
 //==================================================================
 class Proof {
-private:
+protected:
 	spot::bdd_dict_ptr dict;
 
 	size_t max_vertices_log2;

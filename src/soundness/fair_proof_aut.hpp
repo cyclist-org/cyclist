@@ -12,13 +12,12 @@ class ProofState: public spot::state {
 public:
   const Vertex vertex;
   const TagVector & tags;
-  const Label label;
   
-  ProofState(const Vertex & v, const TagVector & ts, const Label lbl) : vertex(v), tags(ts), label(lbl) {}
+  ProofState(const Vertex & v, const TagVector & ts) : vertex(v), tags(ts) {}
   
   virtual int compare(const spot::state* other) const;
   virtual size_t hash() const { return vertex.id(); }
-  virtual spot::state* clone() const { return new ProofState(vertex, tags, label); }
+  virtual spot::state* clone() const { return new ProofState(vertex, tags); }
 };
 //==================================================================
 class ProofGhostState: public spot::state {
@@ -61,7 +60,7 @@ public:
   virtual bool done() const { return finished; }
   virtual spot::state* dst() const {
     Vertex v = proof.get_initial_vertex();
-    return new ProofState(v, proof.get_tags_of_vertex(v),proof.get_label_of_vertex(v) );
+    return new ProofState(v, proof.get_tags_of_vertex(v));
   }
   virtual bdd cond() const { return proof.get_initial_vertex(); }
   virtual spot::acc_cond::mark_t acc() const { return spot::acc_cond::mark_t(); }
@@ -80,7 +79,7 @@ public:
   virtual bool next() { ++successor; return !done(); }
   virtual bool done() const { return successor == proof.get_successors(vertex).end(); }
   virtual spot::state* dst() const {
-    return new ProofState(*successor, proof.get_tags_of_vertex(*successor), proof.get_label_of_vertex(*successor) );
+    return new ProofState(*successor, proof.get_tags_of_vertex(*successor));
   }
   virtual bdd cond() const { return *successor; }
   virtual spot::acc_cond::mark_t acc() const; 

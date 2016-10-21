@@ -21,7 +21,7 @@ extern "C" {
 }
 
 #include "fair_proof_aut.hpp"
-#include "fair_trace.hpp"
+#include "trace.hpp"
 
 static std::shared_ptr<FairProofAutomaton> proof = 0;
 static std::map< int, Vertex > bdd_map;
@@ -103,16 +103,13 @@ extern "C" void destroy_fair_aut() {
   CAMLreturn0;
 }
 
-extern "C" void create_fair_vertex(value v_, value l_) {
+extern "C" void create_fair_vertex(value v_) {
   CAMLparam1(v_);
   assert(proof);
   Vertex v = proof->create_vertex();
   int id = Int_val(v_); //v.id();
-  Label l = Int_val(l_);
   assert( bdd_map.find(id) == bdd_map.end() );
   bdd_map[id] = v;
-  proof->label_vertex(v,l);
-  //	std:: cerr << "create_vertex " << id << '\n';
   CAMLreturn0;
 }
 
@@ -177,16 +174,14 @@ extern "C" void set_fairness_constraint(value v1_, value v2_) {
 extern "C" value check_fair_soundness() {
   CAMLparam0();
   CAMLlocal1(v_res);
-  //	custom_print(std::cout,proof);
   proof->set_acceptance_condition();
   spot::twa_graph_ptr proof_graph = copy(proof, spot::twa::prop_set::all());
   custom_print(std::cout,proof_graph);
-  spot::const_twa_ptr ta = std::make_shared<FairTraceAutomaton>(*proof);
+  spot::const_twa_ptr ta = std::make_shared<TraceAutomaton>(*proof);
   spot::twa_graph_ptr proof_cpy = copy(proof, spot::twa::prop_set::all());
   spot::twa_graph_ptr graph = copy(ta, spot::twa::prop_set::all());
   custom_print(std::cout,graph);
   spot::twa_graph_ptr det = to_generalized_buchi(dtwa_complement(tgba_determinize(graph, false, true, true, spot::check_stutter_invariance(graph).is_true())));
-  //spot::print_dot(std::cerr, ta);
   spot::twa_graph_ptr proof_tgba = to_generalized_buchi(proof_cpy);
   spot::const_twa_ptr product = std::make_shared<spot::twa_product>(proof_tgba, det);
   spot::couvreur99_check ec(product);
