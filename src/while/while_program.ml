@@ -617,6 +617,12 @@ module Cmd =
         Latex.concat
           [ to_melt_lcmd ~abbr hd; symb_semicolon.melt; cont_lbl; Latex.ldots ]
 
+    let rec is_while_prog = function
+      | [] -> true
+      | c::cs -> match c.cmd with
+        | ProcCall(_) | Assert(_) -> false
+        | _ -> is_while_prog cs
+
   end
 
 let program_pp fmt cmd =
@@ -632,10 +638,10 @@ module Seq =
     let tagset_one = Tags.singleton Tags.anonymous
 		let tagpairs_one = Tagpairs.mk tagset_one
     let tags (f,cmd) = if !termination then Sl_form.tags f else tagset_one
-    let tag_pairs f = Tagpairs.mk (tags f)
-    let vars (l,_) = Sl_form.vars l
-    let terms (l,_) = Sl_form.terms l
-    let subst theta (l,cmd) = (Sl_form.subst theta l, cmd)
+    let tag_pairs seq = Tagpairs.mk (tags seq)
+    let vars (f,_) = Sl_form.vars f
+    let terms (f,_) = Sl_form.terms f
+    let subst theta (f,cmd) = (Sl_form.subst theta f, cmd)
     let to_string (f,cmd) =
       (Sl_form.to_string f) ^ symb_turnstile.sep ^ (Cmd.to_string cmd)
     let to_melt (f,cmd) =
@@ -659,7 +665,7 @@ module Seq =
       Cmd.equal cmd cmd' &&
       Sl_form.subsumed_upto_tags ~total:false f' f 
     
-    let subst_tags tagpairs (l,cmd) = (Sl_form.subst_tags tagpairs l, cmd)
+    let subst_tags tagpairs (f,cmd) = (Sl_form.subst_tags tagpairs f, cmd)
   end
 
 let program_vars = ref Sl_term.Set.empty
@@ -691,8 +697,11 @@ let parse_fields st =
 let parse_precondition st = 
   ( parse_symb keyw_precondition >>
     parse_symb symb_colon >>
-    Sl_form.parse >>= (fun f ->
-    parse_symb symb_semicolon >>$ f) <?> "Precondition") st
+    (Sl_form.parse ~allow_tags:false) >>= (fun f ->
+    parse_symb symb_semicolon >>$ 
+    let f = Sl_form.complete_tags Tags.empty f in
+    let theta = Tagpairs.mk_free_subst Tags.empty (Sl_form.tags f) in
+    Sl_form.subst_tags theta f) <?> "Precondition") st
 
     (* fields; p = precondition; cmd = command; EOF { (p, cmd) } *)
 let parse st = 

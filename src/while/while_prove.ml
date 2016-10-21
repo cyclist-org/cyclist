@@ -17,20 +17,24 @@ module F = Frontend.Make(Prover)
 (*     Format.fprintf Format.std_formatter "%a@\n" pp_cmd !cmd ; *)
 (*     cmd := Blist.tl !cmd                                       *)
 (*   done                                                        *)
-let () = F.usage := !F.usage ^ " [-D <file] [-P <file>]"
+let () = F.usage := !F.usage ^ " [-D <file>] -P <file> [-T]"
 
-let () = F.speclist := !F.speclist @ [
-    ("-D", Arg.Set_string defs_path, 
-      ": read inductive definitions from <file>, default is " ^ !defs_path);
-    ("-P", Arg.Set_string prog_path, ": prove termination of program <file>");
-    ("-T", Arg.Set While_program.termination, ": also prove termination, default is " ^ 
-          (string_of_bool !While_program.termination));
-  ]
+let () =  
+  let old_spec_thunk = !F.speclist in
+  F.speclist := 
+    (fun () -> old_spec_thunk() @ [
+      ("-D", Arg.Set_string defs_path, 
+        ": read inductive definitions from <file>, default is " ^ !defs_path);
+      ("-P", Arg.Set_string prog_path, ": prove safety of program <file>");
+      ("-T", Arg.Set While_program.termination, ": also prove termination");
+    ])
 
 let () =
-  Arg.parse !F.speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) !F.usage ;
-  if !prog_path="" then F.die "-P must be specified." ;
+  let spec_list = !F.speclist() in
+  Arg.parse spec_list (fun _ -> raise (Arg.Bad "Stray argument found.")) !F.usage ;
+  if !prog_path="" then F.die "-P must be specified." spec_list !F.usage ;
   let (seq, prog) = While_program.of_channel (open_in !prog_path) in
+  if not (Cmd.is_while_prog prog) then F.die "Unrecognised commands in program!" spec_list !F.usage ;
   let prog = Cmd.number prog in
   While_program.set_program prog ; 
   While_rules.setup (Sl_defs.of_channel (open_in !defs_path)) ;

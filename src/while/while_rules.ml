@@ -24,7 +24,7 @@ let ex_falso_axiom =
   Rule.mk_axiom (fun (f,_) -> Option.mk (Sl_form.inconsistent f) "Ex Falso")
 
 let symex_stop_axiom =
-  Rule.mk_axiom (fun (_,cmd) -> Option.mk (Cmd.is_stop cmd) "Stop")
+  Rule.mk_axiom (fun (_,cmd) -> Option.mk (Cmd.is_stop cmd || Cmd.is_return cmd) "Stop")
 
 let symex_empty_axiom =
   Rule.mk_axiom (fun (_,cmd) -> Option.mk (Cmd.is_empty cmd) "Empty")
@@ -49,33 +49,41 @@ let wrap r =
 
 (* break LHS disjunctions *)
 let lhs_disj_to_symheaps =
-  let rl (l,cmd) =
-    if Blist.length l < 2 then [] else
+  let rl ((cs,hs),cmd) =
+    if Blist.length hs < 2 then [] else
     [ Blist.map 
-        (fun sh -> let s' = ([sh],cmd) in (s', tagpairs s', Tagpairs.empty ) ) 
-        l,
+        (fun h -> let s' = ((cs,[h]),cmd) in (s', tagpairs s', Tagpairs.empty ) ) 
+        hs,
       "L.Or"
     ] in
   Rule.mk_infrule rl
 
 let luf_rl seq defs =
   try
-    let (l,cmd) = dest_sh_seq seq in
+    let ((cs,h),cmd) = dest_sh_seq seq in
     let seq_vars = Seq.vars seq in
-    let left_unfold ((_, (ident, _)) as p) = 
-      let l' = SH.del_ind l p in
-      let clauses = Sl_defs.unfold seq_vars l' p defs in
-      let do_case (f', tagpairs) =
-        let l' = Sl_heap.star l' f' in
+    let seq_tags = Tags.union (Ord_constraints.tags cs) (Sl_heap.tags h) in
+    let left_unfold ((t, (ident, _)) as p) = 
+      let h' = SH.del_ind h p in
+      let clauses = Sl_defs.unfold (seq_vars, seq_tags) p defs in
+      let do_case body =
+        let tag_subst = Tagpairs.mk_free_subst seq_tags (Sl_heap.tags body) in
+        let body = Sl_heap.subst_tags tag_subst body in
+        let h' = Sl_heap.star h' body in
+        let progpairs = Tagpairs.endomap (fun (_, t') -> (t, t')) tag_subst in
+        let allpairs = 
+          Tagpairs.union
+            (Tagpairs.remove (t,t) (Seq.tag_pairs seq))
+            (progpairs) in
         ( 
-					([l'],cmd), 
-					(if !termination then tagpairs else Seq.tagpairs_one), 
-					(if !termination then tagpairs else Tagpairs.empty)
-				) in
+          ((cs,[h']),cmd), 
+          (if !termination then allpairs else Seq.tagpairs_one), 
+          (if !termination then progpairs else Tagpairs.empty)
+        ) in
       Blist.map do_case clauses, ((Sl_predsym.to_string ident) ^ " L.Unf.") in
     Sl_tpreds.map_to_list 
       left_unfold 
-      (Sl_tpreds.filter (Sl_defs.is_defined defs) l.SH.inds)
+      (Sl_tpreds.filter (Sl_defs.is_defined defs) h.SH.inds)
   with Not_symheap -> []
 
 let luf defs = wrap (fun seq -> luf_rl seq defs)
@@ -86,23 +94,23 @@ let fix_tps l =
     (fun (g,d) -> Blist.map (fun s -> (s, tagpairs s, progpairs () )) g, d) l 
 
 let mk_symex f = 
-  let rl ((_,cmd) as seq) =
+  let rl ((pre,cmd) as seq) =
     let cont = Cmd.get_cont cmd in
     fix_tps 
-		  (Blist.map (fun (g,d) -> Blist.map (fun h' -> ([h'], cont)) g, d) (f seq)) in
+      (Blist.map (fun (g,d) -> Blist.map (fun h' -> ((Sl_form.with_heaps pre [h']), cont)) g, d) (f seq)) in
   wrap rl
   
 (* symbolic execution rules *)
 let symex_assign_rule =
   let rl seq =
     try
-      let (f,cmd) = dest_sh_seq seq in
+      let ((_,h),cmd) = dest_sh_seq seq in
       let (x,e) = Cmd.dest_assign cmd in
-      let fv = fresh_evar (Sl_heap.vars f) in
+      let fv = fresh_evar (Sl_heap.vars h) in
       let theta = Sl_subst.singleton x fv in
-      let f' = Sl_heap.subst theta f in
-      let e' = Sl_term.subst theta e in
-      [[ SH.add_eq f' (e',x) ], "Assign"]
+      let h' = Sl_heap.subst theta h in
+      let e' = Sl_subst.apply theta e in
+      [[ SH.add_eq h' (e',x) ], "Assign"]
     with WrongCmd | Not_symheap -> [] in
   mk_symex rl
 
@@ -112,80 +120,80 @@ let find_pto_on f e =
 let symex_load_rule =
   let rl seq =
     try
-      let (f,cmd) = dest_sh_seq seq in
+      let ((_,h),cmd) = dest_sh_seq seq in
       let (x,e,s) = Cmd.dest_load cmd in
-      let (_,ys) = find_pto_on f e in
+      let (_,ys) = find_pto_on h e in
       let t = Blist.nth ys (Field.get_index s) in
-      let fv = fresh_evar (Sl_heap.vars f) in
+      let fv = fresh_evar (Sl_heap.vars h) in
       let theta = Sl_subst.singleton x fv in
-      let f' = Sl_heap.subst theta f in
-      let t' = Sl_term.subst theta t in
-      [[ SH.add_eq f' (t',x) ], "Load"]
+      let h' = Sl_heap.subst theta h in
+      let t' = Sl_subst.apply theta t in
+      [[ SH.add_eq h' (t',x) ], "Load"]
     with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl
 
 let symex_store_rule =
   let rl seq =
     try
-      let (f,cmd) = dest_sh_seq seq in
+      let ((_,h),cmd) = dest_sh_seq seq in
       let (x,s,e) = Cmd.dest_store cmd in
-      let ((x',ys) as pto) = find_pto_on f x in
+      let ((x',ys) as pto) = find_pto_on h x in
       let pto' = (x', Blist.replace_nth e (Field.get_index s) ys) in
-      [[ SH.add_pto (SH.del_pto f pto) pto' ], "Store"]
+      [[ SH.add_pto (SH.del_pto h pto) pto' ], "Store"]
     with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl
 
 let symex_free_rule =
   let rl seq =
     try
-      let (f,cmd) = dest_sh_seq seq in
+      let ((_,h),cmd) = dest_sh_seq seq in
       let e = Cmd.dest_free cmd in
-      let pto = find_pto_on f e in
-      [[ SH.del_pto f pto ], "Free"]
+      let pto = find_pto_on h e in
+      [[ SH.del_pto h pto ], "Free"]
     with Not_symheap | WrongCmd | Not_found -> [] in
   mk_symex rl
 
 let symex_new_rule =
   let rl seq =
     try
-      let (f,cmd) = dest_sh_seq seq in
+      let ((_,h),cmd) = dest_sh_seq seq in
       let x = Cmd.dest_new cmd in
-      let l = fresh_evars (Sl_heap.vars f) (1 + (Field.get_no_fields ())) in
+      let l = fresh_evars (Sl_heap.vars h) (1 + (Field.get_no_fields ())) in
       let (fv,fvs) = (Blist.hd l, Blist.tl l) in
-      let f' = Sl_heap.subst (Sl_subst.singleton x fv) f in
-			let f'' = Sl_heap.mk_pto (x, fvs) in
-      [[ Sl_heap.star f' f'' ], "New"]
+      let h' = Sl_heap.subst (Sl_subst.singleton x fv) h in
+      let h'' = Sl_heap.mk_pto (x, fvs) in
+      [[ Sl_heap.star h' h'' ], "New"]
     with Not_symheap | WrongCmd-> [] in
   mk_symex rl
 
 let symex_skip_rule =
   let rl seq =
     try
-      let (f,cmd) = dest_sh_seq seq in 
-      let () = Cmd.dest_skip cmd in [[f], "Skip"]
+      let ((_,h),cmd) = dest_sh_seq seq in 
+      let () = Cmd.dest_skip cmd in [[h], "Skip"]
     with Not_symheap | WrongCmd -> [] in
   mk_symex rl
 
 let symex_if_rule =
   let rl seq =
     try
-      let (f,cmd) = dest_sh_seq seq in
+      let ((cs,h),cmd) = dest_sh_seq seq in
       let (c,cmd') = Cmd.dest_if cmd in
       let cont = Cmd.get_cont cmd in
-      let (f',f'') = Cond.fork f c in 
-      fix_tps [[ ([f'], Cmd.mk_seq cmd' cont) ; ([f''], cont) ], "If"]
+      let (h',h'') = Cond.fork h c in 
+      fix_tps [[ ((cs,[h']), Cmd.mk_seq cmd' cont) ; ((cs,[h'']), cont) ], "If"]
     with Not_symheap | WrongCmd -> [] in
   wrap rl
 
 let symex_ifelse_rule =
   let rl seq =
     try
-      let (f,cmd) = dest_sh_seq seq in
+      let ((cs,h),cmd) = dest_sh_seq seq in
       let (c,cmd1,cmd2) = Cmd.dest_ifelse cmd in
       let cont = Cmd.get_cont cmd in
-      let (f',f'') = Cond.fork f c in 
+      let (h',h'') = Cond.fork h c in 
       fix_tps 
-        [[ ([f'], Cmd.mk_seq cmd1 cont) ; ([f''], Cmd.mk_seq cmd2 cont) ],
+        [[ ((cs,[h']), Cmd.mk_seq cmd1 cont) ; ((cs,[h'']), Cmd.mk_seq cmd2 cont) ],
          "IfElse"
         ]
     with Not_symheap | WrongCmd -> [] in
@@ -194,11 +202,11 @@ let symex_ifelse_rule =
 let symex_while_rule =
   let rl seq =
     try
-      let (f,cmd) = dest_sh_seq seq in
+      let ((cs,h),cmd) = dest_sh_seq seq in
       let (c,cmd') = Cmd.dest_while cmd in
       let cont = Cmd.get_cont cmd in
-      let (f',f'') = Cond.fork f c in 
-      fix_tps [[ ([f'], Cmd.mk_seq cmd' cmd) ; ([f''], cont) ], "While"]
+      let (h',h'') = Cond.fork h c in 
+      fix_tps [[ ((cs,[h']), Cmd.mk_seq cmd' cmd) ; ((cs,[h'']), cont) ], "While"]
     with Not_symheap | WrongCmd -> [] in
   wrap rl
 
@@ -215,31 +223,29 @@ let symex_while_rule =
 (* For any H!  For this reason, unless this is fixed in another way we need to    *)
 (* restrict to substitutions that do not need rewrites under equalities to yield  *)
 (* the required sequent.                                                          *)
-let matches ((l,cmd) as seq) ((l',cmd') as seq') =
+let matches ((f,cmd) as seq) ((f',cmd') as seq') =
   try
     if not (Cmd.equal cmd cmd') then [] else
-    let (l,l') = Pair.map Sl_form.dest (l,l') in
-    let sub_check = Sl_subst.combine_checks [
-        Sl_subst.basic_lhs_down_check ;
-        Sl_subst.avoids_replacing_check !program_vars ;
-      ] in
-    let cont =
-      Sl_unifier.mk_verifier
-        (Sl_unifier.mk_assert_check
-          (fun (theta, tagpairs) -> 
-            let subst_seq = (Seq.subst_tags tagpairs (Seq.subst theta seq')) in
-            let () = debug (fun _ -> "term substitution: " ^ ((Format.asprintf " %a" Sl_subst.pp theta))) in 
-            let () = debug (fun _ -> "tag substitution: " ^ (Tagpairs.to_string tagpairs)) in 
-            let () = debug (fun _ -> "source seq: " ^ (Seq.to_string seq)) in
-            let () = debug (fun _ -> "target seq: " ^ (Seq.to_string seq')) in
-            let () = debug (fun _ -> "substituted target seq: " ^ (Seq.to_string subst_seq)) in
-            Seq.subsumed seq subst_seq)
-        ) in
-    Sl_unifier.backtrack 
-      (Sl_heap.unify_partial ~tagpairs:true)
-      ~sub_check
-      ~cont
-      l' l
+    let ((cs,h),(cs',h')) = Pair.map Sl_form.dest (f,f') in
+    Sl_unify.Unidirectional.realize (
+      Unification.backtrack
+        (Sl_heap.unify_partial
+          ~update_check:(Fun.conj
+            (Sl_unify.Unidirectional.trm_check)
+            (Sl_unify.Unidirectional.avoid_replacing_trms !program_vars)))
+          h' h
+        (Sl_unify.Unidirectional.unify_tag_constraints 
+          cs cs'
+        (Sl_unify.Unidirectional.mk_verifier
+          (Sl_unify.Unidirectional.mk_assert_check
+            (fun (theta, tagpairs) -> 
+              let subst_seq = (Seq.subst_tags tagpairs (Seq.subst theta seq')) in
+              let () = debug (fun _ -> "term substitution: " ^ ((Format.asprintf " %a" Sl_subst.pp theta))) in 
+              let () = debug (fun _ -> "tag substitution: " ^ (Tagpairs.to_string tagpairs)) in 
+              let () = debug (fun _ -> "source seq: " ^ (Seq.to_string seq)) in
+              let () = debug (fun _ -> "target seq: " ^ (Seq.to_string seq')) in
+              let () = debug (fun _ -> "substituted target seq: " ^ (Seq.to_string subst_seq)) in
+              Seq.subsumed seq subst_seq)))))
   with Not_symheap -> []
 
 (*    seq'     *)
@@ -300,23 +306,22 @@ let dobackl idx prf =
 let fold def =
   let fold_rl seq = 
     try 
-      let (l,cmd) = dest_sh_seq seq in
-      if Sl_tpreds.is_empty l.SH.inds then [] else
+      let ((cs,h),cmd) = dest_sh_seq seq in
+      if Sl_tpreds.is_empty h.SH.inds then [] else
       let tags = Seq.tags seq in
       let do_case case =
         let (f,(ident,vs)) = Sl_indrule.dest case in
-        let results = Sl_indrule.fold case l in
-        let process (theta, l') = 
-          let seq' = ([l'],cmd) in
+        let results = Sl_indrule.fold case h in
+        let process (theta, h') = 
+          let seq' = ((cs,[h']),cmd) in
           (* let () = print_endline "Fold match:" in         *)
           (* let () = print_endline (Seq.to_string seq) in   *)
           (* let () = print_endline (Sl_heap.to_string f) in *)
           (* let () = print_endline (Seq.to_string seq') in  *)
-            [(
-              seq', 
-              Tagpairs.mk (Tags.inter tags (Seq.tags seq')), 
-              Tagpairs.empty 
-            )], ((Sl_predsym.to_string ident) ^ " Fold")  in
+          let allpairs =
+            if !termination then Tagpairs.mk (Tags.inter tags (Seq.tags seq')) else Seq.tagpairs_one in 
+            ( [(seq', allpairs, Tagpairs.empty )], 
+                ((Sl_predsym.to_string ident) ^ " Fold") ) in
         Blist.map process results in
       Blist.bind do_case (Sl_preddef.rules def)
     with Not_symheap -> [] in
@@ -341,15 +346,15 @@ let generalise_while_rule =
         h.SH.inds in
     let rl seq =
       try
-        let (f,cmd) = dest_sh_seq seq in
+        let ((cs,h),cmd) = dest_sh_seq seq in
         let (_,cmd') = Cmd.dest_while cmd in
-        let m = Sl_term.Set.inter (Cmd.modifies cmd') (Sl_heap.vars f) in
+        let m = Sl_term.Set.inter (Cmd.modifies cmd') (Sl_heap.vars h) in
         let subs = Sl_term.Set.subsets m in
         Option.list_get (Blist.map
           begin fun m' ->
-            let f' = generalise m' f in
-            if Sl_heap.equal f f' then None else
-            let s' = ([f'], cmd) in
+            let h' = generalise m' h in
+            if Sl_heap.equal h h' then None else
+            let s' = ((cs,[h']), cmd) in
             Some ([ (s', tagpairs s', Tagpairs.empty) ], "Gen.While")
           end
           subs)

@@ -6,7 +6,7 @@ src/seplog/sl_modelcheck.native
 src/slsat/sl_satcheck.native  
 src/slsat/slsat_expgen.native
 #src/goto/goto_prove.native
-#src/while/while_prove.native  
+src/while/while_prove.native  
 #src/while/while_abduce.native
 src/procedure/procedure_prove.native  
 #src/temporal_ctl/temporal_ctl_prove.native
