@@ -2,39 +2,51 @@ open Lib
 open Symbols
 open MParser
 
+module Tag = Tags.Elt
+
 module Constraint =
   struct
     type t =
-      | LT of (Tags.elt * Tags.elt)
-      | LTE of (Tags.elt * Tags.elt)
+      | LT of (Tag.t * Tag.t)
+      | LTE of (Tag.t * Tag.t)
 
-    let compare (c : t) (c' : t) = compare c c'
-    let equal (c : t) (c' : t) = (c = c')
+    let compare c c' =
+      match (c, c') with
+      | (LT(t, t'), LT(t'', t''')) | (LTE(t, t'), LTE(t'', t''')) ->
+          let fst = Tag.compare t t'' in
+          if fst <> 0 then fst else Tag.compare t' t'''
+      | (LT(_), _) -> -1
+      | (LTE(_), _) -> 1
+    let equal c c' =
+      match (c, c') with
+      | (LT(t, t'), LT(t'', t''')) | (LTE(t, t'), LTE(t'', t''')) ->
+          Tag.equal t t'' && Tag.equal t' t'''
+      | _ -> false
     let hash (c : t) = Hashtbl.hash c
 
     let to_string = function
       | LT(t, t') ->
-          (tag_to_string t) ^ symb_lt.sep ^ (tag_to_string t')
+          (Tag.to_string t) ^ symb_lt.sep ^ (Tag.to_string t')
       | LTE(t, t') ->
-          (tag_to_string t) ^ symb_leq.sep ^ (tag_to_string t')
+          (Tag.to_string t) ^ symb_leq.sep ^ (Tag.to_string t')
 
     let to_melt = function
       | LT(t, t') -> Latex.concat [
-          tag_to_melt t ;
+          Tag.to_melt t ;
           symb_lt.melt ;
-          tag_to_melt t' ]
+          Tag.to_melt t' ]
       | LTE(t, t') -> Latex.concat [
-          tag_to_melt t ;
+          Tag.to_melt t ;
           symb_leq.melt ;
-          tag_to_melt t' ]
+          Tag.to_melt t' ]
 
     let pp fmt c = Format.fprintf fmt "@[%s@]" (to_string c)
 
     let parse st =
-      ( parse_tag >>= (fun t ->
+      ( Tag.parse >>= (fun t ->
         (parse_symb symb_lt) >>
         (option (parse_symb symb_eq)) >>= (fun op ->
-        parse_tag >>= (fun t' ->
+        Tag.parse >>= (fun t' ->
         return (if Option.is_none op then LT(t,t') else LTE(t,t')))))) st
 
     let tags = function

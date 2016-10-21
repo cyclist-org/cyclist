@@ -82,7 +82,7 @@ module type S =
           with type FList.t=t list
           
         val to_int : t -> Int.t
-        (** Returns the underlying integer representation *)
+        (** Returns an integer representation *)
       end
     (** Abstract type of variables *)
 
@@ -94,7 +94,7 @@ module type S =
     include I with type var = Var.t and type var_container = Var.Set.t
     
     val to_ints : Var.Set.t -> Int.Set.t
-    (** Convenience method to return the underlying representation of a set of variables.
+    (** Convenience method to return a set of integer representatives of a set of variables.
         This is equivalent to [Var.Set.map_to Int.Set.add Int.Set.empty Var.to_int] *)
 
   end

@@ -1,3 +1,7 @@
+open MParser
+open MParser_PCRE
+module Tokens = MParser_PCRE.Tokens
+
 let classify_varname s =
   let l = String.length s in 
   assert (String.length s > 0);
@@ -8,6 +12,29 @@ module VM = (val (VarManager.mk "nil" classify_varname) : VarManager.S)
 module Elt =
   struct
     include VM.Var
+
+    let parse st =
+      (   Tokens.squares
+            ((regexp (make_regexp "[a-z][0-9]*[']?") << spaces) >>=
+              (fun name -> return (VM.mk name)))
+      <?> "Tag") st
+
+    let to_melt v =
+      if VM.is_anonymous v then Latex.empty
+      else
+      let name = to_string v in
+      let is_exist = VM.is_exist_var v in
+      let min_len = if is_exist then 2 else 1 in
+      let ltx = Symbols.char_to_greek name.[0] in
+      let ltx = if is_exist then Symbols.ltx_prime ltx else ltx in
+      let ltx =
+        if (String.length name) = min_len then ltx
+        else
+          Latex.index
+            ltx
+            (Latex.text (String.sub name 1 ((String.length name)-min_len))) in
+      Symbols.ltx_mk_math ltx
+    
     module Unifier = Treeset.Make(Pair.Make(VM.Var)(VM.Var))
 
     let unify ?(update_check=Fun._true) t t' cont init_state =

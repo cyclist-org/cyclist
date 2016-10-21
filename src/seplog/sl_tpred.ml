@@ -45,19 +45,19 @@ let is_tagged (x, _) = not (Tags.is_anonymous x)
 
 let to_string (tag, (pred, args)) =
   (Sl_predsym.to_string pred) ^
-  (tag_to_string tag) ^
+  (if Tags.is_anonymous tag then "" else sqbracket (Tags.Elt.to_string tag)) ^
   (bracket (Sl_term.FList.to_string_sep symb_comma.sep args))
 
 let to_melt (tag, (ident,args)) =
   Latex.concat
     ([ Latex.index
         (Sl_predsym.to_melt ident)
-        (tag_to_melt tag);
+        (Tags.Elt.to_melt tag);
       symb_lp.melt; ltx_comma (Blist.map Sl_term.to_melt args); symb_rp.melt ])
 
 let parse ?(allow_tags=true) st =
   (Sl_predsym.parse >>= (fun pred ->
-  (if allow_tags then option parse_tag else (return None)) >>= (fun opt_tag ->
+  (if allow_tags then option Tags.Elt.parse else (return None)) >>= (fun opt_tag ->
   Tokens.parens (Tokens.comma_sep Sl_term.parse) << spaces >>= (fun arg_list ->
   let tag = Option.dest Tags.anonymous Fun.id opt_tag in
   return (tag, (pred, arg_list))))) <?> "ind") st
@@ -67,10 +67,9 @@ let norm eqs (t, pred) = (t, Sl_pred.norm eqs pred)
 let of_string = mk_of_string parse
   
 let pp fmt (tag, pred) =
-  Format.fprintf fmt "@[%a%s%s%s%s%s@]"
+  Format.fprintf fmt "@[%a%s%s%s%s@]"
     Sl_predsym.pp (Sl_pred.predsym pred)
-    symb_caret.str
-    (tag_to_string tag) 
+    (if Tags.is_anonymous tag then "" else sqbracket (Tags.Elt.to_string tag)) 
     symb_lp.str 
     (Sl_term.FList.to_string_sep symb_comma.sep (Sl_pred.args pred)) 
     symb_rp.str
