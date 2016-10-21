@@ -1,6 +1,8 @@
 #ifndef FAIR_PROOF_AUTOMATON_HH_
 #define FAIR_PROOF_AUTOMATON_HH_
 
+#include <string>
+
 #include <spot/twa/twa.hh>
 
 #include "fair_proof.hpp"
@@ -27,12 +29,15 @@ public:
 };
 //==================================================================
 class FairProofAutomaton: public spot::twa, public FairProof {
+private:
+  std::string acceptance_condition_builder() const;
 public:
   FairProofAutomaton(size_t max_vertices_log2) : FairProof(max_vertices_log2), spot::twa(spot::make_bdd_dict()) {
-    set_acceptance(2,spot::acc_cond::acc_code("(Fin(0) | Inf(1))"));
     this->dict_ = FairProof::get_dict();
     register_aps_from_dict();
   }
+
+  void set_acceptance_condition(); 
   
   virtual ~FairProofAutomaton() {};
   virtual spot::state* get_init_state() const { return new ProofGhostState(); }
@@ -47,10 +52,10 @@ class ProofGhostSuccIterator: public spot::twa_succ_iterator {
 private:
   const FairProofAutomaton & proof;
   bool finished;
-
+  
 public:
   ProofGhostSuccIterator(const FairProofAutomaton & p) : proof(p), finished(false) {}
-
+  
   virtual bool first() { finished = false; return !done(); }
   virtual bool next() { finished = true; return !done(); }
   virtual bool done() const { return finished; }

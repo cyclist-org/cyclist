@@ -58,7 +58,6 @@ spot::acc_cond::mark_t FairTraceSuccIterator::acc() const {
 //==================================================================
 FairTraceAutomaton::FairTraceAutomaton(const FairProof & p) : proof(p), spot::twa(p.get_dict()) {
   acc_set = set_buchi();
-  /* set_acceptance(3,spot::acc_cond::acc_code("(Inf(0)")); */
 }
 //------------------------------------------------------------------
 FairTraceAutomaton::~FairTraceAutomaton() {

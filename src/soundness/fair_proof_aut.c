@@ -34,8 +34,19 @@ std::string FairProofAutomaton::format_state(const spot::state* state) const {
 
 //------------------------------------------------------------------
 spot::acc_cond::mark_t ProofSuccIterator::acc() const {
-  Label lbl = proof.get_label_of_vertex(vertex);
-  if(lbl==30) return spot::acc_cond::mark_t(1);
-  else if (lbl==40) return spot::acc_cond::mark_t(2);
-  return spot::acc_cond::mark_t();
+  AcceptanceSet acc_set = proof.get_acc_set_of_vertex(vertex);
+  if(acc_set.empty()) return spot::acc_cond::mark_t();
+  return spot::acc_cond::mark_t(acc_set.begin(),acc_set.end());
+}
+
+void FairProofAutomaton::set_acceptance_condition() {
+  std::stringstream acceptance_condition;
+  std::unordered_set<FairnessConstraint> fairness_constraints = get_fairness_constraints();
+  for(auto elem = fairness_constraints.begin(); elem != fairness_constraints.end(); ++elem) {
+    if(elem != fairness_constraints.begin()) acceptance_condition << " & ";
+    acceptance_condition << "(Fin(" << (std::get< 0 >(*elem))
+			 << ") | Inf(" << (std::get< 1 >(*elem))
+			 << "))" << std::flush;
+  } 
+  set_acceptance(get_max_acc_elem(),spot::acc_cond::acc_code(acceptance_condition.str().c_str()));
 }

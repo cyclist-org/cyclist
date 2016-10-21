@@ -40,14 +40,14 @@ void custom_print(std::ostream& out, spot::twa_graph_ptr& aut)
   out << "Initial state: " << aut->get_init_state_number() << '\n';
   out << "Atomic propositions:";
   for (spot::formula ap: aut->ap())
-      out << ' ' << ap << " (=" << dict->varnum(ap) << ')';
+    out << ' ' << ap << " (=" << dict->varnum(ap) << ')';
   out << '\n';
 
   // Arbitrary data can be attached to automata, by giving them
   // a type and a name.  The HOA parser and printer both use the
   // "automaton-name" to name the automaton.
   if (auto name = aut->get_named_prop<std::string>("automaton-name"))
-     out << "Name: " << *name << '\n';
+    out << "Name: " << *name << '\n';
 
   // For the following prop_*() methods, the return value is an
   // instance of the spot::trival class that can represent
@@ -87,113 +87,125 @@ void custom_print(std::ostream& out, spot::twa_graph_ptr& aut)
 }
 
 extern "C" void create_fair_aut(value max_log2_states) {
-	CAMLparam1(max_log2_states);
-//	std::cerr << "create_aut " << Int_val(max_log2_states) << '\n';
-	assert(proof==0);
-	proof = std::make_shared<FairProofAutomaton>(Int_val(max_log2_states));
-	CAMLreturn0;
+  CAMLparam1(max_log2_states);
+  //	std::cerr << "create_aut " << Int_val(max_log2_states) << '\n';
+  assert(proof==0);
+  proof = std::make_shared<FairProofAutomaton>(Int_val(max_log2_states));
+  CAMLreturn0;
 }
 
 extern "C" void destroy_fair_aut() {
-	CAMLparam0();
-//	std::cerr << "destroy_aut\n";
-	assert(proof);
-	proof = 0;
-	bdd_map.clear();
-	CAMLreturn0;
+  CAMLparam0();
+  //	std::cerr << "destroy_aut\n";
+  assert(proof);
+  proof = 0;
+  bdd_map.clear();
+  CAMLreturn0;
 }
 
 extern "C" void create_fair_vertex(value v_, value l_) {
-	CAMLparam1(v_);
-	assert(proof);
-	Vertex v = proof->create_vertex();
-	int id = Int_val(v_); //v.id();
-	Label l = Int_val(l_);
-	assert( bdd_map.find(id) == bdd_map.end() );
-	bdd_map[id] = v;
-	proof->label_vertex(v,l);
-//	std:: cerr << "create_vertex " << id << '\n';
-	CAMLreturn0;
+  CAMLparam1(v_);
+  assert(proof);
+  Vertex v = proof->create_vertex();
+  int id = Int_val(v_); //v.id();
+  Label l = Int_val(l_);
+  assert( bdd_map.find(id) == bdd_map.end() );
+  bdd_map[id] = v;
+  proof->label_vertex(v,l);
+  //	std:: cerr << "create_vertex " << id << '\n';
+  CAMLreturn0;
 }
 
 extern "C" void tag_fair_vertex(value v_, value t_) {
-	CAMLparam2(v_, t_);
-	int v = Int_val(v_);
-	Tag t = Int_val(t_);
-	assert(proof);
-	assert( bdd_map.find(v) != bdd_map.end() );
-	proof->tag_vertex(bdd_map[v], t);
-	CAMLreturn0;
+  CAMLparam2(v_, t_);
+  int v = Int_val(v_);
+  Tag t = Int_val(t_);
+  assert(proof);
+  assert( bdd_map.find(v) != bdd_map.end() );
+  proof->tag_vertex(bdd_map[v], t);
+  CAMLreturn0;
 }
 
 extern "C" void set_fair_successor(value v1_, value v2_) {
-	CAMLparam2(v1_, v2_);
-	int v1 = Int_val(v1_);
-	int v2 = Int_val(v2_);
-	assert(proof);
-	assert( bdd_map.find(v1) != bdd_map.end() );
-	assert( bdd_map.find(v2) != bdd_map.end() );
-	proof->set_successor(bdd_map[v1], bdd_map[v2]);
-	CAMLreturn0;
+  CAMLparam2(v1_, v2_);
+  int v1 = Int_val(v1_);
+  int v2 = Int_val(v2_);
+  assert(proof);
+  assert( bdd_map.find(v1) != bdd_map.end() );
+  assert( bdd_map.find(v2) != bdd_map.end() );
+  proof->set_successor(bdd_map[v1], bdd_map[v2]);
+  CAMLreturn0;
 }
 
 extern "C" void set_fair_trace_pair(value v1_, value v2_, value t1_, value t2_) {
-	CAMLparam4(v1_, v2_, t1_, t2_);
-	int v1 = Int_val(v1_);
-	int v2 = Int_val(v2_);
-	Tag t1 = Int_val(t1_);
-	Tag t2 = Int_val(t2_);
-	assert(proof);
-	assert( bdd_map.find(v1) != bdd_map.end() );
-	assert( bdd_map.find(v2) != bdd_map.end() );
-	proof->set_trace_pair(bdd_map[v1], bdd_map[v2], t1, t2);
-	CAMLreturn0;
+  CAMLparam4(v1_, v2_, t1_, t2_);
+  int v1 = Int_val(v1_);
+  int v2 = Int_val(v2_);
+  Tag t1 = Int_val(t1_);
+  Tag t2 = Int_val(t2_);
+  assert(proof);
+  assert( bdd_map.find(v1) != bdd_map.end() );
+  assert( bdd_map.find(v2) != bdd_map.end() );
+  proof->set_trace_pair(bdd_map[v1], bdd_map[v2], t1, t2);
+  CAMLreturn0;
 }
 
 extern "C" void set_fair_progress_pair(value v1_, value v2_, value t1_, value t2_) {
-	CAMLparam4(v1_, v2_, t1_, t2_);
-	int v1 = Int_val(v1_);
-	int v2 = Int_val(v2_);
-	Tag t1 = Int_val(t1_);
-	Tag t2 = Int_val(t2_);
-	assert(proof);
-	assert( bdd_map.find(v1) != bdd_map.end() );
-	assert( bdd_map.find(v2) != bdd_map.end() );
-	proof->set_progress_pair(bdd_map[v1], bdd_map[v2], t1, t2);
-	CAMLreturn0;
+  CAMLparam4(v1_, v2_, t1_, t2_);
+  int v1 = Int_val(v1_);
+  int v2 = Int_val(v2_);
+  Tag t1 = Int_val(t1_);
+  Tag t2 = Int_val(t2_);
+  assert(proof);
+  assert( bdd_map.find(v1) != bdd_map.end() );
+  assert( bdd_map.find(v2) != bdd_map.end() );
+  proof->set_progress_pair(bdd_map[v1], bdd_map[v2], t1, t2);
+  CAMLreturn0;
+}
+
+extern "C" void set_fairness_constraint(value v1_, value v2_) {
+  CAMLparam2(v1_,v2_);
+  int v1 = Int_val(v1_);
+  int v2 = Int_val(v2_);
+  assert(proof);
+  assert( bdd_map.find(v1) != bdd_map.end() );
+  assert( bdd_map.find(v2) != bdd_map.end() );
+  proof->set_fairness_constraint(bdd_map[v1], bdd_map[v2]);
+  CAMLreturn0;
 }
 
 extern "C" value check_fair_soundness() {
-	CAMLparam0();
-	CAMLlocal1(v_res);
-	//	custom_print(std::cout,proof);
-	spot::twa_graph_ptr proof_graph = copy(proof, spot::twa::prop_set::all());
-	custom_print(std::cout,proof_graph);
-	spot::const_twa_ptr ta = std::make_shared<FairTraceAutomaton>(*proof);
-	spot::twa_graph_ptr proof_cpy = copy(proof, spot::twa::prop_set::all());
-	spot::twa_graph_ptr graph = copy(ta, spot::twa::prop_set::all());
-	custom_print(std::cout,graph);
-	spot::twa_graph_ptr det = to_generalized_buchi(dtwa_complement(tgba_determinize(graph, false, true, true, spot::check_stutter_invariance(graph).is_true())));
-	//spot::print_dot(std::cerr, ta);
-	spot::twa_graph_ptr proof_tgba = to_generalized_buchi(proof_cpy);
-	spot::const_twa_ptr product = std::make_shared<spot::twa_product>(proof_tgba, det);
-	spot::couvreur99_check ec(product);
-	std::shared_ptr<spot::emptiness_check_result> res = ec.check();
+  CAMLparam0();
+  CAMLlocal1(v_res);
+  //	custom_print(std::cout,proof);
+  proof->set_acceptance_condition();
+  spot::twa_graph_ptr proof_graph = copy(proof, spot::twa::prop_set::all());
+  custom_print(std::cout,proof_graph);
+  spot::const_twa_ptr ta = std::make_shared<FairTraceAutomaton>(*proof);
+  spot::twa_graph_ptr proof_cpy = copy(proof, spot::twa::prop_set::all());
+  spot::twa_graph_ptr graph = copy(ta, spot::twa::prop_set::all());
+  custom_print(std::cout,graph);
+  spot::twa_graph_ptr det = to_generalized_buchi(dtwa_complement(tgba_determinize(graph, false, true, true, spot::check_stutter_invariance(graph).is_true())));
+  //spot::print_dot(std::cerr, ta);
+  spot::twa_graph_ptr proof_tgba = to_generalized_buchi(proof_cpy);
+  spot::const_twa_ptr product = std::make_shared<spot::twa_product>(proof_tgba, det);
+  spot::couvreur99_check ec(product);
+  std::shared_ptr<spot::emptiness_check_result> res = ec.check();
 
-	bool retval = (res == 0);
+  bool retval = (res == 0);
 	
-	//std:: cout << "retval " << retval << '\n';
+  //std:: cout << "retval " << retval << '\n';
 
-	v_res = Val_bool(retval);
-	CAMLreturn(v_res);
+  v_res = Val_bool(retval);
+  CAMLreturn(v_res);
 }
 
 extern "C" void set_initial_fair_vertex(value v_) {
-	CAMLparam1(v_);
-	int v = Int_val(v_);
-//	std::cerr << "set_initial_vertex " << v << '\n';
-	assert(proof);
-	assert( bdd_map.find(v) != bdd_map.end() );
-	proof->set_initial_vertex( bdd_map[v] );
-	CAMLreturn0;
+  CAMLparam1(v_);
+  int v = Int_val(v_);
+  //	std::cerr << "set_initial_vertex " << v << '\n';
+  assert(proof);
+  assert( bdd_map.find(v) != bdd_map.end() );
+  proof->set_initial_vertex( bdd_map[v] );
+  CAMLreturn0;
 }

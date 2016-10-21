@@ -7,7 +7,8 @@ external set_fair_trace_pair : int -> int -> int -> int -> unit = "set_fair_trac
 external set_fair_progress_pair : int -> int -> int -> int -> unit = "set_fair_progress_pair" ;;
 external check_fair_soundness : unit -> bool = "check_fair_soundness" ;;
 external set_initial_fair_vertex : int -> unit = "set_initial_fair_vertex" ;; 
-
+external set_fairness_constraint : int -> int -> unit = "set_fairness_constraint" ;;
+  
 create_fair_aut 4 ;;
 let t1 = 1 ;; (* create_tag () ;; *)
 let t2 = 2 ;; (* create_tag () ;; *)
@@ -29,7 +30,7 @@ create_fair_vertex v2 c2 ;;
 tag_fair_vertex v2 t2 ;;
 
 let v3 = 3 ;;
-  create_fair_vertex v3 c3;; 
+create_fair_vertex v3 c3;; 
 tag_fair_vertex v3 t1 ;;
 tag_fair_vertex v3 t2 ;;
 
@@ -64,6 +65,9 @@ set_fair_trace_pair v4 v1 t2 t2 ;;
 
 set_fair_progress_pair v1 v3 t1 t1 ;;
 
+set_fairness_constraint v1 v3 ;;
+set_fairness_constraint v3 v4 ;;
+  
 print_int (if check_fair_soundness () then 1 else 0) ;;
 Printf.printf "\n" ;
 
