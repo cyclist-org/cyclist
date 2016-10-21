@@ -7,7 +7,7 @@ let classify_varname s =
   assert (String.length s > 0);
   if l > 1 && s.[l-1] = '\'' then VarManager.BOUND
   else VarManager.FREE
-module VM = (val (VarManager.mk "nil" classify_varname) : VarManager.S)
+module VM = (val (VarManager.mk 0 "nil" classify_varname) : VarManager.S)
 
 module Elt =
   struct

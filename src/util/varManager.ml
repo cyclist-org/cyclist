@@ -66,7 +66,16 @@ type varname_class =
   | BOUND
   | ANONYMOUS 
 
-let mk anon_str classify_varname = 
+
+let cyclic_permute s n =
+  let len = String.length s in
+  let i = n mod len in
+  let start = if i <= 0 then abs i else len - i in
+  let fst = String.sub s start (len - start) in
+  let snd = String.sub s 0 start in
+  String.concat "" [fst; snd]
+
+let mk seed anon_str classify_varname = 
   (module
     struct
       let termtbl = H.create 997
@@ -104,12 +113,14 @@ let mk anon_str classify_varname =
       let is_exist_var n = (not (is_anonymous n)) && (classify_varname n.Hashcons.node) = BOUND
       let is_free_var n = (not (is_anonymous n)) && (classify_varname n.Hashcons.node) = FREE
   
-      let search_vars =
+      let letters = 
         let explode s = 
           let rec loop p acc = 
             if p < 0 then acc else loop (p-1) (String.sub s p 1::acc) in
           loop ((String.length s) - 1) [] in
-        let letters = Blist.rev (explode "xyzwabcdefghijklmnopqrstuv") in
+        Blist.rev (explode (cyclic_permute "abcdefghijklmnopqrstuvwxyz" seed))
+        
+      let search_vars =
         let mk_var free lvl acc n = 
           let n = if lvl=0 then n else (n ^ "_" ^ (string_of_int lvl)) in
           (if free then (mk n) else (mk (n ^ "'"))) :: acc in 

@@ -10,7 +10,7 @@ let classify_varname s =
   if l > 1 && s.[l-1] = '\'' then VarManager.BOUND
   else VarManager.FREE
 
-include (val (VarManager.mk "nil" classify_varname) : VarManager.S)
+include (val (VarManager.mk 4 "nil" classify_varname) : VarManager.S)
 
 (* BasicType signature *)
 type t = Var.t

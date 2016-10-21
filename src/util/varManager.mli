@@ -104,5 +104,9 @@ type varname_class =
   | BOUND
   | ANONYMOUS 
 
-val mk : string -> (string -> varname_class) -> (module S)
-(** Create a VarManager *)
+val mk : int -> string -> (string -> varname_class) -> (module S)
+(** [mk seed anon_str classify] creates a new variable manager module where:
+      [seed] specifies a cyclic permutation of the alphabet, which is used 
+        internally to create new variable names;
+      [anon_str] specifies how to represent "anonymous" variables as a string;
+      [classify varname] returns a value of type [varname_class] classifying [varname]. *)
