@@ -63,7 +63,7 @@ struct
   
   let subst theta (v, g) =
     let v' = 
-      Allocated.endomap_fst (fun z -> Sl_term.subst theta z) v in
+      Allocated.endomap_fst (fun z -> Sl_subst.apply theta z) v in
     let g' = Sl_heap.subst theta g in
     (v', g')
   
@@ -73,7 +73,7 @@ struct
       Sl_term.Set.union (Allocated.vars v) (Sl_heap.vars h) in
     let theta = Sl_subst.avoid avoidvars (Sl_term.Set.of_list formals) in
     (* let theta = Sl_subst.avoid avoidvars (Sl_indrule.vars case) in *)
-    let formals = Blist.map (fun x -> Sl_term.subst theta x) formals in
+    let formals = Blist.map (fun x -> Sl_subst.apply theta x) formals in
     let (v', g') = subst theta (v', g') in
     (* now carry on with substitution as normal *)
     (* let formals = Sl_indrule.formals case in *)

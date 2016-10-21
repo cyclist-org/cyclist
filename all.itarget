@@ -1,10 +1,10 @@
 #src/firstorder/fo_prove.native  
 src/generic/checkproof.native
 src/seplog/sl_prove.native
-#src/seplog/sl_disprove.native
+src/seplog/sl_disprove.native
 src/seplog/sl_modelcheck.native
-#src/slsat/sl_satcheck.native  
-#src/slsat/slsat_expgen.native
+src/slsat/sl_satcheck.native  
+src/slsat/slsat_expgen.native
 #src/goto/goto_prove.native
 #src/while/while_prove.native  
 #src/while/while_abduce.native
