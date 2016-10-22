@@ -269,8 +269,8 @@ let parse ?(allow_tags=true) ?(augment_deqs=true) st =
   (sep_by1 (parse_atom ~allow_tags) (parse_symb symb_star) >>= (fun atoms ->
           return (Blist.foldl (star ~augment_deqs) empty atoms)) <?> "symheap") st
 
-let of_string s =
-  handle_reply (MParser.parse_string parse s ())
+let of_string ?(allow_tags=true) ?(augment_deqs=true) s =
+  handle_reply (MParser.parse_string (parse ~allow_tags ~augment_deqs) s ())
 
 let add_eq h eq =
   { h with eqs = Sl_uf.add eq h.eqs; _terms=None; _vars=None; _tags=None }

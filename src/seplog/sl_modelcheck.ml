@@ -68,7 +68,7 @@ let () =
   Arg.parse speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) usage ;
   if !str_model="" then die "-M must be specified." ;
   if !str_symheap="" then die "-F must be specified." ;
-  let sh = Sl_heap.of_string !str_symheap in
+  let sh = Sl_heap.of_string ~allow_tags:false !str_symheap in
   (* TODO: Need to check that all predicate instances in sh match the arity in defs *)
   let defs = Sl_defs.of_channel (open_in !defs_path) in
   let ((s, h) as model) = MCGen.model_of_string model_parser !str_model in

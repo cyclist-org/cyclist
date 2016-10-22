@@ -86,7 +86,7 @@ val is_empty : t -> bool
 (** Constructors. *)
 
 val parse : ?allow_tags:bool -> ?augment_deqs:bool -> (t, 'a) MParser.t
-val of_string : string -> t
+val of_string : ?allow_tags:bool -> ?augment_deqs:bool -> string -> t
 
 val mk_pto : Sl_pto.t -> t
 val mk_eq : Sl_tpair.t -> t
