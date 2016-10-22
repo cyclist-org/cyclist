@@ -20,11 +20,12 @@ val subst : Sl_subst.t -> t -> t
 val parse : (t, 'a) MParser.t
 
 val unfold : 
-  (Sl_term.Set.t * Tags.t) -> Sl_tpred.t -> t -> Sl_heap.t
+  ?gen_tags:bool -> (Sl_term.Set.t * Tags.t) -> Sl_tpred.t -> t -> Sl_heap.t
 (** [unfold (vs, ts) p r] returns the body of the inductive rule [r] with:
       the formal parameters replaced by the arguments of [p]; 
       the remaining variables freshened, avoiding those in [vs]; and
-      the predicates assigned fresh existential tags, avoiding those in [ts].
+      the predicates assigned fresh existential tags avoiding those in [ts],
+        unless the optional argument [gen_tags=true] is set to false.
     NB. This assumes that all predicates in the body of [r] are untagged.
 *)  
     

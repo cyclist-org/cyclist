@@ -30,7 +30,6 @@ let biunify ?(tagpairs=false) ?(update_check=Fun._true)
   init_state
 
 let predsym tpred = Sl_pred.predsym (snd tpred)
-let tag (t, _) = t
 let args tpred = Sl_pred.args (snd tpred)
 let arity tpred = Sl_pred.arity (snd tpred)
 let tag (t, _) = t

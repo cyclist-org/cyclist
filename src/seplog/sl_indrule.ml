@@ -64,12 +64,12 @@ let parse st =
           Sl_pred.parse << spaces >>=
           (fun head -> return (mk h head))) <?> "case") st
 
-let unfold (vars, tags) (tag, (ident, args)) case =
+let unfold ?(gen_tags=true) (vars, tags) (tag, (ident, args)) case =
   let (f, (ident', formals)) = dest (freshen vars case) in
   assert (Sl_predsym.equal ident ident') ;
   assert (Blist.length args == Blist.length formals) ;
   assert (Tags.is_empty (Sl_heap.tags f)) ;
-  let f = Sl_heap.complete_tags tags f in 
+  let f = if gen_tags then Sl_heap.complete_tags tags f else f in 
   let theta = Sl_term.Map.of_list (Blist.combine formals args) in
   Sl_heap.subst theta f
 

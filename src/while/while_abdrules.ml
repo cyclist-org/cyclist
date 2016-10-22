@@ -80,7 +80,7 @@ let inline defs =
           let pred = 
             Sl_tpreds.find (fun (_, (h'', _)) -> Sl_predsym.equal h h'') f.SH.inds in
           let f = SH.with_inds f (Sl_tpreds.remove pred f.SH.inds) in
-          let (g, _) = Sl_indrule.unfold (Sl_indrule.vars orig) f pred case in
+          let g = Sl_indrule.unfold ~gen_tags:false ((Sl_indrule.vars orig), Tags.empty) pred case in
           Sl_heap.star f g
         with Not_found -> f in
       let p'' = Sl_heap.fixpoint first_unfold p' in
@@ -181,7 +181,7 @@ let eq_subst_ex = While_rules.eq_subst_ex_f
 
 let simpl_deqs seq =
   try
-    let (f,cmd) = dest_sh_seq seq in
+    let ((cs,f),cmd) = dest_sh_seq seq in
     let terms =
 			Sl_term.Set.add Sl_term.nil (Sl_heap.vars (SH.with_deqs f Sl_deqs.empty)) in
     let newdeqs =
@@ -191,7 +191,7 @@ let simpl_deqs seq =
       f.SH.deqs in
     let f' = SH.with_deqs f newdeqs in
     if Sl_heap.equal f f' then [] else
-		let s = ([f'], cmd) in
+		let s = ((cs,[f']), cmd) in
     [ [ (s, While_rules.tagpairs s, Tagpairs.empty) ], "Simpl Deqs" ]
   with Not_symheap -> []
 
@@ -219,34 +219,34 @@ let symex_assign_rule = Abdrule.lift While_rules.symex_assign_rule
 let symex_nondet_if_rule =
   let rl seq =
     try
-      let (f,cmd) = dest_sh_seq seq in
+      let ((cs,f),cmd) = dest_sh_seq seq in
       let (c,cmd') = Cmd.dest_if cmd in
       if Cond.is_det c then [] else
       let cont = Cmd.get_cont cmd in
-      While_rules.fix_tps [[ ([f], Cmd.mk_seq cmd' cont); ([f], cont) ], "If(nondet)"]
+      While_rules.fix_tps [[ ((cs,[f]), Cmd.mk_seq cmd' cont); ((cs,[f]), cont) ], "If(nondet)"]
     with Not_symheap | WrongCmd -> [] in
   Abdrule.lift (Rule.mk_infrule rl) 
 
 let symex_nondet_ifelse_rule =
   let rl seq =
     try
-      let (f,cmd) = dest_sh_seq seq in
+      let ((cs,f),cmd) = dest_sh_seq seq in
       let (c,cmd',cmd'') = Cmd.dest_ifelse cmd in
       if Cond.is_det c then [] else
       let cont = Cmd.get_cont cmd in
       While_rules.fix_tps
-        [[ ([f], Cmd.mk_seq cmd' cont); ([f], Cmd.mk_seq cmd'' cont) ], "IfElse(nondet)"]
+        [[ ((cs,[f]), Cmd.mk_seq cmd' cont); ((cs,[f]), Cmd.mk_seq cmd'' cont) ], "IfElse(nondet)"]
     with Not_symheap | WrongCmd -> [] in
   Abdrule.lift (Rule.mk_infrule rl) 
 
 let symex_nondet_while_rule =
   let rl seq =
     try
-      let (f,cmd) = dest_sh_seq seq in
+      let ((cs,f),cmd) = dest_sh_seq seq in
       let (c,cmd') = Cmd.dest_while cmd in
       if Cond.is_det c then [] else
       let cont = Cmd.get_cont cmd in
-      While_rules.fix_tps [[ ([f], Cmd.mk_seq cmd' cmd); ([f], cont) ], "If(nondet)"]
+      While_rules.fix_tps [[ ((cs,[f]), Cmd.mk_seq cmd' cmd); ((cs,[f]), cont) ], "If(nondet)"]
     with Not_symheap | WrongCmd -> [] in
   Abdrule.lift (Rule.mk_infrule rl) 
 
@@ -255,12 +255,12 @@ let symex_nondet_while_rule =
 let symex_det_if_rule =
   let rl seq =
     try
-      let (f,cmd) = dest_sh_seq seq in
+      let ((cs,f),cmd) = dest_sh_seq seq in
       let (c,cmd') = Cmd.dest_if cmd in
       if Cond.is_non_det c then [] else
       let (x,y) = Cond.dest c in
       let cont = Cmd.get_cont cmd in
-      let mk_ret c = While_rules.fix_tps [[ ([f],c) ], "If(det)"] in
+      let mk_ret c = While_rules.fix_tps [[ ((cs,[f]),c) ], "If(det)"] in
       match (Cond.is_deq c, Sl_heap.equates f x y, Sl_heap.disequates f x y) with
         (* cmd wants equality and formula provides it so take the branch *)
         (* cmd wants disequality and formula provides it so take branch *)
@@ -277,12 +277,12 @@ let symex_det_if_rule =
 let symex_det_ifelse_rule =
   let rl seq =
     try
-      let (f,cmd) = dest_sh_seq seq in
+      let ((cs,f),cmd) = dest_sh_seq seq in
       let (c,cmd',cmd'') = Cmd.dest_ifelse cmd in
       if Cond.is_non_det c then [] else
       let (x,y) = Cond.dest c in
       let cont = Cmd.get_cont cmd in
-      let mk_ret c = While_rules.fix_tps [[ ([f], c) ], "If(det)"] in
+      let mk_ret c = While_rules.fix_tps [[ ((cs,[f]), c) ], "If(det)"] in
       match (Cond.is_deq c, Sl_heap.equates f x y, Sl_heap.disequates f x y) with
         (* cmd wants equality and formula provides it so take the branch *)
         (* cmd wants disequality and formula provides it so take branch *)
@@ -299,12 +299,12 @@ let symex_det_ifelse_rule =
 let symex_det_while_rule =
   let rl seq =
     try
-      let (f,cmd) = dest_sh_seq seq in
+      let ((cs,f),cmd) = dest_sh_seq seq in
       let (c,cmd') = Cmd.dest_while cmd in
       if Cond.is_non_det c then [] else
       let (x,y) = Cond.dest c in
       let cont = Cmd.get_cont cmd in
-      let mk_ret c = While_rules.fix_tps [[ ([f], c) ], "While(det)"] in
+      let mk_ret c = While_rules.fix_tps [[ ((cs,[f]), c) ], "While(det)"] in
       match (Cond.is_deq c, Sl_heap.equates f x y, Sl_heap.disequates f x y) with
         (* cmd wants equality and formula provides it so take the branch *)
         (* cmd wants disequality, formula provides it so take branch *)
@@ -337,7 +337,7 @@ let generalise_while_rule =
       h.SH.inds in
   let rl seq =
     try
-      let (f,cmd) = dest_sh_seq seq in
+      let ((cs,f),cmd) = dest_sh_seq seq in
       let (_,cmd') = Cmd.dest_while cmd in
 			let m = Sl_term.Set.inter (Cmd.modifies cmd') (Sl_heap.vars f) in
 			let subs = Sl_term.Set.subsets m in
@@ -345,7 +345,7 @@ let generalise_while_rule =
 			  begin fun m' ->
       		let f' = generalise m' f in
       		if Sl_heap.equal f f' then None else
-					let s' = ([f'], cmd) in
+					let s' = ((cs,[f']), cmd) in
           Some ([ (s', While_rules.tagpairs s', Tagpairs.empty) ], "Gen.While")
 			  end
 				subs)
@@ -358,7 +358,7 @@ let abd_deref =
   let rl seq defs =
     debug (fun () -> "Abd deref") ;
     try
-      let (f,cmd) = dest_sh_seq seq in
+      let ((cs,f),cmd) = dest_sh_seq seq in
       let x = Cmd.dest_deref cmd in
       let inds = Sl_tpreds.to_list (get_undefined defs f) in
 		  if inds=[] then [] else
@@ -377,7 +377,7 @@ let abd_deref =
 						let clause =
 							Sl_heap.star
   							(Sl_heap.mk_pto (newx, pto_params))
-  							(Sl_heap.mk_ind (1, (fresh_ident, (newparams @ pto_params)))) in
+  							(Sl_heap.mk_ind (Tags.anonymous, (fresh_ident, (newparams @ pto_params)))) in
         	Sl_defs.add 
             (Sl_preddef.mk ( [Sl_indrule.mk clause head], ident ))
             defs
@@ -391,7 +391,7 @@ let abd_deref =
 let abd_det_guard =
   let rl seq defs =
     try
-      let (f,cmd) = dest_sh_seq seq in
+      let ((cs,f),cmd) = dest_sh_seq seq in
       if not (Cmd.is_if cmd || Cmd.is_ifelse cmd || Cmd.is_while cmd) then [] else
       let c =
         begin
@@ -427,13 +427,13 @@ let abd_det_guard =
               (Sl_uf.of_list [pair])
               Sl_deqs.empty
               Sl_ptos.empty
-              (Sl_tpreds.singleton (1, (fresh_ident, newparams))) in
+              (Sl_tpreds.singleton (Tags.anonymous, (fresh_ident, newparams))) in
           let clause_deq =
             SH.mk
               Sl_uf.empty
               (Sl_deqs.singleton pair)
               Sl_ptos.empty
-              (Sl_tpreds.singleton (1, (fresh_ident', newparams))) in
+              (Sl_tpreds.singleton (Tags.anonymous, (fresh_ident', newparams))) in
           Sl_defs.add 
             (Sl_preddef.mk 
               ([Sl_indrule.mk clause_eq head; 
@@ -448,7 +448,7 @@ let abd_det_guard =
 let abd_back_rule =
   let rl s1 s2 defs =
     try
-      let ((l1,cmd1),(l2,cmd2)) = Pair.map dest_sh_seq (s1,s2) in
+      let (((cs1,l1),cmd1),((cs2,l2),cmd2)) = Pair.map dest_sh_seq (s1,s2) in
       if
         not (Cmd.equal cmd1 cmd2) ||
         Sl_deqs.cardinal l1.SH.deqs < Sl_deqs.cardinal l2.SH.deqs ||
@@ -490,7 +490,7 @@ let abd_back_rule =
 						let cl =
               SH.with_inds 
                 Sl_heap.empty 
-                (Sl_tpreds.of_list [(1,(c',perm)); (2, (fresh_ident, newparams))]) in
+                (Sl_tpreds.of_list [(Tags.anonymous,(c',perm)); (Tags.anonymous, (fresh_ident, newparams))]) in
             Sl_defs.add 
               (Sl_preddef.mk (( [Sl_indrule.mk cl (c, newparams)], c )))
               defs)
