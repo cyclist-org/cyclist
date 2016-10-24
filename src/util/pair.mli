@@ -8,6 +8,10 @@ val right : 'a * 'b -> 'b
 (** Pair destructor. *)
 val map : ('a -> 'b) -> 'a * 'a -> 'b * 'b
 (** Apply a function to both members individually and put results in a new pair. *)
+val map_left : ('a -> 'c) -> 'a * 'b -> 'c * 'b
+(** Apply a function to the left-hand component only *)
+val map_right : ('b -> 'c) -> 'a * 'b -> 'a * 'c
+(** Apply a function to the right-hand component only *)
 val apply : ('a -> 'b -> 'c) -> 'a * 'b -> 'c 
 (** Apply a function taking two arguments to the members of a pair. *)
 val conj : bool * bool -> bool 

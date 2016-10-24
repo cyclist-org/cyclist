@@ -1,6 +1,6 @@
 fields: this;
 precondition: one!=zero * true!=false * wakend->true * flag=one;
-property: EF AG wakend=nil;
+property: EF (AG (wakend=nil));
 while flag=one do
       if sigup=one then
       	 sigup:=zero;

@@ -39,8 +39,8 @@ module Defs =
         (fun def -> Sl_predsym.equal ident (Sl_preddef.predsym def))
         defs)
 
-    let unfold (vars, tags) ((_, (ident, _)) as pred) defs =
-      Blist.map (Sl_indrule.unfold (vars, tags) pred) (get_def ident defs)
+    let unfold ?(gen_tags=true) (vars, tags) ((_, (ident, _)) as pred) defs =
+      Blist.map (Sl_indrule.unfold ~gen_tags (vars, tags) pred) (get_def ident defs)
 
     let of_formula defs ((_, hs) as f) =
       let counter = ref 0 in

@@ -12,6 +12,7 @@ CTLMAIN:=./src/temporal_ctl/temporal_ctl_prove.native
 LTLMAIN:=./src/temporal_ltl/temporal_ltl_prove.native
 
 WHL2_TEST_FILES:=$(shell find ./benchmarks/procs -name '*.wl2' | sort)
+CTL_TEST_FILES:=$(shell find ./benchmarks/temporal -name '*.ctl' | sort)
 
 all:
 	$(OCB) all.otarget
@@ -76,6 +77,9 @@ whl-tests:
 
 proc-tests:
 	-@for TST in $(WHL2_TEST_FILES) ; do echo $$TST: ; _build/$(XTDPRMAIN) $(TST_OPTS) -P $$TST ; echo ; done
+
+ctl-tests:
+	-@for TST in $(CTL_TEST_FILES) ; do echo $$TST: ; _build/$(CTLMAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
 whl_abd-tests:
 	-@for TST in $(BENCHDIR)/whl_abd/*.wl ; do echo $$TST ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done

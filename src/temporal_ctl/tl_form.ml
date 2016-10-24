@@ -49,8 +49,8 @@ sig
   val mk_circle : t -> t
   val mk_diamond : t -> t
   val mk_box : t -> t
-  val mk_ag : int -> t -> t
-  val mk_eg : int -> t -> t
+  val mk_ag : Tags.elt -> t -> t
+  val mk_eg : Tags.elt -> t -> t
   val mk_af : t -> t
   val mk_ef : t -> t
   val mk_and : t list -> t
@@ -79,7 +79,12 @@ sig
   val vars : t -> Sl_term.Set.t
   val equal : t -> t -> bool
   val equal_upto_tags : t -> t -> bool
-				    
+
+  val complete_tags : Tags.t -> t -> t
+  (** [complete_tags ts f] returns the formula obtained from f by assigning
+      all untagged AG/EG occurrences a fresh free tag, avoiding those in [ts].
+  *)
+
   val e_step : t -> t
   val a_step : t -> t
 		      
@@ -172,19 +177,31 @@ end
       | Or(x,_) -> x
       | _ -> invalid_arg "dest_or"
 
-    let mk_final = (Final 1)
-    let mk_atom a = Atom(a,1)
-    let mk_circle f = Circle(f, 1 + depth f)
-    let mk_diamond f = Diamond(f, 1 + depth f)
-    let mk_box f = Box(f, 1 + depth f)
-    let mk_ag t f = AG(t, f, 1 + depth f)
-    let mk_eg t f = EG(t, f, 1 + depth f)
-    let mk_af f = AF(f, 1 + depth f)
-    let mk_ef f = EF(f, 1 + depth f)
+    let _mk_final n = (Final n)
+    let _mk_atom a n = Atom(a, n)
+    let _mk_circle f n = Circle(f, n)
+    let _mk_diamond f n = Diamond(f, n)
+    let _mk_box f n = Box(f, n)
+    let _mk_ag t f n = AG(t, f, n)
+    let _mk_eg t f n = EG(t, f, n)
+    let _mk_af f n = AF(f, n)
+    let _mk_ef f n = EF(f, n)
+    let _mk_and fs n = And(fs, n)
+    let _mk_or fs n = Or(fs, n)
+
+    let mk_final = _mk_final 1
+    let mk_atom a = _mk_atom a 1
+    let mk_circle f = _mk_circle f (1 + depth f)
+    let mk_diamond f = _mk_diamond f (1 + depth f)
+    let mk_box f = _mk_box f (1 + depth f)
+    let mk_ag t f = _mk_ag t f (1 + depth f)
+    let mk_eg t f = _mk_eg t f (1 + depth f)
+    let mk_af f = _mk_af f (1 + depth f)
+    let mk_ef f = _mk_ef f (1 + depth f)
     let mk_and fs = 
-      And(fs, 1 + (List.fold_left (fun d f -> max (depth f) d) 0 fs))
+      _mk_and fs (1 + (List.fold_left (fun d f -> max (depth f) d) 0 fs))
     let mk_or fs = 
-      Or(fs, 1 + (List.fold_left (fun d f -> max (depth f) d) 0 fs))
+      _mk_or fs (1 + (List.fold_left (fun d f -> max (depth f) d) 0 fs))
 
     let unfold_ag f = match f with
       | AG(_,inner,_) -> (inner,mk_box f)
@@ -203,21 +220,19 @@ end
       | _ -> invalid_arg "unfold_ef"
 		
     let unfold_or f = match f with 
-      | Or(fs,i) -> begin match (List.length fs) with
-		    | 0
-		    | 1 -> invalid_arg "unfold_or"
-		    | 2 -> (List.hd fs, List.hd (List.tl fs))
-		    | _ -> (List.hd fs, mk_or (List.tl fs))
+      | Or(fs,i) -> begin match fs with
+        | [] | [_] -> invalid_arg "unfold_or"
+        | [f;f'] -> (f, f')
+        | f::fs_ -> (f, mk_or fs)
 		    end
       | _ -> invalid_arg "unfold_or"	
 			 
     let unfold_and f = match f with 
-      | And(fs,i) -> begin match (List.length fs) with
-		     | 0
-		     | 1 -> invalid_arg "unfold_or"
-		     | 2 -> (List.hd fs, List.hd (List.tl fs))
-		     | _ -> (List.hd fs, mk_and (List.tl fs))
-		     end
+      | And(fs,i) -> begin match fs with
+        | [] | [_] -> invalid_arg "unfold_and"
+        | [f;f'] -> (f, f')
+        | f::fs -> (f, mk_and fs)
+        end
       | _ -> invalid_arg "unfold_or"	
 
     let rec fold f acc g = match g with
@@ -234,22 +249,24 @@ end
       fold (fun g' acc -> acc || f g') false g
 
     let rec _to_string f = 
-      (if is_and f || is_or f then bracket else id) (to_string f)
-    and to_string = function
+      (if is_and f || is_or f then bracket else Fun.id) (to_string f)
+    and to_string = 
+      let tag_to_string t = if Tags.is_anonymous t then "" else "_" ^ sqbracket (Tags.Elt.to_string t) in
+      function
       | Final(i) -> "final"
       | Atom(a,_) -> Sl_heap.to_string a  
       | Circle(f,_) -> "()" ^ (_to_string f)
       | Diamond(f,_) -> "<>" ^ (_to_string f)
       (* | Box(tag, f, _) -> "[" ^ (string_of_int tag) ^ "]" ^ (_to_string f) *)
       | Box(f, _) -> "[]" ^ (_to_string f)
-      | AG(tag, f, _) -> "AG_" ^ (string_of_int tag) ^ (_to_string f)
-      | EG(tag, f, _) -> "EG_" ^ (string_of_int tag) ^ (_to_string f)
-      | AF(f, _) -> "AF" ^ (_to_string f)
-      | EF(f, _) -> "EF" ^ (_to_string f)
+      | AG(tag, f, _) -> "AG" ^ (tag_to_string tag) ^ " " ^ (_to_string f)
+      | EG(tag, f, _) -> "EG" ^ (tag_to_string tag) ^ " " ^ (_to_string f)
+      | AF(f, _) -> "AF " ^ (_to_string f)
+      | EF(f, _) -> "EF " ^ (_to_string f)
       | And(fs,_) -> 
 	 Blist.to_string 
 	   " & " 
-	   (fun g -> (if is_or g then bracket else id) (to_string g)) 
+	   (fun g -> (if is_or g then bracket else Fun.id) (to_string g)) 
 	   fs
       | Or(fs,_) -> 
 	 Blist.to_string " | " to_string fs
@@ -285,7 +302,7 @@ end
 	| AG (atag, a, _), AG(btag, b, _)
 	| EG (atag, a, _), EG(btag, b, _) ->
 	   begin
-	     match Int.compare atag btag with
+	     match Tags.Elt.compare atag btag with
 	     | 0 -> compare a b
 	     | n -> n
 	   end
@@ -408,41 +425,44 @@ end
     (*   let f' = fixpoint norm f in *)
     (*   if is_or f' then f' else mk_or (FormSet.singleton f')   *)
 
+    let to_formula hs = Ord_constraints.empty, hs
+
     let rec to_slformula t = 
       match t with
-      | Final i -> invalid_arg ((string_of_int i) ^"-AND- to_slformula")
-      | Atom(g,_) -> [g] 
-      | Or(fs,_) -> Blist.flatten (List.map to_slformula fs) 
-      | And(fs,i) -> invalid_arg ((string_of_int i) ^"-AND- to_slformula" ^ to_string t)
-      | Circle(fs,i) -> invalid_arg ((string_of_int i) ^"-CIRCLE- to_slformula" ^ to_string t)
-      | Diamond(fs,i) -> invalid_arg ((string_of_int i) ^"-AND- to_slformula" ^ to_string t)
-      | Box(fs,i) -> invalid_arg ((string_of_int i) ^"-BOX- to_slformula" ^ to_string t)
-      | AG(_,fs,i) -> invalid_arg ((string_of_int i) ^"-AG- to_slformula" ^ to_string t)
-      | EG(_,fs,i) -> invalid_arg ((string_of_int i) ^"-EG- to_slformula" ^ to_string t)
-      | AF(fs,i) -> invalid_arg ((string_of_int i) ^"-AF- to_slformula" ^ to_string t)
-      | EF(fs,i) -> invalid_arg ((string_of_int i) ^"-EF- to_slformula" ^ to_string t)
+      | Final i -> invalid_arg ((string_of_int i) ^" -AND- to_slformula")
+      | Atom(g,_) -> to_formula [g] 
+      | Or(fs,_) -> 
+          let hs = Blist.fold_right (fun (_, hs) hs_acc -> hs @ hs_acc) (List.map to_slformula fs) [] in 
+          to_formula hs
+      | And(fs,i) -> invalid_arg ((string_of_int i) ^" -AND- to_slformula " ^ to_string t)
+      | Circle(fs,i) -> invalid_arg ((string_of_int i) ^ " -CIRCLE- to_slformula " ^ to_string t)
+      | Diamond(fs,i) -> invalid_arg ((string_of_int i) ^" -AND- to_slformula " ^ to_string t)
+      | Box(fs,i) -> invalid_arg ((string_of_int i) ^" -BOX- to_slformula " ^ to_string t)
+      | AG(_,fs,i) -> invalid_arg ((string_of_int i) ^" -AG- to_slformula " ^ to_string t)
+      | EG(_,fs,i) -> invalid_arg ((string_of_int i) ^" -EG- to_slformula " ^ to_string t)
+      | AF(fs,i) -> invalid_arg ((string_of_int i) ^" -AF- to_slformula " ^ to_string t)
+      | EF(fs,i) -> invalid_arg ((string_of_int i) ^" -EF- to_slformula " ^ to_string t)
 
     let rec extract_checkable_slformula t = 
       match t with
-      | Atom(g,_) -> [g] 
-      | Or(fs,_) -> Blist.flatten (List.map extract_checkable_slformula fs) 
-      | _ -> []
+      | Atom(g,_) -> to_formula [g] 
+      | Or(fs,_) ->  
+          let hs = Blist.fold_right (fun (_, hs) hs_acc -> hs @ hs_acc) (List.map extract_checkable_slformula fs) [] in 
+          to_formula hs
+      | _ -> to_formula []
 
     let rec tags f =
       fold 
-	begin fun g acc -> match g with
-			   | Circle (f,_)
-			   | Diamond (f,_)
-			   | Box (f,_)
-			   | AF (f,_)
-			   | EF (f,_)-> tags f
-			   | EG (i,_,_)
-			   | AG(i,_,_) -> Tags.add i acc
+        begin fun g acc -> match g with
+			   | Circle (f,_) | Diamond (f,_) | Box (f,_) | AF (f,_) | EF (f,_)-> tags f
+			   | EG (i,f,_) | AG(i,f,_) -> 
+            let ts = tags f in
+            Tags.add i (Tags.union ts acc)
 			   | Atom _
 			   | _ -> acc 
-	end
-	Tags.empty
-	f
+        end
+        Tags.empty
+        f
 
     let outermost_tag f = 
       match f with
@@ -490,6 +510,37 @@ end
 	end
 	Sl_term.Set.empty
 	f
+  
+  let complete_tags avoid f =
+    let rec _complete_tags avoid f =
+      let wrap mk f n avoid =
+        let (f, used) = _complete_tags avoid f in
+        (mk f n, Tags.union avoid used) in 
+      let do_list avoid fs =
+        let g (fs, avoid) f = 
+          let (f', used) = _complete_tags avoid f in
+          (f::fs, Tags.union avoid used) in
+        let (fs, used) = Blist.fold_left g ([], avoid) fs in
+        (Blist.rev fs, used) in
+      match f with
+      | Final _ | Atom _ -> (f, avoid) 
+      | Circle(f, n) -> wrap _mk_circle f n avoid
+      | Diamond(f, n) -> wrap _mk_diamond f n avoid
+      | Box(f, n) -> wrap _mk_box f n avoid
+      | AF(f, n) -> wrap _mk_af f n avoid
+      | EF(f, n) -> wrap _mk_ef f n avoid
+      | And(fs, n) -> Pair.map_left (Fun.swap _mk_and n) (do_list avoid fs)
+      | Or(fs, n) -> Pair.map_left (Fun.swap _mk_or n) (do_list avoid fs)
+      | AG(t, f, n) ->
+          let t = if Tags.is_anonymous t then Tags.fresh_fvar avoid else t in
+          let (f, used) = _complete_tags (Tags.add t avoid) f in
+          (AG(t, f, n), used)
+      | EG(t, f, n) ->
+          let t = if Tags.is_anonymous t then Tags.fresh_fvar avoid else t in
+          let (f, used) = _complete_tags (Tags.add t avoid) f in
+          (EG(t, f, n), used)
+      in
+    Pair.left (_complete_tags (Tags.union avoid (tags f)) f)
 
     let rec parse_atom st =
       (attempt (parse_symb symb_final >>$ mk_final)
@@ -501,10 +552,10 @@ end
 		      parse_atom|>> (fun inner -> mk_diamond inner))
        <|> attempt (parse_symb symb_ag >>
 		      Tokens.parens parse_atom|>> (fun inner -> 
-						   mk_ag (next_tag ()) inner))
+						   mk_ag Tags.anonymous inner))
        <|> attempt (parse_symb symb_eg >>
 		      Tokens.parens parse_atom|>> (fun inner -> 
-						   mk_eg (next_tag()) inner))
+						   mk_eg Tags.anonymous inner))
        <|> attempt (parse_symb symb_af >>
 		      Tokens.parens parse_atom|>> (fun inner -> mk_af inner))
        <|> attempt (parse_symb symb_ef >>
@@ -515,15 +566,16 @@ end
        <|> attempt (parse_symb symb_and >>
 		      Tokens.parens (sep_by1 parse_atom (parse_symb symb_comma) |>> fun (atoms) ->
 										    mk_and atoms))
-       <|> attempt (Sl_heap.parse |>> (fun sf -> mk_atom sf))
+       <|> attempt ((Sl_heap.parse ~allow_tags:false) |>> (fun sf -> mk_atom sf))
       ) st
 	
     let parse st = 
       (sep_by1 parse_atom (parse_symb symb_or) >>= (fun atoms ->
-						    match atoms with 
-						    | [] -> return (mk_atom Sl_heap.empty)
-						    | [f] -> return f
-						    | _ -> return (mk_or atoms)
+				    let f = match atoms with 
+						  | [] -> mk_atom Sl_heap.empty
+						  | [f] -> f
+						  | _ -> mk_or atoms in
+            return f
 	      <?> "tempform")) st		    
 
     let of_string s =

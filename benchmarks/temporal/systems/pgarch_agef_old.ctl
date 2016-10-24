@@ -1,6 +1,6 @@
 fields: this;
 precondition: one!=zero * true!=false * wakend=true * flag=one;
-property: AG EF wakend=true;
+property: AG (EF (wakend=true));
 while flag=one do
       if sigup=positive then
       	 sigup:=zero;

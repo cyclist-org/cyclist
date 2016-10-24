@@ -26,12 +26,13 @@ val parse : (t, 'a) MParser.t
 val of_channel : in_channel -> t
 val of_string : string -> t
 
-val unfold : (Sl_term.Set.t * Tags.t) -> Sl_tpred.t -> t -> Sl_heap.t list
+val unfold : ?gen_tags:bool -> (Sl_term.Set.t * Tags.t) -> Sl_tpred.t -> t -> Sl_heap.t list
 (** [unfold (vs, ts) p defs] returns a list containing the bodies of all the 
     inductive rules for [p] in [defs] where, for each rule body:
       the formal parameters have been replaced by the arguments of [p]; 
       the remaining variables have been freshened, avoiding those in [vs]; and
-      the predicates have been assigned fresh existential tags, avoiding those in [ts]
+      the predicates have been assigned fresh existential tags avoiding those in [ts],
+        unless the optional argument [gen_tags=true] is set to false.
     NB. This assumes that all predicates in the rules bodies are untagged.
 *)
 

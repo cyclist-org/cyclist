@@ -286,11 +286,11 @@ module Cmd =
 
     let rec subst_cmd theta cmd = match cmd with
       | Stop | Skip -> cmd
-      | New(x) -> New (Sl_term.subst theta x)
-      | Free(x) -> Free (Sl_term.subst theta x)
-      | Assign(x, e) -> Assign ((Sl_term.subst theta x), (Sl_term.subst theta e))
-      | Load(x, e, f) -> Load ((Sl_term.subst theta x), (Sl_term.subst theta e), f)
-      | Store(x, f, e) -> Store ((Sl_term.subst theta x), f, (Sl_term.subst theta e))
+      | New(x) -> New (Sl_subst.apply theta x)
+      | Free(x) -> Free (Sl_subst.apply theta x)
+      | Assign(x, e) -> Assign ((Sl_subst.apply theta x), (Sl_subst.apply theta e))
+      | Load(x, e, f) -> Load ((Sl_subst.apply theta x), (Sl_subst.apply theta e), f)
+      | Store(x, f, e) -> Store ((Sl_subst.apply theta x), f, (Sl_subst.apply theta e))
       | ProcCall(p, args) -> ProcCall (p, (Sl_term.FList.subst theta args))
       | If(cond, cmd) -> If ((Cond.subst theta cond), (subst theta cmd))
       | IfElse(cond, cmd, cmd') -> IfElse ((Cond.subst theta cond), (subst theta cmd), (subst theta cmd'))
@@ -444,7 +444,7 @@ module Seq =
   struct
     type t = Sl_form.t * Cmd.t * Tl_form.t
 
-    let tagset_one = Tags.singleton 1
+    let tagset_one = Tags.singleton Tags.anonymous
     let tagpairs_one = Tagpairs.mk tagset_one
     let tags (sf,cmd,tf) = Tags.union (Sl_form.tags sf) (Tl_form.tags tf)
     let tag_pairs (sf,_,tf) = if !termination then Tagpairs.union (Sl_form.tag_pairs sf) (Tagpairs.mk (Tl_form.outermost_tag tf)) else (Tagpairs.mk (Tl_form.outermost_tag tf))
@@ -515,7 +515,7 @@ let parse_fields st =
 let parse_precondition st = 
   ( parse_symb keyw_precondition >>
     parse_symb symb_colon >>
-    Sl_form.parse >>= (fun f ->
+    Sl_form.parse ~allow_tags:false >>= (fun f ->
     parse_symb symb_semicolon >>$ f) <?> "Precondition") st
 
 (* property: PROPERTY; COLON; tf = formula; SEMICOLON { tf } *)
@@ -531,7 +531,10 @@ let parse st =
     parse_precondition >>= (fun p ->
     parse_property >>= (fun tf ->
     Cmd.parse >>= (fun cmd ->
-    eof >>$ (p,cmd,tf)))) <?> "program") st
+    eof >>$ 
+    let p = Sl_form.complete_tags Tags.empty p in
+    let tf = Tl_form.complete_tags (Sl_form.tags p) tf in
+    (p,cmd,tf)))) <?> "program") st
 
 let of_channel c =
   handle_reply (parse_channel parse c ())
