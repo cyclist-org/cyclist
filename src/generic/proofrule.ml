@@ -38,7 +38,7 @@ struct
       Proof.add_inf idx d l prf in
     L.map mk (L.of_list (r_f seq))
 
-  let mk_backrule ?(fair=true) greedy sel_f br_f srcidx prf =
+  let mk_backrule ?(fair=false) greedy sel_f br_f srcidx prf =
     let srcseq = Proof.get_seq srcidx prf in
     let trgidxs = L.of_list (sel_f srcidx prf) in
     let mk trgidx (vtts,d) = 

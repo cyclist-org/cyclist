@@ -31,8 +31,7 @@ let headers =
     "src/soundness/proof.hpp";
     "src/soundness/trace.hpp";
     "src/soundness/fair_proof_aut.hpp";
-    "src/soundness/fair_proof.hpp"; 
-    "src/soundness/fair_trace.hpp";
+    "src/soundness/fair_proof.hpp";
   ] 
 
 (* you shouldn't normally have to change anything below this point *)

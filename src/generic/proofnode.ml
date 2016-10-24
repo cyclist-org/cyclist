@@ -14,7 +14,7 @@ struct
   type proof_subnode =
     | OpenNode
     | AxiomNode
-    | InfNode of (int * TagPairs.t * TagPairs.t) list
+    | InfNode of bool * (int * TagPairs.t * TagPairs.t) list
     | BackNode of int * TagPairs.t
   
   type t =
@@ -28,14 +28,14 @@ struct
   let get_succs n = match n.node with
     | AxiomNode | OpenNode -> []
     | BackNode (s, _) -> [s]
-    | InfNode(ss) -> let (ss',_,_) = Blist.unzip3 ss in ss'
+    | InfNode(f,ss) -> let (ss',_,_) = Blist.unzip3 ss in ss'
   
   let dest n = (n.seq, n.descr)
   let dest_backlink n = match n.node with
     | BackNode(child, vtts) -> (n.seq, n.descr, child, vtts)
     | _ -> invalid_arg "dest_backlink"
   let dest_inf n = match n.node with
-    | InfNode(subgs) -> (n.seq, n.descr, subgs)
+    | InfNode(f,subgs) -> (n.seq, n.descr, subgs) (* TODO: check consequences of not adding f to dest *)
     | _ -> invalid_arg "dest_inf"
   
   
@@ -65,26 +65,26 @@ struct
     mk seq OpenNode "(Open)"
   let mk_axiom seq descr = 
     mk seq AxiomNode descr
-  let mk_inf seq descr subgoals = 
-    mk seq (InfNode(subgoals)) descr
+  let mk_inf ?(fair=false) seq descr subgoals = 
+    mk seq (InfNode(fair,subgoals)) descr
   let mk_backlink seq descr child vtts = 
     mk seq (BackNode(child, vtts)) descr
   
   let to_abstract_node n = match n.node with
     | OpenNode | AxiomNode ->
         Soundcheck.mk_abs_node (Seq.tags n.seq) []
-    | InfNode(subg) ->
+    | InfNode(fair,subg) ->
         Soundcheck.mk_abs_node (Seq.tags n.seq) subg
     | BackNode(child, tv) ->
         Soundcheck.mk_abs_node (Seq.tags n.seq) [(child, tv, TagPairs.empty)]
 
   let to_fair_abstract_node n = match n.node with
     | OpenNode | AxiomNode ->
-       Fair_soundcheck.mk_fair_abs_node (Seq.pc n.seq) (Seq.tags n.seq) []
-    | InfNode(subg) ->
-       Fair_soundcheck.mk_fair_abs_node (Seq.pc n.seq) (Seq.tags n.seq) subg
+       Fair_soundcheck.mk_fair_abs_node false (Seq.tags n.seq) []
+    | InfNode(fair,subg) ->
+       Fair_soundcheck.mk_fair_abs_node fair (Seq.tags n.seq) subg
     | BackNode(child, tv) ->
-       Fair_soundcheck.mk_fair_abs_node (Seq.pc n.seq) (Seq.tags n.seq) [(child, tv, TagPairs.empty)]	
+       Fair_soundcheck.mk_fair_abs_node false (Seq.tags n.seq) [(child, tv, TagPairs.empty)]	
 			      
   let pp fmt n = match n.node with
     | OpenNode ->
@@ -95,7 +95,7 @@ struct
         Format.fprintf fmt "@[%a (%s) [%i] <pre=%a>@]" 
           Seq.pp n.seq n.descr i
           TagPairs.pp tps
-    | InfNode(p) ->
+    | InfNode(f,p) -> (* TODO: print fair nodes? *) 
         Format.fprintf fmt "@[%a (%s) [%a]@]" 
           Seq.pp n.seq n.descr
           (Blist.pp pp_commasp 
@@ -124,7 +124,7 @@ struct
     | AxiomNode ->
         prooftree first n.seq
           (Latex.concat [ ltx_axiom n.descr; justifies id n.seq ])
-    | InfNode(p) ->
+    | InfNode(f,p) ->
         prooftree first n.seq
           (Latex.concat
               ((Blist.map (fun (i,_,_) -> cont false i) p) @

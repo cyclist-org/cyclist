@@ -33,6 +33,7 @@ Proof
 Proofrule
 Proofnode
 Soundcheck
+Fair_soundcheck
 Seqtactics
 Prover
 MParser

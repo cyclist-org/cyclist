@@ -449,9 +449,6 @@ module Seq =
     let tagpairs_one = TagPairs.mk tagset_one
     let tags (sf,cmd,tf) = Tags.union (Sl_form.tags sf) (Tl_form.tags tf)
     let tag_pairs (sf,_,tf) = if !termination then TagPairs.union (Sl_form.tag_pairs sf) (TagPairs.mk (Tl_form.outermost_tag tf)) else (TagPairs.mk (Tl_form.outermost_tag tf))
-    let pc ((_,cmd,_):t) = match Cmd.get_lbl cmd with
-      |None -> 0
-      |Some x -> x
     let sep_vars (sf,_,_) = Sl_form.vars sf
     let temp_vars (_,_,tf) = Tl_form.vars tf
     let vars (sf,_,tf) = Sl_term.Set.union (Sl_form.vars sf) (Tl_form.vars tf)

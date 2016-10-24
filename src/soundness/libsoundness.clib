@@ -1,1 +1,1 @@
-proof_aut.o proof.o soundness.o trace.o fair_proof_aut.o fair_proof.o fair_soundness.o fair_trace.o
+proof_aut.o proof.o soundness.o trace.o fair_proof_aut.o fair_proof.o fair_soundness.o

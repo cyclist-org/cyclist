@@ -14,9 +14,6 @@ sig
   val tags : t -> Util.Tags.t
   (** Returns set of tags in sequent. *)
 
-  val pc : t -> int
-  (** Returns sequent label *)
-		    
   val to_string : t -> string
   val to_melt: t -> Latex.t
   val pp : Format.formatter -> t -> unit
@@ -53,12 +50,11 @@ sig
       sequent [seq], description [descr], target index [target] and set of 
       valid tag transitions (as pairs) [vtts].*) 
   
-  val mk_inf :
-    seq_t -> string -> (int * Util.TagPairs.t * Util.TagPairs.t) list -> t
-  (** [mk_inf seq descr subgoals back] creates an inference node labelled by 
+  val mk_inf : ?fair:bool -> seq_t -> string -> (int * Util.TagPairs.t * Util.TagPairs.t) list -> t
+  (** [mk_inf fair seq descr subgoals back] creates an inference node labelled by 
       sequent [seq], description [descr], a list of triples consisting of
       subgoal index, valid tag transitions and progressing tag transitions 
-      [subgoals].*) 
+      [subgoals]. The fair flag dictates whether the node imposes fairness constraints*) 
   
   (** Destructors. *)
   
