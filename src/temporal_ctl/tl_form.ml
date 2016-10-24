@@ -454,12 +454,8 @@ end
     let rec tags f =
       fold 
         begin fun g acc -> match g with
-			   | Circle (f,_) | Diamond (f,_) | Box (f,_) | AF (f,_) | EF (f,_)-> tags f
-			   | EG (i,f,_) | AG(i,f,_) -> 
-            let ts = tags f in
-            Tags.add i (Tags.union ts acc)
-			   | Atom _
-			   | _ -> acc 
+        | EG (t,f,_) | AG(t,f,_) -> Tags.add t acc  
+        | _ -> acc 
         end
         Tags.empty
         f
