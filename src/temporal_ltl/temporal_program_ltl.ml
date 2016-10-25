@@ -59,9 +59,9 @@ module Cond =
       | _ -> false
 
     let subst theta cond = match cond with
-      | Eq(x, y) -> Eq ((Sl_term.subst theta x), (Sl_term.subst theta y))
-      | Deq(x, y) -> Deq ((Sl_term.subst theta x), (Sl_term.subst theta y))
-      | Non_det x -> Non_det (Sl_term.subst theta x)
+      | Eq(x, y) -> Eq ((Sl_subst.apply theta x), (Sl_subst.apply theta y))
+      | Deq(x, y) -> Deq ((Sl_subst.apply theta x), (Sl_subst.apply theta y))
+      | Non_det x -> Non_det (Sl_subst.apply theta x)
 
     let pp fmt = function
       | Non_det x ->
@@ -411,11 +411,11 @@ module Cmd =
 
     let rec subst_cmd theta cmd = match cmd with
       | Stop | Skip -> cmd
-      | New(x) -> New (Sl_term.subst theta x)
-      | Free(x) -> Free (Sl_term.subst theta x)
-      | Assign(x, e) -> Assign ((Sl_term.subst theta x), (Sl_term.subst theta e))
-      | Load(x, e, f) -> Load ((Sl_term.subst theta x), (Sl_term.subst theta e), f)
-      | Store(x, f, e) -> Store ((Sl_term.subst theta x), f, (Sl_term.subst theta e))
+      | New(x) -> New (Sl_subst.apply theta x)
+      | Free(x) -> Free (Sl_subst.apply theta x)
+      | Assign(x, e) -> Assign ((Sl_subst.apply theta x), (Sl_subst.apply theta e))
+      | Load(x, e, f) -> Load ((Sl_subst.apply theta x), (Sl_subst.apply theta e), f)
+      | Store(x, f, e) -> Store ((Sl_subst.apply theta x), f, (Sl_subst.apply theta e))
       | ProcCall(p, args) -> ProcCall (p, (Sl_term.FList.subst theta args))
       | If(cond, cmd) -> If ((Cond.subst theta cond), (subst theta cmd))
       | IfElse(cond, cmd, cmd') -> IfElse ((Cond.subst theta cond), (subst theta cmd), (subst theta cmd'))
@@ -557,7 +557,6 @@ module Cmd =
           to_melt_label (Blist.hd tl); Latex.ldots ]
 
   end
-
 let program_pp fmt cmd =
   Format.fprintf fmt "%a@\n%a" Field.pp () (Cmd.pp 0) cmd
 
@@ -569,7 +568,7 @@ module Seq =
   struct
     type t = Sl_form_rho.t * Cmd.t * Tl_form_ltl.t
 
-    let tagset_one = Tags.singleton 1
+    let tagset_one = Tags.singleton Tags.anonymous
     let tagpairs_one = Tagpairs.mk tagset_one
     let tags (sf,cmd,tf) = Tags.union (Sl_form_rho.tags sf) (Tl_form_ltl.tags tf)
     let tag_pairs (sf,_,tf) =Tagpairs.union (Sl_form_rho.tag_pairs sf) (Tagpairs.mk (Tl_form_ltl.outermost_tag tf))
@@ -656,7 +655,9 @@ let parse st =
     parse_precondition >>= (fun p ->
     parse_property >>= (fun tf ->
     Cmd.parse >>= (fun cmd ->
-    eof >>$ (p,cmd,tf)))) <?> "program") st
+    eof >>$ 
+    let tf = Tl_form_ltl.complete_tags (Sl_form_rho.tags p) tf in
+    (p,cmd,tf)))) <?> "program") st
 
 let of_channel c =
   handle_reply (parse_channel parse c ())

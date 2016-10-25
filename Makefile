@@ -75,14 +75,17 @@ goto-tests:
 whl-tests:
 	-@for TST in $(BENCHDIR)/whl/*.wl ; do echo $$TST: ; _build/$(PR2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
+whl_abd-tests:
+	-@for TST in $(BENCHDIR)/whl_abd/*.wl ; do echo $$TST ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
+
 proc-tests:
 	-@for TST in $(WHL2_TEST_FILES) ; do echo $$TST: ; _build/$(XTDPRMAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
 ctl-tests:
 	-@for TST in $(CTL_TEST_FILES) ; do echo $$TST: ; _build/$(CTLMAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
-whl_abd-tests:
-	-@for TST in $(BENCHDIR)/whl_abd/*.wl ; do echo $$TST ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
+ltl-tests:
+	-@for TST in $(BENCHDIR)/temporal/ltl/*.ltl ; do echo $$TST: ; _build/$(LTLMAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
 aplas-tests: sl-tests #goto-tests #fo-tests 
 

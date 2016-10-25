@@ -16,10 +16,6 @@ val union : t -> t -> t
 val fold : (Sl_term.t -> int -> 'a -> 'a) -> t -> 'a -> 'a 
 val for_all : (Sl_term.t -> int -> bool) -> t -> bool
 
-val all_members_of : t -> t -> bool
-(** [all_members_of eqs eqs'] returns true iff all variables in [rho] are also
-    in [rho'] *)
-    
 val diff : t -> t -> t
 (** [diff rho rho'] returns the structure given by removing all variables in
     [rho'] from [rho] *)

@@ -10,6 +10,6 @@ src/while/while_prove.native
 src/while/while_abduce.native
 src/procedure/procedure_prove.native  
 src/temporal_ctl/temporal_ctl_prove.native
-#src/temporal_ltl/temporal_ltl_prove.native
-#src/cyclist.docdir/index.html
-#src/seplog/sl.top
+src/temporal_ltl/temporal_ltl_prove.native
+src/cyclist.docdir/index.html
+src/seplog/sl.top

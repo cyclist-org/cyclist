@@ -479,11 +479,9 @@ end
       | And (fs,d) -> And (List.map (subst_tags tagpairs) fs, d)
       | Or (fs,d) -> Or (List.map (subst_tags tagpairs) fs, d)
       | AG (tag,f,d) ->
-	 let (_, tag'') = Tagpairs.find (fun (tag',_) -> tag=tag') tagpairs in
-	 AG (tag'',subst_tags tagpairs f, d)
+        AG (Tagpairs.apply_to_tag tagpairs tag, subst_tags tagpairs f, d)
       | EG (tag,f,d) ->
-	 let (_, tag'') = Tagpairs.find (fun (tag',_) -> tag=tag') tagpairs in
-	 EG (tag'',subst_tags tagpairs f, d)
+	 EG (Tagpairs.apply_to_tag tagpairs tag, subst_tags tagpairs f, d)
 
     let e_step tf = match tf with
       | Circle (f,_)

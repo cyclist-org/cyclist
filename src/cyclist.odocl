@@ -20,9 +20,12 @@ Treeset
 Containers
 Strng
 Int
+Unification
+VarManager
+Sl_abduce
 Sl_term
 Sl_subst
-Sl_unifier
+Sl_unify
 Sl_tpair
 Sl_uf
 Sl_rho

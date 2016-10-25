@@ -32,7 +32,7 @@ sig
 		       
   val mk_atom : Sl_heap_rho.t -> t
   val mk_next : t -> t
-  val mk_g : int -> t -> t
+  val mk_g : Tags.elt -> t -> t
   val mk_f : t -> t
   val mk_and : t list -> t
   val mk_or : t list -> t
@@ -59,6 +59,11 @@ sig
   val equal : t -> t -> bool
   val equal_upto_tags : t -> t -> bool
 				    
+  val complete_tags : Tags.t -> t -> t
+  (** [complete_tags ts f] returns the formula obtained from f by assigning
+      all untagged G occurrences a fresh free tag, avoiding those in [ts].
+  *)
+
   val step : t -> t
 		      
 end
@@ -116,14 +121,21 @@ end
       | Or(x,_) -> x
       | _ -> invalid_arg "dest_or"
 
-    let mk_atom a = Atom(a,1)
-    let mk_next f = Next(f, 1 + depth f)
-    let mk_g t f = G(t, f, 1 + depth f)
-    let mk_f f = F(f, 1 + depth f)
+    let _mk_atom a n = Atom(a, n)
+    let _mk_next f n = Next(f, n)
+    let _mk_g t f n = G(t, f, n)
+    let _mk_f f n = F(f, n)
+    let _mk_and fs n = And(fs, n)
+    let _mk_or fs n = Or(fs, n)
+
+    let mk_atom a = _mk_atom a 1
+    let mk_next f = _mk_next f (1 + depth f)
+    let mk_g t f = _mk_g t f (1 + depth f)
+    let mk_f f = _mk_f f (1 + depth f)
     let mk_and fs = 
-      And(fs, 1 + (List.fold_left (fun d f -> max (depth f) d) 0 fs))
+      _mk_and fs (1 + (List.fold_left (fun d f -> max (depth f) d) 0 fs))
     let mk_or fs = 
-      Or(fs, 1 + (List.fold_left (fun d f -> max (depth f) d) 0 fs))
+      _mk_or fs (1 + (List.fold_left (fun d f -> max (depth f) d) 0 fs))
 
     let unfold_g f = match f with
       | G(_,inner,_) -> (inner,mk_next f)
@@ -134,21 +146,19 @@ end
       | _ -> invalid_arg "unfold_f"
 		
     let unfold_or f = match f with 
-      | Or(fs,i) -> begin match (List.length fs) with
-		    | 0
-		    | 1 -> invalid_arg "unfold_or"
-		    | 2 -> (List.hd fs, List.hd (List.tl fs))
-		    | _ -> (List.hd fs, mk_or (List.tl fs))
+      | Or(fs,i) -> begin match fs with
+        | [] | [_] -> invalid_arg "unfold_or"
+        | [f;f'] -> (f, f')
+        | f::fs_ -> (f, mk_or fs)
 		    end
       | _ -> invalid_arg "unfold_or"	
 			 
     let unfold_and f = match f with 
-      | And(fs,i) -> begin match (List.length fs) with
-		     | 0
-		     | 1 -> invalid_arg "unfold_or"
-		     | 2 -> (List.hd fs, List.hd (List.tl fs))
-		     | _ -> (List.hd fs, mk_and (List.tl fs))
-		     end
+      | And(fs,i) -> begin match fs with
+        | [] | [_] -> invalid_arg "unfold_and"
+        | [f;f'] -> (f, f')
+        | f::fs -> (f, mk_and fs)
+        end
       | _ -> invalid_arg "unfold_or"	
 
     let rec fold f acc g = match g with
@@ -164,16 +174,18 @@ end
       fold (fun g' acc -> acc || f g') false g
 
     let rec _to_string f = 
-      (if is_and f || is_or f then bracket else id) (to_string f)
-    and to_string = function 
+      (if is_and f || is_or f then bracket else Fun.id) (to_string f)
+    and to_string = 
+      let tag_to_string t = if Tags.is_anonymous t then "" else "_" ^ sqbracket (Tags.Elt.to_string t) in
+      function
       | Atom(a,_) -> Sl_heap_rho.to_string a  
       | Next(f,_) -> "X" ^ (_to_string f)
-      | G(tag, f, _) -> "G_" ^ (string_of_int tag) ^ (_to_string f)
+      | G(tag, f, _) -> "G" ^ (tag_to_string tag) ^ (_to_string f)
       | F(f, _) -> "F" ^ (_to_string f)
       | And(fs,_) -> 
 	 Blist.to_string 
 	   " & " 
-	   (fun g -> (if is_or g then bracket else id) (to_string g)) 
+	   (fun g -> (if is_or g then bracket else Fun.id) (to_string g)) 
 	   fs
       | Or(fs,_) -> 
 	 Blist.to_string " | " to_string fs
@@ -199,7 +211,7 @@ end
 	| F(a,_), F(b,_)-> compare a b
 	| G (atag, a, _), G(btag, b, _) ->
 	   begin
-	     match Int.compare atag btag with
+	     match Tags.Elt.compare atag btag with
 	     | 0 -> compare a b
 	     | n -> n
 	   end
@@ -312,29 +324,28 @@ end
     let rec to_slformula t = 
       match t with
       | Atom(g,_) -> [g] 
-      | Or(fs,_) -> Blist.flatten (List.map to_slformula fs) 
-      | And(fs,i) -> invalid_arg ((string_of_int i) ^"-AND- to_slformula" ^ to_string t)
-      | Next(fs,i) -> invalid_arg ((string_of_int i) ^"-NEXT- to_slformula" ^ to_string t)
-      | G(_,fs,i) -> invalid_arg ((string_of_int i) ^"-G- to_slformula" ^ to_string t)
-      | F(fs,i) -> invalid_arg ((string_of_int i) ^"-F- to_slformula" ^ to_string t)
+      | Or(fs,_) -> 
+          Blist.fold_right (fun hs hs_acc -> hs @ hs_acc) (List.map to_slformula fs) []
+      | And(fs,i) -> invalid_arg ((string_of_int i) ^" -AND- to_slformula " ^ to_string t)
+      | Next(fs,i) -> invalid_arg ((string_of_int i) ^" -NEXT- to_slformula " ^ to_string t)
+      | G(_,fs,i) -> invalid_arg ((string_of_int i) ^" -G- to_slformula " ^ to_string t)
+      | F(fs,i) -> invalid_arg ((string_of_int i) ^" -F- to_slformula " ^ to_string t)
 
     let rec extract_checkable_slformula t = 
       match t with
       | Atom(g,_) -> [g] 
-      | Or(fs,_) -> Blist.flatten (List.map extract_checkable_slformula fs) 
+      | Or(fs,_) ->  
+          Blist.fold_right (fun hs hs_acc -> hs @ hs_acc) (List.map extract_checkable_slformula fs) []
       | _ -> []
 
     let rec tags f =
       fold 
-	begin fun g acc -> match g with
-			   | Next (f,_)
-			   | F (f,_) -> tags f
-			   | G (i,_,_) -> Tags.add i acc
-			   | Atom _
-			   | _ -> acc 
-	end
-	Tags.empty
-	f
+        begin fun g acc -> match g with
+        | G (i,_,_) -> Tags.add i acc
+        | _ -> acc 
+        end
+        Tags.empty
+        f
 
     let outermost_tag f = 
       match f with
@@ -349,9 +360,7 @@ end
       | F (f,d) -> F (subst_tags tagpairs f, d)
       | And (fs,d) -> And (List.map (subst_tags tagpairs) fs, d)
       | Or (fs,d) -> Or (List.map (subst_tags tagpairs) fs, d)
-      | G (tag,f,d) ->
-	 let (_, tag'') = Tagpairs.find (fun (tag',_) -> tag=tag') tagpairs in
-	 G (tag'',subst_tags tagpairs f, d)
+      | G (tag,f,d) -> G (Tagpairs.apply_to_tag tagpairs tag, subst_tags tagpairs f, d)
 	
 
     let step tf = match tf with
@@ -367,14 +376,38 @@ end
 	end
 	Sl_term.Set.empty
 	f
+  
+  let complete_tags avoid f =
+    let rec _complete_tags avoid f =
+      let wrap mk f n avoid =
+        let (f, used) = _complete_tags avoid f in
+        (mk f n, Tags.union avoid used) in 
+      let do_list avoid fs =
+        let g (fs, avoid) f = 
+          let (f', used) = _complete_tags avoid f in
+          (f::fs, Tags.union avoid used) in
+        let (fs, used) = Blist.fold_left g ([], avoid) fs in
+        (Blist.rev fs, used) in
+      match f with
+      | Atom _ -> (f, avoid) 
+      | Next(f, n) -> wrap _mk_next f n avoid
+      | F(f, n) -> wrap _mk_f f n avoid
+      | And(fs, n) -> Pair.map_left (Fun.swap _mk_and n) (do_list avoid fs)
+      | Or(fs, n) -> Pair.map_left (Fun.swap _mk_or n) (do_list avoid fs)
+      | G(t, f, n) ->
+          let t = if Tags.is_anonymous t then Tags.fresh_fvar avoid else t in
+          let (f, used) = _complete_tags (Tags.add t avoid) f in
+          (G(t, f, n), used)
+      in
+    Pair.left (_complete_tags (Tags.union avoid (tags f)) f)
 
     let rec parse_atom st =
-      (   attempt (Sl_heap_rho.parse |>> (fun sf -> mk_atom sf))
+      (   attempt ((Sl_heap_rho.parse ~allow_tags:false) |>> (fun sf -> mk_atom sf))
       <|> attempt (parse_symb symb_next >>
 		   parse_atom|>> (fun inner -> mk_next inner))
       <|> attempt (parse_symb symb_g >>
 		   Tokens.parens parse_atom|>> (fun inner -> 
-		   mk_g (next_tag ()) inner))
+		   mk_g Tags.anonymous inner))
       <|> attempt (parse_symb symb_f >>
 		   Tokens.parens parse_atom|>> (fun inner -> mk_f inner))
 			<|> attempt (parse_symb symb_or >>
@@ -387,10 +420,11 @@ end
 
     let parse st = 
       (sep_by1 parse_atom (parse_symb symb_or) >>= (fun atoms ->
-						    match atoms with 
-						    | [] -> return (mk_atom Sl_heap_rho.empty)
-						    | [f] -> return f
-						    | _ -> return (mk_or atoms)
+				    let f = match atoms with 
+						  | [] -> mk_atom Sl_heap_rho.empty
+						  | [f] -> f
+						  | _ -> mk_or atoms in
+            return f
 	      <?> "tempform")) st		    
 
     let of_string s =
