@@ -31,7 +31,7 @@ module Proc =
       Blist.map (fun (pre, post) -> (pre, cmd, post)) specs
       
     (* precondition: PRECONDITION; COLON; f = formula; SEMICOLON { f } *)
-    let parse_precondition st = While_program.parse_precondition st
+    let parse_precondition st = While_program.parse_precondition ~allow_tags:true st
 
     (* postcondition: POSTCONDITION; COLON; f = formula; SEMICOLON { f } *)
     let parse_postcondition st = 
@@ -41,6 +41,7 @@ module Proc =
         parse_symb symb_semicolon >>$ f) <?> "Postcondition") st
 
     let ensure_tags (pre, post) =
+      let () = debug (fun () -> "Ensuring tags for: " ^ (Sl_form.to_string pre) ^ " |- " ^ (Sl_form.to_string post)) in
       let tags = Tags.union (Sl_form.tags pre) (Sl_form.tags post) in
       let pre' = Sl_form.complete_tags tags pre in
       let inst_subst = 
@@ -49,6 +50,7 @@ module Proc =
           (Tags.diff (Sl_form.tags pre') tags) in
       let pre' = Sl_form.subst_tags inst_subst pre' in
       let post' = Sl_form.complete_tags tags post in
+      let () = debug (fun () -> "Ensuring tags for: " ^ (Sl_form.to_string pre') ^ " |- " ^ (Sl_form.to_string post')) in
       (pre', post')
 
     let check_spec (params, body) (pre, post) =
@@ -58,13 +60,6 @@ module Proc =
       (* - local variables are not mentioned in the pre/post;             *)
       assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_form.vars pre) (Cmd.locals (Sl_term.Set.of_list params) body)));
       assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_form.vars post) (Cmd.locals (Sl_term.Set.of_list params) body)));
-      (* - existential variables are disjoint between pre and post;       *)
-      (* assert(Sl_term.Set.is_empty (Sl_term.Set.inter (Sl_term.Set.filter Sl_term.is_exist_var (Sl_form.vars pre)) (Sl_term.Set.filter Sl_term.is_exist_var (Sl_form.vars post)))); *)
-      (* assert(Tags.is_empty (Tags.inter (Tags.filter Tags.is_exist_var (Sl_form.tags pre)) (Tags.filter Tags.is_exist_var (Sl_form.tags post))));                                   *)
-      (* - that the unversal variables of the post are a subset of those  *)
-      (*   of the pre *)
-      (* assert(Sl_term.Set.subset (Sl_term.Set.filter Sl_term.is_free_var (Sl_form.terms post)) (Sl_term.Set.filter Sl_term.is_free_var (Sl_form.terms pre))); *)
-      (* assert(Tags.subset (Tags.filter Tags.is_free_var (Sl_form.tags post)) (Tags.filter Tags.is_free_var (Sl_form.tags pre)));                              *)
       ()
 
     let parse_named st =

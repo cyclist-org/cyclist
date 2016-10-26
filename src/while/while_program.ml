@@ -694,21 +694,21 @@ let parse_fields st =
     parse_symb symb_semicolon >>$ List.iter Field.add ils) <?> "Fields") st
 
 (* precondition: PRECONDITION; COLON; f = formula; SEMICOLON { f } *)
-let parse_precondition st = 
+let parse_precondition ?(allow_tags=false) st = 
   ( parse_symb keyw_precondition >>
     parse_symb symb_colon >>
-    (Sl_form.parse ~allow_tags:false) >>= (fun f ->
-    parse_symb symb_semicolon >>$ 
-    let f = Sl_form.complete_tags Tags.empty f in
-    let theta = Tagpairs.mk_free_subst Tags.empty (Sl_form.tags f) in
-    Sl_form.subst_tags theta f) <?> "Precondition") st
+    (Sl_form.parse ~allow_tags) >>= (fun f ->
+    parse_symb symb_semicolon >>$ f) <?> "Precondition") st
 
     (* fields; p = precondition; cmd = command; EOF { (p, cmd) } *)
 let parse st = 
   ( parse_fields >>
     parse_precondition >>= (fun p ->
     Cmd.parse >>= (fun cmd ->
-    eof >>$ (p,cmd))) <?> "program") st
+    eof >>$ 
+    let p = Sl_form.complete_tags Tags.empty p in
+    let theta = Tagpairs.mk_free_subst Tags.empty (Sl_form.tags p) in
+    (Sl_form.subst_tags theta p, cmd))) <?> "program") st
 
 let of_channel c =
   handle_reply (parse_channel parse c ())

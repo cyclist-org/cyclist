@@ -86,11 +86,11 @@ let equal_upto_tags (cs, hs) (cs', hs') =
 
 let parse ?(null_is_emp=false) ?(allow_tags=true) ?(augment_deqs=true) st =
   ((if allow_tags then (option Ord_constraints.parse) else return None) >>= (fun cs ->
-  ((attempt (sep_by (Sl_heap.parse ~allow_tags ~augment_deqs) (parse_symb symb_or) <?> "formula")) 
-    <|> (return [])) >>= (fun hs ->
+  (sep_by (Sl_heap.parse ~allow_tags ~augment_deqs) (parse_symb symb_or) <?> "formula") >>= (fun hs ->
   return 
     (Option.dest Ord_constraints.empty Fun.id cs, 
       if null_is_emp && Blist.is_empty hs then [ Sl_heap.empty ] else hs)))) st
+      
 let of_string ?(null_is_emp=false) s =
   handle_reply (MParser.parse_string (parse ~null_is_emp) s ())
 
