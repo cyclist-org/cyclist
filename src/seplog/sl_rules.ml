@@ -141,7 +141,9 @@ let eq_subst_rule ((lhs, rhs) as seq) =
     let ((_, l),(_, r)) = Sl_seq.dest seq in
     let leqs = Sl_uf.bindings l.SH.eqs in
     let (x,y) as p =
-      Blist.find (fun p' -> Pair.disj (Pair.map Sl_term.is_var p')) leqs in
+      Blist.find 
+        (fun p' -> not (Pair.either (Pair.map Sl_term.is_exist_var p'))) 
+        leqs in
     let leqs = Blist.filter (fun q -> q!=p) leqs in
     let l = SH.with_eqs l (Sl_uf.of_list leqs) in
     let (x,y) = if Sl_term.is_var x then p else (y,x) in
@@ -173,7 +175,10 @@ let eq_simplify ((lhs, rhs) as seq) =
     let ((_, l), (_, r)) = Sl_seq.dest seq in
     let (disch, reqs) =
       Blist.partition
-        (fun (x,y) -> Sl_heap.equates l x y) (Sl_uf.bindings r.SH.eqs) in
+        (fun (x,y) ->
+          (not (Pair.either (Pair.map Sl_term.is_exist_var (x,y))))
+            && Sl_heap.equates l x y)
+        (Sl_uf.bindings r.SH.eqs) in
     if disch=[] then [] else
     [
       [
@@ -189,7 +194,11 @@ let deq_simplify ((lhs, rhs) as seq) =
   try
     let ((_, l), (_, r)) = Sl_seq.dest seq in
     let (disch, rdeqs) =
-      Sl_deqs.partition (fun (x,y) -> Sl_heap.disequates l x y) r.SH.deqs in
+      Sl_deqs.partition 
+        (fun (x,y) ->
+          (not (Pair.either (Pair.map Sl_term.is_exist_var (x,y)))) 
+            && Sl_heap.disequates l x y) 
+        r.SH.deqs in
     if Sl_deqs.is_empty disch then [] else
     [
       [
@@ -275,13 +284,32 @@ let pred_intro_rule =
       let ((_, h), (_, h')) = Sl_seq.dest seq in
       let (linds,rinds) = Pair.map Sl_tpreds.elements (h.SH.inds,h'.SH.inds) in
       let cp = Blist.cartesian_product linds rinds in
-      let (p,q) =
-        Blist.find
-          (fun ((t, (id, vs)), (t', (id', vs'))) ->
-            Sl_predsym.equal id id' &&
-            Tags.is_free_var t && 
-            (Tags.is_exist_var t' || Tags.Elt.equal t t') &&
-            Blist.for_all2 (fun x y -> Sl_heap.equates h x y) vs vs') cp in
+      let matches eq ((t, (id, vs)), (t', (id', vs'))) =
+        Sl_predsym.equal id id' &&
+        Blist.for_all (Fun.neg Sl_term.is_exist_var) vs &&
+        Blist.for_all (Fun.neg Sl_term.is_exist_var) vs' &&
+        Tags.is_free_var t && 
+        (Tags.is_exist_var t' || Tags.Elt.equal t t') &&
+        Blist.for_all2 eq vs vs' in
+      let combine_eqs h h'=
+        let (ts, ts') = Pair.map Sl_heap.vars (h, h') in
+        let exs = Sl_term.Set.filter Sl_term.is_exist_var ts in
+        let h_eqs = 
+          if Sl_term.Set.is_empty exs then 
+            h.SH.eqs
+          else
+            let theta = 
+              Sl_subst.mk_free_subst
+                (Sl_term.Set.union ts ts')
+                exs in
+            Sl_uf.subst theta h.SH.eqs in
+        let combined_eqs = Sl_uf.union h_eqs h'.SH.eqs in
+        Sl_uf.equates combined_eqs in
+      let (p,q) = 
+        Option.dest
+          (Blist.find (matches (combine_eqs h h')) cp)
+          (Fun.id)
+          (Blist.find_opt (matches (Sl_heap.equates h)) cp) in
       let h = SH.del_ind h p in
       let h' = SH.del_ind h' q in
       let (t, t') = Pair.map Sl_tpred.tag (p, q) in
