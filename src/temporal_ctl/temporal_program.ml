@@ -11,13 +11,13 @@ let termination = ref true
 module Field = While_program.Field
 module Cond = While_program.Cond
 
-exception WrongCmd
+exception WrongCmd = While_program.WrongCmd
 
 let is_prog_var v = Sl_term.is_free_var v
 let is_prog_term t = Sl_term.is_nil t || is_prog_var t
 
 module Cmd = While_program.Cmd
-
+  
 let program_pp fmt cmd =
   Format.fprintf fmt "%a@\n%a" Field.pp () (Cmd.pp 0) cmd
 
