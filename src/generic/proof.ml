@@ -85,13 +85,13 @@ module Make(Seq : Sigs.SEQUENT) =
       assert (Seq.equal_upto_tags seq (get_seq target prf));
       replace idx n prf
   
-     let add_inf idx descr subgoals prf =
+     let add_inf ?(fair=false) idx descr subgoals prf =
       let subidxs = Blist.range (fresh_idx prf) subgoals in
       let subnodes = 
         Blist.map2 (fun i (seq,_,_) -> (i, Node.mk_open seq)) subidxs subgoals in
       let subidxs_plus_tags = 
         Blist.map2 (fun i (_,vtts,ptts) -> (i,vtts,ptts)) subidxs subgoals in
-      let n = Node.mk_inf (get_seq idx prf) descr subidxs_plus_tags in
+      let n = Node.mk_inf ~fair:fair (get_seq idx prf) descr subidxs_plus_tags in
       ensure_add idx n prf;
       let prf' = 
         Blist.foldl 

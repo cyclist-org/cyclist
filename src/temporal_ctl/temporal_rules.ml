@@ -60,9 +60,9 @@ let simplify_seq_rl =
     (Seqtactics.repeat (Seqtactics.first  simplify_rules))
 
 let simplify = Rule.mk_infrule simplify_seq_rl  
-
-let wrap r =
-  Rule.mk_infrule
+    
+let wrap ?(fair=false) r =
+  Rule.mk_infrule ~fair:fair
     (Seqtactics.compose r (Seqtactics.attempt simplify_seq_rl))
 
 
@@ -213,34 +213,80 @@ let symex_skip_rule =
     with Not_symheap | WrongCmd -> [] in
   mk_symex rl
 
-let symex_ifelse_rule =
+let symex_ifelse_fair_rule =
   let rl seq =
     try
       let (sf,cmd,tf) = dest_sh_seq seq in
       let (c,cmd1,cmd2) = Cmd.dest_ifelse cmd in
       let cont = Cmd.get_cont cmd in
       let (sf',sf'') = Cond.fork sf c in 
-      if Tl_form.is_box tf then
+      if (Tl_form.is_box tf  && not (Cond.is_non_det c)) && !use_fairness then
+	let tf' = Tl_form.a_step tf in
+	fix_tps 
+          [[ ([sf'], Cmd.mk_seq cmd1 cont, tf') ; ([sf''], Cmd.mk_seq cmd2 cont,tf') ], "If-F-[]"]
+      else if (Cond.is_non_det c) && Tl_form.is_diamond tf && !use_fairness then
+	let tf' = Tl_form.e_step tf in
+	fix_tps 
+          [[ ([sf'], Cmd.mk_seq cmd1 cont, tf')], "If-<>1" ;
+	   [ ([sf''], Cmd.mk_seq cmd2 cont, tf')], "If-<>2"]
+      else 
+	[]
+    with Not_symheap | WrongCmd -> [] in
+  wrap ~fair:true rl
+       
+let symex_ifelse_rule =
+  let rl seq =
+    try
+      let (sf,cmd,tf) = dest_sh_seq seq in
+      let (c,cmd1,cmd2) = Cmd.dest_ifelse cmd in
+      let cont = Cmd.get_cont cmd in
+      let (sf',sf'') = Cond.fork sf c in
+      if (Tl_form.is_box tf  && not (Cond.is_non_det c)) || (Tl_form.is_box tf && (not !use_fairness)) then
 	let tf' = Tl_form.a_step tf in
 	fix_tps 
           [[ ([sf'], Cmd.mk_seq cmd1 cont, tf') ; ([sf''], Cmd.mk_seq cmd2 cont,tf') ], "If-[]"]
+      else if Tl_form.is_box tf && !use_fairness then
+	[]
       else if Tl_form.is_diamond tf then
 	let tf' = Tl_form.e_step tf in
-	if Cond.is_non_det c then 
+	if (Cond.is_non_det c) && (not !use_fairness) then
 	  fix_tps 
-            [[ ([sf'], Cmd.mk_seq cmd1 cont, tf')],
+            [[ ([sf'], Cmd.mk_seq cmd1 cont, tf')], 
              "If-<>1" ;
 	     [ ([sf''], Cmd.mk_seq cmd2 cont, tf')],
              "If-<>2"
             ]
+	else if (Cond.is_non_det c) && (!use_fairness) then
+	  []
 	else if Cond.validated_by sf c then
 	  fix_tps [[ ([sf'], Cmd.mk_seq cmd1 cont, tf')], "If-<>1"]
-	else 
-	  fix_tps [[ ([sf''], Cmd.mk_seq cmd2 cont, tf')], "If-<>2"]	  
+	else
+	  fix_tps [[ ([sf''], Cmd.mk_seq cmd2 cont, tf')], "If-<>2"]
       else
 	[]
     with Not_symheap | WrongCmd -> [] in
-  wrap rl
+  wrap ~fair:false rl
+       
+let symex_while_fair_rule =
+  let rl seq =
+    try
+      let (sf,cmd,tf) = dest_sh_seq seq in
+      let (c,cmd') = Cmd.dest_while cmd in
+      let cont = Cmd.get_cont cmd in
+      let (sf',sf'') = Cond.fork sf c in 
+      if (Cond.is_non_det c) && Tl_form.is_box tf && !use_fairness then
+	let tf' = Tl_form.a_step tf in
+	fix_tps 
+	  [[ ([sf'], Cmd.mk_seq cmd' cmd, tf') ; ([sf''], cont, tf') ], "While-Fair-[]"]
+      else if (Cond.is_non_det c) && Tl_form.is_diamond tf && !use_fairness then
+	let tf' = Tl_form.e_step tf in
+	fix_tps 
+          [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], "While-<>1" ;
+	   [ ([sf''], cont, tf')], "While-<>2"]
+      else
+	[]
+    with Not_symheap | WrongCmd -> [] in
+  wrap ~fair:true rl
        
 let symex_while_rule =
   let rl seq =
@@ -249,27 +295,31 @@ let symex_while_rule =
       let (c,cmd') = Cmd.dest_while cmd in
       let cont = Cmd.get_cont cmd in
       let (sf',sf'') = Cond.fork sf c in 
-      if Tl_form.is_box tf then
-				let tf' = Tl_form.a_step tf in
-				fix_tps 
-	  			[[ ([sf'], Cmd.mk_seq cmd' cmd, tf') ; ([sf''], cont, tf') ], "While-Box"]
+      if (Tl_form.is_box tf && (not (Cond.is_non_det c))) || (Tl_form.is_box tf && (not !use_fairness)) then
+	let tf' = Tl_form.a_step tf in
+	fix_tps 
+	  [[ ([sf'], Cmd.mk_seq cmd' cmd, tf') ; ([sf''], cont, tf') ], "While-[]"]
+      else if Tl_form.is_box tf && !use_fairness then
+	[]
       else if Tl_form.is_diamond tf then
-				let tf' = Tl_form.e_step tf in
-				if Cond.is_non_det c then
-	  			fix_tps 
+	let tf' = Tl_form.e_step tf in
+	if (Cond.is_non_det c) && (not !use_fairness) then
+	  fix_tps 
             [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], 
              "While-<>1" ;
-	     			[ ([sf''], cont, tf')],
+	     [ ([sf''], cont, tf')],
              "While-<>2"
             ]
-				else if Cond.validated_by sf c then
-	  			fix_tps [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], "While-<>1"]
-				else
-	  			fix_tps [[ ([sf''], cont, tf')], "While-<>2"]
+	else if (Cond.is_non_det c) && (!use_fairness) then
+	  []
+	else if Cond.validated_by sf c then
+	  fix_tps [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], "While-<>1"]
+	else
+	  fix_tps [[ ([sf''], cont, tf')], "While-<>2"]
       else
 	[]
     with Not_symheap | WrongCmd -> [] in
-  wrap rl
+  wrap ~fair:false rl
 
 module Slprover = Prover.Make(Sl_seq)
 
@@ -427,15 +477,15 @@ let unfold_ef_rule =
     try
       let (sf,cmd,tf) = dest_sh_seq seq in
       if Tl_form.is_ef tf then
-				let (tf1,tf2) = Tl_form.unfold_ef tf in
-					fix_tps
-	  				[[([sf],cmd,tf1)], "UnfoldEF" ;
-	   				[([sf],cmd,tf2)], "UnfoldEF"]
+	let (tf1,tf2) = Tl_form.unfold_ef tf in
+	fix_tps
+	  [[([sf],cmd,tf1)], "UnfoldEF" ;
+	   [([sf],cmd,tf2)], "UnfoldEF"]
       else
-				[]
+	[]
     with Not_symheap -> [] in
   wrap rl
-
+       
 let disjunction_rule = 
   let rl seq = 
     try
@@ -713,6 +763,13 @@ let symex =
       (Rule.compose symex_while_rule (Rule.attempt ex_falso_axiom));
     ]
 
+let symex_fair =
+  Rule.first [
+      (Rule.compose symex_ifelse_fair_rule (Rule.attempt ex_falso_axiom));
+      (Rule.compose symex_while_fair_rule (Rule.attempt ex_falso_axiom));
+    ]
+	     
+	     
 let unfold_gs = 
   Rule.first [
       unfold_ag_rule ;

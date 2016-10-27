@@ -31,11 +31,11 @@ struct
     | None -> L.empty
     | Some descr -> L.singleton ([], Proof.add_axiom idx descr prf)  
   
-  let mk_infrule r_f idx prf =
+  let mk_infrule ?(fair=false) r_f idx prf =
     let seq = Proof.get_seq idx prf in
     let mk (l,d) = 
       debug (fun () -> "Found " ^ d ^ " app.") ;
-      Proof.add_inf idx d l prf in
+      Proof.add_inf ~fair:fair idx d l prf in
     L.map mk (L.of_list (r_f seq))
 
   let mk_backrule ?(fair=false) greedy sel_f br_f srcidx prf =
