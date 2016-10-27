@@ -160,10 +160,16 @@ let eq_ex_subst_rule ((lhs, rhs) as seq) =
   try
     let (_, (_, r)) = Sl_seq.dest seq in
     let reqs = Sl_uf.bindings r.SH.eqs in
-    let (x,y) as p = Blist.find (fun (x,_) -> Sl_term.is_exist_var x) reqs in
+    let (x,y) as p = 
+      Blist.find 
+        (fun vs -> Pair.either (Pair.map Sl_term.is_exist_var vs)) 
+        reqs in
     let reqs = Blist.filter (fun q -> q!=p) reqs in
     let r = SH.with_eqs r (Sl_uf.of_list reqs) in
-    let r' = Sl_heap.subst (Sl_subst.singleton x y) r in
+    let theta = if Sl_term.is_exist_var x 
+      then Sl_subst.singleton x y
+      else Sl_subst.singleton y x in
+    let r' = Sl_heap.subst theta r in
     [ [ ((lhs, (Sl_form.with_heaps rhs [r'])), 
         Sl_form.tag_pairs lhs, 
         Tagpairs.empty) ], "" ]
