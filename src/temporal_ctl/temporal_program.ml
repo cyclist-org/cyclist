@@ -118,6 +118,8 @@ let parse st =
     Cmd.parse >>= (fun cmd ->
     eof >>$ 
     let p = Sl_form.complete_tags Tags.empty p in
+    let theta = Tagpairs.mk_free_subst Tags.empty (Sl_form.tags p) in
+    let p = Sl_form.subst_tags theta p in
     let tf = Tl_form.complete_tags (Sl_form.tags p) tf in
     (p,cmd,tf)))) <?> "program") st
 
