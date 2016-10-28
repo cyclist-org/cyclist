@@ -308,7 +308,7 @@ let match_inds h h' =
       assert (not (Tags.is_anonymous t));
       let ps = Sl_tpreds.remove p inds in
       Option.dest_lazily
-        (fun () -> _match_inds ps inds acc)
+        (fun () -> _match_inds ps inds' acc)
         (fun ((t', _) as p') -> 
           let ps' = Sl_tpreds.remove p' inds' in
           let acc = Tagpairs.add (t', t) acc in
@@ -359,19 +359,16 @@ let matches ((sf,cmd,tf) as seq) ((sf',cmd',tf') as seq') =
             Tagpairs.partition 
               (fun (_, t) -> Tags.is_anonymous t) 
               (match_inds h h') in
-          if Tagpairs.is_empty ts then 
-            [] 
+          let et = Tags.filter Tags.is_exist_var (Sl_form.tags sf') in
+          let ft = Tags.filter Tags.is_free_var (Tagpairs.projectl ts') in
+          let theta = Tagpairs.union ts (Tagpairs.mk_ex_subst (Tags.union et (Sl_form.tags sf)) ft) in
+          let sf' = Sl_form.subst_tags theta sf' in
+          let result = entails sf sf' in
+          let () = debug (fun () -> " CUTLINK3 result: " ^ (string_of_bool (Option.is_some result))) in
+          if Option.is_some result then
+            [(Sl_subst.empty, theta)]
           else
-            let et = Tags.filter Tags.is_exist_var (Sl_form.tags sf') in
-            let ft = Tags.filter Tags.is_free_var (Tagpairs.projectl ts') in
-            let theta = Tagpairs.union ts (Tagpairs.mk_ex_subst (Tags.union et (Sl_form.tags sf)) ft) in
-            let sf' = Sl_form.subst_tags theta sf' in
-            let result = entails sf sf' in
-            let () = debug (fun () -> "CUTLINK3: result: " ^ (string_of_bool (Option.is_some result))) in
-            if Option.is_some result then
-              [(Sl_subst.empty, theta)]
-            else
-              []
+            []
         else
           res in
       let temporal_tag = 
