@@ -1,16 +1,17 @@
 open Lib
 open Util
 
-external create_fair_aut : int -> unit = "create_aut" ;;
-external destroy_fair_aut: unit -> unit = "destroy_aut" ;;
+external create_fair_aut : int -> unit = "create_fair_aut" ;;
+external destroy_fair_aut: unit -> unit = "destroy_fair_aut" ;;
 external create_fair_vertex : int -> unit = "create_fair_vertex" ;;
-external tag_fair_vertex : int -> int -> unit = "tag_vertex" ;;
-external set_fair_successor : int -> int -> unit = "set_successor" ;;
-external set_fair_trace_pair : int -> int -> int -> int -> unit = "set_trace_pair" ;;
-external set_fair_progress_pair : int -> int -> int -> int -> unit = "set_progress_pair" ;;
-external check_fair_soundness : unit -> bool = "check_soundness" ;;
-external set_initial_fair_vertex : int -> unit = "set_initial_vertex" ;;
-
+external tag_fair_vertex : int -> int -> unit = "tag_fair_vertex" ;;
+external set_fair_successor : int -> int -> unit = "set_fair_successor" ;;
+external set_fair_trace_pair : int -> int -> int -> int -> unit = "set_fair_trace_pair" ;;
+external set_fair_progress_pair : int -> int -> int -> int -> unit = "set_fair_progress_pair" ;;
+external check_fair_soundness : unit -> bool = "check_fair_soundness" ;;
+external set_initial_fair_vertex : int -> unit = "set_initial_fair_vertex" ;;
+external set_fairness_constraint : int -> int -> unit = "set_fairness_constraint" ;;
+  
 type fair_abstract_node =
     bool * Util.Tags.t * ((int * Util.TagPairs.t * Util.TagPairs.t) list)
 type t = fair_abstract_node Int.Map.t
@@ -64,7 +65,6 @@ let pp fmt prf =
     (fun idx n -> Format.fprintf fmt "%i: %a@," idx pp_proof_node n) prf ;
   Format.close_box ()
 
-
 let remove_dead_nodes prf' =
   let prf = ref prf' in
   let process_node child par_idx n =
@@ -72,17 +72,25 @@ let remove_dead_nodes prf' =
       let newparent = 
 	let (fair, tags, subg) = n in
 	begin match subg with
-  	      | [_] -> (true, tags, [])
+  	      | [_] -> (fair, tags, [])
   	      | _ -> (fair, tags, Blist.remove_nth (index_of_child child n) subg)
 	end in
       prf := Int.Map.add par_idx newparent !prf in
+  let find_parent child =
+    Int.Map.choose (Int.Map.filter (fun idx n -> in_children child n) !prf) in
   let remove_dead_node idx n =
-    let () = prf := Int.Map.remove idx !prf in
-    Int.Map.iter (fun p n -> process_node idx p n) !prf in
+    let (pidx,parent) = find_parent idx in
+    if is_fair parent then ()
+    else begin
+	let () = prf := Int.Map.remove idx !prf in
+	Int.Map.iter (fun p n -> process_node idx p n) !prf ;
+      end
+  in
   let cont = ref true in
+  let processed = ref [] in
   while !cont do
-    match Int.Map.find_some (fun idx n -> idx<>0 && is_leaf n) !prf with
-    | Some (idx, n) -> remove_dead_node idx n
+    match Int.Map.find_some (fun idx n -> idx<>0 && is_leaf n && not (Blist.mem idx !processed)) !prf with
+    | Some (idx, n) -> processed:= idx::!processed ; remove_dead_node idx n
     | None -> cont := false
   done ;
   !prf
@@ -115,24 +123,23 @@ let fuse_single_nodes prf' =
   (* if a parent points to the child of the node to be fused then *)
   (* we would run into difficulties when updating that parent to point *)
   (* directly to the grandchild, so we avoid that altogether *)
-  let p idx n = idx<>0 && is_single_node idx n && not (fathers_grandchild !prf idx n) in
+  let p idx n = idx<>0 && is_single_node idx n
+		&& not (fathers_grandchild !prf idx n)
+		&& not (is_fair n) in (* TODO : we might need to check for the fairness of the parent as well *)
   while !cont do
     match Int.Map.find_some p !prf with
     | Some (idx, n) -> fuse_node idx n
     | None -> cont := false
   done ;
   !prf
-   
+
 let minimize_abs_proof prf = fuse_single_nodes (remove_dead_nodes prf)
 
 (* check global soundness condition on proof *)
 let check_proof p =
   Stats.MC.call ();
   let create_tags i n =
-    if (is_fair n) then
-      Tags.iter (tag_fair_vertex i) (get_tags n)
-    else
-      Tags.iter (tag_fair_vertex i) (get_tags n)
+    Tags.iter (tag_fair_vertex i) (get_tags n)
   in
   let create_succs i (_, _, l) = 
     Blist.iter (fun (j,_,_) -> set_fair_successor i j) l in
@@ -141,6 +148,19 @@ let check_proof p =
       TagPairs.iter (fun (k,m) -> set_fair_trace_pair i j k m) tvs ;
       TagPairs.iter (fun (k,m) -> set_fair_progress_pair i j k m) tps in
     Blist.iter do_tag_transitions l in
+  let create_fair_constraints_pairs i (fair, _, l) =
+    let rec separate xs =
+      match xs with
+      | x::y::tail -> let a,b = separate tail in x::a, y::b
+      | x::[] -> debug (fun () -> "Odd numbered list in fair constraint") ; [],[] (* TODO : handle this case appropriately *)
+      | [] -> [],[]
+    in
+    let create_pair (i,_,_) (j,_,_) = debug (fun () -> "Creating fairness constraint " ^ string_of_int i ^ " " ^ string_of_int j) ; set_fairness_constraint i j in
+    if fair then
+      begin
+	let l1,l2 = separate l in
+	Blist.iter2 create_pair l1 l2
+      end in
   let size = Int.Map.cardinal p in
   let log2size = 1 + int_of_float (ceil ((log (float_of_int size)) /. (log 2.0))) in
   debug (fun () -> "Checking fair soundness starts...") ;
@@ -150,6 +170,7 @@ let check_proof p =
   Int.Map.iter create_succs p ;
   set_initial_fair_vertex 0 ;
   Int.Map.iter create_fair_trace_pairs p ;
+  Int.Map.iter create_fair_constraints_pairs p ;
   let retval = check_fair_soundness () in
   destroy_fair_aut () ;
   if retval then Stats.MC.accept () else Stats.MC.reject () ;

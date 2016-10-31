@@ -801,6 +801,7 @@ let setup defs =
 		   (* 	(fun c -> Rule.compose (fold c) symex)  *)
 		   (* 	(Sl_defs.to_list defs));		    *)
 		   symex;
+		   symex_fair;
 		   (* new_backl_cut; *)
 		   (Rule.compose (luf defs) (Rule.attempt ex_falso_axiom));
 		   disjunction_rule;

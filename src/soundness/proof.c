@@ -74,7 +74,6 @@ Vertex Proof::create_vertex() {
 }
 //------------------------------------------------------------------
 void Proof::tag_vertex(const Vertex & v, const Tag & t) {
-	assert( t>0 );
 	assert( vertices.find(v) != vertices.end() );
 	max_tag = std::max(max_tag, t);
 	tag_map[v].insert(t);
