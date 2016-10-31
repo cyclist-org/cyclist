@@ -109,12 +109,21 @@ extern "C" value check_soundness() {
 	CAMLparam0();
 	CAMLlocal1(v_res);
 
+	// spot::print_dot(std::cerr, proof);
 	spot::const_twa_ptr ta = std::make_shared<TraceAutomaton>(*proof);
+	// spot::print_dot(std::cerr, ta);
 	spot::twa_graph_ptr graph = copy(ta, spot::twa::prop_set::all());
-	spot::twa_graph_ptr det = to_generalized_buchi(dtwa_complement(tgba_determinize(graph, false, true, true, spot::check_stutter_invariance(graph).is_true())));
-	//spot::print_dot(std::cerr, ta);
+	spot::twa_graph_ptr det = 
+		tgba_determinize(
+			graph, false, true, false, 
+			spot::check_stutter_invariance(graph).is_true()
+		);
+	spot::twa_graph_ptr complement = to_generalized_buchi(dtwa_complement(det));
+	// std::cerr << "check_stutter_invariance(graph) = " << spot::check_stutter_invariance(graph).is_true() << std::endl;
+	// spot::print_dot(std::cerr, det);
+	// spot::print_dot(std::cerr, complement);
 
-	spot::const_twa_ptr product = std::make_shared<spot::twa_product>(proof, det);
+	spot::const_twa_ptr product = std::make_shared<spot::twa_product>(proof, complement);
 	spot::couvreur99_check ec(product);
 	std::shared_ptr<spot::emptiness_check_result> res = ec.check();
 

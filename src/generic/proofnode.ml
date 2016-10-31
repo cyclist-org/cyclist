@@ -92,8 +92,8 @@ struct
           Seq.pp n.seq n.descr
           (Blist.pp pp_commasp 
             (fun fmt (i,pres,prog) -> 
-              Format.fprintf fmt "%i" i)) p
-              (* Format.fprintf fmt "@[%i <%a/%a>@]" i Tagpairs.pp pres Tagpairs.pp prog)) p *)
+              (* Format.fprintf fmt "%i" i)) p *)
+              Format.fprintf fmt "@[%i <%a/%a>@]" i Tagpairs.pp (Tagpairs.diff pres prog) Tagpairs.pp prog)) p
   
   let justify = Latex.text "\n\\justifies\n\\thickness=0.1em\n"
   let using = Latex.text "\\using"

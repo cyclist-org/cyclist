@@ -5,6 +5,8 @@ open Lib
 open Parsers
 open Soundcheck
 
+let () = do_debug := true
+
 let usage = "usage: " ^ Sys.argv.(0) ^ " [abstract proof]"
 
 let parse_proof st = 
