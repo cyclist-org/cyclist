@@ -133,7 +133,7 @@ let close cs =
   let cs = opt_map_to add cs (function | Constraint.LT(t, t') -> Some (Constraint.LTE(t, t')) | _ -> None ) cs in
   let gen cs =
     let cs_list = to_list cs in
-    let allpairs = Blist.cartesian_hemi_square cs_list in
+    let allpairs = Blist.cartesian_product cs_list cs_list in
     Blist.map_to (Option.dest Fun.id add) cs infer_constraint allpairs in
   fixpoint gen cs
   
