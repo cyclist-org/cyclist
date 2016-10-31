@@ -230,6 +230,7 @@ let check_proof =
       end in
     try
       debug (fun _ -> mk_to_string pp prf) ;
+      debug (fun () -> "Minimized proof:\n" ^ (mk_to_string pp aprf)) ;
       Stats.MCCache.call () ;
       let r = CheckCache.find ccache aprf in
       Stats.MCCache.end_call () ;
