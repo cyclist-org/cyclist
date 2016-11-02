@@ -621,6 +621,8 @@ module Cmd =
       | [] -> true
       | c::cs -> match c.cmd with
         | ProcCall(_) | Assert(_) -> false
+        | If(_,c) | While(_,c) -> is_while_prog c && is_while_prog cs
+        | IfElse(_,c,c') -> is_while_prog c && is_while_prog c' && is_while_prog cs
         | _ -> is_while_prog cs
 
   end
