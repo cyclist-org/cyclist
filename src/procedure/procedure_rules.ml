@@ -745,102 +745,105 @@ let transform_seq ((pre, cmd, post) as seq) =
         Tagpairs.mk_ex_subst
           (Tags.union (Sl_form.tags pre) (Sl_form.tags ex_post))
           schema_tags in
+      let schema_subst = Tagpairs.union schema_subst (Tagpairs.reflect u_tag_theta) in
       let ex_schema = Ord_constraints.subst_tags schema_subst abd_schema in
-      let pre_with_schema = Sl_form.add_constraints pre ex_schema in
-      let subst_avoid_tags =
-        Tags.union (Sl_form.tags frame) (Tagpairs.flatten tag_theta) in
-      let subst_avoid_trms =
-        Sl_term.Set.union
-          (Sl_form.vars frame)
-          (Sl_term.Map.fold
-            (fun x y vs -> Sl_term.Set.add x (Sl_term.Set.add y vs))
-            trm_theta
-            Sl_term.Set.empty) in
-      let post_transforms =
-        if match_post then
-          Sl_abduce.abd_bi_substs
-            ~allow_frame:false
-            ~update_check:
-              (Fun.conj
-                (Sl_unify.Bidirectional.updchk_inj_left
-                  (Fun.list_conj [
-                      (Sl_unify.Unidirectional.is_substitution) ;
-                      (Sl_unify.Unidirectional.avoid_replacing_trms
-                        subst_avoid_trms) ;
-                      (Sl_unify.Unidirectional.avoid_replacing_tags
-                        subst_avoid_tags)
-                    ]))
-                (Sl_unify.Bidirectional.updchk_inj_right
-                  Sl_unify.Unidirectional.modulo_entl))
-            ex_post post
-        else
-          Some
-            ((ex_post, post),
-              [(trm_theta, tag_theta), Sl_unify.Unidirectional.empty_state]) in
-      Option.map
-        (fun (_, substs) ->
-          (* We just need one, since it does not affect subsequent proof search *)
-          let subst = Blist.hd substs in
-          let theta = fst subst in
-          let () = debug (fun _ -> "Left-hand sub:") in
-          let () = debug (fun _ -> "\tterms: " ^ (Sl_term.Map.to_string Sl_term.to_string (fst (fst subst)))) in
-          let () = debug (fun _ -> "\ttags: " ^ (Tagpairs.to_string (snd (fst subst)))) in
-          let () = debug (fun _ -> "Right-hand sub:") in
-          let () = debug (fun _ -> "\tterms: " ^ (Sl_term.Map.to_string Sl_term.to_string (fst (snd subst)))) in
-          let () = debug (fun _ -> "\ttags: " ^ (Tagpairs.to_string (snd (snd subst)))) in
-          let trm_theta =
-            Sl_term.Map.union trm_theta (Sl_subst.strip (fst theta)) in
-          let tag_theta =
-            Tagpairs.union tag_theta (Tagpairs.strip (snd theta)) in
-          let () = debug (fun _ -> "Verified entailment with bud postcondition") in
-          let () = debug (fun _ -> "Final term substitution: " ^ (Sl_term.Map.to_string Sl_term.to_string trm_theta)) in
-          let () = debug (fun _ -> "Final tag substitution: " ^ (Tagpairs.to_string tag_theta)) in
-          let subst_seq = Seq.subst_tags tag_theta (Seq.subst trm_theta seq') in
-          let interpolated_seq = (f, cmd, f') in
-          let framed_seq =
-            let framed_pre = Sl_form.star ~augment_deqs:false frame f in
-            (framed_pre, cmd, framed_post) in
-          let univ_seq = Seq.with_pre framed_seq g in
-          let partial_univ_seq = Seq.with_post univ_seq ex_post in
-          let schema_seq = Seq.with_pre partial_univ_seq pre_with_schema in
-          let ex_seq = Seq.with_pre partial_univ_seq pre in
-          let rule =
-            Rule.sequence [
-                if (not match_post) || Seq.equal seq ex_seq
-                  then Rule.identity
-                  else Rule.mk_infrule (right_cut_rule ex_seq) ;
-
-                if Seq.equal ex_seq schema_seq
-                  then Rule.identity
-                  else Rule.mk_infrule (schema_intro_rule schema_seq) ;
-
-                if Seq.equal schema_seq partial_univ_seq
-                  then Rule.identity
-                  else Rule.mk_infrule (ex_intro_rule partial_univ_seq) ;
-
-                if Seq.equal partial_univ_seq univ_seq
-                  then Rule.identity
-                  else Rule.mk_infrule (right_cut_rule univ_seq) ;
-
-                if Seq.equal univ_seq framed_seq
-                  then Rule.identity
-                  else Rule.mk_infrule (left_cut_rule framed_seq) ;
-
-                if Seq.equal framed_seq interpolated_seq
-                  then Rule.identity
-                  else Rule.mk_infrule (frame_rule frame interpolated_seq) ;
-
-                if Seq.equal interpolated_seq subst_seq
-                  then Rule.identity
-                  else Rule.mk_infrule (left_cut_rule subst_seq) ;
-
-                if Seq.equal subst_seq seq'
-                  then Rule.identity
-                  else
-                    Rule.mk_infrule (subst_rule (trm_theta, tag_theta) seq') ;
-              ] in
-            ((if match_post then seq else ex_seq), rule))
-        post_transforms in
+      if not (Ord_constraints.verify_schemas (Sl_form.tags pre) ex_schema) 
+        then None else
+        let pre_with_schema = Sl_form.add_constraints pre ex_schema in
+        let subst_avoid_tags =
+          Tags.union (Sl_form.tags frame) (Tagpairs.flatten tag_theta) in
+        let subst_avoid_trms =
+          Sl_term.Set.union
+            (Sl_form.vars frame)
+            (Sl_term.Map.fold
+              (fun x y vs -> Sl_term.Set.add x (Sl_term.Set.add y vs))
+              trm_theta
+              Sl_term.Set.empty) in
+        let post_transforms =
+          if match_post then
+            Sl_abduce.abd_bi_substs
+              ~allow_frame:false
+              ~update_check:
+                (Fun.conj
+                  (Sl_unify.Bidirectional.updchk_inj_left
+                    (Fun.list_conj [
+                        (Sl_unify.Unidirectional.is_substitution) ;
+                        (Sl_unify.Unidirectional.avoid_replacing_trms
+                          subst_avoid_trms) ;
+                        (Sl_unify.Unidirectional.avoid_replacing_tags
+                          subst_avoid_tags)
+                      ]))
+                  (Sl_unify.Bidirectional.updchk_inj_right
+                    Sl_unify.Unidirectional.modulo_entl))
+              ex_post post
+          else
+            Some
+              ((ex_post, post),
+                [(trm_theta, tag_theta), Sl_unify.Unidirectional.empty_state]) in
+        Option.map
+          (fun (_, substs) ->
+            (* We just need one, since it does not affect subsequent proof search *)
+            let subst = Blist.hd substs in
+            let theta = fst subst in
+            let () = debug (fun _ -> "Left-hand sub:") in
+            let () = debug (fun _ -> "\tterms: " ^ (Sl_term.Map.to_string Sl_term.to_string (fst (fst subst)))) in
+            let () = debug (fun _ -> "\ttags: " ^ (Tagpairs.to_string (snd (fst subst)))) in
+            let () = debug (fun _ -> "Right-hand sub:") in
+            let () = debug (fun _ -> "\tterms: " ^ (Sl_term.Map.to_string Sl_term.to_string (fst (snd subst)))) in
+            let () = debug (fun _ -> "\ttags: " ^ (Tagpairs.to_string (snd (snd subst)))) in
+            let trm_theta =
+              Sl_term.Map.union trm_theta (Sl_subst.strip (fst theta)) in
+            let tag_theta =
+              Tagpairs.union tag_theta (Tagpairs.strip (snd theta)) in
+            let () = debug (fun _ -> "Verified entailment with bud postcondition") in
+            let () = debug (fun _ -> "Final term substitution: " ^ (Sl_term.Map.to_string Sl_term.to_string trm_theta)) in
+            let () = debug (fun _ -> "Final tag substitution: " ^ (Tagpairs.to_string tag_theta)) in
+            let subst_seq = Seq.subst_tags tag_theta (Seq.subst trm_theta seq') in
+            let interpolated_seq = (f, cmd, f') in
+            let framed_seq =
+              let framed_pre = Sl_form.star ~augment_deqs:false frame f in
+              (framed_pre, cmd, framed_post) in
+            let univ_seq = Seq.with_pre framed_seq g in
+            let partial_univ_seq = Seq.with_post univ_seq ex_post in
+            let schema_seq = Seq.with_pre partial_univ_seq pre_with_schema in
+            let ex_seq = Seq.with_pre partial_univ_seq pre in
+            let rule =
+              Rule.sequence [
+                  if (not match_post) || Seq.equal seq ex_seq
+                    then Rule.identity
+                    else Rule.mk_infrule (right_cut_rule ex_seq) ;
+  
+                  if Seq.equal ex_seq schema_seq
+                    then Rule.identity
+                    else Rule.mk_infrule (schema_intro_rule schema_seq) ;
+  
+                  if Seq.equal schema_seq partial_univ_seq
+                    then Rule.identity
+                    else Rule.mk_infrule (ex_intro_rule partial_univ_seq) ;
+  
+                  if Seq.equal partial_univ_seq univ_seq
+                    then Rule.identity
+                    else Rule.mk_infrule (right_cut_rule univ_seq) ;
+  
+                  if Seq.equal univ_seq framed_seq
+                    then Rule.identity
+                    else Rule.mk_infrule (left_cut_rule framed_seq) ;
+  
+                  if Seq.equal framed_seq interpolated_seq
+                    then Rule.identity
+                    else Rule.mk_infrule (frame_rule frame interpolated_seq) ;
+  
+                  if Seq.equal interpolated_seq subst_seq
+                    then Rule.identity
+                    else Rule.mk_infrule (left_cut_rule subst_seq) ;
+  
+                  if Seq.equal subst_seq seq'
+                    then Rule.identity
+                    else
+                      Rule.mk_infrule (subst_rule (trm_theta, tag_theta) seq') ;
+                ] in
+              ((if match_post then seq else ex_seq), rule))
+          post_transforms in
     let result = Option.dest
       Blist.empty
       (fun (interpolant, substs) ->
