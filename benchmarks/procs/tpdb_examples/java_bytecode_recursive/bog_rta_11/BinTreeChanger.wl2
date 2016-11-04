@@ -37,8 +37,3 @@ proc applyChange(t)
 	fi;
 	assert(bt(t))
 }
-
-precondition: x != nil * bt(x);
-postcondition: bt(x);
-
-applyChange(x)

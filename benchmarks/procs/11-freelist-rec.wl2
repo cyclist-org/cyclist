@@ -12,7 +12,3 @@ postcondition: emp;
 	fi
 }
 
-precondition: ls(x, nil);
-postcondition: emp;
-
-freelist(x)

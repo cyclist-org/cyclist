@@ -19,8 +19,3 @@ proc traversecycliclist(x)
   y := x.next;
   traverselist(y, x)
 }
-
-precondition: cls[a](x);
-postcondition: cls[a](x);
-
-traversecycliclist(x)

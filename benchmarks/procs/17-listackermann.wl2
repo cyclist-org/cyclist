@@ -33,9 +33,3 @@ proc Ack(x, y, z)
 	
 	fi
 }
-
-precondition: ls(x,nil) * ls(y,nil);
-postcondition: ls(x,nil) * z->v' * ls(v',nil);
-
-z := new();
-Ack(x, y, z)

@@ -30,12 +30,3 @@ proc copy(t, ret)
 		assert(bt[a](t) * ret->v',w' * bt[a](v'))
 	fi
 }
-
-precondition: bt(x);
-postcondition: bt(x) * bt(y);
-
-ptr := new();
-
-copy(x, ptr);
-y := ptr.left;
-free(ptr)

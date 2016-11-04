@@ -46,6 +46,9 @@ let pp_semicolonsp fmt () =
 
 let pp_commasp fmt () =
   pp_comma fmt () ; Format.pp_print_space fmt ()
+  
+let pp_dbl_nl fmt () =
+  Format.pp_force_newline fmt () ; Format.pp_force_newline fmt ()
 
 let pp_star fmt () = Format.fprintf fmt " *@ "
 

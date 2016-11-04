@@ -13,7 +13,9 @@ proc traverselist(x)
 	fi
 }
 
-precondition: ls(x, nil);
-postcondition: ls(x, nil);
-
-traverselist(x)
+proc main(x)
+	precondition: ls(x, nil);
+	postcondition: ls(x, nil);
+{
+	traverselist(x)
+}

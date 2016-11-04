@@ -119,4 +119,6 @@ val parse : (t, 'a) MParser.parser
 val of_string : string -> t
 
 val to_string_list : t -> string list
+
+val to_string : t -> string
 val to_melt : t -> Latex.t

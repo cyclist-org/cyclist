@@ -35,8 +35,3 @@ proc growList(l)
 		growList(next)
 	fi
 }
-
-precondition: tree(t);
-postcondition: tree(t);
-
-growTree(t)

@@ -1,9 +1,16 @@
 fields: next;
-precondition: ls(x,nil) * ls(y,nil);
-postcondition: ls(x,nil) * ls(y,nil);
-while x!=nil do
-  z := x;
-  x := x.next;
-  z.next := y;
-  y := z
-od
+
+proc main(x)
+	precondition: ls(x,nil);
+	postcondition: ls(x',nil);
+{
+	w := x;
+	y := nil;
+	assert (ls(w,nil) * ls(y,nil));
+	while w!=nil do
+		z := w;
+		w := w.next;
+		z.next := y;
+		y := z
+	od
+}

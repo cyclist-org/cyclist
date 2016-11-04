@@ -14,8 +14,3 @@ proc twoWay(term, x)
 		twoWay(term, y)
 	fi
 }
-
-precondition: term != nil * list[a](x);
-postcondition: term != nil * list(x);
-
-twoWay(term, x)

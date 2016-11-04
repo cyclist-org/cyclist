@@ -7,6 +7,7 @@ module L = Blist
 module Make(Seq : Sigs.SEQUENT) =
 struct
   module Proof = Proof.Make(Seq)
+  module Node = Proofnode.Make(Seq)
   
   type seq_t = Seq.t
   type proof_t = Proof.t
@@ -56,12 +57,20 @@ struct
   
   let all_nodes srcidx prf = 
     Blist.filter (fun idx -> idx<>srcidx) (Blist.map fst (Proof.to_list prf))
+  let closed_nodes srcidx prf =
+    let nodes = 
+      Blist.filter
+        (fun (idx, n) -> not (Node.is_open n) && idx<>srcidx)
+        (Proof.to_list prf) in
+    Blist.map fst nodes
   let ancestor_nodes srcidx prf = Blist.map fst (Proof.get_ancestry srcidx prf)
   let syntactically_equal_nodes srcidx prf =
     let seq = Proof.get_seq srcidx prf in
-    Blist.filter
-      (fun idx -> idx<>srcidx && Seq.equal seq (Proof.get_seq idx prf))
-      (Blist.map fst (Proof.to_list prf))
+    let nodes = 
+      Blist.filter
+        (fun (idx, n) -> Seq.equal seq (Node.get_seq n) && idx<>srcidx)
+        (Proof.to_list prf) in
+    Blist.map fst nodes
 
   
   let fail _ _ = L.empty

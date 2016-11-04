@@ -57,8 +57,10 @@ proc deq(x)
 	fi
 }
 
-precondition: FunQueue(q);
-postcondition: FunQueue(q);
-
-enq(q);
-deq(q)
+proc main(q)
+	precondition: FunQueue(q);
+	postcondition: FunQueue(q);
+{
+	enq(q);
+	deq(q)
+}

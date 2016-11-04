@@ -19,19 +19,19 @@ postcondition: [b] <= [c'] : x -> nil * acc -> z' * ls[c'](z', nil);
 	fi
 }
 
-precondition: ls(x, nil);
-postcondition: ls(x, nil);
-
-ptr := new();
-ptr.next := x;
-
-acc := new();
-list := nil;
-acc.next := list;
-
-reverse(ptr, acc);
-
-x := acc.next;
-
-free(ptr);
-free(acc)
+proc main(x)
+	precondition: ls(x, nil);
+	postcondition: ls(x', nil);
+{
+	ptr := new();
+	ptr.next := x;
+	
+	acc := new();
+	list := nil;
+	acc.next := list;
+	
+	reverse(ptr, acc);
+	
+	free(ptr);
+	free(acc)
+}

@@ -19,17 +19,3 @@ postcondition: x -> z' * ls(z', nil) * y -> nil;
 	fi
 }
 
-precondition: ls(x, nil) * ls(y, nil);
-postcondition: ls(x, nil);
-
-ptr1 := new();
-ptr1.next := x;
-
-ptr2 := new();
-ptr2.next := y;
-
-append(ptr1, ptr2);
-
-x := ptr1.next;
-free(ptr1);
-free(ptr2)

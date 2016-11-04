@@ -29,12 +29,15 @@ proc insert(t)
 	fi
 }
 
-precondition: t != nil * bt(t) * ls2[a](elems, nil);
-postcondition: t != nil * bt(t);
-
-while elems != nil do
-	tmp := elems.left;
-	free(elems);
-	elems := tmp;
-	insert(t)
-od
+proc main(t, elems)
+	precondition: t != nil * bt(t) * ls2[a](elems, nil);
+	postcondition: t != nil * bt(t);
+{
+	es := elems;
+	while es != nil do
+		tmp := es.left;
+		free(es);
+		es := tmp;
+		insert(t)
+	od
+}

@@ -33,21 +33,3 @@ postcondition: x -> nil * y -> v' * ls[b'](v',nil) * z -> w' * ls[c'](w',nil);
 	
 	fi
 }
-
-precondition: ls[a](x,nil);
-postcondition: ls[b'](y,nil) * ls[c'](z,nil);
-
-ptr1 := new();
-ptr1.next := x;
-
-ptr2 := new();
-ptr3 := new();
-
-partition(ptr1, ptr2, ptr3);
-
-y := ptr2.next;
-z := ptr3.next;
-
-free(ptr1);
-free(ptr2);
-free(ptr3)

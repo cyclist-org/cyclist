@@ -48,12 +48,13 @@ proc bubble(x)
 	fi
 }
 
-precondition: ls2[a](l, nil);
-postcondition: ls2[a](l, nil);
-
-ptr := new();
-copy(l, ptr);
-cnt := ptr.data;
-sort(l, cnt);
-free(ptr)
-
+proc main(l)
+	precondition: ls2[a](l, nil);
+	postcondition: ls2[a](l, nil);
+{
+	ptr := new();
+	copy(l, ptr);
+	cnt := ptr.data;
+	sort(l, cnt);
+	free(ptr)	
+}

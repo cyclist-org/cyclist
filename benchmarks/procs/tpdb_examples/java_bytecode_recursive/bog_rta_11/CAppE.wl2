@@ -42,10 +42,3 @@ proc cappE(j)
 		while tail = nil do skip od
 	fi
 }
-
-precondition: list(j);
-postcondition: list(x');
-
-cappE(j)
-
-

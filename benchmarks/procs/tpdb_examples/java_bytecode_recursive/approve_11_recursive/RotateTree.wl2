@@ -26,12 +26,3 @@ proc rotateEachNode(x)
 		assert(x->new_t',v' * bt(new_t'))
 	fi
 }
-
-precondition: bt(t);
-postcondition: bt(t);
-
-ptr := new();
-ptr.left := t;
-rotateEachNode(ptr);
-t := ptr.left;
-free(ptr)

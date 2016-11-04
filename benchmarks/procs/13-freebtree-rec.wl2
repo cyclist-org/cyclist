@@ -12,8 +12,3 @@ postcondition: emp;
 		free(x)
 	fi
 }
-
-precondition: bt(x);
-postcondition: emp;
-
-freebtree(x)

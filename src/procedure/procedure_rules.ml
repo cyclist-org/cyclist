@@ -6,13 +6,22 @@ module SH = Sl_heap
 
 exception Not_symheap = Sl_form.Not_symheap
 
-module Rule = Proofrule.Make(Procedure_program.Seq)
-module Seqtactics = Seqtactics.Make(Procedure_program.Seq)
-module Proof = Proof.Make(Procedure_program.Seq)
+module Program = Procedure_program
+module Seq = Program.Seq
+
+module Rule = Proofrule.Make(Seq)
+module Seqtactics = Seqtactics.Make(Seq)
+module Proof = Proof.Make(Seq)
 module Slprover = Prover.Make(Sl_seq)
 module EntlSeqHash = Hashtbl.Make(Sl_seq)
 
+module ProofNode = Proofnode.Make(Seq)
+
 let check_invalid = ref (Sl_invalid.check Sl_defs.empty)
+
+let show_invalidity_debug = ref false
+let show_entailment_debug = ref false
+let show_frame_debug = ref false
 
 let entl_depth = ref Sl_abduce.max_depth
 
@@ -25,14 +34,24 @@ let entails f f' =
     let depth = if !entl_depth < 1 then max_int else !entl_depth in
     let invalid = 
       let dbg = !do_debug in 
-      let res = (do_debug := false; !check_invalid seq) in 
+      let res = 
+        begin
+        do_debug := !do_debug && !show_invalidity_debug;
+        !check_invalid seq
+        end in 
       do_debug := dbg; res in
     if invalid
       then 
         let () = debug (fun _ -> "Entailment is invalid!") in 
         None
       else 
-        let prf = Slprover.idfs 1 depth !Sl_rules.axioms !Sl_rules.rules seq in
+        let dbg = !do_debug in 
+        let prf = 
+          begin
+          do_debug:= !do_debug && !show_entailment_debug;
+          Slprover.idfs 1 depth !Sl_rules.axioms !Sl_rules.rules seq
+          end in
+        do_debug := dbg;
         let () = debug (fun _ -> "Entailment was " ^ (Option.dest "not " (fun _ -> "") prf) ^ "proved") in
         prf in
   let seq = (f, f') in
@@ -66,7 +85,7 @@ let abd_pre_table :
   EntlSeqHash.create 11
 let abd_pre_transforms ((used_tags, prog_vars) as key) f f' =
   let abd f f' =
-    let res =
+    let res = 
       Sl_abduce.abd_substs ~used_tags
         ~update_check:
           (Fun.disj
@@ -139,7 +158,7 @@ let mk_symex_empty_axiom =
       Option.map (fun _ -> "Axiom") (aux pre cmd)
     else None in
   Rule.mk_axiom ax
-
+  
 (* simplification rules *)
 
 (* Tactic which tries to simplify the sequent by replacing existential variables *)
@@ -446,7 +465,9 @@ let symex_while_rule =
     with Not_symheap | WrongCmd -> [] in
   wrap rl
 
-let mk_symex_proc_unfold procs =
+let proc_unfold_str = "Proc Unf. "
+
+let mk_symex_proc_unfold procs prf_cache =
   let rl (pre, cmd, post) =
     try
       let (p, args) = Cmd.dest_proc_call cmd in
@@ -457,18 +478,25 @@ let mk_symex_proc_unfold procs =
             id=p
               && Blist.equal Sl_term.equal args params
               && Blist.exists
-                  (fun (pre', post') ->
+                  (fun ((pre', post') as spec) ->
+                    not (Proc.SigMap.mem ((id, params), spec) !prf_cache) &&
                     Sl_form.subsumed pre' pre && Sl_form.equal post post')
                   specs
-                (* We use subsumption here to handle the case that the        *)
-                (* procedure has a disjunctive precondition which has already *)
-                (* been split and that we now want to unfold                  *)
+                (* We only unfold procedures for which proofs have not been already *)
+                (* found and we use subsumption here to handle the case that the    *)
+                (* procedure has a disjunctive precondition which has already been  *)
+                (* split and that we now want to unfold                             *)
             with Invalid_argument(_) -> false )
           (procs) in
-        fix_tps [ [ (pre, body, post) ], "Proc Unf. " ^ p  ]
+        fix_tps [ [ (pre, body, post) ], proc_unfold_str ^ p  ]
       else []
     with WrongCmd | Not_found -> [] in
   Rule.mk_infrule rl
+  
+let is_proc_unfold_node n =
+  let (_, descr) = ProofNode.dest n in
+  String.length descr >= String.length proc_unfold_str &&
+  Strng.equal (Str.first_chars descr (String.length proc_unfold_str)) proc_unfold_str
 
 let assert_rule =
   let rl ((pre, cmd, post) as seq) =
@@ -570,12 +598,8 @@ let ex_intro_rule ((pre, cmd, post) as seq) ((pre', cmd', post') as seq') =
       let post_utrms =
         Sl_term.Set.filter Sl_term.is_free_var (Sl_form.vars post) in
       let post_utags = Tags.filter Tags.is_free_var (Sl_form.tags post) in
-      let () = debug (fun _ -> "Testing existential introduction for:\n\t" ^ (Seq.to_string seq) ^ "\n\t" ^ (Seq.to_string seq')) in
       let update_check =
         (fun ((_, (trm_subst, tag_subst)) as state_update) ->
-          let () = debug (fun _ -> "\t" ^ "Testing state update:" ^
-            "\n\t\t" ^ "Terms: " ^ (Sl_term.Map.to_string Sl_term.to_string trm_subst) ^
-            "\n\t\t" ^ "Tags: " ^ (Tagpairs.to_string tag_subst)) in
           let result =
             (Fun.list_conj [
                   Sl_unify.Unidirectional.existential_intro ;
@@ -583,7 +607,6 @@ let ex_intro_rule ((pre, cmd, post) as seq) ((pre', cmd', post') as seq') =
                   Sl_unify.Unidirectional.avoid_replacing_tags ~inverse:true post_utags ;
                 ])
             state_update in
-          let () = debug (fun _ -> "\tResult: " ^ (string_of_bool result)) in
           result) in
       let subst =
         Sl_unify.Unidirectional.realize
@@ -660,6 +683,8 @@ let transform_seq ((pre, cmd, post) as seq) =
     if Cmd.is_assert cmd' || not (Cmd.equal cmd cmd') then Blist.empty else
     if (Sl_form.equal pre pre') && (Sl_form.equal post post') then
       [ (seq, Rule.identity) ] else
+    let dbg = !do_debug in
+    do_debug := !do_debug && !show_frame_debug ;
     let () = debug (fun _ -> "Trying to unify left-hand sides of:" ^ "\n\t" ^ "bud: " ^
       (Seq.to_string seq) ^ "\n\t" ^ "candidate companion: " ^ (Seq.to_string seq')) in
     let u_tag_theta =
@@ -850,6 +875,7 @@ let transform_seq ((pre, cmd, post) as seq) =
         Option.list_get (Blist.map (mk_transform interpolant) substs))
       pre_transforms in
     let () = debug (fun _ -> "Done") in
+    do_debug := dbg ;
     result
 
 let mk_proc_call_rule_seq
@@ -938,7 +964,7 @@ let mk_symex_proc_call procs =
       with Not_symheap | WrongCmd | Not_found -> Rule.fail in
     rl idx prf
 
-let dobackl ?(get_targets=Rule.all_nodes) idx prf =
+let dobackl ?(get_targets=Rule.all_nodes) ?(choose_all=false) idx prf =
   let src_seq = Proof.get_seq idx prf in
   let targets = get_targets idx prf in
   let (ident, rest) =
@@ -968,7 +994,23 @@ let dobackl ?(get_targets=Rule.all_nodes) idx prf =
               then Seq.tag_pairs targ_seq
               else Seq.tagpairs_one in
           [tps, "Backl"])) in
-  Rule.first (Blist.map mk_backlink transformations) idx prf
+  if choose_all then
+    Rule.first (Blist.map mk_backlink transformations) idx prf
+  else
+    Rule.choice (Blist.map mk_backlink transformations) idx prf
+  
+let use_proc_prf prf_cache =
+  fun idx prf ->
+    let (pre, cmd, post) = Proof.get_seq idx prf in
+    try
+      let proc = Cmd.dest_proc_call cmd in
+      if not (Cmd.is_empty (Cmd.get_cont cmd)) then Rule.fail idx prf else
+      let signature = (proc,(pre,post)) in
+      let proc_prf = 
+        Option.get (Proc.SigMap.find signature !prf_cache) in
+      [ [], Proof.add_subprf proc_prf idx prf ]
+    with WrongCmd | Not_found | Invalid_argument(_) -> Rule.fail idx prf
+    
 
 (* let generalise_while_rule =                                                                                                                                                                                                                 *)
 (*     let rl seq =                                                                                                                                                                                                                            *)
@@ -1006,46 +1048,54 @@ let dobackl ?(get_targets=Rule.all_nodes) idx prf =
 let axioms = ref Rule.fail
 let rules = ref Rule.fail
 
-let setup (defs, procs) =
+let setup (defs, procs, prf_cache) =
   let () = Sl_rules.setup defs in
   let () = Sl_abduce.set_defs defs in
   let () = check_invalid := Sl_invalid.check defs in
-  let symex_proc_unfold = mk_symex_proc_unfold procs in
+  let symex_proc_unfold = mk_symex_proc_unfold procs prf_cache in
   let symex_proc_call = mk_symex_proc_call procs in
   rules :=
     Rule.first [
+      
+      (* Simplification *)
       lhs_disj_to_symheaps ;
       simplify ;
 
+      (* Assertions *)
+      assert_rule ;
+
+      (* While loops *)
       Rule.choice [
+        Rule.conditional
+          (fun (_, cmd, _) -> Cmd.is_while cmd)
+          (fun idx prf -> dobackl idx prf) ;
+        Rule.compose (Rule.attempt lab_ex_intro) symex_while_rule ;
+      ];
 
-        Rule.first [
-          Rule.conditional
-            (fun (_, cmd, _) ->
-              Cmd.is_proc_call cmd && Cmd.is_empty (Cmd.get_cont cmd))
-            (dobackl ~get_targets:Rule.syntactically_equal_nodes) ;
-          Rule.conditional
-            (fun (_, cmd, _) -> Cmd.is_while cmd)
-            (fun idx prf -> dobackl idx prf) ;
-        ];
+      (* Procedure calls *)
+      Rule.conditional
+        (fun (_, cmd, _) ->
+          Cmd.is_proc_call cmd && Cmd.is_empty (Cmd.get_cont cmd))
+        (dobackl ~get_targets:Rule.syntactically_equal_nodes) ;
+      use_proc_prf prf_cache ;
+      symex_proc_unfold ;
+      symex_proc_call ;
+      
+      (* Atomic symbolic execution *)
+      symex_skip_rule ;
+      symex_assign_rule ;
+      symex_load_rule ;
+      symex_store_rule ;
+      symex_free_rule ;
+      symex_new_rule ;
+      symex_if_rule ;
+      
+      (* Branching constructs *)
+      symex_ifelse_rule ;
+      
+      (* Predicate unfolding *)
+      luf defs ;
 
-        Rule.first [
-          symex_skip_rule ;
-          symex_assign_rule ;
-          symex_load_rule ;
-          symex_store_rule ;
-          symex_free_rule ;
-          symex_new_rule ;
-          symex_if_rule ;
-          symex_ifelse_rule ;
-          Rule.compose (Rule.attempt lab_ex_intro) symex_while_rule ;
-          symex_proc_unfold ;
-          symex_proc_call ;
-          assert_rule ;
-          luf defs ;
-        ] ;
-
-      ]
     ] ;
   let axioms =
     Rule.first [

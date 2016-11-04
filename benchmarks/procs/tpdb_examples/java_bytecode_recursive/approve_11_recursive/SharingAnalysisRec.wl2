@@ -36,24 +36,26 @@ proc appendNewList(x, cnt)
 	assert(x->v',y' * y'->nil,z' * l != y' * ls2(l,y'))
 }
 
-precondition: ls2(cnt, nil);
-postcondition: ls2(w',t3) * ls2(t1,nil) * t3 != nil * ls2(t3,nil);
-
-ptr := new();
-
-t1 := new();
-t1.field := nil;
-
-ptr.val := t1;
-appendNewList(ptr, nil);
-t2 := ptr.val;
-
-appendNewList(ptr, cnt);
-t3 := ptr.val;
-
-t2.field := nil;
-
-assert(ptr->v',t3 * ls2(w',t3) * ls2(t1,nil) * t3->nil,z');
-copy(t1, t3);
-
-free(ptr)
+proc main(cnt)
+	precondition: ls2(cnt, nil);
+	postcondition: ls2(w',t3') * ls2(t1',nil) * t3' != nil * ls2(t3',nil);
+{
+	ptr := new();
+	
+	t1 := new();
+	t1.field := nil;
+	
+	ptr.val := t1;
+	appendNewList(ptr, nil);
+	t2 := ptr.val;
+	
+	appendNewList(ptr, cnt);
+	t3 := ptr.val;
+	
+	t2.field := nil;
+	
+	assert(ptr->v',t3 * ls2(w',t3) * ls2(t1,nil) * t3->nil,z');
+	copy(t1, t3);
+	
+	free(ptr)
+}

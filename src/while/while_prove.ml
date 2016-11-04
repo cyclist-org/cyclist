@@ -38,7 +38,7 @@ let () =
   let prog = Cmd.number prog in
   While_program.set_program prog ; 
   While_rules.setup (Sl_defs.of_channel (open_in !defs_path)) ;
-  exit (F.prove_seq !While_rules.axioms !While_rules.rules (seq, prog))
+  F.exit (F.prove_seq !While_rules.axioms !While_rules.rules (seq, prog))
     
 
 

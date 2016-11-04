@@ -1,11 +1,13 @@
 fields: next;
 
-precondition: x->v' * PeList[a](v',x); 
-postcondition: x->v' * PeList(v',x);
-
-y := x.next;
-assert(x->v' * PeList(v',y) * PeList[a](y,x));
-while y!=x do
-  y := y.next;
-  assert([b'] < [a] : x->v' * PeList(v',y) * PeList[b'](y,x))
-od
+proc main(x)
+	precondition: x->v' * PeList[a](v',x); 
+	postcondition: x->v' * PeList(v',x);
+{
+	y := x.next;
+	assert(x->v' * PeList(v',y) * PeList[a](y,x));
+	while y!=x do
+	  y := y.next;
+	  assert([b'] < [a] : x->v' * PeList(v',y) * PeList[b'](y,x))
+	od
+}

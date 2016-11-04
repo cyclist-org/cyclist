@@ -1,11 +1,17 @@
 fields: left, right;
-precondition: btseg(y, x) * bt[a](x);
-postcondition: x=nil * bt(y); 
-while x!=nil do
-  if * then
-    x := x.left 
-  else 
-    x := x.right
-  fi ;
-  assert([b'] < [a] : btseg(y, x) * bt[b'](x))
-od
+
+proc main(x)
+	precondition: bt[a](x);
+	postcondition: bt(x);
+{
+	y := x;
+	assert (btseg(x, y) * bt[a](y));
+	while y!=nil do
+		if * then
+			y := y.left 
+		else
+			y := y.right
+		fi ;
+		assert([b'] < [a] : btseg(x, y) * bt[b'](y))
+	od
+}

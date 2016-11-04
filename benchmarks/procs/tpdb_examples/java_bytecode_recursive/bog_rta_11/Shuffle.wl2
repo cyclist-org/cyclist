@@ -47,11 +47,3 @@ proc shuffle(x)
 	
 	fi
 }
-
-precondition: ls[a](l, nil);
-postcondition: ls[a](l, nil);
-
-ptr := new();
-ptr.next := l;
-shuffle(ptr);
-free(ptr)

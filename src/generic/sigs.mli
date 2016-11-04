@@ -130,12 +130,23 @@ sig
     int -> string -> 
     (seq_t * Tagpairs.t * Tagpairs.t) list -> t -> 
     (int list * t)
+    
+  val add_subprf : t -> int -> t -> t
+  (** [add_subprf p idx p'] replaces the node [idx] in [p'] with a copy of [p].
+      N.B. The following should hold, otherwise exceptions will be raised:
+        - [idx] should be an open node; 
+        - the sequent of [idx] should be identical to the root sequent of [p]. *)
+        
+  val extract_subproof : int -> t -> t
+  (** [extract_subproof idx prf] returns [prf] rearranged such that [idx] is
+      the root node. *)
 
   (** Accessor functions. *)
   
   val find : int -> t -> node_t
   val get_seq : int -> t -> seq_t
   val size : t -> int
+  val num_backlinks : t -> int
   (* val mem : int -> t -> bool *)
   val fresh_idx : t -> int
   val fresh_idxs : 'a list -> t -> int list
@@ -228,6 +239,7 @@ sig
   
   (** Ready-made selection functions doing the obvious. *)
   val all_nodes : select_f
+  val closed_nodes : select_f
   val ancestor_nodes : select_f
   val syntactically_equal_nodes : select_f
   

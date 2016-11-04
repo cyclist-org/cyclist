@@ -48,13 +48,11 @@ module Make(Seq: Sigs.SEQUENT) =
       ignore (Latex.to_channel ~mode:Latex.M ch (Proof.to_melt p))
     let print_proof_stats proof =
       let size = Proof.size proof in
-      let links = 
-        Blist.length (
-          Blist.filter (fun (_,n) -> Node.is_backlink n) (Proof.to_list proof)) in
+      let links = Proof.num_backlinks proof in 
       print_endline
-        ("Proof has " ^ (string_of_int size) ^
-         " nodes and a depth of " ^ (string_of_int !last_search_depth) ^
-         " and " ^ (string_of_int links) ^ " back-links.")
+        ("Proof has " ^ (string_of_int size) ^ " nodes" ^
+         " and " ^ (string_of_int links) ^ " back-links.") ;
+      print_endline ("Required search depth was " ^ (string_of_int !last_search_depth))
 
   
     (* type app_state =                                                                              *)

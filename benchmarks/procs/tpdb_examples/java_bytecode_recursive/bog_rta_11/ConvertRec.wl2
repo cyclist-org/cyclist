@@ -28,8 +28,9 @@ proc convert(x)
 	fi
 }
 
-precondition: lsls(x);
-postcondition: emp;
-
-convert(x)
- 
+proc main(x)
+	precondition: lsls(x);
+	postcondition: emp;
+{	
+	convert(x)
+}

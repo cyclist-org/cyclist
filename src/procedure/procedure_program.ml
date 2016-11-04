@@ -1,4 +1,3 @@
-
 open Lib
 open Symbols
 open MParser
@@ -14,21 +13,61 @@ module Cmd = While_program.Cmd
 
 exception WrongCmd = While_program.WrongCmd
 
+let main = "main" 
+
 module Proc =
   struct
     
-    type t = string * Sl_term.t Blist.t * (Sl_form.t * Sl_form.t) list * Cmd.t
+    module K =
+      struct
+        type t = string * Sl_term.t Blist.t * (Sl_form.t * Sl_form.t) list * Cmd.t
+        (** The type of procedures: a tuple of
+              - Procedure name
+              - Formal parameters
+              - A list of pre/post specifications
+              - The body of the procedure
+        *)
+        
+        let compare (id,_,_,_) (id',_,_,_) = Strng.compare id id' 
+        let equal (id,_,_,_) (id',_,_,_) = Strng.equal id id'
+        let hash (id,_,_,_) = Strng.hash id
+        let pp_decl fmt (id, params, _,_) = 
+          Format.fprintf fmt "%s(%a)" id (Blist.pp pp_commasp Sl_term.pp) params
+        let pp_specs fmt (_,_,specs,_) = 
+          let pp_spec fmt (pre, post) =
+            Format.fprintf fmt "%s: %a@\n%s: %a" 
+              keyw_precondition.str Sl_form.pp pre keyw_postcondition.str Sl_form.pp post in
+          Blist.pp Format.pp_print_newline pp_spec fmt specs
+        let pp_head fmt ((id, params, specs, _) as proc) =
+          if Blist.is_empty specs then
+            pp_decl fmt proc
+          else
+            Format.fprintf fmt "%a@\n@[<1>%a@]" pp_decl proc pp_specs proc
+        let pp fmt ((_,_,_, body) as proc) = 
+          Format.fprintf fmt "%a@\n{@\n@[<2>%a@]@\n}" pp_head proc (Cmd.pp ~abbr:true 0) body
+        let to_string = mk_to_string pp
+      end
+    (** The BasicType kernel (N.B. Procs are equal if they have the same name) *)
+      
+    include K
+
+    module Set = Treeset.Make(K)
+    (* module Map = Treemap.Make(K) *)
+    module SigMap = Treemap.Make(Pair.Make(Pair.Make(Strng)(Sl_term.FList))(Pair.Make(Sl_form)(Sl_form)))
+    module Graph = Graph.Imperative.Digraph.ConcreteBidirectional(K)
     
     let get_name ((id, _, _, _) : t) = id
     let get_params ((_, params, _, _) : t) = params
     let get_spec_list ((_, _, specs, _) : t) = specs
-    (* let get_precondition ((_, _, pre, _, _) : t) = pre    *)
-    (* let get_postcondition ((_, _, _, post, _) : t) = post *)
     let get_body ((_, _, _, body) : t) = body
     
     let get_seqs ((id, params, specs, _) : t) = 
       let cmd = Cmd.mk_proc_call id params in
       Blist.map (fun (pre, post) -> (pre, cmd, post)) specs
+      
+    let number_cmds ((id, params, specs, body) : t) = (id, params, specs, Cmd.number body) 
+      
+    let get_dependencies ((id, _, _, body) : t) = Cmd.get_dependencies body
       
     (* precondition: PRECONDITION; COLON; f = formula; SEMICOLON { f } *)
     let parse_precondition st = While_program.parse_precondition ~allow_tags:true st
@@ -106,12 +145,6 @@ module Proc =
         return (pre, body, post)))) <?> "CmdList") st
     
   end
-
-let program_pp fmt cmd =
-  Format.fprintf fmt "%a@\n%a" Field.pp () (Cmd.pp 0) cmd
-
-let pp_cmd fmt cmd =
-  Cmd.pp ~abbr:true 0 fmt cmd
 
 module Seq =
   struct
@@ -204,13 +237,60 @@ module Seq =
     
   end
 
+let pp_prog fmt (fields, procs) =
+  Format.fprintf fmt "%a@\n@\n%a" Field.pp_fields fields (Blist.pp pp_dbl_nl Proc.pp) procs
+
 let program_vars = ref Sl_term.Set.empty
 
-let set_program ((_, cmd, _), procs) =
+(* Store a list as well as a map so the procedures can be printed in the order they were provided *)
+let proc_list = ref []
+let proc_map = ref Strng.Map.empty
+
+module Operations = Graph.Oper.I(Proc.Graph)
+
+let dependencies = ref (Proc.Graph.create ())
+let reachability = ref (Proc.Graph.create ())
+
+let pp fmt () = pp_prog fmt (Field.get_fields (), !proc_list)
+
+let get_proc p = Strng.Map.find p !proc_map
+
+let set_program (fields, procs) =
+  Field.reset () ;
+  Blist.iter Field.add fields ;
+  proc_list := procs ;
   program_vars := Blist.foldl 
-    (fun vars (_, _, _, body) -> Sl_term.Set.union vars (Cmd.vars body)) 
-    (Cmd.vars cmd) 
-    (procs)
+    (fun vars (_, params, _, body) -> 
+      Sl_term.Set.union_of_list [ vars; (Sl_term.Set.of_list params); (Cmd.vars body); ]) 
+    (Sl_term.Set.empty) 
+    (procs) ;
+  proc_map := 
+    Blist.fold_left 
+      (fun procs ((id,_,_,_) as p) -> Strng.Map.add id p procs) 
+      Strng.Map.empty 
+      procs ;
+  Proc.Graph.clear !dependencies ;
+  Blist.iter
+    (fun p -> 
+      Proc.Graph.add_vertex !dependencies p ;
+      Strng.Set.iter
+        (fun p' -> Proc.Graph.add_edge !dependencies p (get_proc p'))
+        (Proc.get_dependencies p))
+    procs ;
+  reachability := Operations.transitive_closure ~reflexive:true !dependencies
+
+let get_reachable ps =
+  let graph = Proc.Graph.copy !dependencies in
+  let () = 
+    Strng.Map.iter 
+      (fun id p -> 
+        if not 
+          (Blist.exists 
+            (fun p' -> Proc.Graph.mem_edge !reachability (Strng.Map.find p' !proc_map) p) 
+            ps)
+        then Proc.Graph.remove_vertex graph p) 
+      !proc_map in
+  graph
 
 let vars_of_program () = !program_vars
 
@@ -223,22 +303,21 @@ let fresh_evars s i = Sl_term.fresh_evars (Sl_term.Set.union !program_vars s) i
 (* again, treat prog vars as special *)
 let freshen_case_by_seq seq case =
   Sl_indrule.freshen (Sl_term.Set.union !program_vars (Seq.vars seq)) case
-
+  
 (* fields: FIELDS; COLON; ils = separated_nonempty_list(COMMA, IDENT); SEMICOLON  *)
 (*     { List.iter P.Field.add ils }                                              *)
 let parse_fields st = 
   ( parse_symb keyw_fields >>
     parse_symb symb_colon >>
-    sep_by1 Field.parse (parse_symb symb_comma) >>= (fun ils ->
-    parse_symb symb_semicolon >>$ List.iter Field.add ils) <?> "Fields") st
+    sep_by1 Field.parse (parse_symb symb_comma)
+    <?> "Fields") st
 
 (* procedures *)
 let parse_procs st =
-  let sigs_equiv (id, params, _,_) (id', params', _,_) = id=id' && (Blist.length params) = (Blist.length params') in
   ( many Proc.parse_named |>> (fun procs ->
     Blist.foldr
       (fun p ps ->
-        assert(not (Blist.exists (sigs_equiv p) ps));
+        assert(not (Blist.exists (Proc.equal p) ps));
         p::ps)
       procs []) ) st
   
@@ -246,11 +325,11 @@ let parse_procs st =
 let parse_main st =
   ( Proc.parse_unnamed << eof <?> "Main procedure") st
 
-(* fields; procs = procedures; main = main  { (main, procs) } *)
+(* fields; procs = procedures; { (main, procs) } *)
 let parse st = 
-  ( parse_fields >>
-    parse_procs >>= (fun procs ->
-    parse_main |>> (fun main -> (main, procs))) <?> "Program") st
+  ( (parse_fields << (parse_symb symb_semicolon)) >>= (fun fields ->
+    (parse_procs << eof) |>> (fun procs ->
+    (fields, procs))) <?> "Program") st
 
 let of_channel c =
   handle_reply (parse_channel parse c ())

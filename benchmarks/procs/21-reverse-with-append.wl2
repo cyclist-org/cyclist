@@ -39,14 +39,3 @@ postcondition: x->w' * ls(w', nil);
 	
 	fi
 }
-
-precondition: ls(x, nil);
-postcondition: ls(x, nil);
-
-ptr := new();
-ptr.next := x;
-
-reverse(ptr);
-
-x := ptr.next;
-free(ptr)

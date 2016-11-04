@@ -1,8 +1,13 @@
 fields: next;
-precondition: ls(x, nil);
-postcondition: emp;
-while x!=nil do
-	y := x;
-	x := x.next;
-	free(y)
-od
+
+proc main(x)
+	precondition: ls(x, nil);
+	postcondition: emp;
+{
+	l := x;
+	while l != nil do
+		y := l;
+		l := l.next;
+		free(y)
+	od
+}

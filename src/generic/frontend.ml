@@ -4,8 +4,14 @@ module Make(Prover : Sigs.PROVER) =
   struct
     module Seq = Prover.Seq
     
+    type result_t =
+      | TIMEOUT
+      | NOT_FOUND 
+      | SUCCESS of Prover.Proof.t
+
     let show_proof = ref false 
     let latex_path = ref ""
+    let open_file_for_append = ref false
     let timeout = ref 30
     let minbound = ref 1
     let maxbound = ref 11
@@ -38,34 +44,60 @@ module Make(Prover : Sigs.PROVER) =
       print_endline (Arg.usage_string spec_list usage) ;
       exit 1
 
-    let prove_seq ax r seq =
-      Format.set_margin (Sys.command "exit $(tput cols)") ;
+    let exit = function
+      | TIMEOUT -> exit 2
+      | NOT_FOUND -> exit 1
+      | SUCCESS(_) -> exit 0
+    
+    let gather_stats call = 
       Stats.reset () ;
       Stats.Gen.call () ;
-      let maxbound = if !maxbound < 1 then max_int else !maxbound in
-      let call () = Prover.idfs !minbound maxbound ax r seq in
       let res = if !timeout<>0 then
-				w_timeout call  !timeout
+        w_timeout call !timeout
 			else
-				Some (call ()) in
+        Some (call ()) in
       Stats.Gen.end_call () ;
-      if !Stats.do_statistics then Stats.gen_print ();
-      if Option.is_none res then
-        (print_endline ("NOT proved: " ^ (Seq.to_string seq) ^ " [TIMEOUT]") ; 2) else
-      let res = Option.get res in
-      if Option.is_none res then
-        (print_endline ("NOT proved: " ^ (Seq.to_string seq)) ; 1) else
-      let proof = Option.get res in
-      if !show_proof then
-        Prover.Proof.pp Format.std_formatter proof
-      else
-        print_endline ("Proved: " ^ (Seq.to_string seq)) ;
-      if !Stats.do_statistics then Prover.print_proof_stats proof ;
+      if !Stats.do_statistics then Stats.gen_print () ;
+      res
+      
+    let do_latex_dump proof =
       if !latex_path<>"" then
       begin
         let ch =
-          open_out_gen [Open_creat; Open_wronly; Open_trunc] 402 !latex_path in
+          open_out_gen 
+            (Open_creat :: if !open_file_for_append then [Open_append] else [ Open_wronly; Open_trunc ]) 
+            402 
+            !latex_path in
         Prover.melt_proof ch proof ; close_out ch
-      end ;
-      0
+      end
+      
+    let process_result output seq res =
+      if Option.is_none res then
+        begin
+        if output then print_endline ("NOT proved: " ^ (Seq.to_string seq) ^ " [TIMEOUT]") ; 
+        TIMEOUT
+        end else
+      let res = Option.get res in
+      if Option.is_none res then
+        begin
+        if output then print_endline ("NOT proved: " ^ (Seq.to_string seq)) ; 
+        NOT_FOUND
+        end else
+      let proof = Option.get res in
+      if !show_proof then
+        Prover.Proof.pp Format.std_formatter proof
+      else if output then
+        print_endline ("Proved: " ^ (Seq.to_string seq)) ;
+      if !Stats.do_statistics then Prover.print_proof_stats proof ;
+      do_latex_dump proof ;
+      SUCCESS(proof)
+      
+    let idfs ax r seq =
+      let maxbound = if !maxbound < 1 then max_int else !maxbound in
+      Prover.idfs !minbound maxbound ax r seq
+
+    let prove_seq ax r seq =
+      Format.set_margin (Sys.command "exit $(tput cols)") ;
+      let res = gather_stats (fun () -> idfs ax r seq) in
+      process_result true seq res
   end

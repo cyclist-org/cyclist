@@ -32,6 +32,6 @@ let () =
   Temporal_program.set_program prog ; 
   Temporal_rules.setup (Sl_defs.of_channel (open_in !defs_path));
   (* Temporal_program.Seq.pp Format.std_formatter (seq, prog, tfext) ; *)
-  exit (F.prove_seq !Temporal_rules.axioms !Temporal_rules.rules (seq, prog, tfext))
+  F.exit (F.prove_seq !Temporal_rules.axioms !Temporal_rules.rules (seq, prog, tfext))
 
   

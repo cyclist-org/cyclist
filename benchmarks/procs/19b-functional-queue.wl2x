@@ -86,24 +86,24 @@ proc deq(x)
 	fi
 }
 
-precondition: emp;
-postcondition: funQueue(q, nil, nil);
-
-q := new();
-
-create(q);
-enq(q);
-
-is_empty := q.datum;
-if is_empty = nil then
-  back := q.next;
-  is_empty := back.datum
-fi;
-while is_empty != nil do
-	deq(q);
-  is_empty := q.datum;
-  if is_empty = nil then
-    back := q.next;
-    is_empty := back.datum
-  fi
-od
+proc main(q)
+	precondition: q->a',b';
+	postcondition: funQueue(q, nil, nil);
+{
+	create(q);
+	enq(q);
+	
+	is_empty := q.datum;
+	if is_empty = nil then
+		back := q.next;
+		is_empty := back.datum
+	fi;
+	while is_empty != nil do
+		deq(q);
+		is_empty := q.datum;
+		if is_empty = nil then
+			back := q.next;
+			is_empty := back.datum
+		fi
+	od
+}

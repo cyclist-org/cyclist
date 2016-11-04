@@ -24,8 +24,3 @@ proc dupList(l)
 	l.across := new_l;
 	dupList(next)
 }
-
-precondition: tree(t);
-postcondition: duptree(t);
-
-dupTree(t)

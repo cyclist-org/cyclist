@@ -86,20 +86,25 @@ proc alternate(x, y, ret)
 	fi
 }
 
-precondition: x != nil * list[a](x) * list[b](y);
-postcondition: list[b](y) * PeList(w',v') * PeList(z, z) * PeList(c', z) * list(d') * list(e');
+proc main(x, y, ret)
+	precondition: x != nil * list[a](x) * list[b](y) * ret->v';
+	postcondition: list[b](y) * PeList(w',v') * ret->f' * PeList(f', f') * PeList(c', f') * list(d') * list(e');
+{
+	ptr := new();
+	alternate(x, y, ptr);
 
-ptr := new();
-alternate(x, y, ptr);
+	z := new();
+	tail := new();
+	z.next := tail;
+	tail.next := z;
 
-z := new();
-tail := new();
-z.next := tail;
-tail.next := z;
+	append(x, z, ptr);
+	iter(x);
+	reverseAcc(x, nil, ptr);
+	reverse(x, ptr);
 
-append(x, z, ptr);
-iter(x);
-reverseAcc(x, nil, ptr);
-reverse(x, ptr);
-
-free(ptr)
+	free(ptr);
+	ret.next := z;
+	
+	assert(list[b](y) * PeList(w',v') * ret->f' * PeList(f', f') * PeList(c', f') * list(d') * list(e'))
+}

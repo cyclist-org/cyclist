@@ -1,8 +1,8 @@
 fields: next;
 
 proc filter(x)
-precondition: x->x' * ls(x',nil);
-postcondition: x->y' * ls(y',nil);
+precondition: x->x' * ls[a](x',nil);
+postcondition: x->y' * ls[a](y',nil);
 {
 	list := x.next;
 
@@ -26,14 +26,3 @@ postcondition: x->y' * ls(y',nil);
 	
 	fi
 }
-
-precondition: ls(x,nil);
-postcondition: ls(x,nil);
-
-ptr := new();
-ptr.next := x;
-
-filter(ptr);
-
-x := ptr.next;
-free(ptr)

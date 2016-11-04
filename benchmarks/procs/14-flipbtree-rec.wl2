@@ -13,8 +13,3 @@ postcondition: bt(x);
 		x.right := left
 	fi
 }
-
-precondition: bt(x);
-postcondition: bt(x);
-
-flipbtree(x)

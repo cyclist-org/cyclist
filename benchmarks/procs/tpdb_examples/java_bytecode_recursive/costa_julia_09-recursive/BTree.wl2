@@ -16,8 +16,3 @@ proc height(t)
 		fi
 	fi
 }
-
-precondition: bt(x);
-postcondition: bt(x);
-
-height(x)

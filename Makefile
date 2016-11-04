@@ -79,7 +79,7 @@ whl_abd-tests:
 	-@for TST in $(BENCHDIR)/whl_abd/*.wl ; do echo $$TST ; _build/$(ABD2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
 proc-tests:
-	-@for TST in $(WHL2_TEST_FILES) ; do echo $$TST: ; _build/$(XTDPRMAIN) $(TST_OPTS) -P $$TST ; echo ; done
+	-@for TST in $(WHL2_TEST_FILES) ; do echo $$TST: ; _build/$(XTDPRMAIN) $(TST_OPTS) -all -P $$TST ; echo ; done
 
 ctl-tests:
 	-@for TST in $(CTL_TEST_FILES) ; do echo $$TST: ; _build/$(CTLMAIN) $(TST_OPTS) -P $$TST ; echo ; done

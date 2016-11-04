@@ -14,6 +14,3 @@ proc traversetree(x)
   fi
 }
 
-precondition: bt[a](x);
-postcondition: bt[a](x); 
-traversetree(x)

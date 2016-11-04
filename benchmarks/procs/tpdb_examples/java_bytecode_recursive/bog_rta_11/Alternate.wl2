@@ -56,18 +56,3 @@ proc alternate(x, y, res)
 		assert(x->v,a' * bt(v) * y->w,b' * bt(w) * res->c',d' * bt(c'))
 	fi
 }
-
-precondition: bt(x) * bt(y);
-postcondition: bt(x) * bt(y) * res->v',w' * bt(v');
-
-ptr1 := new();
-ptr2 := new();
-res := new();
-
-ptr1.left := x;
-ptr2.left := y;
-
-alternate(ptr1, ptr2, res);
-
-free(ptr1);
-free(ptr2)

@@ -25,9 +25,11 @@ module Field =
 
     let get_no_fields () = Strng.Map.cardinal !_map
 
-    let pp fmt () =
+    let pp_fields fmt fs =
       Format.fprintf fmt "@[%s%s %s%s@]"
-        keyw_fields.str symb_colon.str (Strng.FList.to_string (get_fields ())) symb_semicolon.str
+        keyw_fields.str symb_colon.str (Strng.FList.to_string fs) symb_semicolon.str
+        
+    let pp fmt () = pp_fields fmt (get_fields ())
 
     let reset () =
       _map := Strng.Map.empty ;
@@ -624,6 +626,17 @@ module Cmd =
         | If(_,c) | While(_,c) -> is_while_prog c && is_while_prog cs
         | IfElse(_,c,c') -> is_while_prog c && is_while_prog c' && is_while_prog cs
         | _ -> is_while_prog cs
+
+    let rec get_dependencies = function
+      | [] -> Strng.Set.empty
+      | c::cs ->
+        let rest = get_dependencies cs in 
+        match c.cmd with
+        | ProcCall(p, _) -> Strng.Set.add p rest 
+        | If(_,c) | While(_,c) -> Strng.Set.union rest (get_dependencies c)
+        | IfElse(_,c,c') -> Strng.Set.union_of_list [ rest; (get_dependencies c) ; (get_dependencies c') ; ]
+        | _ -> rest
+ 
 
   end
 

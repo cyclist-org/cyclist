@@ -318,6 +318,9 @@ val bind : ('a -> 'b t) -> 'a t -> 'b t
 val rev_filter : ('a -> bool) -> 'a t -> 'a t
 val map_to : ('a -> 'b -> 'b) -> 'b -> ('c -> 'a) -> 'c t -> 'b
 
+val opt_map_to : ('a -> 'b -> 'b) -> 'b -> ('c -> 'a option) -> 'c t -> 'b
+(** [opt_map_to oadd oempty f xs] is equivalent to [map_to (Option.dest Fun.id oadd) oempty f x] *)
+
 val weave :
   ('a -> 'b -> 'b t) ->
   ('a -> 'b -> 'c) -> ('c t -> 'c) -> 'a t -> 'b -> 'c

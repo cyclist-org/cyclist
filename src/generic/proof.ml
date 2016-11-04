@@ -29,7 +29,12 @@ module Make(Seq : Sigs.SEQUENT) =
     let fresh_idx prf = 1 + (fst (P.max_binding prf))
     let fresh_idxs xs prf = Blist.range (fresh_idx prf) xs 
     
+    let to_list m = Blist.map (fun (i,(_,n)) -> (i,n)) (P.bindings m)
+  
     let size prf = P.cardinal prf
+    let num_backlinks prf =
+      Blist.length (
+        Blist.filter (fun (_,n) -> Node.is_backlink n) (to_list prf))
     
     (* not exported *)
     let mem i p = P.mem i p
@@ -60,8 +65,6 @@ module Make(Seq : Sigs.SEQUENT) =
       let () = debug (fun _ -> to_string p) in
       Soundcheck.check_proof 
         (P.map (fun (_,n) -> Node.to_abstract_node n) p)
-  
-    let to_list m = Blist.map (fun (i,(_,n)) -> (i,n)) (P.bindings m)
   
     let mk seq = P.add 0 (0,Node.mk_open seq) P.empty
     
@@ -97,6 +100,73 @@ module Make(Seq : Sigs.SEQUENT) =
           (replace idx n prf) 
           subnodes in 
       (subidxs, prf')
+      
+    let add_subprf prf idx prf' = 
+      let rec _add (prf', (node_map, bls)) idx idx' =
+        let n = find idx prf in
+        if Node.is_open n then
+          (prf', (node_map, bls))
+        else if Node.is_axiom n then
+          let (_, descr) = Node.dest n in
+          (add_axiom idx' descr prf', (node_map, bls))
+        else if Node.is_backlink n then
+          (prf', (node_map, (idx, idx')::bls))
+        else if Node.is_inf n then
+          let (_, descr, premises) = Node.dest_inf n in
+          let premises' = 
+            Blist.map 
+              (fun (pidx, vts, pts) -> (Node.get_seq (find pidx prf), vts, pts)) 
+              premises in
+          let premises = Blist.map (fun (pidx, _,_) -> pidx) premises in
+          let (premises', prf') = add_inf idx' descr premises' prf' in
+          let node_map = 
+            Blist.fold_right2 Int.Map.add premises premises' node_map in
+          Blist.fold_left2 _add (prf', (node_map, bls)) premises premises'
+        else
+          invalid_arg "Unrecognised node type!" in
+      assert (Node.is_open (find idx prf')) ;
+      assert (Seq.equal (Node.get_seq (find 0 prf)) (Node.get_seq (find idx prf'))) ;
+      let (prf', (node_map, bls)) = _add (prf', ((Int.Map.singleton 0 idx), [])) 0 idx in
+      let fix_bl prf' (idx, idx') =
+        let (_, descr, target, vtts) = Node.dest_backlink (find idx prf) in
+        add_backlink idx' descr (Int.Map.find target node_map) vtts prf' in
+      Blist.fold_left fix_bl prf' bls
+      
+    let extract_subproof idx prf =
+      let rec _extract (prf', node_map) idx idx' =
+        if Int.Map.mem idx node_map then
+          let prf' = 
+            add_backlink idx' "Backl" 
+              (Int.Map.find idx node_map) 
+              (Tagpairs.mk (Seq.tags (get_seq idx prf))) 
+              prf' in
+          (prf', node_map)
+        else
+          let node_map = Int.Map.add idx idx' node_map in
+          let n = find idx prf in
+          if Node.is_open n then
+            (prf', node_map)
+          else if Node.is_axiom n then
+            let (_, descr) = Node.dest n in
+            (add_axiom idx' descr prf', node_map)
+          else if Node.is_backlink n then
+            let (_, descr, target, vtts) = Node.dest_backlink n in
+            if Int.Map.mem target  node_map then
+              (add_backlink idx' descr (Int.Map.find target node_map) vtts prf', node_map)
+            else
+              _extract (prf', node_map) target idx'
+          else if Node.is_inf n then
+            let (_, descr, premises) = Node.dest_inf n in
+            let premises' = 
+              Blist.map 
+                (fun (pidx, vts, pts) -> (Node.get_seq (find pidx prf), vts, pts)) 
+                premises in
+            let premises = Blist.map (fun (pidx, _,_) -> pidx) premises in
+            let (premises', prf') = add_inf idx' descr premises' prf' in
+            Blist.fold_left2 _extract (prf', node_map) premises premises'
+          else
+            invalid_arg "Unrecognised node type!" in
+      fst (_extract (mk (get_seq idx prf), Int.Map.empty) idx 0)
   
     let get_ancestry idx prf =
       let rec aux acc idx (par_idx, n) =

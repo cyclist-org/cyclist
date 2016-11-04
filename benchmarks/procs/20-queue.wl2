@@ -59,15 +59,16 @@ proc deq(x)
 	fi
 }
 
-precondition: emp;
-postcondition: EmptyQueue(q);
-
-q := new();
-create(q);
-enq(q);
-
-head := q.head;
-while head != nil do
-	deq(q);
-	head := q.head
-od
+proc main(q)
+	precondition: q->a',b';
+	postcondition: EmptyQueue(q);
+{
+	create(q);
+	enq(q);
+	
+	head := q.head;
+	while head != nil do
+		deq(q);
+		head := q.head
+	od
+}

@@ -20,8 +20,3 @@ proc appE(x, y)
 	fi;
 	appE(tail, y)
 }
-
-precondition: x != nil * list[a](x) * list[b](y);
-postcondition: list(x);
-
-appE(x, y)

@@ -32,17 +32,22 @@ postcondition: [b'] < [a] : x->nil \/ x -> x' * ls[b'](x',nil);
 	fi
 }
 
-precondition: ls(x,nil);
-postcondition: x = nil;
-
-ptr1 := new();
-ptr1.next := x;
-
-while x!=nil do
-
-  removeLast(ptr1);
-  x := ptr1.next
-
-od;
-
-free(ptr1)
+proc main(x)
+	precondition: ls(x,nil);
+	postcondition: emp;
+{
+	y := x;
+	
+	ptr := new();
+	ptr.next := y;
+	
+	assert(ptr->y * ls(y,nil));
+	while y != nil do
+	
+	  removeLast(ptr);
+	  y := ptr.next
+	
+	od;
+	
+	free(ptr)
+}

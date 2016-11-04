@@ -1,0 +1,31 @@
+fields: left, right;
+
+proc traverse1(x)
+  precondition: bt[a](x);
+  postcondition: bt[a](x); 
+{
+  if x != nil then
+    if * then
+      y := x.left;
+      traverse1(y) 
+    else 
+      y := x.right;
+      traverse2(y)
+    fi
+  fi
+}
+
+proc traverse2(x)
+  precondition: bt[a](x);
+  postcondition: bt[a](x); 
+{
+  if x != nil then
+    if * then
+      y := x.left;
+      traverse2(y) 
+    else 
+      y := x.right;
+      traverse1(y)
+    fi
+  fi
+}

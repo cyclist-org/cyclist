@@ -25,12 +25,3 @@ postcondition: [b'] < [a] : l = nil * x->l \/ x->v' * ls[b'](v',l) * l->nil;
   fi
 }
 
-precondition: ls[a](l, nil);
-postcondition: ls[a](l, nil);
-
-ptr := new();
-ptr.next := l;
-reverse(ptr);
-l := ptr.next;
-free(ptr);
-assert(ls[a](l, nil))

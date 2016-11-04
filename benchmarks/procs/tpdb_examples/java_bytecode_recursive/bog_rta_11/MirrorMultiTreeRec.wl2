@@ -19,9 +19,11 @@ proc mirror(x)
 	assert(x->w',v' * treels(v',l) * l->nil,z' * tree(z'))
 }
 
-precondition: tree(t);
-postcondition: tree(t);
-
-if t = nil then return fi;
-mirror(t);
-assert(t->w',children' * treels(children', nil))
+proc main(t)
+	precondition: tree(t);
+	postcondition: tree(t);
+{
+	if t = nil then return fi;
+	mirror(t);
+	assert(t->w',children' * treels(children', nil))
+}

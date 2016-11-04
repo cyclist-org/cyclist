@@ -47,24 +47,26 @@ proc appendNewCyclicList(this, cnt)
 	assert(PeList(this, this))
 }
 
-precondition: ls(cnt1, nil) * ls(cnt2, nil);
-postcondition: ls(t,nil) * PeList(t_field,t_field);
-
-ptr := new();
-
-t := new();
-t_field := new();
-t.field := t_field;
-t_field.field := nil;
-
-appendNewCyclicList(t_field, cnt1);
-
-ptr.field := t;
-
-appendNewList(ptr, cnt2);
-
-assert(ptr->y' * ls(t,nil) * PeList(t_field,t_field));
-
-length(t);
-
-free(ptr)
+proc main(cnt1, cnt2)
+	precondition: ls(cnt1, nil) * ls(cnt2, nil);
+	postcondition: ls(t',nil) * PeList(t_field',t_field');
+{
+	ptr := new();
+	
+	t := new();
+	t_field := new();
+	t.field := t_field;
+	t_field.field := nil;
+	
+	appendNewCyclicList(t_field, cnt1);
+	
+	ptr.field := t;
+	
+	appendNewList(ptr, cnt2);
+	
+	assert(ptr->y' * ls(t,nil) * PeList(t_field,t_field));
+	
+	length(t);
+	
+	free(ptr)
+}
