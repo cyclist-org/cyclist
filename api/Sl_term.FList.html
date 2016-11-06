@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
-<link rel="previous" href="Sl_term.Unifier.html">
+<link rel="previous" href="Sl_term.Subst.html">
 <link rel="Up" href="Sl_term.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
@@ -23,9 +23,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -45,20 +63,36 @@
 <link title="Tl_form_ltl" rel="Chapter" href="Tl_form_ltl.html"><title>Sl_term.FList</title>
 </head>
 <body>
-<div class="navbar"><a class="pre" href="Sl_term.Unifier.html" title="Sl_term.Unifier">Previous</a>
+<div class="navbar"><a class="pre" href="Sl_term.Subst.html" title="Sl_term.Subst">Previous</a>
 &nbsp;<a class="up" href="Sl_term.html" title="Sl_term">Up</a>
 &nbsp;</div>
 <h1>Module <a href="type_Sl_term.FList.html">Sl_term.FList</a></h1>
 
-<pre><span class="keyword">module</span> FList: <code class="code">sig</code> <a href="Sl_term.FList.html">..</a> <code class="code">end</code></pre><div class="info module top">
-A list of terms.<br>
+<pre><span class="keyword">module</span> FList: <code class="code">sig</code> <a href="Sl_term.FList.html">..</a> <code class="code">end</code></pre><hr width="100%">
+
+<pre><span class="keyword">include</span> <a href="Utilsigs.BasicType.html">Utilsigs.BasicType</a></pre>
+
+<pre><span id="VALterms"><span class="keyword">val</span> terms</span> : <code class="type">t -> Sl_term.Set.t</code></pre><div class="info ">
+Convenience function converting the list to a set.<br>
 </div>
-<hr width="100%">
 
-<pre><span class="keyword">include</span> Util.BasicType</pre>
+<pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type">t -> Sl_term.Set.t</code></pre><div class="info ">
+Returns the set of all elements of the list that are not nil<br>
+</div>
 
-<pre><span id="VALunify"><span class="keyword">val</span> unify</span> : <code class="type">t Unifier.t</code></pre>
-<pre><span id="VALsubst"><span class="keyword">val</span> subst</span> : <code class="type">Subst.t -> t -> t</code></pre>
-<pre><span id="VALto_string_sep"><span class="keyword">val</span> to_string_sep</span> : <code class="type">string -> t -> string</code></pre>
-<pre><span id="VALterms"><span class="keyword">val</span> terms</span> : <code class="type">t -> Sl_term.Set.t</code></pre>
-<pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type">t -> Sl_term.Set.t</code></pre></body></html>
+<pre><span id="VALto_string_sep"><span class="keyword">val</span> to_string_sep</span> : <code class="type">string -> t -> string</code></pre><div class="info ">
+<code class="code">to_string_sep sep ts</code> converts <code class="code">ts</code> to a string with each element separated by <code class="code">sep</code>.<br>
+</div>
+
+<pre><span id="VALsubst"><span class="keyword">val</span> subst</span> : <code class="type">Sl_term.Subst.t -> t -> t</code></pre><div class="info ">
+Applies a substitution to the list<br>
+</div>
+
+<pre><span id="VALunify"><span class="keyword">val</span> unify</span> : <code class="type">?update_check:(Sl_term.Subst.t * Sl_term.Subst.t) <a href="Fun.html#TYPEpredicate">Fun.predicate</a> -><br>       (Sl_term.Subst.t, 'a, t) <a href="Unification.html#TYPEcps_unifier">Unification.cps_unifier</a></code></pre><div class="info ">
+Unifies two lists of terms by producing a substitution to act on the first list<br>
+</div>
+
+<pre><span id="VALbiunify"><span class="keyword">val</span> biunify</span> : <code class="type">?update_check:((Sl_term.Subst.t * Sl_term.Subst.t) *<br>                      (Sl_term.Subst.t * Sl_term.Subst.t))<br>                     <a href="Fun.html#TYPEpredicate">Fun.predicate</a> -><br>       (Sl_term.Subst.t * Sl_term.Subst.t, 'a, t) <a href="Unification.html#TYPEcps_unifier">Unification.cps_unifier</a></code></pre><div class="info ">
+Unifies two lists of terms by producing substitutions to act on each list respectively<br>
+</div>
+</body></html>

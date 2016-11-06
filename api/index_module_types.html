@@ -20,9 +20,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -51,6 +69,13 @@
 <td></td></tr>
 <tr><td><a href="Sigs.ABDUCER.html">ABDUCER</a> [<a href="Sigs.html">Sigs</a>]</td>
 <td></td></tr>
+<tr><td align="left"><br>B</td></tr>
+<tr><td><a href="Utilsigs.BasicType.html">BasicType</a> [<a href="Utilsigs.html">Utilsigs</a>]</td>
+<td><div class="info">
+Most types for use in containers, maps and other stuff must provide the
+    above essential methods.
+</div>
+</td></tr>
 <tr><td align="left"><br>D</td></tr>
 <tr><td><a href="Sigs.DEFS.html">DEFS</a> [<a href="Sigs.html">Sigs</a>]</td>
 <td><div class="info">
@@ -60,10 +85,24 @@ Inductive definitions signature.
 <tr><td align="left"><br>H</td></tr>
 <tr><td><a href="Hashset.HashedType.html">HashedType</a> [<a href="Hashset.html">Hashset</a>]</td>
 <td></td></tr>
+<tr><td align="left"><br>I</td></tr>
+<tr><td><a href="VarManager.I.html">I</a> [<a href="VarManager.html">VarManager</a>]</td>
+<td></td></tr>
 <tr><td align="left"><br>N</td></tr>
 <tr><td><a href="Sigs.NODE.html">NODE</a> [<a href="Sigs.html">Sigs</a>]</td>
 <td><div class="info">
 Proof node signature.
+</div>
+</td></tr>
+<tr><td align="left"><br>O</td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html">OrderedContainer</a> [<a href="Utilsigs.html">Utilsigs</a>]</td>
+<td><div class="info">
+A (persistent) ordered container, generalising the standard <code class="code">Set</code> container.
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.OrderedMap.html">OrderedMap</a> [<a href="Utilsigs.html">Utilsigs</a>]</td>
+<td><div class="info">
+An ordered map, extending the standard <code class="code">Map</code> module.
 </div>
 </td></tr>
 <tr><td align="left"><br>P</td></tr>
@@ -77,6 +116,15 @@ Proof signature.
 <tr><td><a href="Sigs.PROVER.html">PROVER</a> [<a href="Sigs.html">Sigs</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>S</td></tr>
+<tr><td><a href="Sl_unify.S.html">S</a> [<a href="Sl_unify.html">Sl_unify</a>]</td>
+<td></td></tr>
+<tr><td><a href="VarManager.S.html">S</a> [<a href="VarManager.html">VarManager</a>]</td>
+<td></td></tr>
+<tr><td><a href="Containers.S.html">S</a> [<a href="Containers.html">Containers</a>]</td>
+<td><div class="info">
+The signature of the containers collection.
+</div>
+</td></tr>
 <tr><td><a href="Hashset.S.html">S</a> [<a href="Hashset.html">Hashset</a>]</td>
 <td><div class="info">
 The output signature of the functor <a href="Hashset.Make.html"><code class="code">Hashset.Make</code></a>.
@@ -89,10 +137,7 @@ The output signature of the functor <a href="Hashset.Make.html"><code class="cod
 Sequent signature used as input to most functors in Cyclist.
 </div>
 </td></tr>
-<tr><td><a href="Sl_term.SubstSig.html">SubstSig</a> [<a href="Sl_term.html">Sl_term</a>]</td>
-<td></td></tr>
-<tr><td align="left"><br>U</td></tr>
-<tr><td><a href="Sl_term.UnifierSig.html">UnifierSig</a> [<a href="Sl_term.html">Sl_term</a>]</td>
+<tr><td><a href="VarManager.SubstSig.html">SubstSig</a> [<a href="VarManager.html">VarManager</a>]</td>
 <td></td></tr>
 </table>
 </body>

@@ -28,7 +28,11 @@
                       <a href="{{ site.baseurl | append: "/sl_disprove" }}"><i class="fa fa-wrench fa-fw"></i> Entailment Disprover</a>
                   </li>
                   <li>
-                      <a href="{{ site.baseurl | append: "/while_prove" }}"><i class="fa fa-wrench fa-fw"></i> Termination/Safety Prover</a>
+                      <a href="#"><i class="fa fa-wrench fa-fw"></i> Termination/Safety Provers</a>
+                      <ul class="nav">
+                      	<li><a href="{{ site.baseurl | append: "/while_prove" }}"><i class="fa fa-fw"></i><i class="fa fa-fw fa-chevron-right"></i> While Programs</a></li>
+                      	<li><a href="{{ site.baseurl | append: "/procedure_prove" }}"><i class="fa fa-fw"></i><i class="fa fa-fw fa-chevron-right"></i> Procedural Programs</a></li>
+                      </ul>
                   </li>
                   <li>
                       <a href="{{ site.baseurl | append: "/while_abduce" }}"><i class="fa fa-wrench fa-fw"></i> Termination/Safety Abducer</a>

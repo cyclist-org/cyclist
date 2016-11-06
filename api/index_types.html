@@ -20,9 +20,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -74,20 +92,32 @@ Abstract proof node type.
 <tr><td><a href="Sigs.PROOFRULE.html#TYPEbackrule_f">backrule_f</a> [<a href="Sigs.PROOFRULE.html">Sigs.PROOFRULE</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>C</td></tr>
-<tr><td><a href="Sl_term.SubstSig.html#TYPEcheck">check</a> [<a href="Sl_term.SubstSig.html">Sl_term.SubstSig</a>]</td>
+<tr><td><a href="Sl_unify.S.html#TYPEcontinuation">continuation</a> [<a href="Sl_unify.S.html">Sl_unify.S</a>]</td>
 <td><div class="info">
-The type of functions that check the validity of a single substitution pair
-      within the context of the whole substitution to which it is being added.
+The type of continuations accepted by SL cps-unifiers
 </div>
 </td></tr>
-<tr><td><a href="Sl_term.UnifierSig.html#TYPEcontinuation">continuation</a> [<a href="Sl_term.UnifierSig.html">Sl_term.UnifierSig</a>]</td>
+<tr><td><a href="Unification.html#TYPEcontinuation">continuation</a> [<a href="Unification.html">Unification</a>]</td>
+<td><div class="info">
+The type of continuations accepted by CPS-unifiers
+</div>
+</td></tr>
+<tr><td><a href="Unification.html#TYPEcps_backtracker">cps_backtracker</a> [<a href="Unification.html">Unification</a>]</td>
 <td></td></tr>
+<tr><td><a href="Unification.html#TYPEcps_unifier">cps_unifier</a> [<a href="Unification.html">Unification</a>]</td>
+<td><div class="info">
+The type of continuation-passing-style unifiers that may
+    accept an initial solution state.
+</div>
+</td></tr>
 <tr><td align="left"><br>D</td></tr>
 <tr><td><a href="Sigs.ABDUCER.html#TYPEdefs_t">defs_t</a> [<a href="Sigs.ABDUCER.html">Sigs.ABDUCER</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sigs.ABDRULE.html#TYPEdefs_t">defs_t</a> [<a href="Sigs.ABDRULE.html">Sigs.ABDRULE</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>E</td></tr>
+<tr><td><a href="Tagpairs.html#TYPEelt">elt</a> [<a href="Tagpairs.html">Tagpairs</a>]</td>
+<td></td></tr>
 <tr><td><a href="Hashset.S.html#TYPEelt">elt</a> [<a href="Hashset.S.html">Hashset.S</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>I</td></tr>
@@ -101,6 +131,8 @@ The type of functions that check the validity of a single substitution pair
 <tr><td><a href="Sigs.PROOF.html#TYPEnode_t">node_t</a> [<a href="Sigs.PROOF.html">Sigs.PROOF</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>P</td></tr>
+<tr><td><a href="Fun.html#TYPEpredicate">predicate</a> [<a href="Fun.html">Fun</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sigs.ABDUCER.html#TYPEproof_t">proof_t</a> [<a href="Sigs.ABDUCER.html">Sigs.ABDUCER</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sigs.ABDRULE.html#TYPEproof_t">proof_t</a> [<a href="Sigs.ABDRULE.html">Sigs.ABDRULE</a>]</td>
@@ -108,6 +140,8 @@ The type of functions that check the validity of a single substitution pair
 <tr><td><a href="Sigs.PROOFRULE.html#TYPEproof_t">proof_t</a> [<a href="Sigs.PROOFRULE.html">Sigs.PROOFRULE</a>]</td>
 <td></td></tr>
 <tr><td align="left"><br>R</td></tr>
+<tr><td><a href="Unification.html#TYPErealizer">realizer</a> [<a href="Unification.html">Unification</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sigs.PROVER.html#TYPErule_t">rule_t</a> [<a href="Sigs.PROVER.html">Sigs.PROVER</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sigs.ABDRULE.html#TYPErule_t">rule_t</a> [<a href="Sigs.ABDRULE.html">Sigs.ABDRULE</a>]</td>
@@ -132,16 +166,18 @@ The type of functions that check the validity of a single substitution pair
 Sequent type used for building proof nodes.
 </div>
 </td></tr>
-<tr><td><a href="Sl_term.UnifierSig.html#TYPEstate">state</a> [<a href="Sl_term.UnifierSig.html">Sl_term.UnifierSig</a>]</td>
+<tr><td><a href="Sl_unify.S.html#TYPEstate">state</a> [<a href="Sl_unify.S.html">Sl_unify.S</a>]</td>
 <td><div class="info">
 State maintained by unifiers.
 </div>
 </td></tr>
-<tr><td><a href="Sl_term.UnifierSig.html#TYPEstate_check">state_check</a> [<a href="Sl_term.UnifierSig.html">Sl_term.UnifierSig</a>]</td>
+<tr><td><a href="Sl_unify.S.html#TYPEstate_check">state_check</a> [<a href="Sl_unify.S.html">Sl_unify.S</a>]</td>
 <td><div class="info">
-The type of functions that check the validity of a whole unifier state
+Predicates that check unifier states for validity
 </div>
 </td></tr>
+<tr><td><a href="Unification.html#TYPEstate_update">state_update</a> [<a href="Unification.html">Unification</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sl_heap_rho.html#TYPEsymheap">symheap</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_heap.html#TYPEsymheap">symheap</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
@@ -151,13 +187,19 @@ The type of functions that check the validity of a whole unifier state
 <td></td></tr>
 <tr><td><a href="Tl_form.Form.html#TYPEt">t</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
 <td></td></tr>
-<tr><td><a href="Sl_term.UnifierSig.html#TYPEt">t</a> [<a href="Sl_term.UnifierSig.html">Sl_term.UnifierSig</a>]</td>
-<td></td></tr>
-<tr><td><a href="Sl_term.SubstSig.html#TYPEt">t</a> [<a href="Sl_term.SubstSig.html">Sl_term.SubstSig</a>]</td>
+<tr><td><a href="VarManager.SubstSig.html#TYPEt">t</a> [<a href="VarManager.SubstSig.html">VarManager.SubstSig</a>]</td>
 <td><div class="info">
-The type of a substitution is a map from terms to terms.
+Abstract type of substitutions
 </div>
 </td></tr>
+<tr><td><a href="Int.html#TYPEt">t</a> [<a href="Int.html">Int</a>]</td>
+<td></td></tr>
+<tr><td><a href="Strng.html#TYPEt">t</a> [<a href="Strng.html">Strng</a>]</td>
+<td></td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html#TYPEt">t</a> [<a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a>]</td>
+<td></td></tr>
+<tr><td><a href="Utilsigs.BasicType.html#TYPEt">t</a> [<a href="Utilsigs.BasicType.html">Utilsigs.BasicType</a>]</td>
+<td></td></tr>
 <tr><td><a href="Soundcheck.html#TYPEt">t</a> [<a href="Soundcheck.html">Soundcheck</a>]</td>
 <td><div class="info">
 The type of abstracted proof as a map from ints to nodes.
@@ -196,7 +238,31 @@ The type of the elements.
 The type of a t.
 </div>
 </td></tr>
-<tr><td><a href="Sl_term.html#TYPEterm_t">term_t</a> [<a href="Sl_term.html">Sl_term</a>]</td>
+<tr><td align="left"><br>U</td></tr>
+<tr><td><a href="Sl_unify.S.html#TYPEunifier">unifier</a> [<a href="Sl_unify.S.html">Sl_unify.S</a>]</td>
+<td><div class="info">
+The type of SL unifiers - these always act on pairs of term substitutions
+      and tagpair sets, and only accept continuations that are maps on such pairs.
+</div>
+</td></tr>
+<tr><td><a href="Sl_unify.S.html#TYPEupdate_check">update_check</a> [<a href="Sl_unify.S.html">Sl_unify.S</a>]</td>
+<td></td></tr>
+<tr><td align="left"><br>V</td></tr>
+<tr><td><a href="VarManager.SubstSig.html#TYPEvar">var</a> [<a href="VarManager.SubstSig.html">VarManager.SubstSig</a>]</td>
+<td><div class="info">
+Abstract type of variables substituted
+</div>
+</td></tr>
+<tr><td><a href="VarManager.I.html#TYPEvar">var</a> [<a href="VarManager.I.html">VarManager.I</a>]</td>
+<td></td></tr>
+<tr><td><a href="VarManager.SubstSig.html#TYPEvar_container">var_container</a> [<a href="VarManager.SubstSig.html">VarManager.SubstSig</a>]</td>
+<td><div class="info">
+abstract type of containers of variables
+</div>
+</td></tr>
+<tr><td><a href="VarManager.I.html#TYPEvar_container">var_container</a> [<a href="VarManager.I.html">VarManager.I</a>]</td>
+<td></td></tr>
+<tr><td><a href="VarManager.html#TYPEvarname_class">varname_class</a> [<a href="VarManager.html">VarManager</a>]</td>
 <td></td></tr>
 </table>
 </body>

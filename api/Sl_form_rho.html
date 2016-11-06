@@ -24,9 +24,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -60,7 +78,7 @@ SL formula, basically a list of symbolic heaps, denoting their disjunction.
 </div>
 <hr width="100%">
 
-<pre><span class="keyword">include</span> Util.BasicType</pre>
+<pre><span class="keyword">include</span> <a href="Utilsigs.BasicType.html">Utilsigs.BasicType</a></pre>
 
 <pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type">t</code></pre><div class="info ">
 The formula <code class="code">emp</code>. NB this is not the same as <code class="code">[]</code>, which is equivalent to 
@@ -85,12 +103,12 @@ Whilst <code class="code">equal</code> demands syntactic equality including tags
 <pre><span id="VALto_melt"><span class="keyword">val</span> to_melt</span> : <code class="type">t -> Latex.t</code></pre>
 <pre><span id="VALterms"><span class="keyword">val</span> terms</span> : <code class="type">t -> Sl_term.Set.t</code></pre>
 <pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type">t -> Sl_term.Set.t</code></pre>
-<pre><span id="VALtags"><span class="keyword">val</span> tags</span> : <code class="type">t -> Util.Tags.t</code></pre><div class="info ">
+<pre><span id="VALtags"><span class="keyword">val</span> tags</span> : <code class="type">t -> Tags.t</code></pre><div class="info ">
 NB no attempt is made to ensure that tags are disjoint between disjuncts. 
     This is not necessarily unsound.<br>
 </div>
 
-<pre><span id="VALtag_pairs"><span class="keyword">val</span> tag_pairs</span> : <code class="type">t -> Util.TagPairs.t</code></pre><div class="info ">
+<pre><span id="VALtag_pairs"><span class="keyword">val</span> tag_pairs</span> : <code class="type">t -> Tagpairs.t</code></pre><div class="info ">
 The proviso on tags applies here too.<br>
 </div>
 
@@ -129,7 +147,7 @@ Or two formulas (list-append).<br>
 Like <code class="code">Sl_heap_rho.subst_existentials</code> applied to all disjuncts.<br>
 </div>
 
-<pre><span id="VALsubst_tags"><span class="keyword">val</span> subst_tags</span> : <code class="type">Util.TagPairs.t -> t -> t</code></pre><div class="info ">
+<pre><span id="VALsubst_tags"><span class="keyword">val</span> subst_tags</span> : <code class="type">Tagpairs.t -> t -> t</code></pre><div class="info ">
 Like <code class="code">Sl_heap_rho.subst_tags</code> applied to all disjuncts.<br>
 </div>
 

@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
-<link rel="previous" href="Sl_unifier.html">
+<link rel="previous" href="Sl_unify.html">
 <link rel="next" href="Sl_uf.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
@@ -24,9 +24,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -46,7 +64,7 @@
 <link title="Tl_form_ltl" rel="Chapter" href="Tl_form_ltl.html"><title>Sl_tpair</title>
 </head>
 <body>
-<div class="navbar"><a class="pre" href="Sl_unifier.html" title="Sl_unifier">Previous</a>
+<div class="navbar"><a class="pre" href="Sl_unify.html" title="Sl_unify">Previous</a>
 &nbsp;<a class="up" href="index.html" title="Index">Up</a>
 &nbsp;<a class="post" href="Sl_uf.html" title="Sl_uf">Next</a>
 </div>
@@ -57,14 +75,15 @@ An ordered pair of SL terms.<br>
 </div>
 <hr width="100%">
 
-<pre><span class="keyword">include</span> Util.BasicType</pre>
+<pre><span class="keyword">include</span> <a href="Utilsigs.BasicType.html">Utilsigs.BasicType</a></pre>
 
-<pre><span id="VALunify"><span class="keyword">val</span> unify</span> : <code class="type">?order:bool -> t Sl_unifier.t</code></pre><div class="info ">
+<pre><span id="VALunify"><span class="keyword">val</span> unify</span> : <code class="type">?order:bool -><br>       ?update_check:Sl_unify.Unidirectional.update_check -><br>       t Sl_unify.Unidirectional.unifier</code></pre><div class="info ">
 Unify two pairs of terms, ignoring the pairs' internal ordering of members.
     The optional argument <code class="code">~order</code> has a default of <code class="code">false</code>.  When it is set 
     to <code class="code">true</code> then the internal order is honoured.<br>
 </div>
 
+<pre><span id="VALbiunify"><span class="keyword">val</span> biunify</span> : <code class="type">?order:bool -><br>       ?update_check:Sl_unify.Bidirectional.update_check -><br>       t Sl_unify.Bidirectional.unifier</code></pre>
 <pre><span id="VALorder"><span class="keyword">val</span> order</span> : <code class="type">t -> t</code></pre><div class="info ">
 Return a permutation of the input that obeys the ordering <code class="code">Sl_term.compare</code>.
 E.g. <code class="code">order (x,y)</code> will return <code class="code">(y,x)</code> is <code class="code">Sl_term.compare x y &gt; 0</code>.<br>
@@ -75,5 +94,9 @@ E.g. <code class="code">order (x,y)</code> will return <code class="code">(y,x)<
 <pre><span id="VALto_melt_sep"><span class="keyword">val</span> to_melt_sep</span> : <code class="type">Latex.t -> t -> Latex.t</code></pre>
 <pre><span class="keyword">module</span> <a href="Sl_tpair.FList.html">FList</a>: <code class="code">sig</code> <a href="Sl_tpair.FList.html">..</a> <code class="code">end</code></pre><div class="info">
 A list of term pairs.
+</div>
+
+<pre><span class="keyword">module</span> <a href="Sl_tpair.ListSet.html">ListSet</a>: <code class="type"><a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a></code><code class="type">  with type elt = t</code></pre><div class="info">
+A set of term pairs
 </div>
 </body></html>

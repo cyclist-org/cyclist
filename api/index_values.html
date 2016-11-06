@@ -20,9 +20,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -46,9 +64,24 @@
 &nbsp;</div>
 <h1>Index of values</h1>
 <table>
+<tr><td align="left"><br></td></tr>
+<tr><td><a href="Fun.html#VAL_false">_false</a> [<a href="Fun.html">Fun</a>]</td>
+<td></td></tr>
+<tr><td><a href="Fun.html#VAL_true">_true</a> [<a href="Fun.html">Fun</a>]</td>
+<td></td></tr>
 <tr><td align="left"><br>A</td></tr>
 <tr><td><a href="Tl_form.Form.html#VALa_step">a_step</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
 <td></td></tr>
+<tr><td><a href="Sl_abduce.html#VALabd_bi_substs">abd_bi_substs</a> [<a href="Sl_abduce.html">Sl_abduce</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_abduce.html#VALabd_substs">abd_substs</a> [<a href="Sl_abduce.html">Sl_abduce</a>]</td>
+<td><div class="info">
+<code class="code">abd_substs f f'</code> returns an option result that consists of a pair of 
+    formulas (g, g') and a list of substitutions <code class="code">substs</code> such that: <code class="code">f</code> entails <code class="code">g</code>, <code class="code">g'</code> entails <code class="code">f'</code>, for all substitutions <code class="code">theta</code> in <code class="code">substs</code>, <code class="code">theta</code> applied to <code class="code">g'</code> is a
+        subformula of <code class="code">g</code>, and if the optional argument <code class="code">allow_frame=true</code> is
+        set to false, then also the spatial parts are equal.
+</div>
+</td></tr>
 <tr><td><a href="Sl_rho.html#VALadd">add</a> [<a href="Sl_rho.html">Sl_rho</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_uf.html#VALadd">add</a> [<a href="Sl_uf.html">Sl_uf</a>]</td>
@@ -59,6 +92,17 @@
 <td></td></tr>
 <tr><td><a href="Sigs.PROOF.html#VALadd_backlink">add_backlink</a> [<a href="Sigs.PROOF.html">Sigs.PROOF</a>]</td>
 <td></td></tr>
+<tr><td><a href="Utilsigs.OrderedMap.html#VALadd_bindings">add_bindings</a> [<a href="Utilsigs.OrderedMap.html">Utilsigs.OrderedMap</a>]</td>
+<td><div class="info">
+Add all bindings in provided list to map.
+</div>
+</td></tr>
+<tr><td><a href="Sl_form.html#VALadd_constraints">add_constraints</a> [<a href="Sl_form.html">Sl_form</a>]</td>
+<td><div class="info">
+<code class="code">add_constraints f cs</code> returns the formula the results by adding <code class="code">cs</code> to the
+    constraints already in <code class="code">f</code>
+</div>
+</td></tr>
 <tr><td><a href="Sl_heap_rho.html#VALadd_deq">add_deq</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_heap.html#VALadd_deq">add_deq</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
@@ -77,21 +121,20 @@
 <td></td></tr>
 <tr><td><a href="Sl_heap.html#VALadd_pto">add_pto</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
 <td></td></tr>
-<tr><td><a href="Sl_rho.html#VALall_members_of">all_members_of</a> [<a href="Sl_rho.html">Sl_rho</a>]</td>
+<tr><td><a href="Sigs.PROOF.html#VALadd_subprf">add_subprf</a> [<a href="Sigs.PROOF.html">Sigs.PROOF</a>]</td>
 <td><div class="info">
-<code class="code">all_members_of eqs eqs'</code> returns true iff all variables in <code class="code">rho</code> are also
-    in <code class="code">rho'</code>
-</div>
-</td></tr>
-<tr><td><a href="Sl_uf.html#VALall_members_of">all_members_of</a> [<a href="Sl_uf.html">Sl_uf</a>]</td>
-<td><div class="info">
-<code class="code">all_members_of eqs eqs'</code> returns true iff all equalities in <code class="code">eqs</code> are also
-    in <code class="code">eqs'</code>
+<code class="code">add_subprf p idx p'</code> replaces the node <code class="code">idx</code> in <code class="code">p'</code> with a copy of <code class="code">p</code>.
 </div>
 </td></tr>
 <tr><td><a href="Sigs.PROOFRULE.html#VALall_nodes">all_nodes</a> [<a href="Sigs.PROOFRULE.html">Sigs.PROOFRULE</a>]</td>
 <td><div class="info">
 Ready-made selection functions doing the obvious.
+</div>
+</td></tr>
+<tr><td><a href="Ord_constraints.html#VALall_pairs">all_pairs</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td><div class="info">
+<code class="code">all_pairs cs</code> returns all of the tag pairs (<code class="code">a</code>, <code class="code">b</code>) such that <code class="code">a</code> &lt;= <code class="code">b</code>
+    is entailed by some constraint in <code class="code">cs</code>
 </div>
 </td></tr>
 <tr><td><a href="Sl_heap_rho.html#VALall_subheaps">all_subheaps</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
@@ -106,9 +149,31 @@ Ready-made selection functions doing the obvious.
 </td></tr>
 <tr><td><a href="Sigs.PROOFRULE.html#VALancestor_nodes">ancestor_nodes</a> [<a href="Sigs.PROOFRULE.html">Sigs.PROOFRULE</a>]</td>
 <td></td></tr>
+<tr><td><a href="VarManager.I.html#VALanonymous">anonymous</a> [<a href="VarManager.I.html">VarManager.I</a>]</td>
+<td><div class="info">
+An "unidentified" variable
+</div>
+</td></tr>
+<tr><td><a href="Tags.html#VALanonymous">anonymous</a> [<a href="Tags.html">Tags</a>]</td>
+<td></td></tr>
 <tr><td><a href="Blist.html#VALappend">append</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
 Catenate two ts.
+</div>
+</td></tr>
+<tr><td><a href="VarManager.SubstSig.html#VALapply">apply</a> [<a href="VarManager.SubstSig.html">VarManager.SubstSig</a>]</td>
+<td><div class="info">
+Apply a substitution to a variable
+</div>
+</td></tr>
+<tr><td><a href="Pair.html#VALapply">apply</a> [<a href="Pair.html">Pair</a>]</td>
+<td><div class="info">
+Apply a function taking two arguments to the members of a pair.
+</div>
+</td></tr>
+<tr><td><a href="Tagpairs.html#VALapply_to_tag">apply_to_tag</a> [<a href="Tagpairs.html">Tagpairs</a>]</td>
+<td><div class="info">
+<code class="code">apply_to_tag tps t</code> treats <code class="code">tps</code> as a substitution and applies it to <code class="code">t</code>.
 </div>
 </td></tr>
 <tr><td><a href="Sl_tpred.html#VALargs">args</a> [<a href="Sl_tpred.html">Sl_tpred</a>]</td>
@@ -142,41 +207,34 @@ Try a rule and if it fails act as <code class="code">identity</code>.
 </td></tr>
 <tr><td><a href="Sigs.SEQTACTICS.html#VALattempt">attempt</a> [<a href="Sigs.SEQTACTICS.html">Sigs.SEQTACTICS</a>]</td>
 <td></td></tr>
-<tr><td><a href="Sl_term.SubstSig.html#VALavoid">avoid</a> [<a href="Sl_term.SubstSig.html">Sl_term.SubstSig</a>]</td>
+<tr><td><a href="VarManager.SubstSig.html#VALavoid">avoid</a> [<a href="VarManager.SubstSig.html">VarManager.SubstSig</a>]</td>
 <td><div class="info">
 <code class="code">avoid vars subvars</code> 
-      returns a substitution that takes all variables in <code class="code">subvars</code> to  
-      variables fresh in <code class="code">vars U subvars</code>, respecting existential   
-      quantification / free variables.
+        returns a substitution that takes all variables in <code class="code">subvars</code> to  
+        variables fresh in <code class="code">vars U subvars</code>, respecting existential   
+        quantification / free variables.
 </div>
 </td></tr>
-<tr><td><a href="Sl_term.SubstSig.html#VALavoids_replacing_check">avoids_replacing_check</a> [<a href="Sl_term.SubstSig.html">Sl_term.SubstSig</a>]</td>
+<tr><td><a href="Sl_unify.Unidirectional.html#VALavoid_replacing_tags">avoid_replacing_tags</a> [<a href="Sl_unify.Unidirectional.html">Sl_unify.Unidirectional</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_unify.Unidirectional.html#VALavoid_replacing_trms">avoid_replacing_trms</a> [<a href="Sl_unify.Unidirectional.html">Sl_unify.Unidirectional</a>]</td>
 <td><div class="info">
-A substitution check which prevents replacements of variables within the
-      given set of terms
+A state update check which prevents replacements of variables within the
+      given set of terms.
 </div>
 </td></tr>
 <tr><td align="left"><br>B</td></tr>
-<tr><td><a href="Sl_term.UnifierSig.html#VALbacktrack">backtrack</a> [<a href="Sl_term.UnifierSig.html">Sl_term.UnifierSig</a>]</td>
+<tr><td><a href="Unification.html#VALbacktrack">backtrack</a> [<a href="Unification.html">Unification</a>]</td>
 <td><div class="info">
-Wrap a unifier into a function that always backtracks, collecting all 
-        states such that <code class="code">cont state</code> is not <code class="code">None</code> and returning that list.
-</div>
-</td></tr>
-<tr><td><a href="Sl_term.SubstSig.html#VALbasic_lhs_down_check">basic_lhs_down_check</a> [<a href="Sl_term.SubstSig.html">Sl_term.SubstSig</a>]</td>
-<td><div class="info">
-When used as <code class="code">subst_check</code> in the call <code class="code">Sl_heap.unify subst_check f f'</code>, 
-      ensures that the generated substitution, when applied to <code class="code">f</code>, produces a
-      formula which is subsumed by <code class="code">f'</code>
-</div>
-</td></tr>
-<tr><td><a href="Sl_term.UnifierSig.html#VALbasic_lhs_down_verifier">basic_lhs_down_verifier</a> [<a href="Sl_term.UnifierSig.html">Sl_term.UnifierSig</a>]</td>
-<td><div class="info">
-A continutation generated from the <code class="code">basic_lhs_down_check</code> substitution 
-        check
+<code class="code">backtrack u</code> takes a cps-style unifier <code class="code">u</code> and produces a
+      backtracking unifier that returns a list of all possible
+      solutions returned by <code class="code">u</code> such that <code class="code">cont solution</code> is not
+      None.
 </div>
 </td></tr>
 <tr><td><a href="Sigs.ABDUCER.html#VALbfs">bfs</a> [<a href="Sigs.ABDUCER.html">Sigs.ABDUCER</a>]</td>
+<td></td></tr>
+<tr><td><a href="Option.html#VALbind">bind</a> [<a href="Option.html">Option</a>]</td>
 <td></td></tr>
 <tr><td><a href="Blist.html#VALbind">bind</a> [<a href="Blist.html">Blist</a>]</td>
 <td></td></tr>
@@ -191,8 +249,51 @@ Return mapping as a list of pairs of terms and values
 Return mapping as a list of pairs, where pair members are ordered by
 </div>
 </td></tr>
+<tr><td><a href="Sl_tpreds.html#VALbiunify">biunify</a> [<a href="Sl_tpreds.html">Sl_tpreds</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_tpred.html#VALbiunify">biunify</a> [<a href="Sl_tpred.html">Sl_tpred</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_pred.html#VALbiunify">biunify</a> [<a href="Sl_pred.html">Sl_pred</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_ptos.html#VALbiunify">biunify</a> [<a href="Sl_ptos.html">Sl_ptos</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_pto.html#VALbiunify">biunify</a> [<a href="Sl_pto.html">Sl_pto</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_tpair.html#VALbiunify">biunify</a> [<a href="Sl_tpair.html">Sl_tpair</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_term.FList.html#VALbiunify">biunify</a> [<a href="Sl_term.FList.html">Sl_term.FList</a>]</td>
+<td><div class="info">
+Unifies two lists of terms by producing substitutions to act on each list respectively
+</div>
+</td></tr>
+<tr><td><a href="Sl_term.html#VALbiunify">biunify</a> [<a href="Sl_term.html">Sl_term</a>]</td>
+<td><div class="info">
+Unifies two terms by producing substitutions to act on each term respectively
+</div>
+</td></tr>
+<tr><td><a href="Tags.Elt.html#VALbiunify">biunify</a> [<a href="Tags.Elt.html">Tags.Elt</a>]</td>
+<td><div class="info">
+Unifies two tags by finding suitable substitutions (represented as a set of tag pairs)
+      for each tag which makes them equal.
+</div>
+</td></tr>
+<tr><td><a href="Ord_constraints.Elt.html#VALbiunify">biunify</a> [<a href="Ord_constraints.Elt.html">Ord_constraints.Elt</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ord_constraints.html#VALbiunify">biunify</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_heap.html#VALbiunify_partial">biunify_partial</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_deqs.html#VALbiunify_partial">biunify_partial</a> [<a href="Sl_deqs.html">Sl_deqs</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_uf.html#VALbiunify_partial">biunify_partial</a> [<a href="Sl_uf.html">Sl_uf</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sl_indrule.html#VALbody">body</a> [<a href="Sl_indrule.html">Sl_indrule</a>]</td>
 <td></td></tr>
+<tr><td><a href="Pair.html#VALboth">both</a> [<a href="Pair.html">Pair</a>]</td>
+<td><div class="info">
+Alias for <code class="code">conj</code>
+</div>
+</td></tr>
 <tr><td><a href="Soundcheck.html#VALbuild_proof">build_proof</a> [<a href="Soundcheck.html">Soundcheck</a>]</td>
 <td></td></tr>
 <tr><td><a href="Blist.html#VALbut_last">but_last</a> [<a href="Blist.html">Blist</a>]</td>
@@ -235,6 +336,8 @@ Apply a list of rules on current subgoal and return all applications.
 <code class="code">choose [[1;2;3]; [4;5]]</code> returns <code class="code">[[1;4];[1;5];[2;4];[2;5];[3;4];[3;5]]</code>.
 </div>
 </td></tr>
+<tr><td><a href="Sl_heap.html#VALclassical_biunify">classical_biunify</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sl_heap_rho.html#VALclassical_unify">classical_unify</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
 <td><div class="info">
 Unify two heaps, by using <code class="code">unify_partial</code> for the pure (classical) part whilst
@@ -249,9 +352,14 @@ Unify two heaps, by using <code class="code">unify_partial</code> for the pure (
 </td></tr>
 <tr><td><a href="Hashset.S.html#VALclear">clear</a> [<a href="Hashset.S.html">Hashset.S</a>]</td>
 <td></td></tr>
-<tr><td><a href="Sl_heap_rho.html#VALcombine">combine</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
+<tr><td><a href="Ord_constraints.html#VALclose">close</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td><div class="info">
+<code class="code">close cs</code> generates the set of all constraints entailed by <code class="code">cs</code>
+</div>
+</td></tr>
+<tr><td><a href="Sigs.PROOFRULE.html#VALclosed_nodes">closed_nodes</a> [<a href="Sigs.PROOFRULE.html">Sigs.PROOFRULE</a>]</td>
 <td></td></tr>
-<tr><td><a href="Sl_heap.html#VALcombine">combine</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
+<tr><td><a href="Sl_heap_rho.html#VALcombine">combine</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
 <td></td></tr>
 <tr><td><a href="Blist.html#VALcombine">combine</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
@@ -262,18 +370,6 @@ Transform a pair of ts into a t of pairs:
 </td></tr>
 <tr><td><a href="Sigs.PROOFRULE.html#VALcombine_axioms">combine_axioms</a> [<a href="Sigs.PROOFRULE.html">Sigs.PROOFRULE</a>]</td>
 <td></td></tr>
-<tr><td><a href="Sl_term.SubstSig.html#VALcombine_checks">combine_checks</a> [<a href="Sl_term.SubstSig.html">Sl_term.SubstSig</a>]</td>
-<td><div class="info">
-Combinator which takes a list of substitution pair check functions and
-      combines them into a single check function
-</div>
-</td></tr>
-<tr><td><a href="Sl_term.UnifierSig.html#VALcombine_state_checks">combine_state_checks</a> [<a href="Sl_term.UnifierSig.html">Sl_term.UnifierSig</a>]</td>
-<td><div class="info">
-Combinator which takes a list of unifier state check functions and
-        combines them into a single check function
-</div>
-</td></tr>
 <tr><td><a href="Blist.html#VALcombs">combs</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
 <code class="code">combs n l</code> returns all combinations of <code class="code">n</code> elements from <code class="code">l</code>.
@@ -283,6 +379,40 @@ Combinator which takes a list of unifier state check functions and
 <td></td></tr>
 <tr><td><a href="Tl_form.Form.html#VALcompare">compare</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
 <td></td></tr>
+<tr><td><a href="Utilsigs.BasicType.html#VALcompare">compare</a> [<a href="Utilsigs.BasicType.html">Utilsigs.BasicType</a>]</td>
+<td><div class="info">
+Standard comparator, return &lt;0 if first less than second, 0 if equal, &gt;0 if greater.
+</div>
+</td></tr>
+<tr><td><a href="Tl_form_ltl.Form.html#VALcomplete_tags">complete_tags</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
+<td></td></tr>
+<tr><td><a href="Tl_form.Form.html#VALcomplete_tags">complete_tags</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_form.html#VALcomplete_tags">complete_tags</a> [<a href="Sl_form.html">Sl_form</a>]</td>
+<td><div class="info">
+<code class="code">complete_tags ts f</code> returns the formula obtained from f by assigning
+    all untagged predicates a fresh existential tag, avoiding those in <code class="code">ts</code>.
+</div>
+</td></tr>
+<tr><td><a href="Sl_heap_rho.html#VALcomplete_tags">complete_tags</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
+<td><div class="info">
+<code class="code">complete_tags exist ts h</code> returns the symbolic heap obtained from <code class="code">h</code> 
+    by assigning all untagged predicates a fresh existential tag avoiding 
+    those in <code class="code">ts</code>.
+</div>
+</td></tr>
+<tr><td><a href="Sl_heap.html#VALcomplete_tags">complete_tags</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
+<td><div class="info">
+<code class="code">complete_tags exist ts h</code> returns the symbolic heap obtained from <code class="code">h</code> 
+    by assigning all untagged predicates a fresh existential tag avoiding 
+    those in <code class="code">ts</code>.
+</div>
+</td></tr>
+<tr><td><a href="Tagpairs.html#VALcompose">compose</a> [<a href="Tagpairs.html">Tagpairs</a>]</td>
+<td><div class="info">
+<code class="code">compose l r</code> computes the relation representing the composition of <code class="code">l</code> with <code class="code">r</code>.
+</div>
+</td></tr>
 <tr><td><a href="Sigs.ABDRULE.html#VALcompose">compose</a> [<a href="Sigs.ABDRULE.html">Sigs.ABDRULE</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sigs.PROOFRULE.html#VALcompose">compose</a> [<a href="Sigs.PROOFRULE.html">Sigs.PROOFRULE</a>]</td>
@@ -295,16 +425,10 @@ Apply the list of rules in the second argument in a pairwise fashion to
 <td></td></tr>
 <tr><td><a href="Sigs.PROOFRULE.html#VALcompose_pairwise">compose_pairwise</a> [<a href="Sigs.PROOFRULE.html">Sigs.PROOFRULE</a>]</td>
 <td></td></tr>
-<tr><td><a href="Sl_heap_rho.html#VALcompute_frame">compute_frame</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
+<tr><td><a href="Sl_form.html#VALcompute_frame">compute_frame</a> [<a href="Sl_form.html">Sl_form</a>]</td>
 <td><div class="info">
-<code class="code">compute_frame f f'</code> computes the portion of <code class="code">f'</code> left over (the 'frame') 
-    after subtracting all the atomic formulae in the specification <code class="code">f</code>.
-</div>
-</td></tr>
-<tr><td><a href="Sl_heap.html#VALcompute_frame">compute_frame</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
-<td><div class="info">
-<code class="code">compute_frame f f'</code> computes the portion of <code class="code">f'</code> left over (the 'frame') 
-    after subtracting all the atomic formulae in the specification <code class="code">f</code>.
+<code class="code">compute_frame f f'</code>, computes the portion of <code class="code">f'</code> left over (the 'frame') 
+    from <code class="code">f</code> and returns None when <code class="code">f</code> is not subsumed by <code class="code">f'</code>.
 </div>
 </td></tr>
 <tr><td><a href="Blist.html#VALconcat">concat</a> [<a href="Blist.html">Blist</a>]</td>
@@ -314,6 +438,13 @@ Concatenate a t of ts.
 </td></tr>
 <tr><td><a href="Sigs.PROOFRULE.html#VALconditional">conditional</a> [<a href="Sigs.PROOFRULE.html">Sigs.PROOFRULE</a>]</td>
 <td></td></tr>
+<tr><td><a href="Fun.html#VALconj">conj</a> [<a href="Fun.html">Fun</a>]</td>
+<td></td></tr>
+<tr><td><a href="Pair.html#VALconj">conj</a> [<a href="Pair.html">Pair</a>]</td>
+<td><div class="info">
+Compute the conjunction of a pair of booleans.
+</div>
+</td></tr>
 <tr><td><a href="Blist.html#VALcons">cons</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
 Equivalent to <code class="code">::</code>.
@@ -335,6 +466,8 @@ Equivalent to <code class="code">::</code>.
 <td></td></tr>
 <tr><td><a href="Hashset.S.html#VALcreate">create</a> [<a href="Hashset.S.html">Hashset.S</a>]</td>
 <td></td></tr>
+<tr><td><a href="Fun.html#VALcurry">curry</a> [<a href="Fun.html">Fun</a>]</td>
+<td></td></tr>
 <tr><td align="left"><br>D</td></tr>
 <tr><td><a href="Blist.html#VALdecons">decons</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
@@ -345,6 +478,11 @@ Destruct a non-empty list.
 <td></td></tr>
 <tr><td><a href="Sl_heap.html#VALdel_deq">del_deq</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
 <td></td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html#VALdel_first">del_first</a> [<a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a>]</td>
+<td><div class="info">
+Remove first element satisfying the given predicate.
+</div>
+</td></tr>
 <tr><td><a href="Blist.html#VALdel_first">del_first</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
 Delete first element satisfying a given predicate.
@@ -379,6 +517,8 @@ Return the single disjunct, if there is exactly one, else raise <code class="cod
 <tr><td><a href="Sl_heap_rho.html#VALdest">dest</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_heap.html#VALdest">dest</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
+<td></td></tr>
+<tr><td><a href="Option.html#VALdest">dest</a> [<a href="Option.html">Option</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sigs.NODE.html#VALdest">dest</a> [<a href="Sigs.NODE.html">Sigs.NODE</a>]</td>
 <td><div class="info">
@@ -421,12 +561,19 @@ Return the single disjunct, if there is exactly one, else raise <code class="cod
 <code class="code">dest_inf n</code> destroys an inference node <code class="code">n</code>, otherwise raises <code class="code">Invalid_arg</code>.
 </div>
 </td></tr>
+<tr><td><a href="Option.html#VALdest_lazily">dest_lazily</a> [<a href="Option.html">Option</a>]</td>
+<td></td></tr>
 <tr><td><a href="Tl_form_ltl.Form.html#VALdest_next">dest_next</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
 <td></td></tr>
 <tr><td><a href="Tl_form_ltl.Form.html#VALdest_or">dest_or</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
 <td></td></tr>
 <tr><td><a href="Tl_form.Form.html#VALdest_or">dest_or</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
 <td></td></tr>
+<tr><td><a href="Tagpairs.html#VALdest_singleton">dest_singleton</a> [<a href="Tagpairs.html">Tagpairs</a>]</td>
+<td><div class="info">
+<code class="code">dest_singleton tps</code> returns <code class="code">Some(tp)</code> if <code class="code">tp</code> is the only element of <code class="code">tps</code>, and <code class="code">None</code> otherwise.
+</div>
+</td></tr>
 <tr><td><a href="Sl_heap_rho.html#VALdiff">diff</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_heap.html#VALdiff">diff</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
@@ -443,6 +590,8 @@ Return the single disjunct, if there is exactly one, else raise <code class="cod
     <code class="code">eqs'</code> from <code class="code">eqs</code>
 </div>
 </td></tr>
+<tr><td><a href="Fun.html#VALdirect">direct</a> [<a href="Fun.html">Fun</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sl_heap_rho.html#VALdisequates">disequates</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
 <td><div class="info">
 Does a symbolic heap entail the disequality of two terms?
@@ -463,6 +612,18 @@ Or two formulas (list-append).
 Or two formulas (list-append).
 </div>
 </td></tr>
+<tr><td><a href="Fun.html#VALdisj">disj</a> [<a href="Fun.html">Fun</a>]</td>
+<td></td></tr>
+<tr><td><a href="Pair.html#VALdisj">disj</a> [<a href="Pair.html">Pair</a>]</td>
+<td><div class="info">
+Compute the disjunction of a pair of booleans.
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html#VALdisjoint">disjoint</a> [<a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a>]</td>
+<td><div class="info">
+Decide if there are no common elements.
+</div>
+</td></tr>
 <tr><td><a href="Blist.html#VALdrop">drop</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
 <code class="code">drop n l</code> returns the suffix of <code class="code">l</code> after skipping <code class="code">n</code> elements.
@@ -471,6 +632,11 @@ Or two formulas (list-append).
 <tr><td align="left"><br>E</td></tr>
 <tr><td><a href="Tl_form.Form.html#VALe_step">e_step</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
 <td></td></tr>
+<tr><td><a href="Pair.html#VALeither">either</a> [<a href="Pair.html">Pair</a>]</td>
+<td><div class="info">
+Alias for <code class="code">disj</code>
+</div>
+</td></tr>
 <tr><td><a href="Sl_form_rho.html#VALempty">empty</a> [<a href="Sl_form_rho.html">Sl_form_rho</a>]</td>
 <td><div class="info">
 The formula <code class="code">emp</code>.
@@ -489,7 +655,7 @@ The formula <code class="code">emp</code>.
 <td></td></tr>
 <tr><td><a href="Sl_uf.html#VALempty">empty</a> [<a href="Sl_uf.html">Sl_uf</a>]</td>
 <td></td></tr>
-<tr><td><a href="Sl_term.SubstSig.html#VALempty">empty</a> [<a href="Sl_term.SubstSig.html">Sl_term.SubstSig</a>]</td>
+<tr><td><a href="VarManager.SubstSig.html#VALempty">empty</a> [<a href="VarManager.SubstSig.html">VarManager.SubstSig</a>]</td>
 <td><div class="info">
 The empty substitution, which has no effect when applied.
 </div>
@@ -499,10 +665,21 @@ The empty substitution, which has no effect when applied.
 The empty list constant.
 </div>
 </td></tr>
-<tr><td><a href="Sl_term.UnifierSig.html#VALempty_state">empty_state</a> [<a href="Sl_term.UnifierSig.html">Sl_term.UnifierSig</a>]</td>
+<tr><td><a href="Sl_unify.S.html#VALempty_state">empty_state</a> [<a href="Sl_unify.S.html">Sl_unify.S</a>]</td>
 <td><div class="info">
 The unifier state consisting of the empty substitution and the empty set of
-        tag pairs
+      tag pairs
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.OrderedMap.html#VALendomap">endomap</a> [<a href="Utilsigs.OrderedMap.html">Utilsigs.OrderedMap</a>]</td>
+<td><div class="info">
+Convert a map to another, by enumerating bindings in key order, 
+        converting them into new ones and adding them to a new map.
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html#VALendomap">endomap</a> [<a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a>]</td>
+<td><div class="info">
+Map a set of elements to another set of elements of the same type.
 </div>
 </td></tr>
 <tr><td><a href="Tl_form_ltl.Form.html#VALequal">equal</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
@@ -517,6 +694,11 @@ Checks whether two symbolic heaps are equal.
 <tr><td><a href="Sl_heap.html#VALequal">equal</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
 <td><div class="info">
 Checks whether two symbolic heaps are equal.
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.BasicType.html#VALequal">equal</a> [<a href="Utilsigs.BasicType.html">Utilsigs.BasicType</a>]</td>
+<td><div class="info">
+Standard equality predicate.
 </div>
 </td></tr>
 <tr><td><a href="Sigs.SEQUENT.html#VALequal">equal</a> [<a href="Sigs.SEQUENT.html">Sigs.SEQUENT</a>]</td>
@@ -552,7 +734,7 @@ Whilst <code class="code">equal</code> demands syntactic equality including tags
 </td></tr>
 <tr><td><a href="Sl_form.html#VALequal_upto_tags">equal_upto_tags</a> [<a href="Sl_form.html">Sl_form</a>]</td>
 <td><div class="info">
-Whilst <code class="code">equal</code> demands syntactic equality including tags, this version 
+Whilst <code class="code">equal</code> demands syntactic equality including tags, this version
     ignores tag assignment.
 </div>
 </td></tr>
@@ -569,6 +751,11 @@ Like <code class="code">equal</code> but ignoring tag assignment.
 <tr><td><a href="Sl_tpreds.html#VALequal_upto_tags">equal_upto_tags</a> [<a href="Sl_tpreds.html">Sl_tpreds</a>]</td>
 <td><div class="info">
 Test whether the two arguments are the equal ignoring tags.
+</div>
+</td></tr>
+<tr><td><a href="Sl_tpred.html#VALequal_upto_tags">equal_upto_tags</a> [<a href="Sl_tpred.html">Sl_tpred</a>]</td>
+<td><div class="info">
+Compare for equality two tagged predicates while ignoring tags.
 </div>
 </td></tr>
 <tr><td><a href="Sigs.SEQUENT.html#VALequal_upto_tags">equal_upto_tags</a> [<a href="Sigs.SEQUENT.html">Sigs.SEQUENT</a>]</td>
@@ -596,6 +783,12 @@ Does a stack struct holds a term with a val?
 Does a UF struct make two terms equal?
 </div>
 </td></tr>
+<tr><td><a href="Sl_unify.Unidirectional.html#VALexistential_intro">existential_intro</a> [<a href="Sl_unify.Unidirectional.html">Sl_unify.Unidirectional</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_unify.Unidirectional.html#VALexistential_split_check">existential_split_check</a> [<a href="Sl_unify.Unidirectional.html">Sl_unify.Unidirectional</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_unify.Unidirectional.html#VALexistentials_only">existentials_only</a> [<a href="Sl_unify.Unidirectional.html">Sl_unify.Unidirectional</a>]</td>
+<td></td></tr>
 <tr><td><a href="Hashset.S.html#VALexists">exists</a> [<a href="Hashset.S.html">Hashset.S</a>]</td>
 <td></td></tr>
 <tr><td><a href="Blist.html#VALexists">exists</a> [<a href="Blist.html">Blist</a>]</td>
@@ -609,10 +802,18 @@ Does a UF struct make two terms equal?
 Same as <code class="code">List.exists</code>, but for a two-argument predicate.
 </div>
 </td></tr>
+<tr><td><a href="Sl_heap.html#VALexplode_deqs">explode_deqs</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
+<td></td></tr>
 <tr><td><a href="Tl_form_ltl.Form.html#VALextract_checkable_slformula">extract_checkable_slformula</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
 <td></td></tr>
 <tr><td><a href="Tl_form.Form.html#VALextract_checkable_slformula">extract_checkable_slformula</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
 <td></td></tr>
+<tr><td><a href="Sigs.PROOF.html#VALextract_subproof">extract_subproof</a> [<a href="Sigs.PROOF.html">Sigs.PROOF</a>]</td>
+<td><div class="info">
+<code class="code">extract_subproof idx prf</code> returns <code class="code">prf</code> rearranged such that <code class="code">idx</code> is
+      the root node.
+</div>
+</td></tr>
 <tr><td align="left"><br>F</td></tr>
 <tr><td><a href="Sigs.ABDRULE.html#VALfail">fail</a> [<a href="Sigs.ABDRULE.html">Sigs.ABDRULE</a>]</td>
 <td></td></tr>
@@ -644,6 +845,12 @@ Remove <code class="code">nil</code> from a set of terms.
 <td></td></tr>
 <tr><td><a href="Sl_uf.html#VALfind">find</a> [<a href="Sl_uf.html">Sl_uf</a>]</td>
 <td></td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html#VALfind">find</a> [<a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a>]</td>
+<td><div class="info">
+<code class="code">find p set</code> returns the first element of <code class="code">set</code>
+        that satisfies the predicate <code class="code">p</code>.
+</div>
+</td></tr>
 <tr><td><a href="Sigs.PROOF.html#VALfind">find</a> [<a href="Sigs.PROOF.html">Sigs.PROOF</a>]</td>
 <td></td></tr>
 <tr><td><a href="Blist.html#VALfind">find</a> [<a href="Blist.html">Blist</a>]</td>
@@ -655,11 +862,6 @@ Remove <code class="code">nil</code> from a set of terms.
 <tr><td><a href="Blist.html#VALfind_all">find_all</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
 <code class="code">find_all</code> is another name for <code class="code">List.filter</code>.
-</div>
-</td></tr>
-<tr><td><a href="Blist.html#VALfind_first">find_first</a> [<a href="Blist.html">Blist</a>]</td>
-<td><div class="info">
-<code class="code">find_first pred l</code> returns <code class="code">Some x</code> for the first <code class="code">x</code> in <code class="code">l</code> such that <code class="code">pred x = true</code>, or <code class="code">None</code>.
 </div>
 </td></tr>
 <tr><td><a href="Blist.html#VALfind_index">find_index</a> [<a href="Blist.html">Blist</a>]</td>
@@ -682,9 +884,30 @@ Find pto whose address is provably equal to given term.
 Find pto whose address is provably equal to given term.
 </div>
 </td></tr>
-<tr><td><a href="Blist.html#VALfind_some">find_some</a> [<a href="Blist.html">Blist</a>]</td>
+<tr><td><a href="Utilsigs.OrderedMap.html#VALfind_map">find_map</a> [<a href="Utilsigs.OrderedMap.html">Utilsigs.OrderedMap</a>]</td>
 <td><div class="info">
 Optimisation for finding and converting at the same time.
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html#VALfind_map">find_map</a> [<a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a>]</td>
+<td><div class="info">
+Optimisation for finding and converting at the same time.
+</div>
+</td></tr>
+<tr><td><a href="Blist.html#VALfind_map">find_map</a> [<a href="Blist.html">Blist</a>]</td>
+<td><div class="info">
+Optimisation for finding and converting at the same time.
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html#VALfind_opt">find_opt</a> [<a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a>]</td>
+<td><div class="info">
+<code class="code">find_opt pred set</code> returns <code class="code">Some x</code> for the first <code class="code">x</code> in <code class="code">set</code> such 
+        that <code class="code">pred x = true</code>, or <code class="code">None</code>.
+</div>
+</td></tr>
+<tr><td><a href="Blist.html#VALfind_opt">find_opt</a> [<a href="Blist.html">Blist</a>]</td>
+<td><div class="info">
+<code class="code">find_opt pred l</code> returns <code class="code">Some x</code> for the first <code class="code">x</code> in <code class="code">l</code> such that <code class="code">pred x = true</code>, or <code class="code">None</code>.
 </div>
 </td></tr>
 <tr><td><a href="Sigs.ABDRULE.html#VALfirst">first</a> [<a href="Sigs.ABDRULE.html">Sigs.ABDRULE</a>]</td>
@@ -700,6 +923,21 @@ Apply a sequence of rules iteratively through <code class="code">compose</code>.
 <td></td></tr>
 <tr><td><a href="Sl_heap.html#VALfixpoint">fixpoint</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
 <td></td></tr>
+<tr><td><a href="Utilsigs.OrderedMap.html#VALfixpoint">fixpoint</a> [<a href="Utilsigs.OrderedMap.html">Utilsigs.OrderedMap</a>]</td>
+<td><div class="info">
+<code class="code">fixpoint val_equal f map</code> computes the fixpoint of <code class="code">f</code> using <code class="code">val_equal</code>
+        to compare *values*.
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html#VALfixpoint">fixpoint</a> [<a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a>]</td>
+<td></td></tr>
+<tr><td><a href="Tagpairs.html#VALflatten">flatten</a> [<a href="Tagpairs.html">Tagpairs</a>]</td>
+<td><div class="info">
+Produce a set of all the tags in the given set of tag pairs.
+</div>
+</td></tr>
+<tr><td><a href="Option.html#VALflatten">flatten</a> [<a href="Option.html">Option</a>]</td>
+<td></td></tr>
 <tr><td><a href="Blist.html#VALflatten">flatten</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
 Same as <code class="code">concat</code>.
@@ -709,14 +947,20 @@ Same as <code class="code">concat</code>.
 <td><div class="info">
 <code class="code">fold r h</code> returns a list of pairs of substitutions over the formal parameters of 
     the rule <code class="code">r</code> such that its body, when one of these substitutions is applied,
-    becomes a subformula of <code class="code">h</code>; and the result of removing that subformula from
-    <code class="code">h</code>.
+    becomes a subformula of <code class="code">h</code>; and the result of removing that subformula from <code class="code">h</code>.
 </div>
 </td></tr>
 <tr><td><a href="Sl_rho.html#VALfold">fold</a> [<a href="Sl_rho.html">Sl_rho</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_uf.html#VALfold">fold</a> [<a href="Sl_uf.html">Sl_uf</a>]</td>
 <td></td></tr>
+<tr><td><a href="Option.html#VALfold">fold</a> [<a href="Option.html">Option</a>]</td>
+<td></td></tr>
+<tr><td><a href="Pair.html#VALfold">fold</a> [<a href="Pair.html">Pair</a>]</td>
+<td><div class="info">
+Fold a function over the members of a pair.
+</div>
+</td></tr>
 <tr><td><a href="Hashset.S.html#VALfold">fold</a> [<a href="Hashset.S.html">Hashset.S</a>]</td>
 <td></td></tr>
 <tr><td><a href="Blist.html#VALfold_left">fold_left</a> [<a href="Blist.html">Blist</a>]</td>
@@ -772,10 +1016,20 @@ Same as <code class="code">List.for_all</code>, but for a two-argument predicate
     fresh in <code class="code">s</code>.
 </div>
 </td></tr>
+<tr><td><a href="VarManager.I.html#VALfresh_evar">fresh_evar</a> [<a href="VarManager.I.html">VarManager.I</a>]</td>
+<td><div class="info">
+<code class="code">fresh_evar s</code> returns an existential variable that is fresh for the set of variables <code class="code">s</code>.
+</div>
+</td></tr>
 <tr><td><a href="Sl_term.html#VALfresh_evars">fresh_evars</a> [<a href="Sl_term.html">Sl_term</a>]</td>
 <td><div class="info">
 <code class="code">fresh_evars s n</code> returns a list of existentially quantified variables 
     of length <code class="code">n</code> all of which are fresh in <code class="code">s</code>.
+</div>
+</td></tr>
+<tr><td><a href="VarManager.I.html#VALfresh_evars">fresh_evars</a> [<a href="VarManager.I.html">VarManager.I</a>]</td>
+<td><div class="info">
+<code class="code">fresh_evars s n</code> returns <code class="code">n</code> distinct existential variables that are all fresh for the set of variables <code class="code">s</code>.
 </div>
 </td></tr>
 <tr><td><a href="Sl_term.html#VALfresh_fvar">fresh_fvar</a> [<a href="Sl_term.html">Sl_term</a>]</td>
@@ -783,10 +1037,20 @@ Same as <code class="code">List.for_all</code>, but for a two-argument predicate
 <code class="code">fresh_fvar s</code> returns a free variable that is fresh in <code class="code">s</code>.
 </div>
 </td></tr>
+<tr><td><a href="VarManager.I.html#VALfresh_fvar">fresh_fvar</a> [<a href="VarManager.I.html">VarManager.I</a>]</td>
+<td><div class="info">
+<code class="code">fresh_uvar s</code> returns a free variable that is fresh for the set of variables <code class="code">s</code>.
+</div>
+</td></tr>
 <tr><td><a href="Sl_term.html#VALfresh_fvars">fresh_fvars</a> [<a href="Sl_term.html">Sl_term</a>]</td>
 <td><div class="info">
 <code class="code">fresh_fvars s n</code> returns a list of free variables of length <code class="code">n</code> 
     all of which are fresh in <code class="code">s</code>.
+</div>
+</td></tr>
+<tr><td><a href="VarManager.I.html#VALfresh_fvars">fresh_fvars</a> [<a href="VarManager.I.html">VarManager.I</a>]</td>
+<td><div class="info">
+<code class="code">fresh_uvars s n</code> returns <code class="code">n</code> distinct free variables that are all fresh for the set of variables <code class="code">s</code>.
 </div>
 </td></tr>
 <tr><td><a href="Sigs.PROOF.html#VALfresh_idx">fresh_idx</a> [<a href="Sigs.PROOF.html">Sigs.PROOF</a>]</td>
@@ -817,6 +1081,16 @@ Rename tags in second argument so that they are disjoint to those in the first.
 </div>
 </td></tr>
 <tr><td align="left"><br>G</td></tr>
+<tr><td><a href="Ord_constraints.html#VALgenerate">generate</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td><div class="info">
+<code class="code">generate avoid t ts</code> returns a constraint set that constitutes an inductive 
+    hypothesis corresponding to a case in the unfolding of a predicate tagged 
+    with <code class="code">t</code> that recursively depends on predicate instances tagged by labels 
+    in <code class="code">ts</code>; any freshly generated labels are not contained in <code class="code">avoid</code>.
+</div>
+</td></tr>
+<tr><td><a href="Option.html#VALget">get</a> [<a href="Option.html">Option</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sigs.PROOF.html#VALget_ancestry">get_ancestry</a> [<a href="Sigs.PROOF.html">Sigs.PROOF</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sigs.PROOF.html#VALget_seq">get_seq</a> [<a href="Sigs.PROOF.html">Sigs.PROOF</a>]</td>
@@ -831,11 +1105,36 @@ Get sequent labelling the node.
 Get the successor node indices of this node.
 </div>
 </td></tr>
+<tr><td><a href="Sl_seq.html#VALget_tracepairs">get_tracepairs</a> [<a href="Sl_seq.html">Sl_seq</a>]</td>
+<td><div class="info">
+Get the tracepairs between two sequents
+</div>
+</td></tr>
+<tr><td><a href="Sl_form.html#VALget_tracepairs">get_tracepairs</a> [<a href="Sl_form.html">Sl_form</a>]</td>
+<td><div class="info">
+<code class="code">get_tracepairs f f'</code> will return the valid and progressing trace pairs 
+    (t, t') specified by the constraints of <code class="code">f'</code> such that <code class="code">t</code> occurs in <code class="code">f</code>
+</div>
+</td></tr>
 <tr><td align="left"><br>H</td></tr>
+<tr><td><a href="Sl_heap_rho.html#VALhas_untagged_preds">has_untagged_preds</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_heap.html#VALhas_untagged_preds">has_untagged_preds</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
+<td></td></tr>
 <tr><td><a href="Tl_form_ltl.Form.html#VALhash">hash</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
 <td></td></tr>
 <tr><td><a href="Tl_form.Form.html#VALhash">hash</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
 <td></td></tr>
+<tr><td><a href="Utilsigs.OrderedMap.html#VALhash">hash</a> [<a href="Utilsigs.OrderedMap.html">Utilsigs.OrderedMap</a>]</td>
+<td><div class="info">
+Hash the map using the provided function for hashing *values*.
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.BasicType.html#VALhash">hash</a> [<a href="Utilsigs.BasicType.html">Utilsigs.BasicType</a>]</td>
+<td><div class="info">
+Standard hash function.
+</div>
+</td></tr>
 <tr><td><a href="Hashset.HashedType.html#VALhash">hash</a> [<a href="Hashset.HashedType.html">Hashset.HashedType</a>]</td>
 <td><div class="info">
 A hashing function on elements.
@@ -847,6 +1146,8 @@ Return the first element of the given t.
 </div>
 </td></tr>
 <tr><td align="left"><br>I</td></tr>
+<tr><td><a href="Fun.html#VALid">id</a> [<a href="Fun.html">Fun</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sigs.PROOFRULE.html#VALidentity">identity</a> [<a href="Sigs.PROOFRULE.html">Sigs.PROOFRULE</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_heap_rho.html#VALidents">idents</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
@@ -873,7 +1174,8 @@ Do all disjuncts entail false in the sense of <code class="code">Sl_heap_rho.inc
 </td></tr>
 <tr><td><a href="Sl_form.html#VALinconsistent">inconsistent</a> [<a href="Sl_form.html">Sl_form</a>]</td>
 <td><div class="info">
-Do all disjuncts entail false in the sense of <code class="code">Sl_heap.inconsistent</code>?
+Do all disjuncts entail false in the sense of <code class="code">Sl_heap.inconsistent</code>
+    or are the tag constraints inconsistent?
 </div>
 </td></tr>
 <tr><td><a href="Sl_heap_rho.html#VALinconsistent">inconsistent</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
@@ -883,9 +1185,12 @@ Trivially false if x=y * x!=y is provable for any x,y.
 </td></tr>
 <tr><td><a href="Sl_heap.html#VALinconsistent">inconsistent</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
 <td><div class="info">
-Trivially false if x=y * x!=y is provable for any x,y.
+Trivially false if heap contains t!=t for any term t, or if x=y * x!=y 
+    is provable for any x,y.
 </div>
 </td></tr>
+<tr><td><a href="Ord_constraints.html#VALinconsistent">inconsistent</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td></td></tr>
 <tr><td><a href="Blist.html#VALindexes">indexes</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
 <code class="code">indexes l</code> returns the list of integer positions of elements in <code class="code">l</code>.
@@ -904,6 +1209,11 @@ Insert given element between elements of given list.
 <td></td></tr>
 <tr><td><a href="Tl_form.Form.html#VALis_and">is_and</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
 <td></td></tr>
+<tr><td><a href="VarManager.I.html#VALis_anonymous">is_anonymous</a> [<a href="VarManager.I.html">VarManager.I</a>]</td>
+<td><div class="info">
+<code class="code">is_unnamed v</code> returns <code class="code">true</code> if and only if <code class="code">v</code> is anonymous
+</div>
+</td></tr>
 <tr><td><a href="Tl_form_ltl.Form.html#VALis_atom">is_atom</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
 <td></td></tr>
 <tr><td><a href="Tl_form.Form.html#VALis_atom">is_atom</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
@@ -959,6 +1269,11 @@ Is the argument the empty list?
 Is the argument an existentially quantified variable?
 </div>
 </td></tr>
+<tr><td><a href="VarManager.I.html#VALis_exist_var">is_exist_var</a> [<a href="VarManager.I.html">VarManager.I</a>]</td>
+<td><div class="info">
+<code class="code">is_exist_var v</code> returns <code class="code">true</code> if and only if <code class="code">v</code> is an existential variable.
+</div>
+</td></tr>
 <tr><td><a href="Tl_form_ltl.Form.html#VALis_f">is_f</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
 <td></td></tr>
 <tr><td><a href="Tl_form.Form.html#VALis_final">is_final</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
@@ -966,6 +1281,11 @@ Is the argument an existentially quantified variable?
 <tr><td><a href="Sl_term.html#VALis_free_var">is_free_var</a> [<a href="Sl_term.html">Sl_term</a>]</td>
 <td><div class="info">
 Is the argument a free variable?
+</div>
+</td></tr>
+<tr><td><a href="VarManager.I.html#VALis_free_var">is_free_var</a> [<a href="VarManager.I.html">VarManager.I</a>]</td>
+<td><div class="info">
+<code class="code">is_exist_var v</code> returns <code class="code">true</code> if and only if <code class="code">v</code> is a free variable.
 </div>
 </td></tr>
 <tr><td><a href="Tl_form_ltl.Form.html#VALis_g">is_g</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
@@ -979,6 +1299,8 @@ Is the argument a free variable?
 Is the argument <code class="code">nil</code>? Equivalent to <code class="code">equal nil x</code>.
 </div>
 </td></tr>
+<tr><td><a href="Option.html#VALis_none">is_none</a> [<a href="Option.html">Option</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sigs.NODE.html#VALis_open">is_open</a> [<a href="Sigs.NODE.html">Sigs.NODE</a>]</td>
 <td></td></tr>
 <tr><td><a href="Tl_form_ltl.Form.html#VALis_or">is_or</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
@@ -988,6 +1310,10 @@ Is the argument <code class="code">nil</code>? Equivalent to <code class="code">
 <tr><td><a href="Tl_form_ltl.Form.html#VALis_slformula">is_slformula</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
 <td></td></tr>
 <tr><td><a href="Tl_form.Form.html#VALis_slformula">is_slformula</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
+<td></td></tr>
+<tr><td><a href="Option.html#VALis_some">is_some</a> [<a href="Option.html">Option</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_unify.Unidirectional.html#VALis_substitution">is_substitution</a> [<a href="Sl_unify.Unidirectional.html">Sl_unify.Unidirectional</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_form_rho.html#VALis_symheap">is_symheap</a> [<a href="Sl_form_rho.html">Sl_form_rho</a>]</td>
 <td><div class="info">
@@ -999,11 +1325,17 @@ Returns true iff the formula has a single disjunct only
 Returns true iff the formula has a single disjunct only
 </div>
 </td></tr>
+<tr><td><a href="Sl_tpred.html#VALis_tagged">is_tagged</a> [<a href="Sl_tpred.html">Sl_tpred</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sl_term.html#VALis_var">is_var</a> [<a href="Sl_term.html">Sl_term</a>]</td>
 <td><div class="info">
 <code class="code">is_nil x</code> is equivalent to <code class="code">not (equal nil x)</code>.
 </div>
 </td></tr>
+<tr><td><a href="Option.html#VALiter">iter</a> [<a href="Option.html">Option</a>]</td>
+<td></td></tr>
+<tr><td><a href="Fun.html#VALiter">iter</a> [<a href="Fun.html">Fun</a>]</td>
+<td></td></tr>
 <tr><td><a href="Hashset.S.html#VALiter">iter</a> [<a href="Hashset.S.html">Hashset.S</a>]</td>
 <td></td></tr>
 <tr><td><a href="Blist.html#VALiter">iter</a> [<a href="Blist.html">Blist</a>]</td>
@@ -1028,6 +1360,11 @@ Same as <code class="code">List.iter</code>, but the function is applied to the 
 <tr><td align="left"><br>L</td></tr>
 <tr><td><a href="Sigs.PROVER.html#VALlast_search_depth">last_search_depth</a> [<a href="Sigs.PROVER.html">Sigs.PROVER</a>]</td>
 <td></td></tr>
+<tr><td><a href="Pair.html#VALleft">left</a> [<a href="Pair.html">Pair</a>]</td>
+<td><div class="info">
+Pair destructor.
+</div>
+</td></tr>
 <tr><td><a href="Hashset.S.html#VALleft_union">left_union</a> [<a href="Hashset.S.html">Hashset.S</a>]</td>
 <td></td></tr>
 <tr><td><a href="Blist.html#VALlength">length</a> [<a href="Blist.html">Blist</a>]</td>
@@ -1037,13 +1374,12 @@ Return the length (number of elements) of the given t.
 </td></tr>
 <tr><td><a href="Sigs.ABDRULE.html#VALlift">lift</a> [<a href="Sigs.ABDRULE.html">Sigs.ABDRULE</a>]</td>
 <td></td></tr>
-<tr><td><a href="Sl_term.UnifierSig.html#VALlift_subst_check">lift_subst_check</a> [<a href="Sl_term.UnifierSig.html">Sl_term.UnifierSig</a>]</td>
-<td><div class="info">
-<code class="code">lift_subst_check c</code> takes a substitution pair check function <code class="code">c</code> and lifts
-        it to a unifier state check function by applying it to each entry in the
-        state's substitution map
-</div>
-</td></tr>
+<tr><td><a href="Fun.html#VALlist_conj">list_conj</a> [<a href="Fun.html">Fun</a>]</td>
+<td></td></tr>
+<tr><td><a href="Fun.html#VALlist_disj">list_disj</a> [<a href="Fun.html">Fun</a>]</td>
+<td></td></tr>
+<tr><td><a href="Option.html#VALlist_get">list_get</a> [<a href="Option.html">Option</a>]</td>
+<td></td></tr>
 <tr><td><a href="Lru.Make.html#VALlru_cache">lru_cache</a> [<a href="Lru.Make.html">Lru.Make</a>]</td>
 <td><div class="info">
 <code class="code">lru_cache f n</code> memoises the non-recursive function <code class="code">f</code>, using an LRU cache
@@ -1057,6 +1393,13 @@ Return the length (number of elements) of the given t.
 </div>
 </td></tr>
 <tr><td align="left"><br>M</td></tr>
+<tr><td><a href="Option.html#VALmap">map</a> [<a href="Option.html">Option</a>]</td>
+<td></td></tr>
+<tr><td><a href="Pair.html#VALmap">map</a> [<a href="Pair.html">Pair</a>]</td>
+<td><div class="info">
+Apply a function to both members individually and put results in a new pair.
+</div>
+</td></tr>
 <tr><td><a href="Blist.html#VALmap">map</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
 <code class="code">List.map f [a1; ...; an]</code> applies function <code class="code">f</code> to <code class="code">a1, ..., an</code>,
@@ -1070,15 +1413,43 @@ Return the length (number of elements) of the given t.
    <code class="code">[f a1 b1; ...; f an bn]</code>.
 </div>
 </td></tr>
+<tr><td><a href="Pair.html#VALmap_left">map_left</a> [<a href="Pair.html">Pair</a>]</td>
+<td><div class="info">
+Apply a function to the left-hand component only
+</div>
+</td></tr>
+<tr><td><a href="Pair.html#VALmap_right">map_right</a> [<a href="Pair.html">Pair</a>]</td>
+<td><div class="info">
+Apply a function to the right-hand component only
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html#VALmap_to">map_to</a> [<a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a>]</td>
+<td><div class="info">
+<code class="code">map_to add empty f set</code> converts every element of <code class="code">set</code> using <code class="code">f</code>, 
+        and then folds over the new collection of elements using as starting
+        value <code class="code">empty</code> and folding operation <code class="code">add</code>.
+</div>
+</td></tr>
 <tr><td><a href="Hashset.S.html#VALmap_to">map_to</a> [<a href="Hashset.S.html">Hashset.S</a>]</td>
 <td></td></tr>
 <tr><td><a href="Blist.html#VALmap_to">map_to</a> [<a href="Blist.html">Blist</a>]</td>
 <td></td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html#VALmap_to_list">map_to_list</a> [<a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a>]</td>
+<td><div class="info">
+<code class="code">map_to_list f set</code> applies <code class="code">f</code> to every element and constructs a list
+        of results.
+</div>
+</td></tr>
 <tr><td><a href="Blist.html#VALmapi">mapi</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
 Same as <code class="code">List.map</code>, but the function is applied to the index of
    the element as first argument (counting from 0), and the element
    itself as second argument.
+</div>
+</td></tr>
+<tr><td><a href="Sl_abduce.html#VALmax_depth">max_depth</a> [<a href="Sl_abduce.html">Sl_abduce</a>]</td>
+<td><div class="info">
+Returns the maximum depth for the underlying proof search
 </div>
 </td></tr>
 <tr><td><a href="Sigs.ABDUCER.html#VALmelt_proof">melt_proof</a> [<a href="Sigs.ABDUCER.html">Sigs.ABDUCER</a>]</td>
@@ -1137,6 +1508,33 @@ Merge two ts:
 <td></td></tr>
 <tr><td><a href="Sl_heap.html#VALmk">mk</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
 <td></td></tr>
+<tr><td><a href="VarManager.I.html#VALmk">mk</a> [<a href="VarManager.I.html">VarManager.I</a>]</td>
+<td><div class="info">
+<code class="code">mk_var n exist</code> returns a variable with name <code class="code">n</code>; if <code class="code">exist</code> is <code class="code">true</code> then 
+        the returned variable will be existential, otherwise it will be free.
+</div>
+</td></tr>
+<tr><td><a href="VarManager.html#VALmk">mk</a> [<a href="VarManager.html">VarManager</a>]</td>
+<td><div class="info">
+<code class="code">mk seed anon_str classify</code> creates a new variable manager module where:
+      <code class="code">seed</code> specifies a cyclic permutation of the alphabet, which is used 
+        internally to create new variable names;
+      <code class="code">anon_str</code> specifies how to represent "anonymous" variables as a string;
+      <code class="code">classify varname</code> returns a value of type <code class="code">varname_class</code> classifying <code class="code">varname</code>.
+</div>
+</td></tr>
+<tr><td><a href="Tagpairs.html#VALmk">mk</a> [<a href="Tagpairs.html">Tagpairs</a>]</td>
+<td><div class="info">
+<code class="code">mk tags</code> computes the identity relation over the set <code class="code">tags</code>.
+</div>
+</td></tr>
+<tr><td><a href="Option.html#VALmk">mk</a> [<a href="Option.html">Option</a>]</td>
+<td></td></tr>
+<tr><td><a href="Pair.html#VALmk">mk</a> [<a href="Pair.html">Pair</a>]</td>
+<td><div class="info">
+Pair constructor.
+</div>
+</td></tr>
 <tr><td><a href="Sigs.PROOF.html#VALmk">mk</a> [<a href="Sigs.PROOF.html">Sigs.PROOF</a>]</td>
 <td><div class="info">
 Constructor.
@@ -1161,7 +1559,7 @@ Constructor for nodes.
 <td></td></tr>
 <tr><td><a href="Tl_form.Form.html#VALmk_and">mk_and</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
 <td></td></tr>
-<tr><td><a href="Sl_term.UnifierSig.html#VALmk_assert_check">mk_assert_check</a> [<a href="Sl_term.UnifierSig.html">Sl_term.UnifierSig</a>]</td>
+<tr><td><a href="Sl_unify.S.html#VALmk_assert_check">mk_assert_check</a> [<a href="Sl_unify.S.html">Sl_unify.S</a>]</td>
 <td><div class="info">
 Takes a state check and wraps it in an assert
 </div>
@@ -1219,10 +1617,34 @@ Backlink rules take: a boolean <code class="code">eager</code> , a selection fun
 <td></td></tr>
 <tr><td><a href="Sl_heap.html#VALmk_eq">mk_eq</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
 <td></td></tr>
+<tr><td><a href="VarManager.SubstSig.html#VALmk_ex_subst">mk_ex_subst</a> [<a href="VarManager.SubstSig.html">VarManager.SubstSig</a>]</td>
+<td><div class="info">
+<code class="code">mk_ex_subst avoid vs</code> produces a substitution of pairwise distinct existentially
+        quantified variables (fresh for all the variables in <code class="code">avoid</code>) for the variables in <code class="code">vs</code>.
+</div>
+</td></tr>
+<tr><td><a href="Tagpairs.html#VALmk_ex_subst">mk_ex_subst</a> [<a href="Tagpairs.html">Tagpairs</a>]</td>
+<td><div class="info">
+<code class="code">mk_ex_subst avoid ts</code> produces a set of tag pairs representing a substitution of pairwise distinct
+    existentially quantified tags (fresh for all the tags in <code class="code">avoid</code>) for the tags in <code class="code">ts</code>.
+</div>
+</td></tr>
 <tr><td><a href="Tl_form_ltl.Form.html#VALmk_f">mk_f</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
 <td></td></tr>
 <tr><td><a href="Tl_form.Form.html#VALmk_final">mk_final</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
 <td></td></tr>
+<tr><td><a href="VarManager.SubstSig.html#VALmk_free_subst">mk_free_subst</a> [<a href="VarManager.SubstSig.html">VarManager.SubstSig</a>]</td>
+<td><div class="info">
+<code class="code">mk_free_subst avoid vs</code> produces a substitution of pairwise distinct
+        free variables (fresh for all the variables in <code class="code">avoid</code>) for the variables in <code class="code">vs</code>.
+</div>
+</td></tr>
+<tr><td><a href="Tagpairs.html#VALmk_free_subst">mk_free_subst</a> [<a href="Tagpairs.html">Tagpairs</a>]</td>
+<td><div class="info">
+<code class="code">mk_free_subst avoid ts</code> produces a set of tag pairs representing a substitution of pairwise distinct
+    free tags (fresh for all the tags in <code class="code">avoid</code>) for the tags in <code class="code">ts</code>.
+</div>
+</td></tr>
 <tr><td><a href="Tl_form_ltl.Form.html#VALmk_g">mk_g</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_heap_rho.html#VALmk_ind">mk_ind</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
@@ -1244,6 +1666,8 @@ Rules are functions that break down a sequent to a choice of applications
       and a description.
 </div>
 </td></tr>
+<tr><td><a href="Option.html#VALmk_lazily">mk_lazily</a> [<a href="Option.html">Option</a>]</td>
+<td></td></tr>
 <tr><td><a href="Tl_form_ltl.Form.html#VALmk_next">mk_next</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sigs.NODE.html#VALmk_open">mk_open</a> [<a href="Sigs.NODE.html">Sigs.NODE</a>]</td>
@@ -1261,13 +1685,27 @@ Rules are functions that break down a sequent to a choice of applications
 <td></td></tr>
 <tr><td><a href="Sl_heap_rho.html#VALmk_rho">mk_rho</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
 <td></td></tr>
-<tr><td><a href="Sl_term.UnifierSig.html#VALmk_verifier">mk_verifier</a> [<a href="Sl_term.UnifierSig.html">Sl_term.UnifierSig</a>]</td>
+<tr><td><a href="Unification.MakeUnifier.html#VALmk_unifier">mk_unifier</a> [<a href="Unification.MakeUnifier.html">Unification.MakeUnifier</a>]</td>
+<td></td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html#VALmk_unifier">mk_unifier</a> [<a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a>]</td>
 <td><div class="info">
-Takes a state checking function and converts it into a continuation which
-        returns None if the check fails
+<code class="code">mk_unifier total linear elt_unifier</code> produces a unifier <code class="code">u</code> for a set of elements
+        using the unifier <code class="code">elt_unifier</code> for a single element.
 </div>
 </td></tr>
+<tr><td><a href="Ord_constraints.html#VALmk_update_check">mk_update_check</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_unify.S.html#VALmk_verifier">mk_verifier</a> [<a href="Sl_unify.S.html">Sl_unify.S</a>]</td>
+<td><div class="info">
+Takes a state check function and converts it into a continuation which
+      returns None if the check fails
+</div>
+</td></tr>
+<tr><td><a href="Sl_unify.Unidirectional.html#VALmodulo_entl">modulo_entl</a> [<a href="Sl_unify.Unidirectional.html">Sl_unify.Unidirectional</a>]</td>
+<td></td></tr>
 <tr><td align="left"><br>N</td></tr>
+<tr><td><a href="Fun.html#VALneg">neg</a> [<a href="Fun.html">Fun</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sl_term.html#VALnil">nil</a> [<a href="Sl_term.html">Sl_term</a>]</td>
 <td><div class="info">
 The <code class="code">nil</code> constant.
@@ -1334,12 +1772,29 @@ Rename all variables involved by their representative in the UF structure
 Return the <code class="code">n</code>-th element of the given t.
 </div>
 </td></tr>
+<tr><td><a href="Sigs.PROOF.html#VALnum_backlinks">num_backlinks</a> [<a href="Sigs.PROOF.html">Sigs.PROOF</a>]</td>
+<td></td></tr>
 <tr><td align="left"><br>O</td></tr>
 <tr><td><a href="Sl_rho.html#VALof_list">of_list</a> [<a href="Sl_rho.html">Sl_rho</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_uf.html#VALof_list">of_list</a> [<a href="Sl_uf.html">Sl_uf</a>]</td>
 <td><div class="info">
 <code class="code">Sl_term.compare</code>.
+</div>
+</td></tr>
+<tr><td><a href="VarManager.SubstSig.html#VALof_list">of_list</a> [<a href="VarManager.SubstSig.html">VarManager.SubstSig</a>]</td>
+<td><div class="info">
+Make a substitution from a list of bindings
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.OrderedMap.html#VALof_list">of_list</a> [<a href="Utilsigs.OrderedMap.html">Utilsigs.OrderedMap</a>]</td>
+<td><div class="info">
+Create a map out of a list of pairs of (keys, values).
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html#VALof_list">of_list</a> [<a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a>]</td>
+<td><div class="info">
+Convert a list of elements to a container.
 </div>
 </td></tr>
 <tr><td><a href="Hashset.S.html#VALof_list">of_list</a> [<a href="Hashset.S.html">Hashset.S</a>]</td>
@@ -1370,6 +1825,20 @@ Construct a <code class="code">t</code> list out of a primitive list.
 <tr><td><a href="Sl_term.html#VALof_string">of_string</a> [<a href="Sl_term.html">Sl_term</a>]</td>
 <td><div class="info">
 Parse a term from a string.
+</div>
+</td></tr>
+<tr><td><a href="Ord_constraints.html#VALof_string">of_string</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td></td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html#VALopt_map_to">opt_map_to</a> [<a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a>]</td>
+<td><div class="info">
+<code class="code">opt_map_to add empty f set</code> converts every element of <code class="code">set</code> using <code class="code">f</code>, 
+        and then folds over the elements of the new collection which are Some
+        using as starting value <code class="code">empty</code> and folding operation <code class="code">add</code>.
+</div>
+</td></tr>
+<tr><td><a href="Blist.html#VALopt_map_to">opt_map_to</a> [<a href="Blist.html">Blist</a>]</td>
+<td><div class="info">
+<code class="code">opt_map_to oadd oempty f xs</code> is equivalent to <code class="code">map_to (Option.dest Fun.id oadd) oempty f x</code>
 </div>
 </td></tr>
 <tr><td><a href="Sl_tpair.html#VALorder">order</a> [<a href="Sl_tpair.html">Sl_tpair</a>]</td>
@@ -1420,6 +1889,19 @@ Return a list of pairs of consecutive elements.
 Parse a term.
 </div>
 </td></tr>
+<tr><td><a href="Tags.Elt.html#VALparse">parse</a> [<a href="Tags.Elt.html">Tags.Elt</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ord_constraints.html#VALparse">parse</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td></td></tr>
+<tr><td><a href="VarManager.SubstSig.html#VALpartition">partition</a> [<a href="VarManager.SubstSig.html">VarManager.SubstSig</a>]</td>
+<td><div class="info">
+<code class="code">partition theta</code> will partition <code class="code">theta</code> into (<code class="code">theta_1</code>, <code class="code">theta_2</code>)
+        such that <code class="code">theta_1</code> contains all and only the mappings in <code class="code">theta</code> from 
+        a free variable to either an anonymous variable or another free variable; 
+        that is <code class="code">theta_1</code> is the part of <code class="code">theta</code> which is a proper
+        (proof-theoretic) substitution.
+</div>
+</td></tr>
 <tr><td><a href="Blist.html#VALpartition">partition</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
 <code class="code">partition p l</code> returns a pair of ts <code class="code">(l1, l2)</code>, where
@@ -1428,11 +1910,29 @@ Parse a term.
    elements of <code class="code">l</code> that do not satisfy <code class="code">p</code>.
 </div>
 </td></tr>
+<tr><td><a href="Tagpairs.html#VALpartition_subst">partition_subst</a> [<a href="Tagpairs.html">Tagpairs</a>]</td>
+<td><div class="info">
+Partition the set of tag pairs into those pairs containing only "free" tags, and all the rest
+</div>
+</td></tr>
 <tr><td><a href="Tl_form_ltl.Form.html#VALpp">pp</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
 <td></td></tr>
 <tr><td><a href="Tl_form.Form.html#VALpp">pp</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
 <td></td></tr>
-<tr><td><a href="Sl_term.SubstSig.html#VALpp">pp</a> [<a href="Sl_term.SubstSig.html">Sl_term.SubstSig</a>]</td>
+<tr><td><a href="VarManager.SubstSig.html#VALpp">pp</a> [<a href="VarManager.SubstSig.html">VarManager.SubstSig</a>]</td>
+<td><div class="info">
+Pretty printer.
+</div>
+</td></tr>
+<tr><td><a href="Option.html#VALpp">pp</a> [<a href="Option.html">Option</a>]</td>
+<td></td></tr>
+<tr><td><a href="Utilsigs.OrderedMap.html#VALpp">pp</a> [<a href="Utilsigs.OrderedMap.html">Utilsigs.OrderedMap</a>]</td>
+<td><div class="info">
+<code class="code">pp pp_val fmt map</code> pretty prints <code class="code">map</code> using <code class="code">pp_val</code> to pretty-print
+        the *values* of <code class="code">map</code>.
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.BasicType.html#VALpp">pp</a> [<a href="Utilsigs.BasicType.html">Utilsigs.BasicType</a>]</td>
 <td><div class="info">
 Pretty printer.
 </div>
@@ -1455,6 +1955,13 @@ Pretty print abstract proof.
 <code class="code">pp sep e fmt l</code> pretty prints the list <code class="code">l</code>.
 </div>
 </td></tr>
+<tr><td><a href="Option.html#VALpred">pred</a> [<a href="Option.html">Option</a>]</td>
+<td><div class="info">
+<code class="code">pred p x</code> returns <code class="code">Some x</code> if <code class="code">p x</code> else <code class="code">None</code>.
+</div>
+</td></tr>
+<tr><td><a href="Option.html#VALpred_dest">pred_dest</a> [<a href="Option.html">Option</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sl_indrule.html#VALpredsym">predsym</a> [<a href="Sl_indrule.html">Sl_indrule</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_tpred.html#VALpredsym">predsym</a> [<a href="Sl_tpred.html">Sl_tpred</a>]</td>
@@ -1465,6 +1972,12 @@ Pretty print abstract proof.
 <td></td></tr>
 <tr><td><a href="Sigs.PROVER.html#VALprint_proof_stats">print_proof_stats</a> [<a href="Sigs.PROVER.html">Sigs.PROVER</a>]</td>
 <td></td></tr>
+<tr><td><a href="Ord_constraints.html#VALprog_pairs">prog_pairs</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td><div class="info">
+<code class="code">prog_pairs cs</code> returns all of the tag pairs (<code class="code">a</code>, <code class="code">b</code>) such that <code class="code">a</code> &lt;<code class="code">b</code>
+    is entailed by some constraint in <code class="code">cs</code>
+</div>
+</td></tr>
 <tr><td><a href="Sl_heap_rho.html#VALproj_pure">proj_pure</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_heap.html#VALproj_pure">proj_pure</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
@@ -1483,6 +1996,16 @@ See CSL-LICS paper for explanation.
 See CSL-LICS paper for explanation.
 </div>
 </td></tr>
+<tr><td><a href="Tagpairs.html#VALprojectl">projectl</a> [<a href="Tagpairs.html">Tagpairs</a>]</td>
+<td><div class="info">
+<code class="code">projectl tps</code> computes the set of tags appearing in the left of pairs in <code class="code">tps</code>.
+</div>
+</td></tr>
+<tr><td><a href="Tagpairs.html#VALprojectr">projectr</a> [<a href="Tagpairs.html">Tagpairs</a>]</td>
+<td><div class="info">
+<code class="code">projectr tps</code> computes the set of tags appearing in the right of pairs in <code class="code">tps</code>.
+</div>
+</td></tr>
 <tr><td align="left"><br>R</td></tr>
 <tr><td><a href="Blist.html#VALrange">range</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
@@ -1490,8 +2013,15 @@ See CSL-LICS paper for explanation.
 and <code class="code">length li = length l</code>.
 </div>
 </td></tr>
+<tr><td><a href="Sl_unify.S.html#VALrealize">realize</a> [<a href="Sl_unify.S.html">Sl_unify.S</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sl_pto.html#VALrecord_type">record_type</a> [<a href="Sl_pto.html">Sl_pto</a>]</td>
 <td></td></tr>
+<tr><td><a href="Tagpairs.html#VALreflect">reflect</a> [<a href="Tagpairs.html">Tagpairs</a>]</td>
+<td><div class="info">
+Reverse the relation.
+</div>
+</td></tr>
 <tr><td><a href="Sigs.SEQTACTICS.html#VALrelabel">relabel</a> [<a href="Sigs.SEQTACTICS.html">Sigs.SEQTACTICS</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_uf.html#VALremove">remove</a> [<a href="Sl_uf.html">Sl_uf</a>]</td>
@@ -1513,8 +2043,21 @@ Same as <code class="code">List.remove_assoc</code>, but uses physical equality 
    of structural equality to compare keys.
 </div>
 </td></tr>
+<tr><td><a href="Sl_unify.Unidirectional.html#VALremove_dup_substs">remove_dup_substs</a> [<a href="Sl_unify.Unidirectional.html">Sl_unify.Unidirectional</a>]</td>
+<td><div class="info">
+<code class="code">remove_dup_substs states</code> will remove any states in <code class="code">states</code> where the 
+      universal parts (i.e.
+</div>
+</td></tr>
 <tr><td><a href="Blist.html#VALremove_nth">remove_nth</a> [<a href="Blist.html">Blist</a>]</td>
 <td></td></tr>
+<tr><td><a href="Ord_constraints.html#VALremove_schema">remove_schema</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td><div class="info">
+<code class="code">remove_schema cs used</code> will remove a (nonempty) subset <code class="code">cs'</code> of <code class="code">cs</code> 
+    containing tags { t_1, ..., t_n } where at least one t_i does not occur in
+    <code class="code">used</code> such that <code class="code">cs'</code> does not affect the support of <code class="code">cs</code> in the sense that
+</div>
+</td></tr>
 <tr><td><a href="Sigs.SEQTACTICS.html#VALrepeat">repeat</a> [<a href="Sigs.SEQTACTICS.html">Sigs.SEQTACTICS</a>]</td>
 <td></td></tr>
 <tr><td><a href="Blist.html#VALrepeat">repeat</a> [<a href="Blist.html">Blist</a>]</td>
@@ -1551,10 +2094,27 @@ List reversal.
    more efficient.
 </div>
 </td></tr>
+<tr><td><a href="Pair.html#VALright">right</a> [<a href="Pair.html">Pair</a>]</td>
+<td><div class="info">
+Pair destructor.
+</div>
+</td></tr>
 <tr><td align="left"><br>S</td></tr>
+<tr><td><a href="Ord_constraints.Elt.html#VALsatisfiable">satisfiable</a> [<a href="Ord_constraints.Elt.html">Ord_constraints.Elt</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sigs.PROOFRULE.html#VALsequence">sequence</a> [<a href="Sigs.PROOFRULE.html">Sigs.PROOFRULE</a>]</td>
 <td></td></tr>
-<tr><td><a href="Sl_term.SubstSig.html#VALsingleton">singleton</a> [<a href="Sl_term.SubstSig.html">Sl_term.SubstSig</a>]</td>
+<tr><td><a href="Sl_abduce.html#VALset_defs">set_defs</a> [<a href="Sl_abduce.html">Sl_abduce</a>]</td>
+<td><div class="info">
+Specify the set of inductive definitions available for the proof search
+</div>
+</td></tr>
+<tr><td><a href="Sl_abduce.html#VALset_depth">set_depth</a> [<a href="Sl_abduce.html">Sl_abduce</a>]</td>
+<td><div class="info">
+Set the maximum depth for the underlying proof search
+</div>
+</td></tr>
+<tr><td><a href="VarManager.SubstSig.html#VALsingleton">singleton</a> [<a href="VarManager.SubstSig.html">VarManager.SubstSig</a>]</td>
 <td><div class="info">
 Constructor for a substitution mapping one variable to a term.
 </div>
@@ -1565,6 +2125,8 @@ Constructs a list with exactly one element, the argument provided.
 </div>
 </td></tr>
 <tr><td><a href="Sigs.PROOF.html#VALsize">size</a> [<a href="Sigs.PROOF.html">Sigs.PROOF</a>]</td>
+<td></td></tr>
+<tr><td><a href="Option.html#VALsome">some</a> [<a href="Option.html">Option</a>]</td>
 <td></td></tr>
 <tr><td><a href="Blist.html#VALsort">sort</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
@@ -1605,9 +2167,30 @@ Star two formulas by distributing <code class="code">*</code> through <code clas
 <td></td></tr>
 <tr><td><a href="Tl_form_ltl.Form.html#VALstep">step</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
 <td></td></tr>
+<tr><td><a href="VarManager.SubstSig.html#VALstrip">strip</a> [<a href="VarManager.SubstSig.html">VarManager.SubstSig</a>]</td>
+<td><div class="info">
+Removes all identity bindings from the substitution map
+</div>
+</td></tr>
+<tr><td><a href="Tagpairs.html#VALstrip">strip</a> [<a href="Tagpairs.html">Tagpairs</a>]</td>
+<td><div class="info">
+<code class="code">strip tps</code> removes all elements that are pairs of equal tags.
+</div>
+</td></tr>
 <tr><td><a href="Sl_tpreds.html#VALstrip_tags">strip_tags</a> [<a href="Sl_tpreds.html">Sl_tpreds</a>]</td>
 <td><div class="info">
 Remove tags.
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.OrderedMap.html#VALsubmap">submap</a> [<a href="Utilsigs.OrderedMap.html">Utilsigs.OrderedMap</a>]</td>
+<td><div class="info">
+Decide if a map is included in another, using the provided value equality
+        predicate.
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html#VALsubsets">subsets</a> [<a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a>]</td>
+<td><div class="info">
+Generate all subsets of a set.
 </div>
 </td></tr>
 <tr><td><a href="Sl_indrule.html#VALsubst">subst</a> [<a href="Sl_indrule.html">Sl_indrule</a>]</td>
@@ -1641,10 +2224,8 @@ Remove tags.
 <tr><td><a href="Sl_tpair.html#VALsubst">subst</a> [<a href="Sl_tpair.html">Sl_tpair</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_term.FList.html#VALsubst">subst</a> [<a href="Sl_term.FList.html">Sl_term.FList</a>]</td>
-<td></td></tr>
-<tr><td><a href="Sl_term.html#VALsubst">subst</a> [<a href="Sl_term.html">Sl_term</a>]</td>
 <td><div class="info">
-Apply a substitution on the given term.
+Applies a substitution to the list
 </div>
 </td></tr>
 <tr><td><a href="Sl_form_rho.html#VALsubst_existentials">subst_existentials</a> [<a href="Sl_form_rho.html">Sl_form_rho</a>]</td>
@@ -1675,7 +2256,7 @@ Compute whether a substitution could be obtained by rewriting under
 </td></tr>
 <tr><td><a href="Sl_tpred.html#VALsubst_tag">subst_tag</a> [<a href="Sl_tpred.html">Sl_tpred</a>]</td>
 <td><div class="info">
-Substitute the tag according to the function represented by the set of 
+Substitute the tag according to the function represented by the set of
     tag pairs provided.
 </div>
 </td></tr>
@@ -1716,10 +2297,14 @@ Substitute tags according to the function represented by the set of
     tag pairs provided.
 </div>
 </td></tr>
+<tr><td><a href="Ord_constraints.Elt.html#VALsubst_tags">subst_tags</a> [<a href="Ord_constraints.Elt.html">Ord_constraints.Elt</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ord_constraints.html#VALsubst_tags">subst_tags</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sl_seq.html#VALsubsumed">subsumed</a> [<a href="Sl_seq.html">Sl_seq</a>]</td>
 <td><div class="info">
-<code class="code">subsumed (l,r) (l',r')</code> is true iff <code class="code">Sl_form.subsumed l' l</code> and
-    <code class="code">Sl_form.subsumed_upto_tags r r'</code> are true.
+<code class="code">subsumed (l,r) (l',r')</code> is true iff both <code class="code">Sl_form.subsumed l' l</code> and
+    <code class="code">Sl_form.subsumed r r'</code> are true.
 </div>
 </td></tr>
 <tr><td><a href="Sl_form_rho.html#VALsubsumed">subsumed</a> [<a href="Sl_form_rho.html">Sl_form_rho</a>]</td>
@@ -1733,9 +2318,12 @@ Substitute tags according to the function represented by the set of
 </td></tr>
 <tr><td><a href="Sl_form.html#VALsubsumed">subsumed</a> [<a href="Sl_form.html">Sl_form</a>]</td>
 <td><div class="info">
-<code class="code">subsumed a b</code>: is it the case that for any disjunct <code class="code">a'</code> of <code class="code">a</code> there a 
-    disjunct <code class="code">b'</code> of <code class="code">b</code> such <code class="code">a'</code> is subsumed by <code class="code">b'</code>?
-    If the optional argument <code class="code">~total=true</code> is set to <code class="code">false</code> then relax the 
+<code class="code">subsumed a b</code>: is it the case that 
+      i)  the constraints cs of <code class="code">a</code> are subsumed by the constraints cs' of <code class="code">b</code> 
+          in the sense that <code class="code">Ord_constraints.subsumes cs' cs</code> returns <code class="code">true</code>
+      ii) for any disjunct <code class="code">a'</code> of <code class="code">a</code> there is a disjunct <code class="code">b'</code> of <code class="code">b</code> such that
+          <code class="code">a'</code> is subsumed by <code class="code">b'</code>?
+    If the optional argument <code class="code">~total=true</code> is set to <code class="code">false</code> then relax the
     check on the spatial part so that it is included rather than equal to that
     of <code class="code">b</code>.
 </div>
@@ -1781,6 +2369,11 @@ Test whether the two arguments are the same modulo the provided equalities.
 <code class="code">subsumed uf uf'</code> is true iff uf' |- uf using the normal equality rules.
 </div>
 </td></tr>
+<tr><td><a href="Sl_form.html#VALsubsumed_upto_constraints">subsumed_upto_constraints</a> [<a href="Sl_form.html">Sl_form</a>]</td>
+<td><div class="info">
+As above but does not check subsumption of constraints
+</div>
+</td></tr>
 <tr><td><a href="Sl_seq.html#VALsubsumed_upto_tags">subsumed_upto_tags</a> [<a href="Sl_seq.html">Sl_seq</a>]</td>
 <td><div class="info">
 Like <code class="code">subsumed</code> but ignoring all tags.
@@ -1811,10 +2404,34 @@ Like <code class="code">subsumed</code> but ignoring tag assignment.
 Test whether the two arguments are the same modulo the provided equalities.
 </div>
 </td></tr>
+<tr><td><a href="Ord_constraints.html#VALsubsumes">subsumes</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td><div class="info">
+<code class="code">subsumes cs cs'</code> checks whether every constraint in <code class="code">cs'</code> also occurs in 
+    <code class="code">cs</code>, ignoring any constraints in <code class="code">cs'</code> which are universally valid 
+    (e.g.
+</div>
+</td></tr>
+<tr><td><a href="Fun.html#VALswap">swap</a> [<a href="Fun.html">Fun</a>]</td>
+<td></td></tr>
+<tr><td><a href="Pair.html#VALswap">swap</a> [<a href="Pair.html">Pair</a>]</td>
+<td><div class="info">
+Swap around the members of a pair.
+</div>
+</td></tr>
+<tr><td><a href="Sigs.PROOFRULE.html#VALsyntactically_equal_nodes">syntactically_equal_nodes</a> [<a href="Sigs.PROOFRULE.html">Sigs.PROOFRULE</a>]</td>
+<td></td></tr>
 <tr><td align="left"><br>T</td></tr>
+<tr><td><a href="Sl_tpred.html#VALtag">tag</a> [<a href="Sl_tpred.html">Sl_tpred</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_unify.Unidirectional.html#VALtag_check">tag_check</a> [<a href="Sl_unify.Unidirectional.html">Sl_unify.Unidirectional</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_tpred.html#VALtag_is_exist">tag_is_exist</a> [<a href="Sl_tpred.html">Sl_tpred</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_tpred.html#VALtag_is_free">tag_is_free</a> [<a href="Sl_tpred.html">Sl_tpred</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sl_seq.html#VALtag_pairs">tag_pairs</a> [<a href="Sl_seq.html">Sl_seq</a>]</td>
 <td><div class="info">
-Only LHS tag pairs are returned.
+Tag pairs constituting the identity relation on the tags in the LHS.
 </div>
 </td></tr>
 <tr><td><a href="Sl_form_rho.html#VALtag_pairs">tag_pairs</a> [<a href="Sl_form_rho.html">Sl_form_rho</a>]</td>
@@ -1839,13 +2456,19 @@ Return a set of pairs representing the identity function over the tags
     of the formula.
 </div>
 </td></tr>
+<tr><td><a href="Ord_constraints.html#VALtag_pairs">tag_pairs</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td><div class="info">
+Return a set of pairs representing the identity function over the tags 
+    in the constraint set, to be used as preserving tag pairs.
+</div>
+</td></tr>
 <tr><td><a href="Tl_form_ltl.Form.html#VALtags">tags</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
 <td></td></tr>
 <tr><td><a href="Tl_form.Form.html#VALtags">tags</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_seq.html#VALtags">tags</a> [<a href="Sl_seq.html">Sl_seq</a>]</td>
 <td><div class="info">
-Only LHS tags are returned.
+Tags occurring in this sequent on both the LHS and RHS
 </div>
 </td></tr>
 <tr><td><a href="Sl_form_rho.html#VALtags">tags</a> [<a href="Sl_form_rho.html">Sl_form_rho</a>]</td>
@@ -1871,6 +2494,10 @@ Return set of tags assigned to predicates in heap.
 <tr><td><a href="Sl_tpreds.html#VALtags">tags</a> [<a href="Sl_tpreds.html">Sl_tpreds</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_tpred.html#VALtags">tags</a> [<a href="Sl_tpred.html">Sl_tpred</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ord_constraints.Elt.html#VALtags">tags</a> [<a href="Ord_constraints.Elt.html">Ord_constraints.Elt</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ord_constraints.html#VALtags">tags</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sigs.SEQUENT.html#VALtags">tags</a> [<a href="Sigs.SEQUENT.html">Sigs.SEQUENT</a>]</td>
 <td><div class="info">
@@ -1907,9 +2534,15 @@ Returns set of tags in sequent.
 <tr><td><a href="Sl_uf.html#VALterms">terms</a> [<a href="Sl_uf.html">Sl_uf</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_tpair.FList.html#VALterms">terms</a> [<a href="Sl_tpair.FList.html">Sl_tpair.FList</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Unify all pairs of the 1st argument with a part of the 2nd.
+</div>
+</td></tr>
 <tr><td><a href="Sl_term.FList.html#VALterms">terms</a> [<a href="Sl_term.FList.html">Sl_term.FList</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Convenience function converting the list to a set.
+</div>
+</td></tr>
 <tr><td><a href="Blist.html#VALtl">tl</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
 Return the given t without its first element.
@@ -1918,6 +2551,30 @@ Return the given t without its first element.
 <tr><td><a href="Sigs.NODE.html#VALto_abstract_node">to_abstract_node</a> [<a href="Sigs.NODE.html">Sigs.NODE</a>]</td>
 <td><div class="info">
 Convert Proof.t node to abstract node as in <a href="Soundcheck.html"><code class="code">Soundcheck</code></a>.
+</div>
+</td></tr>
+<tr><td><a href="VarManager.S.Var.html#VALto_int">to_int</a> [<a href="VarManager.S.Var.html">VarManager.S.Var</a>]</td>
+<td><div class="info">
+Returns an integer representation
+</div>
+</td></tr>
+<tr><td><a href="Tags.Elt.html#VALto_int">to_int</a> [<a href="Tags.Elt.html">Tags.Elt</a>]</td>
+<td></td></tr>
+<tr><td><a href="VarManager.S.html#VALto_ints">to_ints</a> [<a href="VarManager.S.html">VarManager.S</a>]</td>
+<td><div class="info">
+Convenience method to return a set of integer representatives of a set of variables.
+</div>
+</td></tr>
+<tr><td><a href="Tags.html#VALto_ints">to_ints</a> [<a href="Tags.html">Tags</a>]</td>
+<td></td></tr>
+<tr><td><a href="Utilsigs.OrderedMap.html#VALto_list">to_list</a> [<a href="Utilsigs.OrderedMap.html">Utilsigs.OrderedMap</a>]</td>
+<td><div class="info">
+Create a list of pairs (keys, values) out of a map.
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html#VALto_list">to_list</a> [<a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a>]</td>
+<td><div class="info">
+Convert to a list of unique, sorted elements.
 </div>
 </td></tr>
 <tr><td><a href="Sigs.PROOF.html#VALto_list">to_list</a> [<a href="Sigs.PROOF.html">Sigs.PROOF</a>]</td>
@@ -1962,6 +2619,10 @@ Construct a primitive list out of a <code class="code">t</code> list.
 Convert term to LaTeX.
 </div>
 </td></tr>
+<tr><td><a href="Tags.Elt.html#VALto_melt">to_melt</a> [<a href="Tags.Elt.html">Tags.Elt</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ord_constraints.html#VALto_melt">to_melt</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sigs.PROOF.html#VALto_melt">to_melt</a> [<a href="Sigs.PROOF.html">Sigs.PROOF</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sigs.NODE.html#VALto_melt">to_melt</a> [<a href="Sigs.NODE.html">Sigs.NODE</a>]</td>
@@ -1984,6 +2645,24 @@ Convert to Latex.
 <tr><td><a href="Tl_form.Form.html#VALto_string">to_string</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_tpred.html#VALto_string">to_string</a> [<a href="Sl_tpred.html">Sl_tpred</a>]</td>
+<td></td></tr>
+<tr><td><a href="VarManager.SubstSig.html#VALto_string">to_string</a> [<a href="VarManager.SubstSig.html">VarManager.SubstSig</a>]</td>
+<td><div class="info">
+Convert a substitution to a string
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.OrderedMap.html#VALto_string">to_string</a> [<a href="Utilsigs.OrderedMap.html">Utilsigs.OrderedMap</a>]</td>
+<td><div class="info">
+<code class="code">to_string val_to_string map</code> converts to a string, using <code class="code">val_to_string</code>
+        to convert *values* to strings.
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.BasicType.html#VALto_string">to_string</a> [<a href="Utilsigs.BasicType.html">Utilsigs.BasicType</a>]</td>
+<td><div class="info">
+Convert to string.
+</div>
+</td></tr>
+<tr><td><a href="Ord_constraints.html#VALto_string">to_string</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sigs.PROOF.html#VALto_string">to_string</a> [<a href="Sigs.PROOF.html">Sigs.PROOF</a>]</td>
 <td></td></tr>
@@ -2010,25 +2689,38 @@ Convert to Latex.
 <td></td></tr>
 <tr><td><a href="Sl_uf.html#VALto_string_list">to_string_list</a> [<a href="Sl_uf.html">Sl_uf</a>]</td>
 <td></td></tr>
+<tr><td><a href="Ord_constraints.html#VALto_string_list">to_string_list</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sl_tpair.html#VALto_string_sep">to_string_sep</a> [<a href="Sl_tpair.html">Sl_tpair</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_term.FList.html#VALto_string_sep">to_string_sep</a> [<a href="Sl_term.FList.html">Sl_term.FList</a>]</td>
-<td></td></tr>
-<tr><td><a href="Sl_term.SubstSig.html#VALtrivial_check">trivial_check</a> [<a href="Sl_term.SubstSig.html">Sl_term.SubstSig</a>]</td>
 <td><div class="info">
-The check that is always true.
+<code class="code">to_string_sep sep ts</code> converts <code class="code">ts</code> to a string with each element separated by <code class="code">sep</code>.
 </div>
 </td></tr>
-<tr><td><a href="Sl_term.UnifierSig.html#VALtrivial_continuation">trivial_continuation</a> [<a href="Sl_term.UnifierSig.html">Sl_term.UnifierSig</a>]</td>
+<tr><td><a href="Unification.html#VALtransform">transform</a> [<a href="Unification.html">Unification</a>]</td>
+<td><div class="info">
+</div>
+</td></tr>
+<tr><td><a href="Unification.html#VALtrivial_continuation">trivial_continuation</a> [<a href="Unification.html">Unification</a>]</td>
 <td></td></tr>
+<tr><td><a href="Sl_unify.Unidirectional.html#VALtrm_check">trm_check</a> [<a href="Sl_unify.Unidirectional.html">Sl_unify.Unidirectional</a>]</td>
+<td><div class="info">
+When used as state update check in a call to <code class="code">Sl_heap.unify</code> for unifying
+      heaps <code class="code">h</code> and <code class="code">h'</code>, ensures that the generated substitution, when applied 
+      to <code class="code">h</code>, produces a formula which is subsumed by <code class="code">h'</code>
+</div>
+</td></tr>
 <tr><td align="left"><br>U</td></tr>
+<tr><td><a href="Fun.html#VALuncurry">uncurry</a> [<a href="Fun.html">Fun</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sl_indrule.html#VALunfold">unfold</a> [<a href="Sl_indrule.html">Sl_indrule</a>]</td>
 <td><div class="info">
-<code class="code">unfold vars h p r</code> does the following: Removes the (tagged) occurrence of <code class="code">p</code> in <code class="code">h</code>., Inlines the body of <code class="code">r</code> in <code class="code">h</code>, taking care to pick existential variables
-  outside <code class="code">vars</code>., Returns the tag pairs representing progressing tag pairs. I.e. if <code class="code">p</code> is equal
-  to <code class="code">(tag, pred)</code> then new tags will be introduced for all predicates in the
-  body of <code class="code">r</code> (disjoint to those in <code class="code">h</code>), and for each such new tag <code class="code">tag'</code> the
-  pair <code class="code">(tag,tag')</code> will be returned.
+<code class="code">unfold (vs, ts) p r</code> returns the body of the inductive rule <code class="code">r</code> with:
+      the formal parameters replaced by the arguments of <code class="code">p</code>; 
+      the remaining variables freshened, avoiding those in <code class="code">vs</code>; and
+      the predicates assigned fresh existential tags avoiding those in <code class="code">ts</code>,
+        unless the optional argument <code class="code">gen_tags=true</code> is set to false.
 </div>
 </td></tr>
 <tr><td><a href="Tl_form.Form.html#VALunfold_af">unfold_af</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
@@ -2082,11 +2774,28 @@ Unify two pairs of terms, ignoring the pairs' internal ordering of members.
 </div>
 </td></tr>
 <tr><td><a href="Sl_term.FList.html#VALunify">unify</a> [<a href="Sl_term.FList.html">Sl_term.FList</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Unifies two lists of terms by producing a substitution to act on the first list
+</div>
+</td></tr>
 <tr><td><a href="Sl_term.html#VALunify">unify</a> [<a href="Sl_term.html">Sl_term</a>]</td>
 <td><div class="info">
-<code class="code">unify check cont state o o'</code> should try to extend <code class="code">state</code> so that <code class="code">o</code> is 
-    unified with <code class="code">o'</code>, extending the variable substitution inside <code class="code">state</code>.
+Unifies two terms by producing a substitution to act on the first term
+</div>
+</td></tr>
+<tr><td><a href="Tags.Elt.html#VALunify">unify</a> [<a href="Tags.Elt.html">Tags.Elt</a>]</td>
+<td><div class="info">
+Unifies two tags by finding a suitable substitution (represented as a set of tag pairs)
+      for the first tag which makes it equal to the second.
+</div>
+</td></tr>
+<tr><td><a href="Ord_constraints.Elt.html#VALunify">unify</a> [<a href="Ord_constraints.Elt.html">Ord_constraints.Elt</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ord_constraints.html#VALunify">unify</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td><div class="info">
+<code class="code">unify check cs cs' cont init_state</code> calculates a (minimal) extension theta 
+    of <code class="code">init_state</code> such that <code class="code">subsumes cs' (subst_tags theta cs)</code> returns 
+    <code class="code">true</code>, then passes it to <code class="code">cont</code> and returns the resulting (optional) value.
 </div>
 </td></tr>
 <tr><td><a href="Sl_heap_rho.html#VALunify_partial">unify_partial</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
@@ -2101,25 +2810,46 @@ Unify two heaps such that the first becomes a subformula of the second.
 </td></tr>
 <tr><td><a href="Sl_deqs.html#VALunify_partial">unify_partial</a> [<a href="Sl_deqs.html">Sl_deqs</a>]</td>
 <td><div class="info">
-<code class="code">unify_partial Option.some (Sl_subst.empty, ()) d d'</code> computes a 
-    substitution <code class="code">theta</code> such that <code class="code">d[theta]</code> is a subset of <code class="code">d'</code>.
+<code class="code">unify_partial d d' Unification.trivial_continuation Sl_unify.empty_state</code> 
+    computes a substitution <code class="code">theta</code> such that <code class="code">d[theta]</code> is a subset of <code class="code">d'</code>.
 </div>
 </td></tr>
 <tr><td><a href="Sl_uf.html#VALunify_partial">unify_partial</a> [<a href="Sl_uf.html">Sl_uf</a>]</td>
 <td><div class="info">
-<code class="code">unify_partial Option.some (Sl_subst.empty, ()) u u'</code> computes a 
+<code class="code">unify_partial Option.some (Sl_term.empty_subst, ()) u u'</code> computes a 
     substitution <code class="code">theta</code> such that <code class="code">u'</code> |- <code class="code">u[theta]</code>.
 </div>
 </td></tr>
-<tr><td><a href="Sl_tpair.FList.html#VALunify_partial">unify_partial</a> [<a href="Sl_tpair.FList.html">Sl_tpair.FList</a>]</td>
+<tr><td><a href="Sl_unify.S.html#VALunify_tag">unify_tag</a> [<a href="Sl_unify.S.html">Sl_unify.S</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_unify.Bidirectional.html#VALunify_tag_constraints">unify_tag_constraints</a> [<a href="Sl_unify.Bidirectional.html">Sl_unify.Bidirectional</a>]</td>
 <td><div class="info">
-Unify all pairs of the 1st argument with a part of the 2nd.
+<code class="code">Ord_constraints.biunify</code> lifted to the SL unifier type
 </div>
 </td></tr>
+<tr><td><a href="Sl_unify.Unidirectional.html#VALunify_tag_constraints">unify_tag_constraints</a> [<a href="Sl_unify.Unidirectional.html">Sl_unify.Unidirectional</a>]</td>
+<td><div class="info">
+<code class="code">Ord_constraints.unify</code> lifted to the SL unifier type
+</div>
+</td></tr>
+<tr><td><a href="Sl_unify.S.html#VALunify_trm">unify_trm</a> [<a href="Sl_unify.S.html">Sl_unify.S</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_unify.S.html#VALunify_trm_list">unify_trm_list</a> [<a href="Sl_unify.S.html">Sl_unify.S</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sl_rho.html#VALunion">union</a> [<a href="Sl_rho.html">Sl_rho</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_uf.html#VALunion">union</a> [<a href="Sl_uf.html">Sl_uf</a>]</td>
 <td></td></tr>
+<tr><td><a href="Utilsigs.OrderedMap.html#VALunion">union</a> [<a href="Utilsigs.OrderedMap.html">Utilsigs.OrderedMap</a>]</td>
+<td><div class="info">
+Union two maps.
+</div>
+</td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html#VALunion_of_list">union_of_list</a> [<a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a>]</td>
+<td><div class="info">
+Union a list of sets.
+</div>
+</td></tr>
 <tr><td><a href="Blist.html#VALuniq">uniq</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
 <code class="code">uniq eq l</code> returns a list containing no duplicates w.r.t.
@@ -2137,7 +2867,19 @@ Replace all existential variables with fresh universal variables.
 </td></tr>
 <tr><td><a href="Blist.html#VALunzip3">unzip3</a> [<a href="Blist.html">Blist</a>]</td>
 <td></td></tr>
+<tr><td><a href="Sl_unify.Bidirectional.html#VALupdchk_inj_left">updchk_inj_left</a> [<a href="Sl_unify.Bidirectional.html">Sl_unify.Bidirectional</a>]</td>
+<td></td></tr>
+<tr><td><a href="Sl_unify.Bidirectional.html#VALupdchk_inj_right">updchk_inj_right</a> [<a href="Sl_unify.Bidirectional.html">Sl_unify.Bidirectional</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ord_constraints.html#VALupper_bounds">upper_bounds</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td><div class="info">
+<code class="code">upper_bounds ?strict t cs</code> returns the set of tags <code class="code">b</code> such that <code class="code">cs</code>
+    contains a constraint of the form <code class="code">t</code> &lt;= <code class="code">b</code>.
+</div>
+</td></tr>
 <tr><td align="left"><br>V</td></tr>
+<tr><td><a href="Ord_constraints.Elt.html#VALvalid">valid</a> [<a href="Ord_constraints.Elt.html">Ord_constraints.Elt</a>]</td>
+<td></td></tr>
 <tr><td><a href="Tl_form_ltl.Form.html#VALvars">vars</a> [<a href="Tl_form_ltl.Form.html">Tl_form_ltl.Form</a>]</td>
 <td></td></tr>
 <tr><td><a href="Tl_form.Form.html#VALvars">vars</a> [<a href="Tl_form.Form.html">Tl_form.Form</a>]</td>
@@ -2171,11 +2913,31 @@ Replace all existential variables with fresh universal variables.
 <tr><td><a href="Sl_uf.html#VALvars">vars</a> [<a href="Sl_uf.html">Sl_uf</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_term.FList.html#VALvars">vars</a> [<a href="Sl_term.FList.html">Sl_term.FList</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Returns the set of all elements of the list that are not nil
+</div>
+</td></tr>
+<tr><td><a href="Ord_constraints.html#VALverify_schemas">verify_schemas</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td><div class="info">
+<code class="code">verify_schemas ts cs</code> will return <code class="code">true</code> when <code class="code">cs</code> consists entirely of
+    tautological schemas.
+</div>
+</td></tr>
 <tr><td align="left"><br>W</td></tr>
+<tr><td><a href="Utilsigs.OrderedContainer.html#VALweave">weave</a> [<a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a>]</td>
+<td><div class="info">
+Weave combinator - used in the SL Model Checker.
+</div>
+</td></tr>
 <tr><td><a href="Blist.html#VALweave">weave</a> [<a href="Blist.html">Blist</a>]</td>
 <td><div class="info">
 Weave combinator - used in the SL Model Checker.
+</div>
+</td></tr>
+<tr><td><a href="Sl_form.html#VALwith_constraints">with_constraints</a> [<a href="Sl_form.html">Sl_form</a>]</td>
+<td><div class="info">
+<code class="code">with_constraints f cs</code> returns the formula that results by replacing <code class="code">f</code>'s
+    tag constraints with <code class="code">cs</code>
 </div>
 </td></tr>
 <tr><td><a href="Sl_heap_rho.html#VALwith_deqs">with_deqs</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
@@ -2186,6 +2948,12 @@ Weave combinator - used in the SL Model Checker.
 <td></td></tr>
 <tr><td><a href="Sl_heap.html#VALwith_eqs">with_eqs</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>
 <td></td></tr>
+<tr><td><a href="Sl_form.html#VALwith_heaps">with_heaps</a> [<a href="Sl_form.html">Sl_form</a>]</td>
+<td><div class="info">
+<code class="code">with_heaps hs cs</code> returns the formula that results by replacing <code class="code">f</code>'s
+    disjunction of symbolic heaps with <code class="code">hs</code>
+</div>
+</td></tr>
 <tr><td><a href="Sl_heap_rho.html#VALwith_inds">with_inds</a> [<a href="Sl_heap_rho.html">Sl_heap_rho</a>]</td>
 <td></td></tr>
 <tr><td><a href="Sl_heap.html#VALwith_inds">with_inds</a> [<a href="Sl_heap.html">Sl_heap</a>]</td>

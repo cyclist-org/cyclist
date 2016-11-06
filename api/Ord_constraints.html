@@ -1,0 +1,173 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Abducer.html">
+<link rel="next" href="Utilsigs.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Blist" rel="Chapter" href="Blist.html">
+<link title="Hashset" rel="Chapter" href="Hashset.html">
+<link title="Lru" rel="Chapter" href="Lru.html">
+<link title="Sigs" rel="Chapter" href="Sigs.html">
+<link title="Soundcheck" rel="Chapter" href="Soundcheck.html">
+<link title="Proofnode" rel="Chapter" href="Proofnode.html">
+<link title="Proofrule" rel="Chapter" href="Proofrule.html">
+<link title="Proof" rel="Chapter" href="Proof.html">
+<link title="Prover" rel="Chapter" href="Prover.html">
+<link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
+<link title="Abdrule" rel="Chapter" href="Abdrule.html">
+<link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
+<link title="Sl_term" rel="Chapter" href="Sl_term.html">
+<link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
+<link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
+<link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
+<link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
+<link title="Sl_deqs" rel="Chapter" href="Sl_deqs.html">
+<link title="Sl_pto" rel="Chapter" href="Sl_pto.html">
+<link title="Sl_ptos" rel="Chapter" href="Sl_ptos.html">
+<link title="Sl_pred" rel="Chapter" href="Sl_pred.html">
+<link title="Sl_tpred" rel="Chapter" href="Sl_tpred.html">
+<link title="Sl_tpreds" rel="Chapter" href="Sl_tpreds.html">
+<link title="Sl_heap" rel="Chapter" href="Sl_heap.html">
+<link title="Sl_heap_rho" rel="Chapter" href="Sl_heap_rho.html">
+<link title="Sl_form" rel="Chapter" href="Sl_form.html">
+<link title="Sl_form_rho" rel="Chapter" href="Sl_form_rho.html">
+<link title="Sl_seq" rel="Chapter" href="Sl_seq.html">
+<link title="Sl_indrule" rel="Chapter" href="Sl_indrule.html">
+<link title="Tl_form" rel="Chapter" href="Tl_form.html">
+<link title="Tl_form_ltl" rel="Chapter" href="Tl_form_ltl.html"><title>Ord_constraints</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="Abducer.html" title="Abducer">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="Utilsigs.html" title="Utilsigs">Next</a>
+</div>
+<h1>Module <a href="type_Ord_constraints.html">Ord_constraints</a></h1>
+
+<pre><span class="keyword">module</span> Ord_constraints: <code class="code">sig</code> <a href="Ord_constraints.html">..</a> <code class="code">end</code></pre><div class="info module top">
+A structure representing a set of constraints on ordinal-valued variables.
+    The structure may be queried to test whether the constraint set entails
+    particular relationships between pairs of ordinal variables.<br>
+</div>
+<hr width="100%">
+
+<pre><span class="keyword">module</span> <a href="Ord_constraints.Elt.html">Elt</a>: <code class="code">sig</code> <a href="Ord_constraints.Elt.html">..</a> <code class="code">end</code></pre>
+<pre><span class="keyword">include</span> <a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a></pre>
+
+<pre><span id="VALinconsistent"><span class="keyword">val</span> inconsistent</span> : <code class="type">t -> bool</code></pre>
+<pre><span id="VALtags"><span class="keyword">val</span> tags</span> : <code class="type">t -> Tags.t</code></pre>
+<pre><span id="VALtag_pairs"><span class="keyword">val</span> tag_pairs</span> : <code class="type">t -> Tagpairs.t</code></pre><div class="info ">
+Return a set of pairs representing the identity function over the tags 
+    in the constraint set, to be used as preserving tag pairs.<br>
+</div>
+
+<pre><span id="VALsubst_tags"><span class="keyword">val</span> subst_tags</span> : <code class="type">Tagpairs.t -> t -> t</code></pre>
+<pre><span id="VALgenerate"><span class="keyword">val</span> generate</span> : <code class="type">?avoid:Tags.t -> ?augment:bool -> Tags.elt -> Tags.t -> t</code></pre><div class="info ">
+<code class="code">generate avoid t ts</code> returns a constraint set that constitutes an inductive 
+    hypothesis corresponding to a case in the unfolding of a predicate tagged 
+    with <code class="code">t</code> that recursively depends on predicate instances tagged by labels 
+    in <code class="code">ts</code>; any freshly generated labels are not contained in <code class="code">avoid</code>. If the
+    optional argumet <code class="code">augment=true</code> is set to <code class="code">false</code> then, no constraints will
+    be generated in the case that <code class="code">ts</code> is empty.<br>
+</div>
+
+<pre><span id="VALremove_schema"><span class="keyword">val</span> remove_schema</span> : <code class="type">t -> Tags.t -> (t * string) option</code></pre><div class="info ">
+<code class="code">remove_schema cs used</code> will remove a (nonempty) subset <code class="code">cs'</code> of <code class="code">cs</code> 
+    containing tags { t_1, ..., t_n } where at least one t_i does not occur in
+    <code class="code">used</code> such that <code class="code">cs'</code> does not affect the support of <code class="code">cs</code> in the sense that
+<p>
+
+      <code class="code">cs''</code> |= <code class="code">cs</code> \ <code class="code">cs'</code> if and only if <code class="code">cs''</code> |= <code class="code">cs</code>   for all <code class="code">cs''</code>
+<p>
+
+    The remaining constraint set (i.e. <code class="code">cs</code> \ <code class="code">cs'</code>) is returned along with a 
+    string that describes the removed set of constraints. If no such set can be
+    found, then <code class="code">None</code> is returned.
+<p>
+
+    Intuitively, this means identifying and removing a tautological schema 
+    bounded by some (set of) existential tag(s) (outside of the set <code class="code">used</code>).
+      For example, cs = { t_1 &lt; t, ..., t_n &lt; t } + cs'' where t is an 
+    existential tag not occurring in cs'', picks out t as a strict upper bound 
+    of the tags t_1, ..., t_n; since such a bound always exists, this is a 
+    tautological schema.<br>
+</div>
+
+<pre><span id="VALverify_schemas"><span class="keyword">val</span> verify_schemas</span> : <code class="type">Tags.t -> t -> bool</code></pre><div class="info ">
+<code class="code">verify_schemas ts cs</code> will return <code class="code">true</code> when <code class="code">cs</code> consists entirely of
+    tautological schemas. This is computed by repeatedly trying to remove
+    schemas using <code class="code">remove_schema cs ts</code> until failure; if <code class="code">cs</code> before failure
+    was empty, then <code class="code">true</code> is returned, and <code class="code">false</code> otherwise.<br>
+</div>
+
+<pre><span id="VALupper_bounds"><span class="keyword">val</span> upper_bounds</span> : <code class="type">?strict:bool -> Tags.elt -> t -> Tags.t</code></pre><div class="info ">
+<code class="code">upper_bounds ?strict t cs</code> returns the set of tags <code class="code">b</code> such that <code class="code">cs</code>
+    contains a constraint of the form <code class="code">t</code> &lt;= <code class="code">b</code>. If the option argument
+    <code class="code">strict=false</code> is set to <code class="code">true</code> then the set of tags <code class="code">b</code> suh that <code class="code">cs</code>
+    contains a constraints of the form <code class="code">t</code> &lt; <code class="code">b</code> is returned.<br>
+</div>
+
+<pre><span id="VALclose"><span class="keyword">val</span> close</span> : <code class="type">t -> t</code></pre><div class="info ">
+<code class="code">close cs</code> generates the set of all constraints entailed by <code class="code">cs</code><br>
+</div>
+
+<pre><span id="VALall_pairs"><span class="keyword">val</span> all_pairs</span> : <code class="type">t -> Tagpairs.t</code></pre><div class="info ">
+<code class="code">all_pairs cs</code> returns all of the tag pairs (<code class="code">a</code>, <code class="code">b</code>) such that <code class="code">a</code> &lt;= <code class="code">b</code>
+    is entailed by some constraint in <code class="code">cs</code><br>
+</div>
+
+<pre><span id="VALprog_pairs"><span class="keyword">val</span> prog_pairs</span> : <code class="type">t -> Tagpairs.t</code></pre><div class="info ">
+<code class="code">prog_pairs cs</code> returns all of the tag pairs (<code class="code">a</code>, <code class="code">b</code>) such that <code class="code">a</code> &lt;<code class="code">b</code>
+    is entailed by some constraint in <code class="code">cs</code><br>
+</div>
+
+<pre><span id="VALsubsumes"><span class="keyword">val</span> subsumes</span> : <code class="type">t -> t -> bool</code></pre><div class="info ">
+<code class="code">subsumes cs cs'</code> checks whether every constraint in <code class="code">cs'</code> also occurs in 
+    <code class="code">cs</code>, ignoring any constraints in <code class="code">cs'</code> which are universally valid 
+    (e.g. t &lt;= t)<br>
+</div>
+
+<pre><span id="VALunify"><span class="keyword">val</span> unify</span> : <code class="type">?total:bool -><br>       ?inverse:bool -><br>       ?update_check:Tagpairs.t <a href="Unification.html#TYPEstate_update">Unification.state_update</a> <a href="Fun.html#TYPEpredicate">Fun.predicate</a> -><br>       (Tagpairs.t, 'a, t) <a href="Unification.html#TYPEcps_unifier">Unification.cps_unifier</a></code></pre><div class="info ">
+<code class="code">unify check cs cs' cont init_state</code> calculates a (minimal) extension theta 
+    of <code class="code">init_state</code> such that <code class="code">subsumes cs' (subst_tags theta cs)</code> returns 
+    <code class="code">true</code>, then passes it to <code class="code">cont</code> and returns the resulting (optional) value.
+      If the value of the optional argument <code class="code">total=false</code> is set to <code class="code">true</code> then
+    <code class="code">subsumes (subst_tags theta cs) cs'</code> will be <code class="code">true</code> of the result also.
+      If the value of the optional argument <code class="code">inverse=false</code> is set to <code class="code">true</code> 
+    then theta is returned such that <code class="code">subsumes (subst_tags theta cs') cs</code> 
+    is <code class="code">true</code> instead.<br>
+</div>
+
+<pre><span id="VALbiunify"><span class="keyword">val</span> biunify</span> : <code class="type">?total:bool -><br>       ?update_check:(Tagpairs.t * Tagpairs.t) <a href="Unification.html#TYPEstate_update">Unification.state_update</a><br>                     <a href="Fun.html#TYPEpredicate">Fun.predicate</a> -><br>       (Tagpairs.t * Tagpairs.t, 'a, t) <a href="Unification.html#TYPEcps_unifier">Unification.cps_unifier</a></code></pre>
+<pre><span id="VALmk_update_check"><span class="keyword">val</span> mk_update_check</span> : <code class="type">(Tagpairs.t * (Tags.Elt.t * Tags.Elt.t)) <a href="Fun.html#TYPEpredicate">Fun.predicate</a> -><br>       (Tagpairs.t * Tagpairs.t) <a href="Fun.html#TYPEpredicate">Fun.predicate</a></code></pre>
+<pre><span id="VALparse"><span class="keyword">val</span> parse</span> : <code class="type">(t, 'a) MParser.parser</code></pre>
+<pre><span id="VALof_string"><span class="keyword">val</span> of_string</span> : <code class="type">string -> t</code></pre>
+<pre><span id="VALto_string_list"><span class="keyword">val</span> to_string_list</span> : <code class="type">t -> string list</code></pre>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">t -> string</code></pre>
+<pre><span id="VALto_melt"><span class="keyword">val</span> to_melt</span> : <code class="type">t -> Latex.t</code></pre></body></html>

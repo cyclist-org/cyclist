@@ -24,9 +24,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -53,17 +71,18 @@
 <h1>Module <a href="type_Sl_form.html">Sl_form</a></h1>
 
 <pre><span class="keyword">module</span> Sl_form: <code class="code">sig</code> <a href="Sl_form.html">..</a> <code class="code">end</code></pre><div class="info module top">
-SL formula, basically a list of symbolic heaps, denoting their disjunction. 
+SL formula, basically a list of symbolic heaps, denoting their disjunction,
+    along with a set of contraints on predicate ordinal labels (tags).
     NB no attempt to enforce variable or tag hygiene is made.  For example,
     if <code class="code">f</code> and <code class="code">g</code> both use an existential variable <code class="code">x'</code> then <code class="code">[f;g]</code> would
     mean the bound variable is shared.<br>
 </div>
 <hr width="100%">
 
-<pre><span class="keyword">include</span> Util.BasicType</pre>
+<pre><span class="keyword">include</span> <a href="Utilsigs.BasicType.html">Utilsigs.BasicType</a></pre>
 
 <pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type">t</code></pre><div class="info ">
-The formula <code class="code">emp</code>. NB this is not the same as <code class="code">[]</code>, which is equivalent to 
+The formula <code class="code">emp</code>. NB this is not the same as <code class="code">[]</code>, which is equivalent to
     false.<br>
 </div>
 
@@ -73,50 +92,63 @@ The formula <code class="code">emp</code>. NB this is not the same as <code clas
 Returns true iff the formula has a single disjunct only<br>
 </div>
 
-<pre><span id="VALdest"><span class="keyword">val</span> dest</span> : <code class="type">t -> Sl_heap.t</code></pre><div class="info ">
+<pre><span id="VALdest"><span class="keyword">val</span> dest</span> : <code class="type">t -> Ord_constraints.t * Sl_heap.t</code></pre><div class="info ">
 Return the single disjunct, if there is exactly one, else raise <code class="code">Not_symheap</code>.<br>
 </div>
 
 <pre><span id="VALequal_upto_tags"><span class="keyword">val</span> equal_upto_tags</span> : <code class="type">t -> t -> bool</code></pre><div class="info ">
-Whilst <code class="code">equal</code> demands syntactic equality including tags, this version 
+Whilst <code class="code">equal</code> demands syntactic equality including tags, this version
     ignores tag assignment.<br>
 </div>
 
 <pre><span id="VALto_melt"><span class="keyword">val</span> to_melt</span> : <code class="type">t -> Latex.t</code></pre>
 <pre><span id="VALterms"><span class="keyword">val</span> terms</span> : <code class="type">t -> Sl_term.Set.t</code></pre>
 <pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type">t -> Sl_term.Set.t</code></pre>
-<pre><span id="VALtags"><span class="keyword">val</span> tags</span> : <code class="type">t -> Util.Tags.t</code></pre><div class="info ">
+<pre><span id="VALtags"><span class="keyword">val</span> tags</span> : <code class="type">t -> Tags.t</code></pre><div class="info ">
 NB no attempt is made to ensure that tags are disjoint between disjuncts. 
     This is not necessarily unsound.<br>
 </div>
 
-<pre><span id="VALtag_pairs"><span class="keyword">val</span> tag_pairs</span> : <code class="type">t -> Util.TagPairs.t</code></pre><div class="info ">
+<pre><span id="VALtag_pairs"><span class="keyword">val</span> tag_pairs</span> : <code class="type">t -> Tagpairs.t</code></pre><div class="info ">
 The proviso on tags applies here too.<br>
 </div>
 
+<pre><span id="VALcomplete_tags"><span class="keyword">val</span> complete_tags</span> : <code class="type">Tags.t -> t -> t</code></pre><div class="info ">
+<code class="code">complete_tags ts f</code> returns the formula obtained from f by assigning
+    all untagged predicates a fresh existential tag, avoiding those in <code class="code">ts</code>.<br>
+</div>
+
 <pre><span id="VALinconsistent"><span class="keyword">val</span> inconsistent</span> : <code class="type">t -> bool</code></pre><div class="info ">
-Do all disjuncts entail false in the sense of <code class="code">Sl_heap.inconsistent</code>?<br>
+Do all disjuncts entail false in the sense of <code class="code">Sl_heap.inconsistent</code>
+    or are the tag constraints inconsistent?<br>
 </div>
 
 <pre><span id="VALsubsumed"><span class="keyword">val</span> subsumed</span> : <code class="type">?total:bool -> t -> t -> bool</code></pre><div class="info ">
-<code class="code">subsumed a b</code>: is it the case that for any disjunct <code class="code">a'</code> of <code class="code">a</code> there a 
-    disjunct <code class="code">b'</code> of <code class="code">b</code> such <code class="code">a'</code> is subsumed by <code class="code">b'</code>?
-    If the optional argument <code class="code">~total=true</code> is set to <code class="code">false</code> then relax the 
+<code class="code">subsumed a b</code>: is it the case that 
+      i)  the constraints cs of <code class="code">a</code> are subsumed by the constraints cs' of <code class="code">b</code> 
+          in the sense that <code class="code">Ord_constraints.subsumes cs' cs</code> returns <code class="code">true</code>
+      ii) for any disjunct <code class="code">a'</code> of <code class="code">a</code> there is a disjunct <code class="code">b'</code> of <code class="code">b</code> such that
+          <code class="code">a'</code> is subsumed by <code class="code">b'</code>?
+    If the optional argument <code class="code">~total=true</code> is set to <code class="code">false</code> then relax the
     check on the spatial part so that it is included rather than equal to that
     of <code class="code">b</code>.
     NB this includes matching the tags exactly.<br>
 </div>
 
+<pre><span id="VALsubsumed_upto_constraints"><span class="keyword">val</span> subsumed_upto_constraints</span> : <code class="type">?total:bool -> t -> t -> bool</code></pre><div class="info ">
+As above but does not check subsumption of constraints<br>
+</div>
+
 <pre><span id="VALsubsumed_upto_tags"><span class="keyword">val</span> subsumed_upto_tags</span> : <code class="type">?total:bool -> t -> t -> bool</code></pre><div class="info ">
 As above but ignoring tags.
-    If the optional argument <code class="code">~total=true</code> is set to <code class="code">false</code> then relax the 
+    If the optional argument <code class="code">~total=true</code> is set to <code class="code">false</code> then relax the
     check on the spatial part so that it is included rather than equal to that
     of <code class="code">b</code>.<br>
 </div>
 
-<pre><span id="VALparse"><span class="keyword">val</span> parse</span> : <code class="type">?null_is_emp:bool -> (t, 'a) MParser.t</code></pre>
+<pre><span id="VALparse"><span class="keyword">val</span> parse</span> : <code class="type">?null_is_emp:bool -><br>       ?allow_tags:bool -> ?augment_deqs:bool -> (t, 'a) MParser.t</code></pre>
 <pre><span id="VALof_string"><span class="keyword">val</span> of_string</span> : <code class="type">?null_is_emp:bool -> string -> t</code></pre>
-<pre><span id="VALstar"><span class="keyword">val</span> star</span> : <code class="type">t -> t -> t</code></pre><div class="info ">
+<pre><span id="VALstar"><span class="keyword">val</span> star</span> : <code class="type">?augment_deqs:bool -> t -> t -> t</code></pre><div class="info ">
 Star two formulas by distributing <code class="code">*</code> through <code class="code">\/</code>.<br>
 </div>
 
@@ -129,11 +161,42 @@ Or two formulas (list-append).<br>
 Like <code class="code">Sl_heap.subst_existentials</code> applied to all disjuncts.<br>
 </div>
 
-<pre><span id="VALsubst_tags"><span class="keyword">val</span> subst_tags</span> : <code class="type">Util.TagPairs.t -> t -> t</code></pre><div class="info ">
+<pre><span id="VALsubst_tags"><span class="keyword">val</span> subst_tags</span> : <code class="type">Tagpairs.t -> t -> t</code></pre><div class="info ">
 Like <code class="code">Sl_heap.subst_tags</code> applied to all disjuncts.<br>
 </div>
 
 <pre><span id="VALnorm"><span class="keyword">val</span> norm</span> : <code class="type">t -> t</code></pre><div class="info ">
 Replace all terms with their UF representatives in the respective heaps.<br>
+</div>
+
+<pre><span id="VALwith_constraints"><span class="keyword">val</span> with_constraints</span> : <code class="type">t -> Ord_constraints.t -> t</code></pre><div class="info ">
+<code class="code">with_constraints f cs</code> returns the formula that results by replacing <code class="code">f</code>'s
+    tag constraints with <code class="code">cs</code><br>
+</div>
+
+<pre><span id="VALadd_constraints"><span class="keyword">val</span> add_constraints</span> : <code class="type">t -> Ord_constraints.t -> t</code></pre><div class="info ">
+<code class="code">add_constraints f cs</code> returns the formula the results by adding <code class="code">cs</code> to the
+    constraints already in <code class="code">f</code><br>
+</div>
+
+<pre><span id="VALwith_heaps"><span class="keyword">val</span> with_heaps</span> : <code class="type">t -> Sl_heap.t list -> t</code></pre><div class="info ">
+<code class="code">with_heaps hs cs</code> returns the formula that results by replacing <code class="code">f</code>'s
+    disjunction of symbolic heaps with <code class="code">hs</code><br>
+</div>
+
+<pre><span id="VALcompute_frame"><span class="keyword">val</span> compute_frame</span> : <code class="type">?freshen_existentials:bool -><br>       ?avoid:Tags.t * Sl_term.Set.t -> t -> t -> t option</code></pre><div class="info ">
+<code class="code">compute_frame f f'</code>, computes the portion of <code class="code">f'</code> left over (the 'frame') 
+    from <code class="code">f</code> and returns None when <code class="code">f</code> is not subsumed by <code class="code">f'</code>. Any existential 
+    variables occurring in the frame which also occur in the specification <code class="code">f</code> 
+    are freshened, avoiding the variables in the optional argument 
+    <code class="code">~avoid=Sl_term.Set.empty</code>.
+      If the optional argument <code class="code">~freshen_existentials=true</code> is set to false, 
+    then None will be returned in case there are existential variables in the 
+    frame which also occur in the specification.<br>
+</div>
+
+<pre><span id="VALget_tracepairs"><span class="keyword">val</span> get_tracepairs</span> : <code class="type">t -> t -> Tagpairs.t * Tagpairs.t</code></pre><div class="info ">
+<code class="code">get_tracepairs f f'</code> will return the valid and progressing trace pairs 
+    (t, t') specified by the constraints of <code class="code">f'</code> such that <code class="code">t</code> occurs in <code class="code">f</code><br>
 </div>
 </body></html>

@@ -24,9 +24,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -77,13 +95,13 @@ Constructors.<br>
       sequent <code class="code">seq</code> and description <code class="code">descr</code>.<br>
 </div>
 
-<pre><span id="VALmk_backlink"><span class="keyword">val</span> mk_backlink</span> : <code class="type"><a href="Sigs.NODE.html#TYPEseq_t">seq_t</a> -> string -> int -> Util.TagPairs.t -> <a href="Sigs.NODE.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALmk_backlink"><span class="keyword">val</span> mk_backlink</span> : <code class="type"><a href="Sigs.NODE.html#TYPEseq_t">seq_t</a> -> string -> int -> Tagpairs.t -> <a href="Sigs.NODE.html#TYPEt">t</a></code></pre><div class="info ">
 <code class="code">mk_backlink seq descr target vtts</code> creates a back-link node labelled by 
       sequent <code class="code">seq</code>, description <code class="code">descr</code>, target index <code class="code">target</code> and set of 
       valid tag transitions (as pairs) <code class="code">vtts</code>.<br>
 </div>
 
-<pre><span id="VALmk_inf"><span class="keyword">val</span> mk_inf</span> : <code class="type"><a href="Sigs.NODE.html#TYPEseq_t">seq_t</a> -><br>       string -> (int * Util.TagPairs.t * Util.TagPairs.t) list -> <a href="Sigs.NODE.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALmk_inf"><span class="keyword">val</span> mk_inf</span> : <code class="type"><a href="Sigs.NODE.html#TYPEseq_t">seq_t</a> -><br>       string -> (int * Tagpairs.t * Tagpairs.t) list -> <a href="Sigs.NODE.html#TYPEt">t</a></code></pre><div class="info ">
 <code class="code">mk_inf seq descr subgoals back</code> creates an inference node labelled by 
       sequent <code class="code">seq</code>, description <code class="code">descr</code>, a list of triples consisting of
       subgoal index, valid tag transitions and progressing tag transitions 
@@ -96,11 +114,11 @@ Destructors.<br>
 <code class="code">dest n</code> returns (sequent, description). This works with all Proof.t nodes.<br>
 </div>
 
-<pre><span id="VALdest_backlink"><span class="keyword">val</span> dest_backlink</span> : <code class="type"><a href="Sigs.NODE.html#TYPEt">t</a> -> <a href="Sigs.NODE.html#TYPEseq_t">seq_t</a> * string * int * Util.TagPairs.t</code></pre><div class="info ">
+<pre><span id="VALdest_backlink"><span class="keyword">val</span> dest_backlink</span> : <code class="type"><a href="Sigs.NODE.html#TYPEt">t</a> -> <a href="Sigs.NODE.html#TYPEseq_t">seq_t</a> * string * int * Tagpairs.t</code></pre><div class="info ">
 <code class="code">dest_backlink n</code> destroys a back-link node <code class="code">n</code>, otherwise raises <code class="code">Invalid_arg</code>.<br>
 </div>
 
-<pre><span id="VALdest_inf"><span class="keyword">val</span> dest_inf</span> : <code class="type"><a href="Sigs.NODE.html#TYPEt">t</a> -><br>       <a href="Sigs.NODE.html#TYPEseq_t">seq_t</a> * string * (int * Util.TagPairs.t * Util.TagPairs.t) list</code></pre><div class="info ">
+<pre><span id="VALdest_inf"><span class="keyword">val</span> dest_inf</span> : <code class="type"><a href="Sigs.NODE.html#TYPEt">t</a> -><br>       <a href="Sigs.NODE.html#TYPEseq_t">seq_t</a> * string * (int * Tagpairs.t * Tagpairs.t) list</code></pre><div class="info ">
 <code class="code">dest_inf n</code> destroys an inference node <code class="code">n</code>, otherwise raises <code class="code">Invalid_arg</code>.<br>
 </div>
 <br>

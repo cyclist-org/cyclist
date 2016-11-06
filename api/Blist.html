@@ -23,9 +23,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -422,6 +440,10 @@ Destruct a non-empty list.<br>
 <pre><span id="VALbind"><span class="keyword">val</span> bind</span> : <code class="type">('a -> 'b <a href="Blist.html#TYPEt">t</a>) -> 'a <a href="Blist.html#TYPEt">t</a> -> 'b <a href="Blist.html#TYPEt">t</a></code></pre>
 <pre><span id="VALrev_filter"><span class="keyword">val</span> rev_filter</span> : <code class="type">('a -> bool) -> 'a <a href="Blist.html#TYPEt">t</a> -> 'a <a href="Blist.html#TYPEt">t</a></code></pre>
 <pre><span id="VALmap_to"><span class="keyword">val</span> map_to</span> : <code class="type">('a -> 'b -> 'b) -> 'b -> ('c -> 'a) -> 'c <a href="Blist.html#TYPEt">t</a> -> 'b</code></pre>
+<pre><span id="VALopt_map_to"><span class="keyword">val</span> opt_map_to</span> : <code class="type">('a -> 'b -> 'b) -> 'b -> ('c -> 'a option) -> 'c <a href="Blist.html#TYPEt">t</a> -> 'b</code></pre><div class="info ">
+<code class="code">opt_map_to oadd oempty f xs</code> is equivalent to <code class="code">map_to (Option.dest Fun.id oadd) oempty f x</code><br>
+</div>
+
 <pre><span id="VALweave"><span class="keyword">val</span> weave</span> : <code class="type">('a -> 'b -> 'b <a href="Blist.html#TYPEt">t</a>) -><br>       ('a -> 'b -> 'c) -> ('c <a href="Blist.html#TYPEt">t</a> -> 'c) -> 'a <a href="Blist.html#TYPEt">t</a> -> 'b -> 'c</code></pre><div class="info ">
 Weave combinator - used in the SL Model Checker. 
 A "weave" is a generalised form of a fold - it takes as arguments three    
@@ -495,13 +517,13 @@ Insert given element between elements of given list.<br>
 <pre><span id="VALzip3"><span class="keyword">val</span> zip3</span> : <code class="type">'a <a href="Blist.html#TYPEt">t</a> -> 'b <a href="Blist.html#TYPEt">t</a> -> 'c <a href="Blist.html#TYPEt">t</a> -> ('a * 'b * 'c) <a href="Blist.html#TYPEt">t</a></code></pre><br>
 <h6 id="6_Searchinglists">Searching lists</h6><br>
 
-<pre><span id="VALfind_first"><span class="keyword">val</span> find_first</span> : <code class="type">('a -> bool) -> 'a <a href="Blist.html#TYPEt">t</a> -> 'a option</code></pre><div class="info ">
-<code class="code">find_first pred l</code> returns <code class="code">Some x</code> for the first <code class="code">x</code> in <code class="code">l</code> such that <code class="code">pred x = true</code>, or <code class="code">None</code>.<br>
+<pre><span id="VALfind_opt"><span class="keyword">val</span> find_opt</span> : <code class="type">('a -> bool) -> 'a <a href="Blist.html#TYPEt">t</a> -> 'a option</code></pre><div class="info ">
+<code class="code">find_opt pred l</code> returns <code class="code">Some x</code> for the first <code class="code">x</code> in <code class="code">l</code> such that <code class="code">pred x = true</code>, or <code class="code">None</code>.<br>
 </div>
 
-<pre><span id="VALfind_some"><span class="keyword">val</span> find_some</span> : <code class="type">('a -> 'b option) -> 'a <a href="Blist.html#TYPEt">t</a> -> 'b option</code></pre><div class="info ">
-Optimisation for finding and converting at the same time. <code class="code">find_some f l</code>
-will return <code class="code">f l</code> for the first <code class="code">x</code> in <code class="code">l</code> such that <code class="code">f l</code> is not <code class="code">None</code>.<br>
+<pre><span id="VALfind_map"><span class="keyword">val</span> find_map</span> : <code class="type">('a -> 'b option) -> 'a <a href="Blist.html#TYPEt">t</a> -> 'b option</code></pre><div class="info ">
+Optimisation for finding and converting at the same time. <code class="code">find_map f l</code>
+will return <code class="code">f x</code> for the first <code class="code">x</code> in <code class="code">l</code> such that <code class="code">f x</code> is not <code class="code">None</code>, or <code class="code">None</code>.<br>
 </div>
 <br>
 <h6 id="6_Combinatorialfunctions">Combinatorial functions </h6><br>

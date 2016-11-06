@@ -19,6 +19,8 @@ To compile things from scratch you will need the following:
 
 * PCRE bindings for OCaml (tested with 7.0.4) [Debian package: libpcre-ocaml-dev]
 
+* Ocamlgraph (tested with 1.8.6) [Debian package: libocamlgraph-ocaml-dev]
+
 Then you need to clone the repository and run ``make``.
 
     $ git clone https://github.com/ngorogiannis/cyclist.git cyclist

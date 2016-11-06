@@ -21,9 +21,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -102,6 +120,80 @@ An abduction rule used in an abductive cyclic prover.
 A cyclic abducer (cf.
 </div>
 </td></tr>
+<tr><td class="module"><a href="Ord_constraints.html">Ord_constraints</a></td><td><div class="info">
+A structure representing a set of constraints on ordinal-valued variables.
+</div>
+</td></tr>
+<tr><td class="module"><a href="Utilsigs.html">Utilsigs</a></td><td><div class="info">
+Signatures for containers and essential types.
+</div>
+</td></tr>
+<tr><td class="module"><a href="Flist.html">Flist</a></td><td><div class="info">
+A functorised list.
+</div>
+</td></tr>
+<tr><td class="module"><a href="Multiset.html">Multiset</a></td><td><div class="info">
+A multiset container.
+</div>
+</td></tr>
+<tr><td class="module"><a href="Listset.html">Listset</a></td><td><div class="info">
+A list-based set container.
+</div>
+</td></tr>
+<tr><td class="module"><a href="Treemap.html">Treemap</a></td><td><div class="info">
+An ordered map using the standard <code class="code">Map</code> module.
+</div>
+</td></tr>
+<tr><td class="module"><a href="Pair.html">Pair</a></td><td><div class="info">
+Operations on pairs.
+</div>
+</td></tr>
+<tr><td class="module"><a href="Treeset.html">Treeset</a></td><td><div class="info">
+An ordered container based on the standard <code class="code">Set</code> module.
+</div>
+</td></tr>
+<tr><td class="module"><a href="Containers.html">Containers</a></td><td><div class="info">
+Given a <code class="code">BasicType</code> build a module with several containers for it.
+</div>
+</td></tr>
+<tr><td class="module"><a href="Strng.html">Strng</a></td><td><div class="info">
+String <code class="code">BasicType</code> with assorted containers.
+</div>
+</td></tr>
+<tr><td class="module"><a href="Int.html">Int</a></td><td><div class="info">
+Int <code class="code">BasicType</code> with assorted containers.
+</div>
+</td></tr>
+<tr><td class="module"><a href="Fun.html">Fun</a></td><td><div class="info">
+Combinators for manipulating functions.
+</div>
+</td></tr>
+<tr><td class="module"><a href="Option.html">Option</a></td><td><div class="info">
+Functions for manipulating optional values.
+</div>
+</td></tr>
+<tr><td class="module"><a href="Tags.html">Tags</a></td><td><div class="info">
+A set of tags.
+</div>
+</td></tr>
+<tr><td class="module"><a href="Tagpairs.html">Tagpairs</a></td><td><div class="info">
+A set of tag pairs with a few convenience functions.
+</div>
+</td></tr>
+<tr><td class="module"><a href="Unification.html">Unification</a></td><td><div class="info">
+A library of types and combinators supporting 
+    continuation-passing-style unifiers
+</div>
+</td></tr>
+<tr><td class="module"><a href="VarManager.html">VarManager</a></td><td><div class="info">
+An abstract datatype for managing variables.
+</div>
+</td></tr>
+<tr><td class="module"><a href="Sl_abduce.html">Sl_abduce</a></td><td><div class="info">
+This module contains functions to answer various abduction questions for
+    use in program verification.
+</div>
+</td></tr>
 <tr><td class="module"><a href="Sl_term.html">Sl_term</a></td><td><div class="info">
 Module defining SL terms, which consist of variables (free 
     or existentially quantified), or the constant <code class="code">nil</code>.
@@ -111,8 +203,10 @@ Module defining SL terms, which consist of variables (free
 Module providing SL term substitution-related functionality.
 </div>
 </td></tr>
-<tr><td class="module"><a href="Sl_unifier.html">Sl_unifier</a></td><td><div class="info">
-Module providing unification-related functionality.
+<tr><td class="module"><a href="Sl_unify.html">Sl_unify</a></td><td><div class="info">
+This module specialises the generic Unification module to the SL 
+    instantiation of cyclist and provides extra functionality to support the 
+    unification of its various elements
 </div>
 </td></tr>
 <tr><td class="module"><a href="Sl_tpair.html">Sl_tpair</a></td><td><div class="info">
@@ -161,7 +255,8 @@ Symbolic heaps.
 </div>
 </td></tr>
 <tr><td class="module"><a href="Sl_form.html">Sl_form</a></td><td><div class="info">
-SL formula, basically a list of symbolic heaps, denoting their disjunction.
+SL formula, basically a list of symbolic heaps, denoting their disjunction,
+    along with a set of contraints on predicate ordinal labels (tags).
 </div>
 </td></tr>
 <tr><td class="module"><a href="Sl_form_rho.html">Sl_form_rho</a></td><td><div class="info">
@@ -176,8 +271,14 @@ SL sequent, as a pair of SL formulas.
 Inductive rule type consisting of a symbolic heap and a predicate head.
 </div>
 </td></tr>
-<tr><td class="module"><a href="Tl_form.html">Tl_form</a></td><td></td></tr>
-<tr><td class="module"><a href="Tl_form_ltl.html">Tl_form_ltl</a></td><td></td></tr>
+<tr><td class="module"><a href="Tl_form.html">Tl_form</a></td><td><div class="info">
+A CTL temporal logic formula
+</div>
+</td></tr>
+<tr><td class="module"><a href="Tl_form_ltl.html">Tl_form_ltl</a></td><td><div class="info">
+An LTL temporal logic formula
+</div>
+</td></tr>
 </table>
 </body>
 </html>

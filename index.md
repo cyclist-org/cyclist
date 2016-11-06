@@ -29,10 +29,12 @@ See the [**demo**](demo) for a live demonstration.
 
 * [``sl_modelcheck``](sl_modelcheck) decides whether the given SL formula is satisfied by a provided program state.
 
-* [``while_prove``](while_abduce) is termination and/or safety prover for simple while-programs with pointers 
+* [``while_prove``](while_prove) is termination and/or safety prover for simple while-programs with pointers 
    and dynamic allocation specified by SL formulas.
+   
+* [``procedure_prove``](procedure_prove) is a termination and/or safety prover for procedural imperative programs, where procedures are specified with pre- and postconditions composed of SL formulas. 
 
-* [``while_abduce``](while_abduce) is a prover like [``while_prove``](while_abduce), but which attempts
+* [``while_abduce``](while_abduce) is a prover like [``while_prove``](while_prove), but which attempts
    to infer a suitable precondition in SL such that the target
    program will terminate/execute safely, *including inferring the 
    inductive definitions themselves*.

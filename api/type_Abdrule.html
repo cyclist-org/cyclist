@@ -19,9 +19,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -50,8 +68,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;defs_t&nbsp;=&nbsp;<span class="constructor">Defs</span>.t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;rule_t&nbsp;=&nbsp;<span class="constructor">Proofrule</span>.<span class="constructor">Make</span>(<span class="constructor">Seq</span>).t<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;select_f&nbsp;=&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;proof_t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;list<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;infrule_app&nbsp;=<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(seq_t&nbsp;*&nbsp;<span class="constructor">Util</span>.<span class="constructor">TagPairs</span>.t&nbsp;*&nbsp;<span class="constructor">Util</span>.<span class="constructor">TagPairs</span>.t)&nbsp;list&nbsp;*&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;infrule_app&nbsp;=&nbsp;(seq_t&nbsp;*&nbsp;<span class="constructor">Tagpairs</span>.t&nbsp;*&nbsp;<span class="constructor">Tagpairs</span>.t)&nbsp;list&nbsp;*&nbsp;string<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;abdinfrule_f&nbsp;=&nbsp;seq_t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;defs_t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;defs_t&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;abdbackrule_f&nbsp;=&nbsp;seq_t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;seq_t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;defs_t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;defs_t&nbsp;list<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;abdgenrule_f&nbsp;=&nbsp;seq_t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;defs_t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(infrule_app&nbsp;*&nbsp;defs_t)&nbsp;list<br>

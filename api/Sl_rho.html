@@ -24,9 +24,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -57,7 +75,7 @@ A stack structure for prophecy variables.<br>
 </div>
 <hr width="100%">
 
-<pre><span class="keyword">include</span> Util.BasicType</pre>
+<pre><span class="keyword">include</span> <a href="Utilsigs.BasicType.html">Utilsigs.BasicType</a></pre>
 
 <pre><span id="VALparse"><span class="keyword">val</span> parse</span> : <code class="type">(Sl_term.t * int, 'a) MParser.parser</code></pre>
 <pre><span id="VALto_melt"><span class="keyword">val</span> to_melt</span> : <code class="type">t -> Latex.t</code></pre>
@@ -69,11 +87,6 @@ A stack structure for prophecy variables.<br>
 <pre><span id="VALunion"><span class="keyword">val</span> union</span> : <code class="type">t -> t -> t</code></pre>
 <pre><span id="VALfold"><span class="keyword">val</span> fold</span> : <code class="type">(Sl_term.t -> int -> 'a -> 'a) -> t -> 'a -> 'a</code></pre>
 <pre><span id="VALfor_all"><span class="keyword">val</span> for_all</span> : <code class="type">(Sl_term.t -> int -> bool) -> t -> bool</code></pre>
-<pre><span id="VALall_members_of"><span class="keyword">val</span> all_members_of</span> : <code class="type">t -> t -> bool</code></pre><div class="info ">
-<code class="code">all_members_of eqs eqs'</code> returns true iff all variables in <code class="code">rho</code> are also
-    in <code class="code">rho'</code><br>
-</div>
-
 <pre><span id="VALdiff"><span class="keyword">val</span> diff</span> : <code class="type">t -> t -> t</code></pre><div class="info ">
 <code class="code">diff rho rho'</code> returns the structure given by removing all variables in
     <code class="code">rho'</code> from <code class="code">rho</code><br>

@@ -20,9 +20,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -58,11 +76,24 @@ A cyclic abducer (cf.
 </div>
 </td></tr>
 <tr><td align="left"><br>B</td></tr>
+<tr><td><a href="Sl_unify.Bidirectional.html">Bidirectional</a> [<a href="Sl_unify.html">Sl_unify</a>]</td>
+<td></td></tr>
 <tr><td><a href="Blist.html">Blist</a> </td>
 <td><div class="info">
 List operations.
 </div>
 </td></tr>
+<tr><td align="left"><br>C</td></tr>
+<tr><td><a href="Containers.html">Containers</a> </td>
+<td><div class="info">
+Given a <code class="code">BasicType</code> build a module with several containers for it.
+</div>
+</td></tr>
+<tr><td align="left"><br>E</td></tr>
+<tr><td><a href="Tags.Elt.html">Elt</a> [<a href="Tags.html">Tags</a>]</td>
+<td></td></tr>
+<tr><td><a href="Ord_constraints.Elt.html">Elt</a> [<a href="Ord_constraints.html">Ord_constraints</a>]</td>
+<td></td></tr>
 <tr><td align="left"><br>F</td></tr>
 <tr><td><a href="Sl_tpair.FList.html">FList</a> [<a href="Sl_tpair.html">Sl_tpair</a>]</td>
 <td><div class="info">
@@ -70,21 +101,50 @@ A list of term pairs.
 </div>
 </td></tr>
 <tr><td><a href="Sl_term.FList.html">FList</a> [<a href="Sl_term.html">Sl_term</a>]</td>
+<td></td></tr>
+<tr><td><a href="Containers.S.FList.html">FList</a> [<a href="Containers.S.html">Containers.S</a>]</td>
+<td></td></tr>
+<tr><td><a href="Flist.html">Flist</a> </td>
 <td><div class="info">
-A list of terms.
+A functorised list.
 </div>
 </td></tr>
 <tr><td><a href="Tl_form_ltl.Form.html">Form</a> [<a href="Tl_form_ltl.html">Tl_form_ltl</a>]</td>
 <td></td></tr>
 <tr><td><a href="Tl_form.Form.html">Form</a> [<a href="Tl_form.html">Tl_form</a>]</td>
 <td></td></tr>
+<tr><td><a href="Fun.html">Fun</a> </td>
+<td><div class="info">
+Combinators for manipulating functions.
+</div>
+</td></tr>
 <tr><td align="left"><br>H</td></tr>
+<tr><td><a href="Containers.S.Hashmap.html">Hashmap</a> [<a href="Containers.S.html">Containers.S</a>]</td>
+<td></td></tr>
+<tr><td><a href="Containers.S.Hashset.html">Hashset</a> [<a href="Containers.S.html">Containers.S</a>]</td>
+<td></td></tr>
 <tr><td><a href="Hashset.html">Hashset</a> </td>
 <td><div class="info">
 This module implements imperative sets as hash tables.
 </div>
 </td></tr>
+<tr><td align="left"><br>I</td></tr>
+<tr><td><a href="Int.html">Int</a> </td>
+<td><div class="info">
+Int <code class="code">BasicType</code> with assorted containers.
+</div>
+</td></tr>
 <tr><td align="left"><br>L</td></tr>
+<tr><td><a href="Sl_tpair.ListSet.html">ListSet</a> [<a href="Sl_tpair.html">Sl_tpair</a>]</td>
+<td><div class="info">
+A set of term pairs
+</div>
+</td></tr>
+<tr><td><a href="Listset.html">Listset</a> </td>
+<td><div class="info">
+A list-based set container.
+</div>
+</td></tr>
 <tr><td><a href="Lru.html">Lru</a> </td>
 <td><div class="info">
 Implementation of an LRU cache for memoising functions.
@@ -93,6 +153,46 @@ Implementation of an LRU cache for memoising functions.
 <tr><td align="left"><br>M</td></tr>
 <tr><td><a href="Sl_pred.MSet.html">MSet</a> [<a href="Sl_pred.html">Sl_pred</a>]</td>
 <td></td></tr>
+<tr><td><a href="Containers.S.MSet.html">MSet</a> [<a href="Containers.S.html">Containers.S</a>]</td>
+<td></td></tr>
+<tr><td><a href="Containers.Make.html">Make</a> [<a href="Containers.html">Containers</a>]</td>
+<td><div class="info">
+Functor putting together the different containers.
+</div>
+</td></tr>
+<tr><td><a href="Treeset.Make.html">Make</a> [<a href="Treeset.html">Treeset</a>]</td>
+<td><div class="info">
+Create an ordered container.
+</div>
+</td></tr>
+<tr><td><a href="Pair.Make.html">Make</a> [<a href="Pair.html">Pair</a>]</td>
+<td><div class="info">
+Create functions for equality, comparison, hashing and printing for a
+    pair of types.
+</div>
+</td></tr>
+<tr><td><a href="Treemap.Make.html">Make</a> [<a href="Treemap.html">Treemap</a>]</td>
+<td><div class="info">
+Create an ordered map using a tree-based representation.
+</div>
+</td></tr>
+<tr><td><a href="Listset.Make.html">Make</a> [<a href="Listset.html">Listset</a>]</td>
+<td><div class="info">
+Create an ordered container whose underlying representation is a list.
+</div>
+</td></tr>
+<tr><td><a href="Multiset.Make.html">Make</a> [<a href="Multiset.html">Multiset</a>]</td>
+<td><div class="info">
+Create an ordered container that behaves like a bag (<code class="code">add</code> always increases
+    size by one).
+</div>
+</td></tr>
+<tr><td><a href="Flist.Make.html">Make</a> [<a href="Flist.html">Flist</a>]</td>
+<td><div class="info">
+Given a type with comparison, equality and printing facilities, build
+    the same facilities for lists of that type.
+</div>
+</td></tr>
 <tr><td><a href="Abducer.Make.html">Make</a> [<a href="Abducer.html">Abducer</a>]</td>
 <td></td></tr>
 <tr><td><a href="Abdrule.Make.html">Make</a> [<a href="Abdrule.html">Abdrule</a>]</td>
@@ -118,12 +218,41 @@ Implementation of an LRU cache for memoising functions whose arguments
 Functor building an implementation of the hashtable structure.
 </div>
 </td></tr>
+<tr><td><a href="Unification.MakeUnifier.html">MakeUnifier</a> [<a href="Unification.html">Unification</a>]</td>
+<td><div class="info">
+This functor makes a mk_unifier function for a particular implementation of
+    a container.
+</div>
+</td></tr>
 <tr><td><a href="Sl_term.Map.html">Map</a> [<a href="Sl_term.html">Sl_term</a>]</td>
 <td><div class="info">
 An ordered map with terms as keys.
 </div>
 </td></tr>
+<tr><td><a href="Containers.S.Map.html">Map</a> [<a href="Containers.S.html">Containers.S</a>]</td>
+<td></td></tr>
+<tr><td><a href="Multiset.html">Multiset</a> </td>
+<td><div class="info">
+A multiset container.
+</div>
+</td></tr>
+<tr><td align="left"><br>O</td></tr>
+<tr><td><a href="Option.html">Option</a> </td>
+<td><div class="info">
+Functions for manipulating optional values.
+</div>
+</td></tr>
+<tr><td><a href="Ord_constraints.html">Ord_constraints</a> </td>
+<td><div class="info">
+A structure representing a set of constraints on ordinal-valued variables.
+</div>
+</td></tr>
 <tr><td align="left"><br>P</td></tr>
+<tr><td><a href="Pair.html">Pair</a> </td>
+<td><div class="info">
+Operations on pairs.
+</div>
+</td></tr>
 <tr><td><a href="Proof.html">Proof</a> </td>
 <td><div class="info">
 A cyclic proof object.
@@ -163,9 +292,17 @@ Tactics for combining sequent-level rules.
 An ordered set of terms.
 </div>
 </td></tr>
+<tr><td><a href="Containers.S.Set.html">Set</a> [<a href="Containers.S.html">Containers.S</a>]</td>
+<td></td></tr>
 <tr><td><a href="Sigs.html">Sigs</a> </td>
 <td><div class="info">
 Core module signatures used in Cyclist.
+</div>
+</td></tr>
+<tr><td><a href="Sl_abduce.html">Sl_abduce</a> </td>
+<td><div class="info">
+This module contains functions to answer various abduction questions for
+    use in program verification.
 </div>
 </td></tr>
 <tr><td><a href="Sl_deqs.html">Sl_deqs</a> </td>
@@ -175,7 +312,8 @@ Sets of disequalities over terms.
 </td></tr>
 <tr><td><a href="Sl_form.html">Sl_form</a> </td>
 <td><div class="info">
-SL formula, basically a list of symbolic heaps, denoting their disjunction.
+SL formula, basically a list of symbolic heaps, denoting their disjunction,
+    along with a set of contraints on predicate ordinal labels (tags).
 </div>
 </td></tr>
 <tr><td><a href="Sl_form_rho.html">Sl_form_rho</a> </td>
@@ -255,9 +393,11 @@ Multiset of tagged predicates.
 A union-find structure for SL terms.
 </div>
 </td></tr>
-<tr><td><a href="Sl_unifier.html">Sl_unifier</a> </td>
+<tr><td><a href="Sl_unify.html">Sl_unify</a> </td>
 <td><div class="info">
-Module providing unification-related functionality.
+This module specialises the generic Unification module to the SL 
+    instantiation of cyclist and provides extra functionality to support the 
+    unification of its various elements
 </div>
 </td></tr>
 <tr><td><a href="Soundcheck.html">Soundcheck</a> </td>
@@ -266,20 +406,76 @@ Provides an abstract view of a proof as a graph and allows checking its
     soundness.
 </div>
 </td></tr>
-<tr><td><a href="Sl_term.Subst.html">Subst</a> [<a href="Sl_term.html">Sl_term</a>]</td>
+<tr><td><a href="Strng.html">Strng</a> </td>
 <td><div class="info">
-A substitution is a map from terms to terms but with some restrictions: Only variables can be in the domain of the map., An existentially quantified variable can only be mapped to an existential one,
-or <code class="code">nil</code>.
+String <code class="code">BasicType</code> with assorted containers.
 </div>
 </td></tr>
+<tr><td><a href="Sl_term.Subst.html">Subst</a> [<a href="Sl_term.html">Sl_term</a>]</td>
+<td><div class="info">
+Substitutions over terms
+</div>
+</td></tr>
+<tr><td><a href="VarManager.S.Subst.html">Subst</a> [<a href="VarManager.S.html">VarManager.S</a>]</td>
+<td></td></tr>
 <tr><td align="left"><br>T</td></tr>
+<tr><td><a href="Tagpairs.html">Tagpairs</a> </td>
+<td><div class="info">
+A set of tag pairs with a few convenience functions.
+</div>
+</td></tr>
+<tr><td><a href="Tags.html">Tags</a> </td>
+<td><div class="info">
+A set of tags.
+</div>
+</td></tr>
 <tr><td><a href="Tl_form.html">Tl_form</a> </td>
-<td></td></tr>
+<td><div class="info">
+A CTL temporal logic formula
+</div>
+</td></tr>
 <tr><td><a href="Tl_form_ltl.html">Tl_form_ltl</a> </td>
-<td></td></tr>
+<td><div class="info">
+An LTL temporal logic formula
+</div>
+</td></tr>
+<tr><td><a href="Treemap.html">Treemap</a> </td>
+<td><div class="info">
+An ordered map using the standard <code class="code">Map</code> module.
+</div>
+</td></tr>
+<tr><td><a href="Treeset.html">Treeset</a> </td>
+<td><div class="info">
+An ordered container based on the standard <code class="code">Set</code> module.
+</div>
+</td></tr>
 <tr><td align="left"><br>U</td></tr>
-<tr><td><a href="Sl_term.Unifier.html">Unifier</a> [<a href="Sl_term.html">Sl_term</a>]</td>
+<tr><td><a href="Sl_unify.Unidirectional.html">Unidirectional</a> [<a href="Sl_unify.html">Sl_unify</a>]</td>
 <td></td></tr>
+<tr><td><a href="Unification.html">Unification</a> </td>
+<td><div class="info">
+A library of types and combinators supporting 
+    continuation-passing-style unifiers
+</div>
+</td></tr>
+<tr><td><a href="Tags.Elt.Unifier.html">Unifier</a> [<a href="Tags.Elt.html">Tags.Elt</a>]</td>
+<td></td></tr>
+<tr><td><a href="Utilsigs.html">Utilsigs</a> </td>
+<td><div class="info">
+Signatures for containers and essential types.
+</div>
+</td></tr>
+<tr><td align="left"><br>V</td></tr>
+<tr><td><a href="VarManager.S.Var.html">Var</a> [<a href="VarManager.S.html">VarManager.S</a>]</td>
+<td><div class="info">
+Abstract type of variables
+</div>
+</td></tr>
+<tr><td><a href="VarManager.html">VarManager</a> </td>
+<td><div class="info">
+An abstract datatype for managing variables.
+</div>
+</td></tr>
 </table>
 </body>
 </html>

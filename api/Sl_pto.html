@@ -24,9 +24,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -57,17 +75,18 @@ Points-to atom, consisting of a pair of a term and a list of terms.<br>
 </div>
 <hr width="100%">
 
-<pre><span class="keyword">include</span> Util.BasicType</pre>
+<pre><span class="keyword">include</span> <a href="Utilsigs.BasicType.html">Utilsigs.BasicType</a></pre>
 
 <pre><span id="VALsubst"><span class="keyword">val</span> subst</span> : <code class="type">Sl_subst.t -> t -> t</code></pre>
 <pre><span id="VALto_melt"><span class="keyword">val</span> to_melt</span> : <code class="type">t -> Latex.t</code></pre>
 <pre><span id="VALterms"><span class="keyword">val</span> terms</span> : <code class="type">t -> Sl_term.Set.t</code></pre>
 <pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type">t -> Sl_term.Set.t</code></pre>
 <pre><span id="VALparse"><span class="keyword">val</span> parse</span> : <code class="type">(t, 'a) MParser.parser</code></pre>
-<pre><span id="VALunify"><span class="keyword">val</span> unify</span> : <code class="type">t Sl_unifier.t</code></pre><div class="info ">
+<pre><span id="VALunify"><span class="keyword">val</span> unify</span> : <code class="type">?update_check:Sl_unify.Unidirectional.update_check -><br>       t Sl_unify.Unidirectional.unifier</code></pre><div class="info ">
 Compute substitution that unifies two points-tos.<br>
 </div>
 
+<pre><span id="VALbiunify"><span class="keyword">val</span> biunify</span> : <code class="type">?update_check:Sl_unify.Bidirectional.update_check -><br>       t Sl_unify.Bidirectional.unifier</code></pre>
 <pre><span id="VALnorm"><span class="keyword">val</span> norm</span> : <code class="type">Sl_uf.t -> t -> t</code></pre><div class="info ">
 Replace all terms with their UF representative. NB this may replace <code class="code">nil</code> 
     with a variable.<br>

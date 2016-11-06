@@ -24,9 +24,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -52,8 +70,64 @@
 </div>
 <h1>Module <a href="type_Sl_term.Map.html">Sl_term.Map</a></h1>
 
-<pre><span class="keyword">module</span> Map: <code class="type">Util.OrderedMap</code><code class="type">  with type key = t</code></pre><div class="info module top">
+<pre><span class="keyword">module</span> Map: <code class="type"><a href="Utilsigs.OrderedMap.html">Utilsigs.OrderedMap</a></code><code class="type">  with type key = t</code></pre><div class="info module top">
 An ordered map with terms as keys.<br>
 </div>
 <hr width="100%">
+
+<pre><span class="keyword">include</span> Map.S</pre>
+
+<pre><span id="VALpp"><span class="keyword">val</span> pp</span> : <code class="type">(Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit</code></pre><div class="info ">
+<code class="code">pp pp_val fmt map</code> pretty prints <code class="code">map</code> using <code class="code">pp_val</code> to pretty-print
+        the *values* of <code class="code">map</code>.  *Keys* are pretty-printed using the <code class="code">pp</code> function
+        of the <code class="code">BasicType</code> for keys.<br>
+</div>
+
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">('a -> string) -> 'a t -> string</code></pre><div class="info ">
+<code class="code">to_string val_to_string map</code> converts to a string, using <code class="code">val_to_string</code>
+        to convert *values* to strings.<br>
+</div>
+
+<pre><span id="VALhash"><span class="keyword">val</span> hash</span> : <code class="type">('a -> int) -> 'a t -> int</code></pre><div class="info ">
+Hash the map using the provided function for hashing *values*.<br>
+</div>
+
+<pre><span id="VALof_list"><span class="keyword">val</span> of_list</span> : <code class="type">(key * 'a) list -> 'a t</code></pre><div class="info ">
+Create a map out of a list of pairs of (keys, values).<br>
+</div>
+
+<pre><span id="VALto_list"><span class="keyword">val</span> to_list</span> : <code class="type">'a t -> (key * 'a) list</code></pre><div class="info ">
+Create a list of pairs (keys, values) out of a map.<br>
+</div>
+
+<pre><span id="VALendomap"><span class="keyword">val</span> endomap</span> : <code class="type">(key * 'a -> key * 'b) -> 'a t -> 'b t</code></pre><div class="info ">
+Convert a map to another, by enumerating bindings in key order, 
+        converting them into new ones and adding them to a new map. 
+        Bindings created earlier have precedence.<br>
+</div>
+
+<pre><span id="VALunion"><span class="keyword">val</span> union</span> : <code class="type">'a t -> 'a t -> 'a t</code></pre><div class="info ">
+Union two maps. Bindings in the first map have precedence.<br>
+</div>
+
+<pre><span id="VALfind_map"><span class="keyword">val</span> find_map</span> : <code class="type">(key -> 'a -> bool) -> 'a t -> (key * 'a) option</code></pre><div class="info ">
+Optimisation for finding and converting at the same time. <code class="code">find_map f map</code>
+        will return <code class="code">f k v</code> for the first <code class="code">k</code>,<code class="code">v</code> in <code class="code">map</code> such that <code class="code">f k v</code> is not <code class="code">None</code>, 
+        or <code class="code">None</code> otherwise.<br>
+</div>
+
+<pre><span id="VALfixpoint"><span class="keyword">val</span> fixpoint</span> : <code class="type">('a -> 'a -> bool) -> ('a t -> 'a t) -> 'a t -> 'a t</code></pre><div class="info ">
+<code class="code">fixpoint val_equal f map</code> computes the fixpoint of <code class="code">f</code> using <code class="code">val_equal</code>
+        to compare *values*.<br>
+</div>
+
+<pre><span id="VALsubmap"><span class="keyword">val</span> submap</span> : <code class="type">('a -> 'a -> bool) -> 'a t -> 'a t -> bool</code></pre><div class="info ">
+Decide if a map is included in another, using the provided value equality
+        predicate.<br>
+</div>
+
+<pre><span id="VALadd_bindings"><span class="keyword">val</span> add_bindings</span> : <code class="type">(key * 'a) list -> 'a t -> 'a t</code></pre><div class="info ">
+Add all bindings in provided list to map.  Bindings already in the map
+        have precedence.<br>
+</div>
 </body></html>

@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="style.css" type="text/css">
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <link rel="Start" href="index.html">
-<link rel="previous" href="Abducer.html">
+<link rel="previous" href="Sl_abduce.html">
 <link rel="next" href="Sl_subst.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
@@ -24,9 +24,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -46,7 +64,7 @@
 <link title="Tl_form_ltl" rel="Chapter" href="Tl_form_ltl.html"><title>Sl_term</title>
 </head>
 <body>
-<div class="navbar"><a class="pre" href="Abducer.html" title="Abducer">Previous</a>
+<div class="navbar"><a class="pre" href="Sl_abduce.html" title="Sl_abduce">Previous</a>
 &nbsp;<a class="up" href="index.html" title="Index">Up</a>
 &nbsp;<a class="post" href="Sl_subst.html" title="Sl_subst">Next</a>
 </div>
@@ -60,13 +78,13 @@ Module defining SL terms, which consist of variables (free
 </div>
 <hr width="100%">
 
-<pre><span class="keyword">include</span> Util.BasicType</pre>
+<pre><span class="keyword">include</span> <a href="Utilsigs.BasicType.html">Utilsigs.BasicType</a></pre>
 
-<pre><span class="keyword">module</span> <a href="Sl_term.Set.html">Set</a>: <code class="type">Util.OrderedContainer</code><code class="type">  with type elt = t</code></pre><div class="info">
+<pre><span class="keyword">module</span> <a href="Sl_term.Set.html">Set</a>: <code class="type"><a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a></code><code class="type">  with type elt = t</code></pre><div class="info">
 An ordered set of terms.
 </div>
 
-<pre><span class="keyword">module</span> <a href="Sl_term.Map.html">Map</a>: <code class="type">Util.OrderedMap</code><code class="type">  with type key = t</code></pre><div class="info">
+<pre><span class="keyword">module</span> <a href="Sl_term.Map.html">Map</a>: <code class="type"><a href="Utilsigs.OrderedMap.html">Utilsigs.OrderedMap</a></code><code class="type">  with type key = t</code></pre><div class="info">
 An ordered map with terms as keys.
 </div>
 
@@ -125,38 +143,19 @@ Remove <code class="code">nil</code> from a set of terms.<br>
     of length <code class="code">n</code> all of which are fresh in <code class="code">s</code>.<br>
 </div>
 
-<pre><span id="TYPEterm_t"><span class="keyword">type</span> <code class="type"></code>term_t</span> = <code class="type">t</code> </pre>
-
-
-<pre><span class="keyword">module type</span> <a href="Sl_term.SubstSig.html">SubstSig</a> = <code class="code">sig</code> <a href="Sl_term.SubstSig.html">..</a> <code class="code">end</code></pre>
-<pre><span class="keyword">module</span> <a href="Sl_term.Subst.html">Subst</a>: <code class="type"><a href="Sl_term.SubstSig.html">SubstSig</a></code><code class="type"> </code></pre><div class="info">
-A substitution is a map from terms to terms but with some restrictions: Only variables can be in the domain of the map., An existentially quantified variable can only be mapped to an existential one,
-or <code class="code">nil</code>.
+<pre><span class="keyword">module</span> <a href="Sl_term.Subst.html">Subst</a>: <code class="type"><a href="VarManager.SubstSig.html">VarManager.SubstSig</a></code><code class="type"> 
+  with type t = t Map.t</code><code class="type"> 
+  with type var = t</code><code class="type"> 
+  with type var_container = Set.t</code></pre><div class="info">
+Substitutions over terms
 </div>
 
-<pre><span id="VALsubst"><span class="keyword">val</span> subst</span> : <code class="type">Subst.t -> t -> t</code></pre><div class="info ">
-Apply a substitution on the given term.<br>
+<pre><span id="VALunify"><span class="keyword">val</span> unify</span> : <code class="type">?update_check:(Subst.t * Subst.t) <a href="Fun.html#TYPEpredicate">Fun.predicate</a> -><br>       (Subst.t, 'a, t) <a href="Unification.html#TYPEcps_unifier">Unification.cps_unifier</a></code></pre><div class="info ">
+Unifies two terms by producing a substitution to act on the first term<br>
 </div>
 
-<pre><span class="keyword">module type</span> <a href="Sl_term.UnifierSig.html">UnifierSig</a> = <code class="code">sig</code> <a href="Sl_term.UnifierSig.html">..</a> <code class="code">end</code></pre>
-<pre><span class="keyword">module</span> <a href="Sl_term.Unifier.html">Unifier</a>: <code class="type"><a href="Sl_term.UnifierSig.html">UnifierSig</a></code><code class="type"> </code></pre>
-<pre><span id="VALunify"><span class="keyword">val</span> unify</span> : <code class="type">t Unifier.t</code></pre><div class="info ">
-<code class="code">unify check cont state o o'</code> should try to extend <code class="code">state</code> so that <code class="code">o</code> is 
-    unified with <code class="code">o'</code>, extending the variable substitution inside <code class="code">state</code>. 
-    If this is impossible, then <code class="code">unify</code> must return <code class="code">None</code>.  Otherwise, the 
-    new <code class="code">state'</code> is to be passed to the continuation function <code class="code">cont</code>, which
-    may carry on with the unification of other objects, validate the state in
-    various ways or even record it and return <code class="code">None</code> in which case back-tracking
-    should occur. The <code class="code">check</code> predicate should be applied to each individual 
-    term replacement as it is computed, causing the unification to fail if the
-    result is false.
-<p>
-
-    Some unifiers may add to the tag pairs in <code class="code">state</code>, or may not, depending on
-    their function.<br>
+<pre><span id="VALbiunify"><span class="keyword">val</span> biunify</span> : <code class="type">?update_check:((Subst.t * Subst.t) *<br>                      (Subst.t * Subst.t))<br>                     <a href="Fun.html#TYPEpredicate">Fun.predicate</a> -><br>       (Subst.t * Subst.t, 'a, t) <a href="Unification.html#TYPEcps_unifier">Unification.cps_unifier</a></code></pre><div class="info ">
+Unifies two terms by producing substitutions to act on each term respectively<br>
 </div>
 
-<pre><span class="keyword">module</span> <a href="Sl_term.FList.html">FList</a>: <code class="code">sig</code> <a href="Sl_term.FList.html">..</a> <code class="code">end</code></pre><div class="info">
-A list of terms.
-</div>
-</body></html>
+<pre><span class="keyword">module</span> <a href="Sl_term.FList.html">FList</a>: <code class="code">sig</code> <a href="Sl_term.FList.html">..</a> <code class="code">end</code></pre></body></html>

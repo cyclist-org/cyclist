@@ -1,0 +1,131 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Utilsigs.OrderedContainer.html">
+<link rel="Up" href="Utilsigs.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Blist" rel="Chapter" href="Blist.html">
+<link title="Hashset" rel="Chapter" href="Hashset.html">
+<link title="Lru" rel="Chapter" href="Lru.html">
+<link title="Sigs" rel="Chapter" href="Sigs.html">
+<link title="Soundcheck" rel="Chapter" href="Soundcheck.html">
+<link title="Proofnode" rel="Chapter" href="Proofnode.html">
+<link title="Proofrule" rel="Chapter" href="Proofrule.html">
+<link title="Proof" rel="Chapter" href="Proof.html">
+<link title="Prover" rel="Chapter" href="Prover.html">
+<link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
+<link title="Abdrule" rel="Chapter" href="Abdrule.html">
+<link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
+<link title="Sl_term" rel="Chapter" href="Sl_term.html">
+<link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
+<link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
+<link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
+<link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
+<link title="Sl_deqs" rel="Chapter" href="Sl_deqs.html">
+<link title="Sl_pto" rel="Chapter" href="Sl_pto.html">
+<link title="Sl_ptos" rel="Chapter" href="Sl_ptos.html">
+<link title="Sl_pred" rel="Chapter" href="Sl_pred.html">
+<link title="Sl_tpred" rel="Chapter" href="Sl_tpred.html">
+<link title="Sl_tpreds" rel="Chapter" href="Sl_tpreds.html">
+<link title="Sl_heap" rel="Chapter" href="Sl_heap.html">
+<link title="Sl_heap_rho" rel="Chapter" href="Sl_heap_rho.html">
+<link title="Sl_form" rel="Chapter" href="Sl_form.html">
+<link title="Sl_form_rho" rel="Chapter" href="Sl_form_rho.html">
+<link title="Sl_seq" rel="Chapter" href="Sl_seq.html">
+<link title="Sl_indrule" rel="Chapter" href="Sl_indrule.html">
+<link title="Tl_form" rel="Chapter" href="Tl_form.html">
+<link title="Tl_form_ltl" rel="Chapter" href="Tl_form_ltl.html"><title>Utilsigs.OrderedMap</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="Utilsigs.OrderedContainer.html" title="Utilsigs.OrderedContainer">Previous</a>
+&nbsp;<a class="up" href="Utilsigs.html" title="Utilsigs">Up</a>
+&nbsp;</div>
+<h1>Module type <a href="type_Utilsigs.OrderedMap.html">Utilsigs.OrderedMap</a></h1>
+
+<pre><span class="keyword">module type</span> OrderedMap = <code class="code">sig</code> <a href="Utilsigs.OrderedMap.html">..</a> <code class="code">end</code></pre><div class="info modtype top">
+An ordered map, extending the standard <code class="code">Map</code> module.<br>
+</div>
+<hr width="100%">
+
+<pre><span class="keyword">include</span> Map.S</pre>
+
+<pre><span id="VALpp"><span class="keyword">val</span> pp</span> : <code class="type">(Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit</code></pre><div class="info ">
+<code class="code">pp pp_val fmt map</code> pretty prints <code class="code">map</code> using <code class="code">pp_val</code> to pretty-print
+        the *values* of <code class="code">map</code>.  *Keys* are pretty-printed using the <code class="code">pp</code> function
+        of the <code class="code">BasicType</code> for keys.<br>
+</div>
+
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">('a -> string) -> 'a t -> string</code></pre><div class="info ">
+<code class="code">to_string val_to_string map</code> converts to a string, using <code class="code">val_to_string</code>
+        to convert *values* to strings.<br>
+</div>
+
+<pre><span id="VALhash"><span class="keyword">val</span> hash</span> : <code class="type">('a -> int) -> 'a t -> int</code></pre><div class="info ">
+Hash the map using the provided function for hashing *values*.<br>
+</div>
+
+<pre><span id="VALof_list"><span class="keyword">val</span> of_list</span> : <code class="type">(key * 'a) list -> 'a t</code></pre><div class="info ">
+Create a map out of a list of pairs of (keys, values).<br>
+</div>
+
+<pre><span id="VALto_list"><span class="keyword">val</span> to_list</span> : <code class="type">'a t -> (key * 'a) list</code></pre><div class="info ">
+Create a list of pairs (keys, values) out of a map.<br>
+</div>
+
+<pre><span id="VALendomap"><span class="keyword">val</span> endomap</span> : <code class="type">(key * 'a -> key * 'b) -> 'a t -> 'b t</code></pre><div class="info ">
+Convert a map to another, by enumerating bindings in key order, 
+        converting them into new ones and adding them to a new map. 
+        Bindings created earlier have precedence.<br>
+</div>
+
+<pre><span id="VALunion"><span class="keyword">val</span> union</span> : <code class="type">'a t -> 'a t -> 'a t</code></pre><div class="info ">
+Union two maps. Bindings in the first map have precedence.<br>
+</div>
+
+<pre><span id="VALfind_map"><span class="keyword">val</span> find_map</span> : <code class="type">(key -> 'a -> bool) -> 'a t -> (key * 'a) option</code></pre><div class="info ">
+Optimisation for finding and converting at the same time. <code class="code">find_map f map</code>
+        will return <code class="code">f k v</code> for the first <code class="code">k</code>,<code class="code">v</code> in <code class="code">map</code> such that <code class="code">f k v</code> is not <code class="code">None</code>, 
+        or <code class="code">None</code> otherwise.<br>
+</div>
+
+<pre><span id="VALfixpoint"><span class="keyword">val</span> fixpoint</span> : <code class="type">('a -> 'a -> bool) -> ('a t -> 'a t) -> 'a t -> 'a t</code></pre><div class="info ">
+<code class="code">fixpoint val_equal f map</code> computes the fixpoint of <code class="code">f</code> using <code class="code">val_equal</code>
+        to compare *values*.<br>
+</div>
+
+<pre><span id="VALsubmap"><span class="keyword">val</span> submap</span> : <code class="type">('a -> 'a -> bool) -> 'a t -> 'a t -> bool</code></pre><div class="info ">
+Decide if a map is included in another, using the provided value equality
+        predicate.<br>
+</div>
+
+<pre><span id="VALadd_bindings"><span class="keyword">val</span> add_bindings</span> : <code class="type">(key * 'a) list -> 'a t -> 'a t</code></pre><div class="info ">
+Add all bindings in provided list to map.  Bindings already in the map
+        have precedence.<br>
+</div>
+</body></html>

@@ -24,9 +24,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -60,21 +78,21 @@ Multiset of tagged predicates.
 </div>
 <hr width="100%">
 
-<pre><span class="keyword">include</span> Util.OrderedContainer</pre>
+<pre><span class="keyword">include</span> <a href="Utilsigs.OrderedContainer.html">Utilsigs.OrderedContainer</a></pre>
 
 <pre><span id="VALequal_upto_tags"><span class="keyword">val</span> equal_upto_tags</span> : <code class="type">t -> t -> bool</code></pre><div class="info ">
 Test whether the two arguments are the equal ignoring tags.<br>
 </div>
 
 <pre><span id="VALsubst"><span class="keyword">val</span> subst</span> : <code class="type">Sl_subst.t -> t -> t</code></pre>
-<pre><span id="VALsubst_tags"><span class="keyword">val</span> subst_tags</span> : <code class="type">Util.TagPairs.t -> t -> t</code></pre><div class="info ">
+<pre><span id="VALsubst_tags"><span class="keyword">val</span> subst_tags</span> : <code class="type">Tagpairs.t -> t -> t</code></pre><div class="info ">
 Substitute tags according to the function represented by the set of 
     tag pairs provided.<br>
 </div>
 
 <pre><span id="VALterms"><span class="keyword">val</span> terms</span> : <code class="type">t -> Sl_term.Set.t</code></pre>
 <pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type">t -> Sl_term.Set.t</code></pre>
-<pre><span id="VALtags"><span class="keyword">val</span> tags</span> : <code class="type">t -> Util.Tags.t</code></pre>
+<pre><span id="VALtags"><span class="keyword">val</span> tags</span> : <code class="type">t -> Tags.t</code></pre>
 <pre><span id="VALidents"><span class="keyword">val</span> idents</span> : <code class="type">t -> Sl_predsym.MSet.t</code></pre><div class="info ">
 Return multiset of identifiers present.<br>
 </div>
@@ -103,16 +121,15 @@ Test whether the two arguments are the same modulo the provided equalities.
     check if the first multiset is a subset of the second modulo equalities.<br>
 </div>
 
-<pre><span id="VALunify"><span class="keyword">val</span> unify</span> : <code class="type">?total:bool -> ?tagpairs:bool -> t Sl_unifier.t</code></pre><div class="info ">
+<pre><span id="VALunify"><span class="keyword">val</span> unify</span> : <code class="type">?total:bool -><br>       ?tagpairs:bool -><br>       ?update_check:Sl_unify.Unidirectional.update_check -><br>       t Sl_unify.Unidirectional.unifier</code></pre><div class="info ">
 Compute substitution that makes the two multisets equal up to tags. <ul>
 <li>If the optional argument <code class="code">~total=true</code> is set to <code class="code">false</code> then 
   compute substitution that makes the first multiset a subset of the second.</li>
-<li>If the optional argument <code class="code">~tagpairs=false</code> is set to <code class="code">true</code> then return 
-  in addition to the substitution the pairs of tags of predicates unified.</li>
 </ul>
 <br>
 </div>
 
+<pre><span id="VALbiunify"><span class="keyword">val</span> biunify</span> : <code class="type">?total:bool -><br>       ?tagpairs:bool -><br>       ?update_check:Sl_unify.Bidirectional.update_check -><br>       t Sl_unify.Bidirectional.unifier</code></pre>
 <pre><span id="VALnorm"><span class="keyword">val</span> norm</span> : <code class="type">Sl_uf.t -> t -> t</code></pre><div class="info ">
 Replace all terms with their UF representative. NB this may replace <code class="code">nil</code> 
     with a variable.<br>

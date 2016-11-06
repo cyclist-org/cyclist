@@ -23,9 +23,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -89,13 +107,28 @@ Other constructors, which return the indices of new
       an exception will be thrown.`<br>
 
 <pre><span id="VALadd_axiom"><span class="keyword">val</span> add_axiom</span> : <code class="type">int -> string -> <a href="Sigs.PROOF.html#TYPEt">t</a> -> <a href="Sigs.PROOF.html#TYPEt">t</a></code></pre>
-<pre><span id="VALadd_backlink"><span class="keyword">val</span> add_backlink</span> : <code class="type">int -> string -> int -> Util.TagPairs.t -> <a href="Sigs.PROOF.html#TYPEt">t</a> -> <a href="Sigs.PROOF.html#TYPEt">t</a></code></pre>
-<pre><span id="VALadd_inf"><span class="keyword">val</span> add_inf</span> : <code class="type">int -><br>       string -><br>       (<a href="Sigs.PROOF.html#TYPEseq_t">seq_t</a> * Util.TagPairs.t * Util.TagPairs.t) list -><br>       <a href="Sigs.PROOF.html#TYPEt">t</a> -> int list * <a href="Sigs.PROOF.html#TYPEt">t</a></code></pre><br>
+<pre><span id="VALadd_backlink"><span class="keyword">val</span> add_backlink</span> : <code class="type">int -> string -> int -> Tagpairs.t -> <a href="Sigs.PROOF.html#TYPEt">t</a> -> <a href="Sigs.PROOF.html#TYPEt">t</a></code></pre>
+<pre><span id="VALadd_inf"><span class="keyword">val</span> add_inf</span> : <code class="type">int -><br>       string -><br>       (<a href="Sigs.PROOF.html#TYPEseq_t">seq_t</a> * Tagpairs.t * Tagpairs.t) list -><br>       <a href="Sigs.PROOF.html#TYPEt">t</a> -> int list * <a href="Sigs.PROOF.html#TYPEt">t</a></code></pre>
+<pre><span id="VALadd_subprf"><span class="keyword">val</span> add_subprf</span> : <code class="type"><a href="Sigs.PROOF.html#TYPEt">t</a> -> int -> <a href="Sigs.PROOF.html#TYPEt">t</a> -> <a href="Sigs.PROOF.html#TYPEt">t</a></code></pre><div class="info ">
+<code class="code">add_subprf p idx p'</code> replaces the node <code class="code">idx</code> in <code class="code">p'</code> with a copy of <code class="code">p</code>.
+      N.B. The following should hold, otherwise exceptions will be raised:<ul>
+<li><code class="code">idx</code> should be an open node; </li>
+<li>the sequent of <code class="code">idx</code> should be identical to the root sequent of <code class="code">p</code>.</li>
+</ul>
+<br>
+</div>
+
+<pre><span id="VALextract_subproof"><span class="keyword">val</span> extract_subproof</span> : <code class="type">int -> <a href="Sigs.PROOF.html#TYPEt">t</a> -> <a href="Sigs.PROOF.html#TYPEt">t</a></code></pre><div class="info ">
+<code class="code">extract_subproof idx prf</code> returns <code class="code">prf</code> rearranged such that <code class="code">idx</code> is
+      the root node.<br>
+</div>
+<br>
 Accessor functions.<br>
 
 <pre><span id="VALfind"><span class="keyword">val</span> find</span> : <code class="type">int -> <a href="Sigs.PROOF.html#TYPEt">t</a> -> <a href="Sigs.PROOF.html#TYPEnode_t">node_t</a></code></pre>
 <pre><span id="VALget_seq"><span class="keyword">val</span> get_seq</span> : <code class="type">int -> <a href="Sigs.PROOF.html#TYPEt">t</a> -> <a href="Sigs.PROOF.html#TYPEseq_t">seq_t</a></code></pre>
 <pre><span id="VALsize"><span class="keyword">val</span> size</span> : <code class="type"><a href="Sigs.PROOF.html#TYPEt">t</a> -> int</code></pre>
+<pre><span id="VALnum_backlinks"><span class="keyword">val</span> num_backlinks</span> : <code class="type"><a href="Sigs.PROOF.html#TYPEt">t</a> -> int</code></pre>
 <pre><span id="VALfresh_idx"><span class="keyword">val</span> fresh_idx</span> : <code class="type"><a href="Sigs.PROOF.html#TYPEt">t</a> -> int</code></pre>
 <pre><span id="VALfresh_idxs"><span class="keyword">val</span> fresh_idxs</span> : <code class="type">'a list -> <a href="Sigs.PROOF.html#TYPEt">t</a> -> int list</code></pre>
 <pre><span id="VALget_ancestry"><span class="keyword">val</span> get_ancestry</span> : <code class="type">int -> <a href="Sigs.PROOF.html#TYPEt">t</a> -> (int * <a href="Sigs.PROOF.html#TYPEnode_t">node_t</a>) list</code></pre>

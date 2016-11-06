@@ -24,9 +24,27 @@
 <link title="Seqtactics" rel="Chapter" href="Seqtactics.html">
 <link title="Abdrule" rel="Chapter" href="Abdrule.html">
 <link title="Abducer" rel="Chapter" href="Abducer.html">
+<link title="Ord_constraints" rel="Chapter" href="Ord_constraints.html">
+<link title="Utilsigs" rel="Chapter" href="Utilsigs.html">
+<link title="Flist" rel="Chapter" href="Flist.html">
+<link title="Multiset" rel="Chapter" href="Multiset.html">
+<link title="Listset" rel="Chapter" href="Listset.html">
+<link title="Treemap" rel="Chapter" href="Treemap.html">
+<link title="Pair" rel="Chapter" href="Pair.html">
+<link title="Treeset" rel="Chapter" href="Treeset.html">
+<link title="Containers" rel="Chapter" href="Containers.html">
+<link title="Strng" rel="Chapter" href="Strng.html">
+<link title="Int" rel="Chapter" href="Int.html">
+<link title="Fun" rel="Chapter" href="Fun.html">
+<link title="Option" rel="Chapter" href="Option.html">
+<link title="Tags" rel="Chapter" href="Tags.html">
+<link title="Tagpairs" rel="Chapter" href="Tagpairs.html">
+<link title="Unification" rel="Chapter" href="Unification.html">
+<link title="VarManager" rel="Chapter" href="VarManager.html">
+<link title="Sl_abduce" rel="Chapter" href="Sl_abduce.html">
 <link title="Sl_term" rel="Chapter" href="Sl_term.html">
 <link title="Sl_subst" rel="Chapter" href="Sl_subst.html">
-<link title="Sl_unifier" rel="Chapter" href="Sl_unifier.html">
+<link title="Sl_unify" rel="Chapter" href="Sl_unify.html">
 <link title="Sl_tpair" rel="Chapter" href="Sl_tpair.html">
 <link title="Sl_uf" rel="Chapter" href="Sl_uf.html">
 <link title="Sl_rho" rel="Chapter" href="Sl_rho.html">
@@ -57,7 +75,7 @@ Inductive rule type consisting of a symbolic heap and a predicate head.<br>
 </div>
 <hr width="100%">
 
-<pre><span class="keyword">include</span> Util.BasicType</pre>
+<pre><span class="keyword">include</span> <a href="Utilsigs.BasicType.html">Utilsigs.BasicType</a></pre>
 
 <pre><span id="VALmk"><span class="keyword">val</span> mk</span> : <code class="type">Sl_heap.t -> Sl_pred.t -> t</code></pre>
 <pre><span id="VALdest"><span class="keyword">val</span> dest</span> : <code class="type">t -> Sl_heap.t * Sl_pred.t</code></pre>
@@ -73,24 +91,20 @@ Replace all variables in rule such that they are disjoint with the set
 
 <pre><span id="VALsubst"><span class="keyword">val</span> subst</span> : <code class="type">Sl_subst.t -> t -> t</code></pre>
 <pre><span id="VALparse"><span class="keyword">val</span> parse</span> : <code class="type">(t, 'a) MParser.t</code></pre>
-<pre><span id="VALunfold"><span class="keyword">val</span> unfold</span> : <code class="type">Sl_term.Set.t -> Sl_heap.t -> Sl_tpred.t -> t -> Sl_heap.t * Util.TagPairs.t</code></pre><div class="info ">
-<code class="code">unfold vars h p r</code> does the following:<ul>
-<li>Removes the (tagged) occurrence of <code class="code">p</code> in <code class="code">h</code>.</li>
-<li>Inlines the body of <code class="code">r</code> in <code class="code">h</code>, taking care to pick existential variables
-  outside <code class="code">vars</code>.</li>
-<li>Returns the tag pairs representing progressing tag pairs. I.e. if <code class="code">p</code> is equal
-  to <code class="code">(tag, pred)</code> then new tags will be introduced for all predicates in the
-  body of <code class="code">r</code> (disjoint to those in <code class="code">h</code>), and for each such new tag <code class="code">tag'</code> the
-  pair <code class="code">(tag,tag')</code> will be returned.</li>
-</ul>
-<br>
+<pre><span id="VALunfold"><span class="keyword">val</span> unfold</span> : <code class="type">?gen_tags:bool -> Sl_term.Set.t * Tags.t -> Sl_tpred.t -> t -> Sl_heap.t</code></pre><div class="info ">
+<code class="code">unfold (vs, ts) p r</code> returns the body of the inductive rule <code class="code">r</code> with:
+      the formal parameters replaced by the arguments of <code class="code">p</code>; 
+      the remaining variables freshened, avoiding those in <code class="code">vs</code>; and
+      the predicates assigned fresh existential tags avoiding those in <code class="code">ts</code>,
+        unless the optional argument <code class="code">gen_tags=true</code> is set to false.
+    NB. This assumes that all predicates in the body of <code class="code">r</code> are untagged.<br>
 </div>
 
 <pre><span id="VALfold"><span class="keyword">val</span> fold</span> : <code class="type">t -> Sl_heap.t -> (Sl_subst.t * Sl_heap.t) list</code></pre><div class="info ">
 <code class="code">fold r h</code> returns a list of pairs of substitutions over the formal parameters of 
     the rule <code class="code">r</code> such that its body, when one of these substitutions is applied,
-    becomes a subformula of <code class="code">h</code>; and the result of removing that subformula from
-    <code class="code">h</code>. NB the pure part is removed on a best effort basis.<br>
+    becomes a subformula of <code class="code">h</code>; and the result of removing that subformula from <code class="code">h</code>.
+    NB the pure part is removed on a best effort basis.<br>
 </div>
 
 <pre><span id="VALmemory_consuming"><span class="keyword">val</span> memory_consuming</span> : <code class="type">t -> bool</code></pre><div class="info ">
