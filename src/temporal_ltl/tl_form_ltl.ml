@@ -2,7 +2,9 @@ open Lib
 
 open Symbols
 open MParser
-       
+
+(** An LTL temporal logic formula *)
+
 module Form : 
 sig
   type t =

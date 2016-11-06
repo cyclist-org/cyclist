@@ -1,3 +1,5 @@
+(** Combinators for manipulating functions. *)
+
 type 'a predicate = 'a -> bool
 
 let _true _ = true

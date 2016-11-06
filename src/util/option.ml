@@ -1,9 +1,11 @@
+(** Functions for manipulating optional values. *)
+
 let is_none = function None -> true | Some _ -> false
 let is_some = function Some _ -> true | None -> false
 
+(** [pred p x] returns [Some x] if [p x] else [None]. *)
 let pred p x =
   if p x then Some x else None
-(** [pred p x] returns [Some x] if [p x] else [None]. *)
 
 let mk b x =
   if b then Some x else None

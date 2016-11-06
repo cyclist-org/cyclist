@@ -44,7 +44,7 @@ val generate : ?avoid:Tags.t -> ?augment:bool
 
 val remove_schema : t -> Tags.t -> (t * string) option
 (** [remove_schema cs used] will remove a (nonempty) subset [cs'] of [cs] 
-    containing tags { t_1, ..., t_n } where at least one t_i does not occur in
+    containing tags \{ t_1, ..., t_n \} where at least one t_i does not occur in
     [used] such that [cs'] does not affect the support of [cs] in the sense that
     
       [cs''] |= [cs] \ [cs'] if and only if [cs''] |= [cs]   for all [cs'']
@@ -55,7 +55,7 @@ val remove_schema : t -> Tags.t -> (t * string) option
     
     Intuitively, this means identifying and removing a tautological schema 
     bounded by some (set of) existential tag(s) (outside of the set [used]).
-      For example, cs = { t_1 < t, ..., t_n < t} + cs'' where t is an 
+      For example, cs = \{ t_1 < t, ..., t_n < t \} + cs'' where t is an 
     existential tag not occurring in cs'', picks out t as a strict upper bound 
     of the tags t_1, ..., t_n; since such a bound always exists, this is a 
     tautological schema.

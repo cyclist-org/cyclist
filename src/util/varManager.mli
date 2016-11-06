@@ -1,3 +1,5 @@
+(** An abstract datatype for managing variables. *)
+
 module type I =
   sig
     type var

@@ -10,6 +10,7 @@ Prover
 Seqtactics
 Abdrule
 Abducer
+Ord_constraints
 Utilsigs
 Flist
 Multiset
@@ -20,6 +21,10 @@ Treeset
 Containers
 Strng
 Int
+Fun
+Option
+Tags
+Tagpairs
 Unification
 VarManager
 Sl_abduce
