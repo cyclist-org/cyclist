@@ -289,17 +289,18 @@ let univ s f =
   if Sl_term.Map.is_empty theta then f else subst theta f
   
 let subst_existentials h =
-  let aux h' =
-    let (ex_eqs, non_ex_eqs) =
-      Blist.partition
-        (fun p' -> Pair.disj (Pair.map Sl_term.is_exist_var p')) 
-        (Sl_uf.bindings h'.eqs) in
-    if ex_eqs =[] then h' else
-    let ex_eqs = 
-      Blist.map (fun ((x,y) as p) -> if Sl_term.is_exist_var x then p else (y,x)) ex_eqs in
-      let h'' = 
-        { h' with eqs = Sl_uf.of_list non_ex_eqs; _terms=None; _vars=None; _tags=None } in
-      subst (Sl_term.Map.of_list ex_eqs) h'' in
+  let aux h =
+    try
+      let eqs = Sl_uf.bindings h.eqs in
+      let ((x,y) as eq) =
+        Blist.find
+          (fun eq -> Pair.disj (Pair.map Sl_term.is_exist_var eq))
+          eqs in
+      let eqs = Blist.filter (fun eq' -> eq' != eq) eqs in
+      let (x,y) = if Sl_term.is_exist_var x then eq else (y,x) in
+      let h' = { h with eqs = Sl_uf.of_list eqs; _terms=None; _vars=None; _tags=None } in
+      subst (Sl_term.Map.singleton x y) h'
+    with Not_found -> h in
   fixpoint aux h
 
 let norm h =

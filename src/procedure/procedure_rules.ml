@@ -23,7 +23,7 @@ let show_invalidity_debug = ref false
 let show_entailment_debug = ref false
 let show_frame_debug = ref false
 
-let entl_depth = ref Sl_abduce.max_depth
+let entl_depth = ref 4
 
 (* Wrapper for the entailment prover *)
 let entailment_table : (int * (Slprover.Proof.t option)) EntlSeqHash.t =
@@ -772,8 +772,10 @@ let transform_seq ((pre, cmd, post) as seq) =
           schema_tags in
       let schema_subst = Tagpairs.union schema_subst (Tagpairs.reflect u_tag_theta) in
       let ex_schema = Ord_constraints.subst_tags schema_subst abd_schema in
-      if not (Ord_constraints.verify_schemas (Sl_form.tags pre) ex_schema) 
-        then None else
+      if not (Ord_constraints.verify_schemas (Sl_form.tags pre) ex_schema) then
+        let () = debug (fun () -> "Could not verify constraint schema " ^ (Ord_constraints.to_string ex_schema)) in 
+        None 
+      else
         let pre_with_schema = Sl_form.add_constraints pre ex_schema in
         let subst_avoid_tags =
           Tags.union (Sl_form.tags frame) (Tagpairs.flatten tag_theta) in

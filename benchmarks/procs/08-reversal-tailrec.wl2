@@ -2,7 +2,7 @@ fields: next;
 
 proc reverse(x, acc)
 precondition: x -> v' * ls[a](v', nil) * acc -> w' * ls[b](w', nil);
-postcondition: [b] <= [c'] : x -> nil * acc -> z' * ls[c'](z', nil);
+postcondition: x -> nil * acc -> z' * ls[c'](z', nil);
 {
 	list := x.next;
 	if list != nil then

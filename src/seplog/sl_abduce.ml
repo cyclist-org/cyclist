@@ -16,21 +16,21 @@ let mk_axiom unify res =
       Option.mk not_empty "Match")
 
 let ruf_rl = Sl_rules.ruf_rl
-let bounds_intro = Rule.mk_infrule Sl_rules.bounds_intro_rl
-let eq_ex_subst = 
-  Rule.mk_infrule (Seqtactics.relabel "RHS.Ex.Eq." Sl_rules.eq_ex_subst_rule)
+let bounds_intro_rl = Sl_rules.bounds_intro_rl
+let eq_ex_subst_rl = Sl_rules.eq_ex_subst_rule
 let rhs_disj_to_symheaps = Rule.mk_infrule Sl_rules.rhs_disj_to_symheaps_rl
+
+let simplify = 
+  Rule.mk_infrule
+    (Seqtactics.relabel "Simplify"
+        (Seqtactics.repeat 
+          (Seqtactics.first [ bounds_intro_rl ; eq_ex_subst_rl ; ])))
 
 let rules = ref Rule.fail
 let set_defs defs = 
-  rules := Rule.first [
-      rhs_disj_to_symheaps ;
-      bounds_intro ;
-      eq_ex_subst ;
-      Rule.mk_infrule (ruf_rl defs) ;
-    ]
+  rules := Rule.mk_infrule (ruf_rl defs)
 
-let maxdepth = ref 4
+let maxdepth = ref 3
 
 let set_depth d = maxdepth := d
 let max_depth = !maxdepth
@@ -83,7 +83,17 @@ let abd_substs
         Option.dest Blist.empty Fun.id res in
       Blist.bind (f (Ord_constraints.empty, cs')) candidates
     with Not_symheap -> Blist.empty in
-  let rules = Rule.combine_axioms (mk_axiom unifier result) !rules in
+  let axiom = mk_axiom unifier result in
+  let axiom =
+    Rule.first [ 
+      Rule.sequence [
+          Rule.attempt rhs_disj_to_symheaps ;
+          Rule.attempt simplify ;
+          axiom ;
+        ] ;
+      axiom ;
+      ] in
+  let rules = Rule.combine_axioms axiom !rules in
   let proof = Prover.idfs 1 !maxdepth Rule.fail rules (f, f') in
   Option.mk (Option.is_some proof) !result
 
@@ -107,7 +117,17 @@ let abd_bi_substs
         (Sl_unify.Bidirectional.mk_verifier verify))
         (Pair.swap init_state)
     with Not_symheap -> [] in
-  let rules = Rule.combine_axioms (mk_axiom unifier result) !rules in
+  let axiom = mk_axiom unifier result in
+  let axiom =
+    Rule.first [ 
+      Rule.sequence [
+          Rule.attempt rhs_disj_to_symheaps ;
+          Rule.attempt simplify ;
+          axiom ;
+        ] ;
+      axiom ;
+      ] in
+  let rules = Rule.combine_axioms axiom !rules in
   let proof = Prover.idfs 1 !maxdepth Rule.fail rules (f, f') in
   Option.map
     (fun _ -> 

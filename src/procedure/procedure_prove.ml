@@ -18,12 +18,16 @@ module Node = Proofnode.Make(Seq)
 
 let prove_all = ref false
 
-let () = F.usage := !F.usage ^ " [-D <file>] [-d(entail|frame|invalid)] [-Lem <int>] -P <file> [-T] [-all | <entry_point>*]"
+let () = F.usage := !F.usage ^ "[-ed/fd <int>] [-D <file>] [-d(entail|frame|invalid)] [-Lem <int>] -P <file> [-T] [-all | <entry_point>*]"
 
 let () = 
   let old_spec_thunk = !F.speclist in
   F.speclist := 
     (fun () -> old_spec_thunk() @ [
+      ("-ed", Arg.Set_int Rules.entl_depth, 
+        ": maximum search depth for entailment sub-prover, default is " ^ (string_of_int !Rules.entl_depth));
+      ("-fd", Arg.Int Sl_abduce.set_depth, 
+        ": maximum depth to unfold predicates to in frame inference, default is " ^ (string_of_int Sl_abduce.max_depth));
       ("-D", Arg.Set_string defs_path, 
         ": read inductive definitions from <file>, default is " ^ !defs_path);
       ("-dentail", Arg.Set Rules.show_entailment_debug, 
