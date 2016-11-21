@@ -8,6 +8,7 @@
 #include <spot/twa/twaproduct.hh>
 #include <spot/twaalgos/gtec/gtec.hh>
 #include <spot/twaalgos/dot.hh>
+#include <spot/twaalgos/remfin.hh>
 #include <iostream>
 
 
@@ -109,25 +110,18 @@ extern "C" value check_soundness() {
 	CAMLparam0();
 	CAMLlocal1(v_res);
 
-	// spot::print_dot(std::cerr, proof);
 	spot::const_twa_ptr ta = std::make_shared<TraceAutomaton>(*proof);
-	// spot::print_dot(std::cerr, ta);
 	spot::twa_graph_ptr graph = copy(ta, spot::twa::prop_set::all());
 	spot::twa_graph_ptr det = 
 		tgba_determinize(
-			graph, false, true, false, 
+			graph, false, true, true, 
 			spot::check_stutter_invariance(graph).is_true()
 		);
-	spot::twa_graph_ptr complement = to_generalized_buchi(dtwa_complement(det));
-	// std::cerr << "check_stutter_invariance(graph) = " << spot::check_stutter_invariance(graph).is_true() << std::endl;
-	// spot::print_dot(std::cerr, det);
-	// spot::print_dot(std::cerr, complement);
+	spot::twa_graph_ptr complement = remove_fin(dtwa_complement(det));
 
-	spot::const_twa_ptr product = std::make_shared<spot::twa_product>(proof, complement);
-	spot::couvreur99_check ec(product);
-	std::shared_ptr<spot::emptiness_check_result> res = ec.check();
+	spot::const_twa_ptr product = otf_product(proof, complement);
 
-	bool retval = (res == 0);
+	bool retval = (product->is_empty());
 	
 	//std:: cout << "retval " << retval << '\n';
 
