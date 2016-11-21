@@ -15,7 +15,8 @@ To compile things from scratch you will need the following:
 
 * Melt (tested with 1.4.0) [Debian package: ocaml-melt]
 
-* Spot (tested with 2.0.2) [sources at https://spot.lrde.epita.fr ]
+* Spot (tested with 2.2.1) [sources at https://spot.lrde.epita.fr ]
+  &mdash; N.B. do not use versions 2.0.x and 2.1.x, since they contain a bug which can cause Cyclist to fail to find proofs.
 
 * PCRE bindings for OCaml (tested with 7.0.4) [Debian package: libpcre-ocaml-dev]
 
