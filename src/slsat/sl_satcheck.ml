@@ -54,7 +54,7 @@ let check_consistency defs =
           else
             ("UNSAT: " ^
             (if !only_first then "First" else "Some") ^ 
-            " predicate has an empty base.")) ;
+            " *inductive rule* has an empty base.")) ;
         1
       end
     | Some true -> 
