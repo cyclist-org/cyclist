@@ -1,4 +1,12 @@
-OCB := ocamlbuild -j 8 -ocamldoc "ocamldoc -hide-warnings"
+null  :=
+space := $(null) #
+comma := ,
+
+PKGS := pcre,melt,unix,str,ocamlgraph,dynlink
+TAGS := debug,explain,annot,use_libsoundness
+OCAMLDOC := ocamldoc -hide-warnings
+INCLUDES := $(subst $(space),$(comma),$(strip $(wildcard src/*)))
+OCB := ocamlbuild -use-ocamlfind -j 8 -ocamldoc "$(OCAMLDOC)" -pkgs $(PKGS) -tags $(TAGS) -Is $(INCLUDES)
 
 BENCHDIR:=benchmarks
 

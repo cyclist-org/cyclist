@@ -1,3 +1,0 @@
-true:debug,explain,annot
-true:use_unix,use_str,use_latex,use_pcre,use_graph,use_libsoundness
-<src/*>: include
