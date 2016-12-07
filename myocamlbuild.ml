@@ -2,39 +2,43 @@
 
 open Ocamlbuild_plugin ;;
 
-(* change these to match your system *)
-
-(* where standard .h headers for ocaml are installed *)
-(* on Debian/Ubuntu these are in package ocaml-nox *)
-let ocaml_headers_path = "/usr/lib/ocaml/caml"
-
-(* base path for spot library *) 
+(* change this to match your system *)
+(* base path for spot library *)
 let spot_path = "/usr/local"
 
-(* these have to be manually specified as ocamlbuild will not automatically *)
-(* recognise them *)
-let headers = 
-  [ 
-    "src/soundness/proof_aut.hpp"; 
-    "src/soundness/proof.hpp"; 
-    "src/soundness/trace.hpp" 
-  ] 
 
 (* you shouldn't normally have to change anything below this point *)
 let spot_include_path = spot_path ^ "/include"
+
+(* these have to be manually specified as ocamlbuild will not automatically *)
+(* recognise them *)
+let headers =
+  [
+    "src/soundness/proof_aut.hpp";
+    "src/soundness/proof.hpp";
+    "src/soundness/trace.hpp"
+  ]
+
+let cmd_output cmd =
+  let in_channel = Unix.open_process_in cmd in
+  let r = input_line in_channel in
+  ignore (Unix.close_process_in in_channel);
+  r
+
+let ocaml_headers_path = (cmd_output "ocamlfind printconf stdlib") ^ "/caml"
 
 let _ = dispatch begin function
   | After_rules ->
     (* how to compile "c" files, really C++ *)
     dep  ["c"; "compile"] headers;
-    flag ["c"; "compile"]  
+    flag ["c"; "compile"]
       (S[
-        A"-ccopt"; A"-xc++"; A"-ccopt"; A"-std=c++0x"; 
+        A"-ccopt"; A"-xc++"; A"-ccopt"; A"-std=c++0x";
         A"-ccopt"; A("-I" ^ ocaml_headers_path);
         A"-ccopt"; A("-I" ^ spot_include_path)]);
-    
+
     (* declare dependencies for things using libsoundness *)
-    dep ["link"; "ocaml"; "use_libsoundness"] 
+    dep ["link"; "ocaml"; "use_libsoundness"]
       [
         (* the relative path to the .a file is necessary *)
         "src/soundness/libsoundness.a";
@@ -63,9 +67,9 @@ let _ = dispatch begin function
     rule "libbdd"
       ~prod:"libbddx.a"
       (fun env _ -> Cmd(S[P"ln"; A"-s"; A(spot_path ^ "/lib/libbddx.a"); A"."]));
-    
+
     flag ["link"; "ocaml"; "byte"] (A"-custom");
-    
+
     (* skip asserts if the tag noassert is found *)
     flag ["compile"; "ocaml"; "noassert"] (A"-noassert");
   | _ -> ()
