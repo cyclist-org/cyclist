@@ -22,6 +22,8 @@ LTLMAIN:=./src/temporal_ltl/temporal_ltl_prove.native
 WHL2_TEST_FILES:=$(shell find ./benchmarks/procs -name '*.wl2' | sort)
 CTL_TEST_FILES:=$(shell find ./benchmarks/temporal -name '*.ctl' | sort)
 
+export
+
 all:
 	$(OCB) all.otarget
 
@@ -47,17 +49,8 @@ docs:
 clean:
 	$(OCB) -clean
 
-#fo-tests:
-#	-@for TST in $(BENCHDIR)/fo/*.tst ; do _build/$(FOMAIN) $(TST_OPTS) -S "`cat $$TST`" ; done
-
 sl-tests:
-	-@for TST in $(BENCHDIR)/sl/*.tst ; do \
-		echo "$$TST"; \
-		while read -r SEQ; do \
-			echo -n "\t"; \
-			 _build/$(SLMAIN) $(TST_OPTS) -S "$$SEQ"; \
-		done < $$TST; \
-	done
+	$(MAKE) -C $(BENCHDIR)/sl/cyc/
 
 sl-atva-tests:
 	-@for TST in $(BENCHDIR)/sl/ATVA-2014/*.tst ; do \
