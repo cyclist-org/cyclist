@@ -1,6 +1,5 @@
 TESTS:= $(sort $(wildcard *.tst))
 DEFS := $(ROOT)/examples/sl.defs
-CMD := $(ROOT)/_build/$(SLMAIN)
 
 .PHONY: all $(TESTS)
 all: $(TESTS)
