@@ -7,12 +7,11 @@ TAGS := debug,explain,annot,use_libsoundness
 OCAMLDOC := ocamldoc -hide-warnings
 INCLUDES := $(subst $(space),$(comma),$(strip $(wildcard src/*)))
 OCB := ocamlbuild -use-ocamlfind -j 8 -ocamldoc "$(OCAMLDOC)" -pkgs $(PKGS) -tags $(TAGS) -Is $(INCLUDES)
+ROOT := $(shell pwd)
 
 BENCHDIR:=benchmarks
 
-#FOMAIN:=./src/firstorder/fo_prove.native
 SLMAIN:=./src/seplog/sl_prove.native
-#PRMAIN:=./src/goto/goto_prove.native
 PR2MAIN:=./src/while/while_prove.native
 XTDPRMAIN:=./src/procedure/procedure_prove.native
 ABD2MAIN:=./src/while/while_abduce.native
@@ -34,10 +33,10 @@ tests:
 check: tests
 	@for TST in _build/tests/test_*.native ; do $$TST ; done
 
-docs: 
+docs:
 	$(OCB) src/cyclist.docdir/index.html
 
-%.native: 
+%.native:
 	$(OCB) "$@"
 
 %.byte:
@@ -50,28 +49,10 @@ clean:
 	$(OCB) -clean
 
 sl-tests:
-	$(MAKE) -C $(BENCHDIR)/sl/cyc/
+	$(MAKE) -C $(BENCHDIR)/sl all
 
-sl-atva-tests:
-	-@for TST in $(BENCHDIR)/sl/ATVA-2014/*.tst ; do \
-		echo "$$TST"; \
-		while read -r SEQ; do \
-			echo -n "\t"; \
-			 _build/$(SLMAIN) $(TST_OPTS) -D examples/IosifEtAl-ATVA2014.defs -S "$$SEQ"; \
-		done < $$TST; \
-	done
-
-sl-songbird-tests:
-	-@for TST in $(BENCHDIR)/sl/songbird/*.tst ; do \
-		echo "$$TST"; \
-		while read -r SEQ; do \
-			echo -n "\t"; \
-			_build/$(SLMAIN) $(TST_OPTS) -D examples/songbird.defs -S "$$SEQ"; \
-		done < $$TST; \
-	done
-
-goto-tests:
-	-@for TST in $(BENCHDIR)/goto/*.tc ; do _build/$(PRMAIN) $(TST_OPTS) -P $$TST ; done
+sl-%-tests:
+	$(MAKE) -C $(BENCHDIR)/sl $*
 
 whl-tests:
 	-@for TST in $(BENCHDIR)/whl/*.wl ; do echo $$TST: ; _build/$(PR2MAIN) $(TST_OPTS) -P $$TST ; echo ; done
@@ -88,7 +69,7 @@ ctl-tests:
 ltl-tests:
 	-@for TST in $(BENCHDIR)/temporal/ltl/*.ltl ; do echo $$TST: ; _build/$(LTLMAIN) $(TST_OPTS) -P $$TST ; echo ; done
 
-aplas-tests: sl-tests #goto-tests #fo-tests 
+aplas-tests: sl-tests #goto-tests #fo-tests
 
 tp-tests: sl-tests whl-tests xsf-tests #fo-tests
 
