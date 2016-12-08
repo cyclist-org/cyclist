@@ -8,15 +8,7 @@ OCAMLDOC := ocamldoc -hide-warnings
 INCLUDES := $(subst $(space),$(comma),$(strip $(wildcard src/*)))
 OCB := ocamlbuild -use-ocamlfind -j 8 -ocamldoc "$(OCAMLDOC)" -pkgs $(PKGS) -tags $(TAGS) -Is $(INCLUDES)
 ROOT := $(shell pwd)
-
-BENCHDIR:=benchmarks
-
-XTDPRMAIN:=./src/procedure/procedure_prove.native
-CTLMAIN:=./src/temporal_ctl/temporal_ctl_prove.native
-LTLMAIN:=./src/temporal_ltl/temporal_ltl_prove.native
-
-WHL2_TEST_FILES:=$(shell find ./benchmarks/procs -name '*.wl2' | sort)
-CTL_TEST_FILES:=$(shell find ./benchmarks/temporal -name '*.ctl' | sort)
+DEFS := $(ROOT)/examples/sl.defs
 
 export
 
@@ -46,4 +38,4 @@ clean:
 	$(OCB) -clean
 
 %-tests:
-	$(MAKE) -C $(BENCHDIR) $*
+	$(MAKE) -C benchmarks $*

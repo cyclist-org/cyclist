@@ -1,6 +1,4 @@
 TESTS:= $(sort $(wildcard *.tst))
-DEFS := $(ROOT)/examples/sl.defs
-
 .PHONY: all $(TESTS)
 all: $(TESTS)
 
