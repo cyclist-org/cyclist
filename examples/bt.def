@@ -1,0 +1,4 @@
+bt {
+	x=nil => bt(x) |
+	x->y',x' * bt(y') * bt(x') => bt(x)
+}
