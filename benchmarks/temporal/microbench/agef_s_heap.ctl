@@ -1,5 +1,5 @@
 fields: next;
-precondition: ls(x,nil);
+precondition: ls(y,x) * ls(x,nil);
 property: AG(EF(x=nil));
 while x!=nil do
 if * then
@@ -7,7 +7,11 @@ if * then
    x:=new();
    x.next:=temp
 else
-  x:=x.next
+  if x!=nil then
+    x:=x.next
+  else
+    skip
+  fi
 fi
 od;
 x:=nil;

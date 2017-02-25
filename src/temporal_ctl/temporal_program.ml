@@ -448,7 +448,7 @@ module Seq =
     let tagset_one = Tags.singleton 1
     let tagpairs_one = TagPairs.mk tagset_one
     let tags (sf,cmd,tf) = Tags.union (Sl_form.tags sf) (Tl_form.tags tf)
-    let tag_pairs (sf,_,tf) = if !termination then TagPairs.union (Sl_form.tag_pairs sf) (TagPairs.mk (Tl_form.outermost_tag tf)) else (TagPairs.mk (Tl_form.outermost_tag tf))
+    let tag_pairs (sf,_,tf) = TagPairs.union (Sl_form.tag_pairs sf) (TagPairs.mk (Tl_form.outermost_tag tf))
     let sep_vars (sf,_,_) = Sl_form.vars sf
     let temp_vars (_,_,tf) = Tl_form.vars tf
     let vars (sf,_,tf) = Sl_term.Set.union (Sl_form.vars sf) (Tl_form.vars tf)
@@ -477,9 +477,7 @@ module Seq =
 								      
 										      
     let subsumed (sf,cmd,tf) (sf',cmd',tf') = 
-      Cmd.equal cmd cmd' &&
-	(if !termination then Sl_form.subsumed else Sl_form.subsumed_upto_tags) 
-          ~total:false  sf' sf
+      Cmd.equal cmd cmd' && Sl_form.subsumed ~total:false  sf' sf
     let subsumed_upto_tags (sf,cmd,tf) (sf',cmd',tf') = 
       Cmd.equal cmd cmd' &&
 	Sl_form.subsumed_upto_tags ~total:false sf' sf

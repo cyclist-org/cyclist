@@ -1,6 +1,6 @@
 fields: next;
-precondition:ls(x,nil);
-property: AF(EG(emp));
+precondition:x!=nil * ls(x,nil);
+property: AF(emp);
 while x=x do
     if * then
         while x!=nil do

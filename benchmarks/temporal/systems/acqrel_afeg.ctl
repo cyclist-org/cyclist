@@ -1,6 +1,6 @@
 fields: next;
 precondition: a=nil * r=nil * flag->f' * x->x' * three->two * two->one * one->nil;
-property: AG(\/(a=nil,AF(r!=nil)));
+property: AF(EG(r=nil));
 while flag!=nil do
     if * then
 	free(flag);
@@ -10,7 +10,7 @@ while flag!=nil do
     fi;
     if flag!=nil then
 	x:=new();
-	x.next:=one;
+	x.next:=three;
         a:=new();
 	free(a);
 	a:=nil;

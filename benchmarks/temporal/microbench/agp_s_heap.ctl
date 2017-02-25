@@ -1,17 +1,12 @@
 fields: next;
-precondition: x!=nil * ls(x,nil);
-property: AG(x!=nil);
+precondition: ls(y',x) * ls(x,nil);
+property: AG(ls(y',x) * ls(x,nil));
 while x=x do
-  if * then
-    temp:=new();
-    temp.next:=x;
-    x:=temp
-  else
-    temp:=new();
-    temp.next:=x;
-    x:=temp
-  fi
-od;
-while x=x do
-  skip
+    if x!= nil then
+      temp:=x;
+      x := x.next;
+      temp:=nil
+    else
+      skip
+    fi
 od

@@ -1,12 +1,13 @@
 fields: next;
 precondition:ls(x,nil);
-property: AF(EG(emp));
+property: AG(EG(ls(x,nil)));
 while x=x do
     if * then
         while x!=nil do
-            temp:=x.next;
-            free(x);
-            x:=temp
+            temp:=x;
+	    x:=x.next;
+            free(temp);
+	    temp:=nil
         od
     else
         while * do

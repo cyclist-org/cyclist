@@ -1,0 +1,14 @@
+fields: next;
+precondition: tmp->x * ls(x,nil);
+property: AF(emp);
+while x=x do
+  if * then
+     while tmp!=nil do
+	free(tmp);
+	tmp:= x;
+	x:= x.next
+     od
+  else
+     skip
+  fi
+od

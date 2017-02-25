@@ -1,10 +1,6 @@
 fields: next,prev;
-precondition: WItemsNum!= nil *WItemsNum->nil,nil;
-property: EF(AG(WItemsNum!= nil *WItemsNum->nil,nil));
-current:=WItemsNum.next;
-while current=nil do
-    skip
-od;
+precondition: flag1->a' * flag2->b' * flag3->c' * three->nil,two * two->three,one * one->two,nil * WItemsNum->nil,nil;
+property: AF(AG(flag1->a' * three->nil,two * two->three,one * one->two,nil * WItemsNum->nil,nil));
 while flag1!=nil do
     while flag2!=nil do
 	current:=WItemsNum.next;
@@ -21,7 +17,7 @@ while flag1!=nil do
 	    else
 		nNum:=WItemsNum.next;
 		nnNum:=nNum.next;
-	        WItemsNum.next:=nnum;
+	        WItemsNum.next:=nnNum;
 		WItemsNum.prev:=nNum
 	    fi
 	else

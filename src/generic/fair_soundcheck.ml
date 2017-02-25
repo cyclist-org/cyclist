@@ -10,13 +10,13 @@ external set_fair_trace_pair : int -> int -> int -> int -> unit = "set_fair_trac
 external set_fair_progress_pair : int -> int -> int -> int -> unit = "set_fair_progress_pair" ;;
 external check_fair_soundness : unit -> bool = "check_fair_soundness" ;;
 external set_initial_fair_vertex : int -> unit = "set_initial_fair_vertex" ;;
-external set_fairness_constraint : int -> int -> unit = "set_fairness_constraint" ;;
+external set_fairness_constraint : int -> int -> int -> int -> unit = "set_fairness_constraint" ;;
   
 type fair_abstract_node =
-    bool * Util.Tags.t * ((int * Util.TagPairs.t * Util.TagPairs.t) list)
+    (int*int) option * Util.Tags.t * ((int * Util.TagPairs.t * Util.TagPairs.t) list)
 type t = fair_abstract_node Int.Map.t
 			    
-let is_fair (fair,tags,subg) = fair
+let is_fair (fair,tags,subg) = Option.is_some fair
 let get_tags (fair,tags,subg) = tags
 let get_subg ((fair,tags,subg):fair_abstract_node) : (int * Util.TagPairs.t * Util.TagPairs.t) list = subg
 
@@ -45,7 +45,7 @@ let fathers_grandchild prf idx n =
 
 let pp_proof_node fmt n =
   let aux fmt (fair, tags, subg) =
-    Format.printf "fair= %a, tags=%a " Format.pp_print_bool fair Tags.pp tags ; 
+    Format.printf "fair= %a, tags=%a " Format.pp_print_bool (Option.is_some fair) Tags.pp tags ; 
     if subg=[] then Format.pp_print_string fmt "leaf" else
     Blist.pp pp_semicolonsp 
       (fun fmt (i,tv,tp) ->
@@ -155,11 +155,11 @@ let check_proof p =
       | x::[] -> debug (fun () -> "Odd numbered list in fair constraint") ; [],[] (* TODO : handle this case appropriately *)
       | [] -> [],[]
     in
-    let create_pair (i,_,_) (j,_,_) = debug (fun () -> "Creating fairness constraint " ^ string_of_int i ^ " " ^ string_of_int j) ; set_fairness_constraint i j in
-    if fair then
+    let create_pair (i,_,_) (j,_,_) (c1,c2) = debug (fun () -> "Creating fairness constraint " ^ string_of_int i ^ " " ^ string_of_int j) ; set_fairness_constraint i j c1 c2 in
+    if Option.is_some fair then
       begin
 	let l1,l2 = separate l in
-	Blist.iter2 create_pair l1 l2
+	Blist.iter2 (fun li1 li2 -> create_pair li1 li2 (Option.get fair)) l1 l2
       end in
   let size = Int.Map.cardinal p in
   let log2size = 1 + int_of_float (ceil ((log (float_of_int size)) /. (log 2.0))) in

@@ -1,5 +1,5 @@
 fields: next;
-precondition: x=one * zero->one * one->two * two->three * three->four * four->five * FALSE->false' * TRUE->true';
+precondition: x=four * zero->one * one->two * two->three * three->four * four->five * FALSE->false' * TRUE->true';
 property: EF(x=five);
 while TRUE=TRUE do
   if * then

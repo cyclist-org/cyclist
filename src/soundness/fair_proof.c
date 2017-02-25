@@ -20,12 +20,14 @@ Vertex FairProof::create_vertex() {
   return v;
 }
 //------------------------------------------------------------------
-void FairProof::set_fairness_constraint(const Vertex & v1, const Vertex & v2) {
+void FairProof::set_fairness_constraint(const Vertex & v1, const Vertex & v2, int c1, int c2) {
   assert( vertices.find(v1) != vertices.end() );
   assert( vertices.find(v2) != vertices.end() );
-  AcceptanceElem first_acc_elem = max_acc_elem++;
-  AcceptanceElem second_acc_elem = max_acc_elem++;
-  acc_set_map[v1].insert(first_acc_elem);
-  acc_set_map[v2].insert(second_acc_elem);
-  fairness_constraints.insert(FairnessConstraint(first_acc_elem, second_acc_elem));
+  /* AcceptanceElem first_acc_elem = max_acc_elem++; */
+  /* AcceptanceElem second_acc_elem = max_acc_elem++; */
+  max_acc_elem++;
+  max_acc_elem++; // TODO : we do not this anymore, we may use size of acc_set_map
+  acc_set_map[v1].insert(c1);
+  acc_set_map[v2].insert(c2);
+  fairness_constraints.insert(FairnessConstraint(c1, c2));
 }

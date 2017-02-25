@@ -14,7 +14,7 @@ struct
   type proof_subnode =
     | OpenNode
     | AxiomNode
-    | InfNode of bool * (int * TagPairs.t * TagPairs.t) list
+    | InfNode of (int*int) option * (int * TagPairs.t * TagPairs.t) list
     | BackNode of int * TagPairs.t
   
   type t =
@@ -65,8 +65,10 @@ struct
     mk seq OpenNode "(Open)"
   let mk_axiom seq descr = 
     mk seq AxiomNode descr
-  let mk_inf ?(fair=false) seq descr subgoals = 
-    mk seq (InfNode(fair,subgoals)) descr
+  let mk_inf ?(fair_pair_fun=(fun _ -> None)) seq descr subgoals =
+    let fair_constraints = (fair_pair_fun seq) in
+    debug (fun () -> "Making inf node with fair constraints " ^ string_of_bool (Option.is_some fair_constraints));
+    mk seq (InfNode(fair_constraints,subgoals)) descr
   let mk_backlink seq descr child vtts = 
     mk seq (BackNode(child, vtts)) descr
   
@@ -80,11 +82,11 @@ struct
 
   let to_fair_abstract_node n = match n.node with
     | OpenNode | AxiomNode ->
-       Fair_soundcheck.mk_fair_abs_node false (Seq.tags n.seq) []
+       Fair_soundcheck.mk_fair_abs_node None (Seq.tags n.seq) []
     | InfNode(fair,subg) ->
        Fair_soundcheck.mk_fair_abs_node fair (Seq.tags n.seq) subg
     | BackNode(child, tv) ->
-       Fair_soundcheck.mk_fair_abs_node false (Seq.tags n.seq) [(child, tv, TagPairs.empty)]	
+       Fair_soundcheck.mk_fair_abs_node None (Seq.tags n.seq) [(child, tv, TagPairs.empty)]	
 			      
   let pp fmt n = match n.node with
     | OpenNode ->
@@ -95,14 +97,14 @@ struct
         Format.fprintf fmt "@[%a (%s) [%i] <pre=%a>@]" 
           Seq.pp n.seq n.descr i
           TagPairs.pp tps
-    | InfNode(f,p) -> (* TODO: print fair nodes? *) 
-       Format.fprintf fmt "@[%a (%s) [%a] - %s@]" 
+    | InfNode(f,p) ->
+       Format.fprintf fmt "@[%a (%s) [%a] %s@]" 
 		      Seq.pp n.seq
 		      n.descr
 		      (Blist.pp pp_commasp 
 				(fun fmt (i,pres,prog) -> 
 				 Format.fprintf fmt "%i" i)) p
-		      (string_of_bool f)
+		      (if Option.is_some f then "- fair (" ^ string_of_int (fst (Option.get f)) ^ "," ^ string_of_int(snd (Option.get f)) ^ ")" else "")
   (* Format.fprintf fmt "@[%i <%a/%a>@]" i TagPairs.pp pres TagPairs.pp prog)) p *)
   
   let justify = Latex.text "\n\\justifies\n\\thickness=0.1em\n"

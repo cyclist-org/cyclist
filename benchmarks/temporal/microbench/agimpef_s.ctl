@@ -1,5 +1,5 @@
 fields: next;
-precondition: current=zero * check=zero * p=zero * zero->one * one->two * two->three * three->four * four->five * FALSE->false' * TRUE->true' * break=FALSE;
+precondition: current=four * check=zero * p=zero * zero->one * one->two * two->three * three->four * four->five * FALSE->false' * TRUE->true' * break=FALSE;
 property: AG(\/(check=zero,EF(p=one)));
 check:=one;
 while break=FALSE do

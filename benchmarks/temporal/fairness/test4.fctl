@@ -1,0 +1,12 @@
+fields: next;
+precondition:x->x';
+property: AF(emp);
+while x=x do
+  if * then
+     free(x)
+  else
+     while * do
+       skip
+     od
+  fi
+od

@@ -68,9 +68,11 @@ void FairProofAutomaton::set_acceptance_condition() {
     if(elem != fairness_constraints.begin()) acceptance_condition << " & ";
     acceptance_condition << "(Fin(" << (std::get< 0 >(*elem))
 			 << ") | Inf(" << (std::get< 1 >(*elem))
+			 << ")) & (Fin(" << (std::get< 1 >(*elem))
+			 << ") | Inf(" << (std::get< 0 >(*elem))
 			 << "))" << std::flush;
   }
-  std::cout << "Setting acceptance condition: \"" << acceptance_condition.str() << "\"\n" ;
+  /* std::cout << "Setting acceptance condition: \"" << acceptance_condition.str() << "\"\n" ; */
   if (acceptance_condition.str().empty()) {
     set_buchi();
   } else {

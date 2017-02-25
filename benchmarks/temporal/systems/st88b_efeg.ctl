@@ -1,6 +1,6 @@
 fields: next,prev;
 precondition: flag1->a' * flag2->b' * flag3->c' * three->nil,two * two->three,one * one->two,nil * WItemsNum->nil,nil;
-property: EF(EG(WItemsNum->nil,nil));
+property: EF(EG(flag1->a' * three->nil,two * two->three,one * one->two,nil * WItemsNum->nil,nil));
 while flag1!=nil do
     while flag2!=nil do
 	current:=WItemsNum.next;

@@ -43,7 +43,7 @@ public:
   Vertex create_vertex();
   const AcceptanceSet get_acc_set_of_vertex(const Vertex & v) const;
   AcceptanceElem get_max_acc_elem() const { return max_acc_elem; }
-  void set_fairness_constraint(const Vertex & v1, const Vertex & v2);
+  void set_fairness_constraint(const Vertex & v1, const Vertex & v2, const int c1, const int c2);
   virtual std::unordered_set<FairnessConstraint> get_fairness_constraints() const {return fairness_constraints; }
 };
 //==================================================================

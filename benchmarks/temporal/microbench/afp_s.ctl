@@ -1,14 +1,10 @@
 fields: next;
-precondition: n->one * one->zero * zero->nil * p=zero * current=n * FALSE->false' * TRUE->true';
-property: AF(p=one);
-while break=FALSE do
-  if current=zero then
-    break:=TRUE
-  else
-    current:=current.next
-  fi
-od;
-p:=one;
+precondition: x=zero * zero->one * one->two * two->three * three->four * four->five;
+property: AF(x!=zero);
 while TRUE=TRUE do
-  skip
+  if * then
+    x:=x.next
+  else
+    x:=zero
+  fi
 od

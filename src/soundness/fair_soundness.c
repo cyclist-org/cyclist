@@ -160,14 +160,16 @@ extern "C" void set_fair_progress_pair(value v1_, value v2_, value t1_, value t2
   CAMLreturn0;
 }
 
-extern "C" void set_fairness_constraint(value v1_, value v2_) {
-  CAMLparam2(v1_,v2_);
+extern "C" void set_fairness_constraint(value v1_, value v2_, value c1_, value c2_) {
+  CAMLparam4(v1_,v2_,c1_,c2_);
   int v1 = Int_val(v1_);
   int v2 = Int_val(v2_);
+  int c1 = Int_val(c1_);
+  int c2 = Int_val(c2_);
   assert(proof);
   assert( bdd_map.find(v1) != bdd_map.end() );
   assert( bdd_map.find(v2) != bdd_map.end() );
-  proof->set_fairness_constraint(bdd_map[v1], bdd_map[v2]);
+  proof->set_fairness_constraint(bdd_map[v1], bdd_map[v2], c1, c2);
   CAMLreturn0;
 }
 
@@ -176,11 +178,11 @@ extern "C" value check_fair_soundness() {
   CAMLlocal1(v_res);
   proof->set_acceptance_condition();
   spot::twa_graph_ptr proof_graph = copy(proof, spot::twa::prop_set::all());
-  custom_print(std::cout,proof_graph);
+  /* custom_print(std::cout,proof_graph); */
   spot::const_twa_ptr ta = std::make_shared<TraceAutomaton>(*proof);
   spot::twa_graph_ptr proof_cpy = copy(proof, spot::twa::prop_set::all());
   spot::twa_graph_ptr graph = copy(ta, spot::twa::prop_set::all());
-  custom_print(std::cout,graph);
+  /* custom_print(std::cout,graph); */
   spot::twa_graph_ptr det = to_generalized_buchi(dtwa_complement(tgba_determinize(graph, false, true, true, spot::check_stutter_invariance(graph).is_true())));
   spot::twa_graph_ptr proof_tgba = to_generalized_buchi(proof_cpy);
   spot::const_twa_ptr product = std::make_shared<spot::twa_product>(proof_tgba, det);

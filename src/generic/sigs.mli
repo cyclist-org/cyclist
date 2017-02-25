@@ -50,7 +50,7 @@ sig
       sequent [seq], description [descr], target index [target] and set of 
       valid tag transitions (as pairs) [vtts].*) 
   
-  val mk_inf : ?fair:bool -> seq_t -> string -> (int * Util.TagPairs.t * Util.TagPairs.t) list -> t
+  val mk_inf : ?fair_pair_fun:(seq_t -> (int*int) option) -> seq_t -> string -> (int * Util.TagPairs.t * Util.TagPairs.t) list -> t
   (** [mk_inf fair seq descr subgoals back] creates an inference node labelled by 
       sequent [seq], description [descr], a list of triples consisting of
       subgoal index, valid tag transitions and progressing tag transitions 
@@ -129,7 +129,7 @@ sig
   val add_axiom : int -> string -> t -> t
   val add_backlink : int -> string -> int -> Util.TagPairs.t -> t -> t
   val add_inf : 
-    ?fair:bool -> int -> string -> 
+    ?fair_pair_fun:(seq_t -> (int*int) option) -> int -> string -> 
     (seq_t * Util.TagPairs.t * Util.TagPairs.t) list -> t -> 
     (int list * t)
 
@@ -209,7 +209,7 @@ sig
   (** Rules are functions that break down a sequent to a choice of applications
       where each application is a list of premises, including tag information,
       and a description. *)
-  val mk_infrule : ?fair:bool -> infrule_f -> t
+  val mk_infrule : ?fair_pair_fun:(seq_t -> (int*int) option) -> infrule_f -> t
 	
   (** Backlink rules take:
       - a boolean [eager] 

@@ -12,35 +12,40 @@ module Proof = Proof.Make(Temporal_program.Seq)
 let use_cut = ref true
 
 let use_fairness = ref false
-		  
+
+let subcheck = ref false
+		       
 let tagpairs s =
   Seq.tag_pairs s
 		
 (* following is for symex only *)
-let progpairs s = 
+let progpairs s =
   Seq.tag_pairs s
+(* let progpairs (sf,cmd,tf) = *)
+(*   (TagPairs.mk (Tl_form.outermost_tag tf)) *)
 
 let dest_sh_seq (sf,cmd,tf) = (Sl_form.dest sf, cmd, tf)
-				
+	
 (* axioms *)
 let subformula_axiom =
   Rule.mk_axiom 
-    (fun (sf,_,tf) ->
+    (fun (sf,c,tf) ->
      match Tl_form.is_atom tf with
      | true -> let tf_heap = Tl_form.dest_atom tf in
 	       let (_,_,ptos,inds) = Sl_heap.dest tf_heap in
-	       (Option.mk (Sl_ptos.is_empty ptos &&
-			     Sl_tpreds.is_empty inds &&
-			       not (Sl_heap.is_empty tf_heap) &&
-				 Sl_form.subsumed ~total:false [tf_heap] sf) "Sub-Check")
+	       let () = debug (fun () -> "Attempt subformula" ^ (Seq.to_string (sf,c,tf))) in
+	       (Option.mk ((Sl_ptos.is_empty ptos &&
+			      Sl_tpreds.is_empty inds &&
+				not (Sl_heap.is_empty tf_heap) || !subcheck) &&
+			     Sl_form.subsumed_upto_tags ~total:false [tf_heap] sf) "Sub-Check")
      | false -> None)
-
+    
 let ex_falso_axiom = 
   Rule.mk_axiom (fun (sf,_,_) -> Option.mk (Sl_form.inconsistent sf) "Ex Falso")
 
 let symex_check_axiom entails = 
   Rule.mk_axiom (fun (sf,_,tf) -> Option.mk (Tl_form.is_checkable tf && Option.is_some (entails sf (Tl_form.extract_checkable_slformula tf))) "Check")
-		
+
 let symex_empty_axiom =
   Rule.mk_axiom (fun (_,cmd,tf) -> Option.mk (Cmd.is_empty cmd && Tl_form.is_box tf) "Empty")
 
@@ -61,8 +66,8 @@ let simplify_seq_rl =
 
 let simplify = Rule.mk_infrule simplify_seq_rl  
     
-let wrap ?(fair=false) r =
-  Rule.mk_infrule ~fair:fair
+let wrap ?(fair_pair_fun=(fun _ -> None))  r =
+  Rule.mk_infrule ~fair_pair_fun:fair_pair_fun
     (Seqtactics.compose r (Seqtactics.attempt simplify_seq_rl))
 
 
@@ -82,25 +87,20 @@ let luf_rl seq defs =
     let (sf,cmd,tf) = dest_sh_seq seq in
     (* let (c,_,_) = if Cmd.is_ifelse cmd then Cmd.dest_ifelse cmd else let (c,cont) = Cmd.dest_while cmd in (c,cont,cont) in *)
     (* let cond_vars = Cond.vars c in *)
-    let t = if Cmd.is_load cmd then let (t,_,_) = Cmd.dest_load cmd in t else let (t,_,_) = Cmd.dest_store cmd in t in
-    let () = debug (fun _ -> "Term in cmd for luf: " ^ (Sl_term.to_string t)) in 
+    let t = if Cmd.is_load cmd then let (_,t,_) = Cmd.dest_load cmd in t else let (t,_,_) = Cmd.dest_store cmd in t in
+    let () = debug (fun _ -> "Term in cmd for luf: " ^ (Sl_term.to_string t)) in
     if (Blist.exists Option.is_some (Blist.map (fun var -> SH.find_lval var sf) [t])) then
-      let () = debug (fun _ -> "Already exists ") in 
+      let () = debug (fun _ -> "Already exists ") in
       []
     else
-      let () = debug (fun _ -> "Does NOT exists ") in 
-      let seq_vars = Seq.vars seq in
+      let () = debug (fun _ -> "Does NOT exists ") in
+    let seq_vars = Seq.vars seq in
     let left_unfold ((_, (ident, _)) as p) = 
       let l' = SH.del_ind sf p in
       let clauses = Sl_defs.unfold seq_vars l' p defs in
       let do_case (f', tagpairs) =
         let l' = Sl_heap.star l' f' in
-        ( 
-	  ([l'],cmd,tf), 
-	  (if !termination then tagpairs else Seq.tagpairs_one),
-	  (* Seq.tag_pairs ([l'],cmd,tf), *)
-	  (if !termination then tagpairs else TagPairs.empty)
-	) in
+        (([l'],cmd,tf), tagpairs, tagpairs) in
       Blist.map do_case clauses, ((Sl_predsym.to_string ident) ^ " L.Unf.") in
     Sl_tpreds.map_to_list 
       left_unfold (Sl_tpreds.filter (Sl_defs.is_defined defs) sf.SH.inds)
@@ -111,12 +111,8 @@ let luf defs = wrap (fun seq -> luf_rl seq defs)
 (* FOR SYMEX ONLY *)
 let fix_ts l = 
   Blist.map
-    (fun (g,d) ->
-     Blist.map
-       (fun s -> (s, tagpairs s, TagPairs.empty ))
-       g, d)
-    l 
-    
+    (fun (g,d) ->Blist.map (fun s -> (s, tagpairs s, TagPairs.empty )) g, d) l 
+
 let fix_tps l = 
   Blist.map 
     (fun (g,d) -> Blist.map (fun s -> (s, tagpairs s, progpairs s )) g, d) l 
@@ -127,12 +123,12 @@ let mk_symex f =
       if Tl_form.is_diamond tf then
 	let cont = Cmd.get_cont cmd in
 	let tf' = Tl_form.e_step tf in
-	fix_tps 
+	fix_ts 
 	  (Blist.map (fun (g,d) -> Blist.map (fun h' -> ([h'], cont, tf')) g, d) (f seq))
       else if Tl_form.is_box tf then
 	let cont = Cmd.get_cont cmd in
 	let tf' = Tl_form.a_step tf in
-	fix_tps 
+	fix_ts 
 	  (Blist.map (fun (g,d) -> Blist.map (fun h' -> ([h'], cont, tf')) g, d) (f seq))
       else
 	[]
@@ -214,25 +210,35 @@ let symex_skip_rule =
   mk_symex rl
 
 let symex_ifelse_fair_rule =
+  let fair_constraints seq =
+    try
+      let (sf,cmd,tf) = dest_sh_seq seq in
+      let (c,cmd1,cmd2) = Cmd.dest_ifelse cmd in
+      (* Get program labels for fairness constraint *)
+      let cmd_lbl_1 = Option.get (Cmd.get_lbl cmd1) in
+      let cmd_lbl_2 = Option.get (Cmd.get_lbl cmd2) in
+      debug (fun () -> "In constraint function. Shoud be some");
+      Some (cmd_lbl_1,cmd_lbl_2)
+    with WrongCmd -> debug (fun () -> "In constraint function. Failed. None"); None in 
   let rl seq =
     try
       let (sf,cmd,tf) = dest_sh_seq seq in
       let (c,cmd1,cmd2) = Cmd.dest_ifelse cmd in
       let cont = Cmd.get_cont cmd in
       let (sf',sf'') = Cond.fork sf c in 
-      if (Tl_form.is_box tf  && not (Cond.is_non_det c)) && !use_fairness then
+      if Tl_form.is_box tf  && (Cond.is_non_det c) && !use_fairness then
 	let tf' = Tl_form.a_step tf in
-	fix_tps 
+	fix_ts 
           [[ ([sf'], Cmd.mk_seq cmd1 cont, tf') ; ([sf''], Cmd.mk_seq cmd2 cont,tf') ], "If-F-[]"]
       else if (Cond.is_non_det c) && Tl_form.is_diamond tf && !use_fairness then
 	let tf' = Tl_form.e_step tf in
-	fix_tps 
+	fix_ts 
           [[ ([sf'], Cmd.mk_seq cmd1 cont, tf')], "If-<>1" ;
 	   [ ([sf''], Cmd.mk_seq cmd2 cont, tf')], "If-<>2"]
       else 
 	[]
     with Not_symheap | WrongCmd -> [] in
-  wrap ~fair:true rl
+  wrap ~fair_pair_fun:fair_constraints rl
        
 let symex_ifelse_rule =
   let rl seq =
@@ -243,14 +249,14 @@ let symex_ifelse_rule =
       let (sf',sf'') = Cond.fork sf c in
       if (Tl_form.is_box tf  && not (Cond.is_non_det c)) || (Tl_form.is_box tf && (not !use_fairness)) then
 	let tf' = Tl_form.a_step tf in
-	fix_tps 
+	fix_ts 
           [[ ([sf'], Cmd.mk_seq cmd1 cont, tf') ; ([sf''], Cmd.mk_seq cmd2 cont,tf') ], "If-[]"]
       else if Tl_form.is_box tf && !use_fairness then
 	[]
       else if Tl_form.is_diamond tf then
 	let tf' = Tl_form.e_step tf in
 	if (Cond.is_non_det c) && (not !use_fairness) then
-	  fix_tps 
+	  fix_ts 
             [[ ([sf'], Cmd.mk_seq cmd1 cont, tf')], 
              "If-<>1" ;
 	     [ ([sf''], Cmd.mk_seq cmd2 cont, tf')],
@@ -259,15 +265,26 @@ let symex_ifelse_rule =
 	else if (Cond.is_non_det c) && (!use_fairness) then
 	  []
 	else if Cond.validated_by sf c then
-	  fix_tps [[ ([sf'], Cmd.mk_seq cmd1 cont, tf')], "If-<>1"]
+	  fix_ts [[ ([sf'], Cmd.mk_seq cmd1 cont, tf')], "If-<>1"]
 	else
-	  fix_tps [[ ([sf''], Cmd.mk_seq cmd2 cont, tf')], "If-<>2"]
+	  fix_ts [[ ([sf''], Cmd.mk_seq cmd2 cont, tf')], "If-<>2"]
       else
 	[]
     with Not_symheap | WrongCmd -> [] in
-  wrap ~fair:false rl
+  wrap  rl
        
 let symex_while_fair_rule =
+  let fair_constraints seq =
+    try
+      let (sf,cmd,tf) = dest_sh_seq seq in
+      let (c,cmd') = Cmd.dest_while cmd in
+      let cont = Cmd.get_cont cmd in
+      (* Get program labels for fairness constraint *)
+      let cmd_lbl_1 = Option.get (Cmd.get_lbl cmd') in
+      let cmd_lbl_2 = Option.get (Cmd.get_lbl cont) in
+      debug (fun () -> "In constraint function. Shoud be some");
+      Some (cmd_lbl_1,cmd_lbl_2)
+    with WrongCmd -> debug (fun () -> "In constraint function. Failed. None"); None in 
   let rl seq =
     try
       let (sf,cmd,tf) = dest_sh_seq seq in
@@ -276,17 +293,17 @@ let symex_while_fair_rule =
       let (sf',sf'') = Cond.fork sf c in 
       if (Cond.is_non_det c) && Tl_form.is_box tf && !use_fairness then
 	let tf' = Tl_form.a_step tf in
-	fix_tps 
-	  [[ ([sf'], Cmd.mk_seq cmd' cmd, tf') ; ([sf''], cont, tf') ], "While-Fair-[]"]
+	fix_ts 
+	  [[ ([sf'], Cmd.mk_seq cmd' cmd, tf') ; ([sf''], cont, tf') ], "Wh-F-[]"]
       else if (Cond.is_non_det c) && Tl_form.is_diamond tf && !use_fairness then
 	let tf' = Tl_form.e_step tf in
-	fix_tps 
-          [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], "While-<>1" ;
-	   [ ([sf''], cont, tf')], "While-<>2"]
+	fix_ts 
+          [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], "Wh-<>1" ;
+	   [ ([sf''], cont, tf')], "Wh-<>2"]
       else
 	[]
     with Not_symheap | WrongCmd -> [] in
-  wrap ~fair:true rl
+  wrap ~fair_pair_fun:fair_constraints rl
        
 let symex_while_rule =
   let rl seq =
@@ -297,29 +314,29 @@ let symex_while_rule =
       let (sf',sf'') = Cond.fork sf c in 
       if (Tl_form.is_box tf && (not (Cond.is_non_det c))) || (Tl_form.is_box tf && (not !use_fairness)) then
 	let tf' = Tl_form.a_step tf in
-	fix_tps 
-	  [[ ([sf'], Cmd.mk_seq cmd' cmd, tf') ; ([sf''], cont, tf') ], "While-[]"]
+	fix_ts 
+	  [[ ([sf'], Cmd.mk_seq cmd' cmd, tf') ; ([sf''], cont, tf') ], "Wh-[]"]
       else if Tl_form.is_box tf && !use_fairness then
 	[]
       else if Tl_form.is_diamond tf then
 	let tf' = Tl_form.e_step tf in
 	if (Cond.is_non_det c) && (not !use_fairness) then
-	  fix_tps 
+	  fix_ts 
             [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], 
-             "While-<>1" ;
+             "Wh-<>1" ;
 	     [ ([sf''], cont, tf')],
-             "While-<>2"
+             "Wh-<>2"
             ]
 	else if (Cond.is_non_det c) && (!use_fairness) then
 	  []
 	else if Cond.validated_by sf c then
-	  fix_tps [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], "While-<>1"]
+	  fix_ts [[ ([sf'], Cmd.mk_seq cmd' cmd, tf')], "Wh-<>1"]
 	else
-	  fix_tps [[ ([sf''], cont, tf')], "While-<>2"]
+	  fix_ts [[ ([sf''], cont, tf')], "Wh-<>2"]
       else
 	[]
     with Not_symheap | WrongCmd -> [] in
-  wrap ~fair:false rl
+  wrap rl
 
 module Slprover = Prover.Make(Sl_seq)
 
@@ -366,7 +383,7 @@ let matches ((sf,cmd,tf) as seq) ((sf',cmd',tf') as seq') =
           ) in
       let res = 
 	Sl_term.backtrack 
-	  (Sl_heap.unify_partial ~tagpairs:true)
+	  (Sl_heap.classical_unify ~inverse:false ~tagpairs:true)
 	  ~sub_check
 	  ~cont 
 	  sf' sf in
@@ -390,7 +407,6 @@ let matches ((sf,cmd,tf) as seq) ((sf',cmd',tf') as seq') =
       		 else
       		   res in
       if Tl_form.is_ag tf && Tl_form.is_ag tf' then
-	(* let () = print_endline "After computer res with AG" in   *)
 	let (t1, _) = Tl_form.dest_ag tf in
 	let (t2, _) = Tl_form.dest_ag tf' in
 	assert (Tags.equal (Tags.singleton t1) (Tags.singleton t2));
@@ -428,7 +444,7 @@ let cut seq' seq =
     [ [(seq',
         TagPairs.union (TagPairs.mk (Tl_form.outermost_tag tf1)) (TagPairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')))
 	(* TagPairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')) *) (*Seq.tag_pairs seq*),
-       TagPairs.empty (* TagPairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')) *) (*Seq.tag_pairs seq*))], "Cut" ]
+       TagPairs.empty (* TagPairs.mk (Tags.inter (Seq.tags seq) (Seq.tags seq')) *) (*Seq.tag_pairs seq*))], "Cons" ]
   else
     []
 
@@ -439,7 +455,7 @@ let unfold_ag_rule =
       if Tl_form.is_ag tf then
 	let (tf1,tf2) = Tl_form.unfold_ag tf in
 	fix_tps
-	  [[([sf],cmd,tf1); ([sf],cmd,tf2)], "UnfoldAG"]
+	  [[([sf],cmd,tf1); ([sf],cmd,tf2)], "AG"]
       else
 	[]
     with Not_symheap -> [] in
@@ -451,8 +467,8 @@ let unfold_eg_rule =
       let (sf,cmd,tf) = dest_sh_seq seq in
       if Tl_form.is_eg tf then
 	let (tf1,tf2) = Tl_form.unfold_eg tf in
-	fix_ts
-	  [[([sf],cmd,tf1) ; ([sf],cmd,tf2)], "UnfoldEG"]
+	fix_tps
+	  [[([sf],cmd,tf1) ; ([sf],cmd,tf2)], "EG"]
       else 
 	[]
     with Not_symheap -> [] in
@@ -464,9 +480,9 @@ let unfold_af_rule =
       let (sf,cmd,tf) = dest_sh_seq seq in
       if Tl_form.is_af tf then
 	let (tf1,tf2) = Tl_form.unfold_af tf in
-	fix_tps
-	  [[([sf],cmd,tf1)], "UnfoldAF" ;
-	   [([sf],cmd,tf2)], "UnfoldAF"]
+	fix_ts
+	  [[([sf],cmd,tf1)], "AF" ;
+	   [([sf],cmd,tf2)], "AF"]
       else
 	[]
     with Not_symheap -> [] in
@@ -478,9 +494,9 @@ let unfold_ef_rule =
       let (sf,cmd,tf) = dest_sh_seq seq in
       if Tl_form.is_ef tf then
 	let (tf1,tf2) = Tl_form.unfold_ef tf in
-	fix_tps
-	  [[([sf],cmd,tf1)], "UnfoldEF" ;
-	   [([sf],cmd,tf2)], "UnfoldEF"]
+	fix_ts
+	  [[([sf],cmd,tf1)], "EF" ;
+	   [([sf],cmd,tf2)], "EF"]
       else
 	[]
     with Not_symheap -> [] in
@@ -492,7 +508,7 @@ let disjunction_rule =
       let (sf,cmd,tf) = dest_sh_seq seq in
       if Tl_form.is_or tf then
 	let (tf1,tf2) = Tl_form.unfold_or tf in
-	fix_tps
+	fix_ts
 	  [[([sf],cmd,tf1)], "Disj1" ;
 	   [([sf],cmd,tf2)], "Disj2"]
       else 
@@ -506,7 +522,7 @@ let conjunction_rule =
       let (sf,cmd,tf) = dest_sh_seq seq in
       if Tl_form.is_and tf then
 	let (tf1,tf2) = Tl_form.unfold_and tf in
-	fix_tps
+	fix_ts
 	  [[([sf],cmd,tf1);([sf],cmd,tf2)], "Conj"]
       else 
 	[]
@@ -535,24 +551,25 @@ let dobackl idx prf =
       let subst_seq = Seq.subst theta targ_seq' in
       Rule.sequence [
           if Seq.equal src_seq subst_seq
-        then Rule.identity
-        else 
-	  if Seq.subsumed src_seq targ_seq then
-	    Rule.mk_infrule (frame subst_seq)
-	  else
-	    Rule.mk_infrule (cut subst_seq);
-	
-	if Sl_term.Map.for_all Sl_term.equal theta
-	then Rule.identity
-	else Rule.mk_infrule (subst_rule theta targ_seq');
-        
-        Rule.mk_backrule
-	  ~fair:!use_fairness
-          false 
-          (fun _ _ -> [targ_idx]) 
-          (fun (_,_,tf) s' -> 
-           [(if !termination then TagPairs.reflect tagpairs else TagPairs.mk (Tl_form.outermost_tag tf)
-	    (*TagPairs.empty *) (* Seq.tagpairs_one *)), "Backl"])
+          then Rule.identity
+          else 
+	    (* if Seq.subsumed src_seq targ_seq then *)
+	    (*   Rule.mk_infrule (frame subst_seq) *)
+	    (* else *)
+	      Rule.mk_infrule (cut subst_seq);
+	  
+	  if Sl_term.Map.for_all Sl_term.equal theta
+	  then Rule.identity
+	  else Rule.mk_infrule (subst_rule theta targ_seq');
+          
+          Rule.mk_backrule
+	    ~fair:!use_fairness
+            false 
+            (fun _ _ -> [targ_idx]) 
+            (fun (_,_,tf) s' -> 
+             [(*TagPairs.empty*)
+	     (TagPairs.reflect tagpairs)
+	    (*TagPairs.empty *) (* Seq.tagpairs_one *), "Backl"])
 	] in
   (* let () = print_endline "Attempting backlink with source seq:" in   *)
   (* let () = print_endline (Seq.to_string src_seq) in   *)
@@ -619,126 +636,6 @@ let generalise_while_rule =
     with Not_symheap | WrongCmd -> [] in
   Rule.mk_infrule rl 
 
-(* let matches_cut ((sf,cmd,tf) as seq) ((sf',cmd',tf') as seq') = *)
-(*   try *)
-(*     (\* let () = print_endline "At matches with seqs:" in   *\) *)
-(*     (\* let () = print_endline (Seq.to_string seq) in   *\) *)
-(*     (\* let () = print_endline (Seq.to_string seq') in   *\) *)
-(*     if not (Cmd.equal cmd cmd' && Tl_form.equal tf tf' *)
-(* 	    && (Tl_form.is_ag tf || Tl_form.is_eg tf) *)
-(* 	    && (Tl_form.is_ag tf' || Tl_form.is_eg tf')) then  *)
-(*       (\* let () = print_endline "Seqs are not equal" in   *\) *)
-(*       []  *)
-(*     else if Option.is_some (Slprover.idfs 1 11 !Sl_rules.axioms !Sl_rules.rules (sf, sf')) then *)
-(*          [TagPairs.mk (Tl_form.outermost_tag tf)] *)
-(*        else *)
-(* 	 [] *)
-(*   with Not_symheap -> [] *)
-
-			
-(* let new_backl_cut idx prf =  *)
-(*   let src_seq = Proof.get_seq idx prf in *)
-(*   let targets = Rule.all_nodes idx prf in *)
-(*   let apps =  *)
-(*     Blist.bind *)
-(*       (fun idx' ->  *)
-(*        Blist.map  *)
-(*          (fun res -> (idx',res)) *)
-(*          (matches_cut src_seq (Proof.get_seq idx' prf)) *)
-(*       )  *)
-(*       targets in *)
-(*   let f (targ_idx,tagpairs) = *)
-(*       let targ_seq = Proof.get_seq targ_idx prf in *)
-(*       (\* [targ_seq'] is as [targ_seq] but with the tags of [src_seq] *\) *)
-(*       let (sf_targ_seq,cmd_targ_seq,tf_targ_seq) = targ_seq in *)
-(*       let targ_seq' = (Sl_form.subst_tags tagpairs sf_targ_seq, cmd_targ_seq, tf_targ_seq) in  *)
-(*       (\* let subst_seq = Seq.subst theta targ_seq' in *\) *)
-(*       Rule.sequence [ *)
-(* 	  Rule.mk_infrule (fun seq -> [ [(targ_seq', TagPairs.mk (Tl_form.outermost_tag tf_targ_seq), *)
-(* 					  TagPairs.empty)], "Cut" ]); *)
-	  
-(*           Rule.mk_backrule  *)
-(*             false  *)
-(*             (fun _ _ -> [targ_idx])  *)
-(*             (fun s s' ->  *)
-(*              [(if !termination then TagPairs.reflect tagpairs else TagPairs.empty (\* Seq.tagpairs_one *\)), "Backl"]) *)
-(* 	] in *)
-(*   (\* let () = print_endline "Attempting backlink with source seq:" in   *\) *)
-(*   (\* let () = print_endline (Seq.to_string src_seq) in   *\) *)
-(*   let rule_list = (Blist.map f apps) in *)
-(*   (\* let () = print_endline "IS LIST EMPTY? " in *\) *)
-(*   (\* let () = print_endline (string_of_bool (Blist.is_empty rule_list)) in *\) *)
-(*   Rule.first rule_list idx prf *)
-		  
-(* let backlink_cut defs = *)
-(*   let rl s1 s2 = *)
-(*     (\* let () = incr step in *\) *)
-(*     let ((sf1,cmd1,tf1),(sf2,cmd2,tf2)) = (s1,s2) in *)
-(*     if not (Cmd.is_while cmd1) then [] else *)
-(*       let () = debug (fun () -> "CUTLINK3: trying: " ^ (Seq.to_string s2)) in *)
-(*       let () = debug (fun () -> "                  " ^ (Seq.to_string s1)) in *)
-(*       (\* let () = debug (fun () -> "CUTLINK3: step = " ^ (string_of_int !step)) in *\) *)
-(*       (\* if !step <> 22 then None else *\) *)
-(*       if not (Cmd.equal cmd1 cmd2) then [] else *)
-(* 	let olddebug = !Lib.do_debug in *)
-(* 	let () = Lib.do_debug := true in *)
-(* 	let () = Sl_rules.setup defs in *)
-(* 	let result = *)
-(* 	  Option.is_some (Slprover.idfs 1 11 !Sl_rules.axioms !Sl_rules.rules (sf1, sf2)) in *)
-(* 	let () = Lib.do_debug := olddebug in *)
-(* 	let () = debug (fun () -> "CUTLINK3: result: " ^ (string_of_bool result)) in *)
-(* 	if result then *)
-(* 	  [ ((TagPairs.mk (Tl_form.outermost_tag tf1)), "Cut/Backl") ] *)
-(* 	else [] in *)
-(*   Rule.sequence [ *)
-(*       Rule.mk_infrule ([[((sf2,cmd2,tf2), (TagPairs.mk (Tl_form.outermost_tag tf1)),TagPairs.empty)], "Cut" ]); *)
-(*       Rule.mk_backrule true Rule.all_nodes rl] *)
-(* (Blist.map (fun rl -> Rule.mk_backrule true Rule.all_nodes rl) rl) *)
-		   
-
-
-
-    (*     let targ_seq = Proof.get_seq targ_idx prf in *)
-	  (*     (\* [targ_seq'] is as [targ_seq] but with the tags of [src_seq] *\) *)
-	  (*     let (sf_targ_seq,cmd_targ_seq,tf_targ_seq) = targ_seq in *)
-	  (*     let targ_seq' = (Sl_form.subst_tags tagpairs sf_targ_seq, cmd_targ_seq, tf_targ_seq) in  *)
-	  (*     let subst_seq = Seq.subst theta targ_seq' in *)
-	  (*     Rule.sequence [ *)
-	  (* 	  if Seq.equal src_seq subst_seq *)
-	  (* 	  then Rule.identity *)
-	  (* 	  else Rule.mk_infrule (frame subst_seq); *)
-		  
-	  (* 	  if Sl_term.Map.for_all Sl_term.equal theta *)
-	  (* 	  then Rule.identity *)
-	  (* 	  else Rule.mk_infrule (subst_rule theta targ_seq'); *)
-		  
-	  (* 	  Rule.mk_backrule  *)
-	  (* 	    false  *)
-	  (* 	    (fun _ _ -> [targ_idx])  *)
-	  (* 	    (fun s s' ->  *)
-	  (* 	     [(TagPairs.reflect tagpairs), "Backl"]) *)
-	  (* 	] in *)
-	  (*   (\* let () = print_endline "Attempting backlink with source seq:" in   *\) *)
-	  (*   (\* let () = print_endline (Seq.to_string src_seq) in   *\) *)
-	  (*   let rule_list = (Blist.map f apps) in *)
-	  (*   (\* let () = print_endline "IS LIST EMPTY? " in *\) *)
-	  (*   (\* let () = print_endline (string_of_bool (Blist.is_empty rule_list)) in *\) *)
-	  (*   Rule.first rule_list idx prf *)
-	  (* else *)
-	  (*   Rule.identity *)
-		 
-
-  (*   if result then [ (Seq.tagpairs_one, "Cut/Backl") ] else [] in *)
-  (* Rule.mk_backrule true Rule.all_nodes rl *)
-		 
-
-
-  (* 	] in *)
-  (*     [ (Seq.tagpairs_one, "Cut/Backl") ]  *)
-  (*   else [] in *)
-  (* Rule.mk_backrule true Rule.all_nodes rl *)
-
-
 let axioms = 
   let entails f f' =
     let olddebug = !Lib.do_debug in
@@ -746,7 +643,6 @@ let axioms =
     let result = (Slprover.idfs 1 10 !Sl_rules.axioms !Sl_rules.rules (f, f')) in
     let () = Lib.do_debug := olddebug in
     result in
-    (* Slprover.idfs 1 10 !Sl_rules.axioms !Sl_rules.rules (f, f') in *)
   ref (Rule.first [symex_check_axiom entails; symex_empty_axiom; subformula_axiom])
       
 let rules = ref Rule.fail
@@ -790,19 +686,10 @@ let setup defs =
 	       simplify ;
 	       Rule.choice [
 		   dobackl;
-		   Rule.compose_pairwise unfold_gs [Rule.attempt !axioms; (Rule.first [symex;symex_empty_axiom])];
+		   Rule.compose_pairwise unfold_gs [Rule.attempt !axioms; (Rule.first [symex_fair;symex;symex_empty_axiom])];
 		   unfold_fs;
-		   (* Rule.choice  *)
-		   (*   (Blist.map  *)
-		   (* 	(fun c -> Rule.compose (fold c) dobackl)  *)
-		   (* 	(Sl_defs.to_list defs)); *)
-		   (* Rule.choice  *)
-		   (*   (Blist.map  *)
-		   (* 	(fun c -> Rule.compose (fold c) symex)  *)
-		   (* 	(Sl_defs.to_list defs));		    *)
-		   symex;
 		   symex_fair;
-		   (* new_backl_cut; *)
+		   symex;
 		   (Rule.compose (luf defs) (Rule.attempt ex_falso_axiom));
 		   disjunction_rule;
 		   conjunction_rule;
