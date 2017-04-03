@@ -50,7 +50,7 @@ let _ = dispatch begin function
       (S[
         (* following option is a workaround for a bug in ocaml/ocamlbuild 3.x *)
         (* that reorders linker arguments *)
-        (* A"-cclib"; A"-Wl,--no-as-needed"; *)
+        A"-cclib"; A"-Wl,--no-as-needed";
         A"-cclib"; A"-lstdc++";
         A"src/soundness/libsoundness.a";
         A"libspot.a";
