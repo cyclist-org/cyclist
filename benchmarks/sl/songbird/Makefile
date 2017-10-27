@@ -1,5 +1,5 @@
 TESTS:= $(sort $(wildcard *.tst))
-DEFS := $(ROOT)/examples/songbird.defs
+DEFS := "$(ROOT)/examples/songbird.defs"
 
 .PHONY: all $(TESTS)
 all: $(TESTS)

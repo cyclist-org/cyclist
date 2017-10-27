@@ -1,5 +1,5 @@
 TESTS:= $(sort $(wildcard *.tst))
-DEFS := $(ROOT)/examples/IosifEtAl-ATVA2014.defs
+DEFS := "$(ROOT)/examples/IosifEtAl-ATVA2014.defs"
 
 .PHONY: all $(TESTS)
 all: $(TESTS)
