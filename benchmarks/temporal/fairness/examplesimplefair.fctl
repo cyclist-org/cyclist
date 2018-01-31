@@ -1,0 +1,9 @@
+fields: next;
+precondition: x=true;
+property: AF(x=false);
+while x=x do
+  while * do
+     x:=true
+  od;
+  x:=false
+od

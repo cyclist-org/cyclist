@@ -176,7 +176,9 @@ extern "C" void set_fairness_constraint(value v1_, value v2_, value c1_, value c
 extern "C" value check_fair_soundness() {
   CAMLparam0();
   CAMLlocal1(v_res);
+  
   proof->set_acceptance_condition();
+  
   spot::twa_graph_ptr proof_graph = copy(proof, spot::twa::prop_set::all());
   /* custom_print(std::cout,proof_graph); */
   spot::const_twa_ptr ta = std::make_shared<TraceAutomaton>(*proof);

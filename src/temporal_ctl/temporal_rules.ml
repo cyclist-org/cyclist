@@ -545,7 +545,6 @@ let dobackl idx prf =
       targets in
   let f (targ_idx, (theta,tagpairs)) =
       let targ_seq = Proof.get_seq targ_idx prf in
-      (* [targ_seq'] is as [targ_seq] but with the tags of [src_seq] *)
       let (sf_targ_seq,cmd_targ_seq,tf_targ_seq) = targ_seq in
       let targ_seq' = (Sl_form.subst_tags tagpairs sf_targ_seq, cmd_targ_seq, tf_targ_seq) in 
       let subst_seq = Seq.subst theta targ_seq' in
