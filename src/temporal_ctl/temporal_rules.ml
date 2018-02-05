@@ -118,23 +118,24 @@ let fix_tps l =
     (fun (g,d) -> Blist.map (fun s -> (s, tagpairs s, progpairs s )) g, d) l 
     
 let mk_symex f = 
-  let rl ((_,cmd,tf) as seq) = 
+  let rl ((_,cmd,tf) as seq) =
     try
-      if Tl_form.is_diamond tf then
-	let cont = Cmd.get_cont cmd in
-	let tf' = Tl_form.e_step tf in
-	fix_ts 
-	  (Blist.map (fun (g,d) -> Blist.map (fun h' -> ([h'], cont, tf')) g, d) (f seq))
-      else if Tl_form.is_box tf then
-	let cont = Cmd.get_cont cmd in
-	let tf' = Tl_form.a_step tf in
-	fix_ts 
-	  (Blist.map (fun (g,d) -> Blist.map (fun h' -> ([h'], cont, tf')) g, d) (f seq))
-      else
-	[]
+      match tf with
+      | Tl_form.Diamond _ ->
+	 let cont = Cmd.get_cont cmd in
+	 let tf' = Tl_form.e_step tf in
+	 fix_ts 
+	   (Blist.map (fun (g,d) -> Blist.map (fun h' -> ([h'], cont, tf')) g, d) (f seq))
+      | Tl_form.Box _ -> 
+	 let cont = Cmd.get_cont cmd in
+	 let tf' = Tl_form.a_step tf in
+	 fix_ts 
+	   (Blist.map (fun (g,d) -> Blist.map (fun h' -> ([h'], cont, tf')) g, d) (f seq))
+      | _ ->
+	 []
     with WrongCmd -> []
   in wrap rl
-       
+	  
 (* symbolic execution rules *)
 let symex_assign_rule =
   let rl seq =
@@ -452,81 +453,63 @@ let unfold_ag_rule =
   let rl seq =
     try
       let (sf,cmd,tf) = dest_sh_seq seq in
-      if Tl_form.is_ag tf then
-	let (tf1,tf2) = Tl_form.unfold_ag tf in
-	fix_tps
-	  [[([sf],cmd,tf1); ([sf],cmd,tf2)], "AG"]
-      else
-	[]
-    with Not_symheap -> [] in
+      let (tf1,tf2) = Tl_form.unfold_ag tf in
+      fix_tps
+	[[([sf],cmd,tf1); ([sf],cmd,tf2)], "AG"]
+    with Invalid_argument _ | Not_symheap -> [] in
   wrap rl
 
 let unfold_eg_rule = 
   let rl seq =
     try
       let (sf,cmd,tf) = dest_sh_seq seq in
-      if Tl_form.is_eg tf then
-	let (tf1,tf2) = Tl_form.unfold_eg tf in
-	fix_tps
-	  [[([sf],cmd,tf1) ; ([sf],cmd,tf2)], "EG"]
-      else 
-	[]
-    with Not_symheap -> [] in
+      let (tf1,tf2) = Tl_form.unfold_eg tf in
+      fix_tps
+	[[([sf],cmd,tf1) ; ([sf],cmd,tf2)], "EG"]
+    with Invalid_argument _ | Not_symheap -> [] in
   wrap rl
 
 let unfold_af_rule = 
   let rl seq =
     try
       let (sf,cmd,tf) = dest_sh_seq seq in
-      if Tl_form.is_af tf then
-	let (tf1,tf2) = Tl_form.unfold_af tf in
-	fix_ts
-	  [[([sf],cmd,tf1)], "AF" ;
-	   [([sf],cmd,tf2)], "AF"]
-      else
-	[]
-    with Not_symheap -> [] in
+      let (tf1,tf2) = Tl_form.unfold_af tf in
+      fix_ts
+	[[([sf],cmd,tf1)], "AF" ;
+	 [([sf],cmd,tf2)], "AF"]
+    with Invalid_argument _ | Not_symheap -> [] in
   wrap rl
 
 let unfold_ef_rule = 
   let rl seq =
     try
       let (sf,cmd,tf) = dest_sh_seq seq in
-      if Tl_form.is_ef tf then
-	let (tf1,tf2) = Tl_form.unfold_ef tf in
-	fix_ts
-	  [[([sf],cmd,tf1)], "EF" ;
-	   [([sf],cmd,tf2)], "EF"]
-      else
-	[]
-    with Not_symheap -> [] in
+      let (tf1,tf2) = Tl_form.unfold_ef tf in
+      fix_ts
+	[[([sf],cmd,tf1)], "EF" ;
+	 [([sf],cmd,tf2)], "EF"]
+    with Invalid_argument _ | Not_symheap -> [] in
   wrap rl
        
 let disjunction_rule = 
   let rl seq = 
     try
       let (sf,cmd,tf) = dest_sh_seq seq in
-      if Tl_form.is_or tf then
-	let (tf1,tf2) = Tl_form.unfold_or tf in
-	fix_ts
-	  [[([sf],cmd,tf1)], "Disj1" ;
-	   [([sf],cmd,tf2)], "Disj2"]
-      else 
-	[]
-    with Not_symheap -> [] in
+      let (tf1,tf2) = Tl_form.unfold_or tf in
+      fix_ts
+	[[([sf],cmd,tf1)], "Disj1" ;
+	 [([sf],cmd,tf2)], "Disj2"]
+    with Invalid_argument _ | Not_symheap -> [] in
   wrap rl	
        
 let conjunction_rule = 
   let rl seq = 
     try
       let (sf,cmd,tf) = dest_sh_seq seq in
-      if Tl_form.is_and tf then
-	let (tf1,tf2) = Tl_form.unfold_and tf in
-	fix_ts
-	  [[([sf],cmd,tf1);([sf],cmd,tf2)], "Conj"]
-      else 
-	[]
-    with Not_symheap -> [] in
+      let (tf1,tf2) = Tl_form.unfold_and tf in
+      fix_ts
+	[[([sf],cmd,tf1);([sf],cmd,tf2)], "Conj"]
+    with Invalid_argument _ | Not_symheap -> [] in
   wrap rl	
 
 (* if there is a backlink achievable through substitution and classical *)
