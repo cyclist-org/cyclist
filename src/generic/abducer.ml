@@ -8,11 +8,10 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
     module Proof = Proof.Make(Seq)
     module Node = Proofnode.Make(Seq)
     module Prover = Prover.Make(Seq)
-    
-    let melt_proof = Prover.melt_proof
+
     let print_proof_stats = Prover.print_proof_stats
     module Seq = Seq
-    
+
     type seq_t = Seq.t
     type defs_t = Defs.t
     type abdrule_t = Abdrule.t
@@ -34,7 +33,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
         idx : int;
         apps : app_state L.t
       }
-     
+
     let state_seq_no = ref 0
 
     let mk_state par idx apps =
@@ -60,7 +59,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
       (* let () = assert (Node.is_open (Proof.find idx app.prf) && app.depth >= goal_depth) in *)
       let new_goal_depth = goal_depth+1 in
       let new_prf_depth = max app.depth new_goal_depth in
-      let newapps = 
+      let newapps =
         L.map
           begin fun ((g',p'),defs') ->
             mk_app
@@ -75,9 +74,9 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
         idx
         newapps
 
-    
+
     let bfs maxbound rule seq initial_defs check =
-      let rec aux bound frontier stack = 
+      let rec aux bound frontier stack =
         if bound > maxbound || (stack = [] && frontier = []) then None else
         if stack=[] then
           (* finished current depth, increase and repeat *)
@@ -119,15 +118,15 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
           (* that are parents of the current one *)
           (* this is equivalent to a prolog cut over the other possible *)
           (* closed proofs of these goals *)
-          pop_parents proof_state.seq_no stack 
+          pop_parents proof_state.seq_no stack
         else
           stack in
         let stack = (expand_proof_state proof_state.seq_no app rule) :: stack in
         aux bound frontier stack in
       let start = Proof.mk seq in
-      let stack = 
+      let stack =
         [expand_proof_state 0 (mk_app start 0 [(0,0)] initial_defs) rule] in
-      Option.map  
+      Option.map
         (fun (p, d, defs) -> Prover.last_search_depth := d ; (p, defs))
         (aux 1 [] stack)
   end

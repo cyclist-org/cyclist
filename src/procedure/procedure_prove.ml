@@ -20,33 +20,33 @@ let prove_all = ref false
 
 let () = F.usage := !F.usage ^ "[-ed/fd <int>] [-D <file>] [-d(entail|frame|invalid)] [-Lem <int>] -P <file> [-T] [-all | <entry_point>*]"
 
-let () = 
+let () =
   let old_spec_thunk = !F.speclist in
-  F.speclist := 
+  F.speclist :=
     (fun () -> old_spec_thunk() @ [
-      ("-ed", Arg.Set_int Rules.entl_depth, 
+      ("-ed", Arg.Set_int Rules.entl_depth,
         ": maximum search depth for entailment sub-prover, default is " ^ (string_of_int !Rules.entl_depth));
-      ("-fd", Arg.Int Sl_abduce.set_depth, 
+      ("-fd", Arg.Int Sl_abduce.set_depth,
         ": maximum depth to unfold predicates to in frame inference, default is " ^ (string_of_int Sl_abduce.max_depth));
-      ("-D", Arg.Set_string defs_path, 
+      ("-D", Arg.Set_string defs_path,
         ": read inductive definitions from <file>, default is " ^ !defs_path);
-      ("-dentail", Arg.Set Rules.show_entailment_debug, 
+      ("-dentail", Arg.Set Rules.show_entailment_debug,
         ": print debug messages for the entailment subprover, default is " ^ (string_of_bool !Rules.show_entailment_debug) ^
         " (only activated when main debug output flag set)") ;
-      ("-dframe", Arg.Set Rules.show_frame_debug, 
+      ("-dframe", Arg.Set Rules.show_frame_debug,
         ": print debug messages for frame inference, default is " ^ (string_of_bool !Rules.show_frame_debug) ^
         " (only activated when main debug output flag set)") ;
-      ("-dinvalid", Arg.Set Rules.show_invalidity_debug, 
+      ("-dinvalid", Arg.Set Rules.show_invalidity_debug,
         ": print debug messages for invalidity checker, default is " ^ (string_of_bool !Rules.show_invalidity_debug) ^
         " (only activated when main debug output flag set)") ;
       ("-Lem", Arg.Int Sl_rules.set_lemma_level,
-        ": specify the permissiveness of the lemma application strategy for proving entailments" ^ "\n" ^ 
+        ": specify the permissiveness of the lemma application strategy for proving entailments" ^ "\n" ^
         Sl_rules.lemma_option_descr_str());
       ("-P", Arg.Set_string prog_path, ": prove safety of program in <file>");
       ("-T", Arg.Set Program.termination, ": also prove termination");
       ("-all", Arg.Set prove_all, ": analyse all procedures in <file>, or specify procedures to be analysed (default is " ^ Program.main ^ ")") ;
     ])
-  
+
 (* disable max search depth *)
 let () = F.maxbound := 0
 
@@ -75,7 +75,6 @@ let extract_proof prf (idx, node) =
       print_endline
         ("Proof has " ^ (string_of_int (Proof.size new_prf)) ^ " nodes" ^
          " and " ^ (string_of_int (Proof.num_backlinks new_prf)) ^ " back-links.") ;
-    F.do_latex_dump new_prf ;
     proc_proofs := 
       Proc.SigMap.add signature (Some new_prf) !proc_proofs
 
@@ -84,13 +83,13 @@ let prove_seq ((pre,cmd,post) as seq) =
   assert (Cmd.is_empty (Cmd.get_cont cmd)) ;
   let proc = Cmd.dest_proc_call cmd in
   let signature = (proc, (pre, post)) in
-  if not (Proc.SigMap.mem signature !proc_proofs) then 
+  if not (Proc.SigMap.mem signature !proc_proofs) then
   begin
   Lib.debug (fun () -> "Beginning search for proof of: " ^ (Seq.to_string seq)) ;
   if !F.show_proof || !Stats.do_statistics then print_newline() ;
   match (F.prove_seq !Rules.axioms !Rules.rules seq) with
   | TIMEOUT | NOT_FOUND -> proc_proofs := Proc.SigMap.add signature None !proc_proofs
-  | SUCCESS(prf) -> 
+  | SUCCESS(prf) ->
   proc_proofs := Proc.SigMap.add signature (Some prf) !proc_proofs ;
   Blist.iter (extract_proof prf) (Proof.to_list prf)
   end
@@ -109,15 +108,15 @@ let () =
 	(* TODO: Check well-formedness of the program: *)
 	(*   Do all the predicates in the pre/post annotations have the correct arity? *)
 	(*   If not While_program.well_formed defs prog then F.die !While_program.error_msg *)
-  Program.set_program (fields, procs); 
+  Program.set_program (fields, procs);
   Rules.setup (defs, procs, proc_proofs) ;
   let proc_names = Blist.map Proc.get_name procs in
   let entry_points =
-    if !prove_all then proc_names 
-    else if Blist.is_empty !entry_points then [Program.main] 
+    if !prove_all then proc_names
+    else if Blist.is_empty !entry_points then [Program.main]
     else !entry_points in
-  Blist.iter 
-    (fun p -> try Program.get_proc p; () with Not_found -> F.die (p ^ " procedure not found!") spec_list !F.usage) 
+  Blist.iter
+    (fun p -> try Program.get_proc p; () with Not_found -> F.die (p ^ " procedure not found!") spec_list !F.usage)
     entry_points ;
   let reachable = Program.get_reachable entry_points in
   Blist.iter
@@ -127,19 +126,19 @@ let () =
   Timer.call ();
   Blist.iter prove_scc sccs ;
   Timer.end_call ();
-  if !Stats.do_statistics then 
+  if !Stats.do_statistics then
     Printf.printf "\nTotal time taken: %.0f ms\n" (1000.0 *. !Timer.cpu_time) ;
   let res =
-    Blist.for_all 
+    Blist.for_all
       (fun p ->
         let proc = Program.get_proc p in
-        let head = (Proc.get_name proc, Proc.get_params proc) in 
-        try 
-          Blist.for_all 
-            (fun (pre,_,post) -> Option.is_some (Proc.SigMap.find (head,(pre,post)) !proc_proofs)) 
+        let head = (Proc.get_name proc, Proc.get_params proc) in
+        try
+          Blist.for_all
+            (fun (pre,_,post) -> Option.is_some (Proc.SigMap.find (head,(pre,post)) !proc_proofs))
             (Proc.get_seqs proc)
-        with Not_found -> false) 
+        with Not_found -> false)
       entry_points in
-  if res 
+  if res
     then exit 0
     else exit 1

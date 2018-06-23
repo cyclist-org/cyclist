@@ -6,19 +6,18 @@ module Elt :
 sig
   include Utilsigs.BasicType
   module Unifier : Utilsigs.OrderedContainer with type elt = t * t
-  
+
   val parse : (t, 'a) MParser.t
-  
-  val to_melt : t -> Latex.t
+
   val to_int : t -> int
-  
-  val unify : 
+
+  val unify :
     ?update_check:((Unifier.t Unification.state_update) Fun.predicate)
       -> (Unifier.t, 'a, t) Unification.cps_unifier
   (** Unifies two tags by finding a suitable substitution (represented as a set of tag pairs)
       for the first tag which makes it equal to the second. *)
-  
-  val biunify : 
+
+  val biunify :
     ?update_check:(((Unifier.t * Unifier.t) Unification.state_update) Fun.predicate)
       -> ((Unifier.t * Unifier.t), 'a, t) Unification.cps_unifier
   (** Unifies two tags by finding suitable substitutions (represented as a set of tag pairs)

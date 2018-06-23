@@ -2,7 +2,7 @@ null  :=
 space := $(null) #
 comma := ,
 
-PKGS := pcre,melt.latex,unix,str,ocamlgraph,dynlink
+PKGS := pcre,unix,str,ocamlgraph,dynlink
 TAGS := debug,explain,annot,use_libsoundness
 OCAMLDOC := ocamldoc -hide-warnings
 INCLUDES := $(subst $(space),$(comma),$(strip $(wildcard src/*)))

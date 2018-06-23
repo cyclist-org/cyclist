@@ -2,34 +2,31 @@ open Lib
 
 open Symbols
 
-let ltx_axiom ax = ltx_paren (ltx_text ax)
-let ltx_rule r = ltx_paren (ltx_text r)
-  
 module Make(Seq: Sigs.SEQUENT) =
 struct
   module Seq = Seq
-  
+
   type seq_t = Seq.t
-  
+
   type proof_subnode =
     | OpenNode
     | AxiomNode
     | InfNode of (int * Tagpairs.t * Tagpairs.t) list
     | BackNode of int * Tagpairs.t
-  
+
   type t =
     {
       seq: Seq.t;
       descr : string;
       node: proof_subnode;
     }
-  
+
   let get_seq n = n.seq
   let get_succs n = match n.node with
     | AxiomNode | OpenNode -> []
     | BackNode (s, _) -> [s]
     | InfNode(ss) -> let (ss',_,_) = Blist.unzip3 ss in ss'
-  
+
   let dest n = (n.seq, n.descr)
   let dest_backlink n = match n.node with
     | BackNode(child, vtts) -> (n.seq, n.descr, child, vtts)
@@ -37,8 +34,8 @@ struct
   let dest_inf n = match n.node with
     | InfNode(subgs) -> (n.seq, n.descr, subgs)
     | _ -> invalid_arg "dest_inf"
-  
-  
+
+
   let is_open n = match n.node with
     | OpenNode -> true
     | _ -> false
@@ -60,16 +57,16 @@ struct
       node = node;
       descr = descr
     }
-    
-  let mk_open seq = 
+
+  let mk_open seq =
     mk seq OpenNode "(Open)"
-  let mk_axiom seq descr = 
+  let mk_axiom seq descr =
     mk seq AxiomNode descr
-  let mk_inf seq descr subgoals = 
+  let mk_inf seq descr subgoals =
     mk seq (InfNode(subgoals)) descr
-  let mk_backlink seq descr child vtts = 
+  let mk_backlink seq descr child vtts =
     mk seq (BackNode(child, vtts)) descr
-  
+
   let to_abstract_node n = match n.node with
     | OpenNode | AxiomNode ->
         Soundcheck.mk_abs_node (Seq.tags n.seq) []
@@ -77,54 +74,22 @@ struct
         Soundcheck.mk_abs_node (Seq.tags n.seq) subg
     | BackNode(child, tv) ->
         Soundcheck.mk_abs_node (Seq.tags n.seq) [(child, tv, Tagpairs.empty)]
-    
+
   let pp fmt n = match n.node with
     | OpenNode ->
         Format.fprintf fmt "@[%a (Open)@]" Seq.pp n.seq
     | AxiomNode ->
         Format.fprintf fmt "@[%a (%s)@]" Seq.pp n.seq n.descr
     | BackNode(i, tps) ->
-        Format.fprintf fmt "@[%a (%s) [%i] <pre=%a>@]" 
+        Format.fprintf fmt "@[%a (%s) [%i] <pre=%a>@]"
           Seq.pp n.seq n.descr i
           Tagpairs.pp tps
     | InfNode(p) ->
-        Format.fprintf fmt "@[%a (%s) [%a]@]" 
+        Format.fprintf fmt "@[%a (%s) [%a]@]"
           Seq.pp n.seq n.descr
-          (Blist.pp pp_commasp 
-            (fun fmt (i,pres,prog) -> 
+          (Blist.pp pp_commasp
+            (fun fmt (i,pres,prog) ->
               (* Format.fprintf fmt "%i" i)) p *)
               Format.fprintf fmt "@[%i <%a/%a>@]" i Tagpairs.pp (Tagpairs.diff pres prog) Tagpairs.pp prog)) p
-  
-  let justify = Latex.text "\n\\justifies\n\\thickness=0.1em\n"
-  let using = Latex.text "\\using"
-  let prooftree first seq m =
-    let comment = Latex.text ("% " ^ (Seq.to_string seq) ^ "\n") in
-    if first then
-      Latex.environment
-        "prooftree" (Latex.M, (Latex.concat [comment; m])) Latex.M
-    else
-      Latex.concat [ Latex.text "\\[ "; comment; m; Latex.text "\n\\]\n" ]
-  let prefix id s =
-    Latex.concat
-      [ Latex.text ((string_of_int id) ^ " : "); Seq.to_melt s]
-  let justifies id s = Latex.concat [ justify; prefix id s; ltx_newl ]
-  
-  let to_melt first id n cont = match n.node with
-    | OpenNode ->
-        ltx_mk_math
-          (Latex.concat [ prefix id n.seq; ltx_text "(Open)"; ltx_newl ])
-    | AxiomNode ->
-        prooftree first n.seq
-          (Latex.concat [ ltx_axiom n.descr; justifies id n.seq ])
-    | InfNode(p) ->
-        prooftree first n.seq
-          (Latex.concat
-              ((Blist.map (fun (i,_,_) -> cont false i) p) @
-                [ justifies id n.seq; using; ltx_rule n.descr; ltx_newl ]))
-    | BackNode(i, _) ->
-        prooftree first n.seq
-          (Latex.concat
-              [ Latex.text ("\\to " ^ (string_of_int i));
-              ltx_rule n.descr; justifies id n.seq ])
-  
+
 end

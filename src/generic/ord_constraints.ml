@@ -30,16 +30,6 @@ module Constraint =
       | LTE(t, t') ->
           (Tag.to_string t) ^ symb_leq.sep ^ (Tag.to_string t')
 
-    let to_melt = function
-      | LT(t, t') -> Latex.concat [
-          Tag.to_melt t ;
-          symb_lt.melt ;
-          Tag.to_melt t' ]
-      | LTE(t, t') -> Latex.concat [
-          Tag.to_melt t ;
-          symb_leq.melt ;
-          Tag.to_melt t' ]
-
     let pp fmt c = Format.fprintf fmt "@[%s@]" (to_string c)
 
     let parse st =
@@ -56,7 +46,7 @@ module Constraint =
     let subst_tags theta = function
       | LT(ts) -> LT(Pair.map (Tagpairs.apply_to_tag theta) ts)
       | LTE(ts) -> LTE(Pair.map (Tagpairs.apply_to_tag theta) ts)
-    
+
     let satisfiable = function
       | LT(t, t') -> not (Tags.Elt.equal t t')
       | _ -> true
@@ -67,8 +57,8 @@ module Constraint =
 
     let mk_unify elt_unify c c' cont init_state =
       let do_unify (t, t') (t'', t''') =
-        (elt_unify t t'' 
-        (elt_unify t' t''' 
+        (elt_unify t t''
+        (elt_unify t' t'''
         (cont)))
         init_state in
       match (c, c') with
@@ -83,7 +73,7 @@ module Constraint =
       mk_unify (Tags.Elt.biunify ~update_check) c c' cont init_state
 
   end
-  
+
 module Elt = Constraint
 
 include Listset.Make(Constraint)
@@ -91,13 +81,12 @@ include Listset.Make(Constraint)
 let to_string cs = if is_empty cs then "" else to_string cs
 let pp fmt cs = if is_empty cs then Format.fprintf fmt "" else pp fmt cs
 
-let to_melt cs = ltx_comma (map_to_list Constraint.to_melt cs)
 let to_string_list cs = map_to_list Constraint.to_string cs
 
 let parse st =
-  ( ( attempt (sep_by Constraint.parse (parse_symb symb_comma)) 
+  ( ( attempt (sep_by Constraint.parse (parse_symb symb_comma))
     <|> (return [])) >>= (fun cs ->
-    let cs = of_list cs in 
+    let cs = of_list cs in
     if (is_empty cs) then return cs
     else Tokens.colon >> (return cs))) st
 
@@ -105,26 +94,26 @@ let of_string s = handle_reply (MParser.parse_string parse s ())
 
 let tags cs =
   fold (fun c ts -> Tags.union ts (Constraint.tags c)) cs Tags.empty
-  
+
 let tag_pairs cs = Tagpairs.mk (tags cs)
 
 let subst_tags theta cs = endomap (Constraint.subst_tags theta) cs
 
 let generate ?(avoid=Tags.empty) ?(augment=true) t ts =
   let ts =
-    if augment && Tags.is_empty ts 
-      then Tags.singleton (Tags.fresh_evar avoid) 
+    if augment && Tags.is_empty ts
+      then Tags.singleton (Tags.fresh_evar avoid)
       else ts in
   Tags.map_to add empty (fun t' -> Constraint.LT(t', t)) ts
-  
+
 let infer_constraint = function
-  | (Constraint.LT(t1, t2), Constraint.LT(t1', t2')) -> 
+  | (Constraint.LT(t1, t2), Constraint.LT(t1', t2')) ->
       Option.mk (t2 = t1') (Constraint.LT(t1, t2'))
-  | (Constraint.LT(t1, t2), Constraint.LTE(t1', t2')) -> 
+  | (Constraint.LT(t1, t2), Constraint.LTE(t1', t2')) ->
       Option.mk (t2 = t1') (Constraint.LT(t1, t2'))
-  | (Constraint.LTE(t1, t2), Constraint.LT(t1', t2')) -> 
+  | (Constraint.LTE(t1, t2), Constraint.LT(t1', t2')) ->
       Option.mk (t2 = t1') (Constraint.LT(t1, t2'))
-  | (Constraint.LTE(t1, t2), Constraint.LTE(t1', t2')) -> 
+  | (Constraint.LTE(t1, t2), Constraint.LTE(t1', t2')) ->
       Option.mk (t2 = t1') (Constraint.LTE(t1, t2'))
 
 let close cs =
@@ -136,41 +125,41 @@ let close cs =
     let allpairs = Blist.cartesian_product cs_list cs_list in
     Blist.map_to (Option.dest Fun.id add) cs infer_constraint allpairs in
   fixpoint gen cs
-  
+
 let remove_schema cs used =
-  let tags = Tags.filter 
+  let tags = Tags.filter
     (fun t -> Tags.is_exist_var t && not (Tags.mem t used))
     (tags cs) in
   let get_schema t =
     let (cs', cs) = partition (fun c -> Tags.mem t (Constraint.tags c)) cs in
     let ident =
-      if Fun.swap for_all cs' (function 
-          | Constraint.LT(t', t'') -> 
-              Tags.Elt.equal t t'' && not (Tags.Elt.equal t t')  
-          | Constraint.LTE(_, t') -> Tags.Elt.equal t t') 
+      if Fun.swap for_all cs' (function
+          | Constraint.LT(t', t'') ->
+              Tags.Elt.equal t t'' && not (Tags.Elt.equal t t')
+          | Constraint.LTE(_, t') -> Tags.Elt.equal t t')
         then Some "UBound"
-      else if Fun.swap for_all cs' (function 
-          | Constraint.LTE(t', _) -> Tags.Elt.equal t t'  
-          | _ -> false) 
+      else if Fun.swap for_all cs' (function
+          | Constraint.LTE(t', _) -> Tags.Elt.equal t t'
+          | _ -> false)
         then Some "LBound"
       else
         None in
     Option.map (Pair.mk cs) ident in
   Tags.find_map get_schema tags
-  
+
 let verify_schemas used_tags cs =
   let rec f cs =
-    Option.dest_lazily 
-      (fun _ -> cs) 
-      (fun (cs, _) -> f cs) 
+    Option.dest_lazily
+      (fun _ -> cs)
+      (fun (cs, _) -> f cs)
       (remove_schema cs used_tags) in
   is_empty (f cs)
-    
+
 let upper_bounds ?(strict=false) t cs =
   let f = function
     | Constraint.LT(t', t'') ->
         Option.mk (strict && Tags.Elt.equal t t') t''
-    | Constraint.LTE(t', t'') -> 
+    | Constraint.LTE(t', t'') ->
         Option.mk (not strict && Tags.Elt.equal t t') t''
     in
   opt_map_to Tags.add Tags.empty f cs
@@ -189,16 +178,16 @@ let prog_pairs cs =
     ) in
   opt_map_to Tagpairs.add Tagpairs.empty extract cs
 
-let inconsistent cs = 
+let inconsistent cs =
   let lte ts = exists (function | Constraint.LTE(ts') -> ts = ts' | _ -> false) cs in
-  not (for_all Constraint.satisfiable (close cs)) || 
+  not (for_all Constraint.satisfiable (close cs)) ||
   exists (function
     | Constraint.LT(ts) -> lte (Pair.swap ts)
     | _ -> false)
     cs
 
-let subsumes cs cs' = 
-  let cs' = filter 
+let subsumes cs cs' =
+  let cs' = filter
     (function | Constraint.LTE(t, t') -> not (Tags.Elt.equal t t') | _ -> true)
     cs' in
   for_all (Fun.swap mem cs) cs'
@@ -207,10 +196,10 @@ let unify ?(total=false) ?(inverse=false) ?(update_check=Fun._true)
     cs cs' cont init_state =
   mk_unifier total false (Fun.direct inverse (Elt.unify ~update_check))
     cs cs' cont init_state
-  
+
 let biunify ?(total=false) ?(update_check=Fun._true)
     cs cs' cont init_state =
-  mk_unifier total false (Elt.biunify ~update_check) cs cs' cont init_state  
-  
-let mk_update_check f (state, tps) = 
+  mk_unifier total false (Elt.biunify ~update_check) cs cs' cont init_state
+
+let mk_update_check f (state, tps) =
   Option.pred_dest (Fun.curry f state) (Tagpairs.dest_singleton tps)

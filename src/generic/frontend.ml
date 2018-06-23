@@ -1,42 +1,42 @@
 open Lib
 
-module Make(Prover : Sigs.PROVER) = 
+module Make(Prover : Sigs.PROVER) =
   struct
     module Seq = Prover.Seq
-    
+
     type result_t =
       | TIMEOUT
-      | NOT_FOUND 
+      | NOT_FOUND
       | SUCCESS of Prover.Proof.t
 
-    let show_proof = ref false 
+    let show_proof = ref false
     let latex_path = ref ""
     let open_file_for_append = ref false
     let timeout = ref 30
     let minbound = ref 1
     let maxbound = ref 11
 
-    let speclist = 
+    let speclist =
       ref (fun () -> [
-        ("-m", Arg.Set_int minbound, 
-          (": set starting depth for IDFS to <int>, default is " ^ 
+        ("-m", Arg.Set_int minbound,
+          (": set starting depth for IDFS to <int>, default is " ^
             (string_of_int !minbound)));
-        ("-M", Arg.Set_int maxbound, 
-          (": set maximum depth for IDFS to <int>, 0 disables it, default is " ^ 
+        ("-M", Arg.Set_int maxbound,
+          (": set maximum depth for IDFS to <int>, 0 disables it, default is " ^
             (string_of_int !maxbound)));
-        ("-L", Arg.Int 
-          (fun n -> minbound := n ; maxbound := n), 
+        ("-L", Arg.Int
+          (fun n -> minbound := n ; maxbound := n),
           ": set both depths to <int>.");
         ("-p", Arg.Set show_proof,": show proof");
         ("-d", Arg.Set do_debug,": print debug messages");
         ("-s", Arg.Set Stats.do_statistics,": print statistics");
         ("-l", Arg.Set_string latex_path, ": write proofs to <file>");
-        ("-t", Arg.Set_int timeout, 
-          (": set timeout in seconds to <int>, 0 disables it, default is " ^ 
+        ("-t", Arg.Set_int timeout,
+          (": set timeout in seconds to <int>, 0 disables it, default is " ^
             (string_of_int !timeout)));
       ])
 
-    let usage = 
+    let usage =
       ref ("usage: " ^ Sys.argv.(0) ^ " [-p/d/s] [-l <file>] [-t/m/M/L <int>]")
 
     let die msg spec_list usage =
@@ -48,8 +48,8 @@ module Make(Prover : Sigs.PROVER) =
       | TIMEOUT -> exit 2
       | NOT_FOUND -> exit 1
       | SUCCESS(_) -> exit 0
-    
-    let gather_stats call = 
+
+    let gather_stats call =
       Stats.reset () ;
       Stats.Gen.call () ;
       let res = if !timeout<>0 then
@@ -59,28 +59,17 @@ module Make(Prover : Sigs.PROVER) =
       Stats.Gen.end_call () ;
       if !Stats.do_statistics then Stats.gen_print () ;
       res
-      
-    let do_latex_dump proof =
-      if !latex_path<>"" then
-      begin
-        let ch =
-          open_out_gen 
-            (Open_creat :: if !open_file_for_append then [Open_append] else [ Open_wronly; Open_trunc ]) 
-            402 
-            !latex_path in
-        Prover.melt_proof ch proof ; close_out ch
-      end
-      
+
     let process_result output seq res =
       if Option.is_none res then
         begin
-        if output then print_endline ("NOT proved: " ^ (Seq.to_string seq) ^ " [TIMEOUT]") ; 
+        if output then print_endline ("NOT proved: " ^ (Seq.to_string seq) ^ " [TIMEOUT]") ;
         TIMEOUT
         end else
       let res = Option.get res in
       if Option.is_none res then
         begin
-        if output then print_endline ("NOT proved: " ^ (Seq.to_string seq)) ; 
+        if output then print_endline ("NOT proved: " ^ (Seq.to_string seq)) ;
         NOT_FOUND
         end else
       let proof = Option.get res in
@@ -89,9 +78,8 @@ module Make(Prover : Sigs.PROVER) =
       else if output then
         print_endline ("Proved: " ^ (Seq.to_string seq)) ;
       if !Stats.do_statistics then Prover.print_proof_stats proof ;
-      do_latex_dump proof ;
       SUCCESS(proof)
-      
+
     let idfs ax r seq =
       let maxbound = if !maxbound < 1 then max_int else !maxbound in
       Prover.idfs !minbound maxbound ax r seq

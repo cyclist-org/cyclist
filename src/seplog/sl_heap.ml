@@ -100,26 +100,6 @@ let to_string f =
         (Sl_ptos.to_string_list f.ptos) @ (Sl_tpreds.to_string_list f.inds)) in
   if res = "" then keyw_emp.str else res
 
-let to_melt f =
-  let sep = if !split_heaps then Latex.text " \\\\ \n" else symb_star.melt in
-  let content = Latex.concat (Latex.list_insert sep
-          (Blist.filter (fun l -> not (Latex.is_empty l))
-              [Sl_uf.to_melt f.eqs; Sl_deqs.to_melt f.deqs;
-              Sl_ptos.to_melt f.ptos; Sl_tpreds.to_melt f.inds])) in
-  let content = if !split_heaps then
-      Latex.concat
-        [
-        ltx_newl;
-        Latex.environment
-          (* ~opt: (Latex.A, Latex.text "b") *)
-          (* ~args:[(Latex.A, Latex.text "l")] *)
-          "gathered" (Latex.M, content) Latex.M;
-        ltx_newl
-        ]
-    else
-      content in
-  ltx_mk_math content
-
 let pp fmt h =
   let l =
     ((Sl_uf.to_string_list h.eqs) @ (Sl_deqs.to_string_list h.deqs) @
@@ -140,7 +120,7 @@ let disequates h x y =
 let find_lval x h =
   Sl_ptos.find_opt (fun (y, _) -> equates h x y) h.ptos
 
-let inconsistent h = 
+let inconsistent h =
   Sl_deqs.exists (Fun.uncurry Sl_term.equal) h.deqs
     ||
    Sl_deqs.exists (fun (x, y) -> equates h x y) h.deqs
@@ -222,17 +202,17 @@ let complete_tags avoid h =
 
 (* computes all deqs due to a list of ptos *)
 let explode_deqs h =
-  let ptos = Sl_ptos.elements h.ptos in 
+  let ptos = Sl_ptos.elements h.ptos in
   let cp = Blist.cartesian_hemi_square ptos in
   let s1 =
-    Blist.fold_left 
-      (fun s p -> Sl_deqs.add (fst p, Sl_term.nil) s) 
-      Sl_deqs.empty 
+    Blist.fold_left
+      (fun s p -> Sl_deqs.add (fst p, Sl_term.nil) s)
+      Sl_deqs.empty
       ptos in
   let new_deqs = (
-    Blist.fold_left (fun s (p, q) -> Sl_deqs.add (fst p, fst q) s) s1 cp) in 
-  with_deqs h (Sl_deqs.union h.deqs new_deqs) 
-    
+    Blist.fold_left (fun s (p, q) -> Sl_deqs.add (fst p, fst q) s) s1 cp) in
+  with_deqs h (Sl_deqs.union h.deqs new_deqs)
+
 
 (* star two formulae together *)
 let star ?(augment_deqs=true) f g =
@@ -282,12 +262,12 @@ let add_ind h ind = with_inds h (Sl_tpreds.add ind h.inds)
 
 let univ s f =
   let vs = vars f in
-  let theta = 
+  let theta =
     Sl_subst.mk_free_subst
       (Sl_term.Set.union s vs)
       (Sl_term.Set.filter Sl_term.is_exist_var vs) in
   if Sl_term.Map.is_empty theta then f else subst theta f
-  
+
 let subst_existentials h =
   let aux h =
     try
@@ -346,24 +326,24 @@ let freshen_tags h' h =
 let subst_tags tagpairs h =
   with_inds h (Sl_tpreds.subst_tags tagpairs h.inds)
 
-let unify_partial ?(tagpairs=true) ?(update_check=Fun._true) h h' cont init_state = 
+let unify_partial ?(tagpairs=true) ?(update_check=Fun._true) h h' cont init_state =
   (Sl_tpreds.unify ~total:false ~tagpairs ~update_check h.inds h'.inds
   (Sl_ptos.unify ~total:false ~update_check h.ptos h'.ptos
   (Sl_deqs.unify_partial ~update_check h.deqs h'.deqs
-  (Sl_uf.unify_partial ~update_check h.eqs h'.eqs 
+  (Sl_uf.unify_partial ~update_check h.eqs h'.eqs
   (cont)))))
   init_state
 
-let biunify_partial ?(tagpairs=true) ?(update_check=Fun._true) 
-    h h' cont init_state = 
+let biunify_partial ?(tagpairs=true) ?(update_check=Fun._true)
+    h h' cont init_state =
   (Sl_tpreds.biunify ~total:false ~tagpairs ~update_check h.inds h'.inds
   (Sl_ptos.biunify ~total:false ~update_check h.ptos h'.ptos
   (Sl_deqs.biunify_partial ~update_check h.deqs h'.deqs
-  (Sl_uf.biunify_partial ~update_check h.eqs h'.eqs 
+  (Sl_uf.biunify_partial ~update_check h.eqs h'.eqs
   (cont)))))
   init_state
 
-let classical_unify ?(inverse=false) ?(tagpairs=true) 
+let classical_unify ?(inverse=false) ?(tagpairs=true)
     ?(update_check=Fun._true) h h' cont init_state =
   let (h_inv, h'_inv) = Fun.direct inverse Pair.mk h h' in
   (* NB how we don't need an "inverse" version for ptos and inds, since *)
@@ -371,16 +351,16 @@ let classical_unify ?(inverse=false) ?(tagpairs=true)
   (Sl_tpreds.unify ~tagpairs ~update_check h_inv.inds h'_inv.inds
   (Sl_ptos.unify ~update_check h_inv.ptos h'_inv.ptos
   (Sl_deqs.unify_partial ~inverse ~update_check h.deqs h'.deqs
-  (Sl_uf.unify_partial ~inverse ~update_check h.eqs h'.eqs 
+  (Sl_uf.unify_partial ~inverse ~update_check h.eqs h'.eqs
   (cont)))))
   init_state
 
-let classical_biunify ?(tagpairs=true) ?(update_check=Fun._true) 
-    h h' cont init_state = 
+let classical_biunify ?(tagpairs=true) ?(update_check=Fun._true)
+    h h' cont init_state =
   (Sl_tpreds.biunify ~tagpairs ~update_check h.inds h'.inds
   (Sl_ptos.biunify ~update_check h.ptos h'.ptos
   (Sl_deqs.biunify_partial ~update_check h.deqs h'.deqs
-  (Sl_uf.biunify_partial ~update_check h.eqs h'.eqs 
+  (Sl_uf.biunify_partial ~update_check h.eqs h'.eqs
   (cont)))))
   init_state
 
@@ -433,6 +413,3 @@ let constructively_valued h =
         (Sl_term.Set.union cvalued new_cvalued)
         (Sl_term.Set.diff rest new_cvalued) in
   aux freevars existvars
-
-
-

@@ -1,7 +1,7 @@
 open Lib
 
 
-let show_proof = ref false 
+let show_proof = ref false
 let show_defs = ref false
 (*let defs_path = ref "examples/sl.defs"*)
 let prog_path = ref ""
@@ -22,7 +22,7 @@ let program_of_channel c =
     Sl_parser.program Sl_lexer.token lexbuf
   with
     | Lexer.Error msg -> print_endline msg ; assert false
-    | Parser.Error -> 
+    | Parser.Error ->
       begin
         let curr = lexbuf.Lexing.lex_curr_p in
         let line = curr.Lexing.pos_lnum in
@@ -52,11 +52,11 @@ let program_of_channel c =
 let prove_prog seq =
   (* seq_to_prove := Some seq ; *)
   Stats.reset () ;
-  Stats.Gen.call () ; 
-  let res =  
+  Stats.Gen.call () ;
+  let res =
     w_timeout
       (fun () ->
-        Abducer.bfs !minbound !maxbound Goto_abdrules.ruleset seq [] Goto_abdrules.is_possibly_consistent) 
+        Abducer.bfs !minbound !maxbound Goto_abdrules.ruleset seq [] Goto_abdrules.is_possibly_consistent)
       !timeout
       in
   Stats.Gen.end_call () ;
@@ -77,24 +77,17 @@ let prove_prog seq =
     print_endline (Abducer.Proof.to_string proof)
   else
     print_endline ("Proved: " ^ (Goto_program.Seq.to_string seq)) ;
-  if !show_defs then  
-    print_endline (Goto_program.Defs.to_string 
+  if !show_defs then
+    print_endline (Goto_program.Defs.to_string
       (Goto_abdrules.simplify_defs
       defs
       )
       );
-  if !Stats.do_statistics then 
+  if !Stats.do_statistics then
   begin
     Stats.gen_print ();
     Abducer.print_proof_stats proof
   end ;
-  if !latex_path<>"" then 
-  begin
-    let ch = open_out_gen [Open_creat; Open_wronly; Open_trunc] 402 !latex_path in
-    Abducer.melt_proof ch proof ; close_out ch
-  end ;
-  if !latex_defs then 
-    ignore (Latex.to_channel ~mode:Latex.M stdout (Sl_heap.Defs.to_melt (Goto_abdrules.simplify_defs defs)));
   (* Prprover.setup (Goto_abdrules.simplify_defs defs) seq;                                      *)
   (* let res = w_timeout (fun () -> Prprover.idfs seq) !timeout in                           *)
   (* if Option.is_none res then                                                              *)
@@ -107,13 +100,13 @@ let prove_prog seq =
   0
 
 
-let usage = 
+let usage =
   "usage: " ^ Sys.argv.(0) ^ " [-p] [-d] [-l <file>] [-P <file>]"
 
 let speclist = [
-    ("-m", Arg.Set_int minbound, 
+    ("-m", Arg.Set_int minbound,
       (": set starting depth for IDFS to <int>, default is " ^ (string_of_int !minbound)));
-    ("-M", Arg.Set_int maxbound, 
+    ("-M", Arg.Set_int maxbound,
       (": set maximum depth for IDFS/BFS to <int>, default is " ^ (string_of_int !maxbound)));
     ("-L", Arg.Int (fun n -> minbound := n ; maxbound := n), ": set both depths to <int>.");
     ("-p", Arg.Set show_proof,": show proof");
@@ -125,10 +118,10 @@ let speclist = [
 (*    ("-D", Arg.Set_string defs_path,                                        *)
 (*      ": read inductive definitions from <file>, default is " ^ !defs_path);*)
     ("-P", Arg.Set_string prog_path, ": prove termination of program <file>");
-    ("-t", Arg.Set_int timeout, 
-      (": set timeout in seconds to <int>, 0 disables it, default is " ^ 
+    ("-t", Arg.Set_int timeout,
+      (": set timeout in seconds to <int>, 0 disables it, default is " ^
       (string_of_int !timeout)));
-   
+
   ]
 
 let die msg =
@@ -141,9 +134,6 @@ let () =
   Arg.parse speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) usage ;
   if !prog_path="" then die "-P must be specified." ;
   let (seq, prog) = program_of_channel (open_in !prog_path) in
-  Goto_program.set_program prog ; 
+  Goto_program.set_program prog ;
   (* Prprover.setup [] seq ;  *)
   exit (prove_prog seq)
-    
-
-

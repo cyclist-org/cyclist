@@ -42,8 +42,8 @@ let _ = dispatch begin function
       [
         (* the relative path to the .a file is necessary *)
         "src/soundness/libsoundness.a";
-        "libspot.a";
-        "libbddx.a";
+        (* "libspot.a";
+        "libbddx.a"; *)
       ];
     (* how to link everything together that uses libsoundness *)
     flag ["link"; "ocaml"; "use_libsoundness"]
@@ -52,21 +52,23 @@ let _ = dispatch begin function
         (* that reorders linker arguments *)
         A"-cclib"; A"-Wl,--no-as-needed";
         A"-cclib"; A"-lstdc++";
+        A"-cclib"; A"-lspot";
+        A"-cclib"; A"-lbddx";
         A"src/soundness/libsoundness.a";
-        A"libspot.a";
-        A"libbddx.a";
+        (* A"libspot.a";
+        A"libbddx.a"; *)
         ]);
 
     (* symbolically link in place the two static libraries needed for spot *)
     (* this is done because we want to statically link them in *)
     (* and ocamlbuild will just not let me do that with external paths *)
-    rule "libspot"
+    (* rule "libspot"
       ~prod:"libspot.a"
-      (fun env _ -> Cmd(S[P"ln"; A"-s"; A(spot_path ^ "/lib/libspot.a"); A"."]));
+      (fun env _ -> Cmd(S[P"ln"; A"-s"; A(spot_path ^ "/lib/libspot.a"); A"."])); *)
 
-    rule "libbdd"
+    (* rule "libbdd"
       ~prod:"libbddx.a"
-      (fun env _ -> Cmd(S[P"ln"; A"-s"; A(spot_path ^ "/lib/libbddx.a"); A"."]));
+      (fun env _ -> Cmd(S[P"ln"; A"-s"; A(spot_path ^ "/lib/libbddx.a"); A"."])); *)
 
     flag ["link"; "ocaml"; "byte"] (A"-custom");
 

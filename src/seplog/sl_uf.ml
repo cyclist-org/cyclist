@@ -12,18 +12,18 @@ let bindings m = Sl_term.Map.bindings m
 let empty = Sl_term.Map.empty
 let is_empty = Sl_term.Map.is_empty
 
-let to_string_list v = 
+let to_string_list v =
   Blist.map (Sl_tpair.to_string_sep symb_eq.str) (bindings v)
 let to_string v =
   Blist.to_string symb_star.sep (Sl_tpair.to_string_sep symb_eq.str) (bindings v)
-let pp fmt v = 
-  Blist.pp 
-    pp_star   
-    (fun fmt (a,b) -> 
-      Format.fprintf fmt "@[%a%s%a@]" Sl_term.pp a symb_eq.str Sl_term.pp b) 
+let pp fmt v =
+  Blist.pp
+    pp_star
+    (fun fmt (a,b) ->
+      Format.fprintf fmt "@[%a%s%a@]" Sl_term.pp a symb_eq.str Sl_term.pp b)
     fmt
     (bindings v)
-   
+
 let fold f a uf = Sl_term.Map.fold f a uf
 let for_all f uf = Sl_term.Map.for_all f uf
 
@@ -61,11 +61,8 @@ let diff eqs eqs' =
 let subsumed m m' =
   Sl_term.Map.for_all (fun x y -> equates m' x y) m
 
-let subst theta m = 
+let subst theta m =
   Sl_term.Map.fold (fun x y m' -> add (Sl_tpair.subst theta (x, y)) m') m empty
-
-let to_melt v =
-  ltx_star (Blist.map (Sl_tpair.to_melt_sep symb_eq.melt) (bindings v))
 
 let terms m = Sl_tpair.FList.terms (bindings m)
 
@@ -87,28 +84,28 @@ let parse st =
 (*       m                                                           *)
 (*       Sl_term.Map.empty in                                        *)
 (*   Sl_term.Map.fold (fun _ v ls -> v::ls) classes []               *)
-      
-let saturate m = 
+
+let saturate m =
   let ts = Sl_term.Set.to_list (terms m) in
   let pairs = Blist.cartesian_product ts ts in
-  Blist.filter (Fun.uncurry (equates m)) pairs 
+  Blist.filter (Fun.uncurry (equates m)) pairs
 
 let unify_partial ?(inverse=false) ?(update_check=Fun._true)
     m m' cont init_state =
   let eqs = Sl_tpair.ListSet.of_list (bindings m) in
   let eqs' = Sl_tpair.ListSet.of_list (saturate m') in
-  Sl_tpair.ListSet.mk_unifier 
-    false false (Fun.direct inverse (Sl_tpair.unify ~update_check)) 
+  Sl_tpair.ListSet.mk_unifier
+    false false (Fun.direct inverse (Sl_tpair.unify ~update_check))
     eqs eqs' cont init_state
 
 let biunify_partial ?(update_check=Fun._true) m m' cont init_state =
   let eqs = Sl_tpair.ListSet.of_list (bindings m) in
   let eqs' = Sl_tpair.ListSet.of_list (saturate m') in
-  Sl_tpair.ListSet.mk_unifier 
-    false false (Sl_tpair.biunify ~update_check) 
+  Sl_tpair.ListSet.mk_unifier
+    false false (Sl_tpair.biunify ~update_check)
     eqs eqs' cont init_state
 
-let subst_subsumed eqs ((theta,_) as state) = 
+let subst_subsumed eqs ((theta,_) as state) =
   Option.mk (Sl_term.Map.for_all (equates eqs) theta) state
 
 (* FIXME *)
@@ -120,4 +117,3 @@ let remove x m =
       m in
   let xs' = Sl_term.Set.to_list (Sl_term.Set.remove x xs) in
   Blist.fold_left (fun m p -> add p m) rest (Blist.pairs xs')
-

@@ -98,7 +98,6 @@ sig
 
   val equal : t -> t -> bool
   val to_string : t -> string
-  val to_melt : t -> Latex.t
   val pp : Format.formatter -> t -> unit
   val of_string : string -> t
 
@@ -126,7 +125,6 @@ sig
   type t
   val empty : t
   val to_string : t -> string
-  val to_melt : t -> Latex.t
   val pp : Format.formatter -> t -> unit
   val add : string -> Case.t -> t -> t
   val bindings : t -> (string * Case.t list) list

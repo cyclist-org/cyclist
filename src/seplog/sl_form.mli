@@ -20,12 +20,11 @@ val equal_upto_tags : t -> t -> bool
 (** Whilst [equal] demands syntactic equality including tags, this version
     ignores tag assignment. *)
 
-val to_melt : t -> Latex.t
 val terms : t -> Sl_term.Set.t
 val vars : t -> Sl_term.Set.t
 
 val tags : t -> Tags.t
-(** NB no attempt is made to ensure that tags are disjoint between disjuncts. 
+(** NB no attempt is made to ensure that tags are disjoint between disjuncts.
     This is not necessarily unsound. *)
 val tag_pairs : t -> Tagpairs.t
 (** The proviso on tags applies here too. *)
@@ -40,8 +39,8 @@ val inconsistent : t -> bool
     or are the tag constraints inconsistent? *)
 
 val subsumed : ?total:bool -> t -> t -> bool
-(** [subsumed a b]: is it the case that 
-      i)  the constraints cs of [a] are subsumed by the constraints cs' of [b] 
+(** [subsumed a b]: is it the case that
+      i)  the constraints cs of [a] are subsumed by the constraints cs' of [b]
           in the sense that [Ord_constraints.subsumes cs' cs] returns [true]
       ii) for any disjunct [a'] of [a] there is a disjunct [b'] of [b] such that
           [a'] is subsumed by [b']?
@@ -80,7 +79,7 @@ val norm : t -> t
 val with_constraints : t -> Ord_constraints.t -> t
 (** [with_constraints f cs] returns the formula that results by replacing [f]'s
     tag constraints with [cs] *)
-    
+
 val add_constraints : t -> Ord_constraints.t -> t
 (** [add_constraints f cs] returns the formula the results by adding [cs] to the
     constraints already in [f] *)
@@ -92,17 +91,17 @@ val with_heaps : t -> Sl_heap.t list -> t
 val compute_frame :
       ?freshen_existentials:bool -> ?avoid:(Tags.t * Sl_term.Set.t)
         -> t -> t -> t option
-(** [compute_frame f f'], computes the portion of [f'] left over (the 'frame') 
-    from [f] and returns None when [f] is not subsumed by [f']. Any existential 
-    variables occurring in the frame which also occur in the specification [f] 
-    are freshened, avoiding the variables in the optional argument 
+(** [compute_frame f f'], computes the portion of [f'] left over (the 'frame')
+    from [f] and returns None when [f] is not subsumed by [f']. Any existential
+    variables occurring in the frame which also occur in the specification [f]
+    are freshened, avoiding the variables in the optional argument
     [~avoid=Sl_term.Set.empty].
-      If the optional argument [~freshen_existentials=true] is set to false, 
-    then None will be returned in case there are existential variables in the 
+      If the optional argument [~freshen_existentials=true] is set to false,
+    then None will be returned in case there are existential variables in the
     frame which also occur in the specification.
 *)
 
 val get_tracepairs : t -> t -> (Tagpairs.t * Tagpairs.t)
-(** [get_tracepairs f f'] will return the valid and progressing trace pairs 
+(** [get_tracepairs f f'] will return the valid and progressing trace pairs
     (t, t') specified by the constraints of [f'] such that [t] occurs in [f]
 *)

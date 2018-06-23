@@ -101,7 +101,7 @@ module Make (Sig : ValueSig)
     module Location =
       struct
         include Sig.HeapLocation
-        include Containers.Make(Sig.HeapLocation) 
+        include Containers.Make(Sig.HeapLocation)
       end
     module Scalar = Sig.ScalarValue
 
@@ -390,85 +390,6 @@ module Make (Sig : ValueSig)
         let union = Location.Set.union
       end
 
-    module BitvBase =
-      struct
-        let to_bool_list b =
-          Bitv_string.fold_right (fun v vs -> v::vs) b []
-        (* Functions for implementing BasicType signature *)
-        type t = Bitv_string.t
-        (* compare, equal and hash are not the "correct" solutions    *)
-        (* because they also compare "rubbish" that might be present  *)
-        (* in the underlying string that is not actually part ot the  *)
-        (* bitvector, however it should not make a difference for our *)
-        (* code since all such "rubbish" should be '0' bits.          *)
-        let compare b b' =
-          String.compare b.Bitv_string.bits b'.Bitv_string.bits
-        let equal b b' =
-          String.compare b.Bitv_string.bits b'.Bitv_string.bits == 0
-        let hash b = Strng.hash (b.Bitv_string.bits)
-        let to_string b = Printf.sprintf "bitv(%s)" (Blist.to_string ""
-          (fun v -> if v then "1" else "0")
-          (to_bool_list b))
-        let pp fmt b = Format.fprintf fmt "%s" (to_string b)
-
-        let empty = Bitv_string.create 0 false
-
-        let inj h =
-          let cover = Array.make
-            (Location.Map.cardinal h)
-            (Location.zero, []) in
-          let () = List.iteri
-            (fun i (l,c) -> Array.set cover i (l,c))
-            (Location.Map.bindings h) in
-          let rec binary_search ((l,c) as e) min max =
-            if max < min then
-              invalid_arg ("Not a subheap!")
-            else
-              let mid = (min + max) / 2 in
-              let (l',c') = Array.get cover mid in
-              let cmp = Location.compare l l' in
-              if cmp < 0 then
-                binary_search e min (mid-1)
-              else if cmp > 0 then
-                binary_search e (mid+1) max
-              else
-                if Value.FList.equal c c' then mid
-                else invalid_arg ("Not a subheap!") in
-          let arr_size = Array.length cover in
-          fun h' ->
-            let b = Bitv_string.create (Array.length cover) false in
-            let bs = Location.Map.bindings h' in
-            let _ =
-              let f i ((l, c) as e) =
-                let j = binary_search e i arr_size in
-                let () = Bitv_string.unsafe_set b j true in
-                j + 1 in
-              List.fold_left f 0 bs in
-            b
-
-        let proj h b =
-          if (Bitv_string.length b) == 0 then Location.Map.empty
-          else if not
-              ((Location.Map.cardinal h) == (Bitv_string.length b))
-            then
-              invalid_arg ("Missing locations!")
-          else
-            let cs = List.mapi
-              (fun i (l,c) ->
-                Option.mk (Bitv_string.unsafe_get b i) (l,c))
-              (Location.Map.bindings h) in
-            Location.Map.of_list (Option.list_get cs)
-
-        let disjoint b b' =
-          (Bitv_string.length b == 0) || (Bitv_string.length b' == 0) ||
-          (Bitv_string.pop (Bitv_string.bw_and b b') == 0)
-
-        let union b b' =
-          if (Bitv_string.length b == 0) then b'
-          else if (Bitv_string.length b' == 0) then b
-          else (Bitv_string.bw_or b b')
-      end
-
     module HeapBase :
       sig
         include Utilsigs.BasicType
@@ -478,14 +399,14 @@ module Make (Sig : ValueSig)
         val disjoint : t -> t -> bool
         val union : t -> t -> t
       end
-        = BitvBase
+        = SetBase
 
     module InterpretantBase = Hashset.Make(Pair.Make(Value.FList)(HeapBase))
 
     let baseSetPair_to_string (x,x') =
       "(" ^ (InterpretantBase.to_string x) ^ ", " ^
        (InterpretantBase.to_string x') ^ ")"
-    
+
     module SymHeapHash = Hashtbl.Make(Sl_heap)
     module SymHeapHashPrinter = HashtablePrinter.Make(SymHeapHash)
     module ModelBase = Containers.Make(Pair.Make(Stack)(HeapBase))
@@ -502,11 +423,11 @@ module Make (Sig : ValueSig)
       itp_emp
 
     let init_empty defs =
-      Sl_predsym.Map.of_list 
+      Sl_predsym.Map.of_list
         (List.map
           (fun def -> (Sl_preddef.predsym def, (empty_base (), empty_base ())))
           (Sl_defs.to_list defs))
-    
+
     let decorate h itp =
       let f (ancestors, parents) =
         InterpretantBase.left_union ancestors parents in
@@ -531,25 +452,25 @@ module Make (Sig : ValueSig)
       model bases which represents the interpretation of (Pi : F)
     **)
     let generate_model ts constraints (vs, ls) =
-      Option.bind  
-        (fun stack -> 
+      Option.bind
+        (fun stack ->
           if Stack.satisfies constraints stack then Some (stack, ls) else None)
         (Stack.of_term_bindings (List.combine ts vs))
-      
+
     let generate_models_ls ts constraints itpts =
       let f acc itpt =
         Option.fold
-          (fun mdl acc -> mdl::acc) 
-          (generate_model ts constraints itpt) 
+          (fun mdl acc -> mdl::acc)
+          (generate_model ts constraints itpt)
           acc in
-      List.fold_left f [] itpts 
+      List.fold_left f [] itpts
 
     let generate_models ts constraints itpts =
       let models =
         ModelBase.Hashset.create (InterpretantBase.cardinal itpts) in
       let f itpt =
         Option.iter
-          (fun mdl -> ModelBase.Hashset.add models mdl) 
+          (fun mdl -> ModelBase.Hashset.add models mdl)
           (generate_model ts constraints itpt )in
       InterpretantBase.iter f itpts ;
       models
@@ -561,14 +482,14 @@ module Make (Sig : ValueSig)
       generates the set of model bases that denotes the intepretation of
       (Pi : F * G).
     **)
-    
+
     let cross_model constraints (s, ls) (s', ls') =
       if (HeapBase.disjoint ls ls') &&
          (Stack.consistent s s') &&
          (Stack.cross_satisfies constraints s s') then
         let new_stack = Stack.merge s s' in
         let new_heap_spt = HeapBase.union ls ls' in
-        Some (new_stack, new_heap_spt) 
+        Some (new_stack, new_heap_spt)
       else
         None
 
@@ -577,11 +498,11 @@ module Make (Sig : ValueSig)
         let merge_acc acc' m' =
           Option.fold
             (fun new_mdl acc'' -> new_mdl::acc'')
-            (cross_model constraints m m') 
+            (cross_model constraints m m')
             acc' in
         List.fold_left merge_acc acc ms' in
-      List.fold_left merge [] ms 
-        
+      List.fold_left merge [] ms
+
     (* Note: I had thought about a more declarative implementation    *)
     (* which first generates the cross product of ms with ms', then   *)
     (* filters out those elements which do not satisfy the guard      *)
@@ -692,10 +613,10 @@ module Make (Sig : ValueSig)
               (List.append
                 (Sl_term.Set.to_list (Sl_uf.vars eqs))
                 (Sl_term.Set.to_list (Sl_deqs.vars deqs)))))) in
-      if Var.Set.is_empty unmapped_univs then 
+      if Var.Set.is_empty unmapped_univs then
         [(s, ls)]
       else
-        let good_stacks = 
+        let good_stacks =
           valid_extns (eqs, deqs) vs unmapped_univs s List.map in
         List.fold_left
           (fun acc o ->
@@ -703,21 +624,21 @@ module Make (Sig : ValueSig)
               (fun stk acc' -> (stk, ls)::acc')
               o
               acc
-          )    
+          )
           []
-          good_stacks 
-    
+          good_stacks
+
     let saturate_univs_ls params (eqs, deqs) vs mdls =
-      List.fold_left 
-        (fun acc mdl -> 
+      List.fold_left
+        (fun acc mdl ->
           let mdls' = saturate_univs_one params (eqs, deqs) vs mdl in
           List.fold_left
             (fun acc' mdl' -> mdl'::acc')
             acc
             mdls')
         []
-        mdls 
-   
+        mdls
+
     (**
       [ex_constraint_sat constraints vs s] returns true if and only if
       the stack [s] can be extended with mappings from existential
@@ -771,7 +692,7 @@ module Make (Sig : ValueSig)
             let base =
               if Int.Map.mem cell_size ptos then
                 Int.Map.find cell_size ptos
-              else 
+              else
                 empty_base () in
             let pto =
               ((Value.mk_loc_val loc)::cell,
@@ -817,21 +738,21 @@ module Make (Sig : ValueSig)
 
     let saturate_ls valset params constraints mdls =
       debug (fun _ -> "Starting universal variable saturation") ;
-      let mdls = 
+      let mdls =
         saturate_univs_ls
           (Var.Set.of_list (List.map Var.of_term params)) constraints valset mdls in
       debug (fun _ -> "Candidate models after universal variable saturation: " ^
         (ModelBase.FList.to_string mdls)) ;
-      let mdls = 
-        Blist.rev_filter 
-          (fun (s,_) -> exs_satisfiable constraints valset s) 
+      let mdls =
+        Blist.rev_filter
+          (fun (s,_) -> exs_satisfiable constraints valset s)
           mdls in
       debug (fun _ -> "Generated models after filtering for existential saturation: " ^
         (ModelBase.FList.to_string mdls)) ;
-      mdls 
-    
+      mdls
+
     let add_itpts_of_models_ls params itpts mdls =
-      List.iter 
+      List.iter
         (fun (s, ls) ->
           let vs = List.map
             (fun x -> let x = Var.of_term x in Var.Map.find x s)
@@ -839,7 +760,7 @@ module Make (Sig : ValueSig)
             InterpretantBase.add itpts (vs, ls)
         )
         mdls
-        
+
     (* The function that generates new interpretants for a given rule *)
     let rule_gen ptos_base valset itp itp_acc rl =
       let predsym = Sl_indrule.predsym rl in
@@ -858,8 +779,8 @@ module Make (Sig : ValueSig)
         ()
       else
       begin
-        debug 
-          (fun _ -> "Generating new interpretants for rule: " ^ 
+        debug
+          (fun _ -> "Generating new interpretants for rule: " ^
           (Sl_indrule.to_string rl)) ;
         let ptos_models =
           if Sl_ptos.is_empty ptos then [(Stack.empty, HeapBase.empty)]
@@ -868,7 +789,7 @@ module Make (Sig : ValueSig)
           (ModelBase.FList.to_string ptos_models)) ;
         if Sl_tpreds.is_empty inds then
           add_itpts_of_models_ls
-            params 
+            params
             prev_itpts
             (saturate_ls valset params constraints ptos_models)
             (* end rule_gen here *)
@@ -877,7 +798,7 @@ module Make (Sig : ValueSig)
           let get_mdls p ms gen_ancestors =
             let p_sym = Sl_tpred.predsym p in
             let p_args = Sl_tpred.args p in
-            let (ancestors, parents) = 
+            let (ancestors, parents) =
               Pair.map InterpretantBase.to_list (Sl_predsym.Map.find p_sym itp) in
             let parent_mdls = generate_models_ls p_args constraints parents in
             let prod_from_parents = cross_models_ls constraints ms parent_mdls in
@@ -898,7 +819,7 @@ module Make (Sig : ValueSig)
                 debug (fun _ -> "Generated the following candidate models: " ^
                   (ModelBase.FList.to_string candidates)) ;
                 add_itpts_of_models_ls
-                  params 
+                  params
                   prev_itpts
                   candidates
               )
@@ -910,9 +831,9 @@ module Make (Sig : ValueSig)
             (InterpretantBase.to_string prev_itpts)) in
           debug (fun _ -> "New interpretation after adding new interpretants: " ^
             (Sl_predsym.Map.to_string InterpretantBase.to_string itp_acc))
-        end 
+        end
       end
-      
+
     let mk_generator (defs, (vs, h)) =
       let valset = Value.Set.union
         (Value.Set.of_list vs)
@@ -927,16 +848,16 @@ module Make (Sig : ValueSig)
       let ptos_base = mk_ptos_base defs h in
       debug (fun _ -> Value.Set.to_string valset) ;
       debug (fun _ ->
-        SymHeapHashPrinter.to_string 
+        SymHeapHashPrinter.to_string
           Sl_heap.to_string ModelBase.FList.to_string ptos_base) ;
       let itp = init_empty defs in
-      let new_itp = 
-        Sl_predsym.Map.of_list 
-          (List.map 
-            (fun pd -> 
+      let new_itp =
+        Sl_predsym.Map.of_list
+          (List.map
+            (fun pd ->
               let (_,p) = Sl_preddef.dest pd in
               (p, empty_base ())
-            ) 
+            )
             (Sl_defs.to_list defs)
           ) in
       let rec generator () =
@@ -945,7 +866,7 @@ module Make (Sig : ValueSig)
         Sl_defs.rule_iter (rule_gen ptos_base valset itp new_itp) defs ;
         let () = debug (fun _ -> "New interpretants after iteration: " ^
           (Sl_predsym.Map.to_string InterpretantBase.to_string new_itp)) in
-        
+
         (* Add the new interpretants to the old ones *)
         Sl_predsym.Map.iter
           (fun p zs ->
@@ -957,13 +878,13 @@ module Make (Sig : ValueSig)
                 if not (InterpretantBase.mem xs z) then
                   InterpretantBase.add ys z)
               zs ;
-            InterpretantBase.clear zs            
-          ) 
+            InterpretantBase.clear zs
+          )
           new_itp ;
-        
+
         debug (fun _ -> "result of iteration: " ^
           (Sl_predsym.Map.to_string InterpretantBase.to_string new_itp)) ;
-          
+
         (* if all "new" sets of interpretants are empty then stop else recurse *)
         if Sl_predsym.Map.for_all
           (fun _ (_, itpts) -> InterpretantBase.is_empty itpts)

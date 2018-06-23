@@ -1,7 +1,7 @@
 open Lib
 
 
-let show_proof = ref false 
+let show_proof = ref false
 let show_defs = ref false
 let simpl_defs = ref false
 (*let defs_path = ref "examples/sl.defs"*)
@@ -26,17 +26,17 @@ let record_defs defs =
   let ch = open_out path_fn in
   let () = output_string ch (Sl_defs.to_string (While_abdrules.empify defs)) in
   let () = close_out ch in
-	if !defs_count>50000 then exit 0 else false 
+	if !defs_count>50000 then exit 0 else false
 
 let prove_prog seq =
   (* seq_to_prove := Some seq ; *)
   Stats.reset () ;
-  Stats.Gen.call () ; 
-  let res =  
+  Stats.Gen.call () ;
+  let res =
     w_timeout
       (fun () ->
-        Abducer.bfs !maxbound While_abdrules.rules seq Sl_defs.empty  
-        (if !gen_defs then record_defs else While_abdrules.is_sat)) 
+        Abducer.bfs !maxbound While_abdrules.rules seq Sl_defs.empty
+        (if !gen_defs then record_defs else While_abdrules.is_sat))
       !timeout
       in
   Stats.Gen.end_call () ;
@@ -52,29 +52,22 @@ let prove_prog seq =
     print_endline (Abducer.Proof.to_string proof)
   else
     print_endline ("Proved: " ^ (While_program.Seq.to_string seq)) ;
-  if !show_defs || !simpl_defs then  
-    print_endline (Sl_defs.to_string (( 
-      if !simpl_defs then 
-        While_abdrules.simplify_defs 
-      else 
+  if !show_defs || !simpl_defs then
+    print_endline (Sl_defs.to_string ((
+      if !simpl_defs then
+        While_abdrules.simplify_defs
+      else
         While_abdrules.empify
       ) defs));
-  if !latex_path<>"" then 
-  begin
-    let ch = open_out_gen [Open_creat; Open_wronly; Open_trunc] 402 !latex_path in
-    Abducer.melt_proof ch proof ; close_out ch
-  end ;
-  if !latex_defs then 
-    ignore (Latex.to_channel ~mode:Latex.M stdout (Sl_defs.to_melt (While_abdrules.simplify_defs defs)));
   0
 
 
-let usage = 
+let usage =
   "usage: " ^ Sys.argv.(0) ^ " [-g] [-p] [-d] [-l <file>] [-P <file>]"
 
 
 let speclist = [
-    ("-M", Arg.Set_int maxbound, 
+    ("-M", Arg.Set_int maxbound,
       (": set maximum depth for BFS to <int>, default is " ^ (string_of_int !maxbound)));
     ("-p", Arg.Set show_proof,": show proof");
     ("-pd", Arg.Set show_defs,": show abduced definitions");
@@ -86,13 +79,13 @@ let speclist = [
 (*    ("-D", Arg.Set_string defs_path,                                        *)
 (*      ": read inductive definitions from <file>, default is " ^ !defs_path);*)
     ("-P", Arg.Set_string prog_path, ": prove termination of program <file>");
-    ("-t", Arg.Set_int timeout, 
-      (": set timeout in seconds to <int>, 0 disables it, default is " ^ 
+    ("-t", Arg.Set_int timeout,
+      (": set timeout in seconds to <int>, 0 disables it, default is " ^
       (string_of_int !timeout)));
     ("-g", Arg.Set gen_defs, ": fail and record all definitions.");
-    ("-T", Arg.Set While_program.termination, ": also prove termination, default is " ^ 
+    ("-T", Arg.Set While_program.termination, ": also prove termination, default is " ^
 		  (string_of_bool !While_program.termination));
-		
+
   ]
 
 let die msg =
@@ -105,9 +98,6 @@ let () =
   Arg.parse speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) usage ;
   if !prog_path="" then die "-P must be specified." ;
   let ((f, cmd) as seq) = While_program.of_channel (open_in !prog_path) in
-  While_program.set_program cmd ; 
+  While_program.set_program cmd ;
   (* Safety_prover.setup [] ;  *)
   exit (prove_prog seq)
-    
-
-

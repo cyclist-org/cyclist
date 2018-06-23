@@ -25,8 +25,6 @@ module Defs =
     let to_string defs =
       Blist.to_string (symb_semicolon.sep ^ "\n\n") Sl_preddef.to_string defs
 
-    let to_melt d = ltx_text (to_string d)
-
     let pp fmt d = Format.fprintf fmt "%s" (to_string d)
 
     let is_defined defs (_, (ident, _)) =
@@ -143,5 +141,3 @@ module Defs =
   end
 include Defs
 include Fixpoint.Make(Defs)
-
-

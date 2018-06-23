@@ -13,7 +13,7 @@ module Cmd =
       | Eq of Sl_term.t * Sl_term.t
       | Deq of Sl_term.t * Sl_term.t
       | Non_det
-    
+
     let mk_eq e1 e2 = Eq(e1,e2)
     let mk_deq e1 e2 = Deq(e1,e2)
     let mk_non_det () = Non_det
@@ -24,17 +24,17 @@ module Cmd =
     let is_non_det = function
       | Non_det -> true
       | Eq _ | Deq _ -> false
-    
+
     let dest_cond = function
       | Eq(e1, e2)
       | Deq(e1, e2) -> (e1,e2)
       | Non_det -> raise WrongCmd
-    
+
     let parse_cond st =
       ( attempt (parse_symb symb_star >>$ mk_non_det ()) <|>
         attempt (Sl_uf.parse |>> Fun.uncurry mk_eq) <|>
         attempt (Sl_deqs.parse |>> Fun.uncurry mk_deq) <?> "Cond") st
-      
+
     type t =
       | Assign of Sl_term.t * Sl_term.t
       | Load of Sl_term.t * Sl_term.t * field_t
@@ -55,8 +55,8 @@ module Cmd =
     let mk_if c l = If(c,l)
     let mk_stop = Stop
     let mk_skip = Skip
-    
-    let parse st = 
+
+    let parse st =
   (*   | STOP { P.Cmd.mk_stop }                                                     *)
       ( attempt (parse_symb keyw_stop >>$ mk_stop)
         <|>
@@ -98,17 +98,17 @@ module Cmd =
         return (mk_goto n)))
         <|>
   (*   | IF; c = condition; GOTO; n = NUM { P.Cmd.mk_if c n }                       *)
-        attempt (parse_symb keyw_if >> 
-        parse_cond >>= (fun c -> 
+        attempt (parse_symb keyw_if >>
+        parse_cond >>= (fun c ->
         parse_symb keyw_goto >>
         Tokens.integer >>= (fun n ->
         return (mk_if c n))))
         <|>
     (* | v = var; ASSIGN; t = term { P.Cmd.mk_assign v t } *)
-        attempt (Sl_term.parse >>= (fun v -> 
-        parse_symb symb_assign >> 
-        Sl_term.parse >>= (fun t -> 
-        return (assert (Sl_term.is_var v) ; mk_assign v t)))) 
+        attempt (Sl_term.parse >>= (fun v ->
+        parse_symb symb_assign >>
+        Sl_term.parse >>= (fun t ->
+        return (assert (Sl_term.is_var v) ; mk_assign v t))))
       <?> "Cmd") st
 
 
@@ -194,31 +194,26 @@ type program_t = fields * lab_cmds
 module Seq =
   struct
     include Pair.Make(Sl_form)(Int.T)
-    
+
     let tags (f,_) = Sl_form.tags f
     let vars (l,_) = Sl_form.vars l
     let terms (l,_) = Sl_form.terms l
     let subst theta (l,i) = (Sl_form.subst theta l, i)
     let to_string (f,i) =
       (Sl_form.to_string f) ^ " |-_" ^ (string_of_int i) ^ " !"
-    let to_melt (f,i) =
-      Latex.concat
-      [ Sl_form.to_melt f;
-        Latex.index symb_turnstile.melt (Latex.text (string_of_int i)) ]
-
     let pp fmt (f,i) =
       Format.fprintf fmt "@[%a |-_%i@]" Sl_form.pp f i
 
     let equal (f,i) (f',i') = (i=i') && Sl_form.equal f f'
-    
+
     let equal_upto_tags (f,i) (f',i') = (i=i') && Sl_form.equal_upto_tags f f'
-    
-    let parse st = 
+
+    let parse st =
       ( Sl_form.parse >>= (fun f ->
         parse_symb symb_turnstile_underscore >>
         Tokens.integer >>= (fun i ->
         parse_symb symb_bang >>$ (f,i))) <?> "GotoSeq") st
-        
+
   end
 
 let max_prog_var = ref Sl_term.nil
@@ -261,16 +256,16 @@ let fresh_evars s i = Sl_term.fresh_evars (Sl_term.Set.add !max_prog_var s) i
 let freshen_case_by_seq seq case =
   Sl_indrule.freshen (Sl_term.Set.union (vars_of_program ()) (Seq.vars seq)) case
 
-let parse_lcmd st = 
+let parse_lcmd st =
   ( Tokens.integer >>= (fun i ->
     parse_symb symb_colon >>
     Cmd.parse >>= (fun c -> return (i,c))) <?> "GotoLcmd" ) st
-    
+
 let parse_lcmds st =
   ( sep_by1 parse_lcmd (parse_symb symb_semicolon) <?> "GotoLcmds" ) st
 
-let parse_fields st = 
-  ( parse_symb keyw_fields >> 
+let parse_fields st =
+  ( parse_symb keyw_fields >>
     parse_symb symb_colon >>
     sep_by1 parse_ident (parse_symb symb_comma) >>= (fun ils ->
     parse_symb symb_semicolon >>
@@ -288,10 +283,10 @@ let parse_judgment st =
 
     (* f = fields; j = judgement; l = lcommands; EOF { (j, (f, l)) } *)
 
-let parse st = 
+let parse st =
   ( parse_fields >>= (fun f ->
     parse_judgment >>= (fun j ->
-    parse_lcmds >>= (fun l -> 
+    parse_lcmds >>= (fun l ->
     eof >> return (j, (f,l))))) <?> "GotoProgram") st
 
 let of_channel c =

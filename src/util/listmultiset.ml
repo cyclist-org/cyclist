@@ -89,7 +89,7 @@ module Make(T: Utilsigs.BasicType) =
 
     let map_to oadd oempty f xs =
       fold (fun z ys -> oadd (f z) ys) xs oempty
-      
+
     let opt_map_to oadd oempty f xs =
       map_to (Option.dest Fun.id oadd) oempty f xs
 
@@ -120,6 +120,22 @@ module Make(T: Utilsigs.BasicType) =
         | 0 -> false
         | n when n < 0 -> disjoint xs (y::ys)
         | _ -> disjoint (x::xs) ys
+
+    let find_last_opt _ _ = None
+
+    let find_last _ _ = raise Not_found
+
+    let find_first_opt _ _ = None
+
+    let find_first _ _ = raise Not_found
+
+    let choose_opt _ = None
+
+    let max_elt_opt _ = None
+
+    let min_elt_opt _ = None
+
+    let map _ _ = raise Not_found
 
     include Unification.MakeUnifier(
       struct

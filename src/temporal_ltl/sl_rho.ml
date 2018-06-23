@@ -15,18 +15,18 @@ let is_empty = Sl_term.Map.is_empty
 let to_string_sep sep t v =
    Sl_term.to_string t ^ sep ^ (string_of_int v)
 
-let to_string_list v = 
+let to_string_list v =
   Blist.map (fun (t,v) -> to_string_sep symb_eq.str t v) (bindings v)
 let to_string v =
   Blist.to_string symb_star.sep (fun (t,v) -> (to_string_sep symb_eq.str t v)) (bindings v)
-let pp fmt v = 
-  Blist.pp 
-    pp_star   
-    (fun fmt (a,b) -> 
-      Format.fprintf fmt "@[%a%s%s@]" Sl_term.pp a symb_eq.str (string_of_int b)) 
+let pp fmt v =
+  Blist.pp
+    pp_star
+    (fun fmt (a,b) ->
+      Format.fprintf fmt "@[%a%s%s@]" Sl_term.pp a symb_eq.str (string_of_int b))
     fmt
     (bindings v)
-   
+
 let fold f a uf = Sl_term.Map.fold f a uf
 let for_all f uf = Sl_term.Map.for_all f uf
 
@@ -50,11 +50,8 @@ let diff eqs eqs' =
 let subsumed m m' =
   Sl_term.Map.for_all (fun x y -> equates m' x y) m
 
-let subst theta m = 
+let subst theta m =
   Sl_term.Map.fold (fun x y m' -> (add (Sl_subst.apply theta x) y m')) m empty
-
-let to_melt v =
-  ltx_star (Blist.map (fun (k,v) -> Latex.concat [(Sl_term.to_melt k); symb_eq.melt; Latex.text (string_of_int v)]) (bindings v))
 
 let terms m = Sl_term.FList.terms (Blist.map (fun (x,_) -> x) (bindings m))
 

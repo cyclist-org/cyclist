@@ -4,7 +4,7 @@ open Symbols
 open MParser
 
 let classify_varname s =
-  let l = String.length s in 
+  let l = String.length s in
   assert (String.length s > 0);
   if s="nil" then VarManager.ANONYMOUS else
   if l > 1 && s.[l-1] = '\'' then VarManager.BOUND
@@ -25,12 +25,7 @@ module Map = Var.Map
 
 let nil = anonymous
 let is_nil = is_anonymous
-let is_var t = not (is_nil t) 
-
-let to_melt v =
-  ltx_mk_math
-    (Latex.mathit
-      (if is_nil v then keyw_nil.melt else Latex.text (to_string v)))
+let is_var t = not (is_nil t)
 
 let parse st =
   ( (parse_ident >>= (fun name -> return (mk name))) <?> "Sl_term") st
@@ -50,7 +45,7 @@ let trm_unify ?(update_check=Fun._true) t t' cont init_state =
     else
       None in
   Option.bind cont res
-  
+
 let trm_biunify ?(update_check=Fun._true) t t' cont ((subst, subst') as state) =
   let mapped = (Map.mem t subst, Map.mem t' subst') in
   let opts =
@@ -61,7 +56,7 @@ let trm_biunify ?(update_check=Fun._true) t t' cont ((subst, subst') as state) =
     else if fst mapped then
       let t'' = Map.find t subst in
       [ Option.mk_lazily
-          (equal t' t'' || 
+          (equal t' t'' ||
             update_check (state, (Subst.empty, Subst.singleton t' t'')))
           (fun _ -> (subst, Map.add t' t'' subst')) ]
     else if snd mapped && is_nil t then
@@ -76,53 +71,53 @@ let trm_biunify ?(update_check=Fun._true) t t' cont ((subst, subst') as state) =
       [ Some state ]
     else
       [ Option.mk_lazily
-          (not (is_nil t) 
-            && (equal t t' || 
+          (not (is_nil t)
+            && (equal t t' ||
                 update_check (state, (Subst.singleton t t', Subst.empty))))
-          (fun _ -> 
-            (Map.add t t' subst, 
+          (fun _ ->
+            (Map.add t t' subst,
               if not (is_nil t') then Map.add t' t' subst' else subst')) ;
         Option.mk_lazily
-          (not (is_nil t') 
+          (not (is_nil t')
             && (equal t' t ||
                 update_check (state, (Subst.empty, Subst.singleton t' t))))
-          (fun _ -> 
-            ((if not (is_nil t) then Map.add t t subst else subst), 
+          (fun _ ->
+            ((if not (is_nil t) then Map.add t t subst else subst),
               Map.add t' t subst')) ] in
   Blist.find_map (Option.bind cont) opts
 
 module FList =
   struct
     include Var.FList
-    
+
     let terms = Set.of_list
-    let vars ts = Set.of_list (Blist.filter (fun t -> not (is_nil t)) ts) 
-    
+    let vars ts = Set.of_list (Blist.filter (fun t -> not (is_nil t)) ts)
+
     let to_string_sep sep ts = Blist.to_string sep Var.to_string ts
-    
-    let mk_unify 
+
+    let mk_unify
         (unify:
-          ?update_check:('a Unification.state_update) Fun.predicate 
-            -> ('a, 'b, 'c) Unification.cps_unifier) 
-        ?(update_check=Fun._true) = 
+          ?update_check:('a Unification.state_update) Fun.predicate
+            -> ('a, 'b, 'c) Unification.cps_unifier)
+        ?(update_check=Fun._true) =
       let rec u args args' cont init_state =
       match (args, args') with
       | ([], []) -> cont init_state
       | (_, []) | ([], _) -> None
       | (x::xs, y::ys) ->
-          unify ~update_check x y 
+          unify ~update_check x y
           (u xs ys cont)
           init_state in
       u
-        
+
     let unify ?(update_check=Fun._true) args args' cont init_state =
       mk_unify trm_unify ~update_check args args' cont init_state
-      
+
     let biunify ?(update_check=Fun._true) args args' cont init_state =
       mk_unify trm_biunify ~update_check args args' cont init_state
-    
+
     let subst theta xs = Blist.map (fun x -> Subst.apply theta x) xs
   end
-  
+
 let unify = trm_unify
 let biunify = trm_biunify

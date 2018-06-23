@@ -10,11 +10,9 @@ let subst theta ptos = endomap (Sl_pto.subst theta) ptos
 let to_string_list v = Blist.map Sl_pto.to_string (elements v)
 let to_string v =
   Blist.to_string symb_star.sep Sl_pto.to_string (elements v)
-let to_melt v =
-  ltx_star (Blist.map Sl_pto.to_melt (elements v))
 
 let terms ptos =
-  Sl_term.Set.union_of_list (Blist.map Sl_pto.terms (elements ptos)) 
+  Sl_term.Set.union_of_list (Blist.map Sl_pto.terms (elements ptos))
 
 let vars p = Sl_term.filter_vars (terms p)
 
@@ -26,12 +24,12 @@ let parse st =
 
 let rec unify ?(total=true) ?(update_check=Fun._true)
     ptos ptos' cont init_state =
-  mk_unifier total true (Sl_pto.unify ~update_check) ptos ptos' cont init_state 
-  
+  mk_unifier total true (Sl_pto.unify ~update_check) ptos ptos' cont init_state
+
 let rec biunify ?(total=true) ?(update_check=Fun._true)
     ptos ptos' cont init_state =
-  mk_unifier total true (Sl_pto.biunify ~update_check) ptos ptos' cont init_state 
-  
+  mk_unifier total true (Sl_pto.biunify ~update_check) ptos ptos' cont init_state
+
 let rec subsumed ?(total=true) eqs ptos ptos' =
   if is_empty ptos then not total || is_empty ptos' else
   let pto = choose ptos in

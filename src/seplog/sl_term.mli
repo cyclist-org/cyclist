@@ -1,5 +1,5 @@
-(** Module defining SL terms, which consist of variables (free 
-    or existentially quantified), or the constant [nil]. 
+(** Module defining SL terms, which consist of variables (free
+    or existentially quantified), or the constant [nil].
     The focus on fresh variable generation is human readable formulas,
     not speed. *)
 
@@ -10,9 +10,6 @@ module Set : Utilsigs.OrderedContainer with type elt = t
 
 module Map : Utilsigs.OrderedMap with type key = t
 (** An ordered map with terms as keys. *)
-
-val to_melt : t -> Latex.t
-(** Convert term to LaTeX. *)
 
 val parse : (t, 'a) MParser.parser
 (** Parse a term. *)
@@ -42,15 +39,15 @@ val fresh_fvar : Set.t -> t
 (** [fresh_fvar s] returns a free variable that is fresh in [s]. *)
 
 val fresh_fvars : Set.t -> int -> t list
-(** [fresh_fvars s n] returns a list of free variables of length [n] 
+(** [fresh_fvars s n] returns a list of free variables of length [n]
     all of which are fresh in [s]. *)
 
 val fresh_evar : Set.t -> t
-(** [fresh_evar s] returns an existentially quantified variable that is 
+(** [fresh_evar s] returns an existentially quantified variable that is
     fresh in [s]. *)
 
 val fresh_evars : Set.t -> int -> t list
-(** [fresh_evars s n] returns a list of existentially quantified variables 
+(** [fresh_evars s n] returns a list of existentially quantified variables
     of length [n] all of which are fresh in [s]. *)
 
 
@@ -60,20 +57,20 @@ module Subst : VarManager.SubstSig
   with type var_container = Set.t
 (** Substitutions over terms *)
 
-val unify : ?update_check: (Subst.t * Subst.t) Fun.predicate -> 
-  (Subst.t, 'a, t) Unification.cps_unifier 
+val unify : ?update_check: (Subst.t * Subst.t) Fun.predicate ->
+  (Subst.t, 'a, t) Unification.cps_unifier
 (** Unifies two terms by producing a substitution to act on the first term *)
-  
-val biunify: 
-  ?update_check:((Subst.t * Subst.t) * (Subst.t * Subst.t)) 
+
+val biunify:
+  ?update_check:((Subst.t * Subst.t) * (Subst.t * Subst.t))
     Fun.predicate
       -> (Subst.t * Subst.t, 'a, t) Unification.cps_unifier
 (** Unifies two terms by producing substitutions to act on each term respectively *)
 
-module FList : 
+module FList :
   sig
     include Utilsigs.BasicType with type t = t list
-    
+
     val terms : t -> Set.t
     (** Convenience function converting the list to a set. *)
     val vars : t -> Set.t
@@ -85,14 +82,14 @@ module FList :
     val subst : Subst.t -> t -> t
     (** Applies a substitution to the list *)
 
-    val unify : 
-      ?update_check: (Subst.t * Subst.t) Fun.predicate -> 
+    val unify :
+      ?update_check: (Subst.t * Subst.t) Fun.predicate ->
         (Subst.t, 'a, t) Unification.cps_unifier
     (** Unifies two lists of terms by producing a substitution to act on the first list *)
 
-    val biunify: 
+    val biunify:
       ?update_check:
-        ((Subst.t * Subst.t) * (Subst.t * Subst.t)) 
+        ((Subst.t * Subst.t) * (Subst.t * Subst.t))
           Fun.predicate
             -> (Subst.t * Subst.t, 'a, t) Unification.cps_unifier
     (** Unifies two lists of terms by producing substitutions to act on each list respectively *)

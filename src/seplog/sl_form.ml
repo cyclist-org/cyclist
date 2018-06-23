@@ -30,15 +30,6 @@ let to_string (cs, hs) =
   | [] -> cs_str ^ symb_false.str
   | hs ->  cs_str ^ (Blist.to_string symb_or.sep Sl_heap.to_string hs)
 
-let to_melt (cs, hs) =
-  ltx_mk_math
-    (Latex.concat
-      [ (Ord_constraints.to_melt cs) ;
-        (constraints_sep cs).melt ;
-        (if hs = [] then symb_false.melt else
-          Latex.concat
-            (Latex.list_insert symb_or.melt (Blist.map Sl_heap.to_melt hs)))])
-
 let terms (_, d) = Sl_term.Set.union_of_list (Blist.map Sl_heap.terms d)
 let vars f = Sl_term.filter_vars (terms f)
 let tags (cs, d) = Tags.union_of_list ((Ord_constraints.tags cs)::(Blist.map Sl_heap.tags d))
@@ -46,21 +37,21 @@ let tag_pairs f = Tagpairs.mk (tags f)
 let inconsistent (cs, f) = (Ord_constraints.inconsistent cs) || (Blist.for_all Sl_heap.inconsistent f)
 
 let complete_tags avoid (cs, hs) =
-  let hs = 
-    Blist.rev 
-      (Blist.foldr 
-        (fun h hs' -> 
+  let hs =
+    Blist.rev
+      (Blist.foldr
+        (fun h hs' ->
           let h' =
             (* This conditional is an attempt at making efficiency savings:       *)
             (* if we will not be generating new tags for this particular disjunct *)
             (* then don't bother calculating the avoid set - a computation which  *)
-            (* involves progressively more duplicated work as the fold progresses *) 
+            (* involves progressively more duplicated work as the fold progresses *)
             if Sl_heap.has_untagged_preds h then
               let avoid' = Blist.foldl (fun ts h -> Tags.union ts (Sl_heap.tags h)) avoid hs' in
               Sl_heap.complete_tags avoid' h
             else h in
-          h'::hs') 
-        (Blist.rev hs) 
+          h'::hs')
+        (Blist.rev hs)
         []) in
   (cs, hs)
 
@@ -70,11 +61,11 @@ let subsumed_upto_constraints ?(total=true) (_, hs) (_, hs') =
       Sl_heap.subsumed ~total d1 d2) hs) hs'
 
 let subsumed ?(total=true) ((cs, _) as l) ((cs', _) as r) =
-  subsumed_upto_constraints ~total l r  && 
+  subsumed_upto_constraints ~total l r  &&
   let () = debug (fun _ -> "Checking constraint subsumption: " ^ (Ord_constraints.to_string cs') ^ " |- " ^ (Ord_constraints.to_string cs)) in
   let cs' = Ord_constraints.close cs' in
   Ord_constraints.subsumes cs' cs
-      
+
 let subsumed_upto_tags ?(total=true) (cs, hs) (cs', hs') =
   Blist.for_all (fun d2 ->
     Blist.exists (fun d1 ->
@@ -87,17 +78,17 @@ let equal_upto_tags (cs, hs) (cs', hs') =
 let parse ?(null_is_emp=false) ?(allow_tags=true) ?(augment_deqs=true) st =
   ((if allow_tags then (option Ord_constraints.parse) else return None) >>= (fun cs ->
   (sep_by (Sl_heap.parse ~allow_tags ~augment_deqs) (parse_symb symb_or) <?> "formula") >>= (fun hs ->
-  return 
-    (Option.dest Ord_constraints.empty Fun.id cs, 
+  return
+    (Option.dest Ord_constraints.empty Fun.id cs,
       if null_is_emp && Blist.is_empty hs then [ Sl_heap.empty ] else hs)))) st
-      
+
 let of_string ?(null_is_emp=false) s =
   handle_reply (MParser.parse_string (parse ~null_is_emp) s ())
 
 let star ?(augment_deqs=true) (cs, f) (cs', g) =
-  let hs = 
-    Blist.map 
-      (fun (f', g') -> Sl_heap.star ~augment_deqs f' g') 
+  let hs =
+    Blist.map
+      (fun (f', g') -> Sl_heap.star ~augment_deqs f' g')
       (Blist.cartesian_product f g) in
   let constraints = Ord_constraints.union cs cs' in
   (constraints, hs)
@@ -118,17 +109,17 @@ let add_constraints (cs, hs) cs' = (Ord_constraints.union cs cs', hs)
 
 let get_tracepairs f ((cs, _) as f') =
   let cs = Ord_constraints.close cs in
-  let id_pairs = 
+  let id_pairs =
     (Tagpairs.mk (Pair.apply Tags.inter (Pair.map tags (f, f')))) in
-  let (allpairs, progressing) = 
+  let (allpairs, progressing) =
     Pair.map
       (fun tps -> Tagpairs.endomap Pair.swap
-        (Tagpairs.filter (fun (_, t) -> Tags.mem t (tags f)) tps)) 
-      ((Tagpairs.union id_pairs (Ord_constraints.all_pairs cs)), 
+        (Tagpairs.filter (fun (_, t) -> Tags.mem t (tags f)) tps))
+      ((Tagpairs.union id_pairs (Ord_constraints.all_pairs cs)),
         Ord_constraints.prog_pairs cs) in
   (allpairs, progressing)
 
-let compute_frame 
+let compute_frame
     ?(freshen_existentials=true) ?(avoid=(Tags.empty, Sl_term.Set.empty)) f f' =
   try
     let (cs, h) = dest f in
@@ -148,7 +139,7 @@ let compute_frame
     else
       let ex_tags = Tags.filter Tags.is_exist_var (Sl_heap.tags h) in
       let ex_vars = Sl_term.Set.filter Sl_term.is_exist_var (Sl_heap.terms h) in
-      let frame = 
+      let frame =
         (Ord_constraints.diff cs' cs,
           [ Sl_heap.mk
               (Sl_uf.diff eqs eqs')
@@ -156,21 +147,21 @@ let compute_frame
               (Sl_ptos.diff ptos' ptos)
               (Sl_tpreds.diff inds' inds) ] ) in
       let ex_frame_tags = Tags.filter Tags.is_exist_var (tags frame) in
-      let ex_frame_vars = 
+      let ex_frame_vars =
         Sl_term.Set.filter Sl_term.is_exist_var (terms frame) in
       let clashing_tags = Tags.inter ex_tags ex_frame_tags in
       let clashing_vars = Sl_term.Set.inter ex_vars ex_frame_vars in
-      if not freshen_existentials && 
-          (not (Tags.is_empty clashing_tags) || 
+      if not freshen_existentials &&
+          (not (Tags.is_empty clashing_tags) ||
            not (Sl_term.Set.is_empty clashing_vars)) then None
       else
-        let tag_subst = 
-          Tagpairs.mk_ex_subst 
-            (Tags.union (fst avoid) (tags f')) 
+        let tag_subst =
+          Tagpairs.mk_ex_subst
+            (Tags.union (fst avoid) (tags f'))
             clashing_tags in
         let trm_subst =
           Sl_subst.mk_ex_subst
             (Sl_term.Set.union (snd avoid) (terms f'))
-            clashing_vars in 
+            clashing_vars in
         Some (subst trm_subst (subst_tags tag_subst frame))
   with Not_symheap -> None

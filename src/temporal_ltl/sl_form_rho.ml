@@ -26,12 +26,6 @@ let to_string = function
   | [] -> symb_false.str
   | d ->  Blist.to_string symb_or.sep Sl_heap_rho.to_string d
 
-let to_melt d =
-  ltx_mk_math
-    (if d =[] then symb_false.melt else
-        Latex.concat
-          (Latex.list_insert symb_or.melt (Blist.map Sl_heap_rho.to_melt d)))
-
 let terms d = Sl_term.Set.union_of_list (Blist.map Sl_heap_rho.terms d)
 let vars d = Sl_term.filter_vars (terms d)
 let tags d = Tags.union_of_list (Blist.map Sl_heap_rho.tags d)
@@ -39,20 +33,20 @@ let tag_pairs f = Tagpairs.mk (tags f)
 let inconsistent f = Blist.for_all Sl_heap_rho.inconsistent f
 
 let complete_tags avoid hs =
-  Blist.rev 
-    (Blist.foldr 
-      (fun h hs' -> 
+  Blist.rev
+    (Blist.foldr
+      (fun h hs' ->
         let h' =
           (* This conditional is an attempt at making efficiency savings:       *)
           (* if we will not be generating new tags for this particular disjunct *)
           (* then don't bother calculating the avoid set - a computation which  *)
-          (* involves progressively more duplicated work as the fold progresses *) 
+          (* involves progressively more duplicated work as the fold progresses *)
           if Sl_heap_rho.has_untagged_preds h then
             let avoid' = Blist.foldl (fun ts h -> Tags.union ts (Sl_heap_rho.tags h)) avoid hs' in
             Sl_heap_rho.complete_tags avoid' h
           else h in
-        h'::hs') 
-      (Blist.rev hs) 
+        h'::hs')
+      (Blist.rev hs)
       [])
 
 let subsumed ?(total=true) f1 f2 =
@@ -66,7 +60,7 @@ let subsumed_upto_tags ?(total=true) f1 f2 =
 
 let equal_upto_tags f f' =
   Blist.for_all2 Sl_heap_rho.equal_upto_tags f f'
-  
+
 
 let parse st =
   (sep_by1 (Sl_heap_rho.parse ~allow_tags:false) (parse_symb symb_or) >>= (fun f ->

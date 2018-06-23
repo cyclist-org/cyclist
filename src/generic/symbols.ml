@@ -3,68 +3,59 @@ open MParser
 open MParser_PCRE
 module Tokens = MParser_PCRE.Tokens
 
-let ltx_mk_math l = Latex.mode Latex.M l
-let ltx_mk_text l = Latex.mode Latex.T l
-let ltx_math s = ltx_mk_math (Latex.text s)
-let ltx_text s = ltx_mk_text (Latex.text s)
-let ltx_newl = Latex.text "\n"
-
-type symbol = { str: string; sep:string; melt:Latex.t }
+type symbol = { str: string; sep:string }
 
 (* str fields *cannot* have whitespace *)
 (* surrounding them as this trips the lexer *)
 
-let make_symb s m = { str=s; sep=" " ^ s ^ " "; melt=m }
+let make_symb s = { str=s; sep=" " ^ s ^ " " }
 let mk_keyw s =
   {
     str=s;
-    sep=" " ^ s ^ " ";
-    melt=ltx_mk_math (Latex.texttt (Latex.text s))
+    sep=" " ^ s ^ " "
   }
 
-let symb_nullstr = { str=""; sep=""; melt=Latex.empty }
+let symb_nullstr = { str=""; sep="" }
 
-let symb_false = make_symb "F" Latex.bot
-let symb_true = make_symb "T" Latex.top
-let symb_or = make_symb "\\/" Latex.lor_
-let symb_and = make_symb "/\\" Latex.land_
-let symb_ampersand = make_symb "&" Latex.empty (* FIXME *)
-let symb_emp = make_symb "emp" (Latex.texttt (Latex.text "emp"))
-let symb_star = make_symb "*" Latex.ast
-let symb_pointsto = make_symb "->" Latex.mapsto
-let symb_eq = make_symb "=" (ltx_math " = ")
-let symb_deq = make_symb "!=" Latex.neq
-let symb_lt = make_symb "<" (ltx_math "<")
-let symb_leq = make_symb "<=" Latex.leq
-let symb_lp = make_symb "(" (Latex.text "(")
-let symb_rp = make_symb ")" (Latex.text ")")
-let symb_lb = make_symb "{" (Latex.text "\\left\\{")
-let symb_rb = make_symb "}" (Latex.text "\\right\\}")
-let symb_semicolon = make_symb ";" (Latex.text ";")
-let symb_colon = make_symb ":" (Latex.text " : ")
-let symb_comma = { str=","; sep=", "; melt=Latex.text ", " }
-let symb_turnstile = make_symb "|-" Latex.vdash
-let symb_turnstile_underscore = make_symb "|-_" Latex.empty (* FIXME *)
-(* let symb_dturnstile_underscore = make_symb "||-_" Latex.empty (* FIXME *) *)
-let symb_ind_implies = make_symb "=>" Latex.empty
-let symb_ind_sep = make_symb "|" Latex.empty
-let symb_assign = make_symb ":=" (ltx_math ":=")
-let symb_bang = make_symb "!" Latex.empty
-let symb_caret = make_symb "^" Latex.empty
-let symb_mapsto = make_symb "|->" (ltx_math "\\mapsto")
-(* let symb_underscore = make_symb "_" " " Latex.empty (* FIXME *) *)
-let symb_final = make_symb "final" (Latex.texttt (Latex.text "final"))
-let symb_box = make_symb "[]" Latex.box_
-let symb_diamond = make_symb "<>" Latex.diamond
-let symb_circle = make_symb "()" Latex.circ
-let symb_af = make_symb "AF" (Latex.text "AF ")
-let symb_ag = make_symb "AG" (Latex.text "AG ")
-let symb_ef = make_symb "EF" (Latex.text "EF ")
-let symb_eg = make_symb "EG" (Latex.text "EG")
-let symb_next = make_symb "X" (Latex.text "X ")
-let symb_f = make_symb "F" (Latex.text "F ")
-let symb_g = make_symb "G" (Latex.text "G ")
-let symb_fld_sel = make_symb "." (Latex.text ".")
+let symb_false = make_symb "F"
+let symb_true = make_symb "T"
+let symb_or = make_symb "\\/"
+let symb_and = make_symb "/\\"
+let symb_ampersand = make_symb "&"
+let symb_emp = make_symb "emp"
+let symb_star = make_symb "*"
+let symb_pointsto = make_symb "->"
+let symb_eq = make_symb "="
+let symb_deq = make_symb "!="
+let symb_lt = make_symb "<"
+let symb_leq = make_symb "<="
+let symb_lp = make_symb "("
+let symb_rp = make_symb ")"
+let symb_lb = make_symb "{"
+let symb_rb = make_symb "}"
+let symb_semicolon = make_symb ";"
+let symb_colon = make_symb ":"
+let symb_comma = { str=","; sep=", " }
+let symb_turnstile = make_symb "|-"
+let symb_turnstile_underscore = make_symb "|-_"
+let symb_ind_implies = make_symb "=>"
+let symb_ind_sep = make_symb "|"
+let symb_assign = make_symb ":="
+let symb_bang = make_symb "!"
+let symb_caret = make_symb "^"
+let symb_mapsto = make_symb "|->"
+let symb_final = make_symb "final"
+let symb_box = make_symb "[]"
+let symb_diamond = make_symb "<>"
+let symb_circle = make_symb "()"
+let symb_af = make_symb "AF"
+let symb_ag = make_symb "AG"
+let symb_ef = make_symb "EF"
+let symb_eg = make_symb "EG"
+let symb_next = make_symb "X"
+let symb_f = make_symb "F"
+let symb_g = make_symb "G"
+let symb_fld_sel = make_symb "."
 let symb_dot = symb_fld_sel
 
 let keyw_exists = mk_keyw "Ex"
@@ -92,42 +83,5 @@ let keyw_while = mk_keyw "while"
 let keyw_do = mk_keyw "do"
 let keyw_od = mk_keyw "od"
 let keyw_assert = mk_keyw "assert"
-
-let ltx_paren l = Latex.concat [symb_lp.melt; l; symb_rp.melt]
-let ltx_comma l = Latex.concat (Latex.list_insert symb_comma.melt l)
-let ltx_star l = Latex.concat (Latex.list_insert symb_star.melt l)
-let ltx_math_space = Latex.text "\\;"
-let ltx_prime l = Latex.concat [l; (Latex.text "'")]
-
-(** Convert a (lowercase) roman character to a corresponding (lowercase) greek
-    character according to the mapping used by the qsymbols Latex package *)
-let char_to_greek = function
-  | 'a' -> Latex.alpha
-  | 'b' -> Latex.beta
-  | 'c' -> Latex.chi
-  | 'd' -> Latex.delta
-  | 'e' -> Latex.epsilon
-  | 'f' -> Latex.phi
-  | 'g' -> Latex.gamma
-  | 'h' -> Latex.eta
-  | 'i' -> Latex.iota
-  | 'j' -> Latex.psi
-  | 'k' -> Latex.kappa
-  | 'l' -> Latex.lambda
-  | 'm' -> Latex.mu
-  | 'n' -> Latex.nu
-  | 'o' -> ltx_math "o"
-  | 'p' -> Latex.pi
-  | 'q' -> Latex.theta
-  | 'r' -> Latex.rho
-  | 's' -> Latex.sigma
-  | 't' -> Latex.tau
-  | 'u' -> Latex.varrho
-  | 'v' -> Latex.varphi
-  | 'w' -> Latex.omega
-  | 'x' -> Latex.xi
-  | 'y' -> Latex.upsilon
-  | 'z' -> Latex.zeta
-  | _ -> raise (Invalid_argument ("Expecting a lowercase roman character"))
 
 let parse_symb s st = (spaces >> Tokens.skip_symbol s.str >> spaces) st

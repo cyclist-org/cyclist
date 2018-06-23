@@ -12,8 +12,6 @@ val dest : t -> (Ord_constraints.t * Sl_heap.t) * (Ord_constraints.t * Sl_heap.t
 val parse : ?null_is_emp:bool -> (t, 'a) MParser.t
 val of_string : ?null_is_emp:bool -> string -> t
 
-val to_melt : t -> Latex.t
-
 val vars : t -> Sl_term.Set.t
 
 val tags : t -> Tags.t

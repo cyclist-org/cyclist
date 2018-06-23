@@ -71,11 +71,6 @@ module Cond =
       | Deq(x,y) ->
         Format.fprintf fmt "@[%a%s%a@]" Sl_term.pp x symb_deq.str Sl_term.pp y
 
-    let to_melt = function
-      | Non_det x -> Latex.concat [symb_star.melt; Sl_term.to_melt x]
-      | Eq(x,y) -> Latex.concat [Sl_term.to_melt x; symb_eq.melt; Sl_term.to_melt y]
-      | Deq(x,y) -> Latex.concat [Sl_term.to_melt x; symb_deq.melt; Sl_term.to_melt y]
-
     let fork f c =
       if is_non_det c then
 	let rho_stack = f.SH.rho in
@@ -94,14 +89,14 @@ module Cond =
 				let f'' = SH.with_rho f (Sl_rho.add rho_var (1) f.SH.rho) in
 				[f';f'']
 			  end
-      else 
+      else
       	let pair = dest c in
       	let f' =  SH.with_eqs f (Sl_uf.add pair f.SH.eqs) in
       	let f'' = SH.with_deqs f (Sl_deqs.add pair f.SH.deqs) in
       	let (f',f'') = if is_deq c then (f'',f') else (f',f'') in
       	[f';f'']
-    
-    let fork_if f c = 
+
+    let fork_if f c =
       if is_non_det c then
 	let rho_stack = f.SH.rho in
 	let rho_var = dest_nondet c in
@@ -125,14 +120,14 @@ module Cond =
       | Eq(x, y) -> Sl_heap_rho.equates h x y
       | Deq(x, y) -> Sl_heap_rho.disequates h x y
       | _ -> false (* fixme *)
-    
+
     let invalidated_by h = function
       | Eq(x, y) -> Sl_heap_rho.disequates h x y
       | Deq(x, y) -> Sl_heap_rho.equates h x y
       | _ -> false (* fixme *)
-		
+
     let parse st =
-      ( attempt (parse_symb symb_star >> 
+      ( attempt (parse_symb symb_star >>
 		   Sl_term.parse |>> (fun i ->  mk_non_det (i))) <|>
         attempt (Sl_uf.parse |>> Fun.uncurry mk_eq) <|>
                 (Sl_deqs.parse |>> Fun.uncurry mk_deq) <?> "Cond") st
@@ -185,7 +180,7 @@ module Cmd =
     let is_proc_call c = is_not_empty c && match get_cmd c with
       | ProcCall(_, _) -> true
       | _ -> false
-    
+
 
     let is_basic c = is_not_empty c && match get_cmd c with
       ProcCall(_, _) | Assign _ | Load _ | Store _ | New _ | Free _ | Stop | Skip -> true
@@ -210,14 +205,14 @@ module Cmd =
     let mk_free e = mk_basic (Free(e))
     let mk_stop = mk_basic (Stop)
     let mk_skip = mk_basic (Skip)
-    let mk_proc_call p args = mk_basic (ProcCall(p, args)) 
+    let mk_proc_call p args = mk_basic (ProcCall(p, args))
     let mk_if cond cmd = mk_basic (If(cond, cmd))
     let mk_ifelse cond cmd cmd' = mk_basic (IfElse(cond, cmd, cmd'))
     let mk_while cond cmd = mk_basic (While(cond, cmd))
     let mk_seq cmd cmd' = cmd @ cmd'
     let mk_from_list l = Blist.flatten l
 
-    let rec parse_cmd st = 
+    let rec parse_cmd st =
       (   attempt (parse_symb keyw_stop >>$ Stop)
       <|> attempt (parse_symb keyw_skip >>$ Skip)
       <|> attempt (parse_symb keyw_free >>
@@ -234,7 +229,7 @@ module Cmd =
           Cond.parse >>= (fun cond ->
           parse_symb keyw_then >>
           parse >>= (fun cmd ->
-          parse_symb keyw_fi >>$ If(cond,cmd)))) 
+          parse_symb keyw_fi >>$ If(cond,cmd))))
      <|> attempt (parse_symb keyw_while >>
           Cond.parse >>= (fun cond ->
           parse_symb keyw_do >>
@@ -262,17 +257,17 @@ module Cmd =
           parse_ident |>> (fun id ->
           assert (is_prog_var v1 && is_prog_var v2) ; Load(v1,v2,id)))))
     (* | v = var; ASSIGN; t = term { P.Cmd.mk_assign v t } *)
-      <|> attempt ( Sl_term.parse >>= (fun v -> 
-          parse_symb symb_assign >> 
-          Sl_term.parse |>> (fun t -> 
+      <|> attempt ( Sl_term.parse >>= (fun v ->
+          parse_symb symb_assign >>
+          Sl_term.parse |>> (fun t ->
           assert (is_prog_var v) ; Assign(v,t))) )
       <|> (parse_ident >>= (fun p ->
           Tokens.parens (Tokens.comma_sep Sl_term.parse) |>> (fun args ->
           (Blist.iter (fun arg -> assert(is_prog_var arg || Sl_term.is_nil arg)) args);
           ProcCall(p, args))))
       <?> "Cmd") st
-    and parse st = 
-      (sep_by1 parse_cmd (parse_symb symb_semicolon) |>> 
+    and parse st =
+      (sep_by1 parse_cmd (parse_symb symb_semicolon) |>>
       Blist.map mklc <?> "CmdList") st
 
     let _dest_stop = function
@@ -315,7 +310,7 @@ module Cmd =
       | _ -> raise WrongCmd
     let _dest_branching = function
       | While(cond,_) | If(cond,_) | IfElse(cond,_,_) -> cond
-      | _ -> raise WrongCmd 
+      | _ -> raise WrongCmd
 
     let dest_cmd f = fun c -> f (get_cmd c)
 
@@ -339,7 +334,7 @@ module Cmd =
         | [] -> ([], n)
         | c::l ->
           begin match c.cmd with
-            | ProcCall(_,_) | Assign _ | Load _ | Store _ | New _ | Free _ 
+            | ProcCall(_,_) | Assign _ | Load _ | Store _ | New _ | Free _
             | Stop | Skip ->
               let c' = { label=Some n; cmd=c.cmd } in
               let (l', n') = aux (n+1) l in
@@ -377,20 +372,20 @@ module Cmd =
       Blist.fold_left (fun s c -> Sl_term.Set.union s (cmd_terms c.cmd)) Sl_term.Set.empty l
 
     let vars cmd = Sl_term.filter_vars (terms cmd)
-    
+
     let locals params cmd = Sl_term.Set.diff (vars cmd) params
 
     let rec cmd_modifies ?strict:(flag=true) cmd = match cmd with
       | Stop | Skip | Free _ | ProcCall(_, _) -> Sl_term.Set.empty
       | New(x) | Assign(x,_) | Load(x,_,_) -> Sl_term.Set.singleton x
-      | Store(x,_,_) -> if flag then Sl_term.Set.singleton x else Sl_term.Set.empty 
+      | Store(x,_,_) -> if flag then Sl_term.Set.singleton x else Sl_term.Set.empty
       | If(_,cmd) | While(_,cmd) -> modifies ~strict:flag cmd
-      | IfElse(_,cmd,cmd') -> 
+      | IfElse(_,cmd,cmd') ->
           Sl_term.Set.union (modifies ~strict:flag cmd) (modifies ~strict:flag cmd')
     and modifies ?strict:(flag=true) l =
-      Blist.fold_left 
+      Blist.fold_left
         (fun s c -> Sl_term.Set.union s (cmd_modifies ~strict:flag c.cmd)) Sl_term.Set.empty l
-        
+
     let rec cmd_equal cmd cmd' = match (cmd, cmd') with
       | (Stop, Stop) | (Skip, Skip) -> true
       | (New(x), New(y)) | (Free(x), Free(y)) -> Sl_term.equal x y
@@ -422,7 +417,7 @@ module Cmd =
       | While(cond, cmd) -> While ((Cond.subst theta cond), (subst theta cmd))
     and subst theta cmd = match cmd with
       | [] -> []
-      | c::tl -> {c with cmd = (subst_cmd theta c.cmd)} :: (subst theta tl) 
+      | c::tl -> {c with cmd = (subst_cmd theta c.cmd)} :: (subst theta tl)
 
     let number_width = ref 3
     let indent_by = ref 2
@@ -500,61 +495,6 @@ module Cmd =
             (pp_lcmd ~abbr indent) hd symb_semicolon.str (pp ~abbr indent) tl
 
     let to_string cmd = mk_to_string (pp ~abbr:true 0) cmd
-     
-    let to_melt_label c = match c.label with
-        | None -> Latex.empty
-        | Some n -> Latex.text ((string_of_int n) ^ " : ")
-
-    let rec to_melt_cmd c = match c.cmd with
-      | Stop -> keyw_stop.melt
-      | Skip -> keyw_skip.melt
-      | New(x) ->
-        Latex.concat
-          [ Sl_term.to_melt x; symb_assign.melt;
-            keyw_new.melt; symb_lp.melt; symb_rp.melt; ]
-      | Free(x) ->
-        Latex.concat
-          [ keyw_free.melt; symb_lp.melt; Sl_term.to_melt x; symb_rp.melt ]
-      | Assign(x,e) ->
-        Latex.concat
-          [ Sl_term.to_melt x; symb_assign.melt; Sl_term.to_melt e ]
-      | Load(x,e,f) ->
-        Latex.concat
-          [ Sl_term.to_melt x; symb_assign.melt; Sl_term.to_melt e;
-            symb_fld_sel.melt; Field.to_melt f ]
-      | Store(x,f,e) ->
-        Latex.concat
-          [ Sl_term.to_melt x; symb_fld_sel.melt;
-            Field.to_melt f; symb_assign.melt; Sl_term.to_melt e ]
-      | ProcCall(p, args) ->
-        let separated_args =
-          Blist.intersperse symb_comma.melt
-            (Blist.map (fun x -> Sl_term.to_melt x) args) in
-        Latex.concat (ltx_text p :: symb_lp.melt :: separated_args @ [symb_rp.melt])
-      | If(cond,cmd) ->
-        Latex.concat
-          [ keyw_if.melt; ltx_math_space; Cond.to_melt cond; ltx_math_space;
-            keyw_then.melt; ltx_math_space; to_melt_label (Blist.hd cmd);
-            Latex.ldots; keyw_fi.melt ]
-      | IfElse(cond,cmd,cmd') ->
-        Latex.concat
-          [ keyw_if.melt; ltx_math_space; Cond.to_melt cond; ltx_math_space;
-            keyw_then.melt; ltx_math_space; to_melt_label (Blist.hd cmd);
-            Latex.ldots; keyw_else.melt; ltx_math_space; 
-            to_melt_label (Blist.hd cmd'); Latex.ldots; keyw_fi.melt ]
-      | While(cond,cmd) ->
-        Latex.concat
-          [ keyw_while.melt; ltx_math_space; Cond.to_melt cond; ltx_math_space;
-            keyw_do.melt; ltx_math_space; to_melt_label (Blist.hd cmd);
-            Latex.ldots; keyw_od.melt ]
-    and to_melt_lcmd c = Latex.concat [to_melt_label c; to_melt_cmd c]
-    and to_melt = function
-      | [] -> Latex.epsilon
-      | [ c ] -> to_melt_lcmd c
-      | hd::tl ->
-        Latex.concat
-          [ to_melt_lcmd hd; symb_semicolon.melt;
-          to_melt_label (Blist.hd tl); Latex.ldots ]
 
   end
 let program_pp fmt cmd =
@@ -580,33 +520,29 @@ module Seq =
     let to_string (sf,cmd,tf) =
       (Sl_form_rho.to_string sf) ^ symb_turnstile.sep ^ (Cmd.to_string cmd) ^
 	symb_colon.sep ^ (Tl_form_ltl.to_string tf)
-    let to_melt (sf,cmd,tf) =
-      ltx_mk_math
-        (Latex.concat [ Sl_form_rho.to_melt sf; symb_turnstile.melt; Cmd.to_melt cmd;
-	symb_colon.melt; Tl_form_ltl.to_melt tf])
 
     let pp fmt (sf,cmd,tf) =
       Format.fprintf fmt "@[%a%s%a%s%a@]"
         Sl_form_rho.pp sf symb_turnstile.sep (Cmd.pp ~abbr:true 0) cmd symb_colon.sep
 	Tl_form_ltl.pp tf
 
-    let equal (sf,cmd,tf) (sf',cmd',tf') = 
+    let equal (sf,cmd,tf) (sf',cmd',tf') =
       Cmd.equal cmd cmd' && Sl_form_rho.equal sf sf' && Tl_form_ltl.equal tf tf'
 
-    let equal_upto_tags (sf,cmd,tf) (sf',cmd',tf') = 
-      Cmd.equal cmd cmd' && 
-      Sl_form_rho.equal_upto_tags sf sf' && 
-      Tl_form_ltl.equal_upto_tags tf tf'
-								      
-										      
-    let subsumed (sf,cmd,tf) (sf',cmd',tf') = 
+    let equal_upto_tags (sf,cmd,tf) (sf',cmd',tf') =
       Cmd.equal cmd cmd' &&
-	(if !termination then Sl_form_rho.subsumed else Sl_form_rho.subsumed_upto_tags) 
+      Sl_form_rho.equal_upto_tags sf sf' &&
+      Tl_form_ltl.equal_upto_tags tf tf'
+
+
+    let subsumed (sf,cmd,tf) (sf',cmd',tf') =
+      Cmd.equal cmd cmd' &&
+	(if !termination then Sl_form_rho.subsumed else Sl_form_rho.subsumed_upto_tags)
           ~total:false  sf' sf
-    let subsumed_upto_tags (sf,cmd,tf) (sf',cmd',tf') = 
+    let subsumed_upto_tags (sf,cmd,tf) (sf',cmd',tf') =
       Cmd.equal cmd cmd' &&
 	Sl_form_rho.subsumed_upto_tags ~total:false sf' sf
-	  
+
     let subst_tags tagpairs (sf,cmd,tf) = (Sl_form_rho.subst_tags tagpairs sf, cmd,tf)
   end
 
@@ -629,33 +565,33 @@ let freshen_case_by_seq seq case =
 
 (* fields: FIELDS; COLON; ils = separated_nonempty_list(COMMA, IDENT); SEMICOLON  *)
 (*     { List.iter P.Field.add ils }                                              *)
-let parse_fields st = 
+let parse_fields st =
   ( parse_symb keyw_fields >>
     parse_symb symb_colon >>
     sep_by1 Field.parse (parse_symb symb_comma) >>= (fun ils ->
     parse_symb symb_semicolon >>$ List.iter Field.add ils) <?> "Fields") st
 
 (* precondition: PRECONDITION; COLON; f = formula; SEMICOLON { f } *)
-let parse_precondition st = 
+let parse_precondition st =
   ( parse_symb keyw_precondition >>
     parse_symb symb_colon >>
     Sl_form_rho.parse >>= (fun f ->
     parse_symb symb_semicolon >>$ f) <?> "Precondition") st
 
 (* property: PROPERTY; COLON; tf = formula; SEMICOLON { tf } *)
-let parse_property st = 
+let parse_property st =
   ( parse_symb keyw_property >>
     parse_symb symb_colon >>
     Tl_form_ltl.parse >>= (fun tf ->
     parse_symb symb_semicolon >>$ tf) <?> "Property") st
 
     (* fields; p = precondition; cmd = command; EOF { (p, cmd) } *)
-let parse st = 
+let parse st =
   ( parse_fields >>
     parse_precondition >>= (fun p ->
     parse_property >>= (fun tf ->
     Cmd.parse >>= (fun cmd ->
-    eof >>$ 
+    eof >>$
     let tf = Tl_form_ltl.complete_tags (Sl_form_rho.tags p) tf in
     (p,cmd,tf)))) <?> "program") st
 
