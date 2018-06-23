@@ -435,7 +435,7 @@ module Make (Sig : ValueSig)
 
     let add_spares n vs =
       let rec add n v vs =
-        if n <= 0 then vs else
+        if Int.(<=) n 0 then vs else
         let v' = Value.succ v in
         let vs' = Value.Set.add v' vs in
         add (n-1) v' vs' in
@@ -525,7 +525,7 @@ module Make (Sig : ValueSig)
       else if ModelBase.Hashset.is_empty ms' then ms'
       else
       (* Hashset.create: we can tweak the initial size of the hashset for performance *)
-      let size = min
+      let size = Int.min
         !max_hashset_size
         ((ModelBase.Hashset.cardinal ms) * (ModelBase.Hashset.cardinal ms')) in
       let new_mdls = ModelBase.Hashset.create size in
@@ -709,7 +709,7 @@ module Make (Sig : ValueSig)
             let inc =
               if (Sl_heap.inconsistent body) then 0
               else let (_,_, ptos, _) = Sl_heap.dest body in
-                min 1 (Sl_ptos.cardinal ptos) in
+                Int.min 1 (Sl_ptos.cardinal ptos) in
             n + inc in
           Sl_defs.rule_fold test_and_incr 0 defs in
         let base = SymHeapHash.create num_buckets in
@@ -719,8 +719,7 @@ module Make (Sig : ValueSig)
           let (body, _) = Sl_indrule.dest rl in
           let (eqs, deqs, ptos, _) = Sl_heap.dest body in
           let constraints = (eqs, deqs) in
-          if (not (Sl_heap.inconsistent body)) &&
-             (Sl_ptos.cardinal ptos > 0) then
+          if not (Sl_heap.inconsistent body) && Int.(>) (Sl_ptos.cardinal ptos) 0 then
           begin
             let gen_mdls (t, ts) mdls =
               let pto_models =
@@ -841,7 +840,7 @@ module Make (Sig : ValueSig)
       let valset =
         let max_vars_of_defs =
           let update_max m rl =
-            max m (Sl_term.Set.cardinal (Sl_indrule.vars rl)) in
+            Int.max m (Sl_term.Set.cardinal (Sl_indrule.vars rl)) in
           Sl_defs.rule_fold update_max 0 defs in
         add_spares max_vars_of_defs valset in
       let valset = Value.Set.add Value.nil valset in

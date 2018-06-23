@@ -10,3 +10,12 @@ module IntType : Utilsigs.BasicType with type t = int =
 
 include IntType
 include Containers.Make(IntType)
+
+let min (i:int) (j:int) = Pervasives.min i j
+let max (i:int) (j:int) = Pervasives.max i j
+let (<) (i:int) (j:int) = Pervasives.(<) i j
+let (<=) (i:int) (j:int) = Pervasives.(<=) i j
+let (>) (i:int) (j:int) = Pervasives.(>) i j
+let (>=) (i:int) (j:int) = Pervasives.(>=) i j
+let (<>) (i:int) (j:int) = Pervasives.(<>) i j
+let (=) i j = equal i j

@@ -51,7 +51,7 @@ struct
 
 
   let mk seq node descr =
-    assert (descr<>"") ;
+    assert (not (String.equal descr "")) ;
     {
       seq = seq;
       node = node;

@@ -18,7 +18,7 @@ module HT =
     let to_string s = s.Hashcons.node
     let pp fmt s = T.pp fmt (to_string s)
 
-    let compare s s' = Pervasives.compare s.Hashcons.tag s'.Hashcons.tag
+    let compare s s' = Int.compare s.Hashcons.tag s'.Hashcons.tag
     let equal s s' = s==s'
     let hash s = s.Hashcons.hkey
   end

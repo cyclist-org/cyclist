@@ -31,22 +31,22 @@ let entailment_table : (int * (Slprover.Proof.t option)) EntlSeqHash.t =
 let entails f f' =
   let () = debug (fun _ -> "Trying to prove entailment:\n\t" ^ (Sl_seq.to_string (f, f')) ^ "\n\t" ^ "with depth " ^ (string_of_int !entl_depth)) in
   let prove seq =
-    let depth = if !entl_depth < 1 then max_int else !entl_depth in
-    let invalid = 
-      let dbg = !do_debug in 
-      let res = 
+    let depth = if Int.(<) !entl_depth 1 then max_int else !entl_depth in
+    let invalid =
+      let dbg = !do_debug in
+      let res =
         begin
         do_debug := !do_debug && !show_invalidity_debug;
         !check_invalid seq
-        end in 
+        end in
       do_debug := dbg; res in
     if invalid
-      then 
-        let () = debug (fun _ -> "Entailment is invalid!") in 
+      then
+        let () = debug (fun _ -> "Entailment is invalid!") in
         None
-      else 
-        let dbg = !do_debug in 
-        let prf = 
+      else
+        let dbg = !do_debug in
+        let prf =
           begin
           do_debug:= !do_debug && !show_entailment_debug;
           Slprover.idfs 1 depth !Sl_rules.axioms !Sl_rules.rules seq
@@ -58,7 +58,7 @@ let entails f f' =
   if EntlSeqHash.mem entailment_table seq then
     let (depth, prf) = EntlSeqHash.find entailment_table seq in
     let () = debug (fun _ -> "Found result in cache: entailment " ^ (if Option.is_none prf then "not " else "") ^ "proved up to depth " ^ (string_of_int depth)) in
-    if (Option.is_some prf) || (!entl_depth <= depth) then prf
+    if (Option.is_some prf) || Int.(<=) !entl_depth depth then prf
     else
       let prf = prove seq in
       EntlSeqHash.replace entailment_table seq (!entl_depth, prf);
@@ -71,7 +71,7 @@ let entails f f' =
 
 
 (* Wrappers for backlink abducers *)
-module AbdTblElt = 
+module AbdTblElt =
   struct
     include Pair.Make(Tags)(Sl_term.Set)
     include Containers.Make(Pair.Make(Tags)(Sl_term.Set))
@@ -85,7 +85,7 @@ let abd_pre_table :
   EntlSeqHash.create 11
 let abd_pre_transforms ((used_tags, prog_vars) as key) f f' =
   let abd f f' =
-    let res = 
+    let res =
       Sl_abduce.abd_substs ~used_tags
         ~update_check:
           (Fun.disj
@@ -103,7 +103,7 @@ let abd_pre_transforms ((used_tags, prog_vars) as key) f f' =
     let map = EntlSeqHash.find abd_pre_table seq in
     if AbdTblMap.mem map key then
       let (depth, res) = AbdTblMap.find map key in
-      if (Option.is_some res) || (Sl_abduce.max_depth <= depth) then res
+      if (Option.is_some res) || Int.(<=) Sl_abduce.max_depth depth then res
       else
         let res = abd f f' in
         AbdTblMap.replace map key (Sl_abduce.max_depth, res);
@@ -158,7 +158,7 @@ let mk_symex_empty_axiom =
       Option.map (fun _ -> "Axiom") (aux pre cmd)
     else None in
   Rule.mk_axiom ax
-  
+
 (* simplification rules *)
 
 (* Tactic which tries to simplify the sequent by replacing existential variables *)
@@ -215,14 +215,16 @@ let lab_ex_intro =
 (* break LHS disjunctions *)
 let lhs_disj_to_symheaps =
   let rl ((_, hs) as pre, cmd, post) =
-    if Blist.length hs < 2 then [] else
-    [ Blist.map
-        (fun h ->
-          let s' = ((Sl_form.with_heaps pre [h]), cmd, post) in
-          (s', tagpairs s', Tagpairs.empty ) )
-        hs,
-      "L.Or"
-    ] in
+    match hs with
+    | [] | [_] -> []
+    | _ ->
+      [ Blist.map
+          (fun h ->
+            let s' = ((Sl_form.with_heaps pre [h]), cmd, post) in
+            (s', tagpairs s', Tagpairs.empty ) )
+          hs,
+        "L.Or"
+      ] in
   Rule.mk_infrule rl
 
 (* let gen_left_rules_f (def, ident) seq =                                                *)
@@ -475,7 +477,7 @@ let mk_symex_proc_unfold procs prf_cache =
         let (_,_,_, body) = Blist.find
           (fun (id, params, specs, _) ->
             try
-            id=p
+            String.equal id p
               && Blist.equal Sl_term.equal args params
               && Blist.exists
                   (fun ((pre', post') as spec) ->
@@ -492,10 +494,10 @@ let mk_symex_proc_unfold procs prf_cache =
       else []
     with WrongCmd | Not_found -> [] in
   Rule.mk_infrule rl
-  
+
 let is_proc_unfold_node n =
   let (_, descr) = ProofNode.dest n in
-  String.length descr >= String.length proc_unfold_str &&
+  Int.(>=) (String.length descr) (String.length proc_unfold_str) &&
   Strng.equal (Str.first_chars descr (String.length proc_unfold_str)) proc_unfold_str
 
 let assert_rule =
@@ -559,9 +561,9 @@ let left_or_elim_rule (((_, hs'),cmd',post') as seq') ((pre,cmd,post) as seq) =
         && let (_, h) = Sl_form.dest pre in
            Blist.exists (Sl_heap.equal h) hs'
       then
-        let vt = 
-          Tagpairs.filter 
-            (fun tp -> Pair.both (Pair.map Tags.is_free_var tp)) 
+        let vt =
+          Tagpairs.filter
+            (fun tp -> Pair.both (Pair.map Tags.is_free_var tp))
             (Seq.tag_pairs seq) in
         [ [(seq', vt, Tagpairs.empty)], "L. Cut (Or Elim.)" ]
       else
@@ -590,7 +592,7 @@ let right_cut_rule ((pre, cmd, post) as seq) (pre', cmd', post') =
     let () = debug (fun _ -> "Unsuccessfully tried to apply right cut rule!") in
     []
 
-let ex_intro_rule ((pre, cmd, post) as seq) ((pre', cmd', post') as seq') =
+let ex_intro_rule ((pre, cmd, post) as seq) (pre', cmd', post') =
   if Cmd.equal cmd cmd' && Sl_form.equal post post' then
     try
       let (cs, h) = Sl_form.dest pre in
@@ -773,8 +775,8 @@ let transform_seq ((pre, cmd, post) as seq) =
       let schema_subst = Tagpairs.union schema_subst (Tagpairs.reflect u_tag_theta) in
       let ex_schema = Ord_constraints.subst_tags schema_subst abd_schema in
       if not (Ord_constraints.verify_schemas (Sl_form.tags pre) ex_schema) then
-        let () = debug (fun () -> "Could not verify constraint schema " ^ (Ord_constraints.to_string ex_schema)) in 
-        None 
+        let () = debug (fun () -> "Could not verify constraint schema " ^ (Ord_constraints.to_string ex_schema)) in
+        None
       else
         let pre_with_schema = Sl_form.add_constraints pre ex_schema in
         let subst_avoid_tags =
@@ -839,31 +841,31 @@ let transform_seq ((pre, cmd, post) as seq) =
                   if (not match_post) || Seq.equal seq ex_seq
                     then Rule.identity
                     else Rule.mk_infrule (right_cut_rule ex_seq) ;
-  
+
                   if Seq.equal ex_seq schema_seq
                     then Rule.identity
                     else Rule.mk_infrule (schema_intro_rule schema_seq) ;
-  
+
                   if Seq.equal schema_seq partial_univ_seq
                     then Rule.identity
                     else Rule.mk_infrule (ex_intro_rule partial_univ_seq) ;
-  
+
                   if Seq.equal partial_univ_seq univ_seq
                     then Rule.identity
                     else Rule.mk_infrule (right_cut_rule univ_seq) ;
-  
+
                   if Seq.equal univ_seq framed_seq
                     then Rule.identity
                     else Rule.mk_infrule (left_cut_rule framed_seq) ;
-  
+
                   if Seq.equal framed_seq interpolated_seq
                     then Rule.identity
                     else Rule.mk_infrule (frame_rule frame interpolated_seq) ;
-  
+
                   if Seq.equal interpolated_seq subst_seq
                     then Rule.identity
                     else Rule.mk_infrule (left_cut_rule subst_seq) ;
-  
+
                   if Seq.equal subst_seq seq'
                     then Rule.identity
                     else
@@ -886,12 +888,12 @@ let mk_proc_call_rule_seq
     ((link_pre, link_cmd, link_post), bridge_rule) =
   assert (Cmd.is_proc_call target_cmd);
   assert (Cmd.is_empty (Cmd.get_cont target_cmd));
-  let (proc_id, params) = Cmd.dest_proc_call target_cmd in 
+  let (proc_id, params) = Cmd.dest_proc_call target_cmd in
   let prog_cont = Cmd.get_cont src_cmd in
   assert (Cmd.is_proc_call src_cmd) ;
   assert (let (p, args) = Cmd.dest_proc_call src_cmd in
-    p = proc_id &&
-    (Blist.length args) = (Blist.length params)) ;
+    String.equal p proc_id &&
+    Int.(=) (Blist.length args) (Blist.length params)) ;
   assert (Sl_form.equal src_pre link_pre) ;
   assert (not (Cmd.is_empty prog_cont) || Sl_form.equal src_post link_post) ;
   assert
@@ -929,8 +931,8 @@ let mk_symex_proc_call procs =
         let (p, args) = Cmd.dest_proc_call cmd in
         let proc = Blist.find
           (fun x ->
-            (Proc.get_name x) = p
-            && (Blist.length (Proc.get_params x)) = (Blist.length args))
+            String.equal (Proc.get_name x) p
+            && Int.equal (Blist.length (Proc.get_params x)) (Blist.length args))
           (procs) in
         let param_unifier =
           Sl_term.FList.unify (Proc.get_params proc) args
@@ -1000,7 +1002,7 @@ let dobackl ?(get_targets=Rule.all_nodes) ?(choose_all=false) idx prf =
     Rule.first (Blist.map mk_backlink transformations) idx prf
   else
     Rule.choice (Blist.map mk_backlink transformations) idx prf
-  
+
 let use_proc_prf prf_cache =
   fun idx prf ->
     let (pre, cmd, post) = Proof.get_seq idx prf in
@@ -1008,11 +1010,11 @@ let use_proc_prf prf_cache =
       let proc = Cmd.dest_proc_call cmd in
       if not (Cmd.is_empty (Cmd.get_cont cmd)) then Rule.fail idx prf else
       let signature = (proc,(pre,post)) in
-      let proc_prf = 
+      let proc_prf =
         Option.get (Proc.SigMap.find signature !prf_cache) in
       [ [], Proof.add_subprf proc_prf idx prf ]
     with WrongCmd | Not_found | Invalid_argument(_) -> Rule.fail idx prf
-    
+
 
 (* let generalise_while_rule =                                                                                                                                                                                                                 *)
 (*     let rl seq =                                                                                                                                                                                                                            *)
@@ -1058,7 +1060,7 @@ let setup (defs, procs, prf_cache) =
   let symex_proc_call = mk_symex_proc_call procs in
   rules :=
     Rule.first [
-      
+
       (* Simplification *)
       lhs_disj_to_symheaps ;
       simplify ;
@@ -1082,7 +1084,7 @@ let setup (defs, procs, prf_cache) =
       use_proc_prf prf_cache ;
       symex_proc_unfold ;
       symex_proc_call ;
-      
+
       (* Atomic symbolic execution *)
       symex_skip_rule ;
       symex_assign_rule ;
@@ -1091,10 +1093,10 @@ let setup (defs, procs, prf_cache) =
       symex_free_rule ;
       symex_new_rule ;
       symex_if_rule ;
-      
+
       (* Branching constructs *)
       symex_ifelse_rule ;
-      
+
       (* Predicate unfolding *)
       luf defs ;
 

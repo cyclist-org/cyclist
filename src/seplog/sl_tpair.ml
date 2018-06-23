@@ -32,7 +32,7 @@ let biunify ?(order=false) ?(update_check=Fun._true)
   mk_unify (_biunify update_check) order p p' cont init_state
 
 let order ((x,y) as pair) =
-  if Sl_term.compare x y <= 0 then pair else (y,x)
+  if Int.(<=) (Sl_term.compare x y) 0 then pair else (y,x)
 
 let subst theta (x,y) = (Sl_subst.apply theta x, Sl_subst.apply theta y)
 

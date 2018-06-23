@@ -1,2 +1,13 @@
-S src/**
 B _build/**
+S src/bitv/**
+S src/generic/**
+S src/hashcons/**
+S src/mparser/**
+S src/procedure/**
+S src/seplog/**
+S src/slsat/**
+S src/soundness/**
+S src/temporal_ctl/**
+S src/temporal_ltl/**
+S src/util/**
+S src/while/**

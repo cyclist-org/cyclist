@@ -11,6 +11,10 @@ module Field =
   struct
     type t = string
 
+    let equal = String.equal
+
+    let compare = String.compare
+
     let _map = ref Strng.Map.empty
     let _pam = ref Int.Map.empty
 
@@ -138,15 +142,15 @@ module Cmd =
     and basic_t = { label:int option; cmd:cmd_t }
     and t = basic_t list
 
-    let get_cmd c = if c=[] then raise WrongCmd else (Blist.hd c).cmd
-    let get_cont c = if c=[] then raise WrongCmd else Blist.tl c
+    let get_cmd c = match c with [] -> raise WrongCmd | hd::_ -> hd.cmd
+    let get_cont c = match c with [] -> raise WrongCmd | _::tl -> tl
 
     let split c =
-      if Blist.length c < 2
-        then raise WrongCmd
-        else ([Blist.hd c], Blist.tl c)
+      match c with
+      | [] | [_] -> raise WrongCmd
+      | hd::tl -> ([hd], tl)
 
-    let is_empty c = c=[]
+    let is_empty c = Blist.is_empty c
     let is_not_empty c = not (is_empty c)
 
     let is_assign c = is_not_empty c && match get_cmd c with
@@ -352,7 +356,7 @@ module Cmd =
     let dest_branching = dest_cmd _dest_branching
     let dest_proc_call = dest_cmd _dest_proc_call
     let dest_assert = dest_cmd _dest_assert
-    let dest_empty c = if c=[] then () else raise WrongCmd
+    let dest_empty c = if Blist.is_empty c then () else raise WrongCmd
 
     let number c =
       let rec aux n = function
@@ -418,9 +422,9 @@ module Cmd =
       | (New(x), New(y)) | (Free(x), Free(y)) -> Sl_term.equal x y
       | (Assign(x,e), Assign(x',e')) -> Sl_term.equal x x' && Sl_term.equal e e'
       | (Load(x,e,f), Load(x',e',f')) | (Store(x,f,e), Store(x',f',e')) ->
-        Sl_term.equal x x' && Sl_term.equal e e' && f=f'
+        Sl_term.equal x x' && Sl_term.equal e e' && Field.equal f f'
       | (ProcCall(p, args), ProcCall(p', args')) ->
-        p=p' && Blist.equal Sl_term.equal args args'
+        String.equal p p' && Blist.equal Sl_term.equal args args'
       | (While(cond,cmd), While(cond',cmd')) | (If(cond,cmd), If(cond',cmd')) ->
         Cond.equal cond cond' && equal cmd cmd'
       | (IfElse(cond,cmd1,cmd2), IfElse(cond',cmd1',cmd2')) ->

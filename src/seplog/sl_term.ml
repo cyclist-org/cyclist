@@ -5,9 +5,9 @@ open MParser
 
 let classify_varname s =
   let l = String.length s in
-  assert (String.length s > 0);
-  if s="nil" then VarManager.ANONYMOUS else
-  if l > 1 && s.[l-1] = '\'' then VarManager.BOUND
+  assert (not (String.equal s ""));
+  if String.equal s "nil" then VarManager.ANONYMOUS else
+  if Int.(>) l 1 && Char.equal s.[l-1] '\'' then VarManager.BOUND
   else VarManager.FREE
 
 include (val (VarManager.mk 4 "nil" classify_varname) : VarManager.S)

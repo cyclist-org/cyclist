@@ -7,19 +7,19 @@ include Pair.Make(Sl_heap)(Sl_pred)
 
 let vars (f, (_, vs)) =
   Sl_term.Set.union (Sl_term.Set.of_list vs) (Sl_heap.vars f)
-    
+
 let mk f ((_, args) as hd) =
   let v_args = Sl_term.Set.of_list args in
   let v_h = Sl_heap.terms f in
   let (uv_h, ev_h) = Sl_term.Set.partition Sl_term.is_free_var v_h in
   assert (Blist.for_all Sl_term.is_free_var args) ;
-  assert (Sl_term.Set.cardinal v_args = Blist.length args) ;
+  assert (Int.equal (Sl_term.Set.cardinal v_args) (Blist.length args)) ;
   assert (Sl_term.Set.subset uv_h v_args) ;
-  assert 
-    (Sl_term.Set.for_all 
-      (fun trm -> Sl_term.is_nil trm || Sl_term.is_exist_var trm) ev_h) ;   
+  assert
+    (Sl_term.Set.for_all
+      (fun trm -> Sl_term.is_nil trm || Sl_term.is_exist_var trm) ev_h) ;
   (f, hd)
-  
+
 let dest c = c
 
 let predsym (_, pred) = Sl_pred.predsym pred
@@ -30,18 +30,18 @@ let body (h, _) = h
 let subst theta (f, (ident, args)) =
   let f = Sl_heap.subst theta f in
   let args = Sl_term.FList.subst theta args in
-  
+
   let v_args = Sl_term.Set.of_list args in
   let v_h = Sl_heap.terms f in
   let (uv_h, ev_h) = Sl_term.Set.partition Sl_term.is_free_var v_h in
   assert (Blist.for_all Sl_term.is_free_var args) ;
-  assert (Sl_term.Set.cardinal v_args = Blist.length args) ;
+  assert (Int.equal (Sl_term.Set.cardinal v_args) (Blist.length args)) ;
   assert (Sl_term.Set.subset uv_h v_args) ;
-  assert 
-    (Sl_term.Set.for_all 
+  assert
+    (Sl_term.Set.for_all
       (fun trm -> Sl_term.is_nil trm || Sl_term.is_exist_var trm) ev_h) ;
-  (f, (ident, args))   
-  
+  (f, (ident, args))
+
 let freshen varset case =
   let casevars = vars case in
   let theta = Sl_subst.avoid varset casevars in
@@ -69,17 +69,17 @@ let unfold ?(gen_tags=true) (vars, tags) (tag, (ident, args)) case =
   assert (Sl_predsym.equal ident ident') ;
   assert (Blist.length args == Blist.length formals) ;
   assert (Tags.is_empty (Sl_heap.tags f)) ;
-  let f = if gen_tags then Sl_heap.complete_tags tags f else f in 
+  let f = if gen_tags then Sl_heap.complete_tags tags f else f in
   let theta = Sl_term.Map.of_list (Blist.combine formals args) in
   Sl_heap.subst theta f
 
-(* TODO: check whether the update check is necessary for what this function is being used for *) 
+(* TODO: check whether the update check is necessary for what this function is being used for *)
 let fold (f, (predsym, args)) h =
-  let freshtag = Tags.fresh_fvar (Sl_heap.tags h) in 
+  let freshtag = Tags.fresh_fvar (Sl_heap.tags h) in
   let results =
     Sl_unify.Unidirectional.realize
-      (Unification.backtrack 
-        (Sl_heap.unify_partial 
+      (Unification.backtrack
+        (Sl_heap.unify_partial
           ~tagpairs:true ~update_check:Sl_unify.Unidirectional.trm_check)
         f h
         Unification.trivial_continuation) in

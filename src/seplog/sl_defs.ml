@@ -94,7 +94,7 @@ module Defs =
           if not (Blist.is_empty def) then
             let expected = Sl_indrule.arity (Blist.hd def) in
             let provided = Sl_tpred.arity p in
-            if expected <> provided then
+            if not (Int.equal expected provided) then
               invalid_arg (pname ^ " given " ^ (Int.to_string provided) ^
                 " arguments when its definition expects " ^
                 (Int.to_string expected) ^ "!") in

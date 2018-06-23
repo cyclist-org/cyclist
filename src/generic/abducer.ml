@@ -46,19 +46,19 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
       let rec loop aux s = function
         | [] -> Blist.rev aux
         | p::ps ->
-            if p.seq_no = s then
+            if Int.(=) p.seq_no s then
               loop aux p.par ps
             else
               loop (p::aux) s ps in
       loop [] sn stack
 
     let expand_proof_state par_seq_no app rule =
-      let () = assert (not (Proof.is_closed app.prf) && app.goals<>[]) in
+      let () = assert (not (Proof.is_closed app.prf) && not (Blist.is_empty app.goals)) in
       (* idx is the goal being closed and goal_depth is its depth *)
       let ((idx,goal_depth), goals) = Blist.decons app.goals in
       (* let () = assert (Node.is_open (Proof.find idx app.prf) && app.depth >= goal_depth) in *)
       let new_goal_depth = goal_depth+1 in
-      let new_prf_depth = max app.depth new_goal_depth in
+      let new_prf_depth = Int.max app.depth new_goal_depth in
       let newapps =
         L.map
           begin fun ((g',p'),defs') ->
@@ -77,8 +77,8 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
 
     let bfs maxbound rule seq initial_defs check =
       let rec aux bound frontier stack =
-        if bound > maxbound || (stack = [] && frontier = []) then None else
-        if stack=[] then
+        if Int.(>) bound maxbound || (Blist.is_empty stack && Blist.is_empty frontier) then None else
+        if Blist.is_empty stack then
           (* finished current depth, increase and repeat *)
           aux (bound + 1) [] (Blist.rev frontier)
         else
@@ -87,11 +87,11 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
         if L.is_empty proof_state.apps then aux bound frontier stack else
         (* next rule application *)
         let (app, apps) = Blist.decons proof_state.apps in
-        let () = assert (app.depth <= bound) in
-        let () = assert (Blist.for_all (fun (_,gd) -> gd <= bound) app.goals) in
+        let () = assert (Int.(<=) app.depth bound) in
+        let () = assert (Blist.for_all (fun (_,gd) -> Int.(<=) gd bound) app.goals) in
         (* push remaining applications *)
         let stack = {proof_state with apps=apps} :: stack in
-        if app.goals=[] then
+        if Blist.is_empty app.goals then
           begin
             (* no subgoals left, so it must be a closed proof *)
             assert (Proof.is_closed app.prf) ;
@@ -105,7 +105,7 @@ module Make(Seq: Sigs.SEQUENT)(Defs: Sigs.DEFS) =
             print_endline ("Expanding node: " ^ (string_of_int (fst (Blist.hd app.goals)))) ;
             print_endline (Proof.to_string app.prf)
           end in
-        if Blist.exists (fun (_,gd) -> gd = bound) app.goals then
+        if Blist.exists (fun (_,gd) -> Int.(=) gd bound) app.goals then
           begin
             (* if any of the open goals is at the current depth *)
             (* then keep for later *)

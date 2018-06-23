@@ -1,3 +1,20 @@
+
+type compare =
+  [`no_polymorphic_compare]
+  -> [`no_polymorphic_compare]
+  -> [`no_polymorphic_compare]
+
+let compare _ _ = `no_polymorphic_compare
+let (<)     _ _ = `no_polymorphic_compare
+let (<=)    _ _ = `no_polymorphic_compare
+let (>)     _ _ = `no_polymorphic_compare
+let (>=)    _ _ = `no_polymorphic_compare
+let (=)     _ _ = `no_polymorphic_compare
+let (<>)    _ _ = `no_polymorphic_compare
+let equal   _ _ = `no_polymorphic_compare
+let min     _ _ = `no_polymorphic_compare
+let max     _ _ = `no_polymorphic_compare
+
 let do_debug = ref false
 let debug f = if !do_debug then print_endline (f ()) else ()
 
@@ -46,7 +63,7 @@ let pp_semicolonsp fmt () =
 
 let pp_commasp fmt () =
   pp_comma fmt () ; Format.pp_print_space fmt ()
-  
+
 let pp_dbl_nl fmt () =
   Format.pp_force_newline fmt () ; Format.pp_force_newline fmt ()
 
@@ -95,16 +112,16 @@ let gc_setup () =
 
 exception Timeout
 let sigalrm_handler = Sys.Signal_handle (fun _ -> raise Timeout)
-let w_timeout f timeout =
+let w_timeout f (timeout : int) =
   let old_behavior = Sys.signal Sys.sigalrm sigalrm_handler in
   let reset_sigalrm () = Sys.set_signal Sys.sigalrm old_behavior in
-  if timeout > 0 then ignore (Unix.alarm timeout) ;
+  if Pervasives.(>) timeout 0 then ignore (Unix.alarm timeout) ;
   try
     let res = f () in reset_sigalrm () ; Some res
   with Timeout -> (reset_sigalrm () ; None)
 
 open MParser
-let rexp = MParser_PCRE.make_regexp "[a-zA-Z][_0-9a-zA-Z]*[']?" 
+let rexp = MParser_PCRE.make_regexp "[a-zA-Z][_0-9a-zA-Z]*[']?"
 let parse_ident st = (MParser_PCRE.regexp rexp << spaces <?> "Identifier") st
 
 let handle_reply reply =
@@ -117,7 +134,7 @@ let runtest name tst =
   let () = Printexc.record_backtrace true in
   try
     tst ()
-  with 
+  with
   | Assert_failure(_, line, _) ->
     begin
       Printf.eprintf "Test `%s' failed, line %d.\n" name line ;
@@ -126,14 +143,13 @@ let runtest name tst =
   | exn ->
     begin
       let sep = String.make 72 '=' in
-      Printf.eprintf 
-        "Test `%s' threw exception `%s'.\nBacktrace:\n%s\n%s%s\n" 
+      Printf.eprintf
+        "Test `%s' threw exception `%s'.\nBacktrace:\n%s\n%s%s\n"
         name  (Printexc.to_string exn) sep (Printexc.get_backtrace ()) sep;
       let () = exit (-1) in ()
     end ;
   Printexc.record_backtrace bt
 
-    
+
 let mk_of_string parse =
   fun s -> handle_reply (MParser.parse_string parse s ())
-  

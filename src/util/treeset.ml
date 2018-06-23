@@ -10,7 +10,7 @@ module Make(T: Utilsigs.BasicType) : Utilsigs.OrderedContainer with type elt = T
 
     let map_to oadd oempty f s =
       fold (fun el s' -> oadd (f el) s') s oempty
-      
+
     let opt_map_to oadd oempty f s =
       map_to (Option.dest Fun.id oadd) oempty f s
 
@@ -54,7 +54,7 @@ module Make(T: Utilsigs.BasicType) : Utilsigs.OrderedContainer with type elt = T
 
     let to_string s = "{" ^ (Blist.to_string ", " T.to_string (to_list s)) ^ "}"
 
-    let hash s = 
+    let hash s =
       fold (fun x h -> genhash (T.hash x) h) s 0x9e3779b9
 
     let rec subsets s =
@@ -77,7 +77,7 @@ module Make(T: Utilsigs.BasicType) : Utilsigs.OrderedContainer with type elt = T
         | (xs, []) -> true
         | (x::xs, y::ys) -> match T.compare x y with
           | 0 -> false
-          | n when n < 0 -> disjoint xs (y::ys)
+          | n when Pervasives.(<) n 0 -> disjoint xs (y::ys)
           | _ -> disjoint (x::xs) ys in
       disjoint xs ys
 

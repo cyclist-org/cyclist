@@ -129,32 +129,32 @@ let rec choose = function
 let rec min_binding = function
   | Empty -> raise Not_found
   | Leaf (k,v) -> (k,v)
-  | Branch (_,_,s,t) -> 
+  | Branch (_,_,s,t) ->
     let ((k,v) as p), ((k',v') as p') = min_binding s, min_binding t in
     if k.tag <= k'.tag then p else p'
 
 let rec max_binding = function
   | Empty -> raise Not_found
   | Leaf (k,v) -> (k,v)
-  | Branch (_,_,s,t) -> 
+  | Branch (_,_,s,t) ->
     let ((k,v) as p), ((k',v') as p') = max_binding s, max_binding t in
     if k.tag >= k'.tag then p else p'
 
-let rec equal eq m m' = 
+let rec equal eq m m' =
   match m, m' with
   | Empty, Empty -> true
-  | Leaf (k,x), Leaf(k',x') -> k.tag = k'.tag && eq x x' 
+  | Leaf (k,x), Leaf(k',x') -> k.tag = k'.tag && eq x x'
   | Branch (_,_,t0,t1), Branch(_,_,t0',t1') -> equal eq t0 t0' && equal eq t1 t1'
-  | _ -> false 
+  | _ -> false
 
-let rec compare comp m m' = 
+let rec compare comp m m' =
   match m, m' with
   | Empty, Empty -> 0
   | Empty, _ -> -1
   | _, Empty -> 1
   | Leaf (k,x), Leaf(k',x') ->
-    let r = Pervasives.compare k.tag k'.tag in if r<>0 then r else comp x x'
+    let r = Int.compare k.tag k'.tag in if r<>0 then r else comp x x'
   | Leaf _, _ -> -1
   | _, Leaf _ -> 1
-  | Branch (_,_,t0,t1), Branch(_,_,t0',t1') -> 
+  | Branch (_,_,t0,t1), Branch(_,_,t0',t1') ->
     let r = compare comp t0 t0' in if r<>0 then r else compare comp t1 t1'

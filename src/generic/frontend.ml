@@ -52,7 +52,7 @@ module Make(Prover : Sigs.PROVER) =
     let gather_stats call =
       Stats.reset () ;
       Stats.Gen.call () ;
-      let res = if !timeout<>0 then
+      let res = if not (Int.equal !timeout 0) then
         w_timeout call !timeout
 			else
         Some (call ()) in
@@ -81,7 +81,7 @@ module Make(Prover : Sigs.PROVER) =
       SUCCESS(proof)
 
     let idfs ax r seq =
-      let maxbound = if !maxbound < 1 then max_int else !maxbound in
+      let maxbound = if Int.(<) !maxbound 1 then max_int else !maxbound in
       Prover.idfs !minbound maxbound ax r seq
 
     let prove_seq ax r seq =

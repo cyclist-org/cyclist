@@ -90,7 +90,7 @@ module Make (Sig : Sl_mc_core.ValueSig) =
         Sl_uf.is_empty symheap.Sl_heap.eqs &&
         Sl_deqs.is_empty symheap.Sl_heap.deqs &&
         Sl_tpreds.is_empty symheap.Sl_heap.inds &&
-        Sl_ptos.cardinal symheap.Sl_heap.ptos = 1 &&
+        Int.(=) (Sl_ptos.cardinal symheap.Sl_heap.ptos) 1 &&
         let (l,rs) = Sl_ptos.choose symheap.Sl_heap.ptos in
         let (l,rs) = (interpret s l, Blist.map (interpret s) rs) in
         is_location l &&
@@ -147,7 +147,7 @@ module Make (Sig : Sl_mc_core.ValueSig) =
         if not (Sl_deqs.is_empty symheap.Sl_heap.deqs) then [] else
         if Sl_ptos.is_empty symheap.Sl_heap.ptos then [] else
         if
-          Sl_ptos.cardinal symheap.Sl_heap.ptos < 2 &&
+          Int.(<) (Sl_ptos.cardinal symheap.Sl_heap.ptos) 2 &&
           Sl_tpreds.is_empty symheap.Sl_heap.inds
         then [] else
         let pto = Sl_ptos.choose symheap.Sl_heap.ptos in
@@ -169,7 +169,7 @@ module Make (Sig : Sl_mc_core.ValueSig) =
         if not (Sl_uf.is_empty symheap.Sl_heap.eqs) then [] else
         if not (Sl_deqs.is_empty symheap.Sl_heap.deqs) then [] else
         if not (Sl_ptos.is_empty symheap.Sl_heap.ptos) then [] else
-        if Sl_tpreds.cardinal symheap.Sl_heap.inds < 2 then [] else
+        if Int.(<) (Sl_tpreds.cardinal symheap.Sl_heap.inds) 2 then [] else
         let p = Sl_tpreds.choose symheap.Sl_heap.inds in
         let symheap' = Sl_heap.mk_ind p in
         let symheap'' = Sl_heap.del_ind symheap p in
@@ -277,7 +277,7 @@ module Make (Sig : Sl_mc_core.ValueSig) =
         if not (Sl_uf.is_empty symheap.Sl_heap.eqs) then [] else
         if not (Sl_deqs.is_empty symheap.Sl_heap.deqs) then [] else
         if not (Sl_ptos.is_empty symheap.Sl_heap.ptos) then [] else
-        if not (Sl_tpreds.cardinal symheap.Sl_heap.inds = 1) then [] else
+        if not (Int.(=) (Sl_tpreds.cardinal symheap.Sl_heap.inds) 1) then [] else
         let p = Sl_tpreds.choose symheap.Sl_heap.inds in
         let rules = Sl_defs.get_def (Sl_tpred.predsym p) !defs in
         let args = Sl_tpred.args p in

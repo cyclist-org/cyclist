@@ -22,15 +22,15 @@ module Make(Seq: Sigs.SEQUENT) =
     let last_search_depth = ref 0
 
     let rec idfs bound maxbound ax r seq =
-      if bound>maxbound then None else
+      if Int.(>) bound maxbound then None else
       let rec dfs bound idx prf =
-        if bound<0 then None else
+        if Int.(<) bound 0 then None else
         let () = debug (fun () ->
           "Trying to close node: " ^ (string_of_int idx) ^ "\n" ^
           (Proof.to_string prf) ^ "\n"
           ) in
         let res =
-          Option.map snd (L.find_opt (fun (ss', _) -> ss'=[]) (ax idx prf)) in
+          Option.map snd (L.find_opt (fun (ss', _) -> Blist.is_empty ss') (ax idx prf)) in
         if Option.is_some res then res else
         L.find_map
           (fun (subgoals', prf') ->
@@ -68,7 +68,7 @@ module Make(Seq: Sigs.SEQUENT) =
     (*     idx : int;                                                                                *)
     (*     apps : app_state L.t                                                                      *)
     (*   }                                                                                           *)
-     
+
     (* let state_seq_no = ref 0                                                                      *)
 
     (* let mk_state par idx apps =                                                                   *)

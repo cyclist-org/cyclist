@@ -14,7 +14,7 @@ module Constraint =
       match (c, c') with
       | (LT(t, t'), LT(t'', t''')) | (LTE(t, t'), LTE(t'', t''')) ->
           let fst = Tag.compare t t'' in
-          if fst <> 0 then fst else Tag.compare t' t'''
+          if not (Int.equal fst 0) then fst else Tag.compare t' t'''
       | (LT(_), _) -> -1
       | (LTE(_), _) -> 1
     let equal c c' =
@@ -108,13 +108,13 @@ let generate ?(avoid=Tags.empty) ?(augment=true) t ts =
 
 let infer_constraint = function
   | (Constraint.LT(t1, t2), Constraint.LT(t1', t2')) ->
-      Option.mk (t2 = t1') (Constraint.LT(t1, t2'))
+      Option.mk (Tag.equal t2 t1') (Constraint.LT(t1, t2'))
   | (Constraint.LT(t1, t2), Constraint.LTE(t1', t2')) ->
-      Option.mk (t2 = t1') (Constraint.LT(t1, t2'))
+      Option.mk (Tag.equal t2 t1') (Constraint.LT(t1, t2'))
   | (Constraint.LTE(t1, t2), Constraint.LT(t1', t2')) ->
-      Option.mk (t2 = t1') (Constraint.LT(t1, t2'))
+      Option.mk (Tag.equal t2 t1') (Constraint.LT(t1, t2'))
   | (Constraint.LTE(t1, t2), Constraint.LTE(t1', t2')) ->
-      Option.mk (t2 = t1') (Constraint.LTE(t1, t2'))
+      Option.mk (Tag.equal t2 t1') (Constraint.LTE(t1, t2'))
 
 let close cs =
   let ts = tags cs in
@@ -179,7 +179,8 @@ let prog_pairs cs =
   opt_map_to Tagpairs.add Tagpairs.empty extract cs
 
 let inconsistent cs =
-  let lte ts = exists (function | Constraint.LTE(ts') -> ts = ts' | _ -> false) cs in
+  let lte (t1,t2) =
+    exists (function | Constraint.LTE(t1',t2') -> Tag.equal t1 t1' && Tag.equal t2 t2' | _ -> false) cs in
   not (for_all Constraint.satisfiable (close cs)) ||
   exists (function
     | Constraint.LT(ts) -> lte (Pair.swap ts)

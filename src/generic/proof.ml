@@ -167,7 +167,7 @@ module Make(Seq : Sigs.SEQUENT) =
       let rec aux acc idx (par_idx, n) =
         let parent = get par_idx prf in
         let acc = (idx, n)::acc in
-        if par_idx=idx then acc else aux acc par_idx parent in
+        if Int.equal par_idx idx then acc else aux acc par_idx parent in
       aux [] idx (get idx prf)
 
     let rec is_closed_at prf idx =

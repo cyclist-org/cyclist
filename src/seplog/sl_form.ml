@@ -19,10 +19,11 @@ let constraints_sep cs = if (Ord_constraints.is_empty cs) then symb_nullstr else
 
 let pp fmt (cs, f) =
   let pp_or fmt () = Format.fprintf fmt " %s@ " symb_or.str in
-  if f <> [] then
-    Format.fprintf fmt "@[%a%s%a@]" Ord_constraints.pp cs (constraints_sep cs).sep (Blist.pp pp_or Sl_heap.pp) f
-  else
+  match f with
+  | [] ->
     Format.fprintf fmt "@[%a%s%s@]" Ord_constraints.pp cs (constraints_sep cs).sep symb_false.str
+  | _ ->
+    Format.fprintf fmt "@[%a%s%a@]" Ord_constraints.pp cs (constraints_sep cs).sep (Blist.pp pp_or Sl_heap.pp) f
 
 let to_string (cs, hs) =
   let cs_str = (Ord_constraints.to_string cs) ^ (constraints_sep cs).sep in

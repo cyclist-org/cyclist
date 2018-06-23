@@ -20,16 +20,16 @@ module Abdrule = Abdrule.Make(While_program.Seq)(Sl_defs)
 let dest_sh_seq = While_rules.dest_sh_seq
 
 let last_pred = ref 0
-let get_fresh_ident () = 
+let get_fresh_ident () =
   Sl_predsym.of_string (Printf.sprintf "I%.3d" (incr last_pred ; !last_pred))
 
-let get_undefined defs h = Sl_tpreds.filter (Defs.is_undefined defs) h.SH.inds 
+let get_undefined defs h = Sl_tpreds.filter (Defs.is_undefined defs) h.SH.inds
 
 let ex_subst_defs defs =
   let ex_subst_heap h =
     let (ex_eqs, non_ex_eqs) =
       Blist.partition (fun (x,_) -> Sl_term.is_exist_var x) (Sl_uf.bindings h.SH.eqs) in
-      if ex_eqs=[] then h else
+      if Blist.is_empty ex_eqs then h else
       (* NB order of subst is reversed so that *)
       (* the greater variable replaces the lesser *)
       (* this maintains universal vars *)
@@ -38,10 +38,10 @@ let ex_subst_defs defs =
     let (p,h) = Sl_indrule.dest c in
     let p' = Sl_heap.fixpoint ex_subst_heap p in
     Sl_indrule.mk p' h in
-  Sl_defs.of_list (Blist.map 
-    (fun def -> 
-      Sl_preddef.mk 
-        (Blist.map ex_subst_case (Sl_preddef.rules def), Sl_preddef.predsym def)) 
+  Sl_defs.of_list (Blist.map
+    (fun def ->
+      Sl_preddef.mk
+        (Blist.map ex_subst_case (Sl_preddef.rules def), Sl_preddef.predsym def))
     (Sl_defs.to_list defs))
 
 
@@ -50,25 +50,25 @@ let empify defs =
     let (p,h) = Sl_indrule.dest c in
     let inds = Sl_tpreds.filter (Sl_defs.is_defined defs) p.SH.inds in
     Sl_indrule.mk (SH.with_inds p inds) h in
-  Sl_defs.of_list (Blist.map 
-    (fun def -> 
-      Sl_preddef.mk 
-        (Blist.map empify_ (Sl_preddef.rules def), Sl_preddef.predsym def)) 
+  Sl_defs.of_list (Blist.map
+    (fun def ->
+      Sl_preddef.mk
+        (Blist.map empify_ (Sl_preddef.rules def), Sl_preddef.predsym def))
     (Sl_defs.to_list defs))
 
 let inline defs =
   let defs = Sl_defs.to_list defs in
   try
-    let q = 
+    let q =
       Blist.find
         begin fun def ->
           let (p,h) = Sl_preddef.dest def in
-          (Blist.length p)=1 &&
+          (match p with [_] -> true | _ -> false) &&
           let (f,_) = Sl_indrule.dest (Blist.hd p) in
           let idents =
             Sl_tpreds.map_to Sl_predsym.Set.add Sl_predsym.Set.empty (fun (_,(id,_)) -> id) f.SH.inds in
           not (Sl_predsym.Set.mem h idents)
-        end 
+        end
         (Blist.but_last defs) in
     let (p,h) = Sl_preddef.dest q in
     let defs = Blist.filter ((!=)q) defs in
@@ -77,7 +77,7 @@ let inline defs =
       let (p',h') = Sl_indrule.dest orig in
       let first_unfold f =
         try
-          let pred = 
+          let pred =
             Sl_tpreds.find (fun (_, (h'', _)) -> Sl_predsym.equal h h'') f.SH.inds in
           let f = SH.with_inds f (Sl_tpreds.remove pred f.SH.inds) in
           let g = Sl_indrule.unfold ~gen_tags:false ((Sl_indrule.vars orig), Tags.empty) pred case in
@@ -85,9 +85,9 @@ let inline defs =
         with Not_found -> f in
       let p'' = Sl_heap.fixpoint first_unfold p' in
       Sl_indrule.mk p'' h' in
-    Sl_defs.of_list (Blist.map 
-      (fun def -> 
-        Sl_preddef.mk (Blist.map f (Sl_preddef.rules def), Sl_preddef.predsym def)) 
+    Sl_defs.of_list (Blist.map
+      (fun def ->
+        Sl_preddef.mk (Blist.map f (Sl_preddef.rules def), Sl_preddef.predsym def))
         defs)
   with Not_found -> Sl_defs.of_list defs
 
@@ -98,12 +98,12 @@ let used_only_recursively (heap, (ident, params)) pos =
   not (Sl_term.Set.mem var (Sl_heap.vars heap')) &&
   Sl_tpreds.for_all
     begin fun (_,(ident', params')) ->
-      if ident<>ident' then
+      if Sl_predsym.equal ident ident' then
         not (Blist.exists (Sl_term.equal var) params')
       else
-        Blist.for_all2 
-          (fun var' pos' -> pos=pos' || not (Sl_term.equal var var')) 
-          params' 
+        Blist.for_all2
+          (fun var' pos' -> Int.(=) pos pos' || not (Sl_term.equal var var'))
+          params'
           (Blist.indexes params')
     end
     heap.SH.inds
@@ -117,7 +117,7 @@ let find_unused_arg defs =
   let defs = Sl_defs.to_list defs in
   let check_def def =
     let (clauses, ident) = Sl_preddef.dest def in
-    if clauses = [] then None else
+    if Blist.is_empty clauses then None else
     let check_pos pos =
       if Blist.for_all
         begin fun case ->
@@ -130,10 +130,10 @@ let find_unused_arg defs =
         Some (ident, pos)
       else
         None in
-    Blist.find_map 
-      check_pos 
+    Blist.find_map
+      check_pos
       (Blist.range 0 (snd (snd (Sl_indrule.dest (Blist.hd clauses))))) in
-  if Blist.length defs=1 then
+  if Int.(=) (Blist.length defs) 1 then
     None
   else
     Blist.find_map check_def (Blist.but_last defs)
@@ -145,17 +145,17 @@ let eliminate (ident, pos) defs =
       SH.with_inds heap
           (Sl_tpreds.endomap
             begin fun (t, (ident'', params')) ->
-              (t, (ident'', if ident=ident'' then Blist.remove_nth pos params' else params'))
+              (t, (ident'', if Sl_predsym.equal ident ident'' then Blist.remove_nth pos params' else params'))
             end
             heap.SH.inds) in
-    if ident<>ident' then
+    if not (Sl_predsym.equal ident ident') then
       Sl_indrule.mk (elim_pred heap) (ident', params)
     else
       Sl_indrule.mk (elim_pred heap) (ident', Blist.remove_nth pos params) in
-  Sl_defs.of_list (Blist.map 
-    (fun def -> 
+  Sl_defs.of_list (Blist.map
+    (fun def ->
       let (cl, ident') = Sl_preddef.dest def in
-      Sl_preddef.mk (Blist.map elim_clause cl, ident')) 
+      Sl_preddef.mk (Blist.map elim_clause cl, ident'))
     (Sl_defs.to_list defs))
 
 let elim_dead_vars defs =
@@ -169,7 +169,7 @@ let simplify_defs defs =
     (empify defs)
 
 
-let is_sat defs = Sl_basepair.satisfiable (empify defs) 
+let is_sat defs = Sl_basepair.satisfiable (empify defs)
 
 let ex_falso_axiom = Abdrule.lift While_rules.ex_falso_axiom
 let symex_empty_axiom = Abdrule.lift While_rules.symex_empty_axiom
@@ -197,7 +197,7 @@ let simpl_deqs seq =
 
 
 let simplify =
-  Abdrule.lift 
+  Abdrule.lift
     (Rule.mk_infrule
       (Seqtactics.relabel "Simplify"
         (Seqtactics.repeat
@@ -225,7 +225,7 @@ let symex_nondet_if_rule =
       let cont = Cmd.get_cont cmd in
       While_rules.fix_tps [[ ((cs,[f]), Cmd.mk_seq cmd' cont); ((cs,[f]), cont) ], "If(nondet)"]
     with Not_symheap | WrongCmd -> [] in
-  Abdrule.lift (Rule.mk_infrule rl) 
+  Abdrule.lift (Rule.mk_infrule rl)
 
 let symex_nondet_ifelse_rule =
   let rl seq =
@@ -237,7 +237,7 @@ let symex_nondet_ifelse_rule =
       While_rules.fix_tps
         [[ ((cs,[f]), Cmd.mk_seq cmd' cont); ((cs,[f]), Cmd.mk_seq cmd'' cont) ], "IfElse(nondet)"]
     with Not_symheap | WrongCmd -> [] in
-  Abdrule.lift (Rule.mk_infrule rl) 
+  Abdrule.lift (Rule.mk_infrule rl)
 
 let symex_nondet_while_rule =
   let rl seq =
@@ -248,7 +248,7 @@ let symex_nondet_while_rule =
       let cont = Cmd.get_cont cmd in
       While_rules.fix_tps [[ ((cs,[f]), Cmd.mk_seq cmd' cmd); ((cs,[f]), cont) ], "If(nondet)"]
     with Not_symheap | WrongCmd -> [] in
-  Abdrule.lift (Rule.mk_infrule rl) 
+  Abdrule.lift (Rule.mk_infrule rl)
 
 
 
@@ -272,7 +272,7 @@ let symex_det_if_rule =
         (* or otherwise don't know so fail *)
         | _ -> []
     with Not_symheap | WrongCmd -> [] in
-  Abdrule.lift (Rule.mk_infrule rl) 
+  Abdrule.lift (Rule.mk_infrule rl)
 
 let symex_det_ifelse_rule =
   let rl seq =
@@ -294,7 +294,7 @@ let symex_det_ifelse_rule =
         (* or don't know so fail *)
         | _ -> []
     with Not_symheap | WrongCmd -> [] in
-  Abdrule.lift (Rule.mk_infrule rl) 
+  Abdrule.lift (Rule.mk_infrule rl)
 
 let symex_det_while_rule =
   let rl seq =
@@ -316,7 +316,7 @@ let symex_det_while_rule =
         (* otherwise don't know so fail *)
         | _ -> []
     with Not_symheap | WrongCmd -> [] in
-  Abdrule.lift (Rule.mk_infrule rl) 
+  Abdrule.lift (Rule.mk_infrule rl)
 
 
 let generalise_while_rule =
@@ -328,7 +328,7 @@ let generalise_while_rule =
 			else t in
     let gen_pto (x,args) =
     	let l = Blist.map gen_term (x::args) in (Blist.hd l, Blist.tl l) in
-		SH.mk 
+		SH.mk
 			(Sl_term.Set.fold Sl_uf.remove m h.SH.eqs)
 			(Sl_deqs.filter
 			  (fun p -> Pair.conj (Pair.map (fun z -> not (Sl_term.Set.mem z m)) p))
@@ -350,7 +350,7 @@ let generalise_while_rule =
 			  end
 				subs)
     with Not_symheap | WrongCmd -> [] in
-  Abdrule.lift (Rule.mk_infrule rl) 
+  Abdrule.lift (Rule.mk_infrule rl)
 
 (* abduction rules*)
 
@@ -361,7 +361,7 @@ let abd_deref =
       let ((cs,f),cmd) = dest_sh_seq seq in
       let x = Cmd.dest_deref cmd in
       let inds = Sl_tpreds.to_list (get_undefined defs f) in
-		  if inds=[] then [] else
+		  if Blist.is_empty inds then [] else
       let fresh_ident = get_fresh_ident () in
       let f (_,(ident, params)) =
         let newparams = fresh_fvars (Sl_term.Set.empty) (Blist.length params) in
@@ -369,8 +369,8 @@ let abd_deref =
         let pto_params =
           fresh_evars (Sl_term.Set.of_list newparams) (Field.get_no_fields ()) in
         let newxs =
-					Blist.map 
-            (Blist.nth newparams) 
+					Blist.map
+            (Blist.nth newparams)
             (Blist.find_indexes (Sl_heap.equates f x) params) in
         Blist.map
 				  begin fun newx ->
@@ -378,14 +378,14 @@ let abd_deref =
 							Sl_heap.star
   							(Sl_heap.mk_pto (newx, pto_params))
   							(Sl_heap.mk_ind (Tags.anonymous, (fresh_ident, (newparams @ pto_params)))) in
-        	Sl_defs.add 
+        	Sl_defs.add
             (Sl_preddef.mk ( [Sl_indrule.mk clause head], ident ))
             defs
 				  end
 					newxs in
       Blist.bind f inds
     with Not_symheap | WrongCmd -> [] in
-  Abdrule.mk_abdinfrule rl 
+  Abdrule.mk_abdinfrule rl
 
 
 let abd_det_guard =
@@ -401,11 +401,11 @@ let abd_det_guard =
         end in
       if Cond.is_non_det c then [] else
 			let cv_size = Sl_term.Set.cardinal (Cond.vars c) in
-			if cv_size = 0 then [] else
-			let with_nil = (cv_size = 1) in
+			if Int.(=) cv_size 0 then [] else
+			let with_nil = Int.(=) cv_size 1 in
       let (x,y) = Cond.dest c in
       let inds = Sl_tpreds.to_list (get_undefined defs f) in
-			if inds=[] then [] else
+			if Blist.is_empty inds then [] else
       let (fresh_ident, fresh_ident') = Pair.map get_fresh_ident ((),()) in
       let f (_,(ident, params)) =
         let newparams = fresh_fvars (Sl_term.Set.empty) (Blist.length params) in
@@ -423,7 +423,7 @@ let abd_det_guard =
 					in
 				let g pair =
           let clause_eq =
-            SH.mk 
+            SH.mk
               (Sl_uf.of_list [pair])
               Sl_deqs.empty
               Sl_ptos.empty
@@ -434,10 +434,10 @@ let abd_det_guard =
               (Sl_deqs.singleton pair)
               Sl_ptos.empty
               (Sl_tpreds.singleton (Tags.anonymous, (fresh_ident', newparams))) in
-          Sl_defs.add 
-            (Sl_preddef.mk 
-              ([Sl_indrule.mk clause_eq head; 
-                Sl_indrule.mk clause_deq head], 
+          Sl_defs.add
+            (Sl_preddef.mk
+              ([Sl_indrule.mk clause_eq head;
+                Sl_indrule.mk clause_deq head],
                 ident ))
             defs in
 			  Blist.map g occurrences in
@@ -451,8 +451,8 @@ let abd_back_rule =
       let (((cs1,l1),cmd1),((cs2,l2),cmd2)) = Pair.map dest_sh_seq (s1,s2) in
       if
         not (Cmd.equal cmd1 cmd2) ||
-        Sl_deqs.cardinal l1.SH.deqs < Sl_deqs.cardinal l2.SH.deqs ||
-        Sl_ptos.cardinal l1.SH.ptos < Sl_ptos.cardinal l2.SH.ptos
+        Int.(<) (Sl_deqs.cardinal l1.SH.deqs) (Sl_deqs.cardinal l2.SH.deqs) ||
+        Int.(<) (Sl_ptos.cardinal l1.SH.ptos) (Sl_ptos.cardinal l2.SH.ptos)
       then
         []
       else
@@ -475,7 +475,7 @@ let abd_back_rule =
         (fun ((_,(c,_)),(_,(c',_))) ->
           Sl_predsym.MSet.subset inds2 (Sl_predsym.MSet.add c' (Sl_predsym.MSet.remove c inds1)))
         cp in
-			if cp=[] then [] else
+			if Blist.is_empty cp then [] else
       let fresh_ident = get_fresh_ident () in
 			let f ((_,(c,params)),(_,(c',params'))) =
         let newparams = fresh_fvars Sl_term.Set.empty (Blist.length params) in
@@ -488,16 +488,16 @@ let abd_back_rule =
 				Blist.map
           (fun perm ->
 						let cl =
-              SH.with_inds 
-                Sl_heap.empty 
+              SH.with_inds
+                Sl_heap.empty
                 (Sl_tpreds.of_list [(Tags.anonymous,(c',perm)); (Tags.anonymous, (fresh_ident, newparams))]) in
-            Sl_defs.add 
+            Sl_defs.add
               (Sl_preddef.mk (( [Sl_indrule.mk cl (c, newparams)], c )))
               defs)
 				  combinations in
       Blist.bind f cp
     with Not_symheap -> [] in
-  Abdrule.mk_abdbackrule Rule.all_nodes rl 
+  Abdrule.mk_abdbackrule Rule.all_nodes rl
 
 
 let matches = Abdrule.lift While_rules.dobackl
@@ -631,24 +631,24 @@ let matches = Abdrule.lift While_rules.dobackl
 (* 	Proof_tacs.seq [ abd_backlink_cut; abd_mid_backlink_cut; backlink_cut ]        *)
 
 let unfold =
-  Abdrule.mk_abdgenrule 
-    (fun seq defs -> 
-      Blist.map 
-        (fun app -> (app,defs)) 
-        (While_rules.luf_rl seq defs)) 
-  
+  Abdrule.mk_abdgenrule
+    (fun seq defs ->
+      Blist.map
+        (fun app -> (app,defs))
+        (While_rules.luf_rl seq defs))
+
 let unfold_last =
-  Abdrule.mk_abdgenrule 
-    (fun seq defs -> 
-      Blist.map 
-        (fun app -> (app,defs)) 
-        (While_rules.luf_rl seq (Sl_defs.of_list [Blist.hd (Sl_defs.to_list defs)]))) 
+  Abdrule.mk_abdgenrule
+    (fun seq defs ->
+      Blist.map
+        (fun app -> (app,defs))
+        (While_rules.luf_rl seq (Sl_defs.of_list [Blist.hd (Sl_defs.to_list defs)])))
 
 let deref_tac =
-  Abdrule.first 
+  Abdrule.first
     [wrap symex_load_rule; wrap symex_store_rule; wrap symex_free_rule]
 let det_guard_tac =
-  Abdrule.first 
+  Abdrule.first
     [wrap symex_det_if_rule; wrap symex_det_ifelse_rule; wrap symex_det_while_rule]
 
 
@@ -663,14 +663,14 @@ let gen_ifwhile_tac =
 
 let rec straightline =
     Abdrule.first [
-      symex_empty_axiom ; 
-      ex_falso_axiom ; 
+      symex_empty_axiom ;
+      ex_falso_axiom ;
       symex_stop_axiom;
 
-      Abdrule.choice [    
+      Abdrule.choice [
         matches;
         abd_symex abd_back_rule matches;
-        
+
         Abdrule.first [
           symex_skip_rule ;
           symex_new_rule ;
@@ -678,28 +678,28 @@ let rec straightline =
           symex_nondet_ifelse_rule ;
           symex_nondet_while_rule ;
           symex_assign_rule;
-          
-          deref_tac; 
+
+          deref_tac;
           abd_symex abd_deref deref_tac;
         ];
-      ]  
+      ]
     ]
-  
+
 
 (* these rules can rarely create a non-symex loop in termination checking *)
 let rules =
     Abdrule.first [
-      symex_empty_axiom ; 
-      ex_falso_axiom ; 
+      symex_empty_axiom ;
+      ex_falso_axiom ;
       symex_stop_axiom;
 
   		(* lhs_disj_to_symheaps ; *)
       (* simplify ; *)
-        
-      Abdrule.choice [    
+
+      Abdrule.choice [
     		matches;
     		abd_symex abd_back_rule matches;
-        
+
         Abdrule.first [
           symex_skip_rule ;
           symex_new_rule ;
@@ -707,21 +707,21 @@ let rules =
           symex_nondet_ifelse_rule ;
           symex_nondet_while_rule ;
       		symex_assign_rule;
-          
-          deref_tac; 
+
+          deref_tac;
           abd_symex abd_deref deref_tac;
-          
+
           Abdrule.choice [
         		ifwhile_tac;
             gen_ifwhile_tac;
             unfold;
           ]
         ];
-    
+
     		(* Proof_tacs.then_tac                                           *)
     		(*   abd_segment                                                 *)
     		(* 	(Proof_tacs.or_tac [ifwhile_tac; gen_ifwhile_tac]); *)
-    
+
     		(* cut_backlink_tac                                               *)
-      ]  
+      ]
     ]

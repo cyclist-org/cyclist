@@ -22,8 +22,6 @@ TARGETS:= \
 	src/while/while_prove.native  \
 	src/while/while_abduce.native \
 	src/procedure/procedure_prove.native \
-	src/temporal_ctl/temporal_ctl_prove.native \
-	src/temporal_ltl/temporal_ltl_prove.native \
 	src/seplog/sl.top
 
 TEST_TARGETS := \

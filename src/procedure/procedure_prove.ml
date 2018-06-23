@@ -75,7 +75,7 @@ let extract_proof prf (idx, node) =
       print_endline
         ("Proof has " ^ (string_of_int (Proof.size new_prf)) ^ " nodes" ^
          " and " ^ (string_of_int (Proof.num_backlinks new_prf)) ^ " back-links.") ;
-    proc_proofs := 
+    proc_proofs :=
       Proc.SigMap.add signature (Some new_prf) !proc_proofs
 
 let prove_seq ((pre,cmd,post) as seq) =
@@ -116,7 +116,7 @@ let () =
     else if Blist.is_empty !entry_points then [Program.main]
     else !entry_points in
   Blist.iter
-    (fun p -> try Program.get_proc p; () with Not_found -> F.die (p ^ " procedure not found!") spec_list !F.usage)
+    (fun p -> try ignore (Program.get_proc p) with Not_found -> F.die (p ^ " procedure not found!") spec_list !F.usage)
     entry_points ;
   let reachable = Program.get_reachable entry_points in
   Blist.iter

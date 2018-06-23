@@ -42,11 +42,11 @@ include Fixpoint.Make(struct type t = symheap let equal = equal end)
 let compare f g =
   if f == g then 0 else
     match Sl_uf.compare f.eqs g.eqs with
-    | n when n <>0 -> n
+    | n when not (Int.equal n 0) -> n
     | _ -> match Sl_deqs.compare f.deqs g.deqs with
-        | n when n <>0 -> n
+        | n when not (Int.equal n 0) -> n
         | _ -> match Sl_ptos.compare f.ptos g.ptos with
-            | n when n <>0 -> n
+            | n when not (Int.equal n 0) -> n
             | _ -> Sl_tpreds.compare f.inds g.inds
 
 (* custom hash function so that memoization fields are ignored when hashing *)
@@ -98,14 +98,14 @@ let to_string f =
   let res = String.concat symb_star.sep
       ((Sl_uf.to_string_list f.eqs) @ (Sl_deqs.to_string_list f.deqs) @
         (Sl_ptos.to_string_list f.ptos) @ (Sl_tpreds.to_string_list f.inds)) in
-  if res = "" then keyw_emp.str else res
+  if String.equal res "" then keyw_emp.str else res
 
 let pp fmt h =
   let l =
     ((Sl_uf.to_string_list h.eqs) @ (Sl_deqs.to_string_list h.deqs) @
       (Sl_ptos.to_string_list h.ptos) @ (Sl_tpreds.to_string_list h.inds)) in
   Format.fprintf fmt "@[%a@]" (Blist.pp pp_star Format.pp_print_string)
-    (if l<>[] then l else [keyw_emp.str])
+    (if not (Blist.is_empty l) then l else [keyw_emp.str])
 
 let equates h x y = Sl_uf.equates h.eqs x y
 

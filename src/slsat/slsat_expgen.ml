@@ -60,7 +60,7 @@ let circuit_def = Blist.rev [pzero_def; pone_def; pand_def; pxor_def; pnot_def]
 
 (* Helper: [lower..upper] in Haskell. *)
 let rec from_to lower upper =
-  if upper < lower then []
+  if Int.(<) upper lower then []
   else lower :: from_to (lower+1) upper
 
 (* Helper to generate argument lists: E.g. param_m_to_n "x" 2 4 = "x2,x3,x4". *)
@@ -77,9 +77,9 @@ let condlist_to_string conds = String.concat " * " conds
 let psucc_circuit_def (n : int) : string =
   let psucc_circuit_n = psucc_circuit n in
   let rec conds k =
-    if k <= 1 then [pnot ^ "(x1,y1)"]
-    else if k = 2 then (conds 1) @ [pxor ^ "(x1,x2,y2)"]
-    else if k = 3 then (conds 2) @ [pand ^ "(x1,x2,z3)"; pxor ^ "(z3,x3,y3)"]
+    if Int.(<=) k 1 then [pnot ^ "(x1,y1)"]
+    else if Int.(=) k 2 then (conds 1) @ [pxor ^ "(x1,x2,y2)"]
+    else if Int.(=) k 3 then (conds 2) @ [pand ^ "(x1,x2,z3)"; pxor ^ "(z3,x3,y3)"]
     else let kp = string_of_int (k-1) in
          let kk = string_of_int k in
          (conds (k-1)) @ [pand ^ "(z" ^ kp ^ ",x" ^ kp ^ ",z" ^ kk ^ ")";
@@ -106,14 +106,14 @@ let pq_def n psucc_name =
     Blist.map (fun i -> pzero ^ "(y" ^ (string_of_int i) ^ ")") (from_to 1 n) in
   let conds_def2 = [ psucc_name ^ Lib.bracket ( x_param_list ^ "," ^ y_param_list ) ;
                      pq ^ Lib.bracket ( x_param_list ) ] in
-  let clause_head_with_arrow = " => " ^ pq ^ Lib.bracket ( y_param_list ) 
+  let clause_head_with_arrow = " => " ^ pq ^ Lib.bracket ( y_param_list )
   in
   pq ^ " {\n  " ^ (condlist_to_string conds_def1) ^ clause_head_with_arrow ^
        " |\n  " ^ (condlist_to_string conds_def2) ^ clause_head_with_arrow ^
        "\n}"
 
 let succ_circuit_def n =
-  [pp_def n; pq_def n (psucc_circuit n) ; psucc_circuit_def n ] 
+  [pp_def n; pq_def n (psucc_circuit n) ; psucc_circuit_def n ]
 
 let overall_circuit_def n =
   String.concat def_separator (succ_circuit_def n @ circuit_def)
@@ -132,7 +132,7 @@ let rec psucc_rec_def (n : int) : string list =
     in
   let first_clause k = (condlist_to_string (first_conds k)) ^ clause_head_with_arrow
   in
-  if n <= 1 then [ psucc_rec_n ^ " {\n  " ^ (first_clause n) ^ "\n}" ]
+  if Int.(<=) n 1 then [ psucc_rec_n ^ " {\n  " ^ (first_clause n) ^ "\n}" ]
   else (* we need 2 clauses AND a recursive call to the generator *)
     let second_conds k =
       [ (psucc_rec (n-1)) ^ Lib.bracket ((param_m_to_n "x" 2 k) ^ "," ^ (param_m_to_n "y" 2 k)) ;
@@ -151,7 +151,7 @@ let pbitvector_def (n : int) : string =
   in
   pbitvector ^ " {\n  " ^ (condlist_to_string conds) ^ " => " ^
   pbitvector ^ Lib.bracket ( param_1_to_n "x" n ) ^ "\n}"
-  
+
 let overall_bitvector_def n =
   String.concat def_separator [ pzero_def ; pone_def ; pbool_def ; pbitvector_def n ]
 ;;

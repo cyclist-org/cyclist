@@ -26,7 +26,7 @@ let record_defs defs =
   let ch = open_out path_fn in
   let () = output_string ch (Sl_defs.to_string (While_abdrules.empify defs)) in
   let () = close_out ch in
-	if !defs_count>50000 then exit 0 else false
+	if Int.(>) !defs_count 50000 then exit 0 else false
 
 let prove_prog seq =
   (* seq_to_prove := Some seq ; *)
@@ -96,7 +96,7 @@ let die msg =
 let () =
   Format.set_margin 300 ;
   Arg.parse speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) usage ;
-  if !prog_path="" then die "-P must be specified." ;
+  if String.equal !prog_path "" then die "-P must be specified." ;
   let ((f, cmd) as seq) = While_program.of_channel (open_in !prog_path) in
   While_program.set_program cmd ;
   (* Safety_prover.setup [] ;  *)
