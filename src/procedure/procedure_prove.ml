@@ -1,3 +1,5 @@
+open Lib
+
 let defs_path = ref "examples/sl.defs"
 let prog_path = ref ""
 
@@ -101,7 +103,7 @@ module Timer = Stats.TimeStats(struct end)
 let () =
   let spec_list = !F.speclist() in
   Arg.parse spec_list add_entry_point !F.usage ;
-  if !prog_path="" then F.die "-P must be specified." spec_list !F.usage ;
+  if String.equal !prog_path "" then F.die "-P must be specified." spec_list !F.usage ;
   let (fields, procs) = Program.of_channel (open_in !prog_path) in
   let procs = Blist.map Proc.number_cmds procs in
 	let defs = Sl_defs.of_channel (open_in !defs_path) in

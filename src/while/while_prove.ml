@@ -1,3 +1,4 @@
+open Lib
 open While_program
 open While_rules
 
@@ -19,11 +20,11 @@ module F = Frontend.Make(Prover)
 (*   done                                                        *)
 let () = F.usage := !F.usage ^ " [-D <file>] -P <file> [-T]"
 
-let () =  
+let () =
   let old_spec_thunk = !F.speclist in
-  F.speclist := 
+  F.speclist :=
     (fun () -> old_spec_thunk() @ [
-      ("-D", Arg.Set_string defs_path, 
+      ("-D", Arg.Set_string defs_path,
         ": read inductive definitions from <file>, default is " ^ !defs_path);
       ("-P", Arg.Set_string prog_path, ": prove safety of program <file>");
       ("-T", Arg.Set While_program.termination, ": also prove termination");
@@ -32,14 +33,10 @@ let () =
 let () =
   let spec_list = !F.speclist() in
   Arg.parse spec_list (fun _ -> raise (Arg.Bad "Stray argument found.")) !F.usage ;
-  if !prog_path="" then F.die "-P must be specified." spec_list !F.usage ;
+  if String.equal !prog_path "" then F.die "-P must be specified." spec_list !F.usage ;
   let (seq, prog) = While_program.of_channel (open_in !prog_path) in
   if not (Cmd.is_while_prog prog) then F.die "Unrecognised commands in program!" spec_list !F.usage ;
   let prog = Cmd.number prog in
-  While_program.set_program prog ; 
+  While_program.set_program prog ;
   While_rules.setup (Sl_defs.of_channel (open_in !defs_path)) ;
   F.exit (F.prove_seq !While_rules.axioms !While_rules.rules (seq, prog))
-    
-
-
-  

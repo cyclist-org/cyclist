@@ -1,10 +1,12 @@
+open Lib
+
 module Make(T: Utilsigs.BasicType) =
   struct
     type elt = T.t
     include Flist.Make(T)
 
     let empty = []
-    let is_empty xs = xs=[]
+    let is_empty = function [] -> true | _ -> false
     let singleton x = [x]
 
     let of_list l = Blist.fast_sort T.compare l
@@ -16,7 +18,7 @@ module Make(T: Utilsigs.BasicType) =
     let rec add x = function
       | [] -> [x]
       | (y::ys) as zs -> match T.compare x y with
-        | n when n <= 0 -> x::zs
+        | n when Pervasives.(<=) n 0 -> x::zs
         | _ -> y::(add x ys)
 
     let fold f xs a = Blist.fold_left (fun y a' -> f a' y) a xs
@@ -36,7 +38,7 @@ module Make(T: Utilsigs.BasicType) =
       | [] -> false
       | y::ys -> match T.compare x y with
         | 0 -> true
-        | n -> n > 0 && mem x ys
+        | n -> Pervasives.(>) n 0 && mem x ys
 
     let rec max_elt = function
       | [] -> raise Not_found
@@ -52,14 +54,14 @@ module Make(T: Utilsigs.BasicType) =
       | [] -> []
       | (y::ys) as zs -> match T.compare x y with
         | 0 -> ys
-        | n when n > 0 -> y::(remove x ys)
+        | n when Pervasives.(>) n 0 -> y::(remove x ys)
         | _ -> zs
 
     let rec inter xs ys = match (xs,ys) with
       | ([], _) | (_, []) -> []
       | (w::ws, z::zs) -> match T.compare w z with
         | 0 -> w::(inter ws zs)
-        | n when n > 0 -> inter xs zs
+        | n when Pervasives.(>) n 0 -> inter xs zs
         | _ -> inter ws ys
 
     let rec subset xs ys = match (xs,ys) with
@@ -67,7 +69,7 @@ module Make(T: Utilsigs.BasicType) =
       | (_, []) -> false
       | (w::ws, z::zs) -> match T.compare w z with
         | 0 -> subset ws zs
-        | n when n > 0 -> subset xs zs
+        | n when Pervasives.(>) n 0 -> subset xs zs
         | _ -> false
 
     let rec diff xs ys = match (xs,ys) with
@@ -75,7 +77,7 @@ module Make(T: Utilsigs.BasicType) =
       | (_, []) -> xs
       | (w::ws, z::zs) -> match T.compare w z with
         | 0 -> diff ws zs
-        | n when n < 0 -> w::(diff ws ys)
+        | n when Pervasives.(<) n 0 -> w::(diff ws ys)
         | _ -> diff xs zs
 
     let split x xs =
@@ -83,7 +85,7 @@ module Make(T: Utilsigs.BasicType) =
         | [] -> (ys, false, [])
         | (z::zs) as ws -> match T.compare x z with
           | 0 -> (ys, true, ws)
-          | n when n > 0 -> div (z::ys) zs
+          | n when Pervasives.(>) n 0 -> div (z::ys) zs
           | _ -> (ys, false, ws) in
       let (l, f, r) = div [] xs in (Blist.rev l, f, r)
 
@@ -118,7 +120,7 @@ module Make(T: Utilsigs.BasicType) =
       | (xs, []) -> true
       | (x::xs, y::ys) -> match T.compare x y with
         | 0 -> false
-        | n when n < 0 -> disjoint xs (y::ys)
+        | n when Pervasives.(<) n 0 -> disjoint xs (y::ys)
         | _ -> disjoint (x::xs) ys
 
     let find_last_opt _ _ = None

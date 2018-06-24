@@ -1,3 +1,4 @@
+open Lib
 (** Functions for manipulating optional values. *)
 
 let is_none = function None -> true | Some _ -> false
@@ -9,7 +10,7 @@ let pred p x =
 
 let mk b x =
   if b then Some x else None
-	
+
 let mk_lazily b f =
 	if b then Some (f()) else None
 
@@ -51,7 +52,7 @@ let iter f = function
   | None -> ()
   | Some x -> f x
 
-let fold f o a = 
+let fold f o a =
   match o with
   | None -> a
   | Some x -> f x a

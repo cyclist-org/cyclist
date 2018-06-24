@@ -1,3 +1,5 @@
+open Lib
+
 module type I =
   sig
     type var
@@ -66,11 +68,19 @@ type varname_class =
   | BOUND
   | ANONYMOUS
 
+let class_equal c c' = match c, c' with
+  | FREE, FREE
+  | BOUND, BOUND
+  | ANONYMOUS, ANONYMOUS ->
+    true
+  | _ ->
+    false
+
 
 let cyclic_permute s n =
   let len = String.length s in
   let i = n mod len in
-  let start = if i <= 0 then abs i else len - i in
+  let start = if Int.(<=) i 0 then abs i else len - i in
   let fst = String.sub s start (len - start) in
   let snd = String.sub s 0 start in
   String.concat "" [fst; snd]
@@ -84,7 +94,7 @@ let mk seed anon_str classify_varname =
 
       let anonymous = _mk ""
 
-      let mk s = if (classify_varname s = ANONYMOUS) then anonymous else _mk s
+      let mk s = if class_equal (classify_varname s) ANONYMOUS then anonymous else _mk s
 
       module Var =
         struct
@@ -109,20 +119,20 @@ let mk seed anon_str classify_varname =
       let is_anonymous v = Var.equal v anonymous
 
       let is_exist_name s =
-        let l = String.length s in l > 1 && s.[l-1] = '\''
-      let is_exist_var n = (not (is_anonymous n)) && (classify_varname n.Hashcons.node) = BOUND
-      let is_free_var n = (not (is_anonymous n)) && (classify_varname n.Hashcons.node) = FREE
+        let l = String.length s in Int.(>) l 1 && Char.equal s.[l-1] '\''
+      let is_exist_var n = (not (is_anonymous n)) && class_equal (classify_varname n.Hashcons.node) BOUND
+      let is_free_var n = (not (is_anonymous n)) && class_equal (classify_varname n.Hashcons.node) FREE
 
       let letters =
         let explode s =
           let rec loop p acc =
-            if p < 0 then acc else loop (p-1) (String.sub s p 1::acc) in
+            if Int.(<) p 0 then acc else loop (p-1) (String.sub s p 1::acc) in
           loop ((String.length s) - 1) [] in
         Blist.rev (explode (cyclic_permute "abcdefghijklmnopqrstuvwxyz" seed))
 
       let search_vars =
         let mk_var free lvl acc n =
-          let n = if lvl=0 then n else (n ^ "_" ^ (string_of_int lvl)) in
+          let n = match lvl with 0 -> n | _ -> (n ^ "_" ^ (string_of_int lvl)) in
           (if free then (mk n) else (mk (n ^ "'"))) :: acc in
         let mk_seg free lvl =
            Blist.fold_left (mk_var free lvl) [] letters in
@@ -130,11 +140,10 @@ let mk seed anon_str classify_varname =
           | _, 0 -> Some (Blist.rev acc)
           | [],_ -> None
           | v::vs,n ->
-            begin
               let (acc', n') =
                 if Var.Set.mem v s then (acc, n) else (v::acc, n-1) in
               _search s acc' vs n'
-            end in
+            in
         let curr_lvl = ref 1 in
         let _fvars, _evars = ref (mk_seg true 0), ref (mk_seg false 0) in
         let rec search s free n =

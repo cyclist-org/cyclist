@@ -222,7 +222,7 @@ module Make(H: HashedType): (S with type elt = H.t) =
 
     (* changes by NG *)
     let is_empty h = is_empty h
-    
+
     let filter p h = filter p h
 
     let of_list l =
@@ -238,7 +238,7 @@ module Make(H: HashedType): (S with type elt = H.t) =
 
     let exists f h = fold (fun k acc -> acc || f k) h false
     let for_all f h = fold (fun k acc -> acc && f k) h true
-    
+
     (* changes by RR *)
     let to_string h = to_string
       (fun k -> "#" ^ (string_of_int (safehash k)) ^ ": " ^ (H.to_string k))

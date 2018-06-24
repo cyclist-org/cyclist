@@ -1,3 +1,4 @@
+open Lib
 include List
 
 type 'a t = 'a list
@@ -31,37 +32,39 @@ let decons = function
   | _ -> invalid_arg "decons"
 
 let repeat a n =
-  if n<0 then invalid_arg "repeat" else
+  if Pervasives.(<) n 0 then invalid_arg "repeat" else
   let rec aux a acc = function
     | 0 -> acc
     | m -> aux a (a::acc) (m-1) in
   aux a [] n
 
 let rev_filter p xs =
-  foldl (fun acc x -> if p x then x::acc else acc) [] xs  
+  foldl (fun acc x -> if p x then x::acc else acc) [] xs
 
 let rec but_last = function
   | [_] | [] -> []
   | x::xs -> x::(but_last xs)
 
-let range n xs = mapi (fun m _ -> m+n) xs  
+let range n xs = mapi (fun m _ -> m+n) xs
 
 let rec remove_nth n = function
   | [] -> invalid_arg "Blist.remove_nth"
-  | y::ys -> if n=0 then ys else y::(remove_nth (n-1) ys)
+  | y::ys -> match n with 0 -> ys | _ -> y::(remove_nth (n-1) ys)
 
-let replace_nth z n xs = 
-  if n<0 then invalid_arg "Blist.replace_nth" else
-  let f m y = if n=m then z else y in
-  mapi f xs 
+let replace_nth z n xs =
+  if Pervasives.(<) n 0 then invalid_arg "Blist.replace_nth" else
+  let f m y = if Pervasives.(=) n m then z else y in
+  mapi f xs
 
-let rec take n = function
-  | [] -> if n=0 then [] else invalid_arg "Blist.take"
-  | x::xs -> if n=0 then [] else x::(take (n-1) xs)
+let rec take n l = match l, n with
+  | _, 0 -> []
+  | [], _ -> invalid_arg "Blist.take"
+  | x::xs, _ -> x::(take (n-1) xs)
 
-let rec drop n = function
-  | [] -> if n=0 then [] else invalid_arg "Blist.drop"
-  | x::xs -> if n=0 then x::xs else drop (n-1) xs
+let rec drop n l = match l, n with
+  | _, 0 -> l
+  | [], _ -> invalid_arg "Blist.drop"
+  | x::xs, _ -> drop (n-1) xs
 
 let indexes xs = range 0 xs
 
@@ -84,7 +87,7 @@ let find_indexes p xs =
     | [] -> []
     | y::ys -> if p y then n::(aux (n+1) ys) else aux (n+1) ys in
   aux 0 xs
-  
+
 let rec equal eq xs ys = match (xs, ys) with
   | ([], []) -> true
   | (x::xs, y::ys) -> (eq x y) && equal eq xs ys
@@ -100,7 +103,7 @@ let intersperse x = function
 
 let rec unzip3 = function
   | [] -> ([],[],[])
-  | (x,y,z)::ws -> let (xs,ys,zs) = unzip3 ws in (x::xs,y::ys,z::zs)  
+  | (x,y,z)::ws -> let (xs,ys,zs) = unzip3 ws in (x::xs,y::ys,z::zs)
 
 let rec zip3 xs ys zs = match (xs,ys,zs) with
   | ([], [], []) -> []
@@ -117,7 +120,7 @@ let cartesian_hemi_square xs =
       chs (fold_left (fun acc' el' -> (el,el')::acc') acc tl) tl
   in chs [] xs
 
-let bind f xs = flatten (map f xs) 
+let bind f xs = flatten (map f xs)
 
 let rec uniq eq = function
   | [] -> []
@@ -146,9 +149,9 @@ let choose lol =
     [[]] lol
 
 let rec _combs k len l =
-  if k = 0 then [ [] ] else
-  if len < k then [] else 
-  if k = len then [ l ] else
+  if Pervasives.(=) k 0 then [ [] ] else
+  if Pervasives.(<) len k then [] else
+  if Pervasives.(=) k len then [ l ] else
   let (h,t) = (hd l, tl l) in
   let starting_with_h =
     (map (fun sublist -> h :: sublist) (_combs (pred k) (pred len) t)) in

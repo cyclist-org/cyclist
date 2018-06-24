@@ -1,12 +1,14 @@
+open Lib
+
 (* include Treeset.Make(Pair.Make(Tags.Elt)(Tags.Elt)) *)
 include Tags.Elt.Unifier
-    
+
 let mk s = Tags.fold (fun i p -> add (i,i) p) s empty
 
 let compose t1 t2 =
   fold
     (fun (x,y) a ->
-      fold (fun (w,z) b -> if y=w then add (x,z) b else b) t2 a)
+      fold (fun (w,z) b -> if Tags.Elt.equal y w then add (x,z) b else b) t2 a)
     t1 empty
 
 let projectl tp = map_to Tags.add Tags.empty fst tp
@@ -19,9 +21,9 @@ let dest_singleton tps =
 
 let apply_to_tag tps t =
   try
-    snd (find (fun (t',_) -> t=t') tps)
+    snd (find (fun (t',_) -> Tags.Elt.equal t t') tps)
   with Not_found -> t
-  
+
 let strip tps = filter (fun (t, t') -> not (Tags.Elt.equal t t')) tps
 
 let flatten tps =
@@ -33,9 +35,9 @@ let mk_subst avoid ts fresh_vars =
 
 let mk_free_subst avoid ts =
   mk_subst avoid ts Tags.fresh_fvars
-  
+
 let mk_ex_subst avoid ts =
   mk_subst avoid ts Tags.fresh_evars
-  
+
 let partition_subst theta =
   partition (fun tp -> Pair.both (Pair.map Tags.is_free_var tp)) theta

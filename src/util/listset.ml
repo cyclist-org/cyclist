@@ -1,14 +1,16 @@
+open Lib
+
 module Make(T: Utilsigs.BasicType) : Utilsigs.OrderedContainer with type elt = T.t =
   struct
     module MSet = Listmultiset.Make(T)
     include MSet
     include Fixpoint.Make(MSet)
-    
+
     let rec uniq = function
       | [] | [_] as l -> l
       | x::((x'::_) as tl) -> match T.compare x x' with
         | 0 -> uniq tl
-        | i when i<0 -> x::(uniq tl)
+        | i when Int.(<) i 0 -> x::(uniq tl)
         | _ -> failwith "uniq"
 
     let of_list l = uniq (Blist.fast_sort T.compare l)
@@ -20,7 +22,7 @@ module Make(T: Utilsigs.BasicType) : Utilsigs.OrderedContainer with type elt = T
       | [] -> [x]
       | (y::ys) as zs -> match T.compare x y with
         | 0 -> zs
-        | n when n < 0 -> x::zs
+        | n when Int.(<) n 0 -> x::zs
         | _ -> y::(add x ys)
 
     let rec subsets xs =

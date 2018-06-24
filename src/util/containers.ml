@@ -1,3 +1,5 @@
+open Lib
+
 module type S =
   sig
     module Set : Utilsigs.OrderedContainer

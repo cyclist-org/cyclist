@@ -1,11 +1,12 @@
+open Lib
 open MParser
 open MParser_PCRE
 module Tokens = MParser_PCRE.Tokens
 
 let classify_varname s =
   let l = String.length s in
-  assert (String.length s > 0);
-  if l > 1 && s.[l-1] = '\'' then VarManager.BOUND
+  assert (Int.(>) (String.length s) 0);
+  if Int.(>) l 1 && Char.equal s.[l-1] '\'' then VarManager.BOUND
   else VarManager.FREE
 module VM = (val (VarManager.mk 0 "_" classify_varname) : VarManager.S)
 

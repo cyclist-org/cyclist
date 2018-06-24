@@ -1,23 +1,25 @@
+open Lib
+
 let partition_strengthening = ref false
 
 let partitions trm_list pi =
-  assert (not (Sl_heap.inconsistent pi)) ; 
+  assert (not (Sl_heap.inconsistent pi)) ;
   let pairs = Blist.cartesian_hemi_square trm_list in
-  let pairs = 
-    Blist.filter 
+  let pairs =
+    Blist.filter
       (fun (x,y) -> not (Sl_heap.equates pi x y || Sl_heap.disequates pi x y))
       pairs in
-  let aux sub_partitions ((x,y) as q) = 
+  let aux sub_partitions ((x,y) as q) =
     Blist.fold_left
-      (fun l pi' -> 
-        if Sl_heap.equates pi' x y || Sl_heap.disequates pi' x y 
-        then 
+      (fun l pi' ->
+        if Sl_heap.equates pi' x y || Sl_heap.disequates pi' x y
+        then
           pi'::l
-        else 
-          (Sl_heap.add_eq pi' q)::(Sl_heap.add_deq pi' q)::l 
+        else
+          (Sl_heap.add_eq pi' q)::(Sl_heap.add_deq pi' q)::l
       )
       []
-      sub_partitions in 
+      sub_partitions in
   Blist.fold_left aux [pi] pairs
 
 
@@ -73,56 +75,56 @@ let partitions trm_list pi =
 (*     Sl_heap.norm (Sl_heap.with_deqs !heap (Sl_deqs.of_list deqs)) in *)
 (*   Enum.map to_heap parts_enum                                        *)
 
-let invalidity_witness defs seq = 
+let invalidity_witness defs seq =
   Stats.Invalidity.call () ;
   let (lbps, rbps) = Pair.map (Sl_basepair.pairs_of_form defs) seq in
   let (lbps, rbps) = Pair.map Sl_basepair.minimise (lbps, rbps) in
-  let lbps = 
+  let lbps =
     Sl_basepair.Set.filter
-      (fun bp -> 
-        Sl_basepair.Set.for_all 
-          (fun bp' -> not (Sl_basepair.leq bp' bp)) 
+      (fun bp ->
+        Sl_basepair.Set.for_all
+          (fun bp' -> not (Sl_basepair.leq bp' bp))
           rbps)
-      lbps in 
-  let b_vars = 
+      lbps in
+  let b_vars =
     Sl_basepair.Set.fold
       (fun bp vs -> Sl_term.Set.union (Sl_basepair.vars bp) vs)
-      rbps 
-      (Sl_term.Set.singleton Sl_term.nil) in 
+      rbps
+      (Sl_term.Set.singleton Sl_term.nil) in
   let trm_list bp =
-    Sl_term.Set.to_list (Sl_term.Set.union b_vars (Sl_basepair.vars bp)) in 
+    Sl_term.Set.to_list (Sl_term.Set.union b_vars (Sl_basepair.vars bp)) in
   let strengthen trms pi =
     if not !partition_strengthening then pi else
-    let free_deqs = 
+    let free_deqs =
       Blist.cartesian_hemi_square trms in
-    let free_deqs = 
-      Blist.filter 
+    let free_deqs =
+      Blist.filter
         (fun (x,y) ->
-          not (Sl_heap.equates pi x y) && 
-          Sl_basepair.Set.for_all 
+          not (Sl_heap.equates pi x y) &&
+          Sl_basepair.Set.for_all
             (fun (_,pi') ->
               Sl_deqs.for_all
-                (fun (w,z) -> Sl_heap.equates pi x w = Sl_heap.equates pi x z)
+                  (fun (w,z) -> Pervasives.(=) (Sl_heap.equates pi x w) (Sl_heap.equates pi x z))
                 pi'.Sl_heap.deqs
-            ) 
-            rbps) 
+            )
+            rbps)
         free_deqs in
     Blist.fold_left Sl_heap.add_deq pi free_deqs in
   let map_through sigma v =
-    Sl_basepair.Allocated.endomap 
-      (fun (x,i) -> (Sl_uf.find x sigma.Sl_heap.eqs, i)) 
+    Sl_basepair.Allocated.endomap
+      (fun (x,i) -> (Sl_uf.find x sigma.Sl_heap.eqs, i))
       v in
   let b_move sigma (v,_) (v',pi') =
     Sl_heap.subsumed pi' sigma
-    && 
+    &&
     let (v, v') = Pair.map (map_through sigma) (v, v') in
-    Sl_basepair.Allocated.subset v' v in     
+    Sl_basepair.Allocated.subset v' v in
   let a_partition ((v, pi) as bp) sigma =
-    not (Sl_basepair.Set.exists (fun bp' -> b_move sigma bp bp') rbps) in    
+    not (Sl_basepair.Set.exists (fun bp' -> b_move sigma bp bp') rbps) in
   let a_move ((v,pi) as bp) =
-    let trms = trm_list bp in 
-    Blist.exists 
-      (fun sigma -> a_partition bp sigma) 
+    let trms = trm_list bp in
+    Blist.exists
+      (fun sigma -> a_partition bp sigma)
       (partitions trms (strengthen trms pi)) in
   let result = Sl_basepair.Set.find_opt a_move lbps in
   if Option.is_none result then Stats.Invalidity.reject () else Stats.Invalidity.accept () ;
@@ -162,7 +164,7 @@ let check = _invalid
 (*   Sl_term.Set.iter                                                    *)
 (*     (fun x -> Format.printf "(declare-const %a Int)\n" Sl_term.pp x)  *)
 (*     vars                                                              *)
-       
+
   (* let trm_list bp =                                                            *)
   (*   Sl_term.Set.to_list (Sl_term.Set.union b_vars (Sl_basepair.vars bp)) in    *)
   (* let strengthen trms pi =                                                     *)
@@ -199,4 +201,3 @@ let check = _invalid
   (* let result = Sl_basepair.Set.exists a_move lbps in                           *)
   (* if result then Stats.Invalidity.reject () else Stats.Invalidity.accept () ;  *)
   (* result                                                                       *)
-  
