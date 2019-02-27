@@ -1,0 +1,32 @@
+OVERVIEW:
+Cyclist is a framework for cuilding cyclic theorem provers based on a sequent 
+calculus (for more info on Cyclist have a look at papers/cyclist.pdf).  
+
+  
+QUICKSTART:
+If you downloaded a tarball then the executables in the archive will have been 
+linked in such a way that they should work without any additional dependencies 
+on an x86_64 Linux system.
+
+RUNNING
+To execute the entire test suite listed in the publication simply execute the
+provided script:
+    ./jar-test-suite.sh
+
+Alternatively, you can execute individual tests by executing:
+    ./temporal_ctl_prove.native -P ./benchmarks/temporal/jar/<test_file>
+
+
+TEST SUITE
+The test suite used in the paper can be found under project directory
+    benchmarks/temporal/jar/
+
+
+COMPILING:
+See README.compiling.
+
+
+CONTACT:
+Questions and help to get things working: 
+  gadi.tellez.13@ucl.ac.uk
+

@@ -1,0 +1,4 @@
+List { 
+	x->y => List(x,y) | 
+	x->x' * List(x',y) => List(x,y) 
+}

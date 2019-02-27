@@ -1,0 +1,11 @@
+btone { 
+    x'!=x * x->x' => btone(x) 
+};
+
+bttwo { 
+    x'!=x *x->x' * btone(x') => bttwo(x) 
+};
+
+btthree { 
+    x'!=x * x->x' * bttwo(x') => btthree(x) 
+}

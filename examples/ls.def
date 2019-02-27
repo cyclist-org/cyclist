@@ -1,0 +1,4 @@
+ls { 
+    x=y => ls(x,y) | 
+    x!=y * x->x' * ls(x',y) => ls(x,y) 
+}

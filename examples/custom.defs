@@ -1,0 +1,9 @@
+ls { 
+    x=y => ls(x,y) | 
+    x!=y * x->x' * ls(x',y) => ls(x,y) 
+};
+
+List { 
+	x->y => List(x,y) | 
+	x->x' * List(x',y) => List(x,y) 
+} 
