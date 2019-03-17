@@ -52,6 +52,4 @@ let subsumed eqs deqs deqs' =
     deqs
 
 let norm eqs deqs =
-  map
-    (fun p -> Sl_tpair.order (Pair.map (fun x -> Sl_uf.find x eqs) p))
-    deqs
+  map (fun p -> Sl_tpair.order (Pair.map (fun x -> Sl_uf.find x eqs) p)) deqs

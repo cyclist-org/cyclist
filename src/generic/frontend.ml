@@ -1,6 +1,6 @@
 open Lib
 
-module Make (Prover : Sigs.PROVER) = struct
+module Make (Prover : Prover.S) = struct
   module Seq = Prover.Seq
 
   type result_t = TIMEOUT | NOT_FOUND | SUCCESS of Prover.Proof.t

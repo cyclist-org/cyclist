@@ -17,30 +17,41 @@ ROOT := $(shell pwd)
 DEFS := $(ROOT)/examples/sl.defs
 export ROOT DEFS
 
-TARGETS:= \
-	src/generic/checkproof.native \
-	src/seplog/sl_prove.native \
-	src/seplog/sl_disprove.native \
-	src/seplog/sl_modelcheck.native \
-	src/slsat/sl_satcheck.native \
-	src/slsat/slsat_expgen.native \
-	src/while/while_prove.native  \
-	src/while/while_abduce.native \
-	src/procedure/procedure_prove.native \
-	src/seplog/sl.top
+TARGETS := \
+	src/generic/checkproof \
+	src/seplog/sl_prove \
+	src/seplog/sl_disprove \
+	src/seplog/sl_modelcheck \
+	src/slsat/sl_satcheck \
+	src/slsat/slsat_expgen \
+	src/while/while_prove  \
+	src/while/while_abduce \
+	src/procedure/procedure_prove
+
+NATIVE_TARGETS := $(addsuffix .native,$(TARGETS)) 
+
+BYTE_TARGETS := $(addsuffix .byte,$(TARGETS)) 
+
+TOPLEVEL := src/seplog/sl.top
 
 TEST_TARGETS := \
 	tests/test_slterm_bug1.native \
 	tests/test_slterm_bug2.native
 
-.PHONY: all check docs
+.PHONY: all native byte toplevel check docs
 
-all: $(TARGETS)
+byte: $(BYTE_TARGETS)
+
+native: $(NATIVE_TARGETS)
+
+toplevel: $(TOPLEVEL)
 
 check: $(TEST_TARGETS)
 	@for TST in _build/tests/test_*.native ; do $$TST ; done
 
 docs: src/cyclist.docdir/index.html
+
+all: native toplevel 
 
 $(TEST_TARGETS): %.native:
 	$(OCB) -no-links $@

@@ -1,10 +1,7 @@
 (** Signatures for containers and essential types. *)
 
 module type BasicType = sig
-  type t
-
-  val compare : t -> t -> int
-  (** Standard comparator, return <0 if first less than second, 0 if equal, >0 if greater. *)
+  include Set.OrderedType
 
   val equal : t -> t -> bool
   (** Standard equality predicate. *)
@@ -22,9 +19,7 @@ end
 (** Most types for use in containers, maps and other stuff must provide the
     above essential methods. *)
 module type OrderedContainer = sig
-  type t
-
-  include BasicType with type t := t
+  include BasicType
 
   include Set.S with type t := t
 
