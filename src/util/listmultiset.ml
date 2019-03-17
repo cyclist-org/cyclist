@@ -149,21 +149,29 @@ module Make (T : Utilsigs.BasicType) = struct
       | n when Pervasives.( < ) n 0 -> disjoint xs (y :: ys)
       | _ -> disjoint (x :: xs) ys )
 
-  let find_last_opt _ _ = None
+  let find_last_opt _ _ = assert false
 
-  let find_last _ _ = raise Not_found
+  let find_last _ _ = assert false
 
-  let find_first_opt _ _ = None
+  let find_first_opt _ _ = assert false
 
-  let find_first _ _ = raise Not_found
+  let find_first _ _ = assert false
 
-  let choose_opt _ = None
+  let choose_opt _ = assert false
 
-  let max_elt_opt _ = None
+  let max_elt_opt _ = assert false
 
-  let min_elt_opt _ = None
+  let min_elt_opt _ = assert false
 
-  let map _ _ = raise Not_found
+  let map _ _ = assert false
+
+  let of_seq _ = assert false
+
+  let add_seq _ _ = assert false
+
+  let to_seq _ = assert false
+
+  let to_seq_from _ _ = assert false
 
   include Unification.MakeUnifier (struct
     type t = Flist.Make(T).t

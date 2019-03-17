@@ -65,4 +65,4 @@ clean:
 
 .PHONY: fmt
 fmt:
-	parallel $(OCAMLFORMAT_EXE) -i ::: $(OUR_SRCS)
+	@parallel $(OCAMLFORMAT_EXE) -i ::: $(OUR_SRCS)

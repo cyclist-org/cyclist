@@ -28,9 +28,6 @@ module type OrderedContainer = sig
 
   include Set.S with type t := t
 
-  val of_list : elt list -> t
-  (** Convert a list of elements to a container. *)
-
   val to_list : t -> elt list
   (** Convert to a list of unique, sorted elements. *)
 
