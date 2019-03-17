@@ -36,7 +36,7 @@ module Make (T : Utilsigs.BasicType) = struct
 
   let union_of_list l = Blist.fold_left union [] l
 
-  let endomap f xs = of_list (Blist.map f xs)
+  let map f xs = of_list (Blist.map f xs)
 
   let partition = Blist.partition
 
@@ -162,8 +162,6 @@ module Make (T : Utilsigs.BasicType) = struct
   let max_elt_opt _ = assert false
 
   let min_elt_opt _ = assert false
-
-  let map _ _ = assert false
 
   let of_seq _ = assert false
 

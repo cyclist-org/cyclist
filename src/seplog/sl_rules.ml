@@ -526,7 +526,7 @@ let luf defs =
             let cclosure = Ord_constraints.close new_cs in
             let vts, pts =
               let collect tps =
-                Tagpairs.endomap Pair.swap
+                Tagpairs.map Pair.swap
                   (Tagpairs.filter (fun (_, t) -> Tags.mem t seq_tags) tps)
               in
               Pair.map collect

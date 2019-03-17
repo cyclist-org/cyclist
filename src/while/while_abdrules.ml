@@ -165,7 +165,7 @@ let eliminate (ident, pos) defs =
     let heap, (ident', params) = Sl_indrule.dest case in
     let elim_pred heap =
       SH.with_inds heap
-        (Sl_tpreds.endomap
+        (Sl_tpreds.map
            (fun (t, (ident'', params')) ->
              ( t
              , ( ident''
@@ -399,7 +399,7 @@ let generalise_while_rule =
       (Sl_deqs.filter
          (fun p -> Pair.conj (Pair.map (fun z -> not (Sl_term.Set.mem z m)) p))
          h.SH.deqs)
-      (Sl_ptos.endomap gen_pto h.SH.ptos)
+      (Sl_ptos.map gen_pto h.SH.ptos)
       h.SH.inds
   in
   let rl seq =

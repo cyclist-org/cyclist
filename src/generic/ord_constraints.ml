@@ -93,7 +93,7 @@ let tags cs =
 
 let tag_pairs cs = Tagpairs.mk (tags cs)
 
-let subst_tags theta cs = endomap (Constraint.subst_tags theta) cs
+let subst_tags theta cs = map (Constraint.subst_tags theta) cs
 
 let generate ?(avoid = Tags.empty) ?(augment = true) t ts =
   let ts =

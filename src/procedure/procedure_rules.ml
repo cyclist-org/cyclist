@@ -294,7 +294,7 @@ let luf_rl defs ((pre, cmd, post) as seq) =
         let cclosure = Ord_constraints.close new_cs in
         let vts, pts =
           let collect tps =
-            Tagpairs.endomap Pair.swap
+            Tagpairs.map Pair.swap
               (Tagpairs.filter (fun (_, t) -> Tags.mem t seq_tags) tps)
           in
           Pair.map collect
@@ -1203,7 +1203,7 @@ let use_proc_prf prf_cache idx prf =
 (*               (Sl_deqs.filter                                                                                                                                                                                                               *)
 (*                 (fun p -> Pair.conj (Pair.map (fun z -> not (Sl_term.Set.mem z m)) p))                                                                                                                                                      *)
 (*                 h.SH.deqs)                                                                                                                                                                                                                  *)
-(*               (Sl_ptos.endomap gen_pto h.SH.ptos)                                                                                                                                                                                           *)
+(*               (Sl_ptos.map gen_pto h.SH.ptos)                                                                                                                                                                                           *)
 (*               h.SH.inds in                                                                                                                                                                                                                  *)
 (*       try                                                                                                                                                                                                                                   *)
 (*         let (pre, cmd, post) = dest_sh_seq seq in                                                                                                                                                                                           *)

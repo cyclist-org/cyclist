@@ -9,9 +9,9 @@ let singleton p = singleton (Sl_tpair.order p)
 
 let mem p deqs = mem (Sl_tpair.order p) deqs
 
-let endomap f s = endomap (fun e -> Sl_tpair.order (f e)) s
+let map f s = map (fun e -> Sl_tpair.order (f e)) s
 
-let subst theta m = endomap (Sl_tpair.subst theta) m
+let subst theta m = map (Sl_tpair.subst theta) m
 
 let of_list l = Blist.foldl (fun deqs p -> add p deqs) empty l
 
@@ -52,6 +52,6 @@ let subsumed eqs deqs deqs' =
     deqs
 
 let norm eqs deqs =
-  endomap
+  map
     (fun p -> Sl_tpair.order (Pair.map (fun x -> Sl_uf.find x eqs) p))
     deqs

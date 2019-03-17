@@ -20,7 +20,7 @@ module Make (T : Utilsigs.BasicType) :
 
   let union_of_list l = uniq (Blist.fold_left union [] l)
 
-  let endomap f xs = of_list (Blist.map f xs)
+  let map f xs = of_list (Blist.map f xs)
 
   let rec add x = function
     | [] -> [x]

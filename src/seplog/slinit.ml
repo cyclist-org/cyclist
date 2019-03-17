@@ -57,7 +57,7 @@ Format.set_margin (Sys.command "exit $(tput cols)") ;;
 (* let (lbps, rbps) = Pair.map (Sl_basepair.pairs_of_form defs) seq ;;                        *)
 
 (* let map_through sigma v =                                                                  *)
-(*   Sl_term.Set.endomap (fun x -> Sl_uf.find x sigma.Sl_heap.eqs) v ;;                       *)
+(*   Sl_term.Set.map (fun x -> Sl_uf.find x sigma.Sl_heap.eqs) v ;;                       *)
 
 (* let b_move sigma (v,_) (v',pi') =                                                          *)
 (*   Sl_heap.subsumed pi' sigma                                                               *)

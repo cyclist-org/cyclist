@@ -3,7 +3,7 @@ open Symbols
 open MParser
 include Multiset.Make (Sl_pto)
 
-let subst theta ptos = endomap (Sl_pto.subst theta) ptos
+let subst theta ptos = map (Sl_pto.subst theta) ptos
 
 let to_string_list v = Blist.map Sl_pto.to_string (elements v)
 
@@ -46,4 +46,4 @@ let rec subsumed ?(total = true) eqs ptos ptos' =
     | None -> false
     | Some pto' -> subsumed ~total eqs ptos (remove pto' ptos')
 
-let norm eqs ptos = endomap (Sl_pto.norm eqs) ptos
+let norm eqs ptos = map (Sl_pto.norm eqs) ptos

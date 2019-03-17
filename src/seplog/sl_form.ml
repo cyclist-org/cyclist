@@ -145,7 +145,7 @@ let get_tracepairs f ((cs, _) as f') =
   let allpairs, progressing =
     Pair.map
       (fun tps ->
-        Tagpairs.endomap Pair.swap
+        Tagpairs.map Pair.swap
           (Tagpairs.filter (fun (_, t) -> Tags.mem t (tags f)) tps) )
       ( Tagpairs.union id_pairs (Ord_constraints.all_pairs cs)
       , Ord_constraints.prog_pairs cs )

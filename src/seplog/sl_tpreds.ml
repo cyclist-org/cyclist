@@ -3,7 +3,7 @@ open Symbols
 open MParser
 include Multiset.Make (Sl_tpred)
 
-let subst theta elts = endomap (Sl_tpred.subst theta) elts
+let subst theta elts = map (Sl_tpred.subst theta) elts
 
 let terms inds =
   Sl_term.Set.union_of_list (Blist.map Sl_tpred.terms (elements inds))
@@ -31,7 +31,7 @@ let strip_tags inds = map_to Sl_pred.MSet.add Sl_pred.MSet.empty snd inds
 let equal_upto_tags inds inds' =
   Sl_pred.MSet.equal (strip_tags inds) (strip_tags inds')
 
-let subst_tags tagpairs inds = endomap (Sl_tpred.subst_tag tagpairs) inds
+let subst_tags tagpairs inds = map (Sl_tpred.subst_tag tagpairs) inds
 
 let freshen_tags inds' inds =
   if is_empty inds || is_empty inds' then inds
@@ -47,7 +47,7 @@ let freshen_tags inds' inds =
           (Tagpairs.mk_free_subst all_tags free)
           (Tagpairs.mk_ex_subst all_tags ex)
       in
-      endomap (fun (tag, head) -> (Tagpairs.apply_to_tag subst tag, head)) inds
+      map (fun (tag, head) -> (Tagpairs.apply_to_tag subst tag, head)) inds
 
 let unify ?(total = true) ?(tagpairs = true) ?(update_check = Fun._true) inds
     inds' cont init_state =
@@ -92,4 +92,4 @@ let rec subsumed ?(total = true) eqs inds inds' =
     | None -> false
     | Some ind' -> subsumed ~total eqs inds (remove ind' inds')
 
-let norm eqs inds = endomap (Sl_tpred.norm eqs) inds
+let norm eqs inds = map (Sl_tpred.norm eqs) inds

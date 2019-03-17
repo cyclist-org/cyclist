@@ -31,10 +31,6 @@ module type OrderedContainer = sig
   val to_list : t -> elt list
   (** Convert to a list of unique, sorted elements. *)
 
-  val endomap : (elt -> elt) -> t -> t
-  (** Map a set of elements to another set of elements of the same type. 
-        The size of the set may reduce if there are duplicates produced. *)
-
   val map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b) -> t -> 'a
   (** [map_to add empty f set] converts every element of [set] using [f], 
         and then folds over the new collection of elements using as starting
@@ -136,11 +132,6 @@ module type OrderedMap = sig
 
   val to_list : 'a t -> (key * 'a) list
   (** Create a list of pairs (keys, values) out of a map. *)
-
-  val endomap : (key * 'a -> key * 'b) -> 'a t -> 'b t
-  (** Convert a map to another, by enumerating bindings in key order, 
-        converting them into new ones and adding them to a new map. 
-        Bindings created earlier have precedence. *)
 
   val union : 'a t -> 'a t -> 'a t
   (** Union two maps. Bindings in the first map have precedence. *)

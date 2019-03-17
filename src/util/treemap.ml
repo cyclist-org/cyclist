@@ -14,13 +14,6 @@ module Make (T : Utilsigs.BasicType) = struct
     let y = f x in
     if equal eq x y then x else fixpoint eq f y
 
-  let endomap f m =
-    fold
-      (fun k v m' ->
-        let k', v' = f (k, v) in
-        add k' v' m' )
-      m empty
-
   (* NB this prioritises bindings of the first argument *)
   let union m m' = fold add m m'
 

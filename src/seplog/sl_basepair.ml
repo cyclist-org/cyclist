@@ -11,7 +11,7 @@ module Allocated = struct
 
   let vars s = Sl_term.filter_vars (terms s)
 
-  let endomap_fst f s = endomap (fun (x, i) -> (f x, i)) s
+  let endomap_fst f s = map (fun (x, i) -> (f x, i)) s
 end
 
 module BasePair = struct

@@ -70,7 +70,7 @@ let luf_rl seq defs =
         let tag_subst = Tagpairs.mk_free_subst seq_tags (Sl_heap.tags body) in
         let body = Sl_heap.subst_tags tag_subst body in
         let h' = Sl_heap.star h' body in
-        let progpairs = Tagpairs.endomap (fun (_, t') -> (t, t')) tag_subst in
+        let progpairs = Tagpairs.map (fun (_, t') -> (t, t')) tag_subst in
         let allpairs =
           Tagpairs.union (Tagpairs.remove (t, t) (Seq.tag_pairs seq)) progpairs
         in
@@ -390,7 +390,7 @@ let generalise_while_rule =
       (Sl_deqs.filter
          (fun p -> Pair.conj (Pair.map (fun z -> not (Sl_term.Set.mem z m)) p))
          h.SH.deqs)
-      (Sl_ptos.endomap gen_pto h.SH.ptos)
+      (Sl_ptos.map gen_pto h.SH.ptos)
       h.SH.inds
   in
   let rl seq =

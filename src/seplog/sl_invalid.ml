@@ -112,7 +112,7 @@ let invalidity_witness defs seq =
       Blist.fold_left Sl_heap.add_deq pi free_deqs
   in
   let map_through sigma v =
-    Sl_basepair.Allocated.endomap
+    Sl_basepair.Allocated.map
       (fun (x, i) -> (Sl_uf.find x sigma.Sl_heap.eqs, i))
       v
   in
@@ -191,7 +191,7 @@ let check = _invalid
 (*       free_deqs in                                                           *)
 (*   Blist.fold_left Sl_heap.add_deq pi free_deqs in                            *)
 (* let map_through sigma v =                                                    *)
-(*   Sl_term.Set.endomap (fun x -> Sl_uf.find x sigma.Sl_heap.eqs) v in         *)
+(*   Sl_term.Set.map (fun x -> Sl_uf.find x sigma.Sl_heap.eqs) v in         *)
 (* let b_move sigma (v,_) (v',pi') =                                            *)
 (*   Sl_heap.subsumed pi' sigma                                                 *)
 (*   &&                                                                         *)

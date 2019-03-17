@@ -13,8 +13,6 @@ module Make (T : Utilsigs.BasicType) :
 
   let map_to_list f s = Blist.rev (map_to Blist.cons [] f s)
 
-  let endomap f s = map_to add empty f s
-
   let weave split tie join xs acc =
     Blist.weave split tie join (elements xs) acc
 
