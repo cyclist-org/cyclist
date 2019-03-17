@@ -7,6 +7,11 @@ TAGS := debug,explain,annot,use_libsoundness
 OCAMLDOC := ocamldoc -hide-warnings
 INCLUDES := $(subst $(space),$(comma),$(strip $(wildcard src/*)))
 OCB := ocamlbuild -use-ocamlfind -j 8 -ocamldoc "$(OCAMLDOC)" -pkgs $(PKGS) -tags $(TAGS) -Is $(INCLUDES)
+OCAMLFORMAT_EXE := ocamlformat
+
+OUR_DIRS := src/generic src/procedure src/seplog src/slsat src/soundness src/util src/while
+OUR_SRCS := $(shell find -f $(OUR_DIRS) ! -name slinit.ml -name '*.ml' -or -name '*.mli')
+
 
 ROOT := $(shell pwd)
 DEFS := $(ROOT)/examples/sl.defs
@@ -57,3 +62,7 @@ clean:
 
 %-tests:
 	$(MAKE) -C benchmarks $*
+
+.PHONY: fmt
+fmt:
+	parallel $(OCAMLFORMAT_EXE) -i ::: $(OUR_SRCS)

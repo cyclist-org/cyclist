@@ -1,8 +1,9 @@
 (** Core module signatures used in Cyclist. *)
 
-module type SEQUENT =
-sig
+(** Sequent signature used as input to most functors in Cyclist.*)
+module type SEQUENT = sig
   type t
+
   val equal : t -> t -> bool
   (** "Syntactic" equality.  Used to check that closing an open [NODE] is done
       via another one marked with a syntactically equal sequent. *)
@@ -15,24 +16,25 @@ sig
   (** Returns set of tags in sequent. *)
 
   val to_string : t -> string
-  val pp : Format.formatter -> t -> unit
-end
-(** Sequent signature used as input to most functors in Cyclist.*)
 
-module type DEFS =
-sig
-  type t
-  val to_string : t -> string
   val pp : Format.formatter -> t -> unit
 end
+
 (** Inductive definitions signature. *)
-
-module type NODE =
-sig
+module type DEFS = sig
   type t
 
-  type seq_t
+  val to_string : t -> string
+
+  val pp : Format.formatter -> t -> unit
+end
+
+(** Proof node signature. *)
+module type NODE = sig
+  type t
+
   (** Sequent type used for building proof nodes. *)
+  type seq_t
 
   (** Constructors. *)
 
@@ -48,8 +50,7 @@ sig
       sequent [seq], description [descr], target index [target] and set of
       valid tag transitions (as pairs) [vtts].*)
 
-  val mk_inf :
-    seq_t -> string -> (int * Tagpairs.t * Tagpairs.t) list -> t
+  val mk_inf : seq_t -> string -> (int * Tagpairs.t * Tagpairs.t) list -> t
   (** [mk_inf seq descr subgoals back] creates an inference node labelled by
       sequent [seq], description [descr], a list of triples consisting of
       subgoal index, valid tag transitions and progressing tag transitions
@@ -63,45 +64,47 @@ sig
   val dest_backlink : t -> seq_t * string * int * Tagpairs.t
   (** [dest_backlink n] destroys a back-link node [n], otherwise raises [Invalid_arg].*)
 
-  val dest_inf : t ->
-    seq_t * string * (int * Tagpairs.t * Tagpairs.t) list
+  val dest_inf : t -> seq_t * string * (int * Tagpairs.t * Tagpairs.t) list
   (** [dest_inf n] destroys an inference node [n], otherwise raises [Invalid_arg].*)
 
   (** Functions for checking the sort of a node. *)
 
   val is_open : t -> bool
+
   val is_axiom : t -> bool
+
   val is_backlink : t -> bool
+
   val is_inf : t -> bool
 
   (** Auxiliary functions for getting information from all nodes. *)
 
   val get_seq : t -> seq_t
   (** Get sequent labelling the node. *)
+
   val get_succs : t -> int list
   (** Get the successor node indices of this node. *)
 
-  (** Convert Proof.t node to abstract node as in {!Soundcheck}. *)
   val to_abstract_node : t -> Soundcheck.abstract_node
+  (** Convert Proof.t node to abstract node as in {!Soundcheck}. *)
 
   (** Pretty printing and Latex conversion. *)
 
   val pp : Format.formatter -> t -> unit
 end
-(** Proof node signature. *)
 
-
-module type PROOF =
-sig
-  type t
+(** Proof signature. *)
+module type PROOF = sig
   (** Proof type. Invariants are:
       - Graph (all indices point to existing nodes).
       - Non-empty.
       - Rooted at 0.
       - Connected.
       - Leaves are open nodes, axioms or backlinks. *)
+  type t
 
   type seq_t
+
   type node_t
 
   val mk : seq_t -> t
@@ -120,11 +123,15 @@ sig
       *)
 
   val add_axiom : int -> string -> t -> t
+
   val add_backlink : int -> string -> int -> Tagpairs.t -> t -> t
+
   val add_inf :
-    int -> string ->
-    (seq_t * Tagpairs.t * Tagpairs.t) list -> t ->
-    (int list * t)
+       int
+    -> string
+    -> (seq_t * Tagpairs.t * Tagpairs.t) list
+    -> t
+    -> int list * t
 
   val add_subprf : t -> int -> t -> t
   (** [add_subprf p idx p'] replaces the node [idx] in [p'] with a copy of [p].
@@ -139,11 +146,16 @@ sig
   (** Accessor functions. *)
 
   val find : int -> t -> node_t
+
   val get_seq : int -> t -> seq_t
+
   val size : t -> int
+
   val num_backlinks : t -> int
+
   (* val mem : int -> t -> bool *)
   val fresh_idx : t -> int
+
   val fresh_idxs : 'a list -> t -> int list
 
   val get_ancestry : int -> t -> (int * node_t) list
@@ -161,34 +173,43 @@ sig
   (** Output functions. *)
 
   val pp : Format.formatter -> t -> unit
+
   val to_string : t -> string
 end
-(** Proof signature. *)
 
-module type SEQTACTICS =
-sig
+module type SEQTACTICS = sig
   type seq_t
 
   type ruleapp_t = (seq_t * Tagpairs.t * Tagpairs.t) list * string
+
   type t = seq_t -> ruleapp_t list
 
   val relabel : string -> t -> t
+
   val attempt : t -> t
+
   val compose : t -> t -> t
+
   val first : t list -> t
+
   val repeat : t -> t
+
   val choice : t list -> t
 end
 
-module type PROOFRULE =
-sig
+module type PROOFRULE = sig
   type seq_t
+
   type proof_t
 
   type axiom_f = seq_t -> string option
+
   type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * string
+
   type infrule_f = seq_t -> infrule_app list
+
   type backrule_f = seq_t -> seq_t -> (Tagpairs.t * string) list
+
   type select_f = int -> proof_t -> int list
 
   (** The type of proof rules:
@@ -200,17 +221,17 @@ sig
   **)
   type t = int -> proof_t -> (int list * proof_t) Blist.t
 
-
+  val mk_axiom : axiom_f -> t
   (** Axioms are modeled as functions that return [Some string] when the
       input sequent is an instance of an axiom described by [string], else
       [None]. *)
-  val mk_axiom : axiom_f -> t
 
+  val mk_infrule : infrule_f -> t
   (** Rules are functions that break down a sequent to a choice of applications
       where each application is a list of premises, including tag information,
       and a description. *)
-  val mk_infrule : infrule_f -> t
 
+  val mk_backrule : bool -> select_f -> backrule_f -> t
   (** Backlink rules take:
       - a boolean [eager]
       - a selection function [s]
@@ -229,95 +250,120 @@ sig
       and no back-tracking will even happen over later possible matches.
       Otherwise all possible matches are returned as different choices.
       *)
-  val mk_backrule : bool -> select_f -> backrule_f -> t
 
-  (** Ready-made selection functions doing the obvious. *)
   val all_nodes : select_f
+  (** Ready-made selection functions doing the obvious. *)
+
   val closed_nodes : select_f
+
   val ancestor_nodes : select_f
+
   val syntactically_equal_nodes : select_f
 
-  (** The rule that always fails. *)
   val fail : t
-  (** Return current subgoal and proof as application. *)
-  val identity : t
+  (** The rule that always fails. *)
 
-  (** Try a rule and if it fails act as [identity]. *)
+  val identity : t
+  (** Return current subgoal and proof as application. *)
+
   val attempt : t -> t
-  (** Apply the second rule on all premises generated by applying the first. *)
+  (** Try a rule and if it fails act as [identity]. *)
+
   val compose : t -> t -> t
+  (** Apply the second rule on all premises generated by applying the first. *)
+
+  val compose_pairwise : t -> t list -> t
   (** Apply the list of rules in the second argument in a pairwise fashion to
       the premises generated by applying the first rule *)
-  val compose_pairwise : t -> t list -> t
 
-  (** Apply a list of rules on current subgoal and return all applications. *)
   val choice : t list -> t
+  (** Apply a list of rules on current subgoal and return all applications. *)
+
+  val first : t list -> t
   (** Try rules from a list until the first rule is found that has some
       applications on current sugboal and return only those. *)
-  val first : t list -> t
-  (** Apply a sequence of rules iteratively through [compose]. *)
+
   val sequence : t list -> t
+  (** Apply a sequence of rules iteratively through [compose]. *)
 
   val conditional : (seq_t -> bool) -> t -> t
 
   val combine_axioms : t -> t -> t
 end
 
-module type ABDRULE =
-sig
+module type ABDRULE = sig
   type seq_t
+
   type proof_t
+
   type defs_t
+
   type rule_t
 
   type select_f = int -> proof_t -> int list
+
   type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * string
 
   type abdinfrule_f = seq_t -> defs_t -> defs_t list
+
   type abdbackrule_f = seq_t -> seq_t -> defs_t -> defs_t list
+
   type abdgenrule_f = seq_t -> defs_t -> (infrule_app * defs_t) list
 
   type t = int -> proof_t -> defs_t -> ((int list * proof_t) * defs_t) Blist.t
 
   val mk_abdinfrule : abdinfrule_f -> t
+
   val mk_abdbackrule : select_f -> abdbackrule_f -> t
+
   val mk_abdgenrule : abdgenrule_f -> t
 
   val fail : t
+
   val lift : rule_t -> t
+
   val compose : t -> t -> t
+
   val choice : t list -> t
+
   val attempt : t -> t
+
   val first : t list -> t
 end
 
-module type PROVER =
-sig
+module type PROVER = sig
   type rule_t
 
   module Seq : SEQUENT
+
   module Proof : PROOF
 
   val last_search_depth : int ref
 
   val idfs : int -> int -> rule_t -> rule_t -> Seq.t -> Proof.t option
+
   (* val bfs : int -> rule_t -> rule_t -> Seq.t -> Proof.t option   *)
   val print_proof_stats : Proof.t -> unit
 end
 
-module type ABDUCER =
-sig
+module type ABDUCER = sig
   type abdrule_t
+
   type proof_t
+
   type defs_t
 
   module Seq : SEQUENT
+
   module Proof : PROOF
 
   val bfs :
-    int ->
-    abdrule_t -> Seq.t -> defs_t ->
-    (defs_t -> bool) ->
-    (proof_t * defs_t) option
+       int
+    -> abdrule_t
+    -> Seq.t
+    -> defs_t
+    -> (defs_t -> bool)
+    -> (proof_t * defs_t) option
+
   val print_proof_stats : Proof.t -> unit
 end

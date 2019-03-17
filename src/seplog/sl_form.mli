@@ -11,8 +11,10 @@ val empty : t
     false. *)
 
 exception Not_symheap
+
 val is_symheap : t -> bool
 (** Returns true iff the formula has a single disjunct only *)
+
 val dest : t -> Ord_constraints.t * Sl_heap.t
 (** Return the single disjunct, if there is exactly one, else raise [Not_symheap]. *)
 
@@ -21,11 +23,13 @@ val equal_upto_tags : t -> t -> bool
     ignores tag assignment. *)
 
 val terms : t -> Sl_term.Set.t
+
 val vars : t -> Sl_term.Set.t
 
 val tags : t -> Tags.t
 (** NB no attempt is made to ensure that tags are disjoint between disjuncts.
     This is not necessarily unsound. *)
+
 val tag_pairs : t -> Tagpairs.t
 (** The proviso on tags applies here too. *)
 
@@ -48,15 +52,22 @@ val subsumed : ?total:bool -> t -> t -> bool
     check on the spatial part so that it is included rather than equal to that
     of [b].
     NB this includes matching the tags exactly. *)
+
 val subsumed_upto_constraints : ?total:bool -> t -> t -> bool
 (** As above but does not check subsumption of constraints *)
+
 val subsumed_upto_tags : ?total:bool -> t -> t -> bool
 (** As above but ignoring tags.
     If the optional argument [~total=true] is set to [false] then relax the
     check on the spatial part so that it is included rather than equal to that
     of [b]. *)
 
-val parse : ?null_is_emp:bool -> ?allow_tags:bool -> ?augment_deqs:bool -> (t, 'a) MParser.t
+val parse :
+     ?null_is_emp:bool
+  -> ?allow_tags:bool
+  -> ?augment_deqs:bool
+  -> (t, 'a) MParser.t
+
 val of_string : ?null_is_emp:bool -> string -> t
 
 val star : ?augment_deqs:bool -> t -> t -> t
@@ -89,8 +100,11 @@ val with_heaps : t -> Sl_heap.t list -> t
     disjunction of symbolic heaps with [hs] *)
 
 val compute_frame :
-      ?freshen_existentials:bool -> ?avoid:(Tags.t * Sl_term.Set.t)
-        -> t -> t -> t option
+     ?freshen_existentials:bool
+  -> ?avoid:Tags.t * Sl_term.Set.t
+  -> t
+  -> t
+  -> t option
 (** [compute_frame f f'], computes the portion of [f'] left over (the 'frame')
     from [f] and returns None when [f] is not subsumed by [f']. Any existential
     variables occurring in the frame which also occur in the specification [f]
@@ -101,7 +115,7 @@ val compute_frame :
     frame which also occur in the specification.
 *)
 
-val get_tracepairs : t -> t -> (Tagpairs.t * Tagpairs.t)
+val get_tracepairs : t -> t -> Tagpairs.t * Tagpairs.t
 (** [get_tracepairs f f'] will return the valid and progressing trace pairs
     (t, t') specified by the constraints of [f'] such that [t] occurs in [f]
 *)

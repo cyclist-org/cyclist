@@ -1,17 +1,17 @@
 (** Symbolic heaps. *)
 
 type abstract1
+
 type abstract2
 
-type symheap = private {
-  eqs : Sl_uf.t;
-  deqs : Sl_deqs.t;
-  ptos : Sl_ptos.t;
-  inds : Sl_tpreds.t;
-  mutable _terms : abstract1;
-  mutable _vars : abstract1;
-  mutable _tags : abstract2
-}
+type symheap = private
+  { eqs: Sl_uf.t
+  ; deqs: Sl_deqs.t
+  ; ptos: Sl_ptos.t
+  ; inds: Sl_tpreds.t
+  ; mutable _terms: abstract1
+  ; mutable _vars: abstract1
+  ; mutable _tags: abstract2 }
 
 include Utilsigs.BasicType with type t = symheap
 
@@ -20,6 +20,7 @@ val empty : t
 (** Accessor functions. *)
 
 val vars : t -> Sl_term.Set.t
+
 val terms : t -> Sl_term.Set.t
 
 val tags : t -> Tags.t
@@ -76,48 +77,65 @@ val subsumed_upto_tags : ?total:bool -> t -> t -> bool
 
 val equal : t -> t -> bool
 (** Checks whether two symbolic heaps are equal. *)
+
 val equal_upto_tags : t -> t -> bool
 (** Like [equal] but ignoring tag assignment. *)
+
 val is_empty : t -> bool
 (** [is_empty h] tests whether [h] is equal to the empty heap. *)
 
 (** Constructors. *)
 
 val parse : ?allow_tags:bool -> ?augment_deqs:bool -> (t, 'a) MParser.t
+
 val of_string : ?allow_tags:bool -> ?augment_deqs:bool -> string -> t
 
 val mk_pto : Sl_pto.t -> t
+
 val mk_eq : Sl_tpair.t -> t
+
 val mk_deq : Sl_tpair.t -> t
+
 val mk_ind : Sl_tpred.t -> t
 
 val mk : Sl_uf.t -> Sl_deqs.t -> Sl_ptos.t -> Sl_tpreds.t -> t
-val dest : t -> (Sl_uf.t * Sl_deqs.t * Sl_ptos.t * Sl_tpreds.t)
+
+val dest : t -> Sl_uf.t * Sl_deqs.t * Sl_ptos.t * Sl_tpreds.t
 
 (** Functions [with_*] accept a heap [h] and a heap component [c] and
     return the heap that results by replacing [h]'s appropriate component
     with [c]. *)
 
 val with_eqs : t -> Sl_uf.t -> t
+
 val with_deqs : t -> Sl_deqs.t -> t
+
 val with_ptos : t -> Sl_ptos.t -> t
+
 val with_inds : t -> Sl_tpreds.t -> t
 
 val del_deq : t -> Sl_tpair.t -> t
+
 val del_pto : t -> Sl_pto.t -> t
+
 val del_ind : t -> Sl_tpred.t -> t
 
 val add_eq : t -> Sl_tpair.t -> t
+
 val add_deq : t -> Sl_tpair.t -> t
+
 val add_pto : t -> Sl_pto.t -> t
+
 val add_ind : t -> Sl_tpred.t -> t
 
 val proj_sp : t -> t
+
 val proj_pure : t -> t
 
 val explode_deqs : t -> t
 
 val star : ?augment_deqs:bool -> t -> t -> t
+
 val diff : t -> t -> t
 
 val fixpoint : (t -> t) -> t -> t
@@ -143,25 +161,30 @@ val subst_tags : Tagpairs.t -> t -> t
     tag pairs provided. *)
 
 val unify_partial :
-  ?tagpairs:bool -> ?update_check:Sl_unify.Unidirectional.update_check
-    -> t Sl_unify.Unidirectional.unifier
+     ?tagpairs:bool
+  -> ?update_check:Sl_unify.Unidirectional.update_check
+  -> t Sl_unify.Unidirectional.unifier
 (** Unify two heaps such that the first becomes a subformula of the second. *)
 
 val biunify_partial :
-  ?tagpairs:bool -> ?update_check:Sl_unify.Bidirectional.update_check
-    -> t Sl_unify.Bidirectional.unifier
+     ?tagpairs:bool
+  -> ?update_check:Sl_unify.Bidirectional.update_check
+  -> t Sl_unify.Bidirectional.unifier
 
-val classical_unify : ?inverse:bool -> ?tagpairs:bool ->
-  ?update_check:Sl_unify.Unidirectional.update_check
-    -> t Sl_unify.Unidirectional.unifier
+val classical_unify :
+     ?inverse:bool
+  -> ?tagpairs:bool
+  -> ?update_check:Sl_unify.Unidirectional.update_check
+  -> t Sl_unify.Unidirectional.unifier
 (** Unify two heaps, by using [unify_partial] for the pure (classical) part whilst
     using [unify] for the spatial part.
 - If the optional argument [~inverse=false] is set to [true] then compute the
   required substitution for the *second* argument as opposed to the first. *)
 
 val classical_biunify :
-  ?tagpairs:bool -> ?update_check:Sl_unify.Bidirectional.update_check
-    -> t Sl_unify.Bidirectional.unifier
+     ?tagpairs:bool
+  -> ?update_check:Sl_unify.Bidirectional.update_check
+  -> t Sl_unify.Bidirectional.unifier
 
 val norm : t -> t
 (** Replace all terms with their UF representative (the UF in the heap). *)

@@ -1,34 +1,38 @@
 open Lib
 
 let cl_sequent = ref ""
+
 let defs_path = ref "examples/sl.defs"
+
 let z3 = ref false
+
 let show_proof = ref false
 
 let usage =
-  (
-    "usage: " ^
-    Sys.argv.(0) ^
-    " [-p/d/s/f/-Z] [-t <int>] [-D <file>] [-S <string>]"
-    )
+  "usage: " ^ Sys.argv.(0)
+  ^ " [-p/d/s/f/-Z] [-t <int>] [-D <file>] [-S <string>]"
 
 let timeout = ref 60
 
-let speclist = [
-    ("-p", Arg.Set show_proof,": show proof");
-    ("-d", Arg.Set do_debug,": print debug messages");
-    ("-s", Arg.Set Stats.do_statistics,": print statistics");
-    ("-t", Arg.Set_int timeout,
-      (": set timeout in seconds to <int>, 0 disables it, default is " ^
-        (string_of_int !timeout)));
-    ("-D", Arg.Set_string defs_path,
-      ": read inductive definitions from <file>, default is " ^ !defs_path);
-    ("-S", Arg.Set_string cl_sequent, ": disprove the SL sequent provided in <string>");
-    ("-IP", Arg.Set Sl_invalid.partition_strengthening,
-      ": use partition strengthening in invalidity heuristic, default is " ^
-      (string_of_bool !Sl_invalid.partition_strengthening));
-    ("-Z", Arg.Set z3,": only generate Z3 input");
-  ]
+let speclist =
+  [ ("-p", Arg.Set show_proof, ": show proof")
+  ; ("-d", Arg.Set do_debug, ": print debug messages")
+  ; ("-s", Arg.Set Stats.do_statistics, ": print statistics")
+  ; ( "-t"
+    , Arg.Set_int timeout
+    , ": set timeout in seconds to <int>, 0 disables it, default is "
+      ^ string_of_int !timeout )
+  ; ( "-D"
+    , Arg.Set_string defs_path
+    , ": read inductive definitions from <file>, default is " ^ !defs_path )
+  ; ( "-S"
+    , Arg.Set_string cl_sequent
+    , ": disprove the SL sequent provided in <string>" )
+  ; ( "-IP"
+    , Arg.Set Sl_invalid.partition_strengthening
+    , ": use partition strengthening in invalidity heuristic, default is "
+      ^ string_of_bool !Sl_invalid.partition_strengthening )
+  ; ("-Z", Arg.Set z3, ": only generate Z3 input") ]
 
 let die msg =
   print_endline msg ;
@@ -46,32 +50,27 @@ let () =
   (* if !z3 then                  *)
   (*   Sl_invalid.to_z3 defs seq  *)
   (* else *)
-    begin
-    Stats.reset () ;
-    Stats.Gen.call () ;
-    let call () = Sl_invalid.invalidity_witness defs seq in
-    let res =
-      if not (Int.equal !timeout 0) then w_timeout call !timeout else Some (call ()) in
-    Stats.Gen.end_call () ;
-    if !Stats.do_statistics then Stats.gen_print ();
-    let exit_code = match res with
+  Stats.reset () ;
+  Stats.Gen.call () ;
+  let call () = Sl_invalid.invalidity_witness defs seq in
+  let res =
+    if not (Int.equal !timeout 0) then w_timeout call !timeout
+    else Some (call ())
+  in
+  Stats.Gen.end_call () ;
+  if !Stats.do_statistics then Stats.gen_print () ;
+  let exit_code =
+    match res with
     | None ->
-      begin
-        print_endline ("UNKNOWN: " ^ (Sl_seq.to_string seq) ^ " [TIMEOUT]") ;
+        print_endline ("UNKNOWN: " ^ Sl_seq.to_string seq ^ " [TIMEOUT]") ;
         2
-      end
     | Some (Some bp) ->
-      begin
-        print_endline ("INVALID: " ^ (Sl_seq.to_string seq)) ;
+        print_endline ("INVALID: " ^ Sl_seq.to_string seq) ;
         if !show_proof then
           Format.printf "INVALID witness: %a\n" Sl_basepair.pp bp ;
         255
-      end ;
-    | Some None  ->
-      begin
-        print_endline ("UNKNOWN: " ^ (Sl_seq.to_string seq)) ;
+    | Some None ->
+        print_endline ("UNKNOWN: " ^ Sl_seq.to_string seq) ;
         1
-      end
-      in
-      exit exit_code
-    end
+  in
+  exit exit_code

@@ -69,15 +69,17 @@
 
 (*s Functorial interface *)
 
-module type HashedType =
-  sig
-    type t
-      (** The type of the elements. *)
-    val equal : t -> t -> bool
-      (** The equality predicate used to compare elements. *)
-    val to_string : t -> string
-    val hash : t -> int
-      (** A hashing function on elements. It must be such that if two elements are
+module type HashedType = sig
+  (** The type of the elements. *)
+  type t
+
+  val equal : t -> t -> bool
+  (** The equality predicate used to compare elements. *)
+
+  val to_string : t -> string
+
+  val hash : t -> int
+  (** A hashing function on elements. It must be such that if two elements are
           equal according to [equal], then they have identical hash values
           as computed by [hash].
           Examples: suitable ([equal], [hash]) pairs for arbitrary element
@@ -85,37 +87,54 @@ module type HashedType =
           ([(=)], {!Hashset.hash}) for comparing objects by structure, and
           ([(==)], {!Hashset.hash}) for comparing objects by addresses
           (e.g. for mutable or cyclic keys). *)
-   end
+end
 
 (** The input signature of the functor {!Hashset.Make}. *)
+module type S = sig
+  type elt
 
-module type S =
-  sig
-    type elt
-    type t
-    val create : int -> t
-    val clear : t -> unit
-    val copy : t -> t
-    val add : t -> elt -> unit
-    val remove : t -> elt -> unit
-    val mem : t -> elt -> bool
-    val cardinal : t -> int
-    val iter : (elt -> unit) -> t -> unit
-    val fold : (elt -> 'a -> 'a) -> t -> 'a -> 'a
-    val exists : (elt -> bool) -> t -> bool
-    val for_all : (elt -> bool) -> t -> bool
-    val left_union : t -> t -> t
-    val is_empty : t -> bool
-    val filter : (elt -> bool) -> t -> unit
-    val to_string : t -> string
-    val of_list : elt list -> t
-    val to_list : t -> elt list
-    (* val choose : (elt list -> unit) -> t list ->  unit *)
-    val map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b) -> t -> 'a
-  end
+  type t
+
+  val create : int -> t
+
+  val clear : t -> unit
+
+  val copy : t -> t
+
+  val add : t -> elt -> unit
+
+  val remove : t -> elt -> unit
+
+  val mem : t -> elt -> bool
+
+  val cardinal : t -> int
+
+  val iter : (elt -> unit) -> t -> unit
+
+  val fold : (elt -> 'a -> 'a) -> t -> 'a -> 'a
+
+  val exists : (elt -> bool) -> t -> bool
+
+  val for_all : (elt -> bool) -> t -> bool
+
+  val left_union : t -> t -> t
+
+  val is_empty : t -> bool
+
+  val filter : (elt -> bool) -> t -> unit
+
+  val to_string : t -> string
+
+  val of_list : elt list -> t
+
+  val to_list : t -> elt list
+
+  (* val choose : (elt list -> unit) -> t list ->  unit *)
+  val map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b) -> t -> 'a
+end
+
 (** The output signature of the functor {!Hashset.Make}. *)
 
-module Make (H : HashedType) : S with type elt = H.t
 (** Functor building an implementation of the hashtable structure.
     The functor [Hashset.Make] returns a structure containing
     a type [elt] of elements and a type [t] of hash sets.
@@ -123,4 +142,4 @@ module Make (H : HashedType) : S with type elt = H.t
     interface, but use the hashing and equality functions
     specified in the functor argument [H] instead of generic
     equality and hashing. *)
-
+module Make (H : HashedType) : S with type elt = H.t

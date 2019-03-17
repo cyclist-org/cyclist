@@ -1,24 +1,29 @@
 open Lib
 
-
 (* using L should allow switching between Blist and Zlist easily *)
 module L = Blist
 
-module Make(Seq : Sigs.SEQUENT) =
-struct
-  module Proof = Proof.Make(Seq)
-  module Node = Proofnode.Make(Seq)
+module Make (Seq : Sigs.SEQUENT) = struct
+  module Proof = Proof.Make (Seq)
+  module Node = Proofnode.Make (Seq)
 
   type seq_t = Seq.t
+
   type proof_t = Proof.t
+
   type axiom_f = seq_t -> string option
+
   type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * string
+
   type infrule_f = seq_t -> infrule_app list
+
   type t = int -> Proof.t -> (int list * Proof.t) L.t
+
   type backrule_f = seq_t -> seq_t -> (Tagpairs.t * string) list
+
   type select_f = int -> Proof.t -> int list
 
-	(* Apply the sequent in the open node identified by idx in prf to the
+  (* Apply the sequent in the open node identified by idx in prf to the
 	   characterising function ax_f.
 		   If we get back Some descr then the sequent is the conclusion of the axiom
 			   characterised by ax_f (the name of the axiom is given by descr), so return
@@ -34,44 +39,51 @@ struct
 
   let mk_infrule r_f idx prf =
     let seq = Proof.get_seq idx prf in
-    let mk (l,d) =
+    let mk (l, d) =
       debug (fun () -> "Found " ^ d ^ " app.") ;
-      Proof.add_inf idx d l prf in
+      Proof.add_inf idx d l prf
+    in
     L.map mk (L.of_list (r_f seq))
 
   let mk_backrule greedy sel_f br_f srcidx prf =
     let srcseq = Proof.get_seq srcidx prf in
     let trgidxs = L.of_list (sel_f srcidx prf) in
-    let mk trgidx (vtts,d) =
-      ([], Proof.add_backlink srcidx d trgidx vtts prf) in
-    let check (_,p) = Proof.check p in
+    let mk trgidx (vtts, d) =
+      ([], Proof.add_backlink srcidx d trgidx vtts prf)
+    in
+    let check (_, p) = Proof.check p in
     let apply trgidx =
       let trgseq = Proof.get_seq trgidx prf in
-      L.map (mk trgidx) (L.of_list (br_f srcseq trgseq)) in
+      L.map (mk trgidx) (L.of_list (br_f srcseq trgseq))
+    in
     let apps = L.bind apply trgidxs in
-    if greedy then
-      Option.dest L.empty L.singleton (L.find_opt check apps)
-    else
-      L.filter check apps
-
+    if greedy then Option.dest L.empty L.singleton (L.find_opt check apps)
+    else L.filter check apps
 
   let all_nodes srcidx prf =
-    Blist.filter (fun idx -> not (Int.equal idx srcidx)) (Blist.map fst (Proof.to_list prf))
+    Blist.filter
+      (fun idx -> not (Int.equal idx srcidx))
+      (Blist.map fst (Proof.to_list prf))
+
   let closed_nodes srcidx prf =
     let nodes =
       Blist.filter
-        (fun (idx, n) -> not (Node.is_open n) && not (Int.equal idx srcidx))
-        (Proof.to_list prf) in
+        (fun (idx, n) -> (not (Node.is_open n)) && not (Int.equal idx srcidx))
+        (Proof.to_list prf)
+    in
     Blist.map fst nodes
+
   let ancestor_nodes srcidx prf = Blist.map fst (Proof.get_ancestry srcidx prf)
+
   let syntactically_equal_nodes srcidx prf =
     let seq = Proof.get_seq srcidx prf in
     let nodes =
       Blist.filter
-        (fun (idx, n) -> Seq.equal seq (Node.get_seq n) && not (Int.equal idx srcidx))
-        (Proof.to_list prf) in
+        (fun (idx, n) ->
+          Seq.equal seq (Node.get_seq n) && not (Int.equal idx srcidx) )
+        (Proof.to_list prf)
+    in
     Blist.map fst nodes
-
 
   let fail _ _ = L.empty
 
@@ -94,24 +106,25 @@ struct
   let apply_to_subgoals_pairwise rules (subgoals, prf) =
     try
       Blist.fold_left2
-      (* close one subgoal each time by actually appling the corresponding rule *)
-      (fun apps r idx ->
-        L.bind
-          (fun (opened, oldprf) ->
-            (* add new subgoals to the list of opened ones *)
-            L.map
-              (fun (newsubgoals, newprf) -> (opened @ newsubgoals, newprf))
-              (r idx oldprf))
-          apps)
-      (L.singleton ([], prf))
-      rules
-      subgoals
-    with Invalid_argument(_) -> L.empty
+        (* close one subgoal each time by actually appling the corresponding rule *)
+          (fun apps r idx ->
+          L.bind
+            (fun (opened, oldprf) ->
+              (* add new subgoals to the list of opened ones *)
+              L.map
+                (fun (newsubgoals, newprf) -> (opened @ newsubgoals, newprf))
+                (r idx oldprf) )
+            apps )
+        (L.singleton ([], prf))
+        rules subgoals
+    with Invalid_argument _ -> L.empty
 
   let compose r r' idx prf =
     L.bind
       (fun ((subgoals, _) as res) ->
-        apply_to_subgoals_pairwise (Blist.repeat r' (Blist.length subgoals)) res)
+        apply_to_subgoals_pairwise
+          (Blist.repeat r' (Blist.length subgoals))
+          res )
       (r idx prf)
 
   let compose_pairwise r rs idx prf =
@@ -122,25 +135,22 @@ struct
   let rec first rl idx prf =
     match rl with
     | [] -> L.empty
-    | r::rs ->
-      let apps = r idx prf in
-      if not (L.is_empty apps) then apps else first rs idx prf
+    | r :: rs ->
+        let apps = r idx prf in
+        if not (L.is_empty apps) then apps else first rs idx prf
 
-  let identity idx prf =
-    L.singleton ([idx],prf)
+  let identity idx prf = L.singleton ([idx], prf)
 
   let attempt r idx prf =
     let apps = r idx prf in
-    if not (L.is_empty apps) then apps else
-    identity idx prf
+    if not (L.is_empty apps) then apps else identity idx prf
 
   let rec sequence = function
     | [] -> identity
-    | r::rs -> compose r (sequence rs)
+    | r :: rs -> compose r (sequence rs)
 
   let conditional cond r idx prf =
     if cond (Proof.get_seq idx prf) then r idx prf else []
 
-  let combine_axioms ax rl =
-    first [ ax ; compose rl (attempt ax) ]
+  let combine_axioms ax rl = first [ax; compose rl (attempt ax)]
 end

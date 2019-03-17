@@ -5,18 +5,23 @@
 
 module Elt : sig
   include Utilsigs.BasicType
+
   val tags : t -> Tags.t
+
   val subst_tags : Tagpairs.t -> t -> t
+
   val satisfiable : t Fun.predicate
+
   val valid : t Fun.predicate
+
   val unify :
-    ?update_check:((Tagpairs.t Unification.state_update) Fun.predicate) ->
-      (Tagpairs.t, 'a, t) Unification.cps_unifier
+       ?update_check:Tagpairs.t Unification.state_update Fun.predicate
+    -> (Tagpairs.t, 'a, t) Unification.cps_unifier
+
   val biunify :
-    ?update_check:
-      ( ((Tagpairs.t * Tagpairs.t) Unification.state_update)
-          Fun.predicate ) ->
-      ((Tagpairs.t * Tagpairs.t), 'a, t) Unification.cps_unifier
+       ?update_check:(Tagpairs.t * Tagpairs.t) Unification.state_update
+                     Fun.predicate
+    -> (Tagpairs.t * Tagpairs.t, 'a, t) Unification.cps_unifier
 end
 
 include Utilsigs.OrderedContainer with type elt = Elt.t
@@ -32,8 +37,7 @@ val tag_pairs : t -> Tagpairs.t
 
 val subst_tags : Tagpairs.t -> t -> t
 
-val generate : ?avoid:Tags.t -> ?augment:bool
-  -> Tags.elt -> Tags.t -> t
+val generate : ?avoid:Tags.t -> ?augment:bool -> Tags.elt -> Tags.t -> t
 (** [generate avoid t ts] returns a constraint set that constitutes an inductive
     hypothesis corresponding to a case in the unfolding of a predicate tagged
     with [t] that recursively depends on predicate instances tagged by labels
@@ -91,9 +95,10 @@ val subsumes : t -> t -> bool
 *)
 
 val unify :
-  ?total:bool -> ?inverse:bool ->
-    ?update_check:((Tagpairs.t Unification.state_update) Fun.predicate) ->
-      (Tagpairs.t, 'a, t) Unification.cps_unifier
+     ?total:bool
+  -> ?inverse:bool
+  -> ?update_check:Tagpairs.t Unification.state_update Fun.predicate
+  -> (Tagpairs.t, 'a, t) Unification.cps_unifier
 (** [unify check cs cs' cont init_state] calculates a (minimal) extension theta
     of [init_state] such that [subsumes cs' (subst_tags theta cs)] returns
     [true], then passes it to [cont] and returns the resulting (optional) value.
@@ -105,17 +110,17 @@ val unify :
 *)
 
 val biunify :
-  ?total:bool ->
-    ?update_check:
-      ( ((Tagpairs.t * Tagpairs.t) Unification.state_update)
-          Fun.predicate ) ->
-      ((Tagpairs.t * Tagpairs.t), 'a, t) Unification.cps_unifier
+     ?total:bool
+  -> ?update_check:(Tagpairs.t * Tagpairs.t) Unification.state_update
+                   Fun.predicate
+  -> (Tagpairs.t * Tagpairs.t, 'a, t) Unification.cps_unifier
 
 val mk_update_check :
-  (Tagpairs.t * (Tags.Elt.t * Tags.Elt.t)) Fun.predicate
-    -> (Tagpairs.t * Tagpairs.t) Fun.predicate
+     (Tagpairs.t * (Tags.Elt.t * Tags.Elt.t)) Fun.predicate
+  -> (Tagpairs.t * Tagpairs.t) Fun.predicate
 
 val parse : (t, 'a) MParser.parser
+
 val of_string : string -> t
 
 val to_string_list : t -> string list

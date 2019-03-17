@@ -5,11 +5,11 @@
 
 include Utilsigs.BasicType
 
-module Set : Utilsigs.OrderedContainer with type elt = t
 (** An ordered set of terms. *)
+module Set : Utilsigs.OrderedContainer with type elt = t
 
-module Map : Utilsigs.OrderedMap with type key = t
 (** An ordered map with terms as keys. *)
+module Map : Utilsigs.OrderedMap with type key = t
 
 val parse : (t, 'a) MParser.parser
 (** Parse a term. *)
@@ -50,48 +50,45 @@ val fresh_evars : Set.t -> int -> t list
 (** [fresh_evars s n] returns a list of existentially quantified variables
     of length [n] all of which are fresh in [s]. *)
 
-
-module Subst : VarManager.SubstSig
+(** Substitutions over terms *)
+module Subst :
+  VarManager.SubstSig
   with type t = t Map.t
   with type var = t
   with type var_container = Set.t
-(** Substitutions over terms *)
 
-val unify : ?update_check: (Subst.t * Subst.t) Fun.predicate ->
-  (Subst.t, 'a, t) Unification.cps_unifier
+val unify :
+     ?update_check:(Subst.t * Subst.t) Fun.predicate
+  -> (Subst.t, 'a, t) Unification.cps_unifier
 (** Unifies two terms by producing a substitution to act on the first term *)
 
-val biunify:
-  ?update_check:((Subst.t * Subst.t) * (Subst.t * Subst.t))
-    Fun.predicate
-      -> (Subst.t * Subst.t, 'a, t) Unification.cps_unifier
+val biunify :
+     ?update_check:((Subst.t * Subst.t) * (Subst.t * Subst.t)) Fun.predicate
+  -> (Subst.t * Subst.t, 'a, t) Unification.cps_unifier
 (** Unifies two terms by producing substitutions to act on each term respectively *)
 
-module FList :
-  sig
-    include Utilsigs.BasicType with type t = t list
+module FList : sig
+  include Utilsigs.BasicType with type t = t list
 
-    val terms : t -> Set.t
-    (** Convenience function converting the list to a set. *)
-    val vars : t -> Set.t
-    (** Returns the set of all elements of the list that are not nil *)
+  val terms : t -> Set.t
+  (** Convenience function converting the list to a set. *)
 
-    val to_string_sep : string -> t -> string
-    (** [to_string_sep sep ts] converts [ts] to a string with each element separated by [sep]. *)
+  val vars : t -> Set.t
+  (** Returns the set of all elements of the list that are not nil *)
 
-    val subst : Subst.t -> t -> t
-    (** Applies a substitution to the list *)
+  val to_string_sep : string -> t -> string
+  (** [to_string_sep sep ts] converts [ts] to a string with each element separated by [sep]. *)
 
-    val unify :
-      ?update_check: (Subst.t * Subst.t) Fun.predicate ->
-        (Subst.t, 'a, t) Unification.cps_unifier
-    (** Unifies two lists of terms by producing a substitution to act on the first list *)
+  val subst : Subst.t -> t -> t
+  (** Applies a substitution to the list *)
 
-    val biunify:
-      ?update_check:
-        ((Subst.t * Subst.t) * (Subst.t * Subst.t))
-          Fun.predicate
-            -> (Subst.t * Subst.t, 'a, t) Unification.cps_unifier
-    (** Unifies two lists of terms by producing substitutions to act on each list respectively *)
+  val unify :
+       ?update_check:(Subst.t * Subst.t) Fun.predicate
+    -> (Subst.t, 'a, t) Unification.cps_unifier
+  (** Unifies two lists of terms by producing a substitution to act on the first list *)
 
-  end
+  val biunify :
+       ?update_check:((Subst.t * Subst.t) * (Subst.t * Subst.t)) Fun.predicate
+    -> (Subst.t * Subst.t, 'a, t) Unification.cps_unifier
+  (** Unifies two lists of terms by producing substitutions to act on each list respectively *)
+end
