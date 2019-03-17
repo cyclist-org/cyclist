@@ -8,7 +8,7 @@
 type abstract_node
 
 val mk_abs_node :
-  Tags.t -> (int * Tagpairs.t * Tagpairs.t) list -> abstract_node
+  Tags.t -> int list -> (Tagpairs.t * Tagpairs.t) list -> abstract_node
 (** Constructor for nodes. *)
 
 (** The type of abstracted proof as a map from ints to nodes. 

@@ -48,11 +48,11 @@ let in_children child n =
 let index_of_child child (_, subg) =
   Blist.find_index (fun (i, _, _) -> Int.equal i child) subg
 
-let mk_abs_node tags subg =
+let mk_abs_node tags succs tps_pair =
   let tags = Tags.to_ints tags in
   let subg =
-    List.map
-      (fun (i, tps, tps') ->
+    List.map2
+      (fun i (tps, tps') ->
         let tps, tps' =
           Pair.map
             (Tagpairs.map_to IntPairSet.add IntPairSet.empty
@@ -60,7 +60,7 @@ let mk_abs_node tags subg =
             (tps, tps')
         in
         (i, tps, tps') )
-      subg
+      succs tps_pair
   in
   (tags, subg)
 

@@ -161,10 +161,8 @@ module Make (Seq : Sequent.S) = struct
     let subnodes =
       Blist.map2 (fun i (seq, _, _) -> (i, Node.mk_open seq)) subidxs subgoals
     in
-    let subidxs_plus_tags =
-      Blist.map2 (fun i (_, vtts, ptts) -> (i, vtts, ptts)) subidxs subgoals
-    in
-    let n = Node.mk_inf (get_seq idx prf) descr subidxs_plus_tags in
+    let tagpairs2 = Blist.map (fun (_, vtts, ptts) -> (vtts, ptts)) subgoals in
+    let n = Node.mk_inf (get_seq idx prf) descr subidxs tagpairs2 in
     ensure_add idx n prf ;
     let prf' =
       Blist.foldl
@@ -182,13 +180,12 @@ module Make (Seq : Sequent.S) = struct
         (add_axiom idx' descr prf', (node_map, bls))
       else if Node.is_backlink n then (prf', (node_map, (idx, idx') :: bls))
       else if Node.is_inf n then
-        let _, descr, premises = Node.dest_inf n in
+        let _, descr, premises, tagpairs2 = Node.dest_inf n in
         let premises' =
-          Blist.map
-            (fun (pidx, vts, pts) -> (Node.get_seq (find pidx prf), vts, pts))
-            premises
+          Blist.map2
+            (fun pidx (vts, pts) -> (Node.get_seq (find pidx prf), vts, pts))
+            premises tagpairs2
         in
-        let premises = Blist.map (fun (pidx, _, _) -> pidx) premises in
         let premises', prf' = add_inf idx' descr premises' prf' in
         let node_map =
           Blist.fold_right2 Int.Map.add premises premises' node_map
@@ -232,13 +229,12 @@ module Make (Seq : Sequent.S) = struct
             , node_map )
           else _extract (prf', node_map) target idx'
         else if Node.is_inf n then
-          let _, descr, premises = Node.dest_inf n in
+          let _, descr, premises, tagpairs2 = Node.dest_inf n in
           let premises' =
-            Blist.map
-              (fun (pidx, vts, pts) -> (Node.get_seq (find pidx prf), vts, pts))
-              premises
+            Blist.map2
+              (fun pidx (vts, pts) -> (Node.get_seq (find pidx prf), vts, pts))
+              premises tagpairs2
           in
-          let premises = Blist.map (fun (pidx, _, _) -> pidx) premises in
           let premises', prf' = add_inf idx' descr premises' prf' in
           Blist.fold_left2 _extract (prf', node_map) premises premises'
         else invalid_arg "Unrecognised node type!"

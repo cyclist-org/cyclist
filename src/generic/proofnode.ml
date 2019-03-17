@@ -22,7 +22,8 @@ module type S = sig
       sequent [seq], description [descr], target index [target] and set of
       valid tag transitions (as pairs) [vtts].*)
 
-  val mk_inf : seq_t -> string -> (int * Tagpairs.t * Tagpairs.t) list -> t
+  val mk_inf :
+    seq_t -> string -> int list -> (Tagpairs.t * Tagpairs.t) list -> t
   (** [mk_inf seq descr subgoals back] creates an inference node labelled by
       sequent [seq], description [descr], a list of triples consisting of
       subgoal index, valid tag transitions and progressing tag transitions
@@ -36,7 +37,8 @@ module type S = sig
   val dest_backlink : t -> seq_t * string * int * Tagpairs.t
   (** [dest_backlink n] destroys a back-link node [n], otherwise raises [Invalid_arg].*)
 
-  val dest_inf : t -> seq_t * string * (int * Tagpairs.t * Tagpairs.t) list
+  val dest_inf :
+    t -> seq_t * string * int list * (Tagpairs.t * Tagpairs.t) list
   (** [dest_inf n] destroys an inference node [n], otherwise raises [Invalid_arg].*)
 
   (** Functions for checking the sort of a node. *)
@@ -70,75 +72,77 @@ module Make (Seq : Sequent.S) = struct
 
   type seq_t = Seq.t
 
-  type proof_subnode =
-    | OpenNode
-    | AxiomNode
-    | InfNode of (int * Tagpairs.t * Tagpairs.t) list
-    | BackNode of int * Tagpairs.t
+  type t =
+    | OpenNode of {seq: Seq.t; descr: string}
+    | AxiomNode of {seq: Seq.t; descr: string}
+    | InfNode of
+        { seq: Seq.t
+        ; descr: string
+        ; succs: int list
+        ; tagpairs2: (Tagpairs.t * Tagpairs.t) list }
+    | BackNode of {seq: Seq.t; descr: string; succ: int; tagpairs: Tagpairs.t}
 
-  type t = {seq: Seq.t; descr: string; node: proof_subnode}
+  let get_seq = function
+    | OpenNode {seq} | AxiomNode {seq} | InfNode {seq} | BackNode {seq} -> seq
 
-  let get_seq n = n.seq
+  let get_succs = function
+    | AxiomNode _ | OpenNode _ -> []
+    | BackNode {succ= s} -> [s]
+    | InfNode {succs} -> succs
 
-  let get_succs n =
-    match n.node with
-    | AxiomNode | OpenNode -> []
-    | BackNode (s, _) -> [s]
-    | InfNode ss ->
-        let ss', _, _ = Blist.unzip3 ss in
-        ss'
+  let dest = function
+    | OpenNode {seq; descr}
+     |AxiomNode {seq; descr}
+     |InfNode {seq; descr}
+     |BackNode {seq; descr} ->
+        (seq, descr)
 
-  let dest n = (n.seq, n.descr)
-
-  let dest_backlink n =
-    match n.node with
-    | BackNode (child, vtts) -> (n.seq, n.descr, child, vtts)
+  let dest_backlink = function
+    | BackNode {seq; descr; succ; tagpairs} -> (seq, descr, succ, tagpairs)
     | _ -> invalid_arg "dest_backlink"
 
-  let dest_inf n =
-    match n.node with
-    | InfNode subgs -> (n.seq, n.descr, subgs)
+  let dest_inf = function
+    | InfNode {seq; descr; succs; tagpairs2} -> (seq, descr, succs, tagpairs2)
     | _ -> invalid_arg "dest_inf"
 
-  let is_open n = match n.node with OpenNode -> true | _ -> false
+  let is_open = function OpenNode _ -> true | _ -> false
 
-  let is_backlink n = match n.node with BackNode _ -> true | _ -> false
+  let is_backlink = function BackNode _ -> true | _ -> false
 
-  let is_axiom n = match n.node with AxiomNode -> true | _ -> false
+  let is_axiom = function AxiomNode _ -> true | _ -> false
 
-  let is_inf n = match n.node with InfNode _ -> true | _ -> false
+  let is_inf = function InfNode _ -> true | _ -> false
 
-  let mk seq node descr =
-    assert (not (String.equal descr "")) ;
-    {seq; node; descr}
+  let mk_open seq = OpenNode {seq; descr= "(Open)"}
 
-  let mk_open seq = mk seq OpenNode "(Open)"
+  let mk_axiom seq descr = AxiomNode {seq; descr}
 
-  let mk_axiom seq descr = mk seq AxiomNode descr
+  let mk_inf seq descr succs tagpairs2 = InfNode {seq; descr; succs; tagpairs2}
 
-  let mk_inf seq descr subgoals = mk seq (InfNode subgoals) descr
+  let mk_backlink seq descr succ tagpairs =
+    BackNode {seq; succ; tagpairs; descr}
 
-  let mk_backlink seq descr child vtts = mk seq (BackNode (child, vtts)) descr
+  let to_abstract_node = function
+    | OpenNode {seq} | AxiomNode {seq} ->
+        Soundcheck.mk_abs_node (Seq.tags seq) [] []
+    | InfNode {seq; succs; tagpairs2} ->
+        Soundcheck.mk_abs_node (Seq.tags seq) succs tagpairs2
+    | BackNode {seq; succ; tagpairs} ->
+        Soundcheck.mk_abs_node (Seq.tags seq) [succ]
+          [(tagpairs, Tagpairs.empty)]
 
-  let to_abstract_node n =
-    match n.node with
-    | OpenNode | AxiomNode -> Soundcheck.mk_abs_node (Seq.tags n.seq) []
-    | InfNode subg -> Soundcheck.mk_abs_node (Seq.tags n.seq) subg
-    | BackNode (child, tv) ->
-        Soundcheck.mk_abs_node (Seq.tags n.seq) [(child, tv, Tagpairs.empty)]
-
-  let pp fmt n =
-    match n.node with
-    | OpenNode -> Format.fprintf fmt "@[%a (Open)@]" Seq.pp n.seq
-    | AxiomNode -> Format.fprintf fmt "@[%a (%s)@]" Seq.pp n.seq n.descr
-    | BackNode (i, tps) ->
-        Format.fprintf fmt "@[%a (%s) [%i] <pre=%a>@]" Seq.pp n.seq n.descr i
-          Tagpairs.pp tps
-    | InfNode p ->
-        Format.fprintf fmt "@[%a (%s) [%a]@]" Seq.pp n.seq n.descr
-          (Blist.pp pp_commasp (fun fmt (i, pres, prog) ->
+  let pp fmt = function
+    | OpenNode {seq} -> Format.fprintf fmt "@[%a (Open)@]" Seq.pp seq
+    | AxiomNode {seq; descr} ->
+        Format.fprintf fmt "@[%a (%s)@]" Seq.pp seq descr
+    | BackNode {seq; descr; succ; tagpairs} ->
+        Format.fprintf fmt "@[%a (%s) [%i] <pre=%a>@]" Seq.pp seq descr succ
+          Tagpairs.pp tagpairs
+    | InfNode {seq; descr; succs; tagpairs2} ->
+        Format.fprintf fmt "@[%a (%s) [%a]@]" Seq.pp seq descr
+          (Blist.pp pp_commasp (fun fmt (i, (pres, prog)) ->
                (* Format.fprintf fmt "%i" i)) p *)
                Format.fprintf fmt "@[%i <%a/%a>@]" i Tagpairs.pp
                  (Tagpairs.diff pres prog) Tagpairs.pp prog ))
-          p
+          (List.combine succs tagpairs2)
 end

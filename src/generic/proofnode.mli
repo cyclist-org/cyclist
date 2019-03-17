@@ -21,7 +21,8 @@ module type S = sig
       sequent [seq], description [descr], target index [target] and set of
       valid tag transitions (as pairs) [vtts].*)
 
-  val mk_inf : seq_t -> string -> (int * Tagpairs.t * Tagpairs.t) list -> t
+  val mk_inf :
+    seq_t -> string -> int list -> (Tagpairs.t * Tagpairs.t) list -> t
   (** [mk_inf seq descr subgoals back] creates an inference node labelled by
       sequent [seq], description [descr], a list of triples consisting of
       subgoal index, valid tag transitions and progressing tag transitions
@@ -35,7 +36,8 @@ module type S = sig
   val dest_backlink : t -> seq_t * string * int * Tagpairs.t
   (** [dest_backlink n] destroys a back-link node [n], otherwise raises [Invalid_arg].*)
 
-  val dest_inf : t -> seq_t * string * (int * Tagpairs.t * Tagpairs.t) list
+  val dest_inf :
+    t -> seq_t * string * int list * (Tagpairs.t * Tagpairs.t) list
   (** [dest_inf n] destroys an inference node [n], otherwise raises [Invalid_arg].*)
 
   (** Functions for checking the sort of a node. *)
@@ -59,9 +61,8 @@ module type S = sig
   val to_abstract_node : t -> Soundcheck.abstract_node
   (** Convert Proof.t node to abstract node as in {!Soundcheck}. *)
 
-  (** Pretty printing and Latex conversion. *)
-
   val pp : Format.formatter -> t -> unit
+  (** Pretty printing *)
 end
 
 module Make (Seq : Sequent.S) : S with type seq_t = Seq.t
