@@ -10,7 +10,7 @@ let timeout = ref 30
 
 let only_first = ref false
 
-let slcomp_mode = ref false
+let slcomp = ref ""
 
 let speclist =
   ref
@@ -28,34 +28,47 @@ let speclist =
       , Arg.Set_string defs_path
       , ": read inductive definitions from <file>, default is " ^ !defs_path )
     ; ( "-SLCOMP"
-      , Arg.Set slcomp_mode
-      , ": change output to sat/unsat/unknown for SLCOMP" ) ]
+      , Arg.Set_string slcomp
+      , ": change input to SMTLIB <file> and output to sat/unsat/unknown for \
+         SLCOMP " ^ !slcomp ) ]
 
 let usage =
-  ref ("usage: " ^ Sys.argv.(0) ^ " [-p/d/s/f] [-t <int>] [-D <file>]")
+  ref
+    ( "usage: " ^ Sys.argv.(0)
+    ^ " [-p/d/s/f] [-t <int>] [-D <file>] [-SLCOMP <file>]" )
 
 let die msg =
   print_endline msg ;
   print_endline (Arg.usage_string !speclist !usage) ;
   exit 1
 
-let check_consistency defs =
+let () =
+  gc_setup () ;
+  Arg.parse !speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) !usage ;
+  let slcomp_mode = not (String.equal "" !slcomp) in
   Format.set_margin (Sys.command "exit $(tput cols)") ;
+  let consistency_check () =
+    if slcomp_mode then
+      let defs, f = Sl_smtlib.defs_of_channel (open_in !slcomp) in
+      (assert false ;
+      Sl_basepair.form_sat defs f)
+    else
+      let defs = Sl_defs.of_channel (open_in !defs_path) in
+      Sl_basepair.satisfiable ~only_first:!only_first ~output:!show_proof defs
+  in
   Stats.reset () ;
   Stats.Gen.call () ;
-  let consistency_check () =
-    Sl_basepair.satisfiable ~only_first:!only_first ~output:!show_proof defs
-  in
   let res = w_timeout consistency_check !timeout in
   Stats.Gen.end_call () ;
+  let slcomp_mode = not (String.equal "" !slcomp) in
   let exit_code =
     match res with
     | None ->
-        print_endline (if !slcomp_mode then "unknown" else "UNKNOWN: [TIMEOUT]") ;
+        print_endline (if slcomp_mode then "unknown" else "UNKNOWN: [TIMEOUT]") ;
         2
     | Some false ->
         print_endline
-          ( if !slcomp_mode then "unsat"
+          ( if slcomp_mode then "unsat"
           else
             "UNSAT: "
             ^ (if !only_first then "First" else "Some")
@@ -63,7 +76,7 @@ let check_consistency defs =
         1
     | Some true ->
         print_endline
-          ( if !slcomp_mode then "sat"
+          ( if slcomp_mode then "sat"
           else
             "SAT: "
             ^ ( if !only_first then "First predicate has"
@@ -72,10 +85,4 @@ let check_consistency defs =
         0
   in
   if !Stats.do_statistics then Stats.gen_print () ;
-  if !slcomp_mode then 0 else exit_code
-
-let () =
-  gc_setup () ;
-  Arg.parse !speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) !usage ;
-  let res = check_consistency (Sl_defs.of_channel (open_in !defs_path)) in
-  exit res
+  exit (if slcomp_mode then 0 else exit_code)

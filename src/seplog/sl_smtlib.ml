@@ -135,6 +135,8 @@ and parse_heap st =
 let parse_or =
   parens (Tokens.skip_symbol "or" >> spaces >> many1 parse_heap) <?> "parse_or"
 
+let parse_body = attempt parse_heap >>= (fun h -> return [h]) <|> parse_or
+
 let parse_def =
   parens
     ( Tokens.skip_symbol "define-fun-rec"
@@ -143,7 +145,7 @@ let parse_def =
     parens (many (parens (Sl_term.parse << spaces << skip_ident)))
     >>= fun params ->
     let pred = (predsym, params) in
-    Tokens.skip_symbol "Bool" >> spaces >> parse_or
+    Tokens.skip_symbol "Bool" >> spaces >> parse_body
     >>= fun heaps ->
     let rules = List.map (fun h -> Sl_indrule.mk h pred) heaps in
     let preddef = Sl_preddef.mk (rules, predsym) in
@@ -162,9 +164,7 @@ let parse_def_preds =
   in
   parens (many1 parse_def_pred) <?> "parse_def_preds"
 
-let parse_bodies =
-  let parse_body = attempt parse_heap >>= (fun h -> return [h]) <|> parse_or in
-  parens (many1 (parse_body << spaces)) <?> "parse_bodies"
+let parse_bodies = parens (many1 (parse_body << spaces)) <?> "parse_bodies"
 
 let parse_defs =
   parens
@@ -213,10 +213,11 @@ let parse_item =
 let parse_seq_part =
   attempt parse_lhs <|> attempt parse_rhs <|> skip_item << spaces
 
-let parse = many parse_item >> many parse_seq_part >> eof >> get_user_state
+let parse_entl =
+  many parse_item >> many parse_seq_part >> eof >> get_user_state
 
 let of_channel c =
-  match handle_reply (MParser.parse_channel parse c initial) with
+  match handle_reply (MParser.parse_channel parse_entl c initial) with
   | {defs; lhs= Some l; rhs= Some r} ->
       let l, r =
         ( Sl_form.with_heaps Sl_form.empty [l]
@@ -230,4 +231,13 @@ let of_channel c =
       let l' = Sl_form.subst_tags inst_subst l' in
       let r' = Sl_form.complete_tags tags r in
       ((l', r'), Sl_defs.of_list defs)
+  | _ -> assert false
+
+let parse_sat =
+  many parse_item >> parse_seq_part >> many parse_item >> eof >> get_user_state
+
+let defs_of_channel c =
+  match handle_reply (MParser.parse_channel parse_sat c initial) with
+  | {defs; lhs= Some h} ->
+      (Sl_defs.of_list defs, Sl_form.with_heaps Sl_form.empty [h])
   | _ -> assert false
