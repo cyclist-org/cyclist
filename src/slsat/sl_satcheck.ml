@@ -50,8 +50,7 @@ let () =
   let consistency_check () =
     if slcomp_mode then
       let defs, f = Sl_smtlib.defs_of_channel (open_in !slcomp) in
-      (assert false ;
-      Sl_basepair.form_sat defs f)
+      Sl_basepair.form_sat defs f
     else
       let defs = Sl_defs.of_channel (open_in !defs_path) in
       Sl_basepair.satisfiable ~only_first:!only_first ~output:!show_proof defs
