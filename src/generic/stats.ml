@@ -74,7 +74,7 @@ let gen_print () =
       (1000.0 *. !Gen.cpu_time) ;
     Printf.printf
       "MODCHECK: Percentage of process time spent model checking: %.0f%%\n"
-      ( if Pervasives.( = ) !Gen.cpu_time 0. then 0.
+      ( if Stdlib.( = ) !Gen.cpu_time 0. then 0.
       else 100.0 *. !MC.cpu_time /. !Gen.cpu_time ) ;
     Printf.printf "MODCHECK: Rejected %d out of %d calls.\n" !MC.rejects
       !MC.calls ;
@@ -84,7 +84,7 @@ let gen_print () =
       (1000.0 *. !MCCache.cpu_time) ;
     Printf.printf "SLSAT: Total time spent: %.0f ms\n" (1000.0 *. !CC.cpu_time) ;
     Printf.printf "SLSAT: Percentage of process time spent: %.0f%%\n"
-      ( if Pervasives.( = ) !Gen.cpu_time 0. then 0.
+      ( if Stdlib.( = ) !Gen.cpu_time 0. then 0.
       else 100.0 *. !CC.cpu_time /. !Gen.cpu_time ) ;
     Printf.printf
       "SLSAT: %d out of %d predicate definitions were inconsistent.\n"
@@ -92,7 +92,7 @@ let gen_print () =
     Printf.printf "INVAL: Total time spent: %.0f ms\n"
       (1000.0 *. !Invalidity.cpu_time) ;
     Printf.printf "INVAL: Percentage of process time spent: %.0f%%\n"
-      ( if Pervasives.( = ) !Gen.cpu_time 0. then 0.
+      ( if Stdlib.( = ) !Gen.cpu_time 0. then 0.
       else 100.0 *. !Invalidity.cpu_time /. !Gen.cpu_time ) ;
     Printf.printf "INVAL: Found as invalid %d out of %d calls.\n"
       !Invalidity.rejects !Invalidity.calls )

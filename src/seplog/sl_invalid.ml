@@ -103,7 +103,7 @@ let invalidity_witness defs seq =
                  (fun (_, pi') ->
                    Sl_deqs.for_all
                      (fun (w, z) ->
-                       Pervasives.( = ) (Sl_heap.equates pi x w)
+                       Stdlib.( = ) (Sl_heap.equates pi x w)
                          (Sl_heap.equates pi x z) )
                      pi'.Sl_heap.deqs )
                  rbps )

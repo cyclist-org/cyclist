@@ -32,7 +32,7 @@ module IO: sig
       channel [chn] and stores them in the byte-buffer [b], starting at position
       [pos]. It returns the actual number of characters read. A value less
       than [length] is only returned if there are less than [length] characters
-      available from [chn] (the [input] function in the [Pervasives] module is
+      available from [chn] (the [input] function in the [Stdlib] module is
       allowed to read less than [length] characters if it "finds it convenient
       to do a partial read").
 

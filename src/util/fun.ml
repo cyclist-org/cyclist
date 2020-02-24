@@ -31,4 +31,4 @@ let swap f x y = f y x
 let direct inverse = if not inverse then id else swap
 
 let rec iter f n x =
-  match n with n when Pervasives.( <= ) n 0 -> x | n -> iter f (n - 1) (f x)
+  match n with n when Stdlib.( <= ) n 0 -> x | n -> iter f (n - 1) (f x)

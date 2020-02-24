@@ -324,8 +324,8 @@ let matches_fun s1 s2 =
   let tags = Tags.inter (Seq.tags s1) (Seq.tags s2) in
   (* check that disjunctions are not gratuitously introduced by weakening *)
   if Tags.is_empty tags || 
-     (Pervasives.( <> ) (Form.is_prod (fst s1)) (Form.is_prod (fst s2))) ||
-     (Pervasives.( <> ) (Form.is_prod (snd s1)) (Form.is_prod (snd s2)))
+     (Stdlib.( <> ) (Form.is_prod (fst s1)) (Form.is_prod (fst s2))) ||
+     (Stdlib.( <> ) (Form.is_prod (snd s1)) (Form.is_prod (snd s2)))
      then [] else
   let res = Seq.uni_subsumption s1 s2 in
   if Option.is_none res then [] else

@@ -74,7 +74,7 @@ module Make (T : Utilsigs.BasicType) :
       | x :: xs, y :: ys -> (
         match T.compare x y with
         | 0 -> false
-        | n when Pervasives.( < ) n 0 -> disjoint xs (y :: ys)
+        | n when Stdlib.( < ) n 0 -> disjoint xs (y :: ys)
         | _ -> disjoint (x :: xs) ys )
     in
     disjoint xs ys

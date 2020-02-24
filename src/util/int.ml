@@ -15,18 +15,18 @@ end
 include IntType
 include Containers.Make (IntType)
 
-let min (i : int) (j : int) = Pervasives.min i j
+let min (i : int) (j : int) = Stdlib.min i j
 
-let max (i : int) (j : int) = Pervasives.max i j
+let max (i : int) (j : int) = Stdlib.max i j
 
-let ( < ) (i : int) (j : int) = Pervasives.( < ) i j
+let ( < ) (i : int) (j : int) = Stdlib.( < ) i j
 
-let ( <= ) (i : int) (j : int) = Pervasives.( <= ) i j
+let ( <= ) (i : int) (j : int) = Stdlib.( <= ) i j
 
-let ( > ) (i : int) (j : int) = Pervasives.( > ) i j
+let ( > ) (i : int) (j : int) = Stdlib.( > ) i j
 
-let ( >= ) (i : int) (j : int) = Pervasives.( >= ) i j
+let ( >= ) (i : int) (j : int) = Stdlib.( >= ) i j
 
-let ( <> ) (i : int) (j : int) = Pervasives.( <> ) i j
+let ( <> ) (i : int) (j : int) = Stdlib.( <> ) i j
 
 let ( = ) i j = equal i j

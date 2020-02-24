@@ -133,7 +133,7 @@ let sigalrm_handler = Sys.Signal_handle (fun _ -> raise Timeout)
 let w_timeout f (timeout : int) =
   let old_behavior = Sys.signal Sys.sigalrm sigalrm_handler in
   let reset_sigalrm () = Sys.set_signal Sys.sigalrm old_behavior in
-  if Pervasives.( > ) timeout 0 then ignore (Unix.alarm timeout) ;
+  if Stdlib.( > ) timeout 0 then ignore (Unix.alarm timeout) ;
   try
     let res = f () in
     reset_sigalrm () ; Some res

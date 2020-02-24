@@ -34,7 +34,7 @@ let cons x xs = x :: xs
 let decons = function x :: xs -> (x, xs) | _ -> invalid_arg "decons"
 
 let repeat a n =
-  if Pervasives.( < ) n 0 then invalid_arg "repeat"
+  if Stdlib.( < ) n 0 then invalid_arg "repeat"
   else
     let rec aux a acc = function 0 -> acc | m -> aux a (a :: acc) (m - 1) in
     aux a [] n
@@ -50,9 +50,9 @@ let rec remove_nth n = function
   | y :: ys -> ( match n with 0 -> ys | _ -> y :: remove_nth (n - 1) ys )
 
 let replace_nth z n xs =
-  if Pervasives.( < ) n 0 then invalid_arg "Blist.replace_nth"
+  if Stdlib.( < ) n 0 then invalid_arg "Blist.replace_nth"
   else
-    let f m y = if Pervasives.( = ) n m then z else y in
+    let f m y = if Stdlib.( = ) n m then z else y in
     mapi f xs
 
 let rec take n l =
@@ -153,9 +153,9 @@ let choose lol =
     [[]] lol
 
 let rec _combs k len l =
-  if Pervasives.( = ) k 0 then [[]]
-  else if Pervasives.( < ) len k then []
-  else if Pervasives.( = ) k len then [l]
+  if Stdlib.( = ) k 0 then [[]]
+  else if Stdlib.( < ) len k then []
+  else if Stdlib.( = ) k len then [l]
   else
     let h, t = (hd l, tl l) in
     let starting_with_h =
