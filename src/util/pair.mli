@@ -30,6 +30,9 @@ val disj : bool * bool -> bool
 val swap : 'a * 'b -> 'b * 'a
 (** Swap around the members of a pair. *)
 
+val perm : ('a -> 'a -> bool) -> ('a * 'a) -> bool
+(** [perm f (x, y)] returns true iff either [f x y] or [f y x] does.  *)
+
 val fold : ('a -> 'b -> 'b) -> 'a * 'a -> 'b -> 'b
 (** Fold a function over the members of a pair. *)
 

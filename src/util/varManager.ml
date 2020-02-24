@@ -54,6 +54,24 @@ module type SubstSig = sig
   val mk_ex_subst : var_container -> var_container -> t
 end
 
+type alphabet  = string list
+
+let roman_alphabet = [
+    "a"; "b"; "c"; "d"; "e"; "f"; "g"; "h"; "i"; "j"; "k"; "l"; "m"; "n"; "o";
+    "p"; "q"; "r"; "s"; "t"; "u"; "v"; "w"; "x"; "y"; "z";
+  ]
+
+let greek_alphabet = [
+    "α"; "β"; "γ"; "δ"; "ε"; "ζ"; "η"; "θ"; "ι"; "κ"; "λ"; "μ"; "ν"; "ξ"; "ο";
+    "π"; "ρ"; "ς"; "σ"; "τ"; "υ"; "φ";
+    (* "χ";  *) (* Don't use χ because it just looks like x when rendered to the terminal *)
+    "ψ"; "ω";
+  ]
+
+let arabic_digits = [
+  "0"; "1"; "2"; "3"; "4"; "5"; "6"; "7"; "8"; "9";
+]
+
 module type S = sig
   module Var : sig
     include Utilsigs.BasicType
@@ -78,6 +96,7 @@ module type S = sig
 
   include I with type var = Var.t and type var_container = Var.Set.t
 
+  val alphabet : alphabet ref
   val to_ints : Var.Set.t -> Int.Set.t
 end
 
@@ -90,16 +109,30 @@ let class_equal c c' =
   | FREE, FREE | BOUND, BOUND | ANONYMOUS, ANONYMOUS -> true
   | _ -> false
 
-let cyclic_permute s n =
+let cyclic_permute ls n =
+  let rec cyclic_permute ls n acc =
+    if Int.equal n 0
+      then List.append ls ((List.rev) acc)
+      else
+        match ls with
+        | []    -> List.rev acc
+        | l::ls -> cyclic_permute ls (n-1) (l::acc) in
+  let n = n mod (List.length ls) in
+  let n = if Int.( < ) n 0 then n + (List.length ls) else n in
+  cyclic_permute ls n []
+
+(* let cyclic_permute s n =
   let len = String.length s in
   let i = n mod len in
   let start = if Int.( <= ) i 0 then abs i else len - i in
   let fst = String.sub s start (len - start) in
   let snd = String.sub s 0 start in
-  String.concat "" [fst; snd]
+  String.concat "" [fst; snd] *)
 
-let mk seed anon_str classify_varname =
-  ( module struct
+let mk seed anon_str classify_varname = (
+
+  module struct
+
     let termtbl = H.create 997
 
     let _mk s = H.hashcons termtbl s
@@ -108,6 +141,8 @@ let mk seed anon_str classify_varname =
 
     let mk s =
       if class_equal (classify_varname s) ANONYMOUS then anonymous else _mk s
+
+    let alphabet = ref roman_alphabet
 
     module Var = struct
       module T = struct
@@ -149,21 +184,14 @@ let mk seed anon_str classify_varname =
       (not (is_anonymous n))
       && class_equal (classify_varname n.Hashcons.node) FREE
 
-    let letters =
-      let explode s =
-        let rec loop p acc =
-          if Int.( < ) p 0 then acc else loop (p - 1) (String.sub s p 1 :: acc)
-        in
-        loop (String.length s - 1) []
-      in
-      Blist.rev (explode (cyclic_permute "abcdefghijklmnopqrstuvwxyz" seed))
-
-    let search_vars =
+    let search_vars vs fresh n =
       let mk_var free lvl acc n =
         let n = match lvl with 0 -> n | _ -> n ^ "_" ^ string_of_int lvl in
         (if free then mk n else mk (n ^ "'")) :: acc
       in
-      let mk_seg free lvl = Blist.fold_left (mk_var free lvl) [] letters in
+      let letters = cyclic_permute !alphabet seed in
+      let mk_seg free lvl =
+        Blist.fold_left (mk_var free lvl) [] (List.rev letters) in
       let rec _search s acc vs n =
         match (vs, n) with
         | _, 0 -> Some (Blist.rev acc)
@@ -176,6 +204,7 @@ let mk seed anon_str classify_varname =
       in
       let curr_lvl = ref 1 in
       let _fvars, _evars = (ref (mk_seg true 0), ref (mk_seg false 0)) in
+      (* let () =  prerr_endline (Blist.to_string ", " Fun.id !_fvars) in *)
       let rec search s free n =
         match _search s [] (if free then !_fvars else !_evars) n with
         | Some vs -> vs
@@ -185,7 +214,7 @@ let mk seed anon_str classify_varname =
             incr curr_lvl ;
             search s free n
       in
-      search
+      search vs fresh n
 
     let fresh_fvars s n = search_vars s true n
 

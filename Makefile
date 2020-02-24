@@ -19,6 +19,7 @@ export ROOT DEFS
 
 TARGETS := \
 	src/generic/checkproof \
+	src/firstorder/fo_prove \
 	src/seplog/sl_prove \
 	src/seplog/sl_disprove \
 	src/seplog/sl_modelcheck \

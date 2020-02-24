@@ -1,8 +1,11 @@
 (** An abstract datatype for managing variables. *)
 module type I = sig
+
   type var
+  (** The abstract type of variables. *)
 
   type var_container
+  (** The abstract type of a collection of variables. *)
 
   val anonymous : var
   (** An "unidentified" variable *)
@@ -88,6 +91,20 @@ module type SubstSig = sig
         quantified variables (fresh for all the variables in [avoid]) for the variables in [vs]. *)
 end
 
+type alphabet = string list
+(** Type alias for alphabets (i.e. strings to use as "letters" when generating
+    new variables). *)
+
+val roman_alphabet : alphabet
+(** The roman alphabet ("a", "b", "c", ... "z"). *)
+
+val greek_alphabet : alphabet
+(** The greek alphabet ("α", "β", "γ", ... "ω") except "χ", which is not
+    rendered properly on the terminal. *)
+
+val arabic_digits : alphabet
+(** The arabic digits ("0", ..., "9"). *)
+
 module type S = sig
   (** Abstract type of variables *)
   module Var : sig
@@ -113,6 +130,9 @@ module type S = sig
     with type var_container = Var.Set.t
 
   include I with type var = Var.t and type var_container = Var.Set.t
+
+  val alphabet : alphabet ref
+  (** The alphabet that is used to generate new variables. *)
 
   val to_ints : Var.Set.t -> Int.Set.t
   (** Convenience method to return a set of integer representatives of a set of variables.

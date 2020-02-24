@@ -28,6 +28,9 @@ include Utilsigs.OrderedContainer with type elt = Elt.t
 
 include VarManager.I with type var := elt and type var_container = t
 
+val alphabet : VarManager.alphabet ref
+(** The alphabet that is used to generate new tags. *)
+
 val anonymous : elt
 
 val to_ints : t -> Int.Set.t

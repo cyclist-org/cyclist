@@ -85,4 +85,13 @@ R {
 	true => R(0,x) |
 	R(x,0) => R(s(x),0) |
 	R(s(s(x)),y) => R(s(x),s(y))
+} ;
+
+H {
+	true => H(0,0) |
+	true => H(s(0),0) |
+	true => H(x,s(0)) |
+	H(x,y) => H(s(x),s(s(y))) |
+	H(s(y),y) => H(0,s(s(y))) |
+	H(s(x),x) => H(s(s(x)),0) 
 }

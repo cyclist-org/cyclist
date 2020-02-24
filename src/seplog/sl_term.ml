@@ -9,7 +9,7 @@ let classify_varname s =
   else if Int.( > ) l 1 && Char.equal s.[l - 1] '\'' then VarManager.BOUND
   else VarManager.FREE
 
-include (val VarManager.mk 4 "nil" classify_varname : VarManager.S)
+include (val VarManager.mk (-4) "nil" classify_varname : VarManager.S)
 
 (* BasicType signature *)
 type t = Var.t
