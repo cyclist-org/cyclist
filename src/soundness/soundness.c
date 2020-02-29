@@ -1,7 +1,7 @@
 #include <cassert>
 #include <map>
 #include <spot/twaalgos/determinize.hh>
-#include <spot/twaalgos/complement.hh>
+#include <spot/twaalgos/dualize.hh>
 #include <spot/twaalgos/totgba.hh>
 #include <spot/twaalgos/copy.hh>
 #include <spot/twaalgos/stutter.hh>
@@ -111,13 +111,13 @@ extern "C" value check_soundness() {
 	CAMLlocal1(v_res);
 
 	spot::const_twa_ptr ta = std::make_shared<TraceAutomaton>(*proof);
-	spot::twa_graph_ptr graph = copy(ta, spot::twa::prop_set::all());
+	spot::twa_graph_ptr graph = make_twa_graph(ta, spot::twa::prop_set::all());
 	spot::twa_graph_ptr det = 
 		tgba_determinize(
 			graph, false, true, true, 
 			spot::check_stutter_invariance(graph).is_true()
 		);
-	spot::twa_graph_ptr complement = remove_fin(dtwa_complement(det));
+	spot::twa_graph_ptr complement = remove_fin(dualize(det));
 
 	spot::const_twa_ptr product = otf_product(proof, complement);
 
