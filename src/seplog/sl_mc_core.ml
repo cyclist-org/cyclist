@@ -476,7 +476,9 @@ struct
   end =
     SetBase
 
-  module InterpretantBase = Hashset.Make (Pair.Make (Value.FList) (HeapBase))
+  module InterpretantBaseContainers =
+    Containers.Make(Pair.Make(Value.FList)(HeapBase))
+  module InterpretantBase = InterpretantBaseContainers.Hashset
 
   let baseSetPair_to_string (x, x') =
     "("
