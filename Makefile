@@ -10,7 +10,7 @@ OCB := ocamlbuild -use-ocamlfind -j 8 -ocamldoc "$(OCAMLDOC)" -pkgs $(PKGS) -tag
 OCAMLFORMAT_EXE := ocamlformat
 
 OUR_DIRS := src/generic src/procedure src/seplog src/slsat src/soundness src/util src/while
-OUR_SRCS := $(shell find -f $(OUR_DIRS) ! -name slinit.ml -name '*.ml' -or -name '*.mli')
+OUR_SRCS := $(shell find $(OUR_DIRS) ! -name slinit.ml -name '*.ml' -or -name '*.mli')
 
 
 ROOT := $(shell pwd)
