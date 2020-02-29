@@ -11,7 +11,7 @@ val set_defs : Sl_defs.t -> unit
 (** Specify the set of inductive definitions available for the proof search *)
 
 val abd_substs :
-     ?used_tags:Tags.t
+     ?used_tags:Lib.Tags.t
   -> ?init_state:Sl_unify.Unidirectional.state
   -> ?update_check:Sl_unify.Unidirectional.update_check
   -> ?verify:Sl_unify.Unidirectional.state_check

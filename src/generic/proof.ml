@@ -112,9 +112,6 @@ module Make (Seq : Sequent.S) = struct
     Blist.length
       (Blist.filter (fun (_, n) -> Node.is_backlink n) (to_list prf))
 
-  (* not exported *)
-  let mem i p = P.mem i p
-
   let pp fmt prf =
     let rec pp_aux fmt idx =
       let n = find idx prf in

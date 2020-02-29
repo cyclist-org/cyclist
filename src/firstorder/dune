@@ -1,0 +1,4 @@
+(executable
+  (name fo_prove)
+  (public_name fo_prove)
+  (libraries lib generic))

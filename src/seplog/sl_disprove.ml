@@ -1,4 +1,6 @@
 open Lib
+open Generic
+open Seplog
 
 let cl_sequent = ref ""
 

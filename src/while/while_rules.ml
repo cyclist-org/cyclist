@@ -1,5 +1,10 @@
 open Lib
-open While_program
+open Generic
+open Seplog
+
+open While
+open   While_program
+
 module SH = Sl_heap
 
 exception Not_symheap = Sl_form.Not_symheap

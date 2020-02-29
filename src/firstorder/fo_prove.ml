@@ -1,4 +1,5 @@
 open Lib
+open Generic
 
 let cl_sequent = ref ""
 let defs_path = ref "examples/fo.defs"

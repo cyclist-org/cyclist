@@ -1,4 +1,5 @@
 open Lib
+open Generic
 
 open Firstorder
 

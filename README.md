@@ -5,8 +5,6 @@ Cyclist
 In addition, over the years several decision procedures or algorithms have been integrated,
 focusing on Separation Logic with inductively defined predicates.
 
-For information on building *Cyclist*, the available tools included and the papers 
-underpinning those tools, visit
+For information on building *Cyclist*, the available tools included and the papers underpinning those tools, visit
 
 [www.cyclist-prover.org](http://www.cyclist-prover.org)
-

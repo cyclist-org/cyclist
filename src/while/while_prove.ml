@@ -1,5 +1,10 @@
 open Lib
-open While_program
+open Generic
+open Seplog
+
+open While
+open   While_program
+
 open While_rules
 
 let defs_path = ref "examples/sl.defs"

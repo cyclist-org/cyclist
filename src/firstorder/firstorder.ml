@@ -1,7 +1,6 @@
 open Lib
+open   Symbols
 
-open Symbols
-open Utilsigs
 open MParser
 
 let anon_var_name = "_"

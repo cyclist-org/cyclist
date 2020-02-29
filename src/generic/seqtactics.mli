@@ -1,5 +1,7 @@
 (** Tactics for combining sequent-level rules. *)
 
+open Lib
+
 module type S = sig
   type seq_t
 

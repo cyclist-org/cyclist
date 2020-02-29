@@ -1,6 +1,8 @@
 (** Provides an abstract view of a proof as a graph and allows checking its 
     soundness. *)
 
+open Lib
+
 (** Abstract proof node type. The only 
     information stored is a set of tags (integers) and a list of
     tuples of: successor, set of valid tag transitions and set of

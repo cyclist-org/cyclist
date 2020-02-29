@@ -1,6 +1,10 @@
 open Lib
-open Symbols
+open   Symbols
+
+open Seplog
+
 open MParser
+
 module SH = Sl_heap
 
 let termination = ref false

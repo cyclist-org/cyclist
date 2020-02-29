@@ -1,6 +1,8 @@
 (** SL sequent, as a pair of SL formulas. *)
+open Lib
+open Generic
 
-include Utilsigs.BasicType with type t = Sl_form.t * Sl_form.t
+include BasicType with type t = Sl_form.t * Sl_form.t
 
 val equal_upto_tags : t -> t -> bool
 (** Like [equal] but ignoring LHS tags as well as RHS ones. *)

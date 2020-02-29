@@ -1,5 +1,9 @@
 open Lib
+open Generic
+open Seplog
+
 open Procedure_program
+
 module SH = Sl_heap
 
 exception Not_symheap = Sl_form.Not_symheap

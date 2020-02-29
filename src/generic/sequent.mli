@@ -1,3 +1,5 @@
+open Lib
+
 (** Sequent signature used as input to most functors in Cyclist.*)
 module type S = sig
   type t

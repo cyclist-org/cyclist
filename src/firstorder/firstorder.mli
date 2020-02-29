@@ -1,10 +1,12 @@
+open Lib
+
 type term
 
 module Term :
 sig
-  include Utilsigs.BasicType with type t = term
-  module Set : Utilsigs.OrderedContainer with type elt = term
-  module Map : Utilsigs.OrderedMap with type key = term
+  include BasicType with type t = term
+  module Set : OrderedContainer with type elt = term
+  module Map : OrderedMap with type key = term
 
   type substitution
     (* = t Map.t *)
@@ -64,7 +66,7 @@ end
 
 module Prod :
 sig
-  include Utilsigs.OrderedContainer with type elt = Atom.t
+  include OrderedContainer with type elt = Atom.t
 
   val get_eqs : t -> (term * term) list
   val get_deqs : t -> (term * term) list
@@ -85,7 +87,7 @@ end
 
 module Form :
 sig
-  include Utilsigs.OrderedContainer with type elt = Prod.t
+  include OrderedContainer with type elt = Prod.t
   val dest : t -> Prod.t
   val tags : t -> Tags.t
   val tag_pairs : t -> Tagpairs.t

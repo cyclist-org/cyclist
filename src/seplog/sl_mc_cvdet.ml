@@ -1,5 +1,8 @@
 open Lib
-open Symbols
+open   Symbols
+
+open Generic
+
 open MParser
 
 module Make (Sig : Sl_mc_core.ValueSig) = struct

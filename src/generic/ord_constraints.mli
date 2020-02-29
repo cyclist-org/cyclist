@@ -3,8 +3,10 @@
     particular relationships between pairs of ordinal variables.
  *)
 
-module Elt : sig
-  include Utilsigs.BasicType
+ open Lib
+
+ module Elt : sig
+  include BasicType
 
   val tags : t -> Tags.t
 
@@ -24,7 +26,7 @@ module Elt : sig
     -> (Tagpairs.t * Tagpairs.t, 'a, t) Unification.cps_unifier
 end
 
-include Utilsigs.OrderedContainer with type elt = Elt.t
+include OrderedContainer with type elt = Elt.t
 
 val inconsistent : t -> bool
 

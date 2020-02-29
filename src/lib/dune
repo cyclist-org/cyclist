@@ -1,0 +1,5 @@
+(library
+ (name lib)
+ (public_name cyclist.lib)
+ (libraries mparser.pcre unix hashset hashcons)
+ (modules (:standard \ lru)))

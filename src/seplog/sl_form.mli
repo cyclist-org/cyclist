@@ -4,7 +4,10 @@
     if [f] and [g] both use an existential variable [x'] then [[f;g]] would
     mean the bound variable is shared. *)
 
-include Utilsigs.BasicType with type t = Ord_constraints.t * Sl_heap.t list
+open Lib
+open Generic
+
+include BasicType with type t = Ord_constraints.t * Sl_heap.t list
 
 val empty : t
 (** The formula [emp]. NB this is not the same as [[]], which is equivalent to

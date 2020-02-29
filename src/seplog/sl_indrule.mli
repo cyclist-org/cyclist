@@ -1,6 +1,8 @@
 (** Inductive rule type consisting of a symbolic heap and a predicate head. *)
 
-include Utilsigs.BasicType
+open Lib
+
+include BasicType
 
 val mk : Sl_heap.t -> Sl_pred.t -> t
 

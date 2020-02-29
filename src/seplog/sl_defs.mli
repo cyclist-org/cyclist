@@ -1,4 +1,6 @@
-include Utilsigs.BasicType
+open Lib
+
+include BasicType
 
 val empty : t
 

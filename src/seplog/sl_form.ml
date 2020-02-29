@@ -1,6 +1,10 @@
 open Lib
-open Symbols
+open   Symbols
+
+open Generic
+
 open MParser
+
 include Pair.Make (Ord_constraints) (Flist.Make (Sl_heap))
 
 let empty = (Ord_constraints.empty, [Sl_heap.empty])

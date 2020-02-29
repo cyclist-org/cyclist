@@ -1,4 +1,7 @@
 open Lib
+open Generic
+open Seplog
+open While
 
 let show_proof = ref false
 

@@ -1,5 +1,7 @@
 (** A proofrule used by a cyclic prover. *)
 
+open Lib
+
 module type S = sig
   type seq_t
 

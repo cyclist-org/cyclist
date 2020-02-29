@@ -2,7 +2,7 @@
 
 (** it is guaranteed that for any pair (x,y) in the set, x<=y re [Sl_term.compare].*)
 
-include Utilsigs.OrderedContainer with type elt = Sl_tpair.t
+include Lib.OrderedContainer with type elt = Sl_tpair.t
 
 val parse : (Sl_tpair.t, 'a) MParser.parser
 

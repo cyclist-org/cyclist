@@ -1,0 +1,21 @@
+(library 
+ (name seplog)
+ (public_name cyclist.seplog)
+ (libraries lib generic mparser.pcre)
+ (modules
+   (:standard 
+      \ slinit
+        sl_disprove
+        sl_modelcheck
+        sl_prove
+        sl_satcheck
+        slsat_expgen)))
+
+(executables
+ (names
+   sl_prove sl_disprove sl_modelcheck sl_satcheck slsat_expgen)
+ (public_names
+   sl_prove sl_disprove sl_modelcheck sl_satcheck slsat_expgen)
+ (modules
+   sl_prove sl_disprove sl_modelcheck sl_satcheck slsat_expgen)
+ (libraries lib generic seplog))

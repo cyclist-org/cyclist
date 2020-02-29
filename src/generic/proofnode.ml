@@ -1,5 +1,4 @@
 open Lib
-open Symbols
 
 (** Proof node signature. *)
 module type S = sig

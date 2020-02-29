@@ -1,6 +1,8 @@
 (** An ordered pair of SL terms. *)
 
-include Utilsigs.BasicType with type t = Sl_term.t * Sl_term.t
+open Lib
+
+include BasicType with type t = Sl_term.t * Sl_term.t
 
 val unify :
      ?order:bool
@@ -25,7 +27,7 @@ val to_string_sep : string -> t -> string
 
 (** A list of term pairs. *)
 module FList : sig
-  include Utilsigs.BasicType with type t = t list
+  include BasicType with type t = t list
 
   (* val unify_partial : ?order:bool -> ?inverse:bool -> t Sl_unifier.t *)
 
@@ -38,4 +40,4 @@ module FList : sig
 end
 
 (** A set of term pairs *)
-module ListSet : Utilsigs.OrderedContainer with type elt = t
+module ListSet : OrderedContainer with type elt = t

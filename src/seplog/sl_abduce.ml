@@ -1,4 +1,6 @@
 open Lib
+open Generic
+
 module Proof = Proof.Make (Sl_seq)
 module Rule = Proofrule.Make (Sl_seq)
 module Seqtactics = Seqtactics.Make (Sl_seq)

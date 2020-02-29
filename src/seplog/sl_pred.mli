@@ -1,9 +1,11 @@
 (** Predicate occurrences consisting of a predicate identifier and a list of 
     terms as parameters. *)
 
-include Utilsigs.BasicType with type t = Sl_predsym.t * Sl_term.FList.t
+open Lib
 
-module MSet : Utilsigs.OrderedContainer with type elt = t
+include BasicType with type t = Sl_predsym.t * Sl_term.FList.t
+
+module MSet : OrderedContainer with type elt = t
 
 val predsym : t -> Sl_predsym.t
 

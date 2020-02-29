@@ -1,10 +1,12 @@
-include Utilsigs.BasicType
+open Lib
 
-module Set : Utilsigs.OrderedContainer with type elt = t
+include BasicType
 
-module MSet : Utilsigs.OrderedContainer with type elt = t
+module Set : OrderedContainer with type elt = t
 
-module Map : Utilsigs.OrderedMap with type key = t
+module MSet : OrderedContainer with type elt = t
+
+module Map : OrderedMap with type key = t
 
 val parse : (t, 'a) MParser.parser
 

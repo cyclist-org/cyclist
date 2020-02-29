@@ -3,13 +3,15 @@
     The focus on fresh variable generation is human readable formulas,
     not speed. *)
 
-include Utilsigs.BasicType
+open Lib
+
+include BasicType
 
 (** An ordered set of terms. *)
-module Set : Utilsigs.OrderedContainer with type elt = t
+module Set : OrderedContainer with type elt = t
 
 (** An ordered map with terms as keys. *)
-module Map : Utilsigs.OrderedMap with type key = t
+module Map : OrderedMap with type key = t
 
 val parse : (t, 'a) MParser.parser
 (** Parse a term. *)
@@ -68,7 +70,7 @@ val biunify :
 (** Unifies two terms by producing substitutions to act on each term respectively *)
 
 module FList : sig
-  include Utilsigs.BasicType with type t = t list
+  include BasicType with type t = t list
 
   val terms : t -> Set.t
   (** Convenience function converting the list to a set. *)

@@ -1,5 +1,3 @@
-open Lib
-
 let do_statistics = ref false
 
 let now () =

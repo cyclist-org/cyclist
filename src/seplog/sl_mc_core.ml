@@ -1,10 +1,14 @@
 open Lib
+open   Symbols
+
+open Generic
+
 open MParser
-open Symbols
+
 module List = Blist
 
 module type NaturalType = sig
-  include Utilsigs.BasicType
+  include BasicType
 
   val zero : t
 
@@ -20,11 +24,11 @@ module NatType : NaturalType with type t = int = struct
 end
 
 module Var : sig
-  include Utilsigs.BasicType
+  include BasicType
 
-  module Set : Utilsigs.OrderedContainer with type elt = t
+  module Set : OrderedContainer with type elt = t
 
-  module Map : Utilsigs.OrderedMap with type key = t
+  module Map : OrderedMap with type key = t
 
   val of_term : Sl_term.t -> t
 
@@ -66,7 +70,7 @@ module type S = sig
   end
 
   module Heap : sig
-    include Utilsigs.BasicType
+    include BasicType
 
     module MakeParser (T : sig
       val parse_scalar : (Value.t, 'a) MParser.t
@@ -78,7 +82,7 @@ module type S = sig
   end
 
   module Stack : sig
-    include Utilsigs.BasicType
+    include BasicType
 
     module MakeParser (T : sig
       val parse_scalar : (Value.t, 'a) MParser.t
@@ -462,7 +466,7 @@ struct
   end
 
   module HeapBase : sig
-    include Utilsigs.BasicType
+    include BasicType
 
     val empty : t
 

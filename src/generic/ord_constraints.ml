@@ -1,6 +1,8 @@
 open Lib
-open Symbols
+open   Symbols
+
 open MParser
+
 module Tag = Tags.Elt
 
 module Constraint = struct
@@ -178,7 +180,7 @@ let all_pairs cs =
 let prog_pairs cs =
   let extract = function
     | Constraint.LT tp -> Some tp
-    | Constraint.LTE tp -> None
+    | Constraint.LTE _ -> None
   in
   opt_map_to Tagpairs.add Tagpairs.empty extract cs
 

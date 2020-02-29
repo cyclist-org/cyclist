@@ -3,6 +3,9 @@
     unification of its various elements
 *)
 
+open Lib
+open Generic
+
 module type S = sig
   (** State maintained by unifiers. *)
   type state

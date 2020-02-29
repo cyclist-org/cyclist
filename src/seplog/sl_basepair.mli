@@ -1,10 +1,12 @@
-module AllocatedT : Utilsigs.BasicType with type t = Sl_term.t * int
+open Lib
 
-module Allocated : Utilsigs.OrderedContainer with type elt = AllocatedT.t
+module AllocatedT : BasicType with type t = Sl_term.t * int
 
-include Utilsigs.BasicType with type t = Allocated.t * Sl_heap.t
+module Allocated : OrderedContainer with type elt = AllocatedT.t
 
-module Set : Utilsigs.OrderedContainer with type elt = t
+include BasicType with type t = Allocated.t * Sl_heap.t
+
+module Set : OrderedContainer with type elt = t
 
 module Hashset : Hashset.S with type elt = t
 

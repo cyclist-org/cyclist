@@ -1,6 +1,6 @@
 (** Multiset of points-tos. *)
 
-include Utilsigs.OrderedContainer with type elt = Sl_pto.t
+include Lib.OrderedContainer with type elt = Sl_pto.t
 
 val subst : Sl_subst.t -> t -> t
 

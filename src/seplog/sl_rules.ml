@@ -1,4 +1,6 @@
 open Lib
+open Generic
+
 module SH = Sl_heap
 
 exception Not_symheap = Sl_form.Not_symheap

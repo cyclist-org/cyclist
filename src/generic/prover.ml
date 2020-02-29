@@ -1,7 +1,5 @@
 open Lib
-open Symbols
 
-(* module L = Zlist *)
 module L = Blist
 
 module type S = sig

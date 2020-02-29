@@ -1,0 +1,4 @@
+(executable
+  (name procedure_prove)
+  (public_name procedure_prove)
+  (libraries lib generic while ocamlgraph str))

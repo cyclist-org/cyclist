@@ -1,6 +1,6 @@
 (** A union-find structure for SL terms. *)
 
-include Utilsigs.BasicType
+include Lib.BasicType
 
 val parse : (Sl_tpair.t, 'a) MParser.parser
 

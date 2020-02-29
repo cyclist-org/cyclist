@@ -1,5 +1,7 @@
 (** Tagged predicate, as a pair of an integer and a predicate. *)
-include Utilsigs.BasicType with type t = Tags.Elt.t * Sl_pred.t
+open Lib
+
+include BasicType with type t = Tags.Elt.t * Sl_pred.t
 
 val equal_upto_tags : t -> t -> bool
 (** Compare for equality two tagged predicates while ignoring tags. *)

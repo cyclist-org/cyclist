@@ -1,5 +1,7 @@
 (** Symbolic heaps. *)
 
+open Lib
+
 type abstract1
 
 type abstract2
@@ -13,7 +15,7 @@ type symheap = private
   ; mutable _vars: abstract1
   ; mutable _tags: abstract2 }
 
-include Utilsigs.BasicType with type t = symheap
+include BasicType with type t = symheap
 
 val empty : t
 

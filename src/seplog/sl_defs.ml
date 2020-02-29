@@ -1,6 +1,10 @@
 open Lib
-open Symbols
+open   Symbols
+
+open Generic
+
 open MParser
+
 module SH = Sl_heap
 
 module Defs = struct

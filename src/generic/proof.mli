@@ -1,5 +1,7 @@
 (** A cyclic proof object. *)
 
+open Lib
+
 (** Proof signature. *)
 module type S = sig
   (** Proof type. Invariants are:
