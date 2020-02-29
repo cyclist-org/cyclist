@@ -1,6 +1,8 @@
 open Lib
 open   Symbols
 
+open Generic
+
 open Seplog
 
 open MParser

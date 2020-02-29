@@ -1,5 +1,6 @@
 (** Tagged predicate, as a pair of an integer and a predicate. *)
 open Lib
+open Generic
 
 include BasicType with type t = Tags.Elt.t * Sl_pred.t
 

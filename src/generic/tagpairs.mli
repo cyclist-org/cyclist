@@ -1,12 +1,13 @@
 (** A set of tag pairs with a few convenience functions. Tag pairs are 
     used mainly for representing a transition relation over the set of tags. *)
 
+open Lib
+
 type elt = Tags.Elt.t * Tags.Elt.t
 
 include
-  Utilsigs.OrderedContainer
-  with type t = Tags.Elt.Unifier.t
-   and type elt := elt
+  OrderedContainer with type t = Tags.Elt.Unifier.t
+                    and type elt := elt
 
 val mk : Tags.t -> t
 (** [mk tags] computes the identity relation over the set [tags]. *)

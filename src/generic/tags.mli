@@ -1,10 +1,11 @@
 (** A set of tags. *)
 
+open Lib
 (* type elt = int *)
 module Elt : sig
-  include Utilsigs.BasicType
+  include BasicType
 
-  module Unifier : Utilsigs.OrderedContainer with type elt = t * t
+  module Unifier : OrderedContainer with type elt = t * t
 
   val parse : (t, 'a) MParser.t
 
@@ -24,7 +25,7 @@ module Elt : sig
       for each tag which makes them equal. *)
 end
 
-include Utilsigs.OrderedContainer with type elt = Elt.t
+include OrderedContainer with type elt = Elt.t
 
 include VarManager.I with type var := elt and type var_container = t
 

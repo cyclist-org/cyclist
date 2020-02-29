@@ -4,6 +4,7 @@
     a set of tag pairs that describes an injective function.
     *)
 open Lib
+open Generic
 
 include OrderedContainer with type elt = Sl_tpred.t
 

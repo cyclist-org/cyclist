@@ -1,6 +1,7 @@
 (** Inductive rule type consisting of a symbolic heap and a predicate head. *)
 
 open Lib
+open Generic
 
 include BasicType
 

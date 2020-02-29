@@ -1,5 +1,8 @@
 open Lib
-open Symbols
+open   Symbols
+
+open Generic
+
 open MParser
 
 let split_heaps = ref true

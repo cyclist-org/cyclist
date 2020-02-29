@@ -1,5 +1,8 @@
 open MParser
 open MParser_PCRE
+
+open Lib
+
 module Tokens = MParser_PCRE.Tokens
 
 let classify_varname s =

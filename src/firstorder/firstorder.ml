@@ -1,6 +1,8 @@
 open Lib
 open   Symbols
 
+open Generic
+
 open MParser
 
 let anon_var_name = "_"

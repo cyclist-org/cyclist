@@ -1,6 +1,10 @@
 open Lib
-open Symbols
+open   Symbols
+
+open Generic
+
 open MParser
+
 include Multiset.Make (Sl_tpred)
 
 let subst theta elts = map (Sl_tpred.subst theta) elts

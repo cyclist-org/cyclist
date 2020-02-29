@@ -1,6 +1,10 @@
 open Lib
-open Symbols
+open   Symbols
+
+open Generic
+
 open MParser
+
 module TPred = Pair.Make (Tags.Elt) (Sl_pred)
 include TPred
 

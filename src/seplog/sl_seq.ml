@@ -1,6 +1,10 @@
 open Lib
-open Symbols
+open   Symbols
+
+open Generic
+
 open MParser
+
 include Pair.Make (Sl_form) (Sl_form)
 
 let equal (l, r) (l', r') = Sl_form.equal l l' && Sl_form.equal r r'

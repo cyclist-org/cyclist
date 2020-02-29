@@ -1,6 +1,7 @@
 (** Symbolic heaps. *)
 
 open Lib
+open Generic
 
 type abstract1
 

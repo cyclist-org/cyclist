@@ -1,4 +1,6 @@
 (* include Treeset.Make(Pair.Make(Tags.Elt)(Tags.Elt)) *)
+open Lib
+
 include Tags.Elt.Unifier
 
 let mk s = Tags.fold (fun i p -> add (i, i) p) s empty

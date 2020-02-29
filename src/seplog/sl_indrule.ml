@@ -1,6 +1,10 @@
 open Lib
-open Symbols
+open   Symbols
+
+open Generic
+
 open MParser
+
 include Pair.Make (Sl_heap) (Sl_pred)
 
 let vars (f, (_, vs)) =

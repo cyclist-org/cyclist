@@ -1,6 +1,8 @@
 (** This module contains functions to answer various abduction questions for
     use in program verification. *)
 
+open Generic
+
 val max_depth : int
 (** Returns the maximum depth for the underlying proof search *)
 
@@ -11,7 +13,7 @@ val set_defs : Sl_defs.t -> unit
 (** Specify the set of inductive definitions available for the proof search *)
 
 val abd_substs :
-     ?used_tags:Lib.Tags.t
+     ?used_tags:Tags.t
   -> ?init_state:Sl_unify.Unidirectional.state
   -> ?update_check:Sl_unify.Unidirectional.update_check
   -> ?verify:Sl_unify.Unidirectional.state_check
