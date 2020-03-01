@@ -2,14 +2,10 @@ open Lib
 open Generic
 open Seplog
 
-open Procedure_program
-
-module SH = Heap
+open Program
 
 exception Not_symheap = Form.Not_symheap
 
-module Program = Procedure_program
-module Seq = Program.Seq
 module Rule = Proofrule.Make (Seq)
 module Seqtactics = Seqtactics.Make (Seq)
 module Proof = Proof.Make (Seq)
@@ -249,11 +245,11 @@ let lhs_disj_to_symheaps =
 (*   try                                                                                  *)
 (*     let (pre, cmd, post) = dest_sh_seq seq in                                          *)
 (*     let preds =                                                                        *)
-(*       Tpreds.filter (fun (_,(ident',_)) -> Strng.equal ident ident') pre.SH.inds in *)
+(*       Tpreds.filter (fun (_,(ident',_)) -> Strng.equal ident ident') pre.Heap.inds in *)
 (*     if Tpreds.is_empty preds then [] else                                           *)
 (*     let left_unfold ((id,(_,pvs)) as p) =                                              *)
 (*       let ts = Tags.inter (Heap.tags pre) (Heap.tags pre) in                     *)
-(*       let pre' = SH.del_ind pre p in                                                   *)
+(*       let pre' = Heap.del_ind pre p in                                                   *)
 (*       let do_case case =                                                               *)
 (*         let n = Blist.length (Indrule.formals case) in                              *)
 (*         let n' = Blist.length pvs in                                                   *)
@@ -316,7 +312,7 @@ let luf_rl defs ((pre, cmd, post) as seq) =
       (Blist.map do_case cases, Predsym.to_string ident ^ " L.Unf.")
     in
     Tpreds.map_to_list left_unfold
-      (Tpreds.filter (Defs.is_defined defs) pre.SH.inds)
+      (Tpreds.filter (Defs.is_defined defs) pre.Heap.inds)
   with Not_symheap -> []
 
 let luf defs = wrap (luf_rl defs)
@@ -325,9 +321,9 @@ let ruf_rl defs ((pre, cmd, post) as seq) =
   let cs, h = Form.dest post in
   let seq_vars = Seq.vars seq in
   let seq_tags = Seq.all_tags seq in
-  let preds = Tpreds.filter (Defs.is_defined defs) h.SH.inds in
+  let preds = Tpreds.filter (Defs.is_defined defs) h.Heap.inds in
   let right_unfold ((tag, (ident, _)) as p) =
-    let h' = SH.del_ind h p in
+    let h' = Heap.del_ind h p in
     let clauses = Defs.unfold (seq_vars, seq_tags) p defs in
     let do_case f =
       let cs' =
@@ -377,14 +373,14 @@ let symex_assign_rule =
       let theta = Subst.singleton x fv in
       let h' = Heap.subst theta h in
       let e' = Subst.apply theta e in
-      [([SH.add_eq h' (e', x)], "Assign")]
+      [([Heap.add_eq h' (e', x)], "Assign")]
     with
     | WrongCmd | Not_symheap -> []
   in
   mk_symex rl
 
 let find_pto_on f e =
-  Ptos.find (fun (l, _) -> Heap.equates f e l) f.SH.ptos
+  Ptos.find (fun (l, _) -> Heap.equates f e l) f.Heap.ptos
 
 let symex_load_rule =
   let rl ((pre, cmd, _) as seq) =
@@ -397,7 +393,7 @@ let symex_load_rule =
       let theta = Subst.singleton x fv in
       let h' = Heap.subst theta h in
       let t' = Subst.apply theta t in
-      [([SH.add_eq h' (t', x)], "Load")]
+      [([Heap.add_eq h' (t', x)], "Load")]
     with
     | Not_symheap | WrongCmd | Not_found -> []
   in
@@ -410,7 +406,7 @@ let symex_store_rule =
       let x, f, e = Cmd.dest_store cmd in
       let ((x', ys) as pto) = find_pto_on h x in
       let pto' = (x', Blist.replace_nth e (Field.get_index f) ys) in
-      [([SH.add_pto (SH.del_pto h pto) pto'], "Store")]
+      [([Heap.add_pto (Heap.del_pto h pto) pto'], "Store")]
     with
     | Not_symheap | WrongCmd | Not_found -> []
   in
@@ -422,7 +418,7 @@ let symex_free_rule =
       let _, h = Form.dest pre in
       let e = Cmd.dest_free cmd in
       let pto = find_pto_on h e in
-      [([SH.del_pto h pto], "Free")]
+      [([Heap.del_pto h pto], "Free")]
     with
     | Not_symheap | WrongCmd | Not_found -> []
   in
@@ -1202,13 +1198,13 @@ let use_proc_prf prf_cache idx prf =
 (*           else t in                                                                                                                                                                                                                         *)
 (*         let gen_pto (x,args) =                                                                                                                                                                                                              *)
 (*           let l = Blist.map gen_term (x::args) in (Blist.hd l, Blist.tl l) in                                                                                                                                                               *)
-(*             SH.mk                                                                                                                                                                                                                           *)
-(*               (Term.Set.fold Uf.remove m h.SH.eqs)                                                                                                                                                                                    *)
+(*             Heap.mk                                                                                                                                                                                                                           *)
+(*               (Term.Set.fold Uf.remove m h.Heap.eqs)                                                                                                                                                                                    *)
 (*               (Deqs.filter                                                                                                                                                                                                               *)
 (*                 (fun p -> Pair.conj (Pair.map (fun z -> not (Term.Set.mem z m)) p))                                                                                                                                                      *)
-(*                 h.SH.deqs)                                                                                                                                                                                                                  *)
-(*               (Ptos.map gen_pto h.SH.ptos)                                                                                                                                                                                           *)
-(*               h.SH.inds in                                                                                                                                                                                                                  *)
+(*                 h.Heap.deqs)                                                                                                                                                                                                                  *)
+(*               (Ptos.map gen_pto h.Heap.ptos)                                                                                                                                                                                           *)
+(*               h.Heap.inds in                                                                                                                                                                                                                  *)
 (*       try                                                                                                                                                                                                                                   *)
 (*         let (pre, cmd, post) = dest_sh_seq seq in                                                                                                                                                                                           *)
 (*         let (_, cmd') = Cmd.dest_while cmd in                                                                                                                                                                                               *)

@@ -1,16 +1,12 @@
 open Lib
 open Generic
-open Seplog
+
+open Program
 
 let defs_path = ref "examples/sl.defs"
 
 let prog_path = ref ""
 
-module Program = Procedure_program
-module Rules = Procedure_rules
-module Proc = Program.Proc
-module Seq = Program.Seq
-module Cmd = Program.Cmd
 module GraphComponents = Graph.Components.Make (Proc.Graph)
 module Prover = Prover.Make (Seq)
 module F = Frontend.Make (Prover)
@@ -35,10 +31,10 @@ let () =
           , ": maximum search depth for entailment sub-prover, default is "
             ^ string_of_int !Rules.entl_depth )
         ; ( "-fd"
-          , Arg.Int Abduce.set_depth
+          , Arg.Int Seplog.Abduce.set_depth
           , ": maximum depth to unfold predicates to in frame inference, \
              default is "
-            ^ string_of_int Abduce.max_depth )
+            ^ string_of_int Seplog.Abduce.max_depth )
         ; ( "-D"
           , Arg.Set_string defs_path
           , ": read inductive definitions from <file>, default is "
@@ -131,7 +127,7 @@ let () =
     F.die "-P must be specified." spec_list !F.usage ;
   let fields, procs = Program.of_channel (open_in !prog_path) in
   let procs = Blist.map Proc.number_cmds procs in
-  let defs = Defs.of_channel (open_in !defs_path) in
+  let defs = Seplog.Defs.of_channel (open_in !defs_path) in
   (* TODO: Check well-formedness of the program: *)
   (*   Do all the predicates in the pre/post annotations have the correct arity? *)
   (*   If not While_program.well_formed defs prog then F.die !While_program.error_msg *)

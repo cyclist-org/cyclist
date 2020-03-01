@@ -6,10 +6,9 @@ open Generic
 open Seplog
 
 open While
+open   Program
 
 open MParser
-
-module SH = Heap
 
 let termination = ref false
 
