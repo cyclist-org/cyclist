@@ -25,7 +25,7 @@ let gen_defs = ref false
 let maxbound = ref 20
 
 module Seq = While_program.Seq
-module Abducer = Abducer.Make (While_program.Seq) (Sl_defs)
+module Abducer = Abducer.Make (While_program.Seq) (Defs)
 
 let defs_count = ref 0
 
@@ -35,7 +35,7 @@ let record_defs defs =
   let path_fn = Filename.concat !rec_defs_path (fn ^ ext) in
   let () = incr defs_count in
   let ch = open_out path_fn in
-  let () = output_string ch (Sl_defs.to_string (While_abdrules.empify defs)) in
+  let () = output_string ch (Defs.to_string (While_abdrules.empify defs)) in
   let () = close_out ch in
   if Int.( > ) !defs_count 50000 then exit 0 else false
 
@@ -46,7 +46,7 @@ let prove_prog seq =
   let res =
     w_timeout
       (fun () ->
-        Abducer.bfs !maxbound While_abdrules.rules seq Sl_defs.empty
+        Abducer.bfs !maxbound While_abdrules.rules seq Defs.empty
           (if !gen_defs then record_defs else While_abdrules.is_sat) )
       !timeout
   in
@@ -67,7 +67,7 @@ let prove_prog seq =
       else print_endline ("Proved: " ^ While_program.Seq.to_string seq) ;
       if !show_defs || !simpl_defs then
         print_endline
-          (Sl_defs.to_string
+          (Defs.to_string
              (( if !simpl_defs then While_abdrules.simplify_defs
               else While_abdrules.empify )
                 defs)) ;

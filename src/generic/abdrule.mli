@@ -41,7 +41,7 @@ module type S = sig
   val first : t list -> t
 end
 
-module Make (Seq : Sequent.S) (Defs : Defs.S) :
+module Make (Seq : Sequent.S) (Defs : sig type t end) :
   S
   with type seq_t = Seq.t
   with type proof_t = Proof.Make(Seq).t

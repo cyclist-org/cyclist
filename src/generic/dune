@@ -2,7 +2,7 @@
  (name generic)
  (public_name cyclist.generic)
  (libraries lib)
- (modules_without_implementation defs sequent)
+ (modules_without_implementation sequent)
  (foreign_stubs
   (language c)
   (names proof proof_aut trace soundness)

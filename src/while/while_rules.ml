@@ -5,9 +5,9 @@ open Seplog
 open While
 open   While_program
 
-module SH = Sl_heap
+module SH = Heap
 
-exception Not_symheap = Sl_form.Not_symheap
+exception Not_symheap = Form.Not_symheap
 
 module Rule = Proofrule.Make (While_program.Seq)
 module Seqtactics = Seqtactics.Make (While_program.Seq)
@@ -18,11 +18,11 @@ let tagpairs s = if !termination then Seq.tag_pairs s else Seq.tagpairs_one
 (* following is for symex only *)
 let progpairs () = if !termination then Tagpairs.empty else Seq.tagpairs_one
 
-let dest_sh_seq (l, cmd) = (Sl_form.dest l, cmd)
+let dest_sh_seq (l, cmd) = (Form.dest l, cmd)
 
 (* axioms *)
 let ex_falso_axiom =
-  Rule.mk_axiom (fun (f, _) -> Option.mk (Sl_form.inconsistent f) "Ex Falso")
+  Rule.mk_axiom (fun (f, _) -> Option.mk (Form.inconsistent f) "Ex Falso")
 
 let symex_stop_axiom =
   Rule.mk_axiom (fun (_, cmd) ->
@@ -33,8 +33,8 @@ let symex_empty_axiom =
 
 (* simplification rules *)
 let eq_subst_ex_f ((l, cmd) as s) =
-  let l' = Sl_form.subst_existentials l in
-  if Sl_form.equal l l' then []
+  let l' = Form.subst_existentials l in
+  if Form.equal l l' then []
   else [([((l', cmd), tagpairs s, Tagpairs.empty)], "Eq. subst. ex")]
 
 let simplify_rules = [eq_subst_ex_f]
@@ -67,14 +67,14 @@ let luf_rl seq defs =
   try
     let (cs, h), cmd = dest_sh_seq seq in
     let seq_vars = Seq.vars seq in
-    let seq_tags = Tags.union (Ord_constraints.tags cs) (Sl_heap.tags h) in
+    let seq_tags = Tags.union (Ord_constraints.tags cs) (Heap.tags h) in
     let left_unfold ((t, (ident, _)) as p) =
       let h' = SH.del_ind h p in
-      let clauses = Sl_defs.unfold (seq_vars, seq_tags) p defs in
+      let clauses = Defs.unfold (seq_vars, seq_tags) p defs in
       let do_case body =
-        let tag_subst = Tagpairs.mk_free_subst seq_tags (Sl_heap.tags body) in
-        let body = Sl_heap.subst_tags tag_subst body in
-        let h' = Sl_heap.star h' body in
+        let tag_subst = Tagpairs.mk_free_subst seq_tags (Heap.tags body) in
+        let body = Heap.subst_tags tag_subst body in
+        let h' = Heap.star h' body in
         let progpairs = Tagpairs.map (fun (_, t') -> (t, t')) tag_subst in
         let allpairs =
           Tagpairs.union (Tagpairs.remove (t, t) (Seq.tag_pairs seq)) progpairs
@@ -83,10 +83,10 @@ let luf_rl seq defs =
         , (if !termination then allpairs else Seq.tagpairs_one)
         , if !termination then progpairs else Tagpairs.empty )
       in
-      (Blist.map do_case clauses, Sl_predsym.to_string ident ^ " L.Unf.")
+      (Blist.map do_case clauses, Predsym.to_string ident ^ " L.Unf.")
     in
-    Sl_tpreds.map_to_list left_unfold
-      (Sl_tpreds.filter (Sl_defs.is_defined defs) h.SH.inds)
+    Tpreds.map_to_list left_unfold
+      (Tpreds.filter (Defs.is_defined defs) h.SH.inds)
   with Not_symheap -> []
 
 let luf defs = wrap (fun seq -> luf_rl seq defs)
@@ -103,7 +103,7 @@ let mk_symex f =
     fix_tps
       (Blist.map
          (fun (g, d) ->
-           (Blist.map (fun h' -> (Sl_form.with_heaps pre [h'], cont)) g, d) )
+           (Blist.map (fun h' -> (Form.with_heaps pre [h'], cont)) g, d) )
          (f seq))
   in
   wrap rl
@@ -114,10 +114,10 @@ let symex_assign_rule =
     try
       let (_, h), cmd = dest_sh_seq seq in
       let x, e = Cmd.dest_assign cmd in
-      let fv = fresh_evar (Sl_heap.vars h) in
-      let theta = Sl_subst.singleton x fv in
-      let h' = Sl_heap.subst theta h in
-      let e' = Sl_subst.apply theta e in
+      let fv = fresh_evar (Heap.vars h) in
+      let theta = Subst.singleton x fv in
+      let h' = Heap.subst theta h in
+      let e' = Subst.apply theta e in
       [([SH.add_eq h' (e', x)], "Assign")]
     with
     | WrongCmd | Not_symheap -> []
@@ -125,7 +125,7 @@ let symex_assign_rule =
   mk_symex rl
 
 let find_pto_on f e =
-  Sl_ptos.find (fun (l, _) -> Sl_heap.equates f e l) f.SH.ptos
+  Ptos.find (fun (l, _) -> Heap.equates f e l) f.SH.ptos
 
 let symex_load_rule =
   let rl seq =
@@ -134,10 +134,10 @@ let symex_load_rule =
       let x, e, s = Cmd.dest_load cmd in
       let _, ys = find_pto_on h e in
       let t = Blist.nth ys (Field.get_index s) in
-      let fv = fresh_evar (Sl_heap.vars h) in
-      let theta = Sl_subst.singleton x fv in
-      let h' = Sl_heap.subst theta h in
-      let t' = Sl_subst.apply theta t in
+      let fv = fresh_evar (Heap.vars h) in
+      let theta = Subst.singleton x fv in
+      let h' = Heap.subst theta h in
+      let t' = Subst.apply theta t in
       [([SH.add_eq h' (t', x)], "Load")]
     with
     | Not_symheap | WrongCmd | Not_found -> []
@@ -174,11 +174,11 @@ let symex_new_rule =
     try
       let (_, h), cmd = dest_sh_seq seq in
       let x = Cmd.dest_new cmd in
-      let l = fresh_evars (Sl_heap.vars h) (1 + Field.get_no_fields ()) in
+      let l = fresh_evars (Heap.vars h) (1 + Field.get_no_fields ()) in
       let fv, fvs = (Blist.hd l, Blist.tl l) in
-      let h' = Sl_heap.subst (Sl_subst.singleton x fv) h in
-      let h'' = Sl_heap.mk_pto (x, fvs) in
-      [([Sl_heap.star h' h''], "New")]
+      let h' = Heap.subst (Subst.singleton x fv) h in
+      let h'' = Heap.mk_pto (x, fvs) in
+      [([Heap.star h' h''], "New")]
     with
     | Not_symheap | WrongCmd -> []
   in
@@ -256,17 +256,17 @@ let matches ((f, cmd) as seq) ((f', cmd') as seq') =
   try
     if not (Cmd.equal cmd cmd') then []
     else
-      let (cs, h), (cs', h') = Pair.map Sl_form.dest (f, f') in
-      Sl_unify.Unidirectional.realize
+      let (cs, h), (cs', h') = Pair.map Form.dest (f, f') in
+      Unify.Unidirectional.realize
         (Unification.backtrack
-           (Sl_heap.unify_partial
+           (Heap.unify_partial
               ~update_check:
-                (Fun.conj Sl_unify.Unidirectional.trm_check
-                   (Sl_unify.Unidirectional.avoid_replacing_trms !program_vars)))
+                (Fun.conj Unify.Unidirectional.trm_check
+                   (Unify.Unidirectional.avoid_replacing_trms !program_vars)))
            h' h
-           (Sl_unify.Unidirectional.unify_tag_constraints cs cs'
-              (Sl_unify.Unidirectional.mk_verifier
-                 (Sl_unify.Unidirectional.mk_assert_check
+           (Unify.Unidirectional.unify_tag_constraints cs cs'
+              (Unify.Unidirectional.mk_verifier
+                 (Unify.Unidirectional.mk_assert_check
                     (fun (theta, tagpairs) ->
                       let subst_seq =
                         Seq.subst_tags tagpairs (Seq.subst theta seq')
@@ -274,7 +274,7 @@ let matches ((f, cmd) as seq) ((f', cmd') as seq') =
                       let () =
                         debug (fun _ ->
                             "term substitution: "
-                            ^ Format.asprintf " %a" Sl_subst.pp theta )
+                            ^ Format.asprintf " %a" Subst.pp theta )
                       in
                       let () =
                         debug (fun _ ->
@@ -302,7 +302,7 @@ let matches ((f, cmd) as seq) ((f', cmd') as seq') =
 let subst_rule theta seq' seq =
   if Seq.equal (Seq.subst theta seq') seq then
     [ ([(seq', Seq.tag_pairs seq', Tagpairs.empty)], "Subst ")
-    (* ^ (Format.asprintf "%a" Sl_subst.pp theta) *) ]
+    (* ^ (Format.asprintf "%a" Subst.pp theta) *) ]
   else []
 
 let frame seq' seq =
@@ -328,13 +328,13 @@ let dobackl idx prf =
     let targ_seq = Proof.get_seq targ_idx prf in
     (* [targ_seq'] is as [targ_seq] but with the tags of [src_seq] *)
     let targ_seq' =
-      (Sl_form.subst_tags tagpairs (fst targ_seq), snd targ_seq)
+      (Form.subst_tags tagpairs (fst targ_seq), snd targ_seq)
     in
     let subst_seq = Seq.subst theta targ_seq' in
     Rule.sequence
       [ ( if Seq.equal src_seq subst_seq then Rule.identity
         else Rule.mk_infrule (frame subst_seq) )
-      ; ( if Sl_term.Map.for_all Sl_term.equal theta then Rule.identity
+      ; ( if Term.Map.for_all Term.equal theta then Rule.identity
         else Rule.mk_infrule (subst_rule theta targ_seq') )
       ; Rule.mk_backrule false
           (fun _ _ -> [targ_idx])
@@ -349,17 +349,17 @@ let fold def =
   let fold_rl seq =
     try
       let (cs, h), cmd = dest_sh_seq seq in
-      if Sl_tpreds.is_empty h.SH.inds then []
+      if Tpreds.is_empty h.SH.inds then []
       else
         let tags = Seq.tags seq in
         let do_case case =
-          let f, (ident, vs) = Sl_indrule.dest case in
-          let results = Sl_indrule.fold case h in
+          let f, (ident, vs) = Indrule.dest case in
+          let results = Indrule.fold case h in
           let process (theta, h') =
             let seq' = ((cs, [h']), cmd) in
             (* let () = print_endline "Fold match:" in         *)
             (* let () = print_endline (Seq.to_string seq) in   *)
-            (* let () = print_endline (Sl_heap.to_string f) in *)
+            (* let () = print_endline (Heap.to_string f) in *)
             (* let () = print_endline (Seq.to_string seq') in  *)
             let allpairs =
               if !termination then
@@ -367,22 +367,22 @@ let fold def =
               else Seq.tagpairs_one
             in
             ( [(seq', allpairs, Tagpairs.empty)]
-            , Sl_predsym.to_string ident ^ " Fold" )
+            , Predsym.to_string ident ^ " Fold" )
           in
           Blist.map process results
         in
-        Blist.bind do_case (Sl_preddef.rules def)
+        Blist.bind do_case (Preddef.rules def)
     with Not_symheap -> []
   in
   Rule.mk_infrule fold_rl
 
 let generalise_while_rule =
   let generalise m h =
-    let avoid = ref (Sl_heap.vars h) in
+    let avoid = ref (Heap.vars h) in
     let gen_term t =
-      if Sl_term.Set.mem t m then (
+      if Term.Set.mem t m then (
         let r = fresh_evar !avoid in
-        avoid := Sl_term.Set.add r !avoid ;
+        avoid := Term.Set.add r !avoid ;
         r )
       else t
     in
@@ -391,24 +391,24 @@ let generalise_while_rule =
       (Blist.hd l, Blist.tl l)
     in
     SH.mk
-      (Sl_term.Set.fold Sl_uf.remove m h.SH.eqs)
-      (Sl_deqs.filter
-         (fun p -> Pair.conj (Pair.map (fun z -> not (Sl_term.Set.mem z m)) p))
+      (Term.Set.fold Uf.remove m h.SH.eqs)
+      (Deqs.filter
+         (fun p -> Pair.conj (Pair.map (fun z -> not (Term.Set.mem z m)) p))
          h.SH.deqs)
-      (Sl_ptos.map gen_pto h.SH.ptos)
+      (Ptos.map gen_pto h.SH.ptos)
       h.SH.inds
   in
   let rl seq =
     try
       let (cs, h), cmd = dest_sh_seq seq in
       let _, cmd' = Cmd.dest_while cmd in
-      let m = Sl_term.Set.inter (Cmd.modifies cmd') (Sl_heap.vars h) in
-      let subs = Sl_term.Set.subsets m in
+      let m = Term.Set.inter (Cmd.modifies cmd') (Heap.vars h) in
+      let subs = Term.Set.subsets m in
       Option.list_get
         (Blist.map
            (fun m' ->
              let h' = generalise m' h in
-             if Sl_heap.equal h h' then None
+             if Heap.equal h h' then None
              else
                let s' = ((cs, [h']), cmd) in
                Some ([(s', tagpairs s', Tagpairs.empty)], "Gen.While") )
@@ -418,7 +418,7 @@ let generalise_while_rule =
   in
   Rule.mk_infrule rl
 
-module Slprover = Prover.Make (Sl_seq)
+module Slprover = Prover.Make (Seplog.Seq)
 
 let backlink_cut defs =
   let rl s1 s2 =
@@ -437,10 +437,10 @@ let backlink_cut defs =
       else
         (* let olddebug = !Lib.do_debug in *)
         (* let () = Lib.do_debug := true in *)
-        let () = Sl_rules.setup defs in
+        let () = Rules.setup defs in
         let result =
           Option.is_some
-            (Slprover.idfs 1 11 !Sl_rules.axioms !Sl_rules.rules (l1, l2))
+            (Slprover.idfs 1 11 !Rules.axioms !Rules.rules (l1, l2))
         in
         (* let () = Lib.do_debug := olddebug in *)
         (* let () = debug (fun () -> "CUTLINK3: result: " ^ (string_of_bool result)) in *)
@@ -476,7 +476,7 @@ let setup defs =
           ; Rule.choice
               (Blist.map
                  (fun c -> Rule.compose (fold c) dobackl)
-                 (Sl_defs.to_list defs))
+                 (Defs.to_list defs))
           ; symex
           ; generalise_while_rule
           ; (* backlink_cut defs; *)

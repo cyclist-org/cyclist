@@ -51,5 +51,5 @@ let () =
     F.die "Unrecognised commands in program!" spec_list !F.usage ;
   let prog = Cmd.number prog in
   While_program.set_program prog ;
-  While_rules.setup (Sl_defs.of_channel (open_in !defs_path)) ;
+  While_rules.setup (Defs.of_channel (open_in !defs_path)) ;
   F.exit (F.prove_seq !While_rules.axioms !While_rules.rules (seq, prog))

@@ -24,7 +24,7 @@ module type S = sig
   val print_proof_stats : Proof.t -> unit
 end
 
-module Make (Seq : Sequent.S) (Defs : Defs.S) = struct
+module Make (Seq : Sequent.S) (Defs : sig type t end) = struct
   module Abdrule = Abdrule.Make (Seq) (Defs)
   module Proof = Proof.Make (Seq)
   module Node = Proofnode.Make (Seq)

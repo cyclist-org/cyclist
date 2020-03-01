@@ -7,7 +7,7 @@ open Seplog
 
 open MParser
 
-module SH = Sl_heap
+module SH = Heap
 
 let termination = ref false
 
@@ -48,14 +48,14 @@ end
 
 exception WrongCmd
 
-let is_prog_var v = Sl_term.is_free_var v
+let is_prog_var v = Term.is_free_var v
 
-let is_prog_term t = Sl_term.is_nil t || is_prog_var t
+let is_prog_term t = Term.is_nil t || is_prog_var t
 
 module Cond = struct
   type t =
-    | Eq of Sl_term.t * Sl_term.t
-    | Deq of Sl_term.t * Sl_term.t
+    | Eq of Term.t * Term.t
+    | Deq of Term.t * Term.t
     | Non_det
 
   let mk_eq e1 e2 =
@@ -83,54 +83,54 @@ module Cond = struct
     | Non_det -> raise WrongCmd
 
   let terms = function
-    | Non_det -> Sl_term.Set.empty
-    | Deq (x, y) | Eq (x, y) -> Sl_term.Set.add x (Sl_term.Set.singleton y)
+    | Non_det -> Term.Set.empty
+    | Deq (x, y) | Eq (x, y) -> Term.Set.add x (Term.Set.singleton y)
 
-  let vars cond = Sl_term.filter_vars (terms cond)
+  let vars cond = Term.filter_vars (terms cond)
 
   let equal cond cond' =
     match (cond, cond') with
     | Non_det, Non_det -> true
     | Eq (x, y), Eq (x', y') | Deq (x, y), Deq (x', y') ->
-        Sl_term.equal x x' && Sl_term.equal y y'
+        Term.equal x x' && Term.equal y y'
     | _ -> false
 
   let subst theta cond =
     match cond with
-    | Eq (x, y) -> Eq (Sl_subst.apply theta x, Sl_subst.apply theta y)
-    | Deq (x, y) -> Deq (Sl_subst.apply theta x, Sl_subst.apply theta y)
+    | Eq (x, y) -> Eq (Subst.apply theta x, Subst.apply theta y)
+    | Deq (x, y) -> Deq (Subst.apply theta x, Subst.apply theta y)
     | _ -> cond
 
   let pp fmt = function
     | Non_det -> Format.fprintf fmt "@[%s@]" symb_star.str
     | Eq (x, y) ->
-        Format.fprintf fmt "@[%a%s%a@]" Sl_term.pp x symb_eq.str Sl_term.pp y
+        Format.fprintf fmt "@[%a%s%a@]" Term.pp x symb_eq.str Term.pp y
     | Deq (x, y) ->
-        Format.fprintf fmt "@[%a%s%a@]" Sl_term.pp x symb_deq.str Sl_term.pp y
+        Format.fprintf fmt "@[%a%s%a@]" Term.pp x symb_deq.str Term.pp y
 
   let fork f c =
     if is_non_det c then (f, f)
     else
       let pair = dest c in
-      let f' = SH.with_eqs f (Sl_uf.add pair f.SH.eqs) in
-      let f'' = SH.with_deqs f (Sl_deqs.add pair f.SH.deqs) in
+      let f' = SH.with_eqs f (Uf.add pair f.SH.eqs) in
+      let f'' = SH.with_deqs f (Deqs.add pair f.SH.deqs) in
       let f', f'' = if is_deq c then (f'', f') else (f', f'') in
       (f', f'')
 
   let validated_by h = function
-    | Eq (x, y) -> Sl_heap.equates h x y
-    | Deq (x, y) -> Sl_heap.disequates h x y
+    | Eq (x, y) -> Heap.equates h x y
+    | Deq (x, y) -> Heap.disequates h x y
     | _ -> false
 
   let invalidated_by h = function
-    | Eq (x, y) -> Sl_heap.disequates h x y
-    | Deq (x, y) -> Sl_heap.equates h x y
+    | Eq (x, y) -> Heap.disequates h x y
+    | Deq (x, y) -> Heap.equates h x y
     | _ -> false
 
   let parse st =
     ( attempt (parse_symb symb_star >>$ mk_non_det ())
-    <|> attempt (Sl_uf.parse |>> Fun.uncurry mk_eq)
-    <|> (Sl_deqs.parse |>> Fun.uncurry mk_deq)
+    <|> attempt (Uf.parse |>> Fun.uncurry mk_eq)
+    <|> (Deqs.parse |>> Fun.uncurry mk_deq)
     <?> "Cond" )
       st
 end
@@ -140,16 +140,16 @@ module Cmd = struct
     | Stop
     | Return
     | Skip
-    | Assign of Sl_term.t * Sl_term.t
-    | Load of Sl_term.t * Sl_term.t * Field.t
-    | Store of Sl_term.t * Field.t * Sl_term.t
-    | New of Sl_term.t
-    | Free of Sl_term.t
+    | Assign of Term.t * Term.t
+    | Load of Term.t * Term.t * Field.t
+    | Store of Term.t * Field.t * Term.t
+    | New of Term.t
+    | Free of Term.t
     | If of Cond.t * t
     | IfElse of Cond.t * t * t
     | While of Cond.t * t
-    | ProcCall of string * Sl_term.FList.t
-    | Assert of Sl_form.t
+    | ProcCall of string * Term.FList.t
+    | Assert of Form.t
 
   and basic_t = {label: int option; cmd: cmd_t}
 
@@ -257,11 +257,11 @@ module Cmd = struct
     <|> attempt (parse_symb keyw_skip >>$ Some Skip)
     <|> attempt
           ( parse_symb keyw_assert
-          >> Tokens.parens Sl_form.parse
+          >> Tokens.parens Form.parse
           |>> fun f -> Some (Assert f) )
     <|> attempt
           ( parse_symb keyw_free
-          >> Tokens.parens Sl_term.parse
+          >> Tokens.parens Term.parse
           |>> fun v ->
           assert (is_prog_var v) ;
           Some (Free v) )
@@ -289,9 +289,9 @@ module Cmd = struct
           >>= fun v ->
           parse_symb symb_fld_sel >> parse_ident
           >>= fun id ->
-          parse_symb symb_assign >> Sl_term.parse
+          parse_symb symb_assign >> Term.parse
           |>> fun t ->
-          let v = Sl_term.of_string v in
+          let v = Term.of_string v in
           assert (is_prog_var v) ;
           Some (Store (v, id, t)) )
     (*   v = var; ASSIGN; NEW; LP; RP { P.Cmd.mk_new v } *)
@@ -299,7 +299,7 @@ module Cmd = struct
           ( parse_ident << parse_symb symb_assign << parse_symb keyw_new
           << parse_symb symb_lp << parse_symb symb_rp
           |>> fun v ->
-          let v = Sl_term.of_string v in
+          let v = Term.of_string v in
           assert (is_prog_var v) ;
           Some (New v) )
     (*   | v1 = var; ASSIGN; v2 = var; FLD_SEL; fld = IDENT *)
@@ -310,8 +310,8 @@ module Cmd = struct
           >>= fun v2 ->
           parse_symb symb_fld_sel >> parse_ident
           |>> fun id ->
-          let v1 = Sl_term.of_string v1 in
-          let v2 = Sl_term.of_string v2 in
+          let v1 = Term.of_string v1 in
+          let v2 = Term.of_string v2 in
           assert (is_prog_var v1 && is_prog_var v2) ;
           Some (Load (v1, v2, id)) )
     (* | v = var; ASSIGN; t = term { P.Cmd.mk_assign v t } *)
@@ -320,17 +320,17 @@ module Cmd = struct
           >>= fun v ->
           parse_symb symb_assign >> parse_ident
           |>> fun t ->
-          let v = Sl_term.of_string v in
-          let t = Sl_term.of_string t in
+          let v = Term.of_string v in
+          let t = Term.of_string t in
           assert (is_prog_var v) ;
           Some (Assign (v, t)) )
     <|> attempt
           ( parse_ident
           >>= fun p ->
-          Tokens.parens (Tokens.comma_sep Sl_term.parse)
+          Tokens.parens (Tokens.comma_sep Term.parse)
           |>> fun args ->
           Blist.iter
-            (fun arg -> assert (is_prog_var arg || Sl_term.is_nil arg))
+            (fun arg -> assert (is_prog_var arg || Term.is_nil arg))
             args ;
           Some (ProcCall (p, args)) )
     <|> ( spaces >> string "/*"
@@ -458,54 +458,54 @@ module Cmd = struct
     fst (aux 0 c)
 
   let rec cmd_terms = function
-    | Stop | Return | Skip | Assert _ -> Sl_term.Set.empty
-    | New x | Free x -> Sl_term.Set.singleton x
+    | Stop | Return | Skip | Assert _ -> Term.Set.empty
+    | New x | Free x -> Term.Set.singleton x
     | Assign (x, e) | Load (x, e, _) | Store (x, _, e) ->
-        Sl_term.Set.of_list [x; e]
-    | If (cond, cmd) -> Sl_term.Set.union (Cond.vars cond) (terms cmd)
+        Term.Set.of_list [x; e]
+    | If (cond, cmd) -> Term.Set.union (Cond.vars cond) (terms cmd)
     | IfElse (cond, cmd, cmd') ->
-        Sl_term.Set.union
-          (Sl_term.Set.union (Cond.vars cond) (terms cmd))
+        Term.Set.union
+          (Term.Set.union (Cond.vars cond) (terms cmd))
           (terms cmd')
-    | While (cond, cmd) -> Sl_term.Set.union (Cond.vars cond) (terms cmd)
-    | ProcCall (p, args) -> Sl_term.Set.of_list args
+    | While (cond, cmd) -> Term.Set.union (Cond.vars cond) (terms cmd)
+    | ProcCall (p, args) -> Term.Set.of_list args
 
   and terms l =
     Blist.fold_left
-      (fun s c -> Sl_term.Set.union s (cmd_terms c.cmd))
-      Sl_term.Set.empty l
+      (fun s c -> Term.Set.union s (cmd_terms c.cmd))
+      Term.Set.empty l
 
-  let vars cmd = Sl_term.filter_vars (terms cmd)
+  let vars cmd = Term.filter_vars (terms cmd)
 
-  let locals params cmd = Sl_term.Set.diff (vars cmd) params
+  let locals params cmd = Term.Set.diff (vars cmd) params
 
   let rec cmd_modifies ?(strict = true) cmd =
     match cmd with
     | Stop | Return | Skip | Free _ | Assert _ | ProcCall (_, _) ->
-        Sl_term.Set.empty
-    | New x | Assign (x, _) | Load (x, _, _) -> Sl_term.Set.singleton x
+        Term.Set.empty
+    | New x | Assign (x, _) | Load (x, _, _) -> Term.Set.singleton x
     | Store (x, _, _) ->
-        if strict then Sl_term.Set.singleton x else Sl_term.Set.empty
+        if strict then Term.Set.singleton x else Term.Set.empty
     | If (_, cmd) | While (_, cmd) -> modifies ~strict cmd
     | IfElse (_, cmd, cmd') ->
-        Sl_term.Set.union (modifies ~strict cmd) (modifies ~strict cmd')
+        Term.Set.union (modifies ~strict cmd) (modifies ~strict cmd')
 
   and modifies ?(strict = true) l =
     Blist.fold_left
-      (fun s c -> Sl_term.Set.union s (cmd_modifies ~strict c.cmd))
-      Sl_term.Set.empty l
+      (fun s c -> Term.Set.union s (cmd_modifies ~strict c.cmd))
+      Term.Set.empty l
 
   let rec cmd_equal cmd cmd' =
     match (cmd, cmd') with
     | Stop, Stop | Return, Return | Skip, Skip -> true
-    | New x, New y | Free x, Free y -> Sl_term.equal x y
+    | New x, New y | Free x, Free y -> Term.equal x y
     | Assign (x, e), Assign (x', e') ->
-        Sl_term.equal x x' && Sl_term.equal e e'
+        Term.equal x x' && Term.equal e e'
     | Load (x, e, f), Load (x', e', f') | Store (x, f, e), Store (x', f', e')
       ->
-        Sl_term.equal x x' && Sl_term.equal e e' && Field.equal f f'
+        Term.equal x x' && Term.equal e e' && Field.equal f f'
     | ProcCall (p, args), ProcCall (p', args') ->
-        String.equal p p' && Blist.equal Sl_term.equal args args'
+        String.equal p p' && Blist.equal Term.equal args args'
     | While (cond, cmd), While (cond', cmd') | If (cond, cmd), If (cond', cmd')
       ->
         Cond.equal cond cond' && equal cmd cmd'
@@ -530,13 +530,13 @@ module Cmd = struct
   let rec subst_cmd theta cmd =
     match cmd with
     | Stop | Return | Skip | Assert _ -> cmd
-    | New x -> New (Sl_subst.apply theta x)
-    | Free x -> Free (Sl_subst.apply theta x)
-    | Assign (x, e) -> Assign (Sl_subst.apply theta x, Sl_subst.apply theta e)
-    | Load (x, e, f) -> Load (Sl_subst.apply theta x, Sl_subst.apply theta e, f)
+    | New x -> New (Subst.apply theta x)
+    | Free x -> Free (Subst.apply theta x)
+    | Assign (x, e) -> Assign (Subst.apply theta x, Subst.apply theta e)
+    | Load (x, e, f) -> Load (Subst.apply theta x, Subst.apply theta e, f)
     | Store (x, f, e) ->
-        Store (Sl_subst.apply theta x, f, Sl_subst.apply theta e)
-    | ProcCall (p, args) -> ProcCall (p, Sl_term.FList.subst theta args)
+        Store (Subst.apply theta x, f, Subst.apply theta e)
+    | ProcCall (p, args) -> ProcCall (p, Term.FList.subst theta args)
     | If (cond, cmd) -> If (Cond.subst theta cond, subst theta cmd)
     | IfElse (cond, cmd, cmd') ->
         IfElse (Cond.subst theta cond, subst theta cmd, subst theta cmd')
@@ -572,25 +572,25 @@ module Cmd = struct
           Format.fprintf fmt "%s%s...%s" keyw_assert.str symb_lp.str
             symb_rp.str
         else
-          Format.fprintf fmt "%s%s%a%s" keyw_assert.str symb_lp.str Sl_form.pp
+          Format.fprintf fmt "%s%s%a%s" keyw_assert.str symb_lp.str Form.pp
             f symb_rp.str
     | New x ->
-        Format.fprintf fmt "%a%s%s%s%s" Sl_term.pp x symb_assign.sep
+        Format.fprintf fmt "%a%s%s%s%s" Term.pp x symb_assign.sep
           keyw_new.str symb_lp.str symb_rp.str
     | Free x ->
-        Format.fprintf fmt "%s%s%a%s" keyw_free.str symb_lp.str Sl_term.pp x
+        Format.fprintf fmt "%s%s%a%s" keyw_free.str symb_lp.str Term.pp x
           symb_rp.str
     | Assign (x, e) ->
-        Format.fprintf fmt "%a%s%a" Sl_term.pp x symb_assign.sep Sl_term.pp e
+        Format.fprintf fmt "%a%s%a" Term.pp x symb_assign.sep Term.pp e
     | Load (x, e, f) ->
-        Format.fprintf fmt "%a%s%a%s%s" Sl_term.pp x symb_assign.sep Sl_term.pp
+        Format.fprintf fmt "%a%s%a%s%s" Term.pp x symb_assign.sep Term.pp
           e symb_fld_sel.str f
     | Store (x, f, e) ->
-        Format.fprintf fmt "%a%s%s%s%a" Sl_term.pp x symb_fld_sel.str f
-          symb_assign.sep Sl_term.pp e
+        Format.fprintf fmt "%a%s%s%s%a" Term.pp x symb_fld_sel.str f
+          symb_assign.sep Term.pp e
     | ProcCall (p, args) ->
         Format.fprintf fmt "%s(%s)" p
-          (Sl_term.FList.to_string_sep symb_comma.sep args)
+          (Term.FList.to_string_sep symb_comma.sep args)
     | If (cond, cmd) ->
         if abbr then
           Format.fprintf fmt "%s %a %s %a... %s" keyw_if.str Cond.pp cond
@@ -675,63 +675,63 @@ let program_pp fmt cmd =
 let pp_cmd fmt cmd = Cmd.pp ~abbr:true 0 fmt cmd
 
 module Seq = struct
-  type t = Sl_form.t * Cmd.t
+  type t = Form.t * Cmd.t
 
   let tagset_one = Tags.singleton Tags.anonymous
 
   let tagpairs_one = Tagpairs.mk tagset_one
 
-  let tags (f, cmd) = if !termination then Sl_form.tags f else tagset_one
+  let tags (f, cmd) = if !termination then Form.tags f else tagset_one
 
   let tag_pairs seq = Tagpairs.mk (tags seq)
 
-  let vars (f, _) = Sl_form.vars f
+  let vars (f, _) = Form.vars f
 
-  let terms (f, _) = Sl_form.terms f
+  let terms (f, _) = Form.terms f
 
-  let subst theta (f, cmd) = (Sl_form.subst theta f, cmd)
+  let subst theta (f, cmd) = (Form.subst theta f, cmd)
 
   let to_string (f, cmd) =
-    Sl_form.to_string f ^ symb_turnstile.sep ^ Cmd.to_string cmd
+    Form.to_string f ^ symb_turnstile.sep ^ Cmd.to_string cmd
 
   let pp fmt (f, cmd) =
-    Format.fprintf fmt "@[%a%s%a@]" Sl_form.pp f symb_turnstile.sep
+    Format.fprintf fmt "@[%a%s%a@]" Form.pp f symb_turnstile.sep
       (Cmd.pp ~abbr:true 0) cmd
 
-  let equal (f, cmd) (f', cmd') = Cmd.equal cmd cmd' && Sl_form.equal f f'
+  let equal (f, cmd) (f', cmd') = Cmd.equal cmd cmd' && Form.equal f f'
 
   let equal_upto_tags (f, cmd) (f', cmd') =
-    Cmd.equal cmd cmd' && Sl_form.equal_upto_tags f f'
+    Cmd.equal cmd cmd' && Form.equal_upto_tags f f'
 
   let subsumed (f, cmd) (f', cmd') =
     Cmd.equal cmd cmd'
-    && (if !termination then Sl_form.subsumed else Sl_form.subsumed_upto_tags)
+    && (if !termination then Form.subsumed else Form.subsumed_upto_tags)
          ~total:false f' f
 
   let subsumed_upto_tags (f, cmd) (f', cmd') =
-    Cmd.equal cmd cmd' && Sl_form.subsumed_upto_tags ~total:false f' f
+    Cmd.equal cmd cmd' && Form.subsumed_upto_tags ~total:false f' f
 
-  let subst_tags tagpairs (f, cmd) = (Sl_form.subst_tags tagpairs f, cmd)
+  let subst_tags tagpairs (f, cmd) = (Form.subst_tags tagpairs f, cmd)
 end
 
-let program_vars = ref Sl_term.Set.empty
+let program_vars = ref Term.Set.empty
 
 let set_program p = program_vars := Cmd.vars p
 
 let vars_of_program () = !program_vars
 
 (* remember prog vars when introducing fresh ones *)
-let fresh_fvar s = Sl_term.fresh_fvar (Sl_term.Set.union !program_vars s)
+let fresh_fvar s = Term.fresh_fvar (Term.Set.union !program_vars s)
 
-let fresh_fvars s i = Sl_term.fresh_fvars (Sl_term.Set.union !program_vars s) i
+let fresh_fvars s i = Term.fresh_fvars (Term.Set.union !program_vars s) i
 
-let fresh_evar s = Sl_term.fresh_evar (Sl_term.Set.union !program_vars s)
+let fresh_evar s = Term.fresh_evar (Term.Set.union !program_vars s)
 
-let fresh_evars s i = Sl_term.fresh_evars (Sl_term.Set.union !program_vars s) i
+let fresh_evars s i = Term.fresh_evars (Term.Set.union !program_vars s) i
 
 (* again, treat prog vars as special *)
 let freshen_case_by_seq seq case =
-  Sl_indrule.freshen (Sl_term.Set.union !program_vars (Seq.vars seq)) case
+  Indrule.freshen (Term.Set.union !program_vars (Seq.vars seq)) case
 
 (* fields: FIELDS; COLON; ils = separated_nonempty_list(COMMA, IDENT); SEMICOLON  *)
 (*     { List.iter P.Field.add ils }                                              *)
@@ -745,7 +745,7 @@ let parse_fields st =
 (* precondition: PRECONDITION; COLON; f = formula; SEMICOLON { f } *)
 let parse_precondition ?(allow_tags = false) st =
   ( parse_symb keyw_precondition
-  >> parse_symb symb_colon >> Sl_form.parse ~allow_tags
+  >> parse_symb symb_colon >> Form.parse ~allow_tags
   >>= (fun f -> parse_symb symb_semicolon >>$ f)
   <?> "Precondition" )
     st
@@ -758,9 +758,9 @@ let parse st =
         >>= fun cmd ->
         eof
         >>$
-        let p = Sl_form.complete_tags Tags.empty p in
-        let theta = Tagpairs.mk_free_subst Tags.empty (Sl_form.tags p) in
-        (Sl_form.subst_tags theta p, cmd) )
+        let p = Form.complete_tags Tags.empty p in
+        let theta = Tagpairs.mk_free_subst Tags.empty (Form.tags p) in
+        (Form.subst_tags theta p, cmd) )
   <?> "program" )
     st
 

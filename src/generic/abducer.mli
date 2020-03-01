@@ -22,7 +22,7 @@ module type S = sig
   val print_proof_stats : Proof.t -> unit
 end
 
-module Make (Seq : Sequent.S) (Defs : Defs.S) :
+module Make (Seq : Sequent.S) (Defs : sig type t end) :
   S
   with type defs_t = Defs.t
   with type proof_t = Proof.Make(Seq).t

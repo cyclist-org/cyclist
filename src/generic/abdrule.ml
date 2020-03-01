@@ -43,7 +43,7 @@ module type S = sig
   val first : t list -> t
 end
 
-module Make (Seq : Sequent.S) (Defs : Defs.S) = struct
+module Make (Seq : Sequent.S) (Defs : sig type t end) = struct
   module Proof = Proof.Make (Seq)
   module Rule = Proofrule.Make (Seq)
 

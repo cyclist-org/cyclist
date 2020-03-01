@@ -35,10 +35,10 @@ let () =
           , ": maximum search depth for entailment sub-prover, default is "
             ^ string_of_int !Rules.entl_depth )
         ; ( "-fd"
-          , Arg.Int Sl_abduce.set_depth
+          , Arg.Int Abduce.set_depth
           , ": maximum depth to unfold predicates to in frame inference, \
              default is "
-            ^ string_of_int Sl_abduce.max_depth )
+            ^ string_of_int Abduce.max_depth )
         ; ( "-D"
           , Arg.Set_string defs_path
           , ": read inductive definitions from <file>, default is "
@@ -59,10 +59,10 @@ let () =
             ^ string_of_bool !Rules.show_invalidity_debug
             ^ " (only activated when main debug output flag set)" )
         ; ( "-Lem"
-          , Arg.Int Sl_rules.set_lemma_level
+          , Arg.Int Seplog.Rules.set_lemma_level
           , ": specify the permissiveness of the lemma application strategy \
              for proving entailments" ^ "\n"
-            ^ Sl_rules.lemma_option_descr_str () )
+            ^ Seplog.Rules.lemma_option_descr_str () )
         ; ( "-P"
           , Arg.Set_string prog_path
           , ": prove safety of program in <file>" )
@@ -131,7 +131,7 @@ let () =
     F.die "-P must be specified." spec_list !F.usage ;
   let fields, procs = Program.of_channel (open_in !prog_path) in
   let procs = Blist.map Proc.number_cmds procs in
-  let defs = Sl_defs.of_channel (open_in !defs_path) in
+  let defs = Defs.of_channel (open_in !defs_path) in
   (* TODO: Check well-formedness of the program: *)
   (*   Do all the predicates in the pre/post annotations have the correct arity? *)
   (*   If not While_program.well_formed defs prog then F.die !While_program.error_msg *)
