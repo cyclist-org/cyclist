@@ -2,16 +2,15 @@ open Lib
 open Generic
 open Seplog
 
-open While
-open   While_program
+open Program
 
 module SH = Heap
 
 exception Not_symheap = Form.Not_symheap
 
-module Rule = Proofrule.Make (While_program.Seq)
-module Seqtactics = Seqtactics.Make (While_program.Seq)
-module Proof = Proof.Make (While_program.Seq)
+module Rule = Proofrule.Make (Program.Seq)
+module Seqtactics = Seqtactics.Make (Program.Seq)
+module Proof = Proof.Make (Program.Seq)
 
 let tagpairs s = if !termination then Seq.tag_pairs s else Seq.tagpairs_one
 

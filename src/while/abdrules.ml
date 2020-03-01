@@ -1,18 +1,13 @@
 open Lib
 open Generic
-open Seplog
 
-open While
-open   While_program
+open Program
 
-module SH = Heap
+exception Not_symheap = Seplog.Form.Not_symheap
 
-exception Not_symheap = Form.Not_symheap
-
-module Defs = Defs
-module Rule = Proofrule.Make (While_program.Seq)
-module Seqtactics = Seqtactics.Make (While_program.Seq)
-module Abdrule = Abdrule.Make (While_program.Seq) (Defs)
+module Rule = Proofrule.Make (Program.Seq)
+module Seqtactics = Seqtactics.Make (Program.Seq)
+module Abdrule = Abdrule.Make (Program.Seq) (Seplog.Defs)
 
 (* let latex_defs d =                 *)
 (*   let t = !split_heaps in          *)
@@ -20,21 +15,25 @@ module Abdrule = Abdrule.Make (While_program.Seq) (Defs)
 (*   let res = Defs.to_latex d in     *)
 (*   split_heaps := t ; res           *)
 
-let dest_sh_seq = While_rules.dest_sh_seq
+let dest_sh_seq = Rules.dest_sh_seq
+
+(* open Seplog *)
 
 let last_pred = ref 0
 
 let get_fresh_ident () =
-  Predsym.of_string (Printf.sprintf "I%.3d" (incr last_pred ; !last_pred))
+  Seplog.Predsym.of_string (Printf.sprintf "I%.3d" (incr last_pred ; !last_pred))
 
-let get_undefined defs h = Tpreds.filter (Defs.is_undefined defs) h.SH.inds
+let get_undefined defs h =
+  Seplog.(Tpreds.filter (Defs.is_undefined defs) h.Heap.inds)
 
 let ex_subst_defs defs =
+  let open Seplog in
   let ex_subst_heap h =
     let ex_eqs, non_ex_eqs =
       Blist.partition
         (fun (x, _) -> Term.is_exist_var x)
-        (Uf.bindings h.SH.eqs)
+        (Uf.bindings h.Heap.eqs)
     in
     if Blist.is_empty ex_eqs then h
     else
@@ -43,7 +42,7 @@ let ex_subst_defs defs =
       (* this maintains universal vars *)
       Heap.subst
         (Term.Map.of_list ex_eqs)
-        (SH.with_eqs h (Uf.of_list non_ex_eqs))
+        (Heap.with_eqs h (Uf.of_list non_ex_eqs))
   in
   let ex_subst_case c =
     let p, h = Indrule.dest c in
@@ -59,10 +58,11 @@ let ex_subst_defs defs =
        (Defs.to_list defs))
 
 let empify defs =
+  let open Seplog in
   let empify_ c =
     let p, h = Indrule.dest c in
-    let inds = Tpreds.filter (Defs.is_defined defs) p.SH.inds in
-    Indrule.mk (SH.with_inds p inds) h
+    let inds = Tpreds.filter (Defs.is_defined defs) p.Heap.inds in
+    Indrule.mk (Heap.with_inds p inds) h
   in
   Defs.of_list
     (Blist.map
@@ -73,6 +73,7 @@ let empify defs =
        (Defs.to_list defs))
 
 let inline defs =
+  let open Seplog in
   let defs = Defs.to_list defs in
   try
     let q =
@@ -85,7 +86,7 @@ let inline defs =
           let idents =
             Tpreds.map_to Predsym.Set.add Predsym.Set.empty
               (fun (_, (id, _)) -> id)
-              f.SH.inds
+              f.Heap.inds
           in
           not (Predsym.Set.mem h idents) )
         (Blist.but_last defs)
@@ -100,9 +101,9 @@ let inline defs =
           let pred =
             Tpreds.find
               (fun (_, (h'', _)) -> Predsym.equal h h'')
-              f.SH.inds
+              f.Heap.inds
           in
-          let f = SH.with_inds f (Tpreds.remove pred f.SH.inds) in
+          let f = Heap.with_inds f (Tpreds.remove pred f.Heap.inds) in
           let g =
             Indrule.unfold ~gen_tags:false
               (Indrule.vars orig, Tags.empty)
@@ -123,8 +124,9 @@ let inline defs =
   with Not_found -> Defs.of_list defs
 
 let used_only_recursively (heap, (ident, params)) pos =
+  let open Seplog in
   let var = Blist.nth params pos in
-  let heap' = SH.with_inds heap Tpreds.empty in
+  let heap' = Heap.with_inds heap Tpreds.empty in
   (not (Term.Set.mem var (Heap.vars heap')))
   && Tpreds.for_all
        (fun (_, (ident', params')) ->
@@ -135,7 +137,7 @@ let used_only_recursively (heap, (ident, params)) pos =
              (fun var' pos' ->
                Int.( = ) pos pos' || not (Term.equal var var') )
              params' (Blist.indexes params') )
-       heap.SH.inds
+       heap.Heap.inds
 
 (* for all predicates *)
 (* for all integers up to the arity of the predicate *)
@@ -143,6 +145,7 @@ let used_only_recursively (heap, (ident, params)) pos =
 (* then stop and report predicate and position *)
 (* when all are exhausted return None *)
 let find_unused_arg defs =
+  let open Seplog in
   let defs = Defs.to_list defs in
   let check_def def =
     let clauses, ident = Preddef.dest def in
@@ -166,10 +169,11 @@ let find_unused_arg defs =
   else Blist.find_map check_def (Blist.but_last defs)
 
 let eliminate (ident, pos) defs =
+  let open Seplog in
   let elim_clause case =
     let heap, (ident', params) = Indrule.dest case in
     let elim_pred heap =
-      SH.with_inds heap
+      Heap.with_inds heap
         (Tpreds.map
            (fun (t, (ident'', params')) ->
              ( t
@@ -177,7 +181,7 @@ let eliminate (ident, pos) defs =
                , if Predsym.equal ident ident'' then
                    Blist.remove_nth pos params'
                  else params' ) ) )
-           heap.SH.inds)
+           heap.Heap.inds)
     in
     if not (Predsym.equal ident ident') then
       Indrule.mk (elim_pred heap) (ident', params)
@@ -196,38 +200,40 @@ let elim_dead_vars defs =
   | Some (ident, pos) -> eliminate (ident, pos) defs
 
 let simplify_defs defs =
-  Defs.fixpoint
+  Seplog.Defs.fixpoint
     (fun d -> elim_dead_vars (inline (ex_subst_defs d)))
     (empify defs)
 
-let is_sat defs = Basepair.satisfiable (empify defs)
+let is_sat defs = Seplog.Basepair.satisfiable (empify defs)
 
-let ex_falso_axiom = Abdrule.lift While_rules.ex_falso_axiom
+let ex_falso_axiom = Abdrule.lift Rules.ex_falso_axiom
 
-let symex_empty_axiom = Abdrule.lift While_rules.symex_empty_axiom
+let symex_empty_axiom = Abdrule.lift Rules.symex_empty_axiom
 
-let lhs_disj_to_symheaps = Abdrule.lift While_rules.lhs_disj_to_symheaps
+let lhs_disj_to_symheaps = Abdrule.lift Rules.lhs_disj_to_symheaps
 
-let eq_subst_ex = While_rules.eq_subst_ex_f
+let eq_subst_ex = Rules.eq_subst_ex_f
 
 let simpl_deqs seq =
   try
     let (cs, f), cmd = dest_sh_seq seq in
     let terms =
-      Term.Set.add Term.nil (Heap.vars (SH.with_deqs f Deqs.empty))
+      let open Seplog in
+      Term.Set.add Term.nil (Heap.vars (Heap.with_deqs f Deqs.empty))
     in
     let newdeqs =
+      let open Seplog in
       Deqs.filter
         (fun (x, y) ->
           Term.equal x y
           || (Term.Set.mem x terms && Term.Set.mem y terms) )
-        f.SH.deqs
+        f.Heap.deqs
     in
-    let f' = SH.with_deqs f newdeqs in
-    if Heap.equal f f' then []
+    let f' = Seplog.Heap.with_deqs f newdeqs in
+    if Seplog.Heap.equal f f' then []
     else
       let s = ((cs, [f']), cmd) in
-      [([(s, While_rules.tagpairs s, Tagpairs.empty)], "Simpl Deqs")]
+      [([(s, Rules.tagpairs s, Tagpairs.empty)], "Simpl Deqs")]
   with Not_symheap -> []
 
 let simplify =
@@ -239,19 +245,19 @@ let simplify =
 let wrap r = Abdrule.compose r (Abdrule.attempt simplify)
 
 (* symbolic execution rules *)
-let symex_stop_axiom = Abdrule.lift While_rules.symex_stop_axiom
+let symex_stop_axiom = Abdrule.lift Rules.symex_stop_axiom
 
-let symex_load_rule = Abdrule.lift While_rules.symex_load_rule
+let symex_load_rule = Abdrule.lift Rules.symex_load_rule
 
-let symex_store_rule = Abdrule.lift While_rules.symex_store_rule
+let symex_store_rule = Abdrule.lift Rules.symex_store_rule
 
-let symex_free_rule = Abdrule.lift While_rules.symex_free_rule
+let symex_free_rule = Abdrule.lift Rules.symex_free_rule
 
-let symex_new_rule = Abdrule.lift While_rules.symex_new_rule
+let symex_new_rule = Abdrule.lift Rules.symex_new_rule
 
-let symex_skip_rule = Abdrule.lift While_rules.symex_skip_rule
+let symex_skip_rule = Abdrule.lift Rules.symex_skip_rule
 
-let symex_assign_rule = Abdrule.lift While_rules.symex_assign_rule
+let symex_assign_rule = Abdrule.lift Rules.symex_assign_rule
 
 let symex_nondet_if_rule =
   let rl seq =
@@ -261,7 +267,7 @@ let symex_nondet_if_rule =
       if Cond.is_det c then []
       else
         let cont = Cmd.get_cont cmd in
-        While_rules.fix_tps
+        Rules.fix_tps
           [ ( [((cs, [f]), Cmd.mk_seq cmd' cont); ((cs, [f]), cont)]
             , "If(nondet)" ) ]
     with
@@ -277,7 +283,7 @@ let symex_nondet_ifelse_rule =
       if Cond.is_det c then []
       else
         let cont = Cmd.get_cont cmd in
-        While_rules.fix_tps
+        Rules.fix_tps
           [ ( [ ((cs, [f]), Cmd.mk_seq cmd' cont)
               ; ((cs, [f]), Cmd.mk_seq cmd'' cont) ]
             , "IfElse(nondet)" ) ]
@@ -294,7 +300,7 @@ let symex_nondet_while_rule =
       if Cond.is_det c then []
       else
         let cont = Cmd.get_cont cmd in
-        While_rules.fix_tps
+        Rules.fix_tps
           [ ( [((cs, [f]), Cmd.mk_seq cmd' cmd); ((cs, [f]), cont)]
             , "If(nondet)" ) ]
     with
@@ -311,9 +317,9 @@ let symex_det_if_rule =
       else
         let x, y = Cond.dest c in
         let cont = Cmd.get_cont cmd in
-        let mk_ret c = While_rules.fix_tps [([((cs, [f]), c)], "If(det)")] in
+        let mk_ret c = Rules.fix_tps [([((cs, [f]), c)], "If(det)")] in
         match
-          (Cond.is_deq c, Heap.equates f x y, Heap.disequates f x y)
+          Seplog.(Cond.is_deq c, Heap.equates f x y, Heap.disequates f x y)
         with
         (* cmd wants equality and formula provides it so take the branch *)
         (* cmd wants disequality and formula provides it so take branch *)
@@ -338,9 +344,9 @@ let symex_det_ifelse_rule =
       else
         let x, y = Cond.dest c in
         let cont = Cmd.get_cont cmd in
-        let mk_ret c = While_rules.fix_tps [([((cs, [f]), c)], "If(det)")] in
+        let mk_ret c = Rules.fix_tps [([((cs, [f]), c)], "If(det)")] in
         match
-          (Cond.is_deq c, Heap.equates f x y, Heap.disequates f x y)
+          Seplog.(Cond.is_deq c, Heap.equates f x y, Heap.disequates f x y)
         with
         (* cmd wants equality and formula provides it so take the branch *)
         (* cmd wants disequality and formula provides it so take branch *)
@@ -366,10 +372,10 @@ let symex_det_while_rule =
         let x, y = Cond.dest c in
         let cont = Cmd.get_cont cmd in
         let mk_ret c =
-          While_rules.fix_tps [([((cs, [f]), c)], "While(det)")]
+          Rules.fix_tps [([((cs, [f]), c)], "While(det)")]
         in
         match
-          (Cond.is_deq c, Heap.equates f x y, Heap.disequates f x y)
+          Seplog.(Cond.is_deq c, Heap.equates f x y, Heap.disequates f x y)
         with
         (* cmd wants equality and formula provides it so take the branch *)
         (* cmd wants disequality, formula provides it so take branch *)
@@ -387,8 +393,10 @@ let symex_det_while_rule =
 
 let generalise_while_rule =
   let generalise m h =
+    let open Seplog in
     let avoid = ref (Heap.vars h) in
     let gen_term t =
+      let open Seplog in
       if Term.Set.mem t m then (
         let r = fresh_evar !avoid in
         avoid := Term.Set.add r !avoid ;
@@ -399,29 +407,29 @@ let generalise_while_rule =
       let l = Blist.map gen_term (x :: args) in
       (Blist.hd l, Blist.tl l)
     in
-    SH.mk
-      (Term.Set.fold Uf.remove m h.SH.eqs)
+    Heap.mk
+      (Term.Set.fold Uf.remove m h.Heap.eqs)
       (Deqs.filter
          (fun p -> Pair.conj (Pair.map (fun z -> not (Term.Set.mem z m)) p))
-         h.SH.deqs)
-      (Ptos.map gen_pto h.SH.ptos)
-      h.SH.inds
+         h.Heap.deqs)
+      (Ptos.map gen_pto h.Heap.ptos)
+      h.Heap.inds
   in
   let rl seq =
     try
       let (cs, f), cmd = dest_sh_seq seq in
       let _, cmd' = Cmd.dest_while cmd in
-      let m = Term.Set.inter (Cmd.modifies cmd') (Heap.vars f) in
-      let subs = Term.Set.subsets m in
+      let m = Seplog.(Term.Set.inter (Cmd.modifies cmd') (Heap.vars f)) in
+      let subs = Seplog.Term.Set.subsets m in
       Option.list_get
         (Blist.map
            (fun m' ->
              let f' = generalise m' f in
-             if Heap.equal f f' then None
+             if Seplog.Heap.equal f f' then None
              else
                let s' = ((cs, [f']), cmd) in
                Some
-                 ([(s', While_rules.tagpairs s', Tagpairs.empty)], "Gen.While")
+                 ([(s', Rules.tagpairs s', Tagpairs.empty)], "Gen.While")
              )
            subs)
     with
@@ -433,6 +441,7 @@ let generalise_while_rule =
 
 let abd_deref =
   let rl seq defs =
+    let open Seplog in
     debug (fun () -> "Abd deref") ;
     try
       let (cs, f), cmd = dest_sh_seq seq in
@@ -489,6 +498,7 @@ let abd_det_guard =
         in
         if Cond.is_non_det c then []
         else
+          let open Seplog in
           let cv_size = Term.Set.cardinal (Cond.vars c) in
           if Int.( = ) cv_size 0 then []
           else
@@ -520,14 +530,14 @@ let abd_det_guard =
                 in
                 let g pair =
                   let clause_eq =
-                    SH.mk
+                    Heap.mk
                       (Uf.of_list [pair])
                       Deqs.empty Ptos.empty
                       (Tpreds.singleton
                          (Tags.anonymous, (fresh_ident, newparams)))
                   in
                   let clause_deq =
-                    SH.mk Uf.empty (Deqs.singleton pair) Ptos.empty
+                    Heap.mk Uf.empty (Deqs.singleton pair) Ptos.empty
                       (Tpreds.singleton
                          (Tags.anonymous, (fresh_ident', newparams)))
                   in
@@ -546,6 +556,7 @@ let abd_det_guard =
   Abdrule.mk_abdinfrule rl
 
 let abd_back_rule =
+  let open Seplog in
   let rl s1 s2 defs =
     try
       let ((cs1, l1), cmd1), ((cs2, l2), cmd2) =
@@ -554,11 +565,11 @@ let abd_back_rule =
       if
         (not (Cmd.equal cmd1 cmd2))
         || Int.( < )
-             (Deqs.cardinal l1.SH.deqs)
-             (Deqs.cardinal l2.SH.deqs)
+             (Deqs.cardinal l1.Heap.deqs)
+             (Deqs.cardinal l2.Heap.deqs)
         || Int.( < )
-             (Ptos.cardinal l1.SH.ptos)
-             (Ptos.cardinal l2.SH.ptos)
+             (Ptos.cardinal l1.Heap.ptos)
+             (Ptos.cardinal l2.Heap.ptos)
       then []
       else
         (* find multiset of identifiers of ind preds in s1/s2 *)
@@ -571,7 +582,7 @@ let abd_back_rule =
             (fun (_, (ident, _)) ->
               Tpreds.for_all
                 (fun (_, (ident', _)) -> not (Predsym.equal ident ident'))
-                l2.SH.inds )
+                l2.Heap.inds )
             candidates
         in
         (* for each candidate there must exist one in s2 which *)
@@ -580,7 +591,7 @@ let abd_back_rule =
         let cp =
           Blist.cartesian_product
             (Tpreds.to_list candidates)
-            (Tpreds.to_list l2.SH.inds)
+            (Tpreds.to_list l2.Heap.inds)
         in
         let cp =
           Blist.filter
@@ -607,7 +618,7 @@ let abd_back_rule =
             Blist.map
               (fun perm ->
                 let cl =
-                  SH.with_inds Heap.empty
+                  Heap.with_inds Heap.empty
                     (Tpreds.of_list
                        [ (Tags.anonymous, (c', perm))
                        ; (Tags.anonymous, (fresh_ident, newparams)) ])
@@ -622,7 +633,7 @@ let abd_back_rule =
   in
   Abdrule.mk_abdbackrule Rule.all_nodes rl
 
-let matches = Abdrule.lift While_rules.dobackl
+let matches = Abdrule.lift Rules.dobackl
 
 (* NOT UPDATED FOR TERMINATION *)
 (* let abd_segment =                                                                         *)
@@ -673,7 +684,7 @@ let matches = Abdrule.lift While_rules.dobackl
 (* 				let h' = { h' with inds=Tpreds.union h'.inds (Tpreds.of_list [newpred;newpred']) } in *)
 (* 				let () = debug (fun () -> "Heap: " ^ (Heap.to_string h')) in                      *)
 (* 				let () = debug (fun () -> "Clause: " ^ (Heap.to_string clause)) in                *)
-(*         Some ([ (([h'], cmd), While_rules.symex_tagpairs, Tagpairs.empty) ], new_defs) in *)
+(*         Some ([ (([h'], cmd), Rules.symex_tagpairs, Tagpairs.empty) ], new_defs) in *)
 (*       Option.list_get (Blist.map f (Tpreds.to_list inds))                                   *)
 (*     with Not_symheap | WrongCmd -> [] in                                                  *)
 (*   mk_gen_rule rl "Abd. segment"                                                           *)
@@ -746,7 +757,7 @@ let matches = Abdrule.lift While_rules.dobackl
 (*     let result = Option.is_some (Slprover.idfs (l1, l2)) in                      *)
 (*     let () = Lib.do_debug := olddebug in                                         *)
 (* 		let () = debug (fun () -> "CUTLINK3: result: " ^ (string_of_bool result)) in *)
-(* 		if result then Some While_rules.symex_tagpairs else None in                *)
+(* 		if result then Some Rules.symex_tagpairs else None in                *)
 (*   mk_back_rule rl "Cut backlink"                                                 *)
 
 (* let cut_backlink_tac =                                                           *)
@@ -754,14 +765,14 @@ let matches = Abdrule.lift While_rules.dobackl
 
 let unfold =
   Abdrule.mk_abdgenrule (fun seq defs ->
-      Blist.map (fun app -> (app, defs)) (While_rules.luf_rl seq defs) )
+      Blist.map (fun app -> (app, defs)) (Rules.luf_rl seq defs) )
 
 let unfold_last =
   Abdrule.mk_abdgenrule (fun seq defs ->
       Blist.map
         (fun app -> (app, defs))
-        (While_rules.luf_rl seq
-           (Defs.of_list [Blist.hd (Defs.to_list defs)])) )
+        (Rules.luf_rl seq
+           Seplog.(Defs.of_list [Blist.hd (Defs.to_list defs)])) )
 
 let deref_tac =
   Abdrule.first

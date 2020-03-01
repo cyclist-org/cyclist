@@ -3,13 +3,11 @@
  (libraries lib generic seplog mparser.pcre)
  (modules
    (:standard \ 
-        while_abduce
-        while_abdrules
-        while_prove
-        while_rules)))
+        abduce
+        prove)))
 
 (executables
-  (names while_abduce while_prove)
+  (names abduce prove)
   (public_names while_abduce while_prove)
-  (modules while_abduce while_abdrules while_prove while_rules)
+  (modules abduce prove)
   (libraries lib generic while))

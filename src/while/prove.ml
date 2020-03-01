@@ -3,15 +3,14 @@ open Generic
 open Seplog
 
 open While
-open   While_program
-
-open While_rules
+open   Program
+open   Rules
 
 let defs_path = ref "examples/sl.defs"
 
 let prog_path = ref ""
 
-module Prover = Prover.Make (While_program.Seq)
+module Prover = Prover.Make (Seq)
 module F = Frontend.Make (Prover)
 
 (* let () =                                                      *)
@@ -36,7 +35,7 @@ let () =
           , ": read inductive definitions from <file>, default is "
             ^ !defs_path )
         ; ("-P", Arg.Set_string prog_path, ": prove safety of program <file>")
-        ; ("-T", Arg.Set While_program.termination, ": also prove termination")
+        ; ("-T", Arg.Set termination, ": also prove termination")
         ]
 
 let () =
@@ -46,10 +45,10 @@ let () =
     !F.usage ;
   if String.equal !prog_path "" then
     F.die "-P must be specified." spec_list !F.usage ;
-  let seq, prog = While_program.of_channel (open_in !prog_path) in
+  let seq, prog = of_channel (open_in !prog_path) in
   if not (Cmd.is_while_prog prog) then
     F.die "Unrecognised commands in program!" spec_list !F.usage ;
   let prog = Cmd.number prog in
-  While_program.set_program prog ;
-  While_rules.setup (Defs.of_channel (open_in !defs_path)) ;
-  F.exit (F.prove_seq !While_rules.axioms !While_rules.rules (seq, prog))
+  set_program prog ;
+  setup (Defs.of_channel (open_in !defs_path)) ;
+  F.exit (F.prove_seq !axioms !rules (seq, prog))

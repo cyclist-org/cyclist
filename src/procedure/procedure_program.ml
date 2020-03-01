@@ -13,11 +13,11 @@ module SH = Heap
 
 let termination = ref false
 
-module Field = While_program.Field
-module Cond = While_program.Cond
-module Cmd = While_program.Cmd
+module Field = Program.Field
+module Cond = Program.Cond
+module Cmd = Program.Cmd
 
-exception WrongCmd = While_program.WrongCmd
+exception WrongCmd = Program.WrongCmd
 
 let main = "main"
 
@@ -88,7 +88,7 @@ module Proc = struct
 
   (* precondition: PRECONDITION; COLON; f = formula; SEMICOLON { f } *)
   let parse_precondition st =
-    While_program.parse_precondition ~allow_tags:true st
+    While.Program.parse_precondition ~allow_tags:true st
 
   (* postcondition: POSTCONDITION; COLON; f = formula; SEMICOLON { f } *)
   let parse_postcondition st =

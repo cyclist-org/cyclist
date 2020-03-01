@@ -24,8 +24,8 @@ let gen_defs = ref false
 
 let maxbound = ref 20
 
-module Seq = While_program.Seq
-module Abducer = Abducer.Make (While_program.Seq) (Defs)
+module Seq = Program.Seq
+module Abducer = Abducer.Make (Program.Seq) (Defs)
 
 let defs_count = ref 0
 
@@ -35,7 +35,7 @@ let record_defs defs =
   let path_fn = Filename.concat !rec_defs_path (fn ^ ext) in
   let () = incr defs_count in
   let ch = open_out path_fn in
-  let () = output_string ch (Defs.to_string (While_abdrules.empify defs)) in
+  let () = output_string ch (Defs.to_string (Abdrules.empify defs)) in
   let () = close_out ch in
   if Int.( > ) !defs_count 50000 then exit 0 else false
 
@@ -46,8 +46,8 @@ let prove_prog seq =
   let res =
     w_timeout
       (fun () ->
-        Abducer.bfs !maxbound While_abdrules.rules seq Defs.empty
-          (if !gen_defs then record_defs else While_abdrules.is_sat) )
+        Abducer.bfs !maxbound Abdrules.rules seq Defs.empty
+          (if !gen_defs then record_defs else Abdrules.is_sat) )
       !timeout
   in
   Stats.Gen.end_call () ;
@@ -64,12 +64,12 @@ let prove_prog seq =
       let proof, defs = Option.get res in
       if !Stats.do_statistics then Abducer.print_proof_stats proof ;
       if !show_proof then print_endline (Abducer.Proof.to_string proof)
-      else print_endline ("Proved: " ^ While_program.Seq.to_string seq) ;
+      else print_endline ("Proved: " ^ Program.Seq.to_string seq) ;
       if !show_defs || !simpl_defs then
         print_endline
           (Defs.to_string
-             (( if !simpl_defs then While_abdrules.simplify_defs
-              else While_abdrules.empify )
+             (( if !simpl_defs then Abdrules.simplify_defs
+              else Abdrules.empify )
                 defs)) ;
       0
 
@@ -99,9 +99,9 @@ let speclist =
       ^ string_of_int !timeout )
   ; ("-g", Arg.Set gen_defs, ": fail and record all definitions.")
   ; ( "-T"
-    , Arg.Set While_program.termination
+    , Arg.Set Program.termination
     , ": also prove termination, default is "
-      ^ string_of_bool !While_program.termination ) ]
+      ^ string_of_bool !Program.termination ) ]
 
 let die msg =
   print_endline msg ;
@@ -112,7 +112,7 @@ let () =
   Format.set_margin 300 ;
   Arg.parse speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) usage ;
   if String.equal !prog_path "" then die "-P must be specified." ;
-  let ((f, cmd) as seq) = While_program.of_channel (open_in !prog_path) in
-  While_program.set_program cmd ;
+  let ((f, cmd) as seq) = Program.of_channel (open_in !prog_path) in
+  Program.set_program cmd ;
   (* Safety_prover.setup [] ;  *)
   exit (prove_prog seq)
