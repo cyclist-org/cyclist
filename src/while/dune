@@ -1,5 +1,6 @@
 (library
  (name while)
+ (public_name cyclist.while)
  (libraries lib generic seplog mparser.pcre)
  (modules
    (:standard \ 

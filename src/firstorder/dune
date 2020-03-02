@@ -1,4 +1,12 @@
+(library
+ (name fol)
+ (public_name cyclist.fol)
+ (libraries lib generic mparser)
+ (modules
+  (:standard \ prove)))
+
 (executable
-  (name fo_prove)
+  (name prove)
   (public_name fo_prove)
-  (libraries lib generic))
+  (libraries lib generic fol)
+  (modules prove))

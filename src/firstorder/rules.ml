@@ -1,12 +1,9 @@
 open Lib
 open Generic
 
-open Firstorder
-
-module FOP = Prover.Make(Firstorder.Seq)
-module Proof = Proof.Make(Firstorder.Seq)
-module Rule = Proofrule.Make(Firstorder.Seq)
-module Seqtactics = Seqtactics.Make(Firstorder.Seq)
+module Proof = Proof.Make(Seq)
+module Rule = Proofrule.Make(Seq)
+module Seqtactics = Seqtactics.Make(Seq)
 
 let product_subsumed_upto_tags p1 p2 =
   Prod.subsumed_wrt_tags Tags.empty p1 p2
@@ -61,7 +58,7 @@ let eq_subst_rule seq =
     let (x,y) = if Term.is_var y then (x,y) else (y,x) in
     let theta = Term.singleton_subst y x in 
     [ [ ((Seq.subst theta seq), Seq.tag_pairs seq, Tagpairs.empty) ], "" ]
-  with Not_product | Not_found -> [] 
+  with Prod.Not_product | Not_found -> [] 
 
 let simplify_eqs seq =
   debug (fun () -> "simpl_eqs") ;
@@ -152,7 +149,7 @@ let simpl_rhs (l,r) =
           )) r in
     if not !prog then [] else 
     [ [ ((l, r'), Prod.tag_pairs lp, Tagpairs.empty) ], "" ]
-  with Not_product -> [] 
+  with Prod.Not_product -> [] 
 
 let simplify_rules = [ 
   simplify_eqs ;
@@ -207,7 +204,7 @@ let rhs_conj_to_atoms =
             ( (l, Form.singleton (Prod.singleton at)), t, Tagpairs.empty ) ) rp,
           "R.And" 
         ] 
-      with Not_product -> []
+      with Prod.Not_product -> []
     end
 
 
@@ -317,7 +314,7 @@ let gen_left_rules (ident, def) =
       in (*(Blist.map (left_unfold false) (Prod.elements preds)) 
           @ *)
           (Blist.map (left_unfold true) (Prod.elements preds))
-    with Not_product -> [] in
+    with Prod.Not_product -> [] in
   wrap left_rule 
 
 
@@ -425,7 +422,7 @@ let fold (ident,defs) =
             )], (ident ^ " Fold")  in
         Blist.map process_sub !results in
       Blist.bind do_case defs
-    with Not_product -> [] in
+    with Prod.Not_product -> [] in
   Rule.mk_infrule fold_rl 
 
 
@@ -436,7 +433,6 @@ let setup defs =
   let luf = Rule.choice (Blist.map gen_left_rules (Defs.bindings defs)) in
   let folds = Rule.choice (
     Blist.map 
-      (* (fun c -> FOP.Proof_tacs.then_tac (up_to_n 1 (fold c)) matches) *)
       (fun c -> Rule.compose (fold c) dobackl)
       (* fold *)
       (Defs.bindings defs)
