@@ -2,6 +2,9 @@
  (name generic)
  (public_name cyclist.generic)
  (libraries lib)
+ (modules
+   (:standard 
+      \ checkproof))
  (modules_without_implementation sequent)
  (foreign_stubs
   (language c)
@@ -9,6 +12,12 @@
   (flags :standard -xc++ -std=c++1y (:include c_flags.sexp))
   (include_dirs %{ocaml_where}/caml))
  (c_library_flags (:include c_library_flags.sexp) -lstdc++))
+
+(executable
+ (name checkproof)
+ (public_name checkproof)
+ (modules checkproof)
+ (libraries generic))
 
  (rule
   (targets c_flags.sexp c_library_flags.sexp)

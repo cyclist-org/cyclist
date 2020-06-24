@@ -143,7 +143,7 @@ let remove_dead_nodes prf' =
   done ;
   !prf
 
-let fuse_single_nodes prf' =
+let fuse_single_nodes prf' init =
   let prf = ref prf' in
   let process_node child grand_child tv tp par_idx n =
     if not (in_children child n) then ()
@@ -172,7 +172,7 @@ let fuse_single_nodes prf' =
   (* we would run into difficulties when updating that parent to point *)
   (* directly to the grandchild, so we avoid that altogether *)
   let p idx n =
-    (not (Int.equal idx 0))
+    (not (Int.equal idx init))
     && is_single_node idx n
     && not (fathers_grandchild !prf idx n)
   in
@@ -183,10 +183,10 @@ let fuse_single_nodes prf' =
   done ;
   !prf
 
-let minimize_abs_proof prf = fuse_single_nodes (remove_dead_nodes prf)
+let minimize_abs_proof prf init = fuse_single_nodes (remove_dead_nodes prf) init
 
 (* check global soundness condition on proof *)
-let check_proof p =
+let check_proof ?(init=0) p =
   Stats.MC.call () ;
   let create_tags i n = Int.Set.iter (tag_vertex i) (get_tags n) in
   let create_succs i (_, l) =
@@ -208,7 +208,7 @@ let check_proof p =
   Int.Map.iter (fun i _ -> create_vertex i) p ;
   Int.Map.iter create_tags p ;
   Int.Map.iter create_succs p ;
-  set_initial_vertex 0 ;
+  set_initial_vertex init ;
   Int.Map.iter create_trace_pairs p ;
   let retval = check_soundness () in
   destroy_aut () ;
@@ -217,40 +217,45 @@ let check_proof p =
       "Checking soundness ends, result=" ^ if retval then "OK" else "NOT OK" ) ;
   retval
 
-let valid prf =
+let valid prf init =
   let projectl = IntPairSet.map_to Int.Set.add Int.Set.empty Pair.left in
   let projectr = IntPairSet.map_to Int.Set.add Int.Set.empty Pair.right in
-  Int.Map.mem 0 prf
+  (* 0 is a node in the proof *)
+  Int.Map.mem init prf
+  (* For all nodes n in the proof *)
   && Int.Map.for_all
        (fun _ n ->
+         (* For all premises i of n *)
          Blist.for_all
            (fun (i, tv, tp) ->
-             Int.Map.mem i prf && IntPairSet.subset tp tv
+             (* i is a node in the proof *)
+             Int.Map.mem i prf
+             (* progressing tag pairs of i are a subset of all tagpairs of i *)
+             && IntPairSet.subset tp tv
+             (* The left-hand components of all tagpairs are in the tagset of n *)
              && Int.Set.subset (projectl tv) (get_tags n)
-             && (* Int.Set.subset (projectl tp) (get_tags n) &&                          *)
-                (* trivially true, given the previous clause, whenever tp a subset of tv *)
-                Int.Set.subset (projectr tv) (get_tags (Int.Map.find i prf))
-             (*   &&  *)
-             (* Int.Set.subset (projectr tp) (get_tags (Int.Map.find i prf))          *)
-             (* trivially true, given the previous clause, whenever tp a subset of tv *)
-             )
+             (* The right-hand components of all tagpairs are in the tagset of i *)
+             && Int.Set.subset (projectr tv) (get_tags (Int.Map.find i prf)))
            (get_subg n) )
        prf
 
 module CheckCache = Hashtbl
 
-let check_proof =
-  let ccache = CheckCache.create 1000 in
-  (* let limit = ref 1 in  *)
-  let f prf =
+let ccache = CheckCache.create 1000
+(* let limit = ref 1 *)
+
+let check_proof ?(init=0) prf =
+  if (Int.Map.is_empty prf) then
+    true
+  else
     let () =
-      if not (valid prf) then (
+      if not (valid prf init) then (
         pp Format.std_formatter prf ;
         assert false )
     in
-    let aprf = minimize_abs_proof prf in
+    let aprf = minimize_abs_proof prf init in
     let () =
-      if not (valid aprf) then (
+      if not (valid aprf init) then (
         pp Format.std_formatter aprf ;
         assert false )
     in
@@ -270,7 +275,7 @@ let check_proof =
     with Not_found ->
       Stats.MCCache.end_call () ;
       Stats.MCCache.miss () ;
-      let r = check_proof aprf in
+      let r = check_proof ~init aprf in
       Stats.MCCache.call () ;
       CheckCache.add ccache aprf r ;
       Stats.MCCache.end_call () ;
@@ -280,5 +285,3 @@ let check_proof =
       (*     limit := 10 * !limit                                                           *)
       (*   end ;                                                                            *)
       r
-  in
-  f

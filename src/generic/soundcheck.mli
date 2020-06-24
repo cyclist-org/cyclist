@@ -20,7 +20,7 @@ type t = abstract_node Int.Map.t
 val build_proof :
   (int * int list * (int * (int * int) list * (int * int) list) list) list -> t
 
-val check_proof : t -> bool
+val check_proof : ?init:int -> t -> bool
 (** Validate, minimise, check soundness of proof/graph and memoise. *)
 
 val pp : Format.formatter -> t -> unit
