@@ -57,50 +57,46 @@ let parse_line s =
 
 let mk_prf lines =
   let open Int.Map in
-  let nodemap =
-    List.fold_left
-      (fun nodemap (src, dest, prog, nonprog) -> 
-        let src = Node.Var.to_int src in
-        let dest = Node.Var.to_int dest in
-        let all = Tagpairs.union nonprog prog in
-        let tags = Tagpairs.projectl all in
-        update
-          src
-          (function
-            | None ->
-              Some (tags, [dest], [(all, prog)])
-            | Some (tags', premises, tps) ->
-              Some (Tags.union tags tags', dest::premises, (all, prog)::tps))
-          nodemap)
-      empty
-      lines in
-  let missing =
-    List.fold_left
-      (fun missing (_, (_, premises, tps)) ->
-        List.fold_left2
-          (fun missing premise (all, _) ->
-            if (not (mem premise nodemap)) then
-              let tags = Tagpairs.projectr all in
-              update
-                premise
-                (function
-                  | None ->
-                    Some (tags, [], [])
-                  | Some (tags', premises, tps) ->
-                    Some (Tags.union tags tags', premises, tps))
-                missing
-            else
-              missing)
-          missing
-          premises
-          tps)
-      empty
-      (bindings nodemap) in
-  let nodemap = union nodemap missing in
+  let add_entry nodemap (src, dest, prog, nonprog) =
+    let src = Node.Var.to_int src in
+    let dest = Node.Var.to_int dest in
+    let all = Tagpairs.union nonprog prog in
+    let src_tags = Tagpairs.projectl all in
+    let dest_tags = Tagpairs.projectr all in
+    let () =
+      assert (
+        match (find_opt src nodemap) with
+        | None ->
+          true
+        | Some (_, premises, _) ->
+          not (List.mem dest premises)
+      ) in
+    let () = print_endline (Printf.sprintf "updating node %i" src) in
+    let nodemap =
+      update
+        src
+        (function
+          | None ->
+            Some (src_tags, [dest], [(all, prog)])
+          | Some (tags, premises, tps) ->
+            Some
+              (Tags.union src_tags tags, dest::premises, (all, prog)::tps))
+        nodemap in
+    let () = print_endline (Printf.sprintf "updating node %i" dest) in
+    let nodemap =
+      update
+        dest
+        (function
+          | None ->
+            Some (dest_tags, [], [])
+          | Some (tags, premises, tps) ->
+            Some (Tags.union dest_tags tags, premises, tps))
+        nodemap in
+    nodemap in
   let prf =
-    Int.Map.map
+    map
       (fun (tags, premises, tps) -> Soundcheck.mk_abs_node tags premises tps)
-      nodemap in
+      (List.fold_left add_entry empty lines) in
   let init = 
     match lines with
     | [] ->
