@@ -55,78 +55,85 @@ let parse_line s =
     (src, dest, prog, nonprog)))))
   ) s
 
+let mk_prf lines =
+  let open Int.Map in
+  let nodemap =
+    List.fold_left
+      (fun nodemap (src, dest, prog, nonprog) -> 
+        let src = Node.Var.to_int src in
+        let dest = Node.Var.to_int dest in
+        let all = Tagpairs.union nonprog prog in
+        let tags = Tagpairs.projectl all in
+        update
+          src
+          (function
+            | None ->
+              Some (tags, [dest], [(all, prog)])
+            | Some (tags', premises, tps) ->
+              Some (Tags.union tags tags', dest::premises, (all, prog)::tps))
+          nodemap)
+      empty
+      lines in
+  let missing =
+    List.fold_left
+      (fun missing (_, (_, premises, tps)) ->
+        List.fold_left2
+          (fun missing premise (all, _) ->
+            if (not (mem premise nodemap)) then
+              let tags = Tagpairs.projectr all in
+              update
+                premise
+                (function
+                  | None ->
+                    Some (tags, [], [])
+                  | Some (tags', premises, tps) ->
+                    Some (Tags.union tags tags', premises, tps))
+                missing
+            else
+              missing)
+          missing
+          premises
+          tps)
+      empty
+      (bindings nodemap) in
+  let nodemap = union nodemap missing in
+  let prf =
+    Int.Map.map
+      (fun (tags, premises, tps) -> Soundcheck.mk_abs_node tags premises tps)
+      nodemap in
+  let init = 
+    match lines with
+    | [] ->
+      0
+    | (src, _, _, _)::_ ->
+      Node.Var.to_int src in
+  (prf, init)
+
 let parse_proof s =
-  let mk_prf lines =
-    let open Int.Map in
-    let nodemap =
-      List.fold_left
-        (fun nodemap (src, dest, prog, nonprog) -> 
-          let src = Node.Var.to_int src in
-          let dest = Node.Var.to_int dest in
-          let all = Tagpairs.union nonprog prog in
-          let tags = Tagpairs.projectl all in
-          update
-            src
-            (function
-              | None ->
-                Some (tags, [dest], [(all, prog)])
-              | Some (tags', premises, tps) ->
-                Some (Tags.union tags tags', dest::premises, (all, prog)::tps))
-            nodemap)
-        empty
-        lines in
-    let missing =
-      List.fold_left
-        (fun missing (_, (_, premises, tps)) ->
-          List.fold_left2
-            (fun missing premise (all, _) ->
-              if (not (mem premise nodemap)) then
-                let tags = Tagpairs.projectr all in
-                update
-                  premise
-                  (function
-                    | None ->
-                      Some (tags, [], [])
-                    | Some (tags', premises, tps) ->
-                      Some (Tags.union tags tags', premises, tps))
-                  missing
-              else
-                missing)
-            missing
-            premises
-            tps)
-        empty
-        (bindings nodemap) in
-    let nodemap = union nodemap missing in
-    let prf =
-      Int.Map.map
-        (fun (tags, premises, tps) -> Soundcheck.mk_abs_node tags premises tps)
-        nodemap in
-    let init = 
-      match lines with
-      | [] ->
-        0
-      | (src, _, _, _)::_ ->
-        Node.Var.to_int src in
-    (prf, init) in
   (many parse_line |>> mk_prf) s
 
-;;
-
-gc_setup () ;;
-
-Format.set_margin (Sys.command "exit $(tput cols)") ;;
-
-handle_reply
-    (parse_channel
-      (many
-        (parse_proof << Tokens.semi |>> (fun (prf, init) ->
-          if (check_proof ~init prf)
-            then print_endline "YES"
-            else print_endline "NO"
-        ))
-        >> spaces >> eof)
-      (stdin)
-      ())
-
-;;
+let () =
+  let () = gc_setup () in
+  let () = Format.set_margin (Sys.command "exit $(tput cols)") in
+  let buf = Buffer.create 2014 in
+  while true do
+    let ready = 
+      try
+        let c = input_char stdin in
+        let () = Buffer.add_char buf c in
+        Char.equal c ';'
+      with End_of_file -> true in
+    if ready then
+      let input = Buffer.contents buf in
+      match (parse_string (spaces >> eof) input ()) with
+      | Success _ ->
+        exit 0
+      | Failed _ ->
+        let (prf, init) =
+          handle_reply
+            (parse_string (spaces >> parse_proof << Tokens.semi) (Buffer.contents buf) ()) in
+        let () = Buffer.clear buf in
+        if (check_proof ~init prf)
+          then print_endline "YES"
+          else print_endline "NO"
+  done
