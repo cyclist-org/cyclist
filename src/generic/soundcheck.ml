@@ -220,24 +220,47 @@ let check_proof ?(init=0) p =
 let valid prf init =
   let projectl = IntPairSet.map_to Int.Set.add Int.Set.empty Pair.left in
   let projectr = IntPairSet.map_to Int.Set.add Int.Set.empty Pair.right in
-  (* 0 is a node in the proof *)
-  Int.Map.mem init prf
+  (* init is a node in the proof *)
+  if (not (Int.Map.mem init prf)) then
+    let () =
+      prerr_endline
+        (Printf.sprintf "Initial node %i not in proof" init) in
+    false
+  else
   (* For all nodes n in the proof *)
-  && Int.Map.for_all
-       (fun _ n ->
-         (* For all premises i of n *)
-         Blist.for_all
-           (fun (i, tv, tp) ->
-             (* i is a node in the proof *)
-             Int.Map.mem i prf
-             (* progressing tag pairs of i are a subset of all tagpairs of i *)
-             && IntPairSet.subset tp tv
-             (* The left-hand components of all tagpairs are in the tagset of n *)
-             && Int.Set.subset (projectl tv) (get_tags n)
-             (* The right-hand components of all tagpairs are in the tagset of i *)
-             && Int.Set.subset (projectr tv) (get_tags (Int.Map.find i prf)))
-           (get_subg n) )
-       prf
+  Int.Map.for_all
+    (fun n_idx n ->
+      (* For all premises i of n *)
+      Blist.for_all
+        (fun (i, tv, tp) ->
+          (* i is a node in the proof *)
+          if (not (Int.Map.mem i prf)) then
+            let () =
+              prerr_endline
+                (Printf.sprintf "Goal %i for node %i not in proof" i n_idx) in
+            false
+          (* progressing tag pairs of i are a subset of all tagpairs of i *)
+          else if (not (IntPairSet.subset tp tv)) then
+            let () =
+              prerr_endline
+                (Printf.sprintf "Prog pairs for goal %i of node %i not contained in all pairs" i n_idx) in
+            false
+          (* The left-hand components of all tagpairs are in the tagset of n *)
+          else if (not (Int.Set.subset (projectl tv) (get_tags n))) then
+            let () =
+              prerr_endline
+                (Printf.sprintf "Source tags of tagpairs for goal %i of node %i not contained in tags of node" i n_idx) in
+            false
+          (* The right-hand components of all tagpairs are in the tagset of i *)
+          else if (not (Int.Set.subset (projectr tv) (get_tags (Int.Map.find i prf)))) then
+            let () =
+              prerr_endline
+                (Printf.sprintf "Target tags of tagpairs for goal %i of node %i not contained in tags of target" i n_idx) in
+            false
+          else
+            true)
+        (get_subg n))
+    prf
 
 module CheckCache = Hashtbl
 
@@ -254,34 +277,37 @@ let check_proof ?(init=0) prf =
         assert false )
     in
     let aprf = minimize_abs_proof prf init in
-    let () =
-      if not (valid aprf init) then (
-        pp Format.std_formatter aprf ;
-        assert false )
-    in
-    try
-      debug (fun _ -> mk_to_string pp prf) ;
-      debug (fun () -> "Minimized proof:\n" ^ mk_to_string pp aprf) ;
-      Stats.MCCache.call () ;
-      let r = CheckCache.find ccache aprf in
-      Stats.MCCache.end_call () ;
-      Stats.MCCache.hit () ;
+    if (Int.Map.is_empty aprf) then
+      true
+    else
       let () =
-        debug (fun _ ->
-            "Found soundness result in the cache: "
-            ^ if r then "OK" else "NOT OK" )
+        if not (valid aprf init) then (
+          pp Format.std_formatter aprf ;
+          assert false )
       in
-      r
-    with Not_found ->
-      Stats.MCCache.end_call () ;
-      Stats.MCCache.miss () ;
-      let r = check_proof ~init aprf in
-      Stats.MCCache.call () ;
-      CheckCache.add ccache aprf r ;
-      Stats.MCCache.end_call () ;
-      (* if CheckCache.length ccache > !limit then                                          *)
-      (*   begin                                                                            *)
-      (*     debug (fun () -> "Soundness cache passed limit: " ^ (string_of_int !limit)) ;  *)
-      (*     limit := 10 * !limit                                                           *)
-      (*   end ;                                                                            *)
-      r
+      try
+        debug (fun _ -> mk_to_string pp prf) ;
+        debug (fun () -> "Minimized proof:\n" ^ mk_to_string pp aprf) ;
+        Stats.MCCache.call () ;
+        let r = CheckCache.find ccache aprf in
+        Stats.MCCache.end_call () ;
+        Stats.MCCache.hit () ;
+        let () =
+          debug (fun _ ->
+              "Found soundness result in the cache: "
+              ^ if r then "OK" else "NOT OK" )
+        in
+        r
+      with Not_found ->
+        Stats.MCCache.end_call () ;
+        Stats.MCCache.miss () ;
+        let r = check_proof ~init aprf in
+        Stats.MCCache.call () ;
+        CheckCache.add ccache aprf r ;
+        Stats.MCCache.end_call () ;
+        (* if CheckCache.length ccache > !limit then                                          *)
+        (*   begin                                                                            *)
+        (*     debug (fun () -> "Soundness cache passed limit: " ^ (string_of_int !limit)) ;  *)
+        (*     limit := 10 * !limit                                                           *)
+        (*   end ;                                                                            *)
+        r
