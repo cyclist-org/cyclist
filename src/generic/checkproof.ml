@@ -125,14 +125,14 @@ let () =
       with End_of_file -> true in
     if ready then
       let input = Buffer.contents buf in
+      let () = Buffer.clear buf in
       match (parse_string (spaces >> eof) input ()) with
       | Success _ ->
         exit 0
       | Failed _ ->
         let (prf, init) =
           handle_reply
-            (parse_string (spaces >> parse_proof << Tokens.semi) (Buffer.contents buf) ()) in
-        let () = Buffer.clear buf in
+            (parse_string (spaces >> parse_proof << Tokens.semi) input ()) in
         if (check_proof ~init prf)
           then print_endline "YES"
           else print_endline "NO"
