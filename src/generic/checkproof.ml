@@ -71,7 +71,6 @@ let mk_prf lines =
         | Some (_, premises, _) ->
           not (List.mem dest premises)
       ) in
-    let () = print_endline (Printf.sprintf "updating node %i" src) in
     let nodemap =
       update
         src
@@ -82,7 +81,6 @@ let mk_prf lines =
             Some
               (Tags.union src_tags tags, dest::premises, (all, prog)::tps))
         nodemap in
-    let () = print_endline (Printf.sprintf "updating node %i" dest) in
     let nodemap =
       update
         dest
