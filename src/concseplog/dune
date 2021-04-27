@@ -1,6 +1,6 @@
 (library 
- (name seplog)
- (public_name cyclist.seplog)
+ (name concseplog)
+ (public_name cyclist.concseplog)
  (libraries lib generic mparser.pcre)
  (modules
    (:standard 
@@ -18,11 +18,11 @@
    sl_prove sl_disprove sl_modelcheck sl_satcheck sl_satexpgen)
  (modules
    prove disprove modelcheck satcheck satexpgen)
- (libraries lib generic seplog))
+ (libraries lib generic concseplog))
 
 (toplevel
  (name sltop)
- (libraries lib generic seplog))
+ (libraries lib generic concseplog))
 
 ; (executable
 ;  (name        sltop)
