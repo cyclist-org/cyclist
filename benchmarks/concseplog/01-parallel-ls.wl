@@ -9,9 +9,9 @@ proc main(x, y)
 	(while z!=nil do
 		z := z.next;
 		assert([b'] < [a] : ls(y, z) * ls[b'](z,nil))
-	od)
+	od
 	||
-	(while z!=nil do
+	while z!=nil do
 		z := z.next;
 		assert([b'] < [a] : ls(y, x) * ls[b'](z,nil))
 	od)

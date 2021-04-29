@@ -178,6 +178,12 @@ module Cmd = struct
           >>= fun cond ->
           parse_symb keyw_do >> parse
           >>= fun cmd -> parse_symb keyw_od >>$ Some (While (cond, cmd)) )
+    <|> attempt
+          ( parse_symb symb_lp >> parse
+          >>= fun cmd1 ->
+          parse_symb symb_parallel >> parse
+          >>= fun cmd2 -> 
+          parse_symb symb_rp >>$ Some (Parallel (cmd1, cmd2)) )
     (*   | v = var; FLD_SEL; fld = IDENT; ASSIGN; t = term *)
     <|> attempt
           ( parse_ident
@@ -228,12 +234,6 @@ module Cmd = struct
             (fun arg -> assert (is_prog_var arg || Term.is_nil arg))
             args ;
           Some (ProcCall (p, args)) )
-    <|> attempt
-          ( parse_symb symb_lp >> parse
-          >>= fun cmd1 ->
-          parse_symb symb_parallel >> parse
-          >>= fun cmd2 -> 
-          parse_symb symb_rp >>$ Some (Parallel (cmd1, cmd2)) )
     <|> ( spaces >> string "/*"
         >> (many_until any_char_or_nl (string "*/" << spaces) >>$ None) )
     <?> "Cmd" )
