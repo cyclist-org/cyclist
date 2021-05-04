@@ -11,18 +11,18 @@
         satcheck
         satexpgen)))
 
-(executables
- (names
-   prove disprove modelcheck satcheck satexpgen)
- (public_names
-   sl_prove sl_disprove sl_modelcheck sl_satcheck sl_satexpgen)
- (modules
-   prove disprove modelcheck satcheck satexpgen)
- (libraries lib generic concseplog))
+; (executables
+;  (names
+;    prove disprove modelcheck satcheck satexpgen)
+;  (public_names
+;    sl_prove sl_disprove sl_modelcheck sl_satcheck sl_satexpgen)
+;  (modules
+;    prove disprove modelcheck satcheck satexpgen)
+;  (libraries lib generic concseplog))
 
-(toplevel
- (name sltop)
- (libraries lib generic concseplog))
+; (toplevel
+;  (name sltop)
+;  (libraries lib generic concseplog))
 
 ; (executable
 ;  (name        sltop)

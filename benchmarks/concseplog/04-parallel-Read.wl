@@ -1,4 +1,6 @@
-proc check(x)
+fields: tree;
+
+proc main(x)
 	precondition: tree(x); 
 	postcondition: tree(x);
 {	
@@ -6,10 +8,8 @@ proc check(x)
 		return;
 	else 
 		(
-		read(x);
-		)
-		||
-		(
+		read(x); 
+		|| 
 		read(x);
 		)
 	fi 
