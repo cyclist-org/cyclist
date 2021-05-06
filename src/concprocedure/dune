@@ -1,4 +1,0 @@
-(executable
-  (name prove)
-  (public_name concseplog_prove)
-  (libraries lib generic while concseplog ocamlgraph str))
