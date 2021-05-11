@@ -439,7 +439,10 @@ let symex_new_rule =
   in
   mk_symex rl
 
-let symex_skip_rule =
+  (*            *)
+  (* ---------- *)
+  (* {A}skip{A} *)
+  let symex_skip_rule =
   let rl (pre, cmd, _) =
     try
       let _, h = Form.dest pre in
@@ -450,7 +453,8 @@ let symex_skip_rule =
   in
   mk_symex rl
 
-let symex_if_rule =
+
+  let symex_if_rule =
   let rl (pre, cmd, post) =
     try
       let _, h = Form.dest pre in
@@ -539,7 +543,8 @@ let is_proc_unfold_node n =
        (Str.first_chars descr (String.length proc_unfold_str))
        proc_unfold_str
 
-let assert_rule =
+
+  let assert_rule =
   let rl ((pre, cmd, post) as seq) =
     try
       let f = Cmd.dest_assert cmd in
