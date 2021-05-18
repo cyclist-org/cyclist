@@ -1,6 +1,6 @@
 fields: next;
 
-proc main (x, y)
+proc main(x, y)
 	precondition: ls(x,y); 
 	postcondition: ls(x,y); 
 {

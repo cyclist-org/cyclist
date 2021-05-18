@@ -363,7 +363,12 @@ let mk_symex f =
   in
   wrap rl
 
-(* symbolic execution rules *)
+  (* symbolic execution rules *)
+  (*
+  {x = e /\ P } C {Q}
+  --------------------
+  {P} x = e ; C {Q}
+  *)
 let symex_assign_rule =
   let rl ((pre, cmd, _) as seq) =
     try

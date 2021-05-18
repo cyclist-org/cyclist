@@ -5,10 +5,5 @@ proc main(x, y)
 	postcondition: ls(y,nil);
 {
 	z := x;
-	assert (ls(y,z) * ls[a](z,nil));
-	( 
-	z := x;
-	|| 
-	z := x;
-	)
+	assert (ls(y,z) * ls[a](z,nil))
 }
