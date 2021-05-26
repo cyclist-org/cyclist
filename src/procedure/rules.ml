@@ -508,6 +508,23 @@ let symex_while_rule =
   in
   wrap rl
 
+  let symex_parallel_rule =
+    let rl (pre, cmd, post) =
+      try
+        let _, _ = Form.dest pre in
+        let cmd1, cmd2 = Cmd.dest_parallel cmd in
+        let cont = Cmd.get_cont cmd in 
+        fix_tps
+          [ ( [ (pre, Cmd.mk_seq cmd1 cont, post)
+              ; (pre, Cmd.mk_seq cmd2 cont, post)
+              ]
+            , "Parallel" ) ]
+      with
+      | Not_symheap | WrongCmd -> []
+    in
+    wrap rl
+
+
 let proc_unfold_str = "Proc Unf. "
 
 let mk_symex_proc_unfold procs prf_cache =

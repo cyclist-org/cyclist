@@ -429,6 +429,8 @@ module Cmd = struct
 
   let dest_while = dest_cmd _dest_while
 
+  let dest_parallel = dest_cmd _dest_parallel
+
   let dest_branching = dest_cmd _dest_branching
 
   let dest_proc_call = dest_cmd _dest_proc_call
