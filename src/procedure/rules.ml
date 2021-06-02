@@ -1289,6 +1289,8 @@ let setup (defs, procs, prf_cache) =
       ; symex_if_rule
       ; (* Branching constructs *)
         symex_ifelse_rule
+      ; (* Parallel composition*)
+        symex_parallel_rule
       ; (* Predicate unfolding *)
         luf defs ] ;
   let axioms = Rule.first [ex_falso_axiom; mk_symex_empty_axiom] in
