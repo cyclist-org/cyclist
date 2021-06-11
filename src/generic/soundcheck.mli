@@ -9,6 +9,10 @@ open Lib
     progressing tag transitions. *)
 type abstract_node
 
+val use_spot : bool ref
+(** Flag to indicate whether the Spot model checker should be used to verify the
+    trace condition for proofs. *)
+
 val mk_abs_node :
   Tags.t -> int list -> (Tagpairs.t * Tagpairs.t) list -> abstract_node
 (** Constructor for nodes. *)

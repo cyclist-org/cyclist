@@ -33,6 +33,7 @@ module Make (Prover : Prover.S) = struct
                 minbound := n ;
                 maxbound := n )
           , ": set both depths to <int>." )
+        ; ("-spot", Arg.Set Soundcheck.use_spot, ": use the spot model checker to verify the cyclic trace condition")
         ; ("-p", Arg.Set show_proof, ": show proof")
         ; ("-d", Arg.Set do_debug, ": print debug messages")
         ; ("-s", Arg.Set Stats.do_statistics, ": print statistics")

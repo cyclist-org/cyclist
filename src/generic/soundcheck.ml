@@ -32,8 +32,12 @@ let compose t1 t2 =
         t2 a )
     t1 IntPairSet.empty
 
+(* An abstract node is a set of tags, and a list of successor node IDs along
+   with, for each successor, a list of the tag pairs and strictly progressing
+   tag pairs *)
 type abstract_node = Int.Set.t * (int * IntPairSet.t * IntPairSet.t) list
 
+(* An abstract proof is a map from node IDs to abstract nodes *)
 type t = abstract_node Int.Map.t
 
 let get_tags n = fst n
@@ -185,38 +189,6 @@ let fuse_single_nodes prf' init =
 
 let minimize_abs_proof prf init = fuse_single_nodes (remove_dead_nodes prf) init
 
-(* check global soundness condition on proof *)
-let check_proof ?(init=0) p =
-  Stats.MC.call () ;
-  let create_tags i n = Int.Set.iter (tag_vertex i) (get_tags n) in
-  let create_succs i (_, l) =
-    Blist.iter (fun (j, _, _) -> set_successor i j) l
-  in
-  let create_trace_pairs i (_, l) =
-    let do_tag_transitions (j, tvs, tps) =
-      IntPairSet.iter (fun (k, m) -> set_trace_pair i j k m) tvs ;
-      IntPairSet.iter (fun (k, m) -> set_progress_pair i j k m) tps
-    in
-    Blist.iter do_tag_transitions l
-  in
-  let size = Int.Map.cardinal p in
-  let log2size =
-    1 + int_of_float (ceil (log (float_of_int size) /. log 2.0))
-  in
-  debug (fun () -> "Checking soundness starts...") ;
-  create_aut log2size ;
-  Int.Map.iter (fun i _ -> create_vertex i) p ;
-  Int.Map.iter create_tags p ;
-  Int.Map.iter create_succs p ;
-  set_initial_vertex init ;
-  Int.Map.iter create_trace_pairs p ;
-  let retval = check_soundness () in
-  destroy_aut () ;
-  if retval then Stats.MC.accept () else Stats.MC.reject () ;
-  debug (fun () ->
-      "Checking soundness ends, result=" ^ if retval then "OK" else "NOT OK" ) ;
-  retval
-
 let valid prf init =
   let projectl = IntPairSet.map_to Int.Set.add Int.Set.empty Pair.left in
   let projectr = IntPairSet.map_to Int.Set.add Int.Set.empty Pair.right in
@@ -262,6 +234,335 @@ let valid prf init =
         (get_subg n))
     prf
 
+module AutomatonCheck = struct
+  (* check global soundness condition on proof *)
+  let check_proof ?(init=0) p =
+    Stats.MC.call () ;
+    let create_tags i n = Int.Set.iter (tag_vertex i) (get_tags n) in
+    let create_succs i (_, l) =
+      Blist.iter (fun (j, _, _) -> set_successor i j) l
+    in
+    let create_trace_pairs i (_, l) =
+      let do_tag_transitions (j, tvs, tps) =
+        IntPairSet.iter (fun (k, m) -> set_trace_pair i j k m) tvs ;
+        IntPairSet.iter (fun (k, m) -> set_progress_pair i j k m) tps
+      in
+      Blist.iter do_tag_transitions l
+    in
+    let size = Int.Map.cardinal p in
+    let log2size =
+      1 + int_of_float (ceil (log (float_of_int size) /. log 2.0))
+    in
+    debug (fun () -> "Checking soundness starts...") ;
+    create_aut log2size ;
+    Int.Map.iter (fun i _ -> create_vertex i) p ;
+    Int.Map.iter create_tags p ;
+    Int.Map.iter create_succs p ;
+    set_initial_vertex init ;
+    Int.Map.iter create_trace_pairs p ;
+    let retval = check_soundness () in
+    destroy_aut () ;
+    if retval then Stats.MC.accept () else Stats.MC.reject () ;
+    debug (fun () ->
+        "Checking soundness ends, result=" ^ if retval then "OK" else "NOT OK" ) ;
+    retval
+end
+
+module RelationalCheck = struct
+
+  module IntPairMap = Lib.Treemap.Make(Pair.Make(Int)(Int))
+
+  module Slope = struct
+
+    type t = 
+      (* | Unknown *)
+      | Stay
+      | Decrease
+
+    let equal h h' =
+      match (h, h') with
+      | Decrease, Decrease
+      | Stay, Stay
+      (* | Unknown, Unknown  *)
+        ->
+        true
+      | _ ->
+        false
+    
+    let ( < ) h h' =
+      match (h, h') with
+      (* | Unknown, Stay
+      | Unknown, Decrease *)
+      | Stay, Decrease ->
+        true
+      | _, _ ->
+        false
+
+    let max h h' = 
+      match (h, h') with
+      | Decrease, _
+      | _, Decrease ->
+        Decrease
+      (* | Stay, _ 
+      | _, Stay ->
+        Stay *)
+      | _, _ ->
+        (* Unknown *)
+        Stay
+    
+    let pp fmt s =
+      let s = match s with
+      (* | Unknown -> "Unknown" *)
+      | Stay -> "Stay"
+      | Decrease -> "Decrease" in
+      Format.fprintf fmt "%s" s
+    
+    let hash s = Hashtbl.hash s
+    
+  end
+
+  module SlopedRel = struct
+
+    module HashedKernel = struct
+      (* domain-codomain mapping, codomain-domain mapping, slopes *)
+      type t = 
+        Int.Set.t Int.Map.t * Int.Set.t Int.Map.t * Slope.t IntPairMap.t
+      let equal (_, _, p) (_, _, q) =
+        IntPairMap.equal Slope.equal p q
+      let pp fmt (_, _, p) =
+        IntPairMap.pp Slope.pp fmt p
+      let hash (_, _, p) =
+        IntPairMap.hash Slope.hash p
+    end
+
+    module Set = struct
+      include Hashset.Make(HashedKernel)
+      let equal s s' =
+        if Int.(cardinal s <> cardinal s') then
+          false
+        else
+          try
+            let () =
+              iter (fun p -> if not (mem s' p) then raise Not_found) s in
+            true
+          with Not_found -> false
+      let pp fmt s =
+        let () = Format.fprintf fmt "@[[" in
+        let first = ref true in
+        let () =
+          iter
+            (fun p ->
+              let () = if not !first then Format.fprintf fmt ", " in
+              let () = first := false in
+              let () = Format.fprintf fmt "%a" HashedKernel.pp p in
+              ())
+            s in
+        let () = Format.fprintf fmt "]@]" in
+        ()
+    end
+    
+    include HashedKernel
+
+    let empty = (Int.Map.empty, Int.Map.empty, IntPairMap.empty)
+
+    let add (h, h', s) (fd, bk, slopes) =
+      let upd x = function
+      | None -> Some (Int.Set.singleton x)
+      | Some s -> Some (Int.Set.add x s) in
+      (Int.Map.update h (upd h') fd,
+       Int.Map.update h' (upd h) bk,
+       IntPairMap.update (h, h') 
+        (function
+          | None -> Some s
+          | Some s' -> Some (Slope.max s s'))
+        slopes)
+
+    let has_decreasing_self_loop (_, _, slopes) =
+      IntPairMap.exists
+        (fun (n, n') s ->
+          if Int.(n <> n) then
+            false
+          else
+            match s with
+            | Slope.Decrease ->
+              true
+            | _ ->
+              false)
+        slopes
+
+    let compose (p_fd, p_bk, p_sl) (q_fd, q_bk, q_sl) = 
+      Int.Map.fold
+        (fun h hs ->
+          Int.Map.fold
+            (fun h' hs' result ->
+              let s = 
+                Int.Set.fold
+                (fun h'' s ->
+                  let s' =
+                    Slope.max
+                      (IntPairMap.find (h, h'') p_sl)
+                      (IntPairMap.find (h'', h') q_sl) in
+                  match s with
+                  | None   -> Some s'
+                  | Some s -> Some (Slope.max s s'))
+                (Int.Set.inter hs hs')
+                None in
+              match s with
+              | None   -> result
+              | Some s -> add (h, h', s) result)
+           q_bk)
+        p_fd
+        empty
+    
+    (* Repeat code for relational composition, so as to inline check for whether
+       we have reached the fixed point - slightly more efficient than comparing
+       new relation for equality with the old one at each iteration. *)
+    let transitive_closure ((p_fd, p_bk, p_sl) as p) =
+      let rec transitive_closure (q_fd, q_bk, q_sl) =
+        let result, continue =
+          Int.Map.fold
+            (fun h hs ->
+              Int.Map.fold
+                (fun h' hs' (result, continue) ->
+                  let s = 
+                    Int.Set.fold
+                    (fun h'' s ->
+                      let s' =
+                        Slope.max
+                          (IntPairMap.find (h, h'') p_sl)
+                          (IntPairMap.find (h'', h') q_sl) in
+                        match s with
+                          | None   -> Some s'
+                          | Some s -> Some (Slope.max s s'))
+                    (Int.Set.inter hs hs')
+                    None in
+                  let result =
+                    match s with
+                    | None   -> result
+                    | Some s -> add (h, h', s) result in
+                  let continue =
+                    if Option.is_none s then
+                      continue
+                    else 
+                      continue
+                        ||
+                      not (IntPairMap.mem (h, h') q_sl)
+                        ||
+                      Slope.((Option.get s) < (IntPairMap.find (h, h') q_sl)) in
+                  result, continue)
+              q_bk)
+            p_fd
+            (empty, false) in
+        if continue then transitive_closure result else result in
+      transitive_closure p
+
+  end
+
+  (* A height graph is a set of nodes and sloped relation for each edge *)
+  type height_graph = Int.Set.t * SlopedRel.t IntPairMap.t
+
+  let pp_height_graph fmt (nodes, slopes) =
+    Format.fprintf fmt "@[Nodes: %a@.Slopes: %a@]"
+      Int.Set.pp nodes
+      (IntPairMap.pp SlopedRel.pp) slopes
+
+  (* Compute the composition closure of the given height graph *)
+  let comp_closure (ns, slopes) =
+    let init = 
+      Int.Set.fold
+        (fun n ccl ->
+          Int.Set.fold
+            (fun n' ccl ->
+              let edge = (n, n') in
+              let s = SlopedRel.Set.create 1 in
+              let () =
+                match (IntPairMap.find_opt edge slopes) with
+                | None ->
+                  ()
+                | Some p ->
+                  SlopedRel.Set.add s p in
+              IntPairMap.add edge s ccl)
+            ns
+            ccl)
+        ns
+        IntPairMap.empty in
+    let rec closure ccl =
+      let ccl', cont =
+        Int.Set.fold (fun n ->
+        Int.Set.fold (fun n' (acc, cont) ->
+          let old_slopes = IntPairMap.find (n, n') ccl in
+          let new_slopes = SlopedRel.Set.copy old_slopes in
+          let cont =
+            Int.Set.fold (fun n'' ->
+            SlopedRel.Set.fold (fun p ->
+            SlopedRel.Set.fold (fun q cont ->
+              let r = SlopedRel.compose p q in
+              let () = SlopedRel.Set.add new_slopes r in
+              cont || not (SlopedRel.Set.mem old_slopes r)
+            ) (IntPairMap.find (n'', n') ccl)
+            ) (IntPairMap.find (n, n'') ccl)
+            ) ns cont in
+          (IntPairMap.add (n, n') new_slopes acc, cont)
+        ) ns) ns (IntPairMap.empty, false) in
+      if cont then closure ccl' else ccl in
+    closure init
+
+  let pp_closure fmt ccl =
+    IntPairMap.pp SlopedRel.Set.pp fmt ccl
+
+  let check_proof p =
+    let to_height_graph p =
+      Int.Map.fold
+        (fun n (_, succs) (nodes, slopes) ->
+          let nodes = Int.Set.add n nodes in
+          let slopes = 
+            List.fold_left
+              (fun slopes (n', all_tags, prog_tags) ->
+                let hs =
+                  IntPairSet.fold
+                    (fun (h, h') -> SlopedRel.add (h, h', Slope.Stay))
+                    all_tags
+                    SlopedRel.empty in
+                let hs =
+                  IntPairSet.fold
+                    (fun (h, h') -> SlopedRel.add (h, h', Slope.Decrease))
+                    prog_tags
+                    hs in
+                IntPairMap.add (n, n') hs slopes)
+              slopes
+              succs in
+          (nodes, slopes))
+        p
+        (Int.Set.empty, IntPairMap.empty) in
+    let () = Stats.MC.call () in
+    let ((nodes, _) as g) = to_height_graph p in
+    let () = debug (fun () -> "Height Graph:\n" ^ mk_to_string pp_height_graph g) in
+    let ccl = comp_closure g in
+    let () = debug (fun () -> "Composition Closure:\n" ^ mk_to_string pp_closure ccl) in
+    try
+      let () = 
+        Int.Set.iter (fun n ->
+        SlopedRel.Set.iter (fun p ->
+          let () = debug (fun () -> "Checking " ^ mk_to_string SlopedRel.pp p) in
+          let r = SlopedRel.transitive_closure p in
+          let () = debug (fun () -> "Transitive closure: " ^ mk_to_string SlopedRel.pp r) in
+          if not (SlopedRel.has_decreasing_self_loop r)
+            then raise Not_found
+        ) (IntPairMap.find (n, n) ccl)
+        ) nodes
+        in
+      let () = Stats.MC.accept () in
+      let () = debug (fun () -> "Checking soundness ends, result=OK") in
+      true
+    with Not_found ->
+      let () = Stats.MC.reject () in
+      let () = debug (fun () -> "Checking soundness ends, result=NOT OK") in
+      false
+
+end
+
+let use_spot = ref false
+
 module CheckCache = Hashtbl
 
 let ccache = CheckCache.create 1000
@@ -301,7 +602,10 @@ let check_proof ?(init=0) prf =
       with Not_found ->
         Stats.MCCache.end_call () ;
         Stats.MCCache.miss () ;
-        let r = check_proof ~init aprf in
+        let r =
+          if !use_spot
+            then AutomatonCheck.check_proof ~init aprf
+            else RelationalCheck.check_proof aprf in
         Stats.MCCache.call () ;
         CheckCache.add ccache aprf r ;
         Stats.MCCache.end_call () ;

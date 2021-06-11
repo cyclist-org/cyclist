@@ -6,5 +6,5 @@ $(TESTS): %.tst:
 	@echo "$@"
 	-@while read -r SEQ; do \
 		echo -n "\t"; \
-		$(CMD) -D $(DEFS) $(TST_OPTS) -S "$$SEQ" || true ;\
+		(cd "$(ROOT)" && dune exec $(CMD) -- $(TST_OPTS) -S "$$SEQ" || true) ;\
 	done < "$@"

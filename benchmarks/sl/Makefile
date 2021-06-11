@@ -1,4 +1,4 @@
-CMD := "$(ROOT)/_build/src/seplog/sl_prove.native"
+CMD := "src/seplog/prove.exe"
 export CMD
 
 TARGETS:=$(filter-out Makefile,$(wildcard *))
