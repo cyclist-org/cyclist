@@ -418,7 +418,7 @@ module RelationalCheck = struct
        we have reached the fixed point - slightly more efficient than comparing
        new relation for equality with the old one at each iteration. *)
     let transitive_closure ((p_fd, p_bk, p_sl) as p) =
-      let rec transitive_closure (q_fd, q_bk, q_sl) =
+      let rec transitive_closure ((q_fd, q_bk, q_sl) as q) =
         let result, continue =
           Int.Map.fold
             (fun h hs ->
@@ -448,11 +448,11 @@ module RelationalCheck = struct
                         ||
                       not (IntPairMap.mem (h, h') q_sl)
                         ||
-                      Slope.((Option.get s) < (IntPairMap.find (h, h') q_sl)) in
+                      Slope.((IntPairMap.find (h, h') q_sl) < (Option.get s)) in
                   result, continue)
               q_bk)
             p_fd
-            (empty, false) in
+            (q, false) in
         if continue then transitive_closure result else result in
       transitive_closure p
 
