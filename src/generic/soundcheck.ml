@@ -380,7 +380,7 @@ module RelationalCheck = struct
     let has_decreasing_self_loop (_, _, slopes) =
       IntPairMap.exists
         (fun (n, n') s ->
-          if Int.(n <> n) then
+          if Int.(n <> n') then
             false
           else
             match s with
