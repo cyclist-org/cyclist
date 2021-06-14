@@ -511,6 +511,7 @@ module RelationalCheck = struct
     IntPairMap.pp SlopedRel.Set.pp fmt ccl
 
   let check_proof p =
+    Stats.MC.call () ;
     let to_height_graph p =
       Int.Map.fold
         (fun n (_, succs) (nodes, slopes) ->
@@ -534,30 +535,31 @@ module RelationalCheck = struct
           (nodes, slopes))
         p
         (Int.Set.empty, IntPairMap.empty) in
-    let () = Stats.MC.call () in
+    let () = debug (fun () -> "Checking soundness starts...") in
     let ((nodes, _) as g) = to_height_graph p in
     let () = debug (fun () -> "Height Graph:\n" ^ mk_to_string pp_height_graph g) in
     let ccl = comp_closure g in
     let () = debug (fun () -> "Composition Closure:\n" ^ mk_to_string pp_closure ccl) in
-    try
-      let () = 
-        Int.Set.iter (fun n ->
-        SlopedRel.Set.iter (fun p ->
-          let () = debug (fun () -> "Checking " ^ mk_to_string SlopedRel.pp p) in
-          let r = SlopedRel.transitive_closure p in
-          let () = debug (fun () -> "Transitive closure: " ^ mk_to_string SlopedRel.pp r) in
-          if not (SlopedRel.has_decreasing_self_loop r)
-            then raise Not_found
-        ) (IntPairMap.find (n, n) ccl)
-        ) nodes
-        in
-      let () = Stats.MC.accept () in
-      let () = debug (fun () -> "Checking soundness ends, result=OK") in
-      true
-    with Not_found ->
-      let () = Stats.MC.reject () in
-      let () = debug (fun () -> "Checking soundness ends, result=NOT OK") in
-      false
+    let retval =
+      try
+        let () = 
+          Int.Set.iter (fun n ->
+          SlopedRel.Set.iter (fun p ->
+            let () = debug (fun () -> "Checking " ^ mk_to_string SlopedRel.pp p) in
+            let r = SlopedRel.transitive_closure p in
+            let () = debug (fun () -> "Transitive closure: " ^ mk_to_string SlopedRel.pp r) in
+            if not (SlopedRel.has_decreasing_self_loop r)
+              then raise Not_found
+          ) (IntPairMap.find (n, n) ccl)
+          ) nodes in
+        true
+      with Not_found ->
+        false in
+    if retval then Stats.MC.accept () else Stats.MC.reject () ;
+    debug (fun () ->
+        "Checking soundness ends, result=" ^ if retval then "OK" else "NOT OK" ) ;
+    retval
+        
 
 end
 
