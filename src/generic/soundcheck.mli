@@ -23,8 +23,20 @@ type t = abstract_node Int.Map.t
 
 val build_proof :
   (int * int list * (int * (int * int) list * (int * int) list) list) list -> t
+(* Make an abstract proof from a representation using integers for node and tag
+   IDs. The representation consists of a list of tuples, each representing one
+   node of the proof and consisting of:
+   
+     - a node ID
+     - a list of the tag IDs belonging to that node
+     - a list of tuples representing the successors of the node, each consisting
+       of:
+         # the ID of the successor
+         # a list of valid tag transitions
+         # a list of the progressing tag transitions
+ *)
 
-val check_proof : ?init:int -> t -> bool
+val check_proof : ?init:int -> ?minimize:bool -> t -> bool
 (** Validate, minimise, check soundness of proof/graph and memoise. *)
 
 val pp : Format.formatter -> t -> unit

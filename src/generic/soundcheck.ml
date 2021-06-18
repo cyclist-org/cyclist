@@ -70,17 +70,17 @@ let mk_abs_node tags succs tps_pair =
 
 let build_proof nodes =
   Int.Map.of_list
-    (List.map
+    (List.rev_map
        (fun (id, tags, premises) ->
          let premises =
-           List.map
+           List.rev_map
              (fun (target, allpairs, progpairs) ->
                ( target
                , IntPairSet.of_list allpairs
                , IntPairSet.of_list progpairs ) )
              premises
          in
-         (id, (Int.Set.of_list tags, premises)) )
+         (id, (Int.Set.of_list tags, List.rev premises)) )
        nodes)
 
 (* has one child and is not a self loop *)
@@ -570,7 +570,7 @@ module CheckCache = Hashtbl
 let ccache = CheckCache.create 1000
 (* let limit = ref 1 *)
 
-let check_proof ?(init=0) prf =
+let check_proof ?(init=0) ?(minimize=true) prf =
   if (Int.Map.is_empty prf) then
     true
   else
@@ -579,7 +579,10 @@ let check_proof ?(init=0) prf =
         pp Format.std_formatter prf ;
         assert false )
     in
-    let aprf = minimize_abs_proof prf init in
+    let aprf =
+      if minimize
+        then minimize_abs_proof prf init
+        else prf in
     if (Int.Map.is_empty aprf) then
       true
     else

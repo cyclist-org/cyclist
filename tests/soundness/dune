@@ -1,0 +1,17 @@
+(library
+ (name base)
+ (public_name cyclist.test.soundness)
+ (libraries lib generic)
+ (modules base))
+
+(executable
+ (name test1)
+ (public_name test1)
+ (modules test1)
+ (libraries generic lib base))
+
+(executable
+ (name test2)
+ (public_name test2)
+ (modules test2)
+ (libraries generic lib base))
