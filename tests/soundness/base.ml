@@ -3,11 +3,12 @@ open Generic
 
 let speclist =
   [ ("-spot", Arg.Set Soundcheck.use_spot, ": use the spot model checker to verify the cyclic trace condition")
+  ; ("-ext", Arg.Set Soundcheck.use_external, ": use external C++ code to verify the cyclic trace condition")
   ; ("-d", Arg.Set do_debug, ": print debug messages")
   ; ("-s", Arg.Set Stats.do_statistics, ": print statistics") ]
 
 let usage =
-  "usage: " ^ Sys.argv.(0) ^ " [-d] [-s] [-spot] [<size>]"
+  "usage: " ^ Sys.argv.(0) ^ " [-d] [-s] [-spot|-ext] [<size>]"
 
 let size = ref 1
 

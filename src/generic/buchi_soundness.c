@@ -106,7 +106,7 @@ extern "C" void set_progress_pair(value v1_, value v2_, value t1_, value t2_) {
 	CAMLreturn0;
 }
 
-extern "C" value check_soundness() {
+extern "C" value check_soundness_buchi() {
 	CAMLparam0();
 	CAMLlocal1(v_res);
 

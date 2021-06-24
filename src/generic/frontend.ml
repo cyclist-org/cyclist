@@ -34,6 +34,7 @@ module Make (Prover : Prover.S) = struct
                 maxbound := n )
           , ": set both depths to <int>." )
         ; ("-spot", Arg.Set Soundcheck.use_spot, ": use the spot model checker to verify the cyclic trace condition")
+        ; ("-ext", Arg.Set Soundcheck.use_external, ": use external C++ code to verify the cyclic trace condition")
         ; ("-p", Arg.Set show_proof, ": show proof")
         ; ("-d", Arg.Set do_debug, ": print debug messages")
         ; ("-s", Arg.Set Stats.do_statistics, ": print statistics")
@@ -44,7 +45,7 @@ module Make (Prover : Prover.S) = struct
             ^ string_of_int !timeout ) ] )
 
   let usage =
-    ref ("usage: " ^ Sys.argv.(0) ^ " [-p/d/s] [-l <file>] [-t/m/M/L <int>]")
+    ref ("usage: " ^ Sys.argv.(0) ^ " [-p/d/s] [-l <file>] [-t/m/M/L <int>] [-spot|-ext]")
 
   let die msg spec_list usage =
     print_endline msg ;

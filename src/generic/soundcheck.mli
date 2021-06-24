@@ -13,6 +13,10 @@ val use_spot : bool ref
 (** Flag to indicate whether the Spot model checker should be used to verify the
     trace condition for proofs. *)
 
+val use_external : bool ref
+(** Flag to indicate whether trace condition check should be done by external
+    C++ code. *)
+
 val mk_abs_node :
   Tags.t -> int list -> (Tagpairs.t * Tagpairs.t) list -> abstract_node
 (** Constructor for nodes. *)

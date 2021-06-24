@@ -1,26 +1,6 @@
 open Lib
 open Parsers
 
-external create_aut : int -> unit = "create_aut"
-
-external destroy_aut : unit -> unit = "destroy_aut"
-
-external create_vertex : int -> unit = "create_vertex"
-
-external tag_vertex : int -> int -> unit = "tag_vertex"
-
-external set_successor : int -> int -> unit = "set_successor"
-
-external set_trace_pair : int -> int -> int -> int -> unit = "set_trace_pair"
-
-external set_progress_pair :
-  int -> int -> int -> int -> unit
-  = "set_progress_pair"
-
-external check_soundness : unit -> bool = "check_soundness"
-
-external set_initial_vertex : int -> unit = "set_initial_vertex"
-
 module IntPairSet = Treeset.Make (Pair.Make (Int) (Int))
 
 (* computes the composition of two sets of pairs *)
@@ -128,8 +108,10 @@ let remove_dead_nodes prf' =
       let newparent =
         let tags, subg = n in
         match subg with
-        | [_] -> (tags, [])
-        | _ -> (tags, Blist.remove_nth (index_of_child child n) subg)
+        | [_] ->
+          (tags, [])
+        | _ -> 
+          (tags, Blist.remove_nth (index_of_child child n) subg)
       in
       prf := Int.Map.add par_idx newparent !prf
   in
@@ -234,8 +216,20 @@ let valid prf init =
         (get_subg n))
     prf
 
-module AutomatonCheck = struct
-  (* check global soundness condition on proof *)
+module BuchiCheck = struct
+
+  external create_aut : int -> unit = "create_aut"
+  external destroy_aut : unit -> unit = "destroy_aut"
+  external create_vertex : int -> unit = "create_vertex"
+  external tag_vertex : int -> int -> unit = "tag_vertex"
+  external set_successor : int -> int -> unit = "set_successor"
+  external set_trace_pair : int -> int -> int -> int -> unit = "set_trace_pair"
+  external set_progress_pair : int -> int -> int -> int -> unit
+    = "set_progress_pair"
+  external check_soundness : unit -> bool = "check_soundness_buchi"
+  external set_initial_vertex : int -> unit = "set_initial_vertex"
+  
+    (* check global soundness condition on proof *)
   let check_proof ?(init=0) p =
     Stats.MC.call () ;
     let create_tags i n = Int.Set.iter (tag_vertex i) (get_tags n) in
@@ -311,11 +305,14 @@ module RelationalCheck = struct
         Stay
     
     let pp fmt s =
-      let s = match s with
-      (* | Unknown -> "Unknown" *)
-      | Stay -> "Stay"
-      | Decrease -> "Decrease" in
-      Format.fprintf fmt "%s" s
+      Format.fprintf fmt "%s"
+        begin match s with
+        (* | Unknown -> "Unknown" *)
+        | Stay ->
+          "Stay"
+        | Decrease ->
+          "Decrease"
+        end
     
     let hash s = Hashtbl.hash s
     
@@ -559,11 +556,50 @@ module RelationalCheck = struct
     debug (fun () ->
         "Checking soundness ends, result=" ^ if retval then "OK" else "NOT OK" ) ;
     retval
-        
+  
+  (* Call out to C++ library for relational check *)
+  module Ext = struct
+
+    external create_hgraph : unit -> unit = "create_hgraph"
+    external destroy_hgraph : unit -> unit = "destroy_hgraph"
+    external add_node : int -> unit = "add_node"
+    external add_height : int -> int -> unit = "add_height"
+    external add_edge : int -> int -> unit = "add_edge"
+    external add_stay : int -> int -> int -> int -> unit = "add_stay"
+    external add_decrease : int -> int -> int -> int -> unit = "add_decr"
+    external check_soundness : unit -> bool = "check_soundness_buchi"
+
+    let check_proof p =
+      let process_succ n (n', tps, prog) =
+        add_edge n n' ;
+        IntPairSet.iter
+          (fun ((h, h') as p) ->
+            if IntPairSet.mem p prog
+              then add_decrease n h n' h'
+              else add_stay n h n' h')
+          (tps) ;
+        in
+      let process_node n (tags, succs) =
+        add_node n ;
+        Int.Set.iter (add_height n) tags ;
+        List.iter (process_succ n) succs ; in
+      Stats.MC.call () ;
+      debug (fun () -> "Checking soundness starts...") ;
+      create_hgraph () ;
+      Int.Map.iter process_node p ;
+      let retval = check_soundness () in
+      destroy_hgraph () ;
+      if retval then Stats.MC.accept () else Stats.MC.reject () ;
+      debug (fun () ->
+          "Checking soundness ends, result=" ^ if retval then "OK" else "NOT OK" ) ;
+      retval
+  
+  end
 
 end
 
 let use_spot = ref false
+let use_external = ref false
 
 module CheckCache = Hashtbl
 
@@ -609,8 +645,11 @@ let check_proof ?(init=0) ?(minimize=true) prf =
         Stats.MCCache.miss () ;
         let r =
           if !use_spot
-            then AutomatonCheck.check_proof ~init aprf
-            else RelationalCheck.check_proof aprf in
+            then BuchiCheck.check_proof ~init aprf
+            else 
+              if !use_external
+                then RelationalCheck.Ext.check_proof aprf
+                else RelationalCheck.check_proof aprf in
         Stats.MCCache.call () ;
         CheckCache.add ccache aprf r ;
         Stats.MCCache.end_call () ;
