@@ -567,7 +567,7 @@ module RelationalCheck = struct
     external add_edge : int -> int -> unit = "add_edge"
     external add_stay : int -> int -> int -> int -> unit = "add_stay"
     external add_decrease : int -> int -> int -> int -> unit = "add_decr"
-    external check_soundness : unit -> bool = "check_soundness_buchi"
+    external check_soundness : unit -> bool = "check_soundness_relational"
 
     let check_proof p =
       let process_succ n (n', tps, prog) =
