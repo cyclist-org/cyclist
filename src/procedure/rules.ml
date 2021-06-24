@@ -786,6 +786,19 @@ let frame_rule frame ((pre, cmd, post) as seq) ((pre', cmd', post') as seq') =
     let () = debug (fun _ -> "Unsuccessfully tried to apply frame rule!") in
     []
 
+let weak_frame_rule frame ((pre, cmd, post) as seq) ((pre', cmd', post') as seq') =
+  if
+    Cmd.equal cmd cmd'
+    && Seq.equal (Seq.frame frame seq) seq'
+    && Term.Set.is_empty
+          (Term.Set.inter
+            (Cmd.modifies ~strict:false cmd)
+            (Form.vars frame))
+  then [([(seq, Seq.tag_pairs seq, Tagpairs.empty)], "Weak frame rule")]
+  else
+    let () = debug (fun _ -> "Unsuccessfully tried to apply frame rule!") in
+    []
+
 let schema_intro_rule (((cs, hs), cmd, post) as seq)
     ((((cs', hs') as pre'), cmd', post') as seq') =
   if

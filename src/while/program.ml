@@ -568,7 +568,7 @@ module Cmd = struct
     | IfElse (cond, cmd, cmd') ->
         IfElse (Cond.subst theta cond, subst theta cmd, subst theta cmd')
     | While (cond, cmd) -> While (Cond.subst theta cond, subst theta cmd)
-    | Parallel(cmd, cmd') -> Parallel(subst theta cmd, subst theta cmd') (*IMPORTANT: CHECK THIS AGAIN*)
+    | Parallel(cmd, cmd') -> Parallel(subst theta cmd, subst theta cmd') 
  
   and subst theta cmd =
     match cmd with
@@ -653,7 +653,7 @@ module Cmd = struct
             cmd
             (String.make (!number_width + indent + 2) ' ' ^ keyw_od.str)
     | Parallel(cmd, cmd') -> 
-        Format.fprintf fmt "%s" symb_parallel.str  (* IMPORTANT! MODIFY THIS*)
+        Format.fprintf fmt "%s" symb_parallel.str   
       
 
   and pp_lcmd ?(abbr = false) indent fmt c =
