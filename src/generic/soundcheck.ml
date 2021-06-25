@@ -1,21 +1,24 @@
 open Lib
 open Parsers
 
-module IntPairSet = Treeset.Make (Pair.Make (Int) (Int))
+module IntPair = struct
+  include Pair.Make(Int)(Int)
+  include Containers.Make(Pair.Make(Int)(Int))
+end
 
 (* computes the composition of two sets of pairs *)
 let compose t1 t2 =
-  IntPairSet.fold
+  IntPair.Set.fold
     (fun (x, y) a ->
-      IntPairSet.fold
-        (fun (w, z) b -> if Int.equal y w then IntPairSet.add (x, z) b else b)
+      IntPair.Set.fold
+        (fun (w, z) b -> if Int.equal y w then IntPair.Set.add (x, z) b else b)
         t2 a )
-    t1 IntPairSet.empty
+    t1 IntPair.Set.empty
 
 (* An abstract node is a set of tags, and a list of successor node IDs along
    with, for each successor, a list of the tag pairs and strictly progressing
    tag pairs *)
-type abstract_node = Int.Set.t * (int * IntPairSet.t * IntPairSet.t) list
+type abstract_node = Int.Set.t * (int * IntPair.Set.t * IntPair.Set.t) list
 
 (* An abstract proof is a map from node IDs to abstract nodes *)
 type t = abstract_node Int.Map.t
@@ -39,7 +42,7 @@ let mk_abs_node tags succs tps_pair =
       (fun i (tps, tps') ->
         let tps, tps' =
           Pair.map
-            (Tagpairs.map_to IntPairSet.add IntPairSet.empty
+            (Tagpairs.map_to IntPair.Set.add IntPair.Set.empty
                (Pair.map Tags.Elt.to_int))
             (tps, tps')
         in
@@ -56,8 +59,8 @@ let build_proof nodes =
            List.rev_map
              (fun (target, allpairs, progpairs) ->
                ( target
-               , IntPairSet.of_list allpairs
-               , IntPairSet.of_list progpairs ) )
+               , IntPair.Set.of_list allpairs
+               , IntPair.Set.of_list progpairs ) )
              premises
          in
          (id, (Int.Set.of_list tags, List.rev premises)) )
@@ -88,7 +91,7 @@ let pp_proof_node fmt n =
       Blist.pp pp_semicolonsp
         (fun fmt (i, tv, tp) ->
           Format.fprintf fmt "(goal=%a, valid=%a, prog=%a)" Format.pp_print_int
-            i IntPairSet.pp tv IntPairSet.pp tp )
+            i IntPair.Set.pp tv IntPair.Set.pp tp )
         fmt subg
   in
   Format.fprintf fmt "@[%a@]" aux n
@@ -141,7 +144,7 @@ let fuse_single_nodes prf' init =
         Blist.replace_nth
           ( grand_child
           , compose par_tv tv
-          , IntPairSet.union_of_list
+          , IntPair.Set.union_of_list
               [compose par_tp tp; compose par_tv tp; compose par_tp tv] )
           pos par_subg
       in
@@ -172,8 +175,8 @@ let fuse_single_nodes prf' init =
 let minimize_abs_proof prf init = fuse_single_nodes (remove_dead_nodes prf) init
 
 let valid prf init =
-  let projectl = IntPairSet.map_to Int.Set.add Int.Set.empty Pair.left in
-  let projectr = IntPairSet.map_to Int.Set.add Int.Set.empty Pair.right in
+  let projectl = IntPair.Set.map_to Int.Set.add Int.Set.empty Pair.left in
+  let projectr = IntPair.Set.map_to Int.Set.add Int.Set.empty Pair.right in
   (* init is a node in the proof *)
   if (not (Int.Map.mem init prf)) then
     let () =
@@ -194,7 +197,7 @@ let valid prf init =
                 (Printf.sprintf "Goal %i for node %i not in proof" i n_idx) in
             false
           (* progressing tag pairs of i are a subset of all tagpairs of i *)
-          else if (not (IntPairSet.subset tp tv)) then
+          else if (not (IntPair.Set.subset tp tv)) then
             let () =
               prerr_endline
                 (Printf.sprintf "Prog pairs for goal %i of node %i not contained in all pairs" i n_idx) in
@@ -238,8 +241,8 @@ module BuchiCheck = struct
     in
     let create_trace_pairs i (_, l) =
       let do_tag_transitions (j, tvs, tps) =
-        IntPairSet.iter (fun (k, m) -> set_trace_pair i j k m) tvs ;
-        IntPairSet.iter (fun (k, m) -> set_progress_pair i j k m) tps
+        IntPair.Set.iter (fun (k, m) -> set_trace_pair i j k m) tvs ;
+        IntPair.Set.iter (fun (k, m) -> set_progress_pair i j k m) tps
       in
       Blist.iter do_tag_transitions l
     in
@@ -263,8 +266,6 @@ module BuchiCheck = struct
 end
 
 module RelationalCheck = struct
-
-  module IntPairMap = Lib.Treemap.Make(Pair.Make(Int)(Int))
 
   module Slope = struct
 
@@ -291,6 +292,15 @@ module RelationalCheck = struct
         true
       | _, _ ->
         false
+
+    let compare h h' =
+      match (h, h') with
+      | Stay, Decrease ->
+        -1
+      | Decrease, Stay ->
+        1
+      | _ ->
+        0
 
     let max h h' = 
       match (h, h') with
@@ -323,44 +333,22 @@ module RelationalCheck = struct
     module HashedKernel = struct
       (* domain-codomain mapping, codomain-domain mapping, slopes *)
       type t = 
-        Int.Set.t Int.Map.t * Int.Set.t Int.Map.t * Slope.t IntPairMap.t
+        Int.Set.t Int.Map.t * Int.Set.t Int.Map.t * Slope.t IntPair.Map.t
       let equal (_, _, p) (_, _, q) =
-        IntPairMap.equal Slope.equal p q
-      let pp fmt (_, _, p) =
-        IntPairMap.pp Slope.pp fmt p
+        IntPair.Map.equal Slope.equal p q
+      let compare (_, _, p) (_, _, q) =
+        IntPair.Map.compare Slope.compare p q
       let hash (_, _, p) =
-        IntPairMap.hash Slope.hash p
+        IntPair.Map.hash Slope.hash p
+      let pp fmt (_, _, p) =
+        IntPair.Map.pp Slope.pp fmt p
+      let to_string p = mk_to_string pp p
     end
 
-    module Set = struct
-      include Hashset.Make(HashedKernel)
-      let equal s s' =
-        if Int.(cardinal s <> cardinal s') then
-          false
-        else
-          try
-            let () =
-              iter (fun p -> if not (mem s' p) then raise Not_found) s in
-            true
-          with Not_found -> false
-      let pp fmt s =
-        let () = Format.fprintf fmt "@[[" in
-        let first = ref true in
-        let () =
-          iter
-            (fun p ->
-              let () = if not !first then Format.fprintf fmt ", " in
-              let () = first := false in
-              let () = Format.fprintf fmt "%a" HashedKernel.pp p in
-              ())
-            s in
-        let () = Format.fprintf fmt "]@]" in
-        ()
-    end
-    
     include HashedKernel
+    include Containers.Make(HashedKernel)
 
-    let empty = (Int.Map.empty, Int.Map.empty, IntPairMap.empty)
+    let empty = (Int.Map.empty, Int.Map.empty, IntPair.Map.empty)
 
     let add (h, h', s) (fd, bk, slopes) =
       let upd x = function
@@ -368,14 +356,14 @@ module RelationalCheck = struct
       | Some s -> Some (Int.Set.add x s) in
       (Int.Map.update h (upd h') fd,
        Int.Map.update h' (upd h) bk,
-       IntPairMap.update (h, h') 
+       IntPair.Map.update (h, h') 
         (function
           | None -> Some s
           | Some s' -> Some (Slope.max s s'))
         slopes)
 
     let has_decreasing_self_loop (_, _, slopes) =
-      IntPairMap.exists
+      IntPair.Map.exists
         (fun (n, n') s ->
           if Int.(n <> n') then
             false
@@ -397,8 +385,8 @@ module RelationalCheck = struct
                 (fun h'' s ->
                   let s' =
                     Slope.max
-                      (IntPairMap.find (h, h'') p_sl)
-                      (IntPairMap.find (h'', h') q_sl) in
+                      (IntPair.Map.find (h, h'') p_sl)
+                      (IntPair.Map.find (h'', h') q_sl) in
                   match s with
                   | None   -> Some s'
                   | Some s -> Some (Slope.max s s'))
@@ -426,8 +414,8 @@ module RelationalCheck = struct
                     (fun h'' s ->
                       let s' =
                         Slope.max
-                          (IntPairMap.find (h, h'') p_sl)
-                          (IntPairMap.find (h'', h') q_sl) in
+                          (IntPair.Map.find (h, h'') p_sl)
+                          (IntPair.Map.find (h'', h') q_sl) in
                         match s with
                           | None   -> Some s'
                           | Some s -> Some (Slope.max s s'))
@@ -443,9 +431,9 @@ module RelationalCheck = struct
                     else 
                       continue
                         ||
-                      not (IntPairMap.mem (h, h') q_sl)
+                      not (IntPair.Map.mem (h, h') q_sl)
                         ||
-                      Slope.((IntPairMap.find (h, h') q_sl) < (Option.get s)) in
+                      Slope.((IntPair.Map.find (h, h') q_sl) < (Option.get s)) in
                   result, continue)
               q_bk)
             p_fd
@@ -456,12 +444,12 @@ module RelationalCheck = struct
   end
 
   (* A height graph is a set of nodes and sloped relation for each edge *)
-  type height_graph = Int.Set.t * SlopedRel.t IntPairMap.t
+  type height_graph = Int.Set.t * SlopedRel.t IntPair.Map.t
 
   let pp_height_graph fmt (nodes, slopes) =
     Format.fprintf fmt "@[Nodes: %a@.Slopes: %a@]"
       Int.Set.pp nodes
-      (IntPairMap.pp SlopedRel.pp) slopes
+      (IntPair.Map.pp SlopedRel.pp) slopes
 
   (* Compute the composition closure of the given height graph *)
   let comp_closure (ns, slopes) =
@@ -471,41 +459,54 @@ module RelationalCheck = struct
           Int.Set.fold
             (fun n' ccl ->
               let edge = (n, n') in
-              let s = SlopedRel.Set.create 1 in
+              let s = SlopedRel.Hashset.create 1 in
               let () =
-                match (IntPairMap.find_opt edge slopes) with
+                match (IntPair.Map.find_opt edge slopes) with
                 | None ->
                   ()
                 | Some p ->
-                  SlopedRel.Set.add s p in
-              IntPairMap.add edge s ccl)
+                  SlopedRel.Hashset.add s p in
+              IntPair.Map.add edge s ccl)
             ns
             ccl)
         ns
-        IntPairMap.empty in
+        IntPair.Map.empty in
     let rec closure ccl =
       let ccl', cont =
         Int.Set.fold (fun n ->
         Int.Set.fold (fun n' (acc, cont) ->
-          let old_slopes = IntPairMap.find (n, n') ccl in
-          let new_slopes = SlopedRel.Set.copy old_slopes in
+          let old_slopes = IntPair.Map.find (n, n') ccl in
+          let new_slopes = SlopedRel.Hashset.copy old_slopes in
           let cont =
             Int.Set.fold (fun n'' ->
-            SlopedRel.Set.fold (fun p ->
-            SlopedRel.Set.fold (fun q cont ->
+            SlopedRel.Hashset.fold (fun p ->
+            SlopedRel.Hashset.fold (fun q cont ->
               let r = SlopedRel.compose p q in
-              let () = SlopedRel.Set.add new_slopes r in
-              cont || not (SlopedRel.Set.mem old_slopes r)
-            ) (IntPairMap.find (n'', n') ccl)
-            ) (IntPairMap.find (n, n'') ccl)
+              let () = SlopedRel.Hashset.add new_slopes r in
+              cont || not (SlopedRel.Hashset.mem old_slopes r)
+            ) (IntPair.Map.find (n'', n') ccl)
+            ) (IntPair.Map.find (n, n'') ccl)
             ) ns cont in
-          (IntPairMap.add (n, n') new_slopes acc, cont)
-        ) ns) ns (IntPairMap.empty, false) in
+          (IntPair.Map.add (n, n') new_slopes acc, cont)
+        ) ns) ns (IntPair.Map.empty, false) in
       if cont then closure ccl' else ccl in
     closure init
 
   let pp_closure fmt ccl =
-    IntPairMap.pp SlopedRel.Set.pp fmt ccl
+    let pp fmt s =
+      let () = Format.fprintf fmt "@[[" in
+      let first = ref true in
+      let () =
+        SlopedRel.Hashset.iter
+          (fun p ->
+            let () = if not !first then Format.fprintf fmt ", " in
+            let () = first := false in
+            let () = Format.fprintf fmt "%a" SlopedRel.pp p in
+            ())
+          s in
+      let () = Format.fprintf fmt "]@]" in
+      () in
+    IntPair.Map.pp pp fmt ccl
 
   let check_proof p =
     Stats.MC.call () ;
@@ -517,21 +518,21 @@ module RelationalCheck = struct
             List.fold_left
               (fun slopes (n', all_tags, prog_tags) ->
                 let hs =
-                  IntPairSet.fold
+                  IntPair.Set.fold
                     (fun (h, h') -> SlopedRel.add (h, h', Slope.Stay))
                     all_tags
                     SlopedRel.empty in
                 let hs =
-                  IntPairSet.fold
+                  IntPair.Set.fold
                     (fun (h, h') -> SlopedRel.add (h, h', Slope.Decrease))
                     prog_tags
                     hs in
-                IntPairMap.add (n, n') hs slopes)
+                IntPair.Map.add (n, n') hs slopes)
               slopes
               succs in
           (nodes, slopes))
         p
-        (Int.Set.empty, IntPairMap.empty) in
+        (Int.Set.empty, IntPair.Map.empty) in
     let () = debug (fun () -> "Checking soundness starts...") in
     let ((nodes, _) as g) = to_height_graph p in
     let () = debug (fun () -> "Height Graph:\n" ^ mk_to_string pp_height_graph g) in
@@ -541,13 +542,13 @@ module RelationalCheck = struct
       try
         let () = 
           Int.Set.iter (fun n ->
-          SlopedRel.Set.iter (fun p ->
+          SlopedRel.Hashset.iter (fun p ->
             let () = debug (fun () -> "Checking " ^ mk_to_string SlopedRel.pp p) in
             let r = SlopedRel.transitive_closure p in
             let () = debug (fun () -> "Transitive closure: " ^ mk_to_string SlopedRel.pp r) in
             if not (SlopedRel.has_decreasing_self_loop r)
               then raise Not_found
-          ) (IntPairMap.find (n, n) ccl)
+          ) (IntPair.Map.find (n, n) ccl)
           ) nodes in
         true
       with Not_found ->
@@ -572,9 +573,9 @@ module RelationalCheck = struct
     let check_proof p =
       let process_succ n (n', tps, prog) =
         add_edge n n' ;
-        IntPairSet.iter
+        IntPair.Set.iter
           (fun ((h, h') as p) ->
-            if IntPairSet.mem p prog
+            if IntPair.Set.mem p prog
               then add_decrease n h n' h'
               else add_stay n h n' h')
           (tps) ;
