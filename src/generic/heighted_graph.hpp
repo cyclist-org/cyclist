@@ -10,11 +10,13 @@
 
 class Heighted_graph {
 private:
-    Int_SET HNode;
-    std::set<Int_pair> Edge;
-    Map<Int_pair,Sloped_relation> h_change;
-    Map<int,Int_SET*> HeightsOf;
-    Map<Int_pair,std::set<Sloped_relation>*> Ccl;
+    int                     max_node = -1;
+    int                     number_of_edges = 0;
+    Int_SET                 HNode;
+    Map<int,Int_SET*>       HeightsOf;
+    Sloped_relation***      h_change_;
+    Sloped_Relation_SET***  Ccl;
+
 public:
 
     Heighted_graph(void){}
@@ -28,6 +30,10 @@ public:
     void add_decrease(int source_node, int source_h, int sink_node, int sink_h);
     int num_nodes(void);
     int num_edges(void);
+    int get_node_size(void);
+    void set_node_size(int node_size);
+    void init_h_change(void);
+    void init_Ccl(void);
     void compute_Ccl(void);
     bool check_soundness(void);
     void clean(void);
