@@ -11,6 +11,8 @@ module type S = sig
   module Hashset :
     sig
       include Hashset.S
+      (* include Utilsigs.OrderedContainer with type t := t *)
+      val inter : t -> t -> t
       val exists : (elt -> bool) -> t -> bool
       val for_all : (elt -> bool) -> t -> bool
       val left_union : t -> t -> t
@@ -20,6 +22,7 @@ module type S = sig
       val of_list : elt list -> t
       val to_list : t -> elt list
       val map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b) -> t -> 'a
+      val singleton : elt -> t
     end
 
   module MSet : Utilsigs.OrderedContainer
