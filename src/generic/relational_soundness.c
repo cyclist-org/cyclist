@@ -27,6 +27,13 @@ extern "C" void destroy_hgraph() {
 	CAMLreturn0;
 }
 
+extern "C" void init_h_change() {
+	CAMLparam0();
+  assert(hg);
+  hg->init_h_change();
+	CAMLreturn0;
+}
+
 extern "C" void add_node(value n_) {
   CAMLparam1(n_);
   assert(hg);

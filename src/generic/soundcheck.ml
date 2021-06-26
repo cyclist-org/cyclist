@@ -563,6 +563,7 @@ module RelationalCheck = struct
 
     external create_hgraph : unit -> unit = "create_hgraph"
     external destroy_hgraph : unit -> unit = "destroy_hgraph"
+    external init_h_change : unit -> unit = "init_h_change"
     external add_node : int -> unit = "add_node"
     external add_height : int -> int -> unit = "add_height"
     external add_edge : int -> int -> unit = "add_edge"
@@ -581,12 +582,13 @@ module RelationalCheck = struct
           (tps) ;
         in
       let process_node n (tags, succs) =
-        add_node n ;
         Int.Set.iter (add_height n) tags ;
         List.iter (process_succ n) succs ; in
       Stats.MC.call () ;
       debug (fun () -> "Checking soundness starts...") ;
       create_hgraph () ;
+      Int.Map.iter (fun n _ -> add_node n) p ;
+      init_h_change () ;
       Int.Map.iter process_node p ;
       let retval = check_soundness () in
       destroy_hgraph () ;
