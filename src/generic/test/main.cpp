@@ -14,13 +14,15 @@ void parse_from_json(std::string &path, Heighted_graph &hg){
     std::cout << "Parsing Nodes: ";
     for( auto& element : graph["Node"] ){
         int id = element[0];
+        if( id > hg.get_node_size() ) hg.set_node_size(id); 
         for( int h : element[1] ){
             hg.add_height(id, h);
         }
     }
-    std::cout << "Done! , Node size: " << hg.num_nodes() << std::endl;
+    std::cout << "Done! , Node size: " << hg.num_nodes() << " max node id: " << hg.get_node_size() << std::endl;
 
     //====================== parse edges
+    hg.init_h_change();
     std::cout << "Parsing Edges: ";
     for( auto& element : graph["Edge"] ){
         int source = element[0][0];
@@ -34,14 +36,6 @@ void parse_from_json(std::string &path, Heighted_graph &hg){
         }
     }
     std::cout << "Done! , Edge size: " << hg.num_edges() << std::endl;
-
-    // Heighted graph does not need heights separately
-    // //====================== parse heights
-    // std::cout << "Parsing Heights: ";
-    // for( int h : graph["Height"] ){
-    //     Height.insert(h);
-    // }
-    // std::cout << "Done! , Height size: " << Height.size() << std::endl;
 }
 
 int main(int argc, char** argv) {

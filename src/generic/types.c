@@ -5,10 +5,12 @@
 #include <set>
 #include <map>
 
-#define Int_pair                std::pair<int,int>
-#define Int_pair_SET            std::set<Int_pair>
-#define Int_SET                 std::set<int>
 #define Map                     std::map
+#define Pair                    std::pair
+#define Int_SET                 std::set<int>
+#define Int_pair                std::pair<int,int>
+#define Int_pair_SET            std::set<std::pair<int,int>>
+#define Sloped_Relation_SET     std::set<Sloped_relation>
 
 enum slope {Downward = 1,Stay = 0};
 
