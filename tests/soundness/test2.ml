@@ -29,8 +29,10 @@ let prf () =
     List.init
       !size
       (fun n ->
-        let tps = [(n, n+1 mod !size)] in
-        (0, tps, tps)) in
+        let tps = [(n, (n+1) mod !size)] in
+        if Int.equal (n+1) !size
+          then (0, tps, tps)
+          else (0, tps, [])) in
   Soundcheck.build_proof [(0, tags, succs)]
 
 ;;
