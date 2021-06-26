@@ -10,39 +10,6 @@ let debug f = if !do_debug then print_endline (f ()) else ()
 (* FIXME this should only produce >= 0  *)
 let genhash h v = h lxor (v + (h lsl 5) + (h lsr 2))
 
-module HashtablePrinter = struct
-  module type S = sig
-    type 'a t
-
-    type key
-
-    val to_string : (key -> string) -> ('a -> string) -> 'a t -> string
-  end
-
-  module Make (H : Hashtbl.S) :
-    S with type 'a t = 'a H.t with type key = H.key = struct
-    type 'a t = 'a H.t
-
-    type key = H.key
-
-    let to_string key_tos val_tos ht =
-      let str_buffer = Buffer.create 0 in
-      let entry_tos k v =
-        Buffer.add_char str_buffer '(' ;
-        Buffer.add_string str_buffer (key_tos k) ;
-        Buffer.add_string str_buffer " -> " ;
-        Buffer.add_string str_buffer (val_tos v) ;
-        Buffer.add_string str_buffer ") "
-      in
-      let () = Buffer.add_string str_buffer "[ " in
-      let () = H.iter entry_tos ht in
-      let () = Buffer.add_char str_buffer ']' in
-      let contents = Buffer.contents str_buffer in
-      let () = Buffer.clear str_buffer in
-      contents
-  end
-end
-
 let pp_comma fmt () = Format.pp_print_char fmt ','
 
 let pp_semicolonsp fmt () =
@@ -64,6 +31,40 @@ let mk_to_string pp v =
   Format.pp_set_margin Format.str_formatter max_int ;
   pp Format.str_formatter v ;
   Format.flush_str_formatter ()
+
+module HashtablePrinter = struct
+  module type S = sig
+    type 'a t
+    type key
+    val pp : 
+      (Format.formatter -> key -> unit) -> (Format.formatter -> 'a -> unit)
+        -> Format.formatter -> 'a t -> unit
+    val to_string :
+      (Format.formatter -> key -> unit) -> (Format.formatter -> 'a -> unit)
+        -> 'a t -> string
+  end
+
+  module Make (H : Hashtbl.S)
+    : S with type 'a t := 'a H.t with type key := H.key = 
+  struct
+    type 'a t = 'a H.t
+    type key = H.key
+    let pp pp_key pp_val fmt h =
+      let () = Format.fprintf fmt "@[[" in
+      let first = ref true in
+      let () =
+        H.iter
+          (fun k v ->
+            let () = if not !first then Format.fprintf fmt ", " in
+            let () = first := false in
+            let () = Format.fprintf fmt "%a -> %a" pp_key k pp_val v in
+            ())
+          h in
+      let () = Format.fprintf fmt "]@]" in
+      ()
+    let to_string pp_key pp_val p = mk_to_string (pp pp_key pp_val) p
+  end
+end
 
 let rec fixpoint eq f x =
   let y = f x in

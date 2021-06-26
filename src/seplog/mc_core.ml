@@ -978,8 +978,8 @@ struct
     let ptos_base = mk_ptos_base defs h in
     debug (fun _ -> Value.Set.to_string valset) ;
     debug (fun _ ->
-        SymHeapHashPrinter.to_string Heap.to_string
-          ModelBase.FList.to_string ptos_base ) ;
+        SymHeapHashPrinter.to_string Heap.pp
+          ModelBase.FList.pp ptos_base ) ;
     let itp = init_empty defs in
     let new_itp =
       Predsym.Map.of_list
