@@ -331,40 +331,117 @@ module RelationalCheck = struct
   module SlopedRel = struct
 
     module HashedKernel = struct
+      let collect eq_key s =
+        let rec collect prev acc s =
+          match s () with
+          | Seq.Nil ->
+            begin match acc with
+            | [] ->
+              []
+            | (k, vs)::acc ->
+              List.rev ((k, List.rev vs)::acc)
+            end
+          | Seq.Cons ((k, v), s') ->
+            begin match prev, acc with
+            | None, _ ->
+              collect (Some k) ((k, [v])::acc) s'
+            | Some k', (_, vs)::acc' ->
+              if (eq_key k k') then
+                collect (Some k) ((k, v::vs)::acc') s'
+              else
+                collect (Some k) ((k, [v])::acc) s'
+            | _ ->
+              failwith "SlopedRel.HashedKernel.collect"
+            end in
+        collect None [] s
+      let sort_bindings cmp_key s =
+        List.stable_sort (fun (k, _) (k', _) -> cmp_key k k') (List.of_seq s)
+      let compare cmp_key cmp_val kvs kvs' =
+        let rec compare kvs kvs' =
+          match kvs, kvs' with
+          | [], [] ->
+            0
+          | [], _ ->
+            -1
+          | _, [] ->
+            1
+          | (k, v)::kvs, (k', v')::kvs' ->
+            let k_cmp = cmp_key k k' in
+            if Int.(k_cmp <> 0) then
+              k_cmp
+            else 
+              let v_cmp = cmp_val v v' in
+              if Int.(v_cmp <> 0) then
+                v_cmp
+              else
+                compare kvs kvs' in
+        compare kvs kvs'
+      type domain_map = Int.Hashset.t Int.Hashmap.t
+      type slope_map = Slope.t IntPair.Hashmap.t
       (* domain-codomain mapping, codomain-domain mapping, slopes *)
-      type t = 
-        Int.Set.t Int.Map.t * Int.Set.t Int.Map.t * Slope.t IntPair.Map.t
+      type t = domain_map * domain_map * slope_map
       let equal (_, _, p) (_, _, q) =
-        IntPair.Map.equal Slope.equal p q
+        if not (Int.equal (IntPair.Hashmap.length p) (IntPair.Hashmap.length p))
+          then false
+          else
+            List.for_all
+              (fun (((h, h') as k), ss) ->
+                let ss' = IntPair.Hashmap.find_all q k in
+                if not (Int.equal (List.length ss) (List.length ss'))
+                  then false
+                  else
+                    List.for_all2 Slope.equal ss ss')
+              (collect IntPair.equal (IntPair.Hashmap.to_seq p))
       let compare (_, _, p) (_, _, q) =
-        IntPair.Map.compare Slope.compare p q
+        let p_kvs, q_kvs =
+          Pair.map
+            (fun x -> sort_bindings IntPair.compare (IntPair.Hashmap.to_seq x))
+            (p, q) in
+        Pair.apply (compare IntPair.compare Slope.compare) (p_kvs, q_kvs)
       let hash (_, _, p) =
-        IntPair.Map.hash Slope.hash p
+        let bindings =
+          sort_bindings IntPair.compare (IntPair.Hashmap.to_seq p) in
+        List.fold_left
+          (fun a (k, v) -> genhash a (genhash (IntPair.hash k) (Slope.hash v)))
+          0x9e3779b9
+          bindings
+      include HashtablePrinter.Make(IntPair.Hashmap)
       let pp fmt (_, _, p) =
-        IntPair.Map.pp Slope.pp fmt p
-      let to_string p = mk_to_string pp p
+        pp IntPair.pp Slope.pp fmt p
+      let to_string (_, _, p) =
+        to_string IntPair.pp Slope.pp p 
     end
 
-    include HashedKernel
+    include (HashedKernel : BasicType with type t = HashedKernel.t)
     include Containers.Make(HashedKernel)
 
-    let empty = (Int.Map.empty, Int.Map.empty, IntPair.Map.empty)
+    let empty () =
+      let fd = Int.Hashmap.create 1 in
+      let bd = Int.Hashmap.create 1 in
+      let slopes = IntPair.Hashmap.create 1 in
+      (fd, bd, slopes)
 
     let add (h, h', s) (fd, bk, slopes) =
-      let upd x = function
-      | None -> Some (Int.Set.singleton x)
-      | Some s -> Some (Int.Set.add x s) in
-      (Int.Map.update h (upd h') fd,
-       Int.Map.update h' (upd h) bk,
-       IntPair.Map.update (h, h') 
-        (function
-          | None -> Some s
-          | Some s' -> Some (Slope.max s s'))
-        slopes)
+      let upd x =
+        function
+        | None ->
+          Int.Hashset.singleton x
+        | Some s ->
+          let () = Int.Hashset.add s x in
+          s in
+      Int.Hashmap.replace fd h (upd h' (Int.Hashmap.find_opt fd h)) ;
+      Int.Hashmap.replace bk h' (upd h (Int.Hashmap.find_opt bk h')) ;
+      IntPair.Hashmap.replace
+        slopes
+        (h, h')
+        (match IntPair.Hashmap.find_opt slopes (h, h')
+          with
+          | None -> s
+          | Some s' -> Slope.max s s')
 
     let has_decreasing_self_loop (_, _, slopes) =
-      IntPair.Map.exists
-        (fun (n, n') s ->
+      List.exists
+        (fun ((n, n'), s) ->
           if Int.(n <> n') then
             false
           else
@@ -373,57 +450,60 @@ module RelationalCheck = struct
               true
             | _ ->
               false)
-        slopes
+        (List.of_seq (IntPair.Hashmap.to_seq slopes))
 
-    let compose (p_fd, p_bk, p_sl) (q_fd, q_bk, q_sl) = 
-      Int.Map.fold
-        (fun h hs ->
-          Int.Map.fold
-            (fun h' hs' result ->
-              let s = 
-                Int.Set.fold
-                (fun h'' s ->
-                  let s' =
-                    Slope.max
-                      (IntPair.Map.find (h, h'') p_sl)
-                      (IntPair.Map.find (h'', h') q_sl) in
-                  match s with
-                  | None   -> Some s'
-                  | Some s -> Some (Slope.max s s'))
-                (Int.Set.inter hs hs')
-                None in
-              match s with
-              | None   -> result
-              | Some s -> add (h, h', s) result)
-           q_bk)
-        p_fd
-        empty
+    let compose (p_fd, _, p_sl) (_, q_bk, q_sl) = 
+      let result = empty () in
+      let () =
+        Int.Hashmap.iter
+          (fun h hs ->
+            Int.Hashmap.iter
+              (fun h' hs' ->
+                let s = 
+                  Int.Hashset.fold
+                  (fun h'' s ->
+                    let s' =
+                      Slope.max
+                        (IntPair.Hashmap.find p_sl (h, h''))
+                        (IntPair.Hashmap.find q_sl (h'', h')) in
+                    match s with
+                    | None   -> Some s'
+                    | Some s -> Some (Slope.max s s'))
+                  (Int.Hashset.inter hs hs')
+                  None in
+                match s with
+                | None   -> ()
+                | Some s -> add (h, h', s) result)
+              q_bk)
+          p_fd in
+      result
     
     (* Repeat code for relational composition, so as to inline check for whether
        we have reached the fixed point - slightly more efficient than comparing
        new relation for equality with the old one at each iteration. *)
     let transitive_closure ((p_fd, p_bk, p_sl) as p) =
-      let rec transitive_closure ((q_fd, q_bk, q_sl) as q) =
-        let result, continue =
-          Int.Map.fold
+      let rec transitive_closure (q_fd, q_bk, q_sl) =
+        let result = empty () in
+        let continue =
+          Int.Hashmap.fold
             (fun h hs ->
-              Int.Map.fold
-                (fun h' hs' (result, continue) ->
+              Int.Hashmap.fold
+                (fun h' hs' continue ->
                   let s = 
-                    Int.Set.fold
+                    Int.Hashset.fold
                     (fun h'' s ->
                       let s' =
                         Slope.max
-                          (IntPair.Map.find (h, h'') p_sl)
-                          (IntPair.Map.find (h'', h') q_sl) in
+                          (IntPair.Hashmap.find p_sl (h, h''))
+                          (IntPair.Hashmap.find q_sl (h'', h')) in
                         match s with
                           | None   -> Some s'
                           | Some s -> Some (Slope.max s s'))
-                    (Int.Set.inter hs hs')
+                    (Int.Hashset.inter hs hs')
                     None in
-                  let result =
+                  let () =
                     match s with
-                    | None   -> result
+                    | None   -> ()
                     | Some s -> add (h, h', s) result in
                   let continue =
                     if Option.is_none s then
@@ -431,13 +511,13 @@ module RelationalCheck = struct
                     else 
                       continue
                         ||
-                      not (IntPair.Map.mem (h, h') q_sl)
+                      not (IntPair.Hashmap.mem q_sl (h, h'))
                         ||
-                      Slope.((IntPair.Map.find (h, h') q_sl) < (Option.get s)) in
-                  result, continue)
+                      Slope.((IntPair.Hashmap.find q_sl (h, h')) < (Option.get s)) in
+                  continue)
               q_bk)
             p_fd
-            (q, false) in
+            false in
         if continue then transitive_closure result else result in
       transitive_closure p
 
@@ -517,16 +597,15 @@ module RelationalCheck = struct
           let slopes = 
             List.fold_left
               (fun slopes (n', all_tags, prog_tags) ->
-                let hs =
-                  IntPair.Set.fold
-                    (fun (h, h') -> SlopedRel.add (h, h', Slope.Stay))
-                    all_tags
-                    SlopedRel.empty in
-                let hs =
-                  IntPair.Set.fold
-                    (fun (h, h') -> SlopedRel.add (h, h', Slope.Decrease))
-                    prog_tags
-                    hs in
+                let hs = SlopedRel.empty () in
+                let () =
+                  IntPair.Set.iter
+                    (fun (h, h') -> SlopedRel.add (h, h', Slope.Stay) hs)
+                    all_tags in
+                let () =
+                  IntPair.Set.iter
+                    (fun (h, h') -> SlopedRel.add (h, h', Slope.Decrease) hs)
+                    prog_tags in
                 IntPair.Map.add (n, n') hs slopes)
               slopes
               succs in
