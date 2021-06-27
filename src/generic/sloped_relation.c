@@ -230,23 +230,24 @@ Sloped_relation Sloped_relation::compute_transitive_closure(void){
 }
 
 bool operator< (const Sloped_relation& R, const Sloped_relation& L){
-    if( R.forward_map == 0 || L.forward_map == 0 ) return false;
-    else if( (R.forward_map)->size() == 0 || (L.forward_map)->size() == 0 ){
-        return false;
-    }
-    for( const auto& pairR : *(R.forward_map) ){
-        for( const auto& pairL : *(L.forward_map) ){
-            if( pairR.first != pairL.first ) continue;
-            for( const auto& a : *(pairR.second) ){
-                for( const auto& b : *(pairL.second) ){
-                    if( a.first != b.first ) continue;
+    // if( R.forward_map == 0 || L.forward_map == 0 ) return false;
+    // else if( (R.forward_map)->size() == 0 || (L.forward_map)->size() == 0 ){
+    //     return false;
+    // }
+    // for( const auto& pairR : *(R.forward_map) ){
+    //     for( const auto& pairL : *(L.forward_map) ){
+    //         if( pairR.first != pairL.first ) continue;
+    //         for( const auto& a : *(pairR.second) ){
+    //             for( const auto& b : *(pairL.second) ){
+    //                 if( a.first != b.first ) continue;
 
-                    else if (a.second >= b.second) return false;
-                }
-            }
-        }
-    }
-    return true;
+    //                 else if (a.second >= b.second) return false;
+    //             }
+    //         }
+    //     }
+    // }
+    // return true;
+    return (R.slope_map < L.slope_map);
 }
 
 bool operator== (const Sloped_relation& R, const Sloped_relation& L){
