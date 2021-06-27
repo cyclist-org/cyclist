@@ -10,7 +10,7 @@
 #define Int_SET                 std::set<int>
 #define Int_pair                std::pair<int,int>
 #define Int_pair_SET            std::set<std::pair<int,int>>
-#define Sloped_Relation_SET     std::set<Sloped_relation>
+#define Sloped_Relation_SET     std::set<Sloped_relation*>
 
 enum slope {Downward = 1,Stay = 0};
 

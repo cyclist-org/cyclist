@@ -11,13 +11,14 @@ class Sloped_relation {
 private:
     Map<int,Int_pair_SET*>* forward_map;
     Map<int,Int_pair_SET*>* backward_map;
+    Map<Int_pair,int>* slope_map;
     
 public:
 
     Sloped_relation(void){}
 
-    Sloped_relation(Map<int,Int_pair_SET*>* forward_map_,Map<int,Int_pair_SET*>* backward_map_)
-        : forward_map(forward_map_), backward_map(backward_map_){}
+    Sloped_relation(Map<int,Int_pair_SET*>* forward_map_,Map<int,Int_pair_SET*>* backward_map_, Map<Int_pair,int>* slope_map_)
+        : forward_map(forward_map_), backward_map(backward_map_), slope_map(slope_map_){}
     Sloped_relation( const Sloped_relation& R );
     Sloped_relation( Sloped_relation&& R );
     Sloped_relation& operator=( const Sloped_relation& R );
@@ -27,8 +28,10 @@ public:
     void add( int h1, int h2, slope s );
     Int_pair_SET* get_forward_slopes( int h );
     Int_pair_SET* get_backward_slopes( int h );
-    Sloped_relation compose( Sloped_relation* other );
+    Map<Int_pair,int>* get_slopes(void);
+    Sloped_relation* compose( Sloped_relation* other );
     Sloped_relation compute_transitive_closure(void);
+    void add_or_replace(int h1, int h2, slope s);
     void clear(void);
     friend bool operator< ( const Sloped_relation& R, const Sloped_relation& L );
     friend bool operator== ( const Sloped_relation& R, const Sloped_relation& L );

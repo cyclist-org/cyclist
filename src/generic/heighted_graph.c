@@ -26,7 +26,7 @@ void Heighted_graph::add_height(int n, int h) {
 void Heighted_graph::add_edge(int source, int sink) {
     if ( h_change_[source][sink] == 0 ) {
         number_of_edges++;
-        h_change_[source][sink] = new Sloped_relation(new Map<int,Int_pair_SET*>(),new Map<int,Int_pair_SET*>());
+        h_change_[source][sink] = new Sloped_relation(new Map<int,Int_pair_SET*>(),new Map<int,Int_pair_SET*>(),new Map<Int_pair,int>());
     }
 }
 
@@ -84,7 +84,7 @@ void Heighted_graph::init_Ccl(void){
         }
         else{
             Sloped_Relation_SET* Ccl_e = new Sloped_Relation_SET();
-            Ccl_e->insert(*(h_change_[source][sink]));
+            Ccl_e->insert(h_change_[source][sink]);
             Ccl[source][sink] = Ccl_e;
         }
     }
@@ -99,25 +99,41 @@ void Heighted_graph::compute_Ccl(void){
         for( int source = 0 ; source < (max_node + 1) ; source++ ){
         for( int middle = 0 ; middle < (max_node + 1)  ; middle++ ){
         for( int sink = 0 ; sink < (max_node + 1) ; sink++ ){
-            for( Sloped_relation P : *Ccl[source][middle] ){
-                if( P.size() == 0 ) continue;
-                for( Sloped_relation Q : *Ccl[middle][sink] ){
-                    if( Q.size() == 0 ) continue;
-                    Sloped_relation R = P.compose(&Q);
-                    if( R.size() == 0 ) continue;
+            for( Sloped_relation* P : *Ccl[source][middle] ){
+                if( P->size() == 0 ) continue;
+                for( Sloped_relation* Q : *Ccl[middle][sink] ){
+                    if( Q->size() == 0 ) continue;
+                    Sloped_relation* R = P->compose(Q);
+                    if( R->size() == 0 ) continue;
                     if( (Ccl[source][sink])->size() == 0 ){
                         done = false;
                         (Ccl[source][sink])->insert(R);
                     }
                     else{
                         done = true;
-                        auto exists = (Ccl[source][sink])->find(R);
-                        if( exists == (Ccl[source][sink])->end() ){
+                        bool found = false;
+                        for( Sloped_relation* S : *Ccl[source][sink] ){
+                            if( *S == *R ){
+                                found = true;
+                                delete R;
+                                break;
+                            }
+                        }
+                        if( !found ){
                             done = false;
                             (Ccl[source][sink])->insert(R);
                         }
+                        // done = true;
+                        // auto exists = (Ccl[source][sink])->find(R);
+                        // if( exists == (Ccl[source][sink])->end() ){
+                        //     done = false;
+                        //     Sloped_Relation_SET* s = new Sloped_Relation_SET(*Ccl[source][sink]);
+                        //     auto a = s->insert(R);
+                        //     Ccl[source][sink] = s;
+                        //     // auto a = (Ccl[source][sink])->insert(R);
+                        //     if( a.second == false ) std::cout << "hello my friend" << std::endl;
+                        // }
                     }
-                    
                 }
             }
         }
@@ -130,9 +146,9 @@ bool Heighted_graph::check_soundness(void){
     bool found_loop = false;
     for( int node : HNode ){
         Sloped_Relation_SET* Ccl_nd = Ccl[node][node];
-        for( Sloped_relation P : *Ccl_nd ){
-            if( P.size() == 0 ) continue;
-            Sloped_relation R = P.compute_transitive_closure();
+        for( Sloped_relation* P : *Ccl_nd ){
+            if( P->size() == 0 ) continue;
+            Sloped_relation R = P->compute_transitive_closure();
             for( int h : *(HeightsOf.at(node)) ){
                 Int_pair_SET* slopes = R.get_backward_slopes(h);
                 if( slopes == 0 ) continue;
@@ -156,8 +172,10 @@ bool Heighted_graph::check_soundness(void){
 void Heighted_graph::clean(void){
     for( int source = 0 ; source < (max_node + 1) ; source++ ){
         for( int sink = 0 ; sink < (max_node + 1) ; sink++ ){
+            for( Sloped_relation* s : *(Ccl[source][sink]) ){
+                delete s;
+            }
             delete Ccl[source][sink];
-            delete h_change_[source][sink];
         }
         delete h_change_[source];
         delete Ccl[source];
@@ -175,7 +193,7 @@ void Heighted_graph::print_Ccl(void){
         for( auto S : *Ccl[source][sink]){
             std::cout << "<><><><><><><><><><><><><><><><><><><><><><><><><><><><><>" << std::endl;
             std::cout << source << " " << sink << std::endl;
-            S.print_();
+            S->print_();
             std::cout << "<><><><><><><><><><><><><><><><><><><><><><><><><><><><><>" << std::endl;
         }
     }
