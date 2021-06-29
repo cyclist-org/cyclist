@@ -67,64 +67,47 @@ Sloped_relation& Sloped_relation::operator=(Sloped_relation&& R){
     return *this;
 }
 
-
-
-// void Sloped_relation::add(int h1, int h2, slope s) {
-//     // Add forward mapping
-//     Int_pair p1(h2, s);
-//     auto exists_h1 = forward_map->find(h1);
-//     if( exists_h1 == forward_map->end() ){
-//         forward_map->insert(Pair<int,Int_pair_SET*>(h1,new Int_pair_SET()));
-//     }
-//     (forward_map->at(h1))->insert(p1);
-
-//     // Add backward mapping
-//     Int_pair p2(h1, s);
-//     auto exists_h2 = backward_map->find(h2);
-//     if( exists_h2 == backward_map->end() ){
-//         backward_map->insert(Pair<int,Int_pair_SET*>(h2,new Int_pair_SET()));
-//     }
-//     (backward_map->at(h2))->insert(p2);
-
-//     Int_pair p3(h1,h2);
-//     auto exists_s = slope_map->find(p3);
-//     if( exists_s == slope_map->end() ){
-//         slope_map->insert(Pair<Int_pair,int>(p3,s));
-//     }
-// }
-
 void Sloped_relation::add(int h1, int h2, slope s) {
+    
     // Add forward mapping
-    Int_pair p1(h2, s);
     auto exists_h1 = forward_map->find(h1);
     if( exists_h1 == forward_map->end() ){
         forward_map->insert(Pair<int,Int_pair_SET*>(h1,new Int_pair_SET()));
     }
-    else{
-        Int_pair to_delete(h2,1-s);
-        (forward_map->at(h1))->erase(to_delete);
+    Int_pair h1_other(h2, 1-s);
+    int h1_count = (forward_map->at(h1))->count(h1_other);
+    // If slope is Downward, we want to overwrite an existing Stay mapping
+    if( s == Downward ){
+        (forward_map->at(h1))->erase(h1_other);
     }
-    (forward_map->at(h1))->insert(p1);
-    
+    // Don't overwrite an existing Downward mapping with a Stay
+    if( s == Downward || h1_count == 0 ){
+        (forward_map->at(h1))->insert(Int_pair(h2, s));
+    }
 
     // Add backward mapping
-    Int_pair p2(h1, s);
     auto exists_h2 = backward_map->find(h2);
     if( exists_h2 == backward_map->end() ){
         backward_map->insert(Pair<int,Int_pair_SET*>(h2,new Int_pair_SET()));
     }
-    else{
-        Int_pair to_delete(h2,1-s);
-        (backward_map->at(h1))->erase(to_delete);
+    Int_pair h2_other(h1, 1-s);
+    int h2_count = (backward_map->at(h2))->count(h2_other);
+    // If slope is Downward, we want to overwrite an existing Stay mapping
+    if( s == Downward ){
+        (backward_map->at(h2))->erase(h2_other);
     }
-    (backward_map->at(h2))->insert(p2);
+    // Don't overwrite an existing Downward mapping with a Stay
+    if( s == Downward || h2_count == 0 ){
+        (backward_map->at(h2))->insert(Int_pair(h1, s));
+    }
 
     Int_pair p3(h1,h2);
     auto exists_s = slope_map->find(p3);
     if( exists_s == slope_map->end() ){
         slope_map->insert(Pair<Int_pair,int>(p3,s));
     }
-    else{
+    // Don't overwrite an existing Downward mapping with a Stay
+    else if( s == Downward || slope_map->at(p3) != Downward ){
         slope_map->at(p3) = s;
     }
 }
