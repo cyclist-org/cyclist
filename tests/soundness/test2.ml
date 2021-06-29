@@ -25,15 +25,8 @@ include Base
 
 let prf () =
   let tags = List.init !size (fun n -> n) in
-  let succs = 
-    List.init
-      !size
-      (fun n ->
-        let tps = [(n, (n+1) mod !size)] in
-        if Int.equal (n+1) !size
-          then (0, tps, tps)
-          else (0, tps, [])) in
-  Soundcheck.build_proof [(0, tags, succs)]
+  let tps = List.init !size (fun h -> (h, (h+1) mod !size)) in
+  Soundcheck.build_proof [(0, tags, [(0, tps, [(!size-1,0)])])]
 
 ;;
 
