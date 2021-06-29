@@ -123,16 +123,6 @@ void Heighted_graph::compute_Ccl(void){
                             done = false;
                             (Ccl[source][sink])->insert(R);
                         }
-                        // done = true;
-                        // auto exists = (Ccl[source][sink])->find(R);
-                        // if( exists == (Ccl[source][sink])->end() ){
-                        //     done = false;
-                        //     Sloped_Relation_SET* s = new Sloped_Relation_SET(*Ccl[source][sink]);
-                        //     auto a = s->insert(R);
-                        //     Ccl[source][sink] = s;
-                        //     // auto a = (Ccl[source][sink])->insert(R);
-                        //     if( a.second == false ) std::cout << "hello my friend" << std::endl;
-                        // }
                     }
                 }
             }
@@ -150,19 +140,13 @@ bool Heighted_graph::check_soundness(void){
             if( P->size() == 0 ) continue;
             Sloped_relation R = P->compute_transitive_closure();
             for( int h : *(HeightsOf.at(node)) ){
-                Int_pair_SET* slopes = R.get_backward_slopes(h);
-                if( slopes == 0 ) continue;
-                for( auto pair : *slopes ){
-                    if( pair.first == h){
-                        if( pair.second == Downward ){
-                            found_loop = true;
-                            break;
-                        }
-                    }
-                }
-                if( !found_loop ) {
-                    return false;
-                }
+                Map<Int_pair,int>* slopes = R.get_slopes();
+                auto exists = slopes->find(Int_pair(h,h));
+                if( exists == slopes->end()) continue;
+                if( exists->second == Downward) found_loop = true;
+            }
+            if( !found_loop ) {
+                return false;
             }
         }
     }
