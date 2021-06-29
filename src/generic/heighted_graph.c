@@ -142,8 +142,11 @@ bool Heighted_graph::check_soundness(void){
             for( int h : *(HeightsOf.at(node)) ){
                 Map<Int_pair,int>* slopes = R.get_slopes();
                 auto exists = slopes->find(Int_pair(h,h));
-                if( exists == slopes->end()) continue;
-                if( exists->second == Downward) found_loop = true;
+                if( exists == slopes->end() ) continue;
+                if( exists->second == Downward ){
+                    found_loop = true;
+                    break;
+                }
             }
             if( !found_loop ) {
                 return false;
