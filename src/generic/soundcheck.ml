@@ -413,6 +413,21 @@ module RelationalCheck = struct
     end
 
     include (HashedKernel : BasicType with type t = HashedKernel.t)
+
+    let copy (fd, bk, slopes) =
+      let fd' = Int.Hashmap.create (Int.Hashmap.length fd) in
+      let () = 
+        Int.Hashmap.iter
+          (fun i hs -> Int.Hashmap.add fd' i (Int.Hashset.copy hs))
+          (fd) in
+      let bk' = Int.Hashmap.create (Int.Hashmap.length bk) in
+      let () = 
+        Int.Hashmap.iter
+          (fun i hs -> Int.Hashmap.add bk' i (Int.Hashset.copy hs))
+          (bk) in
+      let slopes' = IntPair.Hashmap.copy slopes in
+      (fd', bk', slopes')
+
     include Containers.Make(HashedKernel)
 
     let empty () =
@@ -482,8 +497,8 @@ module RelationalCheck = struct
        we have reached the fixed point - slightly more efficient than comparing
        new relation for equality with the old one at each iteration. *)
     let transitive_closure ((p_fd, p_bk, p_sl) as p) =
-      let rec transitive_closure (q_fd, q_bk, q_sl) =
-        let result = empty () in
+      let rec transitive_closure ((q_fd, q_bk, q_sl) as q) =
+        let result = copy q in
         let continue =
           Int.Hashmap.fold
             (fun h hs ->
@@ -505,16 +520,15 @@ module RelationalCheck = struct
                     match s with
                     | None   -> ()
                     | Some s -> add (h, h', s) result in
-                  let continue =
-                    if Option.is_none s then
-                      continue
-                    else 
-                      continue
-                        ||
-                      not (IntPair.Hashmap.mem q_sl (h, h'))
-                        ||
-                      Slope.((IntPair.Hashmap.find q_sl (h, h')) < (Option.get s)) in
-                  continue)
+                  match s with
+                  | None ->
+                    continue
+                  | Some s' ->
+                    continue
+                      ||
+                    not (IntPair.Hashmap.mem q_sl (h, h'))
+                      ||
+                    Slope.((IntPair.Hashmap.find q_sl (h, h')) < s'))
               q_bk)
             p_fd
             false in
