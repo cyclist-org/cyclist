@@ -10,8 +10,6 @@ extern "C" {
 
 static std::shared_ptr<Heighted_graph> hg = 0;
 
-namespace relational {
-
 extern "C" void create_hgraph() {
 	CAMLparam0();
   assert(hg == 0);
@@ -55,7 +53,7 @@ extern "C" void add_edge(value n1_, value n2_) {
   CAMLparam2(n1_, n2_);
   assert(hg);
   int n1 = Int_val(n1_);
-  int n2 = Int_val(n1_);
+  int n2 = Int_val(n2_);
   hg->add_edge(n1, n2);
   CAMLreturn0;
 }
@@ -92,6 +90,4 @@ extern "C" value check_soundness_relational() {
 
 	v_res = Val_bool(retval);
 	CAMLreturn(v_res);
-}
-
 }
