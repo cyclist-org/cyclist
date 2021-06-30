@@ -19,7 +19,12 @@ module Node =
 
     (<tag-id>, <tag-id>)
 
+  The first tag pair list are the progressing tags, and the second list are the
+  non-progressing tags.
+
   Lines beginning with the same node id are merged.
+
+  Proofs must end with a semicolon.
 
   A value of Soundcheck.t is returned.
 *)
@@ -106,6 +111,18 @@ let mk_prf lines =
 let parse_proof s =
   (many parse_line |>> mk_prf) s
 
+let speclist = [
+    ("-spot", Arg.Set Soundcheck.use_spot, ": use the spot model checker to verify the cyclic trace condition") ;
+    ("-ext", Arg.Set Soundcheck.use_external, ": use external C++ code to verify the cyclic trace condition") ;
+    ("-d", Arg.Set do_debug, ": print debug messages") ;
+  ]
+
+let usage =
+  "usage: " ^ Sys.argv.(0) ^ " [-d] [-s] [-spot|-ext] [<size>]"
+
+let () =
+  Arg.parse speclist (fun _ -> ()) usage
+    
 let () =
   let () = gc_setup () in
   let () = Format.set_margin (Sys.command "exit $(tput cols)") in
