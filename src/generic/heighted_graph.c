@@ -139,6 +139,7 @@ bool Heighted_graph::check_soundness(void){
         for( Sloped_relation* P : *Ccl_nd ){
             if( P->size() == 0 ) continue;
             Sloped_relation R = P->compute_transitive_closure();
+            if( R.size() == 0 ) continue;
             for( int h : *(HeightsOf.at(node)) ){
                 Map<Int_pair,int>* slopes = R.get_slopes();
                 auto exists = slopes->find(Int_pair(h,h));
