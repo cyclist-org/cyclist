@@ -11,25 +11,25 @@ extern "C" {
 static std::shared_ptr<Heighted_graph> hg = 0;
 
 extern "C" void create_hgraph() {
-	CAMLparam0();
+  CAMLparam0();
   assert(hg == 0);
   hg = std::make_shared<Heighted_graph>();
-	CAMLreturn0;
+  CAMLreturn0;
 }
 
 extern "C" void destroy_hgraph() {
-	CAMLparam0();
+  CAMLparam0();
   assert(hg);
   hg->clean();
   hg = 0;
-	CAMLreturn0;
+  CAMLreturn0;
 }
 
 extern "C" void init_h_change() {
-	CAMLparam0();
+  CAMLparam0();
   assert(hg);
   hg->init_h_change();
-	CAMLreturn0;
+  CAMLreturn0;
 }
 
 extern "C" void add_node(value n_) {
@@ -80,14 +80,21 @@ extern "C" void add_decr(value src_, value src_h_, value snk_, value snk_h_) {
   CAMLreturn0;
 }
 
+extern "C" void print_ccl() {
+  CAMLparam0();
+  assert(hg);
+  hg->print_Ccl();
+  CAMLreturn0;
+}
+
 extern "C" value check_soundness_relational() {
-	CAMLparam0();
-	CAMLlocal1(v_res);
+  CAMLparam0();
+  CAMLlocal1(v_res);
 
   assert(hg);
   hg->compute_Ccl();
-	bool retval = (hg->check_soundness());
+  bool retval = (hg->check_soundness());
 
-	v_res = Val_bool(retval);
-	CAMLreturn(v_res);
+  v_res = Val_bool(retval);
+  CAMLreturn(v_res);
 }

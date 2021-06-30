@@ -663,6 +663,7 @@ module RelationalCheck = struct
     external add_stay : int -> int -> int -> int -> unit = "add_stay"
     external add_decrease : int -> int -> int -> int -> unit = "add_decr"
     external check_soundness : unit -> bool = "check_soundness_relational"
+    external print_ccl : unit -> unit = "print_ccl"
 
     let check_proof p =
       let process_succ n (n', tps, prog) =
@@ -683,7 +684,10 @@ module RelationalCheck = struct
       Int.Map.iter (fun n _ -> add_node n) p ;
       init_h_change () ;
       Int.Map.iter process_node p ;
+      debug (fun () -> "Built height graph") ;
       let retval = check_soundness () in
+      debug (fun () -> "Composition Closure:\n") ;
+      if !do_debug then print_ccl() ;
       destroy_hgraph () ;
       if retval then Stats.MC.accept () else Stats.MC.reject () ;
       debug (fun () ->
