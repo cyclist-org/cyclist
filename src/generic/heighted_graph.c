@@ -133,13 +133,14 @@ void Heighted_graph::compute_Ccl(void){
 }
 
 bool Heighted_graph::check_soundness(void){
-    bool found_loop = false;
     for( int node : HNode ){
+        bool found_loop = false;
         Sloped_Relation_SET* Ccl_nd = Ccl[node][node];
         for( Sloped_relation* P : *Ccl_nd ){
-            if( P->size() == 0 ) continue;
+            if( P->size() == 0 ) return false;
             Sloped_relation R = P->compute_transitive_closure();
             if( R.size() == 0 ) continue;
+            R.print_();
             for( int h : *(HeightsOf.at(node)) ){
                 Map<Int_pair,int>* slopes = R.get_slopes();
                 auto exists = slopes->find(Int_pair(h,h));
