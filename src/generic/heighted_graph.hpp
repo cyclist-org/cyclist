@@ -32,8 +32,7 @@ public:
     int num_edges(void);
     int get_node_size(void);
     void set_node_size(int node_size);
-    void init_h_change(void);
-    void init_Ccl(void);
+    void init_h_change_Ccl(void);
     void compute_Ccl(void);
     bool check_soundness(void);
     void clean(void);

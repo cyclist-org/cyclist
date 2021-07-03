@@ -28,7 +28,7 @@ extern "C" void destroy_hgraph() {
 extern "C" void init_h_change() {
   CAMLparam0();
   assert(hg);
-  hg->init_h_change();
+  hg->init_h_change_Ccl();
   CAMLreturn0;
 }
 

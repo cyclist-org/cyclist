@@ -22,7 +22,7 @@ void parse_from_json(std::string &path, Heighted_graph &hg){
     std::cout << "Done! , Node size: " << hg.num_nodes() << " max node id: " << hg.get_node_size() << std::endl;
 
     //====================== parse edges
-    hg.init_h_change();
+    hg.init_h_change_Ccl();
     std::cout << "Parsing Edges: ";
     for( auto& element : graph["Edge"] ){
         int source = element[0][0];
