@@ -18,11 +18,15 @@
    sl_prove sl_disprove sl_modelcheck sl_satcheck sl_satexpgen)
  (modules
    prove disprove modelcheck satcheck satexpgen)
- (libraries lib generic seplog))
+   (libraries lib generic seplog))
 
 (toplevel
  (name sltop)
  (libraries lib generic seplog zarith))
+
+
+
+
 
 ; (executable
 ;  (name        sltop)
