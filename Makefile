@@ -9,7 +9,7 @@ INCLUDES := $(subst $(space),$(comma),$(strip $(wildcard src/*)))
 OCB := ocamlbuild -use-ocamlfind -j 8 -ocamldoc "$(OCAMLDOC)" -pkgs $(PKGS) -tags $(TAGS) -Is $(INCLUDES)
 OCAMLFORMAT_EXE := ocamlformat
 
-OUR_DIRS := src/generic src/procedure src/seplog src/slsat src/soundness src/util src/while
+OUR_DIRS := src/generic src/procedure src/seplog src/slsat src/soundness src/util src/while 
 OUR_SRCS := $(shell find $(OUR_DIRS) ! -name slinit.ml -name '*.ml' -or -name '*.mli')
 
 
@@ -37,7 +37,8 @@ TOPLEVEL := src/seplog/sl.top
 
 TEST_TARGETS := \
 	tests/test_slterm_bug1.native \
-	tests/test_slterm_bug2.native
+	tests/test_slterm_bug2.native \
+	tests/seplog
 
 .PHONY: all native byte toplevel check docs
 

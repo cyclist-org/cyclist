@@ -1,5 +1,5 @@
 open Lib
-open   Symbols
+open Symbols
 
 open Generic
 
@@ -8,6 +8,7 @@ open MParser
 
 type psymheap = 
   {permis: Q.t
+  ; label: int
   ; heap: Heap.t}
  
 type t = psymheap
