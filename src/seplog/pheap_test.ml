@@ -1,7 +1,7 @@
  
 open OUnit2
-
-open Sum
+ 
+open Seplog
  
 open Pheap
 
@@ -14,9 +14,7 @@ let pheap1 = {
 }
 
 let tests = "Test suite for pheap" >::: [
-   "empty"  >:: (fun _ -> assert_equal pheap1 pheap1);
-   "one"    >:: (fun _ -> assert_equal 1 (sum [1]));
-   "onetwo" >:: (fun _ -> assert_equal 3 (sum [1;2]));
+   "empty"  >:: (fun _ -> assert_equal pheap1 pheap1); 
 ]
 
 

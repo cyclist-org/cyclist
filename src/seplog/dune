@@ -9,7 +9,8 @@
         modelcheck
         prove
         satcheck
-        satexpgen)))
+        satexpgen
+        pheap_test)))
 
 (executables
  (names
@@ -23,10 +24,17 @@
 (toplevel
  (name sltop)
  (libraries lib generic seplog zarith))
+ 
 
+;(executable
+; (name pheap_test) 
+; (modules pheap_test)
+; (libraries oUnit lib generic seplog zarith))
 
-
-
+(tests
+ (names pheap_test)
+ (modules pheap_test)
+ (libraries oUnit lib generic seplog zarith)) 
 
 ; (executable
 ;  (name        sltop)
