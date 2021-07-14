@@ -1,0 +1,18 @@
+ (library 
+ (name testsFolder)
+ (public_name cyclist.tests)
+ (libraries lib generic mparser mparser.pcre zarith ounit2)
+ (modules
+   (:standard 
+      \ pheap_test)))
+
+(toplevel
+ (name sltop)
+ (libraries lib generic seplog zarith)) 
+
+
+(test
+ (name pheap_test)
+ (modules pheap_test)
+ (libraries oUnit lib generic seplog zarith)) 
+ 

@@ -8,7 +8,7 @@ open MParser
 
 type psymheap = 
   {permis: Q.t
-  ; label: int
+  ; label: int 
   ; heap: Heap.t}
  
 type t = psymheap
@@ -18,6 +18,7 @@ type t = psymheap
 let equal (h:psymheap) h' =
   h == h'
   || Q.equal h.permis h'.permis
+  && h.label == h'.label
   && Heap.equal h.heap h'.heap
  
   
