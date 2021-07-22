@@ -508,6 +508,7 @@ let symex_while_rule =
   in
   wrap rl
 
+  (* This rule is part of parallel composition || It divides it in two branches*)
   let symex_parallel_rule =
     let rl (pre, cmd, post) =
       try
@@ -521,7 +522,19 @@ let symex_while_rule =
           [ ( [ ((* pre_constraints : (lab : phi) *) pre, Cmd.mk_seq cmd1 cont, post (* post_constraints : (lab : phi') *))
               ; ((* pre_constraints : (lab : psi) *) pre, Cmd.mk_seq cmd2 cont, post (* post_constraints : (lab : psi') *) )
               ]
-            , "Parallel" ) ]
+            , "Parallel III" ) ]
+      with
+      | Not_symheap | WrongCmd -> []
+    in
+    wrap rl
+
+ (* This rule is part of parallel composition || Applies a label to the predicate *)
+let label_pred_rule =
+  let rl (pre, cmd, post) = 
+    try 
+        fix_tps
+          [ ( [ pre, cmd, post]
+            , "Parallel II" ) ]
       with
       | Not_symheap | WrongCmd -> []
     in
@@ -1306,7 +1319,7 @@ let setup (defs, procs, prf_cache) =
       ; (* Branching constructs *)
         symex_ifelse_rule
       ; (* Parallel composition*)
-        symex_parallel_rule
+        Rule.compose label_pred_rule symex_parallel_rule
       ; (* Predicate unfolding *)
         luf defs ] ;
   let axioms = Rule.first [ex_falso_axiom; mk_symex_empty_axiom] in
