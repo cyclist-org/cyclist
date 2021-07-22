@@ -11,7 +11,7 @@ let pheap1 = {
     num= Z.one; 
     den= Z.of_int(2)
   };
-  label=1;
+  label=Pheap.HeapLabelMgr.anonymous;
   heap = Heap.empty
 }
 
@@ -20,7 +20,7 @@ let pheap2 = {
     num= Z.one; 
     den= Z.of_int(4)
   };
-  label=1;
+  label=Pheap.HeapLabelMgr.anonymous;
   heap = Heap.empty
 }
 

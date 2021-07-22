@@ -511,12 +511,15 @@ let symex_while_rule =
   let symex_parallel_rule =
     let rl (pre, cmd, post) =
       try
-        let _, _ = Form.dest pre in
-        let cmd1, cmd2 = Cmd.dest_parallel cmd in
+        let cmd1, cmd2 = Cmd.dest_parallel cmd in 
+       (*  let pre_constraints, pre_f = Form.dest pre in *)
+       (*  let post_constraints, post_f = Form.dest post in  *)
+        (* Test that pre_f is of the form (lab : phi) * (lab : psi) *)
+        (* Test that post_f is of the form (lab : phi') * (lab : psi') *)
         let cont = Cmd.get_cont cmd in 
         fix_tps
-          [ ( [ (pre, Cmd.mk_seq cmd1 cont, post)
-              ; (pre, Cmd.mk_seq cmd2 cont, post)
+          [ ( [ ((* pre_constraints : (lab : phi) *) pre, Cmd.mk_seq cmd1 cont, post (* post_constraints : (lab : phi') *))
+              ; ((* pre_constraints : (lab : psi) *) pre, Cmd.mk_seq cmd2 cont, post (* post_constraints : (lab : psi') *) )
               ]
             , "Parallel" ) ]
       with
