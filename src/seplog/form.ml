@@ -17,6 +17,15 @@ let dest : t -> Ord_constraints.t * Heap.t = function
   | cs, [s] -> (cs, s)
   | _ -> raise Not_symheap
 
+(* Another way to write the same:
+let dest p = match p with
+  | cs, [s] -> cs, s
+  | _ -> raise Not_symheap *)
+
+(* dest function for pheaps: *)
+let dest_csl (ph: Pheap.t) = 
+  dest (Ord_constraints.empty, [ph.heap]) 
+
 let constraints_sep cs =
   if Ord_constraints.is_empty cs then symb_nullstr else symb_colon
 

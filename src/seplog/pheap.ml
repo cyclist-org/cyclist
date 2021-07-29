@@ -40,3 +40,7 @@ let compare f g =
   else Heap.compare f.heap g.heap
  
 
+
+
+let check_F_is_split (_:psymheap) =
+  true
