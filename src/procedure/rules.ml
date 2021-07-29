@@ -555,7 +555,7 @@ let symex_parallel_rule =
             ; ((* pre_constraints : (lab : psi) *) pre, Cmd.mk_seq cmd2 cont, post (* post_constraints : (lab : psi') *) )
             ]
           , "Parallel III" ) ]
-      else 
+        
     with
     | Not_symheap | WrongCmd -> []
   in
