@@ -42,5 +42,10 @@ let compare f g =
 
 
 
-let check_F_is_split (_:psymheap) =
-  true
+(* let check_F_is_split (_:psymheap) =
+  true *)
+let check_F_is_split myF = 
+  match myF with
+  | _ -> true
+
+
