@@ -25,6 +25,7 @@ let dest p = match p with
 (* dest function for pheaps: *)
 let dest_csl (ph: Pheap.t) = 
   dest (Ord_constraints.empty, [ph.heap]) 
+ 
 
 let constraints_sep cs =
   if Ord_constraints.is_empty cs then symb_nullstr else symb_colon

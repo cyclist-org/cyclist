@@ -515,12 +515,12 @@ let label_pred_rule =
     try 
        (* let pre_constraints, pre_f = Form.dest pre in *)
        let _, _ = Form.dest post in 
-      (*  let cf =  *)
-       (* let pre_constraints, pre_f = Form.dest pre in *)
+       let pre_constraints, pre_f = Form.dest pre in  
+       let newPre = Form.with_constraints pre pre_constraints in 
        (* let post_constraints, post_f = Form.dest post in  *)
        (* let newPre = pre_constraints *)
         fix_tps
-          [ ( [ pre, cmd, post]
+          [ ( [ newPre, cmd, post]
             , "Parallel I" ) ]
       with
       | Not_symheap | WrongCmd -> []
@@ -545,9 +545,8 @@ let symex_parallel_rule =
   let rl (pre, cmd, post) =
     try
       let cmd1, cmd2 = Cmd.dest_parallel cmd in 
-      let _, pre_f = Form.dest_csl pre in 
-      if Pheap.check_F_is_split pre_f then 
-      (* let pre_constraints, pre_f = Form.dest pre in *)
+       let _, _ = Form.dest pre in  
+      (*  if Pheap.check_F_is_split  pre  then *)
       (* Test that pre_f is of the form (lab : phi) * (lab : psi) *)
       (*  let post_constraints, post_f = Form.dest post in  *)
       (* Test that post_f is of the form (lab : phi') * (lab : psi') *)
