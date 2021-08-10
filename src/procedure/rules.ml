@@ -509,11 +509,11 @@ let symex_while_rule =
   wrap rl
 
 
- (* This rule is part of parallel composition || Applies a label to the predicate *)
+ (* This rule is part of parallel composition || It applies a label to the predicate *)
 let label_pred_rule =
   let rl (pre, cmd, post) = 
     try 
-       let _, _ = Form.dest pre in 
+       (* let pre_constraints, pre_f = Form.dest pre in *)
        let _, _ = Form.dest post in 
        let pre_constraints, pre_f = Form.dest pre in  
        let newPre = Form.with_constraints pre pre_constraints in 
@@ -528,7 +528,7 @@ let label_pred_rule =
     wrap rl
 
 
- (* This rule is part of parallel composition || Splits a predicate into two 0.5 permision regions*)
+ (* This rule is part of parallel composition || It splits a predicate into two 0.5 permision regions*)
 let split_pred_rule =
   let rl (pre, cmd, post) = 
     try 
@@ -540,7 +540,7 @@ let split_pred_rule =
     in
     wrap rl
 
- (* This rule is part of parallel composition || It divides it in two branches*)
+ (* This rule is part of parallel composition || It divides it in two branches
 let symex_parallel_rule =
   let rl (pre, cmd, post) =
     try
@@ -550,17 +550,18 @@ let symex_parallel_rule =
       (* Test that pre_f is of the form (lab : phi) * (lab : psi) *)
       (*  let post_constraints, post_f = Form.dest post in  *)
       (* Test that post_f is of the form (lab : phi') * (lab : psi') *)
-      let cont = Cmd.get_cont cmd in 
-      fix_tps
-        [ ( [ ((* pre_constraints : (lab : phi) *) pre, Cmd.mk_seq cmd1 cont, post (* post_constraints : (lab : phi') *))
-            ; ((* pre_constraints : (lab : psi) *) pre, Cmd.mk_seq cmd2 cont, post (* post_constraints : (lab : psi') *) )
-            ]
-          , "Parallel III" ) ]
-        
-    with
+        let cont = Cmd.get_cont cmd in 
+        fix_tps
+          [ ( [ ((* pre_constraints : (lab : phi) *) pre, Cmd.mk_seq cmd1 cont, post (* post_constraints : (lab : phi') *))
+              ; ((* pre_constraints : (lab : psi) *) pre, Cmd.mk_seq cmd2 cont, post (* post_constraints : (lab : psi') *) )
+              ]
+            , "Parallel III" ) ]
+      else [] 
+    with  
     | Not_symheap | WrongCmd -> []
   in
   wrap rl
+  *)
 
 let proc_unfold_str = "Proc Unf. "
 
@@ -1340,8 +1341,8 @@ let setup (defs, procs, prf_cache) =
       ; (* Branching constructs *)
         symex_ifelse_rule
       ; (* Parallel composition*)
-        Rule.compose label_pred_rule
-          (Rule.compose split_pred_rule  symex_parallel_rule)
+        Rule.compose label_pred_rule  split_pred_rule  (* Remove split_pred_rule if uncommenting next line *)
+          (*Rule.compose split_pred_rule  symex_parallel_rule*)
       ; (* Predicate unfolding *)
         luf defs ] ;
   let axioms = Rule.first [ex_falso_axiom; mk_symex_empty_axiom] in
