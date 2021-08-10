@@ -21,6 +21,8 @@ val is_symheap : t -> bool
 val dest : t -> Ord_constraints.t * Heap.t
 (** Return the single disjunct, if there is exactly one, else raise [Not_symheap]. *)
 
+ val dest_csl : Pheap.t -> Ord_constraints.t * Heap.t
+
 val equal_upto_tags : t -> t -> bool
 (** Whilst [equal] demands syntactic equality including tags, this version
     ignores tag assignment. *)
