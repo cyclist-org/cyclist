@@ -6,7 +6,7 @@ open Generic
 open MParser
 
 type state =
-  {lhs: Heap.t option; rhs: Heap.t option; defs: Preddef.t list}
+  {lhs: Pheap.t option; rhs: Pheap.t option; defs: Preddef.t list}
 
 let initial = {lhs= None; rhs= None; defs= []}
 
@@ -66,19 +66,19 @@ let parse_pred =
     many parse_exp
     >>= fun params ->
     let tpred = (Tags.anonymous, (predsym, params)) in
-    return (Heap.mk_ind tpred) )
+    return (Pheap.mk_ind tpred) )
   <?> "parse_pred"
 
 let parse_emp =
   parens
     ( Tokens.skip_symbol "_" >> spaces >> Tokens.skip_symbol "emp" >> spaces
-    >> skip_ident >> spaces >> skip_ident >>$ Heap.empty )
+    >> skip_ident >> spaces >> skip_ident >>$ Pheap.empty )
   <?> "parse_emp"
 
 let parse_eq =
   parens
     ( Tokens.skip_symbol "=" >> spaces >> parse_exp
-    >>= fun l -> spaces >> parse_exp >>= fun r -> return (Heap.mk_eq (l, r))
+    >>= fun l -> spaces >> parse_exp >>= fun r -> return (Pheap.mk_eq (l, r))
     )
   <?> "parse_eq"
 
@@ -87,14 +87,14 @@ let parse_pto =
     ( Tokens.skip_symbol "pto" >> spaces >> parse_exp
     >>= fun lval ->
     parens (skip_ident >> spaces >> many1 parse_exp)
-    >>= fun rvals -> return (Heap.mk_pto (lval, rvals)) )
+    >>= fun rvals -> return (Pheap.mk_pto (lval, rvals)) )
   <?> "parse_pto"
 
 let parse_deq =
   parens
     ( Tokens.skip_symbol "distinct"
     >> spaces >> parse_exp
-    >>= fun lhs -> parse_exp >>= fun rhs -> return (Heap.mk_deq (lhs, rhs))
+    >>= fun lhs -> parse_exp >>= fun rhs -> return (Pheap.mk_deq (lhs, rhs))
     )
   <?> "parse_deq"
 
@@ -110,9 +110,9 @@ let rec parse_binop op_str op st =
     return (op lhs final_rhs) <?> "parse_binop" )
     st
 
-and parse_and st = parse_binop "and" Heap.star st
+and parse_and st = parse_binop "and" Pheap.star st
 
-and parse_sep st = parse_binop "sep" Heap.star st
+and parse_sep st = parse_binop "sep" Pheap.star st
 
 and parse_exists st =
   parens
@@ -122,18 +122,18 @@ and parse_exists st =
     >>= fun existentials ->
     spaces >> parse_heap
     >>= fun heap ->
-    let allvars = Heap.vars heap in
+    let allvars = Pheap.vars heap in
     let theta =
       Subst.mk_ex_subst allvars (Term.Set.of_list existentials)
     in
-    return (Heap.subst theta heap) <?> "parse_exists" )
+    return (Pheap.subst theta heap) <?> "parse_exists" )
     st
 
 and parse_heap st =
   ( attempt parse_emp <|> attempt parse_eq <|> attempt parse_deq
   <|> attempt parse_pto <|> attempt parse_and <|> attempt parse_sep
   <|> attempt parse_exists <|> parse_pred <?> "parse_heap" )
-    st
+    st  
 
 let parse_or =
   parens (Tokens.skip_symbol "or" >> spaces >> many1 parse_heap) <?> "parse_or"

@@ -21,7 +21,7 @@ val get_def : Predsym.t -> t -> Indrule.t list
 
 val fixpoint : (t -> t) -> t -> t
 
-val relevant_defs : t -> Form.t -> t
+val relevant_defs : t -> Form.t -> t 
 
 val check_form_wf : t -> Form.t -> unit
 

@@ -5,15 +5,15 @@ open Generic
 
 open MParser
 
-include Pair.Make (Ord_constraints) (Flist.Make (Heap))
+include Pair.Make (Ord_constraints) (Flist.Make (Pheap))
 
-let empty = (Ord_constraints.empty, [Heap.empty])
+let empty = (Ord_constraints.empty, [Pheap.empty])
 
 exception Not_symheap
 
 let is_symheap = function _, [s] -> true | _ -> false
 
-let dest : t -> Ord_constraints.t * Heap.t = function
+let dest : t -> Ord_constraints.t * Pheap.t = function
   | cs, [s] -> (cs, s)
   | _ -> raise Not_symheap
 
@@ -24,7 +24,7 @@ let dest p = match p with
 
 (* dest function for pheaps: *)
 let dest_csl (ph: Pheap.t) = 
-  dest (Ord_constraints.empty, [ph.heap]) 
+  dest (Ord_constraints.empty, [ph]) 
  
 
 let constraints_sep cs =
@@ -39,21 +39,21 @@ let pp fmt (cs, f) =
   | _ ->
       Format.fprintf fmt "@[%a%s%a@]" Ord_constraints.pp cs
         (constraints_sep cs).sep
-        (Blist.pp pp_or Heap.pp)
+        (Blist.pp pp_or Pheap.pp)
         f
 
 let to_string (cs, hs) =
   let cs_str = Ord_constraints.to_string cs ^ (constraints_sep cs).sep in
   match hs with
   | [] -> cs_str ^ symb_false.str
-  | hs -> cs_str ^ Blist.to_string symb_or.sep Heap.to_string hs
+  | hs -> cs_str ^ Blist.to_string symb_or.sep Pheap.to_string hs
 
-let terms (_, d) = Term.Set.union_of_list (Blist.map Heap.terms d)
+let terms (_, d) = Term.Set.union_of_list (Blist.map Pheap.terms d)
 
 let vars f = Term.filter_vars (terms f)
 
 let tags (cs, d) =
-  Tags.union_of_list (Ord_constraints.tags cs :: Blist.map Heap.tags d)
+  Tags.union_of_list (Ord_constraints.tags cs :: Blist.map Pheap.tags d)
 
 let tag_pairs f = Tagpairs.mk (tags f)
 
@@ -109,13 +109,13 @@ let subsumed_upto_tags ?(total = true) (cs, hs) (cs', hs') =
     hs'
 
 let equal_upto_tags (cs, hs) (cs', hs') =
-  Blist.for_all2 Heap.equal_upto_tags hs hs'
+  Blist.for_all2 Pheap.equal_upto_tags hs hs'
 
 let parse ?(null_is_emp = false) ?(allow_tags = true) ?(augment_deqs = true) st
     =
   ( (if allow_tags then option Ord_constraints.parse else return None)
   >>= fun cs ->
-  sep_by (Heap.parse ~allow_tags ~augment_deqs) (parse_symb symb_or)
+  sep_by (Pheap.parse ~allow_tags ~augment_deqs) (parse_symb symb_or)
   <?> "formula"
   >>= fun hs ->
   return
@@ -143,7 +143,7 @@ let subst_existentials (cs, hs) = (cs, Blist.map Heap.subst_existentials hs)
 
 let subst_tags tagpairs (cs, hs) =
   ( Ord_constraints.subst_tags tagpairs cs
-  , Blist.map (Heap.subst_tags tagpairs) hs )
+  , Blist.map (Pheap.subst_tags tagpairs) hs )
 
 let norm (cs, hs) = (cs, Blist.map Heap.norm hs)
 
@@ -171,25 +171,25 @@ let compute_frame ?(freshen_existentials = true)
   try
     let cs, h = dest f in
     let cs', h' = dest f' in
-    let eqs, deqs, ptos, inds = Heap.dest h in
-    let eqs', deqs', ptos', inds' = Heap.dest h' in
+    let eqs, deqs, ptos, inds = Heap.dest h.heap in
+    let eqs', deqs', ptos', inds' = Heap.dest h'.heap in
     if not (Ord_constraints.subset cs cs') then None
     else if not (Uf.subsumed eqs eqs') then None
     else if not (Deqs.subset deqs deqs') then None
     else if not (Ptos.subset ptos ptos') then None
     else if not (Tpreds.subset inds inds') then None
     else
-      let ex_tags = Tags.filter Tags.is_exist_var (Heap.tags h) in
+      let ex_tags = Tags.filter Tags.is_exist_var (Heap.tags h.heap) in
       let ex_vars =
-        Term.Set.filter Term.is_exist_var (Heap.terms h)
+        Term.Set.filter Term.is_exist_var (Heap.terms h.heap)
       in
       let frame =
         ( Ord_constraints.diff cs' cs
-        , [ Heap.mk (Uf.diff eqs eqs') (Deqs.diff deqs' deqs)
+        , [ Pheap.mk_h (Uf.diff eqs eqs') (Deqs.diff deqs' deqs)
               (Ptos.diff ptos' ptos)
               (Tpreds.diff inds' inds) ] )
       in
-      let ex_frame_tags = Tags.filter Tags.is_exist_var (tags frame) in
+        let ex_frame_tags = Tags.filter Tags.is_exist_var (tags frame) in
       let ex_frame_vars =
         Term.Set.filter Term.is_exist_var (terms frame)
       in

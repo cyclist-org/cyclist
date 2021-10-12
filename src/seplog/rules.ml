@@ -63,7 +63,7 @@ let id_axiom =
                           Option.is_some
                             (Blist.find_map
                                (fun h' ->
-                                 Heap.classical_unify
+                                 Pheap.classical_unify
                                    ~update_check:
                                      Unify.Unidirectional.modulo_entl h' h
                                    Unification.trivial_continuation theta )

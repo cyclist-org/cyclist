@@ -7,21 +7,21 @@
 open Lib
 open Generic
 
-include BasicType with type t = Ord_constraints.t * Heap.t list
+include BasicType with type t = Ord_constraints.t * Pheap.t list
 
 val empty : t
 (** The formula [emp]. NB this is not the same as [[]], which is equivalent to
     false. *)
 
-exception Not_symheap
+exception Not_symheap 
 
 val is_symheap : t -> bool
 (** Returns true iff the formula has a single disjunct only *)
 
-val dest : t -> Ord_constraints.t * Heap.t
+val dest : t -> Ord_constraints.t * Pheap.t
 (** Return the single disjunct, if there is exactly one, else raise [Not_symheap]. *)
 
- val dest_csl : Pheap.t -> Ord_constraints.t * Heap.t
+ val dest_csl : Pheap.t -> Ord_constraints.t * Pheap.t
 
 val equal_upto_tags : t -> t -> bool
 (** Whilst [equal] demands syntactic equality including tags, this version
@@ -100,7 +100,7 @@ val add_constraints : t -> Ord_constraints.t -> t
 (** [add_constraints f cs] returns the formula the results by adding [cs] to the
     constraints already in [f] *)
 
-val with_heaps : t -> Heap.t list -> t
+val with_heaps : t -> Pheap.t list -> t
 (** [with_heaps hs cs] returns the formula that results by replacing [f]'s
     disjunction of symbolic heaps with [hs] *)
 

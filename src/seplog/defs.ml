@@ -5,7 +5,7 @@ open Generic
 
 open MParser
 
-module SH = Heap
+module SH = Pheap
 
 module Defs = struct
   include Flist.Make (Preddef)
@@ -78,7 +78,7 @@ module Defs = struct
         let rules = get_def pred all_defs in
         let add_preds_from_rule preds rule =
           let body, _ = Indrule.dest rule in
-          let new_preds = ident_set (Heap.idents body) in
+          let new_preds = ident_set (Pheap.idents body) in
           Predsym.Set.union preds new_preds
         in
         Blist.foldl add_preds_from_rule preds rules
@@ -88,7 +88,7 @@ module Defs = struct
     let init_ids =
       let ident_mset =
         Blist.fold_right
-          (fun h -> Predsym.MSet.union (Heap.idents h))
+          (fun h -> Predsym.MSet.union (Pheap.idents h))
           hs Predsym.MSet.empty
       in
       ident_set ident_mset

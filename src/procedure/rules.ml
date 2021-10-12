@@ -8,7 +8,7 @@ exception Not_symheap = Form.Not_symheap
 
 module Rule = Proofrule.Make (Seq)
 module Seqtactics = Seqtactics.Make (Seq)
-module Proof = Proof.Make (Seq)
+module Proof = Proof.Make (Seq) 
 module Slprover = Prover.Make (Seplog.Seq)
 module EntlSeqHash = Hashtbl.Make (Seplog.Seq)
 module ProofNode = Proofnode.Make (Seq)
@@ -516,12 +516,11 @@ let label_pred_rule =
        let _, _ = Form.dest pre in 
        let _, _ = Form.dest post in 
        let pre_constraints, pre_f = Form.dest pre in  
+     (*  let labelled_pre_cons = Pheap.addLabel pre_constraints in  *)
        let newPre = Form.with_constraints pre pre_constraints in 
-       (* let post_constraints, post_f = Form.dest post in  *)
-       (* let newPre = pre_constraints *)
-        fix_tps
+       fix_tps
           [ ( [ newPre, cmd, post]
-            , "Parallel I" ) ]
+            , "Label (||)" ) ]
       with
       | Not_symheap | WrongCmd -> []
     in
@@ -534,7 +533,7 @@ let split_pred_rule =
     try 
         fix_tps
           [ ( [ pre, cmd, post]
-            , "Parallel II" ) ]
+            , "Split predicate (||)" ) ]
       with
       | Not_symheap | WrongCmd -> []
     in
@@ -555,7 +554,7 @@ let symex_parallel_rule =
         [ ( [ ((* pre_constraints : (lab : phi) *) pre, Cmd.mk_seq cmd1 cont, post (* post_constraints : (lab : phi') *))
             ; ((* pre_constraints : (lab : psi) *) pre, Cmd.mk_seq cmd2 cont, post (* post_constraints : (lab : psi') *) )
             ]
-          , "Parallel III" ) ]
+          , "Create branches (||)" ) ]
         
     with
     | Not_symheap | WrongCmd -> []

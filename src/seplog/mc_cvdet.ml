@@ -17,7 +17,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
     type t =
       { stack: Stack.t
       ; heap: ConcreteHeap.t option ref
-      ; symheap: Heap.t
+      ; symheap: Pheap.t
       ; remainder: ConcreteHeap.t option ref }
 
     let dest r = (r.stack, Option.get !(r.heap), r.symheap, r.remainder)
@@ -27,7 +27,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
 
     let equal r r' =
       Stack.equal r.stack r'.stack
-      && Heap.equal r.symheap r'.symheap
+      && Pheap.equal r.symheap r'.symheap
       &&
       match (!(r.heap), !(r'.heap)) with
       | None, None -> true
@@ -48,7 +48,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
       Format.fprintf fmt "@[s, h %s %a -> h':%a@]"
         (* Stack.pp r.stack  *)
         (* (Option.pp ConcreteHeap.pp) !(r.heap)  *)
-        symb_turnstile.str Heap.pp r.symheap (Option.pp ConcreteHeap.pp)
+        symb_turnstile.str Heap.pp r.symheap.heap (Option.pp ConcreteHeap.pp)
         !(r.remainder)
 
     let to_string r = mk_to_string pp r
@@ -63,7 +63,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
   let emp_axiom =
     let f r =
       let _, h, symheap, remainder = Reduction.dest r in
-      Heap.is_empty symheap && (set_metavar remainder h ; true)
+      Heap.is_empty symheap.heap && (set_metavar remainder h ; true)
     in
     Rule.mk_axiom (fun r -> Option.mk (f r) "emp")
 
@@ -83,13 +83,13 @@ module Make (Sig : Mc_core.ValueSig) = struct
   let points_to_axiom =
     let f r =
       let s, h, symheap, remainder = Reduction.dest r in
-      all_vars_free symheap
-      && Uf.is_empty symheap.Heap.eqs
-      && Deqs.is_empty symheap.Heap.deqs
-      && Tpreds.is_empty symheap.Heap.inds
-      && Int.( = ) (Ptos.cardinal symheap.Heap.ptos) 1
+      all_vars_free symheap.heap
+      && Uf.is_empty symheap.heap.eqs
+      && Deqs.is_empty symheap.heap.deqs
+      && Tpreds.is_empty symheap.heap.inds
+      && Int.( = ) (Ptos.cardinal symheap.heap.ptos) 1
       &&
-      let l, rs = Ptos.choose symheap.Heap.ptos in
+      let l, rs = Ptos.choose symheap.heap.ptos in
       let l, rs = (interpret s l, Blist.map (interpret s) rs) in
       is_location l
       &&
@@ -119,15 +119,16 @@ module Make (Sig : Mc_core.ValueSig) = struct
   let discharge_eq =
     let rl red =
       let s, h, symheap, remainder = Reduction.dest red in
-      if not (all_vars_free symheap) then []
-      else if Uf.is_empty symheap.Heap.eqs then []
+      if not (all_vars_free symheap.heap) then []
+      else if Uf.is_empty symheap.heap.eqs then []
       else
-        let eqs = Uf.bindings symheap.Heap.eqs in
+        let eqs = Uf.bindings symheap.heap.eqs in
         let eq, tl = Blist.decons eqs in
         let x, y = Pair.map (interpret s) eq in
         if not (Value.equal x y) then []
         else
-          let symheap' = Heap.with_eqs symheap (Uf.of_list tl) in
+          let symheap' = Heap.with_eqs symheap.heap (Uf.of_list tl) in
+          let sympheap' = Pheap.with_heap symheap' in 
           [([{red with Reduction.symheap= symheap'}], "=")]
     in
     mk_infrule rl

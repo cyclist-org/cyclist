@@ -8,7 +8,7 @@ val equal_upto_tags : t -> t -> bool
 (** Like [equal] but ignoring LHS tags as well as RHS ones. *)
 
 val dest :
-  t -> (Ord_constraints.t * Heap.t) * (Ord_constraints.t * Heap.t)
+  t -> (Ord_constraints.t * Pheap.t) * (Ord_constraints.t * Pheap.t)
 (** If both LHS and RHS are symbolic heaps then return them else raise
     [Form.Not_symheap]. *)
 
