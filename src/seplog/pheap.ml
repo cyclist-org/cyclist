@@ -160,3 +160,13 @@ let star ?(augment_deqs = true) f g =
   Heap.star ~augment_deqs f g
 
 
+<<<<<<< HEAD
+=======
+(* let check_F_is_split (_:psymheap) =
+  true *)
+let check_F_is_split myF = 
+  match myF with
+  | _ -> true
+
+
+>>>>>>> e0257b802144fba76d0fd47bda97be3695e038f3
