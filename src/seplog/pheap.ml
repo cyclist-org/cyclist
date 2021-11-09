@@ -137,7 +137,8 @@ let tags ph =
     Heap.tags ph.heap
 
 let subst theta ph =
-    Heap.subst theta ph.heap
+    (* mk 1.0 HeapLabelMgr.anonymous (Heap.subst theta ph.heap) *)
+    mk 1.0 HeapLabelMgr.anonymous (Heap.subst theta ph)
 
 let subst_tags tagpairs ph  = 
     Heap.subst_tags tagpairs ph.heap
@@ -149,7 +150,7 @@ let parse ?(allow_tags = true) st =
     Heap.parse ~allow_tags st
 
 let vars f =
-    Heap.vars f.heap
+    Heap.vars f (*.heap *)
 
 let classical_unify ?(inverse = false) ?(tagpairs = true)
     ?(update_check = Fun._true) ph ph' cont init_state = 
@@ -160,13 +161,10 @@ let star ?(augment_deqs = true) f g =
   Heap.star ~augment_deqs f g
 
 
-<<<<<<< HEAD
-=======
 (* let check_F_is_split (_:psymheap) =
   true *)
-let check_F_is_split myF = 
+(* let check_F_is_split myF = 
   match myF with
   | _ -> true
 
-
->>>>>>> e0257b802144fba76d0fd47bda97be3695e038f3
+*)
