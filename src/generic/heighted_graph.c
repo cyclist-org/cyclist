@@ -79,7 +79,7 @@ bool Heighted_graph::check_soundness_2(void){
     while( !done ){
         done = true;
         for( int source = 0 ; source < (max_node + 1) ; source++ ){
-        for( int middle = 0 ; middle < (max_node + 1)  ; middle++ ){
+        for( int middle = 0 ; middle < (max_node + 1) ; middle++ ){
         for( int sink = 0 ; sink < (max_node + 1) ; sink++ ){
             for( Sloped_relation* P : *Ccl[source][middle] ){
                 if( P->size() == 0 ) continue;
@@ -87,7 +87,16 @@ bool Heighted_graph::check_soundness_2(void){
                     if( Q->size() == 0 ) continue;
                     Sloped_relation* R = P->compose(Q);
                     if( R->size() == 0 ) continue;
-                    if( (Ccl[source][sink])->size() == 0 ){
+                    done = true;
+                    bool found = false;
+                    for( Sloped_relation* S : *Ccl[source][sink] ){
+                        if( *S == *R ){
+                            found = true;
+                            delete R;
+                            break;
+                        }
+                    }
+                    if( !found ){
                         done = false;
                         if( source == sink ){
                             if(! (R->has_downward_SCC())){
@@ -96,28 +105,6 @@ bool Heighted_graph::check_soundness_2(void){
                             }
                         }
                         (Ccl[source][sink])->insert(R);
-                    }
-                    else{
-                        
-                        done = true;
-                        bool found = false;
-                        for( Sloped_relation* S : *Ccl[source][sink] ){
-                            if( *S == *R ){
-                                found = true;
-                                delete R;
-                                break;
-                            }
-                        }
-                        if( !found ){
-                            done = false;
-                            if( source == sink ){
-                                if(! (R->has_downward_SCC())){
-                                    delete R;
-                                    return false;
-                                }
-                            }
-                            (Ccl[source][sink])->insert(R);
-                        }
                     }
 
 
