@@ -75,6 +75,16 @@ void Heighted_graph::init_h_change_Ccl(void){
 }
 
 bool Heighted_graph::check_soundness_2(void){
+    // Check initial sloped relations for self-loops
+    for( int n = 0 ; n < (max_node + 1) ; n++ ){
+        for( Sloped_relation* R : *Ccl[n][n] ){
+            if(! (R->has_downward_SCC())) {
+                return false;
+            }
+        }
+    }
+
+    // Now compute the SCC and check for self-loops on the fly
     bool done = false;
     while( !done ){
         done = true;
