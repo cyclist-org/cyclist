@@ -310,7 +310,7 @@ void find_scc(int v, int* visited, int** g,int n,bool* b){
     visited[v] = 1;
     for (int i = 0 ; i < n; ++i)
         if(g[i][v] != 2 ){
-            if(g[i][v] == 1) *b = true;
+            if(g[v][i] == 1) *b = true;
             if (visited[i] == 0)
                 find_scc(i, visited,g,n,b);
         }
