@@ -30,4 +30,4 @@ tests: soundness
 	TEST="graph_7"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [ ! $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
 	TEST="graph_8"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [ ! $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
 	TEST="graph_8a"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [ ! $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
-	TEST="graph_8b"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [ ! $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
+	TEST="graph_8b"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [   $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
