@@ -48,8 +48,8 @@ int main(int argc, char** argv) {
     }
     Heighted_graph hg = Heighted_graph();
     parse_from_json(path, hg);
-    hg.compute_Ccl();
-    if( hg.check_soundness()){
+    //hg.compute_Ccl();
+    if( hg.check_soundness_2()){
         std::cout << "SUCCESS" << std::endl;
     }
     else {

@@ -74,7 +74,7 @@ void Heighted_graph::init_h_change_Ccl(void){
     }
 }
 
-void Heighted_graph::compute_Ccl(void){
+bool Heighted_graph::check_soundness_2(void){
     bool done = false;
     while( !done ){
         done = true;
@@ -89,9 +89,16 @@ void Heighted_graph::compute_Ccl(void){
                     if( R->size() == 0 ) continue;
                     if( (Ccl[source][sink])->size() == 0 ){
                         done = false;
+                        if( source == sink ){
+                            if(! (R->has_downward_SCC())){
+                                delete R;
+                                return false;
+                            }
+                        }
                         (Ccl[source][sink])->insert(R);
                     }
                     else{
+                        
                         done = true;
                         bool found = false;
                         for( Sloped_relation* S : *Ccl[source][sink] ){
@@ -103,15 +110,49 @@ void Heighted_graph::compute_Ccl(void){
                         }
                         if( !found ){
                             done = false;
+                            if( source == sink ){
+                                if(! (R->has_downward_SCC())){
+                                    delete R;
+                                    return false;
+                                }
+                            }
                             (Ccl[source][sink])->insert(R);
                         }
                     }
+
+
+
+
+                    // bool need_to_add = true;
+                    // for( Sloped_relation* R_p : *Ccl[source][sink] ){
+                    //     comparison result = R->compare(*R_p);
+                    //     if( result == less){
+                    //         (Ccl[source][sink])->erase(R_p);
+                    //         (Ccl[source][sink])->insert(R);
+                    //         done = false;
+                    //         need_to_add = false;
+                    //         break;
+                    //     }
+                    //     else if( result == greq ){
+                    //         need_to_add = false;
+                    //         break;
+                    //     }
+                    // }
+                    // if( need_to_add ){
+                    //     (Ccl[source][sink])->insert(R);
+                    //     done = false;
+                    // }
+
+
+
+                    
                 }
             }
         }
         }
         }
     }
+    return true;
 }
 
 bool Heighted_graph::check_soundness(void){

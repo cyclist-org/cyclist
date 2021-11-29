@@ -13,6 +13,8 @@ Sloped_relation::Sloped_relation( const Sloped_relation& R){
     this->forward_map = new Map<int,Int_pair_SET*>();
     this->backward_map = new Map<int,Int_pair_SET*>();
     this->slope_map = new Map<Int_pair,int>();
+    this->max_height = R.max_height;
+    this->min_height = R.min_height;
     for( auto pair : *(R.forward_map) ){
         (this->forward_map)->insert(Pair<int,Int_pair_SET*>(pair.first,new Int_pair_SET(*(pair.second))));
     }
@@ -28,6 +30,8 @@ Sloped_relation::Sloped_relation( Sloped_relation&& R){
     this->forward_map = R.forward_map;
     this->backward_map = R.backward_map;
     this->slope_map = R.slope_map;
+    this->max_height = R.max_height;
+    this->min_height = R.min_height;
     R.forward_map = nullptr;
     R.backward_map = nullptr;
     R.slope_map = nullptr;
@@ -68,6 +72,14 @@ Sloped_relation& Sloped_relation::operator=(Sloped_relation&& R){
 }
 
 void Sloped_relation::add(int h1, int h2, slope s) {
+
+    if( min_height == 0 ) min_height = h1;
+    if( max_height < h1 ) max_height = h1;
+    if( max_height < h2 ) max_height = h2;
+    if( min_height > h1) min_height = h1;
+    if( min_height > h2) min_height = h2;
+
+
     
     // Add forward mapping
     auto exists_h1 = forward_map->find(h1);
@@ -179,7 +191,8 @@ Sloped_relation* Sloped_relation::compose(Sloped_relation* other){
             }
         }
     }
-    return new Sloped_relation(composed_forward_map,composed_backward_map,composed_slope_map);
+    int haha = this->max_height > other->max_height ? this->max_height : other->max_height;
+    return new Sloped_relation(composed_forward_map,composed_backward_map,composed_slope_map,haha);
 }
 
 Sloped_relation::~Sloped_relation(void){
@@ -201,7 +214,7 @@ Sloped_relation Sloped_relation::compute_transitive_closure(void){
                 done = false;
                 R.add(R_p.first.first,R_p.first.second,(slope)R_p.second);
             }
-            else if(R_p.second < exists->second){
+            else if( R_p.second < exists->second ){
                 done = false;
                 R.add(R_p.first.first,R_p.first.second,(slope)R_p.second);
             }
@@ -215,8 +228,9 @@ bool operator< (const Sloped_relation& R, const Sloped_relation& L){
     return (R.slope_map < L.slope_map);
 }
 
+
 bool operator== (const Sloped_relation& R, const Sloped_relation& L){
-    if( (R.slope_map)->size() != (L.slope_map)->size()){
+    if( (R.slope_map)->size() != (L.slope_map)->size() ){
         return false;
     }
     for( auto r : *(R.slope_map) ){
@@ -227,7 +241,7 @@ bool operator== (const Sloped_relation& R, const Sloped_relation& L){
     return true;
 }
 int Sloped_relation::size(void){
-    return forward_map->size();
+    return slope_map->size();
 }
 
 void Sloped_relation::clear(void){
@@ -244,12 +258,7 @@ void Sloped_relation::clear(void){
 
 void Sloped_relation::print_(void){
     std::cout << "--------------------------------------------" << std::endl;
-    for( const auto& pair : *(forward_map) ){
-        std::cout << "source height: " << pair.first << std::endl;;
-        for( const auto& p : *(pair.second) ){
-            std::cout << "      dist:" << p.first << " slope:" << p.second << std::endl;
-        }
-    }
+    std::cout << "Size of relation: " << this->size() << std::endl;
     std::cout << "--------------------------------------------" << std::endl;
     for( auto r : *(slope_map) ){
         std::cout << "source height: " << r.first.first << std::endl;;
@@ -257,3 +266,105 @@ void Sloped_relation::print_(void){
     }
     std::cout << "============================================" << std::endl;
 }
+
+
+comparison Sloped_relation::compare(const Sloped_relation& lhs){
+    comparison result = initial;
+    for( auto pair : *(lhs.slope_map) ){
+        auto exists = (this->slope_map)->find(pair.first);
+        if( exists == (this->slope_map)->end() ){
+            if( result == initial ) result = less;
+            else if( result == greq ) return noncomp;
+        }
+        else if( exists->second >= pair.second ){
+            if( result == initial ) result = greq;
+            else if( result == less ) return noncomp;
+        }
+        else if( exists->second < pair.second ){
+            if( result == initial ) result = less;
+            else if( result == greq ) return noncomp;
+        }
+    }
+    for( auto pair : *(this->slope_map) ){
+        if( result == initial ) return greq;
+        auto exists = (lhs.slope_map)->find(pair.first);
+        if( exists == (this->slope_map)->end() ){
+            if( result == less) return noncomp; 
+        }
+    }
+    return result;
+}
+
+
+void fill_order( int v, int* visited, std::stack<int>* s,int** g ,int n){
+    visited[v] = 1;
+    for(int i = 0; i < n; ++i)
+        if(g[v][i] != 2)
+            if(!visited[i])
+                fill_order(i, visited, s,g,n);
+    s->push(v);
+}
+
+
+void find_scc(int v, int* visited, int** g,int n,bool* b){
+    visited[v] = 1;
+    for (int i = 0 ; i < n; ++i)
+        if(g[i][v] != 2 ){
+            if(g[i][v] == 1) *b = true;
+            if (visited[i] == 0)
+                find_scc(i, visited,g,n,b);
+        }
+}
+
+bool Sloped_relation::has_downward_SCC(void){
+    int** g = (int**)malloc( (max_height + 1) * sizeof(int*));
+    int* visited = (int*)malloc((max_height + 1) * sizeof(int));
+    for( int i = 0 ; i < max_height + 1 ; i++ ){
+        g[i] = (int*)malloc((max_height + 1) * sizeof(int));
+        visited[i] = 0;
+        for( int j = 0 ; j < max_height + 1 ; j++ ){
+            g[i][j] = 2;
+        }
+    }
+
+    for( Pair<Int_pair,int> pair : *(this->slope_map) ){
+        g[(pair.first).first][(pair.first).second] = pair.second;
+    }
+    std::stack<int> s;
+    for(int i = min_height; i < max_height + 1; i++)
+        if(visited[i] == 0)
+            fill_order(i, visited, &s,g,max_height+1);
+
+    for( int i = 0 ; i < max_height + 1; i++) {
+        visited[i] = 0;
+    }
+    bool down = false;
+    while (s.empty() == false){
+        int v = s.top();
+        s.pop();
+        if (visited[v] == 0){
+            find_scc(v, visited,g,max_height+1,&down);
+        }
+        if( down ){
+            for( int i = 0 ; i < max_height + 1 ; i++ ){
+                delete g[i];
+            }
+            delete g;
+            delete visited;
+            return true;
+        }
+    }
+    
+   
+    for( int i = 0 ; i < max_height + 1 ; i++ ){
+        delete g[i];
+    }
+    delete g;
+    delete visited;
+
+
+    return false;
+}
+
+
+//enum comparison {greq,less,noncomp,initial};

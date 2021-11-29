@@ -3,6 +3,7 @@
 
 #include <set>
 #include <map>
+#include <stack>
 
 #include "types.c"
 
@@ -12,13 +13,16 @@ private:
     Map<int,Int_pair_SET*>* forward_map;
     Map<int,Int_pair_SET*>* backward_map;
     Map<Int_pair,int>* slope_map;
+
     
 public:
+    int max_height = -1;
+    int min_height = 0;
 
     Sloped_relation(void){}
 
-    Sloped_relation(Map<int,Int_pair_SET*>* forward_map_,Map<int,Int_pair_SET*>* backward_map_, Map<Int_pair,int>* slope_map_)
-        : forward_map(forward_map_), backward_map(backward_map_), slope_map(slope_map_){}
+    Sloped_relation(Map<int,Int_pair_SET*>* forward_map_,Map<int,Int_pair_SET*>* backward_map_, Map<Int_pair,int>* slope_map_,int max_height_ = -1,int min_height_ = 0)
+        : forward_map(forward_map_), backward_map(backward_map_), slope_map(slope_map_), max_height(max_height_), min_height(min_height_){}
     Sloped_relation( const Sloped_relation& R );
     Sloped_relation( Sloped_relation&& R );
     Sloped_relation& operator=( const Sloped_relation& R );
@@ -36,5 +40,9 @@ public:
     friend bool operator< ( const Sloped_relation& R, const Sloped_relation& L );
     friend bool operator== ( const Sloped_relation& R, const Sloped_relation& L );
     void print_(void);
+    comparison compare(const Sloped_relation& lhs);
+
+    bool has_downward_SCC(void);
+
 };
 #endif

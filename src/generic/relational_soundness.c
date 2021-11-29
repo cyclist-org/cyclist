@@ -92,8 +92,8 @@ extern "C" value check_soundness_relational() {
   CAMLlocal1(v_res);
 
   assert(hg);
-  hg->compute_Ccl();
-  bool retval = (hg->check_soundness());
+  // hg->compute_Ccl();
+  bool retval = (hg->check_soundness_2());
 
   v_res = Val_bool(retval);
   CAMLreturn(v_res);

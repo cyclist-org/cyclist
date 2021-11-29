@@ -13,5 +13,6 @@
 #define Sloped_Relation_SET     std::set<Sloped_relation*>
 
 enum slope {Downward = 1,Stay = 0};
+enum comparison {greq,less,noncomp,initial};
 
 #endif

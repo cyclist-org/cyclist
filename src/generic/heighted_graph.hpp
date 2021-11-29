@@ -33,7 +33,7 @@ public:
     int get_node_size(void);
     void set_node_size(int node_size);
     void init_h_change_Ccl(void);
-    void compute_Ccl(void);
+    bool check_soundness_2(void);
     bool check_soundness(void);
     void clean(void);
     void print_Ccl(void);
