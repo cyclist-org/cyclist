@@ -159,18 +159,16 @@ bool Heighted_graph::check_soundness(int opts){
         }
     }
 
-    // Now compute the SCC
+    // Now compute the CCL
     bool done = false;
     while( !done ){
         done = true;
         for( int source = 0 ; source < (max_node + 1) ; source++ ){
         for( int middle = 0 ; middle < (max_node + 1) ; middle++ ){
         for( int sink = 0 ; sink < (max_node + 1) ; sink++ ){
-            // std::cout << source << ", " << middle << ", " << sink << "\n";
             for( Sloped_relation* P : *Ccl[source][middle] ){
                 if( P->size() == 0 ) continue;
                 for( Sloped_relation* Q : *Ccl[middle][sink] ){
-                    // std::cout << "doing a composition\n";
                     if( Q->size() == 0 ) continue;
                     Sloped_relation* R = P->compose(Q);
                     if( R->size() == 0 ) continue;
@@ -222,7 +220,6 @@ bool Heighted_graph::check_soundness(int opts){
 
     // If not using fast-fail, then check for self-loops in the computed CCL
     if ((opts & FAIL_FAST) == 0 || ((opts & USE_MINIMALITY) != 0)) {
-        // std::cout << "Checking for self-loops\n";
         if (!check_Ccl(opts)) {
             return false;
         }
