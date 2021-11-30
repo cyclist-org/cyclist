@@ -7,6 +7,13 @@
 #include <set>
 #include <utility>
 
+// N.B. These MUST match the corresponding constants in the OCaml code
+//      Look in soundcheck.ml
+const int Heighted_graph::FAIL_FAST       = 0b0001;
+const int Heighted_graph::USE_SCC_CHECK   = 0b0010;
+const int Heighted_graph::USE_IDEMPOTENCE = 0b0100;
+const int Heighted_graph::USE_MINIMALITY  = 0b1000;
+
 // Methods for constructing the height graph
 void Heighted_graph::add_node(int n) {
     if (HNode.find(n) == HNode.end()) {
@@ -61,7 +68,7 @@ int Heighted_graph::num_edges(void) {
     return number_of_edges;
 }
 
-void Heighted_graph::init_h_change_Ccl(void){
+void Heighted_graph::init(void){
     h_change_ = (Sloped_relation***)malloc( sizeof(Sloped_relation**) * (max_node + 1));
     Ccl = (Sloped_Relation_SET***)malloc( sizeof(Sloped_Relation_SET**) * (max_node + 1) );
     for( int i = 0 ; i < (max_node + 1) ; i++ ){
@@ -74,105 +81,153 @@ void Heighted_graph::init_h_change_Ccl(void){
     }
 }
 
-bool Heighted_graph::check_soundness_2(void){
-    // Check initial sloped relations for self-loops
-    for( int n = 0 ; n < (max_node + 1) ; n++ ){
-        for( Sloped_relation* R : *Ccl[n][n] ){
-            if(! (R->has_downward_SCC())) {
+bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
+    if ((opts & USE_SCC_CHECK) != 0) {
+        return R->has_downward_SCC();
+    } else {
+        // Compute R composed with R if using the idempotent method
+        // or the transitive closure otherwise (i.e. using the standard method)
+        Sloped_relation R2 = 
+            ((opts & USE_IDEMPOTENCE) != 0)
+                ? *(R->compose(R))
+                : R->compute_transitive_closure();
+
+        // If we're using the idempotent method and the relation is not
+        // idempotent then trivially return true
+        if (((opts & USE_IDEMPOTENCE) != 0) && !(R2 == *R)) {
+            return true;
+        }
+
+        // Otherwise, check we have a self-loop in the relevant relation
+        Map<Int_pair,int>* slopes = R2.get_slopes();
+        /* In the worst case we have to iterate over all entries in the
+           transitive closure of R (quadratic in the number of heights in the domain),
+           but in practice this mightn't often be the case?
+        */
+        for( Map<Int_pair,int>::iterator it = slopes->begin(); it != slopes->end(); it++ ) {
+            Int_pair heights = it->first;
+            if (heights.first == heights.second && it->second == Downward) {
+                return true;
+            }
+        }
+        /* The alternative is to iterate over all heights h in the domain, and
+           use the find method to see if (h, h) is mapped.
+           So this would be h * log(h * h) = h * 2log(h).
+        */
+        // for( int h : *(HeightsOf.at(node)) ){
+        //     auto exists = slopes->find(Int_pair(h,h));
+        //     if( exists != slopes->end() && exists->second == Downward ){
+        //         return true;
+        //     }
+        // }
+        return false;
+    }
+}
+
+bool Heighted_graph::check_Ccl(int opts) {
+    for( int node : HNode ){
+        Sloped_Relation_SET* Ccl_nd = Ccl[node][node];
+        for( Sloped_relation* R : *Ccl_nd ){
+            if(!check_self_loop(R, node, opts)) {
                 return false;
             }
         }
     }
+    return true;
+}
 
-    // Now compute the SCC and check for self-loops on the fly
+bool Heighted_graph::check_soundness(int opts){
+
+    /* N.B. We cannot combine the fast-fail and minimality optimisations.
+            When applying the minimality optimisation, it can be that we replace
+            a sloped relation with a self-loop by one without a self-loop.
+            Therefore, if checking for self-loops on-the-fly, we would still
+            have to check every sloped relation anyway
+            This would thus obviate the minimality optimisation, whose point is
+            that we have a smaller number of sloped relations to check for
+            self-loops.
+     */ 
+    // if ((opts & FAIL_FAST) != 0) std::cout << "Fail Fast\n";
+    // if ((opts & USE_SCC_CHECK) != 0) std::cout << "Use SCC Check\n";
+    // if ((opts & USE_IDEMPOTENCE) != 0) std::cout << "Use Idempotence\n";
+    // if ((opts & USE_MINIMALITY) != 0) std::cout << "Use Minimality\n";
+
+    // If fail-fast, then need to check initial sloped relations for self-loops
+    if (((opts & FAIL_FAST) != 0) && ((opts & USE_MINIMALITY) == 0)) {
+        if (!check_Ccl(opts)) {
+            return false;
+        }
+    }
+
+    // Now compute the SCC
     bool done = false;
     while( !done ){
         done = true;
         for( int source = 0 ; source < (max_node + 1) ; source++ ){
         for( int middle = 0 ; middle < (max_node + 1) ; middle++ ){
         for( int sink = 0 ; sink < (max_node + 1) ; sink++ ){
+            // std::cout << source << ", " << middle << ", " << sink << "\n";
             for( Sloped_relation* P : *Ccl[source][middle] ){
                 if( P->size() == 0 ) continue;
                 for( Sloped_relation* Q : *Ccl[middle][sink] ){
+                    // std::cout << "doing a composition\n";
                     if( Q->size() == 0 ) continue;
                     Sloped_relation* R = P->compose(Q);
                     if( R->size() == 0 ) continue;
                     done = true;
-                    bool found = false;
+
+                    bool need_to_add = true;
                     for( Sloped_relation* S : *Ccl[source][sink] ){
-                        if( *S == *R ){
-                            found = true;
-                            delete R;
-                            break;
-                        }
-                    }
-                    if( !found ){
-                        done = false;
-                        if( source == sink ){
-                            if(! (R->has_downward_SCC())){
-                                delete R;
-                                return false;
+                        if ((opts & USE_MINIMALITY) != 0) {
+                            comparison result = R->compare(*S);
+                            if( result == less ){
+                                (Ccl[source][sink])->erase(S);
+                                break;
+                            }
+                            else if( result == greq ){
+                                need_to_add = false;
+                                break;
+                            }
+                        } else {
+                            if( *S == *R ){
+                                need_to_add = false;
+                                break;
                             }
                         }
-                        (Ccl[source][sink])->insert(R);
                     }
 
-
-
-
-                    // bool need_to_add = true;
-                    // for( Sloped_relation* R_p : *Ccl[source][sink] ){
-                    //     comparison result = R->compare(*R_p);
-                    //     if( result == less){
-                    //         (Ccl[source][sink])->erase(R_p);
-                    //         (Ccl[source][sink])->insert(R);
-                    //         done = false;
-                    //         need_to_add = false;
-                    //         break;
-                    //     }
-                    //     else if( result == greq ){
-                    //         need_to_add = false;
-                    //         break;
-                    //     }
-                    // }
-                    // if( need_to_add ){
-                    //     (Ccl[source][sink])->insert(R);
-                    //     done = false;
-                    // }
-
-
-
-                    
+                    if( need_to_add ){
+                        // If fail-fast, then check for self-loop if necessary
+                        if (((opts & FAIL_FAST) != 0) && ((opts & USE_MINIMALITY) == 0)) {
+                            if( source == sink ){
+                                if(! (check_self_loop(R, source, opts))){
+                                    delete R;
+                                    return false;
+                                }
+                            }
+                        }
+                        // Otherwise, not done with the fixed point computation
+                        done = false;
+                        // So add the newly computed sloped relation
+                        (Ccl[source][sink])->insert(R);
+                    } else {
+                        delete R;
+                    }
                 }
             }
         }
         }
         }
     }
-    return true;
-}
 
-bool Heighted_graph::check_soundness(void){
-    for( int node : HNode ){
-        bool found_loop = false;
-        Sloped_Relation_SET* Ccl_nd = Ccl[node][node];
-        for( Sloped_relation* P : *Ccl_nd ){
-            if( P->size() == 0 ) return false;
-            Sloped_relation R = P->compute_transitive_closure();
-            for( int h : *(HeightsOf.at(node)) ){
-                Map<Int_pair,int>* slopes = R.get_slopes();
-                auto exists = slopes->find(Int_pair(h,h));
-                if( exists == slopes->end() ) continue;
-                if( exists->second == Downward ){
-                    found_loop = true;
-                    break;
-                }
-            }
-            if( !found_loop ) {
-                return false;
-            }
+    // If not using fast-fail, then check for self-loops in the computed CCL
+    if ((opts & FAIL_FAST) == 0 || ((opts & USE_MINIMALITY) != 0)) {
+        // std::cout << "Checking for self-loops\n";
+        if (!check_Ccl(opts)) {
+            return false;
         }
     }
+
     return true;
 }
 

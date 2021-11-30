@@ -17,7 +17,16 @@ private:
     Sloped_relation***      h_change_;
     Sloped_Relation_SET***  Ccl;
 
+    bool check_self_loop(Sloped_relation *R, int node, int opts);
+    bool check_Ccl(int opts);
+
 public:
+
+    // Option flags
+    static const int FAIL_FAST;
+    static const int USE_SCC_CHECK;
+    static const int USE_IDEMPOTENCE;
+    static const int USE_MINIMALITY;
 
     Heighted_graph(void){}
 
@@ -32,9 +41,8 @@ public:
     int num_edges(void);
     int get_node_size(void);
     void set_node_size(int node_size);
-    void init_h_change_Ccl(void);
-    bool check_soundness_2(void);
-    bool check_soundness(void);
+    void init(void);
+    bool check_soundness(int opts);
     void clean(void);
     void print_Ccl(void);
 };

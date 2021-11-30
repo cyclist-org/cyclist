@@ -22,7 +22,7 @@ void parse_from_json(std::string &path, Heighted_graph &hg){
     std::cout << "Done! , Node size: " << hg.num_nodes() << " max node id: " << hg.get_node_size() << std::endl;
 
     //====================== parse edges
-    hg.init_h_change_Ccl();
+    hg.init();
     std::cout << "Parsing Edges: ";
     for( auto& element : graph["Edge"] ){
         int source = element[0][0];
@@ -39,23 +39,27 @@ void parse_from_json(std::string &path, Heighted_graph &hg){
 }
 
 int main(int argc, char** argv) {
-    std::string path = std::string("./data/");
     if(argc > 1){
+        std::string path = std::string("./data/");
         path = path + argv[1] + ".json";
+        int opts = 0;
+        if(const char* flags = std::getenv("FLAGS")) {
+            opts = atoi(flags);
+        }
+        Heighted_graph hg = Heighted_graph();
+        parse_from_json(path, hg);
+        bool result = hg.check_soundness(opts);
+        // hg.print_Ccl();
+        if( result ){
+            std::cout << "SOUND" << std::endl;
+        }
+        else {
+            std::cout << "UNSOUND" << std::endl;
+        }
+        hg.clean();
+        return !result;
     }
-    else{
-        path = path + "graph.json";
-    }
-    Heighted_graph hg = Heighted_graph();
-    parse_from_json(path, hg);
-    //hg.compute_Ccl();
-    bool result = hg.check_soundness_2();
-    if( result ){
-        std::cout << "SOUND" << std::endl;
-    }
-    else {
-        std::cout << "UNSOUND" << std::endl;
-    }
-    hg.clean();
-    return !result;
+
+    std::cout << "Provide test file name!\n";
+    return -1;
 }

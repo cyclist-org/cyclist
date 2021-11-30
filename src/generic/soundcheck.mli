@@ -17,6 +17,15 @@ val use_external : bool ref
 (** Flag to indicate whether trace condition check should be done by external
     C++ code. *)
 
+val fail_fast : unit -> unit
+(** Set fail_fast flag for external code checking trace condition *)
+val use_scc_check : unit -> unit
+(** Set use_scc_check flag for external code checking trace condition *)
+val use_idempotence : unit -> unit
+(** Set use_idempotence flag for external code checking trace condition *)
+val use_minimality : unit -> unit
+(** Set use_minimality flag for external code checking trace condition *)
+
 val mk_abs_node :
   Tags.t -> int list -> (Tagpairs.t * Tagpairs.t) list -> abstract_node
 (** Constructor for nodes. *)

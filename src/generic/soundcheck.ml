@@ -656,14 +656,34 @@ module RelationalCheck = struct
 
     external create_hgraph : unit -> unit = "create_hgraph"
     external destroy_hgraph : unit -> unit = "destroy_hgraph"
-    external init_h_change : unit -> unit = "init_h_change"
+    external init : unit -> unit = "init"
     external add_node : int -> unit = "add_node"
     external add_height : int -> int -> unit = "add_height"
     external add_edge : int -> int -> unit = "add_edge"
     external add_stay : int -> int -> int -> int -> unit = "add_stay"
     external add_decrease : int -> int -> int -> int -> unit = "add_decr"
-    external check_soundness : unit -> bool = "check_soundness_relational"
+    external check_soundness : int -> bool = "check_soundness_relational"
     external print_ccl : unit -> unit = "print_ccl"
+
+    (* Flags for applying different optimisations in the C++ code
+       These values MUST match the corresponding constants in the C++ code
+       Check heighted_graph.c
+    *)
+    let flag_fail_fast = 0b0001
+    let flag_use_scc_check = 0b0010
+    let flag_use_idempotence = 0b0100
+    let flag_use_minimality = 0b1000
+
+    let opts = ref 0
+  
+    let fail_fast () =
+      opts := !opts lor flag_fail_fast
+    let use_scc_check () =
+      opts := !opts lor flag_use_scc_check
+    let use_idempotence () =
+      opts := !opts lor flag_use_idempotence
+    let use_minimality () =
+      opts := !opts lor flag_use_minimality
 
     let check_proof p =
       let process_succ n (n', tps, prog) =
@@ -682,12 +702,12 @@ module RelationalCheck = struct
       debug (fun () -> "Checking soundness starts...") ;
       create_hgraph () ;
       Int.Map.iter (fun n _ -> add_node n) p ;
-      init_h_change () ;
+      init () ;
       Int.Map.iter process_node p ;
-      debug (fun () -> "Built height graph") ;
-      let retval = check_soundness () in
-      debug (fun () -> "Composition Closure:\n") ;
-      if !do_debug then print_ccl() ;
+      (* debug (fun () -> "Built height graph") ; *)
+      let retval = check_soundness !opts in
+      (* debug (fun () -> "Composition Closure:\n") ; *)
+      (* if !do_debug then print_ccl() ; *)
       destroy_hgraph () ;
       if retval then Stats.MC.accept () else Stats.MC.reject () ;
       debug (fun () ->
@@ -700,6 +720,13 @@ end
 
 let use_spot = ref false
 let use_external = ref false
+
+include (RelationalCheck.Ext : sig
+  val fail_fast : unit -> unit
+  val use_scc_check : unit -> unit
+  val use_idempotence : unit -> unit
+  val use_minimality : unit -> unit    
+end)
 
 module CheckCache = Hashtbl
 

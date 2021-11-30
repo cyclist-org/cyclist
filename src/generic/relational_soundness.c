@@ -25,10 +25,10 @@ extern "C" void destroy_hgraph() {
   CAMLreturn0;
 }
 
-extern "C" void init_h_change() {
+extern "C" void init() {
   CAMLparam0();
   assert(hg);
-  hg->init_h_change_Ccl();
+  hg->init();
   CAMLreturn0;
 }
 
@@ -87,13 +87,13 @@ extern "C" void print_ccl() {
   CAMLreturn0;
 }
 
-extern "C" value check_soundness_relational() {
-  CAMLparam0();
+extern "C" value check_soundness_relational(value opts_) {
+  CAMLparam1(opts_);
   CAMLlocal1(v_res);
 
   assert(hg);
-  // hg->compute_Ccl();
-  bool retval = (hg->check_soundness_2());
+  int opts = Int_val(opts_);
+  bool retval = (hg->check_soundness(opts));
 
   v_res = Val_bool(retval);
   CAMLreturn(v_res);
