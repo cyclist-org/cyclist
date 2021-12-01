@@ -2,6 +2,7 @@
 #include "sloped_relation.hpp"
 #include "types.c"
 
+#include <cassert>
 #include <iostream>
 #include <fstream>
 #include <set>
@@ -138,22 +139,30 @@ bool Heighted_graph::check_Ccl(int opts) {
 
 bool Heighted_graph::check_soundness(int opts){
 
-    /* N.B. We cannot combine the fast-fail and minimality optimisations.
-            When applying the minimality optimisation, it can be that we replace
-            a sloped relation with a self-loop by one without a self-loop.
-            Therefore, if checking for self-loops on-the-fly, we would still
-            have to check every sloped relation anyway
-            This would thus obviate the minimality optimisation, whose point is
-            that we have a smaller number of sloped relations to check for
-            self-loops.
-     */ 
     // if ((opts & FAIL_FAST) != 0) std::cout << "Fail Fast\n";
     // if ((opts & USE_SCC_CHECK) != 0) std::cout << "Use SCC Check\n";
     // if ((opts & USE_IDEMPOTENCE) != 0) std::cout << "Use Idempotence\n";
     // if ((opts & USE_MINIMALITY) != 0) std::cout << "Use Minimality\n";
 
+    // We cannot combine the idempotence and minimality optimisations.
+    assert(((opts & USE_IDEMPOTENCE) == 0) || ((opts & USE_MINIMALITY) == 0));
+
+    /* N.B. It is useless to combine the fast-fail and minimality optimisations.
+            The point of the minimality optimisation is to not have to check for
+            self-loops in all sloped relations. But when applying the minimality
+            optimisation, it can be that we replace a sloped relation with a
+            self-loop by one without a self-loop. Therefore, if checking for
+            self-loops on-the-fly, we would still end up having to check every
+            sloped relation anyway.
+
+            If both flags are set, then we ignore (unset) fast-fail
+     */
+    if ((opts & USE_MINIMALITY) != 0) {
+        opts &= ~FAIL_FAST;
+    }
+
     // If fail-fast, then need to check initial sloped relations for self-loops
-    if (((opts & FAIL_FAST) != 0) && ((opts & USE_MINIMALITY) == 0)) {
+    if ((opts & FAIL_FAST) != 0) {
         if (!check_Ccl(opts)) {
             return false;
         }
@@ -196,7 +205,7 @@ bool Heighted_graph::check_soundness(int opts){
 
                     if( need_to_add ){
                         // If fail-fast, then check for self-loop if necessary
-                        if (((opts & FAIL_FAST) != 0) && ((opts & USE_MINIMALITY) == 0)) {
+                        if ((opts & FAIL_FAST) != 0) {
                             if( source == sink ){
                                 if(! (check_self_loop(R, source, opts))){
                                     delete R;
@@ -219,7 +228,7 @@ bool Heighted_graph::check_soundness(int opts){
     }
 
     // If not using fast-fail, then check for self-loops in the computed CCL
-    if ((opts & FAIL_FAST) == 0 || ((opts & USE_MINIMALITY) != 0)) {
+    if ((opts & FAIL_FAST) == 0) {
         if (!check_Ccl(opts)) {
             return false;
         }

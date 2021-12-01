@@ -681,9 +681,17 @@ module RelationalCheck = struct
     let use_scc_check () =
       opts := !opts lor flag_use_scc_check
     let use_idempotence () =
-      opts := !opts lor flag_use_idempotence
+      if not (Int.equal (!opts land flag_use_minimality) 0) then
+        prerr_endline
+          "Cannot use both idempotence and minimality - ignoring idempotence!"
+      else
+       opts := !opts lor flag_use_idempotence
     let use_minimality () =
-      opts := !opts lor flag_use_minimality
+      if not (Int.equal (!opts land flag_use_idempotence) 0) then
+        prerr_endline
+          "Cannot use both minimality and idempotence - ignoring minimality!"
+      else
+        opts := !opts lor flag_use_minimality
 
     let check_proof p =
       let process_succ n (n', tps, prog) =
