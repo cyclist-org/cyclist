@@ -1,6 +1,18 @@
 TEST_EXE=./soundness
 
-all: soundness
+TIMEOUT := $(if $(TIMEOUT),$(TIMEOUT),2)
+
+define test_success
+	echo "TEST: $(1), FLAGS=$$FLAGS"
+	(timeout $(TIMEOUT) $(TEST_EXE) $(1); EXIT_CODE=$$?; if [ $$EXIT_CODE -eq 0 ]; then echo "TEST PASSED"; elif [ $$EXIT_CODE -eq 124 ]; then echo "TIMEOUT"; else echo "TEST NOT PASSED"; fi; exit 0)
+endef
+
+define test_failure
+	echo "TEST: $(1), FLAGS=$$FLAGS"
+	(timeout $(TIMEOUT) $(TEST_EXE) $(1); EXIT_CODE=$$?; if [ ! $$EXIT_CODE -eq 0 ] && [ ! $$EXIT_CODE -eq 124 ]; then echo "TEST PASSED"; elif [ $$EXIT_CODE -eq 124 ]; then echo "TIMEOUT"; else echo "TEST NOT PASSED"; fi; exit 0)
+endef
+
+all: soundness tests
 
 soundness: main.o sloped_relation.o heighted_graph.o
 	g++ -g -o soundness main.o sloped_relation.o heighted_graph.o
@@ -14,23 +26,51 @@ heighted_graph.o: ../heighted_graph.hpp ../heighted_graph.c ../sloped_relation.h
 sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
 	g++ -I ../ -L/opt/lib -g -c ../sloped_relation.c -o sloped_relation.o
 
-.PHONY: clean tests
-.SILENT: tests
+.PHONY: clean tests test-suite tests-no
+.SILENT: tests test-suite test_success test_failure tests-no-opts tests-ff tests-scc tests-min tests-idem tests-ff-scc tests-min-scc tests-ff-idem
 
 clean: 
 	rm -f ./*.o soundness
 
-tests: soundness
-	TEST="graph_1"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [   $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
-	TEST="graph_2"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [ ! $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
-	TEST="graph_3"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [   $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
-	TEST="graph_4"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [   $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
-	TEST="graph_5"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [   $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
-	TEST="graph_6"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [ ! $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
-	TEST="graph_7"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [ ! $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
-	TEST="graph_8"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [ ! $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
-	TEST="graph_8a"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [ ! $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
-	TEST="graph_8b"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [   $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
-	TEST="graph_9"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [ ! $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
-	TEST="graph_9a"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [ ! $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
-	TEST="graph_9b"; echo "TEST: $$TEST"; ($(TEST_EXE) $$TEST; if [ ! $$? -eq 0 ]; then echo "TEST PASSED"; else echo "TEST FAILED"; fi; exit 0)
+tests: tests-no-opts tests-ff tests-scc tests-min tests-idem tests-ff-scc tests-min-scc tests-ff-idem
+
+tests-no-opts:
+	echo "NO OPTIMSATIONS";
+	export FLAGS=0; make -s test-suite
+tests-ff:
+	echo "FAST-FAIL"
+	export FLAGS=1; make -s test-suite
+tests-scc:
+	echo "SCC LOOP CHECK"
+	export FLAGS=2; make -s test-suite
+tests-min:
+	echo "MINIMAL CCL"
+	export FLAGS=4; make -s test-suite
+tests-idem:
+	echo "IDEMPOTENT RELATIONS ONLY"
+	export FLAGS=8; make -s test-suite
+tests-ff-scc:
+	echo "FAST-FAIL, SCC LOOP CHECK"
+	export FLAGS=3; make -s test-suite
+tests-min-scc:
+	echo "MINIMAL CCL, SCC LOOP CHECK"
+	export FLAGS=6; make -s test-suite
+tests-ff-idem:
+	echo "FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
+	export FLAGS=9; make -s test-suite
+
+test-suite: soundness
+	$(call test_success, graph_1)
+	$(call test_failure, graph_2)
+	$(call test_success, graph_3)
+	$(call test_success, graph_4)
+	$(call test_success, graph_5)
+	$(call test_failure, graph_6)
+	$(call test_failure, graph_7)
+	$(call test_failure, graph_8)
+	$(call test_failure, graph_8a)
+	$(call test_success, graph_8b)
+	$(call test_failure, graph_9)
+	$(call test_failure, graph_9a)
+	$(call test_failure, graph_9b)
+	$(call test_success, graph_10)
