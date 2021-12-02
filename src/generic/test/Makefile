@@ -32,7 +32,7 @@ sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
 clean: 
 	rm -f ./*.o soundness
 
-tests: tests-no-opts tests-ff tests-scc tests-min tests-idem tests-ff-scc tests-min-scc tests-ff-idem
+tests: tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-scc tests-ff-idem tests-min-scc
 
 tests-no-opts:
 	echo "NO OPTIMSATIONS";
@@ -43,21 +43,21 @@ tests-ff:
 tests-scc:
 	echo "SCC LOOP CHECK"
 	export FLAGS=2; make -s test-suite
-tests-min:
-	echo "MINIMAL CCL"
-	export FLAGS=4; make -s test-suite
 tests-idem:
 	echo "IDEMPOTENT RELATIONS ONLY"
+	export FLAGS=4; make -s test-suite
+tests-min:
+	echo "MINIMAL CCL"
 	export FLAGS=8; make -s test-suite
 tests-ff-scc:
 	echo "FAST-FAIL, SCC LOOP CHECK"
 	export FLAGS=3; make -s test-suite
-tests-min-scc:
-	echo "MINIMAL CCL, SCC LOOP CHECK"
-	export FLAGS=6; make -s test-suite
 tests-ff-idem:
 	echo "FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=9; make -s test-suite
+	export FLAGS=5; make -s test-suite
+tests-min-scc:
+	echo "MINIMAL CCL, SCC LOOP CHECK"
+	export FLAGS=10; make -s test-suite
 
 test-suite: soundness
 	$(call test_success, graph_1)
