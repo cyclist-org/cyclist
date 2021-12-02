@@ -215,13 +215,13 @@ bool Heighted_graph::check_soundness(int opts){
                         comparisons++;
                         if ((opts & USE_MINIMALITY) != 0) {
                             comparison result = R->compare(*S);
-                            if( result == less ){
+                            if( result == lt ){
                                 ccl_replacements++;
                                 ccl_size--;
                                 (Ccl[source][sink])->erase(S);
                                 break;
                             }
-                            else if( result == greq ){
+                            else if( result == eq || result == gt ){
                                 need_to_add = false;
                                 break;
                             }
@@ -305,10 +305,6 @@ void Heighted_graph::print_statistics(void) {
     std::cout << "Sloped relations computed: " << compositions << std::endl;
     std::cout << "Sloped relations compared: " << comparisons << std::endl;
     std::cout << "Number of self-loop checks: " << loop_checks << std::endl;
-    // std::cout << "Time spent loop checking (ns): " << std::chrono::duration_cast<std::chrono::microseconds>(loop_check_time).count() << std::endl;
-    // std::chrono::duration<double, std::chrono::milliseconds> duration = loop_check_time;
-    // auto duration = 
-    //     std::chrono::duration_cast<std::chrono::milliseconds>(loop_check_time);
     std::cout << "Time spent loop checking (ms): " 
               << loop_check_time.count() << std::endl;
 }

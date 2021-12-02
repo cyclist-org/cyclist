@@ -268,31 +268,63 @@ void Sloped_relation::print_(void){
 }
 
 
-comparison Sloped_relation::compare(const Sloped_relation& lhs){
-    comparison result = initial;
-    for( auto pair : *(lhs.slope_map) ){
-        auto exists = (this->slope_map)->find(pair.first);
-        if( exists == (this->slope_map)->end() ){
-            if( result == initial ) result = less;
-            else if( result == greq ) return noncomp;
+comparison Sloped_relation::compare(const Sloped_relation& other){
+
+    // Remember: undefined < stay < decrease
+
+    /* First of all check whether this < other.
+     * this < other means both this <= other and this != other
+     * this <= other means that this(h1, h2) <= other(h1, h2) for all h1, h2
+     * So we go through each binding (h1, h2) in this->slope_map
+     * (i.e. for which this(h1, h2) > undefined) and check that a corresponding
+     * binding exists in other (i.e. other(h1, h2) > undefined), and also that
+     * then this(h1, h2) <= other(h1, h2).
+     * Note that for the bindings not in the map, we immediately have that
+     *      this(h1, h2) = undefined <= other(h1, h2)
+     */
+    bool all_leq = true;
+    bool found_lt = false;
+    for(auto my_binding : *(this->slope_map)) {
+        auto other_binding = (other.slope_map)->find(my_binding.first);
+        if (other_binding == (other.slope_map)->end()
+              || other_binding->second < my_binding.second) {
+            all_leq = false;
+            break;
         }
-        else if( exists->second >= pair.second ){
-            if( result == initial ) result = greq;
-            else if( result == less ) return noncomp;
-        }
-        else if( exists->second < pair.second ){
-            if( result == initial ) result = less;
-            else if( result == greq ) return noncomp;
+        if (my_binding.second < other_binding->second) {
+            found_lt = true;
         }
     }
-    for( auto pair : *(this->slope_map) ){
-        if( result == initial ) return greq;
-        auto exists = (lhs.slope_map)->find(pair.first);
-        if( exists == (this->slope_map)->end() ){
-            if( result == less) return noncomp; 
+
+    // Now, if all_leq is true then we know this <= other
+    if (all_leq) {
+        /* If all the bindings in this have a corresponding equal value in
+         * other (i.e. when found_lt is false), then this = other iff there are
+         * the same number of bindings in both slope maps
+         */
+        if (!found_lt && this->size() == other.size()) {
+            return eq;
+        /* Otherwise we have this != other, and so this < other */
+        } else {
+            return lt;
         }
     }
-    return result;
+
+    /*
+     * Now, we know that this != other and so we have to determine whether
+     * other <= this (in which case, since other != this, we have this > other).
+     * If this is not the case, then the only other possibility is that they are
+     * incomparable.
+     */
+    for(auto other_binding : *(other.slope_map)) {
+        auto my_binding = (this->slope_map)->find(other_binding.first);
+        if (my_binding == (this->slope_map)->end()
+              || my_binding->second < other_binding.second) {
+            return noncomp;
+        }
+    }
+
+    return gt;
 }
 
 
