@@ -16,9 +16,11 @@
 
 (package
  (name cyclist)
+ (synopsis "Cyclist is a framework for building cyclic theorem provers.")
  (depends
   (ocaml (and (>= 4.02.0) (< 4.11.0)))
-  (mparser (and (>= 1.2) (< 1.2.3)))
+  (stdlib-shims :build)
+  (mparser-pcre (>= 1.3))
   (hashcons (>= 1.0.1))
   (hashset (>= 1.0.0))
   (ocamlgraph (>= 1.8.7))))
