@@ -3,6 +3,7 @@
 #include "types.c"
 
 #include <cassert>
+#include <chrono>
 #include <iostream>
 #include <fstream>
 #include <set>
@@ -37,6 +38,7 @@ void Heighted_graph::add_edge(int source, int sink) {
         Sloped_relation* R = new Sloped_relation(new Map<int,Int_pair_SET*>(),new Map<int,Int_pair_SET*>(),new Map<Int_pair,int>());
         h_change_[source][sink] = R;
         (Ccl[source][sink])->insert(R);
+        ccl_size++;
     }
 }
 
@@ -70,6 +72,14 @@ int Heighted_graph::num_edges(void) {
 }
 
 void Heighted_graph::init(void){
+
+    ccl_size = 0;
+    ccl_replacements = 0;
+    compositions = 0;
+    comparisons = 0;
+    loop_checks = 0;
+    loop_check_time = std::chrono::duration<double, std::milli>::zero();
+
     h_change_ = (Sloped_relation***)malloc( sizeof(Sloped_relation**) * (max_node + 1));
     Ccl = (Sloped_Relation_SET***)malloc( sizeof(Sloped_Relation_SET**) * (max_node + 1) );
     for( int i = 0 ; i < (max_node + 1) ; i++ ){
@@ -83,8 +93,15 @@ void Heighted_graph::init(void){
 }
 
 bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
+
+
+    auto start = std::chrono::system_clock::now();
+    loop_checks++;
+
+    bool result = false;
+
     if ((opts & USE_SCC_CHECK) != 0) {
-        return R->has_downward_SCC();
+        result = R->has_downward_SCC();
     } else {
         // Compute R composed with R if using the idempotent method
         // or the transitive closure otherwise (i.e. using the standard method)
@@ -96,33 +113,42 @@ bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
         // If we're using the idempotent method and the relation is not
         // idempotent then trivially return true
         if (((opts & USE_IDEMPOTENCE) != 0) && !(R2 == *R)) {
-            return true;
-        }
+            result = true;
+            loop_checks--;
+        } else {
+            // Otherwise, check we have a self-loop in the relevant relation
+            Map<Int_pair,int>* slopes = R2.get_slopes();
 
-        // Otherwise, check we have a self-loop in the relevant relation
-        Map<Int_pair,int>* slopes = R2.get_slopes();
-        /* In the worst case we have to iterate over all entries in the
-           transitive closure of R (quadratic in the number of heights in the domain),
-           but in practice this mightn't often be the case?
-        */
-        for( Map<Int_pair,int>::iterator it = slopes->begin(); it != slopes->end(); it++ ) {
-            Int_pair heights = it->first;
-            if (heights.first == heights.second && it->second == Downward) {
-                return true;
+            /* In the worst case we have to iterate over all entries in the
+            transitive closure of R (quadratic in the number of heights in the domain),
+            but in practice this mightn't often be the case?
+            */
+            for( Map<Int_pair,int>::iterator it = slopes->begin(); it != slopes->end(); it++ ) {
+                Int_pair heights = it->first;
+                if (heights.first == heights.second && it->second == Downward) {
+                    result = true;
+                    break;
+                }
             }
+
+            /* The alternative is to iterate over all heights h in the domain, and
+            use the find method to see if (h, h) is mapped.
+            So this would be h * log(h * h) = h * 2log(h).
+            */
+            // for( int h : *(HeightsOf.at(node)) ){
+            //     auto exists = slopes->find(Int_pair(h,h));
+            //     if( exists != slopes->end() && exists->second == Downward ){
+            //         result true;
+            //         break;
+            //     }
+            // }
         }
-        /* The alternative is to iterate over all heights h in the domain, and
-           use the find method to see if (h, h) is mapped.
-           So this would be h * log(h * h) = h * 2log(h).
-        */
-        // for( int h : *(HeightsOf.at(node)) ){
-        //     auto exists = slopes->find(Int_pair(h,h));
-        //     if( exists != slopes->end() && exists->second == Downward ){
-        //         return true;
-        //     }
-        // }
-        return false;
     }
+
+    auto end = std::chrono::system_clock::now();
+    loop_check_time += end - start;
+
+    return result;
 }
 
 bool Heighted_graph::check_Ccl(int opts) {
@@ -180,14 +206,18 @@ bool Heighted_graph::check_soundness(int opts){
                 for( Sloped_relation* Q : *Ccl[middle][sink] ){
                     if( Q->size() == 0 ) continue;
                     Sloped_relation* R = P->compose(Q);
+                    compositions++;
                     if( R->size() == 0 ) continue;
                     done = true;
 
                     bool need_to_add = true;
                     for( Sloped_relation* S : *Ccl[source][sink] ){
+                        comparisons++;
                         if ((opts & USE_MINIMALITY) != 0) {
                             comparison result = R->compare(*S);
                             if( result == less ){
+                                ccl_replacements++;
+                                ccl_size--;
                                 (Ccl[source][sink])->erase(S);
                                 break;
                             }
@@ -217,6 +247,7 @@ bool Heighted_graph::check_soundness(int opts){
                         done = false;
                         // So add the newly computed sloped relation
                         (Ccl[source][sink])->insert(R);
+                        ccl_size++;
                     } else {
                         delete R;
                     }
@@ -266,4 +297,18 @@ void Heighted_graph::print_Ccl(void){
         }
     }
     }
+}
+
+void Heighted_graph::print_statistics(void) {
+    std::cout << "Final CCL size: " << ccl_size << std::endl;
+    std::cout << "CCL Replacements: " << ccl_replacements << std::endl;
+    std::cout << "Sloped relations computed: " << compositions << std::endl;
+    std::cout << "Sloped relations compared: " << comparisons << std::endl;
+    std::cout << "Number of self-loop checks: " << loop_checks << std::endl;
+    // std::cout << "Time spent loop checking (ns): " << std::chrono::duration_cast<std::chrono::microseconds>(loop_check_time).count() << std::endl;
+    // std::chrono::duration<double, std::chrono::milliseconds> duration = loop_check_time;
+    // auto duration = 
+    //     std::chrono::duration_cast<std::chrono::milliseconds>(loop_check_time);
+    std::cout << "Time spent loop checking (ms): " 
+              << loop_check_time.count() << std::endl;
 }

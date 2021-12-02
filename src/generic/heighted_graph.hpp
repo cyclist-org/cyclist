@@ -1,6 +1,7 @@
 #ifndef HEIGHTED_GRAPH_HH_
 #define HEIGHTED_GRAPH_HH_
 
+#include<chrono>
 #include <iostream>
 #include <fstream>
 #include <set>
@@ -16,6 +17,13 @@ private:
     Map<int,Int_SET*>       HeightsOf;
     Sloped_relation***      h_change_;
     Sloped_Relation_SET***  Ccl;
+
+    int                     ccl_size;
+    int                     ccl_replacements;
+    int                     compositions;
+    int                     comparisons;
+    int                     loop_checks;
+    std::chrono::duration<double, std::milli> loop_check_time;
 
     bool check_self_loop(Sloped_relation *R, int node, int opts);
     bool check_Ccl(int opts);
@@ -45,6 +53,7 @@ public:
     bool check_soundness(int opts);
     void clean(void);
     void print_Ccl(void);
+    void print_statistics(void);
 };
 
 #endif

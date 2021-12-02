@@ -87,6 +87,13 @@ extern "C" void print_ccl() {
   CAMLreturn0;
 }
 
+extern "C" void print_statistics() {
+  CAMLparam0();
+  assert(hg);
+  hg->print_statistics();
+  CAMLreturn0;
+}
+
 extern "C" value check_soundness_relational(value opts_) {
   CAMLparam1(opts_);
   CAMLlocal1(v_res);

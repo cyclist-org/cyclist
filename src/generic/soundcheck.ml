@@ -664,6 +664,7 @@ module RelationalCheck = struct
     external add_decrease : int -> int -> int -> int -> unit = "add_decr"
     external check_soundness : int -> bool = "check_soundness_relational"
     external print_ccl : unit -> unit = "print_ccl"
+    external print_stats : unit -> unit = "print_statistics"
 
     (* Flags for applying different optimisations in the C++ code
        These values MUST match the corresponding constants in the C++ code
@@ -716,6 +717,7 @@ module RelationalCheck = struct
       let retval = check_soundness !opts in
       (* debug (fun () -> "Composition Closure:\n") ; *)
       (* if !do_debug then print_ccl() ; *)
+      if !do_debug then print_stats ();
       destroy_hgraph () ;
       if retval then Stats.MC.accept () else Stats.MC.reject () ;
       debug (fun () ->
