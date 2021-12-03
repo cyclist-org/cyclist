@@ -9,7 +9,7 @@
 #include <spot/twa/bdddict.hh>
 
 typedef int Tag;
-#define NO_TAG 0
+#define NO_TAG -1
 
 typedef bdd Vertex;
 #define NO_VERTEX bddfalse

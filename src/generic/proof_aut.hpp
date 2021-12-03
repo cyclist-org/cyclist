@@ -13,7 +13,7 @@ public:
 
 	ProofState(const Vertex & v, const TagVector & ts) : vertex(v), tags(ts) {}
 
-    virtual int compare(const spot::state* other) const;
+	virtual int compare(const spot::state* other) const;
 	virtual size_t hash() const { return vertex.id(); }
 	virtual spot::state* clone() const { return new ProofState(vertex, tags); }
 };
