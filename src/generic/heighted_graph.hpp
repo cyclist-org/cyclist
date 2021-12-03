@@ -23,6 +23,8 @@ private:
     int                     compositions;
     int                     comparisons;
     int                     loop_checks;
+    std::chrono::duration<double, std::milli> compose_time;
+    std::chrono::duration<double, std::milli> compare_time;
     std::chrono::duration<double, std::milli> loop_check_time;
 
     bool check_self_loop(Sloped_relation *R, int node, int opts);

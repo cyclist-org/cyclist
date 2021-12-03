@@ -91,6 +91,8 @@ void Heighted_graph::init(void){
     compositions = 0;
     comparisons = 0;
     loop_checks = 0;
+    compose_time = std::chrono::duration<double, std::milli>::zero();
+    compare_time = std::chrono::duration<double, std::milli>::zero();
     loop_check_time = std::chrono::duration<double, std::milli>::zero();
 
     h_change_ = (Sloped_relation***)malloc( sizeof(Sloped_relation**) * (max_node + 1));
@@ -207,6 +209,9 @@ bool Heighted_graph::check_soundness(int opts){
         }
     }
 
+    std::chrono::time_point<std::chrono::system_clock> start;
+    std::chrono::time_point<std::chrono::system_clock> end;
+
     // Now compute the CCL
     bool done = false;
     while( !done ){
@@ -218,7 +223,10 @@ bool Heighted_graph::check_soundness(int opts){
                 if( P->size() == 0 ) continue;
                 for( Sloped_relation* Q : *Ccl[middle][sink] ){
                     if( Q->size() == 0 ) continue;
+                    start = std::chrono::system_clock::now();
                     Sloped_relation* R = P->compose(Q);
+                    end = std::chrono::system_clock::now();
+                    compose_time += (end - start);
                     compositions++;
                     if( R->size() == 0 ) continue;
                     done = true;
@@ -227,7 +235,9 @@ bool Heighted_graph::check_soundness(int opts){
                     for( Sloped_relation* S : *Ccl[source][sink] ){
                         comparisons++;
                         if ((opts & USE_MINIMALITY) != 0) {
+                            start = std::chrono::system_clock::now();
                             comparison result = R->compare(*S);
+                            end = std::chrono::system_clock::now();
                             if( result == lt ){
                                 ccl_replacements++;
                                 ccl_size--;
@@ -239,11 +249,15 @@ bool Heighted_graph::check_soundness(int opts){
                                 break;
                             }
                         } else {
-                            if( *S == *R ){
+                            start = std::chrono::system_clock::now();
+                            bool equal = (*S == *R);
+                            end = std::chrono::system_clock::now();
+                            if( equal ){
                                 need_to_add = false;
                                 break;
                             }
                         }
+                        compare_time += (end - start);
                     }
 
                     if( need_to_add ){
@@ -316,8 +330,12 @@ void Heighted_graph::print_statistics(void) {
     std::cout << "Final CCL size: " << ccl_size << std::endl;
     std::cout << "CCL Replacements: " << ccl_replacements << std::endl;
     std::cout << "Sloped relations computed: " << compositions << std::endl;
+    std::cout << "Time spent computing sloped relations (ms): "
+              << compose_time.count() << std::endl;
     std::cout << "Sloped relations compared: " << comparisons << std::endl;
+    std::cout << "Time spent comparing sloped relations (ms): "
+              << compare_time.count() << std::endl;
     std::cout << "Number of self-loop checks: " << loop_checks << std::endl;
-    std::cout << "Time spent loop checking (ms): " 
+    std::cout << "Time spent loop checking (ms): "
               << loop_check_time.count() << std::endl;
 }
