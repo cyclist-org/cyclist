@@ -328,75 +328,76 @@ comparison Sloped_relation::compare(const Sloped_relation& other){
 }
 
 
-void fill_order( int v, int* visited, std::stack<int>* s,int** g ,int n){
-    visited[v] = 1;
-    for(int i = 0; i < n; ++i)
-        if(g[v][i] != 2)
+void fill_order(int v, bool* visited, std::stack<int>* s, slope** g, int n){
+    visited[v] = true;
+    for(int i = 0; i <= n; ++i)
+        if(g[v][i] != Undef)
             if(!visited[i])
-                fill_order(i, visited, s,g,n);
+                fill_order(i, visited, s, g, n);
     s->push(v);
 }
 
 
-void find_scc(int v, int* visited, int** g,int n,bool* b){
-    visited[v] = 1;
-    for (int i = 0 ; i < n; ++i)
-        if(g[i][v] != 2 ){
-            if(g[v][i] == 1) *b = true;
-            if (visited[i] == 0)
-                find_scc(i, visited,g,n,b);
+bool find_scc(int v, bool* visited, slope** g, int n){
+    visited[v] = true;
+    bool found = false;
+    for (int i = 0 ; i <= n; ++i) {
+        if(g[i][v] != Undef) {
+            if (!visited[i]) {
+                if(g[i][v] == Downward) {
+                    return true;
+                }
+                if (find_scc(i, visited, g, n)) {
+                    found = true;
+                    break;
+                }
+            }
         }
+    }
+    return found;
 }
 
 bool Sloped_relation::has_downward_SCC(void){
-    int** g = (int**)malloc( (max_height + 1) * sizeof(int*));
-    int* visited = (int*)malloc((max_height + 1) * sizeof(int));
-    for( int i = 0 ; i < max_height + 1 ; i++ ){
-        g[i] = (int*)malloc((max_height + 1) * sizeof(int));
-        visited[i] = 0;
+    slope** g = (slope**)malloc( (max_height + 1) * sizeof(slope*));
+    bool* visited = (bool*)malloc((max_height + 1) * sizeof(bool));
+    for( int i = 0 ; i <= max_height; i++ ){
+        g[i] = (slope*)malloc((max_height + 1) * sizeof(slope));
+        visited[i] = false;
         for( int j = 0 ; j < max_height + 1 ; j++ ){
-            g[i][j] = 2;
+            g[i][j] = Undef;
         }
     }
 
     for( Pair<Int_pair,int> pair : *(this->slope_map) ){
-        g[(pair.first).first][(pair.first).second] = pair.second;
+        g[(pair.first).first][(pair.first).second] = static_cast<slope>(pair.second);
     }
     std::stack<int> s;
-    for(int i = min_height; i < max_height + 1; i++)
-        if(visited[i] == 0)
-            fill_order(i, visited, &s,g,max_height+1);
+    for(int i = min_height; i <= max_height; i++)
+        if(!visited[i])
+            fill_order(i, visited, &s, g, max_height);
 
-    for( int i = 0 ; i < max_height + 1; i++) {
-        visited[i] = 0;
+    for( int i = 0 ; i <= max_height; i++) {
+        visited[i] = false;
     }
-    bool down = false;
-    while (s.empty() == false){
+    bool found = false;
+    while (!s.empty() && !found){
         int v = s.top();
         s.pop();
-        if (visited[v] == 0){
-            find_scc(v, visited,g,max_height+1,&down);
-        }
-        if( down ){
-            for( int i = 0 ; i < max_height + 1 ; i++ ){
-                delete g[i];
+        if (!visited[v]){
+            if (g[v][v] == Downward) {
+                found = true;
+            } else {
+                found = find_scc(v, visited, g, max_height);
             }
-            delete g;
-            delete visited;
-            return true;
         }
     }
     
    
-    for( int i = 0 ; i < max_height + 1 ; i++ ){
+    for( int i = 0 ; i <= max_height ; i++ ){
         delete g[i];
     }
     delete g;
     delete visited;
 
-
-    return false;
+    return found;
 }
-
-
-//enum comparison {greq,less,noncomp,initial};

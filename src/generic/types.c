@@ -12,7 +12,11 @@
 #define Int_pair_SET            std::set<std::pair<int,int>>
 #define Sloped_Relation_SET     std::set<Sloped_relation*>
 
-enum slope {Downward = 1,Stay = 0};
+enum slope {
+  Undef = -1,
+  Stay = 0,
+  Downward = 1
+};
 
 /* Enumeration for comparing sloped relations */
 enum comparison { 
