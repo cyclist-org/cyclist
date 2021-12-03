@@ -240,7 +240,7 @@ bool operator== (const Sloped_relation& R, const Sloped_relation& L){
     }
     return true;
 }
-int Sloped_relation::size(void){
+int Sloped_relation::size(void) const{
     return slope_map->size();
 }
 
@@ -256,17 +256,23 @@ void Sloped_relation::clear(void){
     delete slope_map;
 }
 
-void Sloped_relation::print_(void){
-    std::cout << "--------------------------------------------" << std::endl;
-    std::cout << "Size of relation: " << this->size() << std::endl;
-    std::cout << "--------------------------------------------" << std::endl;
-    for( auto r : *(slope_map) ){
-        std::cout << "source height: " << r.first.first << std::endl;;
-        std::cout << "      dist:" << r.first.second << " slope:" << r.second << std::endl;
+std::ostream& operator<<(std::ostream& os, const Sloped_relation& r) {
+    os << "--------------------------------------------" << std::endl;
+    os << "Size of relation: " << r.size() << std::endl;
+    os << "--------------------------------------------" << std::endl;
+    for( auto binding : *(r.slope_map) ){
+        os << "\tsource height: " << binding.first.first;;
+        os << ", dest height: " << binding.first.second;
+        os << ", slope:" << binding.second;
+        os << std::endl;
     }
-    std::cout << "============================================" << std::endl;
+    os << "============================================" << std::endl;
+    return os;
 }
 
+void Sloped_relation::print_(void){
+    std::cout << *this;
+}
 
 comparison Sloped_relation::compare(const Sloped_relation& other){
 

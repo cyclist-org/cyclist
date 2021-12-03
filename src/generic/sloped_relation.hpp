@@ -4,6 +4,7 @@
 #include <set>
 #include <map>
 #include <stack>
+#include <ostream>
 
 #include "types.c"
 
@@ -28,7 +29,7 @@ public:
     Sloped_relation& operator=( const Sloped_relation& R );
     Sloped_relation& operator=( Sloped_relation&& R );
     ~Sloped_relation(void);
-    int size(void);
+    int size(void) const;
     void add( int h1, int h2, slope s );
     Int_pair_SET* get_forward_slopes( int h );
     Int_pair_SET* get_backward_slopes( int h );
@@ -43,6 +44,8 @@ public:
     comparison compare(const Sloped_relation& lhs);
 
     bool has_downward_SCC(void);
+
+    friend std::ostream& operator<<(std::ostream& os, const Sloped_relation& r);
 
 };
 #endif
