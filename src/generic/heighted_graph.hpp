@@ -36,6 +36,8 @@ public:
     static const int USE_IDEMPOTENCE;
     static const int USE_MINIMALITY;
 
+    static int parse_flags(const std::string flags);
+
     Heighted_graph(void){}
 
     // Methods for constructing the height graph

@@ -16,6 +16,19 @@ const int Heighted_graph::USE_SCC_CHECK   = 0b0010;
 const int Heighted_graph::USE_IDEMPOTENCE = 0b0100;
 const int Heighted_graph::USE_MINIMALITY  = 0b1000;
 
+int Heighted_graph::parse_flags(const std::string flags_s) {
+    int flags = 0;
+    for (char c : flags_s) {
+        switch (c) {
+            case 'f': flags |= FAIL_FAST; break;
+            case 's': flags |= USE_SCC_CHECK; break;
+            case 'i': flags |= USE_IDEMPOTENCE; break;
+            case 'm': flags |= USE_MINIMALITY; break;
+        }
+    }
+    return flags;
+}
+
 // Methods for constructing the height graph
 void Heighted_graph::add_node(int n) {
     if (HNode.find(n) == HNode.end()) {

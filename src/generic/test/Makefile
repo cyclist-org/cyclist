@@ -36,28 +36,28 @@ tests: tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-scc tests-
 
 tests-no-opts:
 	echo "NO OPTIMSATIONS";
-	export FLAGS=0; make -s test-suite
+	make -s test-suite
 tests-ff:
 	echo "FAST-FAIL"
-	export FLAGS=1; make -s test-suite
+	export FLAGS=f; make -s test-suite
 tests-scc:
 	echo "SCC LOOP CHECK"
-	export FLAGS=2; make -s test-suite
+	export FLAGS=s; make -s test-suite
 tests-idem:
 	echo "IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=4; make -s test-suite
+	export FLAGS=i; make -s test-suite
 tests-min:
 	echo "MINIMAL CCL"
-	export FLAGS=8; make -s test-suite
+	export FLAGS=m; make -s test-suite
 tests-ff-scc:
 	echo "FAST-FAIL, SCC LOOP CHECK"
-	export FLAGS=3; make -s test-suite
+	export FLAGS=fs; make -s test-suite
 tests-ff-idem:
 	echo "FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=5; make -s test-suite
+	export FLAGS=fi; make -s test-suite
 tests-min-scc:
 	echo "MINIMAL CCL, SCC LOOP CHECK"
-	export FLAGS=10; make -s test-suite
+	export FLAGS=ms; make -s test-suite
 
 test-suite: soundness
 	$(call test_success, graph_1)

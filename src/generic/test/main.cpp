@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
         path = path + argv[1] + ".json";
         int opts = 0;
         if(const char* flags = std::getenv("FLAGS")) {
-            opts = atoi(flags);
+            opts = Heighted_graph::parse_flags(flags);
         }
         Heighted_graph hg = Heighted_graph();
         parse_from_json(path, hg);
