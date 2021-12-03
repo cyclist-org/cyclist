@@ -18,13 +18,18 @@ private:
     Sloped_relation***      h_change_;
     Sloped_Relation_SET***  Ccl;
 
+    int                     ccl_initial_size;
     int                     ccl_size;
     int                     ccl_replacements;
+    int                     ccl_rejections;
     int                     compositions;
     int                     comparisons;
     int                     loop_checks;
+    int                     checked_size_sum;
     std::chrono::duration<double, std::milli> compose_time;
     std::chrono::duration<double, std::milli> compare_time;
+    std::chrono::duration<double, std::milli> insertion_time;
+    std::chrono::duration<double, std::milli> deletion_time;
     std::chrono::duration<double, std::milli> loop_check_time;
 
     bool check_self_loop(Sloped_relation *R, int node, int opts);

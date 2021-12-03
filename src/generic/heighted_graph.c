@@ -51,6 +51,7 @@ void Heighted_graph::add_edge(int source, int sink) {
         Sloped_relation* R = new Sloped_relation(new Map<int,Int_pair_SET*>(),new Map<int,Int_pair_SET*>(),new Map<Int_pair,int>());
         h_change_[source][sink] = R;
         (Ccl[source][sink])->insert(R);
+        ccl_initial_size++;
         ccl_size++;
     }
 }
@@ -86,13 +87,18 @@ int Heighted_graph::num_edges(void) {
 
 void Heighted_graph::init(void){
 
+    ccl_initial_size = 0;
     ccl_size = 0;
     ccl_replacements = 0;
+    ccl_rejections = 0;
     compositions = 0;
     comparisons = 0;
     loop_checks = 0;
+    checked_size_sum = 0;
     compose_time = std::chrono::duration<double, std::milli>::zero();
     compare_time = std::chrono::duration<double, std::milli>::zero();
+    insertion_time = std::chrono::duration<double, std::milli>::zero();
+    deletion_time = std::chrono::duration<double, std::milli>::zero();
     loop_check_time = std::chrono::duration<double, std::milli>::zero();
 
     h_change_ = (Sloped_relation***)malloc( sizeof(Sloped_relation**) * (max_node + 1));
@@ -112,6 +118,7 @@ bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
 
     auto start = std::chrono::system_clock::now();
     loop_checks++;
+    checked_size_sum += R->size();
 
     bool result = false;
 
@@ -130,6 +137,7 @@ bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
         if (((opts & USE_IDEMPOTENCE) != 0) && !(R2 == *R)) {
             result = true;
             loop_checks--;
+            checked_size_sum -= R->size();
         } else {
             // Otherwise, check we have a self-loop in the relevant relation
             Map<Int_pair,int>* slopes = R2.get_slopes();
@@ -238,6 +246,7 @@ bool Heighted_graph::check_soundness(int opts){
                             start = std::chrono::system_clock::now();
                             comparison result = R->compare(*S);
                             end = std::chrono::system_clock::now();
+                            compare_time += (end - start);
                             if( result == lt ){
                                 ccl_replacements++;
                                 ccl_size--;
@@ -245,6 +254,7 @@ bool Heighted_graph::check_soundness(int opts){
                                 break;
                             }
                             else if( result == eq || result == gt ){
+                                ccl_rejections++;
                                 need_to_add = false;
                                 break;
                             }
@@ -252,32 +262,42 @@ bool Heighted_graph::check_soundness(int opts){
                             start = std::chrono::system_clock::now();
                             bool equal = (*S == *R);
                             end = std::chrono::system_clock::now();
+                            compare_time += (end - start);
                             if( equal ){
+                                ccl_rejections++;
                                 need_to_add = false;
                                 break;
                             }
                         }
-                        compare_time += (end - start);
+                    }
+
+                    // If fail-fast, then check for self-loop if necessary
+                    bool fail_now = false;
+                    if (need_to_add 
+                            && ((opts & FAIL_FAST) != 0)
+                            && source == sink
+                            && !(check_self_loop(R, source, opts))) {
+                        fail_now = true;
+                        need_to_add = false;
                     }
 
                     if( need_to_add ){
-                        // If fail-fast, then check for self-loop if necessary
-                        if ((opts & FAIL_FAST) != 0) {
-                            if( source == sink ){
-                                if(! (check_self_loop(R, source, opts))){
-                                    delete R;
-                                    return false;
-                                }
-                            }
-                        }
                         // Otherwise, not done with the fixed point computation
                         done = false;
                         // So add the newly computed sloped relation
+                        start = std::chrono::system_clock::now();
                         (Ccl[source][sink])->insert(R);
+                        end = std::chrono::system_clock::now();
+                        insertion_time += (end - start);
                         ccl_size++;
                     } else {
+                        start = std::chrono::system_clock::now();
                         delete R;
+                        end = std::chrono::system_clock::now();
+                        deletion_time += (end - start);
                     }
+
+                    if (fail_now) { return false; }
                 }
             }
         }
@@ -327,7 +347,9 @@ void Heighted_graph::print_Ccl(void){
 }
 
 void Heighted_graph::print_statistics(void) {
+    std::cout << "Initial CCL size: " << ccl_initial_size << std::endl;
     std::cout << "Final CCL size: " << ccl_size << std::endl;
+    std::cout << "CCL Rejections: " << ccl_rejections << std::endl;
     std::cout << "CCL Replacements: " << ccl_replacements << std::endl;
     std::cout << "Sloped relations computed: " << compositions << std::endl;
     std::cout << "Time spent computing sloped relations (ms): "
@@ -335,7 +357,13 @@ void Heighted_graph::print_statistics(void) {
     std::cout << "Sloped relations compared: " << comparisons << std::endl;
     std::cout << "Time spent comparing sloped relations (ms): "
               << compare_time.count() << std::endl;
+    std::cout << "Time spent inserting sloped relations (ms): "
+              << insertion_time.count() << std::endl;
+    std::cout << "Time spent deleting sloped relations (ms): "
+              << deletion_time.count() << std::endl;
     std::cout << "Number of self-loop checks: " << loop_checks << std::endl;
     std::cout << "Time spent loop checking (ms): "
               << loop_check_time.count() << std::endl;
+    std::cout << "Average size of loop-checked sloped relations: "
+              << (checked_size_sum / loop_checks) << std::endl;
 }
