@@ -35,6 +35,10 @@ module Make (Prover : Prover.S) = struct
           , ": set both depths to <int>." )
         ; ("-spot", Arg.Set Soundcheck.use_spot, ": use the spot model checker to verify the cyclic trace condition")
         ; ("-ext", Arg.Set Soundcheck.use_external, ": use external C++ code to verify the cyclic trace condition")
+        ; ("-ff", Arg.Unit Soundcheck.fail_fast, ": use fast fail in external C++ code")
+        ; ("-scc", Arg.Unit Soundcheck.use_scc_check, ": use SCC check in external C++ code")
+        ; ("-idem", Arg.Unit Soundcheck.use_idempotence, ": use idempotency optimisation in external C++ code")
+        ; ("-min", Arg.Unit Soundcheck.use_minimality, ": use minimality optimisation in external C++ code")
         ; ("-p", Arg.Set show_proof, ": show proof")
         ; ("-d", Arg.Set do_debug, ": print debug messages")
         ; ("-s", Arg.Set Stats.do_statistics, ": print statistics")
@@ -45,7 +49,7 @@ module Make (Prover : Prover.S) = struct
             ^ string_of_int !timeout ) ] )
 
   let usage =
-    ref ("usage: " ^ Sys.argv.(0) ^ " [-p/d/s] [-l <file>] [-t/m/M/L <int>] [-spot|-ext]")
+    ref ("usage: " ^ Sys.argv.(0) ^ " [-p/d/s] [-l <file>] [-t/m/M/L <int>] [-spot|-ext [-ff][-scc][-idem][-min]]")
 
   let die msg spec_list usage =
     print_endline msg ;
