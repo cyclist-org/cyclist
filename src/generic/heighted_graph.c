@@ -151,7 +151,7 @@ bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
             // for( int h : *(HeightsOf.at(node)) ){
             //     auto exists = slopes->find(Int_pair(h,h));
             //     if( exists != slopes->end() && exists->second == Downward ){
-            //         result true;
+            //         result = true;
             //         break;
             //     }
             // }
