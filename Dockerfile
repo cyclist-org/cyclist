@@ -25,16 +25,13 @@ RUN (curl -s https://www.lrde.epita.fr/repo/debian.gpg | apt-key add -) \
 
 USER opam
 
-# 4.05 is the latest compiler version that we can build the Jane Street testbed on
-RUN  opam repo -a add ocaml.org https://opam.ocaml.org/ \
-  && opam update \
-  && opam install -y dune hashset hashcons pcre mparser ocamlgraph
-
 WORKDIR /home/opam
 
 RUN git clone https://github.com/ngorogiannis/cyclist.git \
   && cd cyclist \
   && eval `opam config env` \
+  && opam update \
+  && opam install -y --deps-only ./cyclist.opam \
   && dune build
 
 ENV PATH /home/opam/cyclist/_build/install/default/bin:$PATH
