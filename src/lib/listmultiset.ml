@@ -1,17 +1,10 @@
 module Make (T : Utilsigs.BasicType) = struct
   type elt = T.t
 
+  include Blist
   include Flist.Make (T)
 
-  let empty = []
-
-  let is_empty = function [] -> true | _ -> false
-
-  let singleton x = [x]
-
   let of_list l = Blist.fast_sort T.compare l
-
-  let to_list xs = xs
 
   let min_elt = Blist.hd
 
@@ -35,18 +28,6 @@ module Make (T : Utilsigs.BasicType) = struct
   let union_of_list l = Blist.fold_left union [] l
 
   let map f xs = of_list (Blist.map f xs)
-
-  let partition = Blist.partition
-
-  let find = Blist.find
-
-  let filter = Blist.filter
-
-  let exists = Blist.exists
-
-  let for_all = Blist.for_all
-
-  let iter = Blist.iter
 
   let rec mem x = function
     | [] -> false
@@ -121,6 +102,8 @@ module Make (T : Utilsigs.BasicType) = struct
 
   let map_to_list f xs = Blist.map f xs
 
+  let to_rev_seq xs = to_seq (rev xs)
+
   let weave = Blist.weave
 
   let rec find_map f = function
@@ -147,27 +130,15 @@ module Make (T : Utilsigs.BasicType) = struct
       | n when Stdlib.( < ) n 0 -> disjoint xs (y :: ys)
       | _ -> disjoint (x :: xs) ys )
 
-  let find_last_opt _ _ = assert false
-
-  let find_last _ _ = assert false
-
-  let find_first_opt _ _ = assert false
-
-  let find_first _ _ = assert false
-
-  let choose_opt _ = assert false
-
-  let max_elt_opt _ = assert false
-
-  let min_elt_opt _ = assert false
-
-  let of_seq _ = assert false
-
-  let add_seq _ _ = assert false
-
-  let to_seq _ = assert false
-
-  let to_seq_from _ _ = assert false
+  let find_last_opt _ _ = failwith "Not implemented!"
+  let find_last _ _ = failwith "Not implemented!"
+  let find_first_opt _ _ = failwith "Not implemented!"
+  let find_first _ _ = failwith "Not implemented!"
+  let choose_opt _ = failwith "Not implemented!"
+  let max_elt_opt _ = failwith "Not implemented!"
+  let min_elt_opt _ = failwith "Not implemented!"
+  let add_seq _ _ = failwith "Not implemented!"
+  let to_seq_from _ _ = failwith "Not implemented!"
 
   include Unification.MakeUnifier (struct
     type t = Flist.Make(T).t
