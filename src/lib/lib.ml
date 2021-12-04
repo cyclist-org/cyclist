@@ -1,4 +1,4 @@
-(* Exposed moodules *)
+(* Exposed modules *)
 module Blist        = Blist
 module Containers   = Containers
 module Fixpoint     = Fixpoint

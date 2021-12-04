@@ -1,5 +1,6 @@
 module Make (T : Utilsigs.BasicType) :
-  Utilsigs.OrderedContainer with type elt = T.t = struct
+  Utilsigs.OrderedContainer with type elt = T.t =
+struct
   module MSet = Listmultiset.Make (T)
   include MSet
   include Fixpoint.Make (MSet)

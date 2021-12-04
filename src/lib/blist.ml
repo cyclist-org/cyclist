@@ -1,7 +1,5 @@
 include List
 
-type 'a t = 'a list
-
 let foldl = fold_left
 
 let foldr = fold_right
@@ -27,8 +25,6 @@ let rec pp pp_sep pp_elem fmt = function
   | [h] -> Format.fprintf fmt "%a" pp_elem h
   | h :: t ->
       Format.fprintf fmt "%a%a%a" pp_elem h pp_sep () (pp pp_sep pp_elem) t
-
-let cons x xs = x :: xs
 
 let decons = function x :: xs -> (x, xs) | _ -> invalid_arg "decons"
 
@@ -67,12 +63,6 @@ let rec drop n l =
   | _ :: xs, _ -> drop (n - 1) xs
 
 let indexes xs = range 0 xs
-
-let rec find_map f = function
-  | [] -> None
-  | x :: xs -> ( match f x with None -> find_map f xs | y -> y )
-
-let find_opt p l = find_map (fun x -> if p x then Some x else None) l
 
 let find_index p l =
   let rec aux p n = function

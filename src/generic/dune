@@ -9,7 +9,7 @@
  (foreign_stubs
   (language c)
   (names proof proof_aut trace soundness)
-  (flags :standard -xc++ -std=c++1y (:include c_flags.sexp))
+  (flags :standard -xc++ -std=c++17 (:include c_flags.sexp))
   (include_dirs %{ocaml_where}/caml))
  (c_library_flags (:include c_library_flags.sexp) -lstdc++))
 
