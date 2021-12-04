@@ -11,7 +11,6 @@ USER root
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 RUN apt-get update && apt-get install -y --no-install-recommends \
       autoconf \
-      libpcre3-dev \
       m4 \
       pkg-config \
       software-properties-common \
