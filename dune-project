@@ -20,6 +20,7 @@
  (depends
   (ocaml (>= 4.08.0))
   (stdlib-shims :build)
+  (dune-configurator :build)
   (mparser-re (>= 1.3))
   (hashcons (>= 1.0.1))
   (hashset (>= 1.0.0))
