@@ -8,6 +8,8 @@
 #include <utility>
 #include "sloped_relation.hpp"
 #include "types.c"
+#include <vector>
+#include <thread>
 
 class Heighted_graph {
 private:
