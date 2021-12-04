@@ -8,6 +8,7 @@
 #include <fstream>
 #include <set>
 #include <utility>
+#include <thread>
 
 // N.B. These MUST match the corresponding constants in the OCaml code
 //      Look in soundcheck.ml
@@ -186,6 +187,13 @@ bool Heighted_graph::check_Ccl(int opts) {
     return true;
 }
 
+void delete_relations(std::vector<Sloped_relation*>* to_delete){
+    for (Sloped_relation* R : *to_delete){
+        delete R;
+    }
+}
+
+
 bool Heighted_graph::check_soundness(int opts){
 
     // if ((opts & FAIL_FAST) != 0) std::cout << "Fail Fast\n";
@@ -219,6 +227,8 @@ bool Heighted_graph::check_soundness(int opts){
 
     std::chrono::time_point<std::chrono::system_clock> start;
     std::chrono::time_point<std::chrono::system_clock> end;
+
+    std::vector<Sloped_relation*>* to_delete = new std::vector<Sloped_relation*>();
 
     // Now compute the CCL
     bool done = false;
@@ -291,10 +301,7 @@ bool Heighted_graph::check_soundness(int opts){
                         insertion_time += (end - start);
                         ccl_size++;
                     } else {
-                        start = std::chrono::system_clock::now();
-                        delete R;
-                        end = std::chrono::system_clock::now();
-                        deletion_time += (end - start);
+                        to_delete->push_back(R);                        
                     }
 
                     if (fail_now) { return false; }
@@ -311,6 +318,15 @@ bool Heighted_graph::check_soundness(int opts){
             return false;
         }
     }
+
+    // start = std::chrono::system_clock::now();
+    // delete_relations(to_delete);
+    // end = std::chrono::system_clock::now();
+    // deletion_time += (end - start);
+
+
+    std::thread t(delete_relations,to_delete);
+    t.detach();
 
     return true;
 }
