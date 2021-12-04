@@ -64,6 +64,11 @@ let rec drop n l =
 
 let indexes xs = range 0 xs
 
+(* This exists in OCaml's List module only from version 4.10 *)
+let rec find_map f = function
+  | [] -> None
+  | x :: xs -> ( match f x with None -> find_map f xs | y -> y )
+
 let find_index p l =
   let rec aux p n = function
     | [] -> raise Not_found
