@@ -33,8 +33,8 @@ let skip_brexp =
   char '(' >> skip_until ')' >> char ')' >> spaces |>> ignore <?> "skip_brexp"
 
 let skip_ident =
-  let rexp = MParser_PCRE.make_regexp "[a-zA-Z][_0-9a-zA-Z]*" in
-  MParser_PCRE.regexp rexp |>> ignore <?> "skip_ident"
+  let rexp = MParser_RE.make_regexp "[a-zA-Z][_0-9a-zA-Z]*" in
+  MParser_RE.regexp rexp |>> ignore <?> "skip_ident"
 
 let skip_types =
   let skip_ctr = parens (skip_ident >> spaces1 >> skip_ident) in

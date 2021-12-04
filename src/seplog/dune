@@ -1,7 +1,7 @@
 (library 
  (name seplog)
  (public_name cyclist.seplog)
- (libraries lib generic mparser-pcre)
+ (libraries lib generic mparser-re)
  (modules
    (:standard 
       \ slinit

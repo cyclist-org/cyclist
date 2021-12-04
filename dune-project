@@ -20,7 +20,7 @@
  (depends
   (ocaml (>= 4.08.0))
   (stdlib-shims :build)
-  (mparser-pcre (>= 1.3))
+  (mparser-re (>= 1.3))
   (hashcons (>= 1.0.1))
   (hashset (>= 1.0.0))
   (ocamlgraph (>= 1.8.7))))
