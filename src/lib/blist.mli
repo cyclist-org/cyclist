@@ -121,6 +121,13 @@ val unzip3 : ('a * 'b * 'c) t -> 'a t * 'b t * 'c t
 
 val zip3 : 'a t -> 'b t -> 'c t -> ('a * 'b * 'c) t
 
+(** {6 Searching lists} *)
+
+(* This exists in OCaml's List module only from version 4.10 *)
+val find_map : ('a -> 'b option) -> 'a t -> 'b option
+(** Optimisation for finding and converting at the same time. [find_map f l]
+will return [f x] for the first [x] in [l] such that [f x] is not [None], or [None]. *)
+
 (** {6 Combinatorial functions } *)
 
 val cartesian_product : 'a t -> 'b t -> ('a * 'b) t
