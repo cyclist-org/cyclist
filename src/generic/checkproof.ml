@@ -1,5 +1,5 @@
 open MParser
-open MParser_PCRE
+open   MParser_RE
 
 open Lib
 open   Parsers
@@ -25,13 +25,13 @@ module Node =
 *)
 
 let id_exp =
-  MParser_PCRE.make_regexp "[_0-9a-zA-Z'\\.\\-]+"
+  make_regexp "[_0-9a-zA-Z'\\.\\-]+"
 
 let parse_nodeid s =
-  (MParser_PCRE.regexp id_exp << spaces <?> "Identifier" |>> Node.mk) s
+  (regexp id_exp << spaces <?> "Identifier" |>> Node.mk) s
 
 let parse_tagid s =
-  (MParser_PCRE.regexp id_exp << spaces |>> Tags.mk) s
+  (regexp id_exp << spaces |>> Tags.mk) s
 
 let parse_tps s =
   ((sep_by

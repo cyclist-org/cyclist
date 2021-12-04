@@ -40,7 +40,7 @@ Seqtactics
 Prover
 MParser
 MParser_Char_Stream
-MParser_PCRE
+MParser_RE
 MParser_Utils
 Fun
 Hashcons

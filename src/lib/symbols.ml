@@ -1,5 +1,5 @@
 open MParser
-module Tokens = MParser_PCRE.Tokens
+module Tokens = MParser_RE.Tokens
 
 type symbol = {str: string; sep: string}
 

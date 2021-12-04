@@ -1,5 +1,5 @@
 open MParser
-open MParser_PCRE
+open MParser_RE
 
 let try_prefix p continue_with = look_ahead p >> continue_with p
 
