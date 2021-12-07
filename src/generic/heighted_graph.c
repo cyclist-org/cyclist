@@ -102,9 +102,8 @@ Heighted_graph::~Heighted_graph(void) {
     for(Int_SET* heights : HeightsOf){
         delete heights;
     }
-    clean_up(Ccl, h_change_, max_nodes, rejected);
-    // std::thread t(clean_up, Ccl, h_change_, max_nodes, rejected);
-    // t.detach();
+    std::thread t(clean_up, Ccl, h_change_, max_nodes, rejected);
+    t.detach();
 }
 
 // Methods for constructing the height graph
