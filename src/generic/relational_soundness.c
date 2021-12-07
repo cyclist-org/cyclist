@@ -10,25 +10,18 @@ extern "C" {
 
 static std::shared_ptr<Heighted_graph> hg = 0;
 
-extern "C" void create_hgraph() {
-  CAMLparam0();
+extern "C" void create_hgraph(value max_nodes_) {
+  CAMLparam1(max_nodes_);
   assert(hg == 0);
-  hg = std::make_shared<Heighted_graph>();
+  int max_nodes = Int_val(max_nodes_);
+  hg = std::make_shared<Heighted_graph>(max_nodes);
   CAMLreturn0;
 }
 
 extern "C" void destroy_hgraph() {
   CAMLparam0();
   assert(hg);
-  hg->clean();
   hg = 0;
-  CAMLreturn0;
-}
-
-extern "C" void init() {
-  CAMLparam0();
-  assert(hg);
-  hg->init();
   CAMLreturn0;
 }
 

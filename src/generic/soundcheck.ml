@@ -654,9 +654,8 @@ module RelationalCheck = struct
   (* Call out to C++ library for relational check *)
   module Ext = struct
 
-    external create_hgraph : unit -> unit = "create_hgraph"
+    external create_hgraph : int -> unit = "create_hgraph"
     external destroy_hgraph : unit -> unit = "destroy_hgraph"
-    external init : unit -> unit = "init"
     external add_node : int -> unit = "add_node"
     external add_height : int -> int -> unit = "add_height"
     external add_edge : int -> int -> unit = "add_edge"
@@ -718,9 +717,8 @@ module RelationalCheck = struct
         List.iter (process_succ n) succs ; in
       Stats.MC.call () ;
       debug (fun () -> "Checking soundness starts...") ;
-      create_hgraph () ;
+      create_hgraph (Lib.Int.Map.cardinal p) ;
       Int.Map.iter (fun n _ -> add_node n) p ;
-      init () ;
       Int.Map.iter process_node p ;
       (* debug (fun () -> "Built height graph") ; *)
       let retval = check_soundness !opts in

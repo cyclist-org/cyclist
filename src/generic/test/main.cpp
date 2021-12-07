@@ -5,24 +5,18 @@
 
 using json = nlohmann::json;
 
-void parse_from_json(std::string &path, Heighted_graph &hg){
-    std::ifstream graph_data(path.c_str());
-    json graph;
-    graph_data >> graph;
-
+void parse_from_json(json &graph, Heighted_graph &hg){
     //====================== parse nodes
     std::cout << "Parsing Nodes: ";
     for( auto& element : graph["Node"] ){
         int id = element[0];
-        if( id > hg.get_node_size() ) hg.set_node_size(id); 
         for( int h : element[1] ){
             hg.add_height(id, h);
         }
     }
-    std::cout << "Done! , Node size: " << hg.num_nodes() << " max node id: " << hg.get_node_size() << std::endl;
+    std::cout << "Done! , Node size: " << hg.num_nodes() << std::endl;
 
     //====================== parse edges
-    hg.init();
     std::cout << "Parsing Edges: ";
     for( auto& element : graph["Edge"] ){
         int source = element[0][0];
@@ -46,8 +40,14 @@ int main(int argc, char** argv) {
         if(const char* flags = std::getenv("FLAGS")) {
             opts = Heighted_graph::parse_flags(flags);
         }
-        Heighted_graph hg = Heighted_graph();
-        parse_from_json(path, hg);
+        // Get JSON data
+        std::ifstream graph_data(path.c_str());
+        json graph;
+        graph_data >> graph;
+
+        // Create heighted graph object
+        Heighted_graph hg = Heighted_graph(graph["Node"].size());
+        parse_from_json(graph, hg);
         bool result = hg.check_soundness(opts);
         // hg.print_Ccl();
         if( result ){
@@ -56,7 +56,6 @@ int main(int argc, char** argv) {
         else {
             std::cout << "UNSOUND" << std::endl;
         }
-        hg.clean();
         return !result;
     }
 

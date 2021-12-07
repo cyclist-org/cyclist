@@ -145,14 +145,14 @@ Map<Int_pair,int>* Sloped_relation::get_slopes(void){
 }
 
 
-Sloped_relation* Sloped_relation::compose(Sloped_relation* other){
+Sloped_relation* Sloped_relation::compose(Sloped_relation& other){
     Map<int,Int_pair_SET*>* composed_forward_map = new Map<int,Int_pair_SET*>();
     Map<int,Int_pair_SET*>* composed_backward_map = new Map<int,Int_pair_SET*>();
     Map<Int_pair,int>* composed_slope_map = new Map<Int_pair,int>();
     Int_pair_SET* slopes_h1_h2;
     Int_pair_SET* slopes_h2_h3;
     for( auto p1 : *(this->forward_map) ){
-        for( auto p2 : *(other->backward_map) ){
+        for( auto p2 : *(other.backward_map) ){
             slopes_h1_h2 = p1.second;
             slopes_h2_h3 = p2.second;
             int h1 = p1.first;
@@ -191,7 +191,7 @@ Sloped_relation* Sloped_relation::compose(Sloped_relation* other){
             }
         }
     }
-    int haha = this->max_height > other->max_height ? this->max_height : other->max_height;
+    int haha = this->max_height > other.max_height ? this->max_height : other.max_height;
     return new Sloped_relation(composed_forward_map,composed_backward_map,composed_slope_map,haha);
 }
 
@@ -200,23 +200,23 @@ Sloped_relation::~Sloped_relation(void){
 }
 
 
-Sloped_relation Sloped_relation::compute_transitive_closure(void){
-    Sloped_relation R(*this);
+Sloped_relation* Sloped_relation::compute_transitive_closure(void){
+    Sloped_relation* R = new Sloped_relation(*this);
     bool done = false;
     while( !done ){
-        Sloped_relation* R_prime = compose(&R);
+        Sloped_relation* R_prime = compose(*R);
         done = true;
-        Map<Int_pair,int>* R_slopes = R.get_slopes();
+        Map<Int_pair,int>* R_slopes = R->get_slopes();
         Map<Int_pair,int>* R_prime_slopes = R_prime->get_slopes();
         for( auto R_p : *(R_prime_slopes) ){
             auto exists = R_slopes->find(R_p.first);
             if( exists == R_slopes->end() ){
                 done = false;
-                R.add(R_p.first.first,R_p.first.second,(slope)R_p.second);
+                R->add(R_p.first.first,R_p.first.second,(slope)R_p.second);
             }
             else if( R_p.second < exists->second ){
                 done = false;
-                R.add(R_p.first.first,R_p.first.second,(slope)R_p.second);
+                R->add(R_p.first.first,R_p.first.second,(slope)R_p.second);
             }
         }
         delete R_prime;

@@ -7,8 +7,8 @@
 #include <iostream>
 #include <fstream>
 #include <set>
-#include <utility>
 #include <thread>
+#include <utility>
 
 // N.B. These MUST match the corresponding constants in the OCaml code
 //      Look in soundcheck.ml
@@ -30,44 +30,119 @@ int Heighted_graph::parse_flags(const std::string flags_s) {
     return flags;
 }
 
+// Construcor
+Heighted_graph::Heighted_graph(int max_nodes) {
+
+    assert(max_nodes >= 0);
+
+    this->max_nodes = max_nodes;
+    number_of_edges = 0;
+
+    ccl_initial_size = 0;
+    ccl_size = 0;
+    ccl_replacements = 0;
+    ccl_rejections = 0;
+    compositions = 0;
+    comparisons = 0;
+    loop_checks = 0;
+    checked_size_sum = 0;
+
+    compose_time = std::chrono::duration<double, std::milli>::zero();
+    compare_time = std::chrono::duration<double, std::milli>::zero();
+    insertion_time = std::chrono::duration<double, std::milli>::zero();
+    loop_check_time = std::chrono::duration<double, std::milli>::zero();
+
+    rejected = new Relation_LIST();
+
+    h_change_ =
+        (Sloped_relation***) malloc(sizeof(Sloped_relation**) * max_nodes);
+    Ccl =
+        (Sloped_Relation_SET***) malloc(sizeof(Sloped_Relation_SET**) * max_nodes);
+
+    for( int i = 0 ; i < max_nodes ; i++ ){
+        Ccl[i] = 
+            (Sloped_Relation_SET**) malloc(sizeof(Sloped_Relation_SET*) * max_nodes);
+        h_change_[i] =
+            (Sloped_relation**) malloc(sizeof(Sloped_relation*) * max_nodes);
+        for( int j = 0 ; j < max_nodes ; j++ ){
+            h_change_[i][j] = 0;
+            Ccl[i][j] = new Sloped_Relation_SET();
+        }
+    }
+
+}
+
+void clean_up(Sloped_Relation_SET*** ccl,
+              Sloped_relation*** h_change_,
+              int num_nodes,
+              Relation_LIST* rejected) {
+
+    for( int source = 0 ; source < num_nodes ; source++ ){
+        for( int sink = 0 ; sink < num_nodes ; sink++ ){
+            for( Sloped_relation* s : *(ccl[source][sink]) ){
+                delete s;
+            }
+            delete ccl[source][sink];
+        }
+        delete h_change_[source];
+        delete ccl[source];
+    }
+    delete ccl;
+    delete h_change_;
+
+    for (Sloped_relation* R : *rejected){
+        delete R;
+    }
+    delete rejected;
+
+}
+
+// Destructor
+Heighted_graph::~Heighted_graph(void) {
+    for(Int_SET* heights : HeightsOf){
+        delete heights;
+    }
+    clean_up(Ccl, h_change_, max_nodes, rejected);
+    // std::thread t(clean_up, Ccl, h_change_, max_nodes, rejected);
+    // t.detach();
+}
+
 // Methods for constructing the height graph
 void Heighted_graph::add_node(int n) {
-    if (HNode.find(n) == HNode.end()) {
-        if( n > max_node ) max_node = n;
-        HNode.insert(n);
-        HeightsOf.insert(Pair<int,Int_SET*>(n, new Int_SET()));
+    if (node_idxs.find(n) == node_idxs.end()) {
+        int next_idx = node_idxs.size();
+        assert(next_idx < max_nodes);
+        node_idxs[n] = next_idx;
+        HeightsOf.push_back(new Int_SET());
     }
 }
 
 void Heighted_graph::add_height(int n, int h) {
-    if (HeightsOf.count(n) == 0) {
-        add_node(n);
-    }
-    (HeightsOf.at(n))->insert(h);
+    add_node(n);
+    int idx = node_idxs.at(n);
+    HeightsOf[idx]->insert(h);
 }
 
 void Heighted_graph::add_edge(int source, int sink) {
-    if ( h_change_[source][sink] == 0 ) {
+    add_node(source);
+    add_node(sink);
+    int src_idx = node_idxs[source];
+    int sink_idx = node_idxs[sink];
+    if ( h_change_[src_idx][sink_idx] == 0 ) {
         number_of_edges++;
         Sloped_relation* R = new Sloped_relation(new Map<int,Int_pair_SET*>(),new Map<int,Int_pair_SET*>(),new Map<Int_pair,int>());
-        h_change_[source][sink] = R;
-        (Ccl[source][sink])->insert(R);
+        h_change_[src_idx][sink_idx] = R;
+        Ccl[src_idx][sink_idx]->insert(R);
         ccl_initial_size++;
         ccl_size++;
     }
 }
 
-int Heighted_graph::get_node_size(void){
-    return max_node+1;
-}
-
-void Heighted_graph::set_node_size(int node_size){
-    max_node = node_size;
-}
-
 void Heighted_graph::add_hchange(int source, int source_h, int sink, int sink_h, slope s) {
     add_edge(source, sink);
-    h_change_[source][sink]->add(source_h, sink_h, s);
+    int src_idx = node_idxs[source];
+    int sink_idx = node_idxs[sink];
+    h_change_[src_idx][sink_idx]->add(source_h, sink_h, s);
 }
 
 void Heighted_graph::add_stay(int source_node, int source_h, int sink_node, int sink_h) {
@@ -79,43 +154,14 @@ void Heighted_graph::add_decrease(int source_node, int source_h, int sink_node, 
 }
 
 int Heighted_graph::num_nodes(void) {
-    return HNode.size();
+    return node_idxs.size();
 }
 
 int Heighted_graph::num_edges(void) {
     return number_of_edges;
 }
 
-void Heighted_graph::init(void){
-
-    ccl_initial_size = 0;
-    ccl_size = 0;
-    ccl_replacements = 0;
-    ccl_rejections = 0;
-    compositions = 0;
-    comparisons = 0;
-    loop_checks = 0;
-    checked_size_sum = 0;
-    compose_time = std::chrono::duration<double, std::milli>::zero();
-    compare_time = std::chrono::duration<double, std::milli>::zero();
-    insertion_time = std::chrono::duration<double, std::milli>::zero();
-    deletion_time = std::chrono::duration<double, std::milli>::zero();
-    loop_check_time = std::chrono::duration<double, std::milli>::zero();
-
-    h_change_ = (Sloped_relation***)malloc( sizeof(Sloped_relation**) * (max_node + 1));
-    Ccl = (Sloped_Relation_SET***)malloc( sizeof(Sloped_Relation_SET**) * (max_node + 1) );
-    for( int i = 0 ; i < (max_node + 1) ; i++ ){
-        Ccl[i] = (Sloped_Relation_SET**)malloc( sizeof(Sloped_Relation_SET*) * (max_node + 1) );
-        h_change_[i] = (Sloped_relation**)malloc( sizeof(Sloped_relation*) * (max_node + 1));
-        for( int j = 0 ; j < (max_node + 1) ; j++ ){
-            h_change_[i][j] = 0;
-            Ccl[i][j] = new Sloped_Relation_SET();
-        }
-    }
-}
-
 bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
-
 
     auto start = std::chrono::system_clock::now();
     loop_checks++;
@@ -128,44 +174,42 @@ bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
     } else {
         // Compute R composed with R if using the idempotent method
         // or the transitive closure otherwise (i.e. using the standard method)
-        Sloped_relation R2 = 
+        Sloped_relation* R2 = 
             ((opts & USE_IDEMPOTENCE) != 0)
-                ? *(R->compose(R))
+                ? R->compose(*R)
                 : R->compute_transitive_closure();
 
         // If we're using the idempotent method and the relation is not
         // idempotent then trivially return true
-        if (((opts & USE_IDEMPOTENCE) != 0) && !(R2 == *R)) {
+        if (((opts & USE_IDEMPOTENCE) != 0) && !(*R2 == *R)) {
             result = true;
             loop_checks--;
             checked_size_sum -= R->size();
         } else {
             // Otherwise, check we have a self-loop in the relevant relation
-            Map<Int_pair,int>* slopes = R2.get_slopes();
+            Map<Int_pair,int>* slopes = R2->get_slopes();
 
-            /* In the worst case we have to iterate over all entries in the
-            transitive closure of R (quadratic in the number of heights in the domain),
-            but in practice this mightn't often be the case?
-            */
-            for( Map<Int_pair,int>::iterator it = slopes->begin(); it != slopes->end(); it++ ) {
-                Int_pair heights = it->first;
-                if (heights.first == heights.second && it->second == Downward) {
-                    result = true;
-                    break;
+            if (HeightsOf[node]->size() < slopes->size()) {
+                // Iterate over all heights h in the node, to see if (h, h) is
+                // mapped to the Downward slope.
+                for( int h : *(HeightsOf.at(node)) ){
+                    auto exists = slopes->find(Int_pair(h,h));
+                    if( exists != slopes->end() && exists->second == Downward ){
+                        result = true;
+                        break;
+                    }
+                }
+            } else {
+                // Only iterate over all entries in the transitive closure of R
+                // if this will be quicker then going over the heights
+                for(auto it = slopes->begin(); it != slopes->end(); it++) {
+                    Int_pair heights = it->first;
+                    if (heights.first == heights.second && it->second == Downward) {
+                        result = true;
+                        break;
+                    }
                 }
             }
-
-            /* The alternative is to iterate over all heights h in the domain, and
-            use the find method to see if (h, h) is mapped.
-            So this would be h * log(h * h) = h * 2log(h).
-            */
-            // for( int h : *(HeightsOf.at(node)) ){
-            //     auto exists = slopes->find(Int_pair(h,h));
-            //     if( exists != slopes->end() && exists->second == Downward ){
-            //         result = true;
-            //         break;
-            //     }
-            // }
         }
     }
 
@@ -176,7 +220,8 @@ bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
 }
 
 bool Heighted_graph::check_Ccl(int opts) {
-    for( int node : HNode ){
+    int num_nodes = this->num_nodes();
+    for( int node = 0; node < num_nodes; node++ ){
         Sloped_Relation_SET* Ccl_nd = Ccl[node][node];
         for( Sloped_relation* R : *Ccl_nd ){
             if(!check_self_loop(R, node, opts)) {
@@ -186,13 +231,6 @@ bool Heighted_graph::check_Ccl(int opts) {
     }
     return true;
 }
-
-void delete_relations(std::vector<Sloped_relation*>* to_delete){
-    for (Sloped_relation* R : *to_delete){
-        delete R;
-    }
-}
-
 
 bool Heighted_graph::check_soundness(int opts){
 
@@ -230,11 +268,13 @@ bool Heighted_graph::check_soundness(int opts){
     std::chrono::time_point<std::chrono::system_clock> start;
     std::chrono::time_point<std::chrono::system_clock> end;
 
-    std::vector<Sloped_relation*>* to_delete = new std::vector<Sloped_relation*>();
+    Relation_LIST* rejected = new Relation_LIST();
 
     // Now compute the CCL
     bool done = false;
+    int num_nodes = this->num_nodes();
     while( !done ){
+        // reset loop flag
         done = true;
         for( int source = 0 ; source < num_nodes ; source++ ){
         for( int sink = 0 ; sink < num_nodes ; sink++ ){
@@ -245,7 +285,7 @@ bool Heighted_graph::check_soundness(int opts){
                 for( Sloped_relation* Q : *Ccl[middle][sink] ){
                     if( Q->size() == 0 ) continue;
                     start = std::chrono::system_clock::now();
-                    Sloped_relation* R = P->compose(Q);
+                    Sloped_relation* R = P->compose(*Q);
                     end = std::chrono::system_clock::now();
                     compose_time += (end - start);
                     compositions++;
@@ -264,6 +304,7 @@ bool Heighted_graph::check_soundness(int opts){
                                 ccl_replacements++;
                                 ccl_size--;
                                 (Ccl[source][sink])->erase(S);
+                                rejected->push_back(S);
                                 break;
                             }
                             else if( result == eq || result == gt ){
@@ -304,7 +345,7 @@ bool Heighted_graph::check_soundness(int opts){
                         insertion_time += (end - start);
                         ccl_size++;
                     } else {
-                        to_delete->push_back(R);                        
+                        rejected->push_back(R);                        
                     }
 
                     if (fail_now) { return false; }
@@ -322,39 +363,13 @@ bool Heighted_graph::check_soundness(int opts){
         }
     }
 
-    // start = std::chrono::system_clock::now();
-    // delete_relations(to_delete);
-    // end = std::chrono::system_clock::now();
-    // deletion_time += (end - start);
-
-
-    std::thread t(delete_relations,to_delete);
-    t.detach();
-
     return true;
 }
 
-void Heighted_graph::clean(void){
-    for( int source = 0 ; source < (max_node + 1) ; source++ ){
-        for( int sink = 0 ; sink < (max_node + 1) ; sink++ ){
-            for( Sloped_relation* s : *(Ccl[source][sink]) ){
-                delete s;
-            }
-            delete Ccl[source][sink];
-        }
-        delete h_change_[source];
-        delete Ccl[source];
-    }
-    delete Ccl;
-    delete h_change_;
-    for( auto p : HeightsOf){
-        delete p.second;
-    }
-}
-
 void Heighted_graph::print_Ccl(void){
-    for( int source = 0 ; source < (max_node + 1) ; source++ ){
-    for( int sink = 0 ; sink < (max_node + 1)  ; sink++ ){
+    int num_nodes = this->num_nodes();
+    for( int source = 0 ; source < num_nodes ; source++ ){
+    for( int sink = 0 ; sink < num_nodes  ; sink++ ){
         for( auto S : *Ccl[source][sink]){
             std::cout << "<><><><><><><><><><><><><><><><><><><><><><><><><><><><><>" << std::endl;
             std::cout << source << " " << sink << std::endl;
@@ -378,8 +393,6 @@ void Heighted_graph::print_statistics(void) {
               << compare_time.count() << std::endl;
     std::cout << "Time spent inserting sloped relations (ms): "
               << insertion_time.count() << std::endl;
-    std::cout << "Time spent deleting sloped relations (ms): "
-              << deletion_time.count() << std::endl;
     std::cout << "Number of self-loop checks: " << loop_checks << std::endl;
     std::cout << "Time spent loop checking (ms): "
               << loop_check_time.count() << std::endl;

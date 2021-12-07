@@ -34,8 +34,8 @@ public:
     Int_pair_SET* get_forward_slopes( int h );
     Int_pair_SET* get_backward_slopes( int h );
     Map<Int_pair,int>* get_slopes(void);
-    Sloped_relation* compose( Sloped_relation* other );
-    Sloped_relation compute_transitive_closure(void);
+    Sloped_relation* compose( Sloped_relation& other );
+    Sloped_relation* compute_transitive_closure(void);
     void add_or_replace(int h1, int h2, slope s);
     void clear(void);
     friend bool operator< ( const Sloped_relation& R, const Sloped_relation& L );
