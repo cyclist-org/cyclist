@@ -203,6 +203,8 @@ bool Heighted_graph::check_soundness(int opts){
 
     // We cannot combine the idempotence and minimality optimisations.
     assert(((opts & USE_IDEMPOTENCE) == 0) || ((opts & USE_MINIMALITY) == 0));
+    // It doesn't make sense to combine the idempotence and the SCC-based loop check
+    assert(((opts & USE_IDEMPOTENCE) == 0) || ((opts & USE_SCC_CHECK) == 0));
 
     /* N.B. It is useless to combine the fast-fail and minimality optimisations.
             The point of the minimality optimisation is to not have to check for
