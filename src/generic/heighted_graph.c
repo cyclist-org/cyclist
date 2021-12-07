@@ -236,9 +236,10 @@ bool Heighted_graph::check_soundness(int opts){
     bool done = false;
     while( !done ){
         done = true;
-        for( int source = 0 ; source < (max_node + 1) ; source++ ){
-        for( int middle = 0 ; middle < (max_node + 1) ; middle++ ){
-        for( int sink = 0 ; sink < (max_node + 1) ; sink++ ){
+        for( int source = 0 ; source < num_nodes ; source++ ){
+        for( int sink = 0 ; sink < num_nodes ; sink++ ){
+        for( int middle = 0 ; middle < num_nodes ; middle++ ){
+
             for( Sloped_relation* P : *Ccl[source][middle] ){
                 if( P->size() == 0 ) continue;
                 for( Sloped_relation* Q : *Ccl[middle][sink] ){
