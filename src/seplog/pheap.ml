@@ -146,6 +146,12 @@ let subst_tags tagpairs ph  =
 let idents p =
     Tpreds.idents p.heap.inds
 
+let inconsistent p =
+    Heap.inconsistent p.heap
+
+let dest p = 
+    Heap.dest p.heap
+
 let parse ?(allow_tags = true) st = 
     Heap.parse ~allow_tags st
 

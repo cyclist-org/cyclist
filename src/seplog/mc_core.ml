@@ -807,9 +807,9 @@ struct
       let test_and_incr n rl =
         let body = Indrule.body rl in
         let inc =
-          if Heap.inconsistent body then 0
+          if Pheap.inconsistent body then 0
           else
-            let _, _, ptos, _ = Heap.dest body in
+            let _, _, ptos, _ = Pheap.dest body in
             Int.min 1 (Ptos.cardinal ptos)
         in
         n + inc
