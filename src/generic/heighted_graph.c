@@ -40,54 +40,68 @@ Heighted_graph::Heighted_graph(int max_nodes) {
 
     ccl_initial_size = 0;
     ccl_size = 0;
+    ccl_iterations = 0;
     ccl_replacements = 0;
     ccl_rejections = 0;
     compositions = 0;
     comparisons = 0;
     loop_checks = 0;
     checked_size_sum = 0;
+    total_size_sum = 0;
 
-    compose_time = std::chrono::duration<double, std::milli>::zero();
-    compare_time = std::chrono::duration<double, std::milli>::zero();
-    insertion_time = std::chrono::duration<double, std::milli>::zero();
-    loop_check_time = std::chrono::duration<double, std::milli>::zero();
+    compose_time = std::chrono::duration<double, DURATION>::zero();
+    compare_time = std::chrono::duration<double, DURATION>::zero();
+    need_to_add_compute_time = std::chrono::duration<double, DURATION>::zero();
+    insertion_time = std::chrono::duration<double, DURATION>::zero();
+    loop_check_time = std::chrono::duration<double, DURATION>::zero();
 
     rejected = new Relation_LIST();
 
     h_change_ =
         (Sloped_relation***) malloc(sizeof(Sloped_relation**) * max_nodes);
-    Ccl =
-        (Sloped_Relation_SET***) malloc(sizeof(Sloped_Relation_SET**) * max_nodes);
+    Ccl = (Relation_LIST***) malloc(sizeof(Relation_LIST**) * max_nodes);
+    ccl_counts = (Int_pair****) malloc(sizeof(Int_pair***) * max_nodes);
 
-    for( int i = 0 ; i < max_nodes ; i++ ){
-        Ccl[i] = 
-            (Sloped_Relation_SET**) malloc(sizeof(Sloped_Relation_SET*) * max_nodes);
+    for(int i = 0; i < max_nodes; i++) {
+        Ccl[i] = (Relation_LIST**) malloc(sizeof(Relation_LIST*) * max_nodes);
+        ccl_counts[i] = (Int_pair***) malloc(sizeof(Int_pair**) * max_nodes);
         h_change_[i] =
             (Sloped_relation**) malloc(sizeof(Sloped_relation*) * max_nodes);
-        for( int j = 0 ; j < max_nodes ; j++ ){
+        for (int j = 0; j < max_nodes; j++) {
             h_change_[i][j] = 0;
-            Ccl[i][j] = new Sloped_Relation_SET();
+            Ccl[i][j] = new Relation_LIST();
+            ccl_counts[i][j] = (Int_pair**) malloc(sizeof(Int_pair*) * max_nodes);
+            for (int k = 0; k < max_nodes; k++) {
+                ccl_counts[i][j][k] = new Int_pair();
+            }
         }
     }
 
 }
 
-void clean_up(Sloped_Relation_SET*** ccl,
+void clean_up(Relation_LIST*** ccl,
               Sloped_relation*** h_change_,
+              Int_pair**** ccl_counts,
               int num_nodes,
               Relation_LIST* rejected) {
 
-    for( int source = 0 ; source < num_nodes ; source++ ){
-        for( int sink = 0 ; sink < num_nodes ; sink++ ){
-            for( Sloped_relation* s : *(ccl[source][sink]) ){
+    for (int source = 0; source < num_nodes; source++) {
+        for (int sink = 0; sink < num_nodes; sink++) {
+            for (Sloped_relation* s : *(ccl[source][sink])) {
                 delete s;
             }
             delete ccl[source][sink];
+            for (int middle = 0; middle < num_nodes; middle++) {
+                delete ccl_counts[source][sink][middle];
+            }
+            delete ccl_counts[source][sink];
         }
         delete h_change_[source];
         delete ccl[source];
+        delete ccl_counts[source];
     }
     delete ccl;
+    delete ccl_counts;
     delete h_change_;
 
     for (Sloped_relation* R : *rejected){
@@ -102,7 +116,7 @@ Heighted_graph::~Heighted_graph(void) {
     for(Int_SET* heights : HeightsOf){
         delete heights;
     }
-    std::thread t(clean_up, Ccl, h_change_, max_nodes, rejected);
+    std::thread t(clean_up, Ccl, h_change_, ccl_counts, max_nodes, rejected);
     t.detach();
 }
 
@@ -131,7 +145,7 @@ void Heighted_graph::add_edge(int source, int sink) {
         number_of_edges++;
         Sloped_relation* R = new Sloped_relation(new Map<int,Int_pair_SET*>(),new Map<int,Int_pair_SET*>(),new Map<Int_pair,int>());
         h_change_[src_idx][sink_idx] = R;
-        Ccl[src_idx][sink_idx]->insert(R);
+        Ccl[src_idx][sink_idx]->push_back(R);
         ccl_initial_size++;
         ccl_size++;
     }
@@ -221,7 +235,7 @@ bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
 bool Heighted_graph::check_Ccl(int opts) {
     int num_nodes = this->num_nodes();
     for( int node = 0; node < num_nodes; node++ ){
-        Sloped_Relation_SET* Ccl_nd = Ccl[node][node];
+        Relation_LIST* Ccl_nd = Ccl[node][node];
         for( Sloped_relation* R : *Ccl_nd ){
             if(!check_self_loop(R, node, opts)) {
                 return false;
@@ -269,44 +283,83 @@ bool Heighted_graph::check_soundness(int opts){
 
     Relation_LIST* rejected = new Relation_LIST();
 
+    int num_nodes = this->num_nodes();
+
     // Now compute the CCL
     bool done = false;
-    int num_nodes = this->num_nodes();
-    while( !done ){
+    while (!done) {
+        ccl_iterations++;
         // reset loop flag
         done = true;
-        for( int source = 0 ; source < num_nodes ; source++ ){
-        for( int sink = 0 ; sink < num_nodes ; sink++ ){
-        for( int middle = 0 ; middle < num_nodes ; middle++ ){
+        for (int source = 0; source < num_nodes; source++) {
+        for (int sink = 0; sink < num_nodes; sink++) {
+        for (int middle = 0; middle < num_nodes; middle++) {
 
-            for( Sloped_relation* P : *Ccl[source][middle] ){
-                if( P->size() == 0 ) continue;
-                for( Sloped_relation* Q : *Ccl[middle][sink] ){
-                    if( Q->size() == 0 ) continue;
+            int left_count = 0;
+            for (
+                auto left = Ccl[source][middle]->begin();
+                left != Ccl[source][middle]->end();
+                left++
+            ) {
+                left_count++;
+                Sloped_relation* P = *left;
+                if (P->size() == 0) continue;
+                int right_count = 0;
+                for (
+                    auto right = Ccl[middle][sink]->begin();
+                    right != Ccl[middle][sink]->end();
+                    right++
+                ) {
+                    right_count++;
+                    if (left_count <= ccl_counts[source][sink][middle]->first
+                          && right_count <= ccl_counts[source][sink][middle]->second)
+                    {
+                        continue;
+                    } 
+                    Sloped_relation* Q = *right;
+                    if (Q->size() == 0) continue;
                     start = std::chrono::system_clock::now();
                     Sloped_relation* R = P->compose(*Q);
                     end = std::chrono::system_clock::now();
                     compose_time += (end - start);
                     compositions++;
-                    if( R->size() == 0 ) continue;
+                    total_size_sum += R->size();
+                    if (R->size() == 0) continue;
                     done = true;
 
                     bool need_to_add = true;
-                    for( Sloped_relation* S : *Ccl[source][sink] ){
+                    int outer_count = 0;
+                    auto loop_start = std::chrono::system_clock::now();
+                    for (
+                        auto outer = Ccl[source][sink]->begin();
+                        outer != Ccl[source][sink]->end();
+                        outer++
+                    ) {
+                        Sloped_relation* S = *outer;
                         comparisons++;
                         if ((opts & USE_MINIMALITY) != 0) {
                             start = std::chrono::system_clock::now();
                             comparison result = R->compare(*S);
                             end = std::chrono::system_clock::now();
                             compare_time += (end - start);
-                            if( result == lt ){
+                            if (result == lt) {
                                 ccl_replacements++;
                                 ccl_size--;
-                                (Ccl[source][sink])->erase(S);
+                                auto to_delete = outer--;
+                                if (to_delete == left) left--;
+                                if (to_delete == right) right--;
+                                // Update CCL counts if we are removing a relation in the "processed" portion
+                                for (int node = 0; node < num_nodes; node++) {
+                                    if (outer_count < ccl_counts[source][node][sink]->first)
+                                        ccl_counts[source][node][sink]->first--;
+                                    if (outer_count < ccl_counts[node][sink][source]->second)
+                                        ccl_counts[node][sink][source]->second--;
+                                }
+                                (Ccl[source][sink])->erase(to_delete);
                                 rejected->push_back(S);
                                 break;
                             }
-                            else if( result == eq || result == gt ){
+                            else if (result == eq || result == gt) {
                                 ccl_rejections++;
                                 need_to_add = false;
                                 break;
@@ -316,13 +369,16 @@ bool Heighted_graph::check_soundness(int opts){
                             bool equal = (*S == *R);
                             end = std::chrono::system_clock::now();
                             compare_time += (end - start);
-                            if( equal ){
+                            if (equal) {
                                 ccl_rejections++;
                                 need_to_add = false;
                                 break;
                             }
                         }
+                        outer_count++;
                     }
+                    auto loop_end = std::chrono::system_clock::now();
+                    need_to_add_compute_time += (loop_end - loop_start);
 
                     // If fail-fast, then check for self-loop if necessary
                     bool fail_now = false;
@@ -334,12 +390,12 @@ bool Heighted_graph::check_soundness(int opts){
                         need_to_add = false;
                     }
 
-                    if( need_to_add ){
+                    if (need_to_add) {
                         // Otherwise, not done with the fixed point computation
                         done = false;
                         // So add the newly computed sloped relation
                         start = std::chrono::system_clock::now();
-                        (Ccl[source][sink])->insert(R);
+                        (Ccl[source][sink])->push_back(R);
                         end = std::chrono::system_clock::now();
                         insertion_time += (end - start);
                         ccl_size++;
@@ -350,6 +406,11 @@ bool Heighted_graph::check_soundness(int opts){
                     if (fail_now) { return false; }
                 }
             }
+
+            // Update CCL counts
+            ccl_counts[source][sink][middle]->first = Ccl[source][middle]->size();
+            ccl_counts[source][sink][middle]->second = Ccl[middle][sink]->size();
+
         }
         }
         }
@@ -382,13 +443,16 @@ void Heighted_graph::print_Ccl(void){
 void Heighted_graph::print_statistics(void) {
     std::cout << "Initial CCL size: " << ccl_initial_size << std::endl;
     std::cout << "Final CCL size: " << ccl_size << std::endl;
+    std::cout << "Number of iterations to compute CCL: " << ccl_iterations << std::endl;
     std::cout << "CCL Rejections: " << ccl_rejections << std::endl;
     std::cout << "CCL Replacements: " << ccl_replacements << std::endl;
     std::cout << "Sloped relations computed: " << compositions << std::endl;
     std::cout << "Time spent computing sloped relations (ms): "
               << compose_time.count() << std::endl;
     std::cout << "Sloped relations compared: " << comparisons << std::endl;
-    std::cout << "Time spent comparing sloped relations (ms): "
+    std::cout << "Time spent computing \"need to add\" (ms): "
+              << need_to_add_compute_time.count() << std::endl;
+    std::cout << "(of which) time spent comparing sloped relations (ms): "
               << compare_time.count() << std::endl;
     std::cout << "Time spent inserting sloped relations (ms): "
               << insertion_time.count() << std::endl;
@@ -396,5 +460,9 @@ void Heighted_graph::print_statistics(void) {
     std::cout << "Time spent loop checking (ms): "
               << loop_check_time.count() << std::endl;
     std::cout << "Average size of loop-checked sloped relations: "
-              << (checked_size_sum / loop_checks) << std::endl;
+              << ((loop_checks == 0) ? 0 : (checked_size_sum / loop_checks))
+              << std::endl;
+    std::cout << "Average size of all computed sloped relations: "
+              << ((compositions == 0) ? 0 : (total_size_sum / compositions))
+              << std::endl;
 }
