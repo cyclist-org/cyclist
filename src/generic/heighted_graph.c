@@ -325,7 +325,6 @@ bool Heighted_graph::check_soundness(int opts){
                     compositions++;
                     total_size_sum += R->size();
                     if (R->size() == 0) continue;
-                    done = true;
 
                     bool need_to_add = true;
                     int outer_count = 0;
