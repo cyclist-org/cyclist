@@ -7,7 +7,48 @@
 #include "types.c"
 
 
+void Sloped_relation::initialize(void){
+    if( initialized ) return;
+    for( int i = 0 ; i < a ; i++ ){
+        for( int j = 0 ; j < b ; j++ ){
+            if( repr_matrix[i][j] != Undef ){
+                auto exists = forward_map->find(i);
+                if( exists == forward_map->end() ){
+                    forward_map->insert(Pair<int,Int_pair_SET*>(i,new Int_pair_SET()));
+                }
+                (forward_map->at(i))->insert(Int_pair(j,(int)repr_matrix[i][j]));
+                exists = backward_map->find(j);
+                 if( exists == backward_map->end() ){
+                    backward_map->insert(Pair<int,Int_pair_SET*>(j,new Int_pair_SET()));
+                }
+                (backward_map->at(j))->insert(Int_pair(i,(int)repr_matrix[i][j]));
+                slope_map->insert(Pair<Int_pair,int>(Int_pair(i,j),(int)repr_matrix[i][j]));
+            }
+        }
+        delete repr_matrix[i];
+    }
+    delete repr_matrix;
+    initialized = true;
+    return;
+}
 
+
+Sloped_relation::Sloped_relation(int max_source_height, int max_dest_height){
+    this->a = max_source_height+1;
+    this->b = max_dest_height+1;
+
+    repr_matrix = (int**)malloc(sizeof(int*) * a);
+    for( int i = 0 ; i < a ; i++ ){
+        repr_matrix[i] = (int*)malloc(sizeof(int) * b);
+        for( int j = 0 ; j < b ; j++ ){
+            repr_matrix[i][j] = Undef;
+        }
+    }
+
+    this->forward_map = new Map<int,Int_pair_SET*>();
+    this->backward_map = new Map<int,Int_pair_SET*>();
+    this->slope_map = new Map<Int_pair,int>();
+}
 
 Sloped_relation::Sloped_relation( const Sloped_relation& R){
     this->forward_map = new Map<int,Int_pair_SET*>();
@@ -15,6 +56,7 @@ Sloped_relation::Sloped_relation( const Sloped_relation& R){
     this->slope_map = new Map<Int_pair,int>();
     this->max_height = R.max_height;
     this->min_height = R.min_height;
+    this->initialized = true;
     for( auto pair : *(R.forward_map) ){
         (this->forward_map)->insert(Pair<int,Int_pair_SET*>(pair.first,new Int_pair_SET(*(pair.second))));
     }
@@ -32,6 +74,8 @@ Sloped_relation::Sloped_relation( Sloped_relation&& R){
     this->slope_map = R.slope_map;
     this->max_height = R.max_height;
     this->min_height = R.min_height;
+    this->initialized = true;
+
     R.forward_map = nullptr;
     R.backward_map = nullptr;
     R.slope_map = nullptr;
@@ -79,8 +123,13 @@ void Sloped_relation::add(int h1, int h2, slope s) {
     if( min_height > h1) min_height = h1;
     if( min_height > h2) min_height = h2;
 
-
-    
+    // std::cout << h1 << " " << h2 << std::endl;
+    if( !initialized ){
+        if( repr_matrix[h1][h2] < s){
+            repr_matrix[h1][h2] = s;
+        }
+    } 
+    else{
     // Add forward mapping
     auto exists_h1 = forward_map->find(h1);
     if( exists_h1 == forward_map->end() ){
@@ -121,6 +170,7 @@ void Sloped_relation::add(int h1, int h2, slope s) {
     // Don't overwrite an existing Downward mapping with a Stay
     else if( s == Downward || slope_map->at(p3) != Downward ){
         slope_map->at(p3) = s;
+    }
     }
 }
   
@@ -240,6 +290,7 @@ bool operator== (const Sloped_relation& R, const Sloped_relation& L){
     }
     return true;
 }
+
 int Sloped_relation::size(void) const{
     return slope_map->size();
 }
