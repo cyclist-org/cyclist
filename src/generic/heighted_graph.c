@@ -270,7 +270,7 @@ bool Heighted_graph::check_soundness(int opts){
     // if ((opts & USE_MINIMALITY) != 0) std::cout << "Use Minimality\n";
 
 
-    // if ((opts & USE_SD) != 0) {
+    if ((opts & USE_SD) != 0) {
         int size_ = this->num_nodes();
         for( int node = 0; node < size_; node++ ){
         for( int node_ = 0; node_ < size_; node_++ ){
@@ -283,7 +283,7 @@ bool Heighted_graph::check_soundness(int opts){
         if( edges->size() < 2 ) return false;
         Graph G(edges,&HeightsOf,h_change_, num_nodes(),max_height);
         return G.check_SD();
-    // }
+    }
     
 
     // We cannot combine the idempotence and minimality optimisations.
