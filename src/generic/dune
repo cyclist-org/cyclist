@@ -10,7 +10,7 @@
   (language c)
   (names proof
     proof_aut trace buchi_soundness
-    types sloped_relation heighted_graph relational_soundness)
+    types sloped_relation graph heighted_graph relational_soundness)
   (flags :standard -xc++ -std=c++17 (:include c_flags.sexp))
   (include_dirs %{ocaml_where}/caml))
  (c_library_flags (:include c_library_flags.sexp) -lpthread -lstdc++))
