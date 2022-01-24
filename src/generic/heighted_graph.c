@@ -262,29 +262,12 @@ bool Heighted_graph::check_Ccl(int opts) {
     return true;
 }
 
-bool Heighted_graph::check_soundness(int opts){
+bool Heighted_graph::relational_check(int opts){
 
     // if ((opts & FAIL_FAST) != 0) std::cout << "Fail Fast\n";
     // if ((opts & USE_SCC_CHECK) != 0) std::cout << "Use SCC Check\n";
     // if ((opts & USE_IDEMPOTENCE) != 0) std::cout << "Use Idempotence\n";
     // if ((opts & USE_MINIMALITY) != 0) std::cout << "Use Minimality\n";
-
-
-    if ((opts & USE_SD) != 0) {
-        int size_ = this->num_nodes();
-        for( int node = 0; node < size_; node++ ){
-        for( int node_ = 0; node_ < size_; node_++ ){
-            Relation_LIST* Ccl_nd = Ccl[node][node_];
-            for( Sloped_relation* R : *Ccl_nd ){
-                R->initialize();
-            }
-        }
-        }
-        if( edges->size() < 2 ) return false;
-        Graph G(edges,&HeightsOf,h_change_, num_nodes(),max_height);
-        return G.check_SD();
-    }
-    
 
     // We cannot combine the idempotence and minimality optimisations.
     assert(((opts & USE_IDEMPOTENCE) == 0) || ((opts & USE_MINIMALITY) == 0));
@@ -462,6 +445,21 @@ bool Heighted_graph::check_soundness(int opts){
     }
 
     return true;
+}
+
+bool Heighted_graph::sd_check() {
+    int size_ = this->num_nodes();
+    for( int node = 0; node < size_; node++ ){
+    for( int node_ = 0; node_ < size_; node_++ ){
+        Relation_LIST* Ccl_nd = Ccl[node][node_];
+        for( Sloped_relation* R : *Ccl_nd ){
+            R->initialize();
+        }
+    }
+    }
+    if( edges->size() < 2 ) return false;
+    Graph G(edges,&HeightsOf,h_change_, num_nodes(),max_height);
+    return G.check_SD();
 }
 
 void Heighted_graph::print_Ccl(void){

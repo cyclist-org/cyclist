@@ -1,6 +1,20 @@
 open Lib
 open Parsers
 
+type soundness_method =
+  | SPOT
+  | RELATIONAL_OCAML
+  | RELATIONAL_CPP
+  | SD_CPP
+
+let soundness_method = ref RELATIONAL_OCAML
+let use_spot () = 
+  soundness_method := SPOT
+let use_external () = 
+  soundness_method := RELATIONAL_CPP
+let use_sprengerdam () =
+  soundness_method := SD_CPP
+
 module IntPair = struct
   include Pair.Make(Int)(Int)
   include Containers.Make(Pair.Make(Int)(Int))
@@ -661,7 +675,8 @@ module RelationalCheck = struct
     external add_edge : int -> int -> unit = "add_edge"
     external add_stay : int -> int -> int -> int -> unit = "add_stay"
     external add_decrease : int -> int -> int -> int -> unit = "add_decr"
-    external check_soundness : int -> bool = "check_soundness_relational"
+    external relational_check : int -> bool = "relational_check"
+    external sd_check : unit -> bool = "sd_check"
     external print_ccl : unit -> unit = "print_ccl"
     external print_stats : unit -> unit = "print_statistics"
 
@@ -721,7 +736,14 @@ module RelationalCheck = struct
       Int.Map.iter (fun n _ -> add_node n) p ;
       Int.Map.iter process_node p ;
       (* debug (fun () -> "Built height graph") ; *)
-      let retval = check_soundness !opts in
+      let retval = 
+        match !soundness_method with
+        | RELATIONAL_CPP ->
+          relational_check !opts 
+        | SD_CPP ->
+          sd_check ()
+        | _ ->
+          failwith "Unexpected soundness check method!" in
       (* debug (fun () -> "Composition Closure:\n") ; *)
       (* if !do_debug then print_ccl() ; *)
       if !do_debug then print_stats ();
@@ -735,15 +757,24 @@ module RelationalCheck = struct
 
 end
 
-let use_spot = ref false
-let use_external = ref false
-
 include (RelationalCheck.Ext : sig
   val fail_fast : unit -> unit
   val use_scc_check : unit -> unit
   val use_idempotence : unit -> unit
   val use_minimality : unit -> unit    
 end)
+
+let arg_opts =
+  [
+    ("-spot", Arg.Unit use_spot, ": use the spot model checker to verify pre-proof validity") ;
+    ("-rel-ext", Arg.Unit use_external, ": use external C++ relation-based check to verify pre-proof validity") ;
+    ("-SD", Arg.Unit use_sprengerdam, ": use Sprenger-Dam check to verify pre-proof validity") ;
+    ("-ff", Arg.Unit fail_fast, ": use fast fail in relation-based validty check") ;
+    ("-scc", Arg.Unit use_scc_check, ": use SCC check in relation-based validity check") ;
+    ("-idem", Arg.Unit use_idempotence, ": use idempotency optimisation in relation-based validity check") ;
+    ("-min", Arg.Unit use_minimality, ": use minimality optimisation in relation-based validity check") ;
+
+  ]
 
 module CheckCache = Hashtbl
 
@@ -788,12 +819,13 @@ let check_proof ?(init=0) ?(minimize=true) prf =
         Stats.MCCache.end_call () ;
         Stats.MCCache.miss () ;
         let r =
-          if !use_spot
-            then BuchiCheck.check_proof ~init aprf
-            else 
-              if !use_external
-                then RelationalCheck.Ext.check_proof aprf
-                else RelationalCheck.check_proof aprf in
+          match !soundness_method with
+          | SPOT ->
+            BuchiCheck.check_proof ~init aprf
+          | RELATIONAL_OCAML ->
+            RelationalCheck.check_proof aprf
+          | _ ->
+            RelationalCheck.Ext.check_proof aprf in
         Stats.MCCache.call () ;
         CheckCache.add ccache aprf r ;
         Stats.MCCache.end_call () ;

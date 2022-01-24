@@ -9,22 +9,29 @@ open Lib
     progressing tag transitions. *)
 type abstract_node
 
-val use_spot : bool ref
+val use_spot : unit -> unit
 (** Flag to indicate whether the Spot model checker should be used to verify the
     trace condition for proofs. *)
 
-val use_external : bool ref
-(** Flag to indicate whether trace condition check should be done by external
-    C++ code. *)
+val use_external : unit -> unit
+(** Flag to indicate whether trace condition check should be done by the
+    relation-based method using external C++ code. *)
+
+val use_sprengerdam : unit -> unit
+(** Flag to indicate whether trace condition check should be done by the
+    Sprenger-Dam method (only implemented in external C++ code). *)
 
 val fail_fast : unit -> unit
-(** Set fail_fast flag for external code checking trace condition *)
+(** Set fail_fast flag for C++ relation-based trace condition check *)
 val use_scc_check : unit -> unit
-(** Set use_scc_check flag for external code checking trace condition *)
+(** Set use_scc_check flag for C++ relation-based trace condition check *)
 val use_idempotence : unit -> unit
-(** Set use_idempotence flag for external code checking trace condition *)
+(** Set use_idempotence flag for C++ relation-based trace condition check *)
 val use_minimality : unit -> unit
-(** Set use_minimality flag for external code checking trace condition *)
+(** Set use_minimality flag for C++ relation-based trace condition check *)
+
+val arg_opts : (string * Arg.spec * string) list
+(* Specification of command-line options applying to soundness check *)
 
 val mk_abs_node :
   Tags.t -> int list -> (Tagpairs.t * Tagpairs.t) list -> abstract_node

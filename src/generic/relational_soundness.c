@@ -87,14 +87,23 @@ extern "C" void print_statistics() {
   CAMLreturn0;
 }
 
-extern "C" value check_soundness_relational(value opts_) {
+extern "C" value relational_check(value opts_) {
   CAMLparam1(opts_);
   CAMLlocal1(v_res);
 
   assert(hg);
   int opts = Int_val(opts_);
-  bool retval = (hg->check_soundness(opts));
+  bool retval = (hg->relational_check(opts));
 
+  v_res = Val_bool(retval);
+  CAMLreturn(v_res);
+}
+
+extern "C" value sd_check() {
+  CAMLparam0();
+  CAMLlocal1(v_res);
+  assert(hg);
+  bool retval = (hg->sd_check());
   v_res = Val_bool(retval);
   CAMLreturn(v_res);
 }

@@ -71,7 +71,8 @@ public:
     void add_decrease(int source_node, int source_h, int sink_node, int sink_h);
     int num_nodes(void);
     int num_edges(void);
-    bool check_soundness(int opts);
+    bool relational_check(int opts);
+    bool sd_check();
     void print_Ccl(void);
     void print_statistics(void);
 };

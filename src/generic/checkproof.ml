@@ -111,9 +111,10 @@ let mk_prf lines =
 let parse_proof s =
   (many parse_line |>> mk_prf) s
 
-let speclist = [
-    ("-spot", Arg.Set Soundcheck.use_spot, ": use the spot model checker to verify the cyclic trace condition") ;
-    ("-ext", Arg.Set Soundcheck.use_external, ": use external C++ code to verify the cyclic trace condition") ;
+let speclist = 
+  Soundcheck.arg_opts
+    @
+  [
     ("-d", Arg.Set do_debug, ": print debug messages") ;
   ]
 
