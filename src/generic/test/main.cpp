@@ -53,9 +53,9 @@ int main(int argc, char** argv) {
             result = hg.sd_check();
         } else {
             result = hg.relational_check(opts);
+            // hg.print_Ccl();
+            hg.print_statistics();
         }
-        // hg.print_Ccl();
-        hg.print_statistics();
         if( result ){
             std::cout << "SOUND" << std::endl;
         }

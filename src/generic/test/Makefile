@@ -14,8 +14,8 @@ endef
 
 all: soundness tests
 
-soundness: main.o sloped_relation.o heighted_graph.o
-	g++ -pthread -g -o soundness main.o sloped_relation.o heighted_graph.o
+soundness: main.o sloped_relation.o heighted_graph.o graph.o
+	g++ -pthread -g -o soundness main.o sloped_relation.o heighted_graph.o graph.o
 
 main.o: main.cpp ../heighted_graph.hpp 
 	g++ -I ../ -L/opt/lib -g -c main.cpp -o main.o
@@ -26,13 +26,16 @@ heighted_graph.o: ../heighted_graph.hpp ../heighted_graph.c ../sloped_relation.h
 sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
 	g++ -I ../ -L/opt/lib -g -c ../sloped_relation.c -o sloped_relation.o
 
+graph.o: ../graph.c ../graph.hpp ../sloped_relation.hpp
+	g++ -I ../ -L/opt/lib -g -c ../graph.c -o graph.o
+
 .PHONY: clean tests test-suite tests-no
 .SILENT: tests test-suite test_success test_failure tests-no-opts tests-ff tests-scc tests-min tests-idem tests-ff-scc tests-min-scc tests-ff-idem
 
 clean: 
 	rm -f ./*.o soundness
 
-tests: tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-scc tests-ff-idem tests-min-scc
+tests: tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-scc tests-ff-idem tests-min-scc tests-sd
 
 tests-no-opts:
 	echo "NO OPTIMSATIONS";
@@ -74,3 +77,8 @@ test-suite: soundness
 	$(call test_failure, graph_9a)
 	$(call test_failure, graph_9b)
 	$(call test_success, graph_10)
+	$(call test_failure, graph_11)
+
+tests-sd:
+	echo "SPRENGER-DAM"
+	export FLAGS=D; make -s test-suite
