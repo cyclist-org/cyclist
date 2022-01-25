@@ -81,6 +81,9 @@ spot::acc_cond::mark_t TraceSuccIterator::acc() const {
 TraceAutomaton::TraceAutomaton(const Proof & p) :
 	spot::twa(p.get_dict()), proof(p) {
 	acc_set = set_buchi();
+	for (auto binding : this->dict_->var_map) {
+		this->register_ap(binding.first.ap_name());
+	}
 }
 //------------------------------------------------------------------
 TraceAutomaton::~TraceAutomaton() {
