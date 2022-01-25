@@ -34,7 +34,7 @@ Graph::~Graph(void){
     // delete adj;
 }
 
-bool Graph::enumerate_and_check_SD(int curr,std::vector<int>* node_idxs_,Map<int,int>* rev_node_idxs,std::vector<int>* indicies){
+bool Graph::enumerate_and_check_SD(int curr,std::vector<int>* node_idxs_,Map<int,int>* rev_node_idxs,std::vector<int>* indicies,std::vector<Int_pair>* edges){
     if( curr == node_idxs_->size()){
         bool found = false;
         bool valid = true;
@@ -57,7 +57,7 @@ bool Graph::enumerate_and_check_SD(int curr,std::vector<int>* node_idxs_,Map<int
         Int_SET* heights = (HeightsOf->at(node_idxs_->at(curr)));
         for(int h : *(heights) ){
             indicies->push_back(h);
-            if( enumerate_and_check_SD(curr+1,node_idxs_,rev_node_idxs,indicies) ) return true;
+            if( enumerate_and_check_SD(curr+1,node_idxs_,rev_node_idxs,indicies,edges) ) return true;
             indicies->pop_back();
         }
     }
@@ -83,11 +83,11 @@ bool Graph::check_descending_SD(std::vector<Int_pair>* edges){
             rev_node_idx->insert(Int_pair(e.second,idx));
         }
     }
-    return enumerate_and_check_SD(0,node_idxs_,rev_node_idx,new std::vector<int>());
+    return enumerate_and_check_SD(0,node_idxs_,rev_node_idx,new std::vector<int>(),edges);
 }
 
 bool Graph::check_SD(void){
-    get_SCCs(edges);
+    if( !get_SCCs(edges) ) return false;
     // print_SCCs();
     std::vector<std::vector<Int_pair>*>* SG = new std::vector<std::vector<Int_pair>*>();
     std::vector<std::vector<Int_pair>*>* SubSG;
@@ -209,7 +209,8 @@ void  Graph::extract_SCC(int u){
     }
 }
 
-void Graph::get_SCCs(std::vector<Int_pair>* e){
+bool Graph::get_SCCs(std::vector<Int_pair>* e){
+    bool non_trivial = false;
     this->adj = new std::list<int>[max_node];
     for( Int_pair p : *e ){
         adj[p.first].push_back(p.second);
@@ -231,6 +232,10 @@ void Graph::get_SCCs(std::vector<Int_pair>* e){
             extract_SCC(i);
         }
     }
+    for( auto SCC : *SCCs ){
+        if( SCC.second.size() > 1 ) return true;
+    }
+    return false;
 }
 
 void Graph::print_SCCs(void){

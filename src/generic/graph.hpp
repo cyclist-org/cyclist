@@ -22,8 +22,6 @@ private:
 
     std::vector<Int_SET*>*  HeightsOf;
     Sloped_relation***      h_change_;
-
-    Map<int,std::vector<Int_SET*>>* height_families;
     
     int*                    disc;
     int*                    low;
@@ -31,8 +29,10 @@ private:
     bool*                   stackMember;
 
     void                    mark_nodes(int u);
-    void                    get_SCCs (std::vector<Int_pair>*);
     void                    extract_SCC(int u);
+    bool                    get_SCCs (std::vector<Int_pair>*);
+    bool                    check_descending_SD(std::vector<Int_pair>*);
+    bool                    enumerate_and_check_SD(int,std::vector<int>*,Map<int,int>*,std::vector<int>*,std::vector<Int_pair>*);
 
     std::vector<std::vector<Int_pair>*>* get_subgraphs(std::vector<Int_pair>*);
 
@@ -42,8 +42,7 @@ public:
     ~Graph(void);
 
     bool check_SD(void);
-    bool check_descending_SD(std::vector<Int_pair>*);
-    bool enumerate_and_check_SD(int,std::vector<int>*,Map<int,int>*,std::vector<int>*);
+    
 
     void print_SCCs(void);
 

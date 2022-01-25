@@ -25,9 +25,7 @@ void Sloped_relation::initialize(void){
                 slope_map->insert(Pair<Int_pair,int>(Int_pair(i,j),(int)repr_matrix[i][j]));
             }
         }
-        delete repr_matrix[i];
     }
-    delete repr_matrix;
     initialized = true;
     return;
 }
@@ -56,7 +54,7 @@ Sloped_relation::Sloped_relation( const Sloped_relation& R){
     this->slope_map = new Map<Int_pair,int>();
     this->max_height = R.max_height;
     this->min_height = R.min_height;
-    this->initialized = true;
+    this->initialized = R.initialized;
     for( auto pair : *(R.forward_map) ){
         (this->forward_map)->insert(Pair<int,Int_pair_SET*>(pair.first,new Int_pair_SET(*(pair.second))));
     }
@@ -74,7 +72,7 @@ Sloped_relation::Sloped_relation( Sloped_relation&& R){
     this->slope_map = R.slope_map;
     this->max_height = R.max_height;
     this->min_height = R.min_height;
-    this->initialized = true;
+    this->initialized = R.initialized;
 
     R.forward_map = nullptr;
     R.backward_map = nullptr;
@@ -87,6 +85,7 @@ Sloped_relation& Sloped_relation::operator=(const Sloped_relation& R){
         this->forward_map = new Map<int,Int_pair_SET*>();
         this->backward_map = new Map<int,Int_pair_SET*>();
         this->slope_map = new Map<Int_pair,int>();
+        this->initialized = true;
         if( (R.forward_map) != 0 && R.backward_map != 0){
             for( auto pair : *(R.forward_map)){
                 (this->forward_map)->insert(Pair<int,Int_pair_SET*>(pair.first,new Int_pair_SET(*(pair.second))));
@@ -108,6 +107,7 @@ Sloped_relation& Sloped_relation::operator=(Sloped_relation&& R){
         this->forward_map = R.forward_map;
         this->backward_map = R.backward_map;
         this->slope_map = R.slope_map;
+        this->initialized = R.initialized;
         R.forward_map = nullptr;
         R.backward_map = nullptr;
         R.slope_map = nullptr;
@@ -305,6 +305,10 @@ void Sloped_relation::clear(void){
     delete forward_map;
     delete backward_map;
     delete slope_map;
+    if( repr_matrix ){
+        for( int i = 0 ; i < a ; i++) delete repr_matrix[i];
+        delete repr_matrix;
+    }
 }
 
 std::ostream& operator<<(std::ostream& os, const Sloped_relation& r) {
