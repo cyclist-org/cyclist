@@ -29,13 +29,15 @@ sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
 graph.o: ../graph.c ../graph.hpp ../sloped_relation.hpp
 	g++ -I ../ -L/opt/lib -g -c ../graph.c -o graph.o
 
-.PHONY: clean tests test-suite tests-no
-.SILENT: tests test-suite test_success test_failure tests-no-opts tests-ff tests-scc tests-min tests-idem tests-ff-scc tests-min-scc tests-ff-idem
+.PHONY: clean tests test-suite tests-rel
+.SILENT: tests tests-rel tests-sd test-suite test_success test_failure tests-no-opts tests-ff tests-scc tests-min tests-idem tests-ff-scc tests-min-scc tests-ff-idem
 
 clean: 
 	rm -f ./*.o soundness
 
-tests: tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-scc tests-ff-idem tests-min-scc tests-sd
+tests: tests-rel tests-sd
+
+tests-rel: tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-scc tests-ff-idem tests-min-scc
 
 tests-no-opts:
 	echo "NO OPTIMSATIONS";
