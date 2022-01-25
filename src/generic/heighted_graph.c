@@ -63,20 +63,14 @@ Heighted_graph::Heighted_graph(int max_nodes) {
     h_change_ =
         (Sloped_relation***) malloc(sizeof(Sloped_relation**) * max_nodes);
     Ccl = (Relation_LIST***) malloc(sizeof(Relation_LIST**) * max_nodes);
-    ccl_counts = (Int_pair****) malloc(sizeof(Int_pair***) * max_nodes);
 
     for(int i = 0; i < max_nodes; i++) {
         Ccl[i] = (Relation_LIST**) malloc(sizeof(Relation_LIST*) * max_nodes);
-        ccl_counts[i] = (Int_pair***) malloc(sizeof(Int_pair**) * max_nodes);
         h_change_[i] =
             (Sloped_relation**) malloc(sizeof(Sloped_relation*) * max_nodes);
         for (int j = 0; j < max_nodes; j++) {
             h_change_[i][j] = 0;
             Ccl[i][j] = new Relation_LIST();
-            ccl_counts[i][j] = (Int_pair**) malloc(sizeof(Int_pair*) * max_nodes);
-            for (int k = 0; k < max_nodes; k++) {
-                ccl_counts[i][j][k] = new Int_pair();
-            }
         }
     }
     edges = new std::vector<Int_pair>();
@@ -85,7 +79,6 @@ Heighted_graph::Heighted_graph(int max_nodes) {
 
 void clean_up(Relation_LIST*** ccl,
               Sloped_relation*** h_change_,
-              Int_pair**** ccl_counts,
               int num_nodes,
               Relation_LIST* rejected) {
 
@@ -95,17 +88,11 @@ void clean_up(Relation_LIST*** ccl,
                 delete s;
             }
             delete ccl[source][sink];
-            for (int middle = 0; middle < num_nodes; middle++) {
-                delete ccl_counts[source][sink][middle];
-            }
-            delete ccl_counts[source][sink];
         }
         delete h_change_[source];
         delete ccl[source];
-        delete ccl_counts[source];
     }
     delete ccl;
-    delete ccl_counts;
     delete h_change_;
 
     for (Sloped_relation* R : *rejected){
@@ -120,7 +107,7 @@ Heighted_graph::~Heighted_graph(void) {
     for(Int_SET* heights : HeightsOf){
         delete heights;
     }
-    std::thread t(clean_up, Ccl, h_change_, ccl_counts, max_nodes, rejected);
+    std::thread t(clean_up, Ccl, h_change_, max_nodes, rejected);
     t.detach();
 }
 
@@ -308,28 +295,19 @@ bool Heighted_graph::relational_check(int opts){
         for (int middle = 0; middle < num_nodes; middle++) {
         for (int sink = 0; sink < num_nodes; sink++) {
 
-            int left_count = 0;
             for (
                 auto left = Ccl[source][middle]->begin();
                 left != Ccl[source][middle]->end();
                 left++
             ) {
-                left_count++;
                 Sloped_relation* P = *left;
                 P->initialize();
                 if (P->size() == 0) continue;
-                int right_count = 0;
                 for (
                     auto right = Ccl[middle][sink]->begin();
                     right != Ccl[middle][sink]->end();
                     right++
                 ) {
-                    right_count++;
-                    if (left_count <= ccl_counts[source][sink][middle]->first
-                          && right_count <= ccl_counts[source][sink][middle]->second)
-                    {
-                        continue;
-                    } 
                     Sloped_relation* Q = *right;
                     Q->initialize();
                     if (Q->size() == 0) continue;
@@ -342,7 +320,6 @@ bool Heighted_graph::relational_check(int opts){
                     if (R->size() == 0) continue;
 
                     bool need_to_add = true;
-                    int outer_count = 0;
                     auto loop_start = std::chrono::system_clock::now();
                     for (
                         auto outer = Ccl[source][sink]->begin();
@@ -363,13 +340,6 @@ bool Heighted_graph::relational_check(int opts){
                                 auto to_delete = outer--;
                                 if (to_delete == left) left--;
                                 if (to_delete == right) right--;
-                                // Update CCL counts if we are removing a relation in the "processed" portion
-                                for (int node = 0; node < num_nodes; node++) {
-                                    if (outer_count < ccl_counts[source][node][sink]->first)
-                                        ccl_counts[source][node][sink]->first--;
-                                    if (outer_count < ccl_counts[node][sink][source]->second)
-                                        ccl_counts[node][sink][source]->second--;
-                                }
                                 (Ccl[source][sink])->erase(to_delete);
                                 rejected->push_back(S);
                                 break;
@@ -390,7 +360,6 @@ bool Heighted_graph::relational_check(int opts){
                                 break;
                             }
                         }
-                        outer_count++;
                     }
                     auto loop_end = std::chrono::system_clock::now();
                     need_to_add_compute_time += (loop_end - loop_start);
@@ -421,10 +390,6 @@ bool Heighted_graph::relational_check(int opts){
                     if (fail_now) { return false; }
                 }
             }
-
-            // Update CCL counts
-            ccl_counts[source][sink][middle]->first = Ccl[source][middle]->size();
-            ccl_counts[source][sink][middle]->second = Ccl[middle][sink]->size();
 
         }
         }

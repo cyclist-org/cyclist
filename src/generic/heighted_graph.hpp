@@ -22,7 +22,6 @@ private:
     std::vector<Int_SET*>   HeightsOf;
     Sloped_relation***      h_change_;
     Relation_LIST***        Ccl;
-    Int_pair****            ccl_counts;
     Relation_LIST*          rejected;
     std::vector<int>        max_heights;
     std::vector<Int_pair>*  edges;
