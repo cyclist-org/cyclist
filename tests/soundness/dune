@@ -15,3 +15,10 @@
  (public_name test2)
  (modules test2)
  (libraries generic lib base))
+
+
+(executable
+ (name test3)
+ (public_name test3)
+ (modules test3)
+ (libraries generic lib base))
