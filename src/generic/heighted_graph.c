@@ -296,8 +296,6 @@ bool Heighted_graph::relational_check(int opts){
     std::chrono::time_point<std::chrono::system_clock> start;
     std::chrono::time_point<std::chrono::system_clock> end;
 
-    Relation_LIST* rejected = new Relation_LIST();
-
     int num_nodes = this->num_nodes();
 
     // Now compute the CCL
