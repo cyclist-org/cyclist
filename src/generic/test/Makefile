@@ -78,6 +78,7 @@ test-suite: soundness
 	$(call test_failure, graph_9b)
 	$(call test_success, graph_10)
 	$(call test_failure, graph_11)
+	$(call test_failure, graph_12)
 
 tests-sd:
 	echo "SPRENGER-DAM"
