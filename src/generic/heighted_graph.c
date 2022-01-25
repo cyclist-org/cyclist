@@ -120,9 +120,8 @@ Heighted_graph::~Heighted_graph(void) {
     for(Int_SET* heights : HeightsOf){
         delete heights;
     }
-    clean_up( Ccl, h_change_, ccl_counts, max_nodes, rejected);
-    // std::thread t(clean_up, Ccl, h_change_, ccl_counts, max_nodes, rejected);
-    // t.join();
+    std::thread t(clean_up, Ccl, h_change_, ccl_counts, max_nodes, rejected);
+    t.detach();
 }
 
 // Methods for constructing the height graph
@@ -158,8 +157,7 @@ void Heighted_graph::add_edge(int source, int sink) {
     if ( h_change_[src_idx][sink_idx] == 0 ) {
         number_of_edges++;
         edges->push_back(Int_pair(src_idx,sink_idx));
-        Sloped_relation* R = new Sloped_relation(new Map<int,Int_pair_SET*>(),new Map<int,Int_pair_SET*>(),new Map<Int_pair,int>());
-        // Sloped_relation* R = new Sloped_relation(max_heights[src_idx],max_heights[sink_idx]);
+        Sloped_relation* R = new Sloped_relation(max_heights[src_idx],max_heights[sink_idx]);
         h_change_[src_idx][sink_idx] = R;
         Ccl[src_idx][sink_idx]->push_back(R);
         ccl_initial_size++;
@@ -375,8 +373,7 @@ bool Heighted_graph::relational_check(int opts){
                                         ccl_counts[node][sink][source]->second--;
                                 }
                                 (Ccl[source][sink])->erase(to_delete);
-                                // rejected->push_back(S);
-                                delete S;
+                                rejected->push_back(S);
                                 break;
                             }
                             else if (result == eq || result == gt) {
@@ -420,8 +417,7 @@ bool Heighted_graph::relational_check(int opts){
                         insertion_time += (end - start);
                         ccl_size++;
                     } else {
-                        // rejected->push_back(R);      
-                        delete R;                  
+                        rejected->push_back(R);      
                     }
 
                     if (fail_now) { return false; }
