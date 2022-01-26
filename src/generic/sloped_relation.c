@@ -9,8 +9,8 @@
 
 void Sloped_relation::initialize(void){
     if( initialized ) return;
-    for( int i = 0 ; i < a ; i++ ){
-        for( int j = 0 ; j < b ; j++ ){
+    for( int i = 0 ; i < num_heights ; i++ ){
+        for( int j = 0 ; j < num_heights ; j++ ){
             if( repr_matrix[i][j] != Undef ){
                 auto exists = forward_map->find(i);
                 if( exists == forward_map->end() ){
@@ -25,20 +25,22 @@ void Sloped_relation::initialize(void){
                 slope_map->insert(Pair<Int_pair,int>(Int_pair(i,j),(int)repr_matrix[i][j]));
             }
         }
+        delete repr_matrix[i];
     }
+    delete repr_matrix;
     initialized = true;
     return;
 }
 
 
 Sloped_relation::Sloped_relation(int max_source_height, int max_dest_height){
-    this->a = max_source_height+1;
-    this->b = max_dest_height+1;
+    this->num_heights = max_source_height+1;
+    if( max_dest_height > this->num_heights ) num_heights = max_dest_height;
 
-    repr_matrix = (int**)malloc(sizeof(int*) * a);
-    for( int i = 0 ; i < a ; i++ ){
-        repr_matrix[i] = (int*)malloc(sizeof(int) * b);
-        for( int j = 0 ; j < b ; j++ ){
+    repr_matrix = (int**)malloc(sizeof(int*) * num_heights);
+    for( int i = 0 ; i < num_heights ; i++ ){
+        repr_matrix[i] = (int*)malloc(sizeof(int) * num_heights);
+        for( int j = 0 ; j < num_heights ; j++ ){
             repr_matrix[i][j] = Undef;
         }
     }
@@ -305,10 +307,6 @@ void Sloped_relation::clear(void){
     delete forward_map;
     delete backward_map;
     delete slope_map;
-    if( repr_matrix ){
-        for( int i = 0 ; i < a ; i++) delete repr_matrix[i];
-        delete repr_matrix;
-    }
 }
 
 std::ostream& operator<<(std::ostream& os, const Sloped_relation& r) {

@@ -1,5 +1,6 @@
 
 #include "graph.hpp"
+#include "sloped_relation.hpp"
 #include <iostream>
 #include <ostream>
 #include <cmath>
@@ -68,6 +69,7 @@ bool Graph::enumerate_and_check_SD(int curr,std::vector<int>* node_idxs_,Map<int
 bool Graph::check_descending_SD(std::vector<Int_pair>* edges){
     std::vector<int>* node_idxs_ = new std::vector<int>();
     Int_SET* nodes = new Int_SET();
+    std::vector<int>* indicies = new std::vector<int>();
     Map<int,int>* rev_node_idx = new Map<int,int>();
     for( auto e : *edges ){
         if (nodes->find(e.first) == nodes->end()) {
@@ -83,18 +85,40 @@ bool Graph::check_descending_SD(std::vector<Int_pair>* edges){
             rev_node_idx->insert(Int_pair(e.second,idx));
         }
     }
-    return enumerate_and_check_SD(0,node_idxs_,rev_node_idx,new std::vector<int>(),edges);
+    bool res =  enumerate_and_check_SD(0,node_idxs_,rev_node_idx,indicies,edges);
+    delete node_idxs_;
+    delete nodes;
+    delete rev_node_idx;
+    delete indicies;
+    return res;
 }
 
 bool Graph::check_SD(void){
-    if( !get_SCCs(edges) ) return false;
+    get_SCCs(edges);
     // print_SCCs();
+    if( SCCs->size() == 0 ) return true;
     std::vector<std::vector<Int_pair>*>* SG = new std::vector<std::vector<Int_pair>*>();
     std::vector<std::vector<Int_pair>*>* SubSG;
     for( auto p : *SCCs){
-        if( p.second.size() < 2 ) continue;
         std::vector<Int_pair>* SCC_edges = new std::vector<Int_pair>((p.second).begin(), (p.second).end());
-        if( !check_descending_SD(SCC_edges)) return false;
+        if( SCCs->size() == 1 && p.second.size() == 1 ){
+            bool ok = false;
+            auto e = SCC_edges->at(0);
+            if( e.first != e.second ) return false;
+            Sloped_relation* S = h_change_[e.first][e.second]->compute_transitive_closure();
+            Map<Int_pair,int>* slope_map = S->get_slopes();
+            for( auto p_ : *slope_map ){
+                if( p_.first.first == p_.first.second &&  p_.second == Downward ){
+                    delete S;
+                    return true;
+                }
+            }
+            return false;
+        }
+        else{
+            if( !check_descending_SD(SCC_edges)) return false;
+            SG->push_back(SCC_edges);
+        }
     }
     if( SCCs ){
         delete SCCs;
@@ -106,7 +130,6 @@ bool Graph::check_SD(void){
         for( std::vector<Int_pair>* G_p : *SubSG){
             get_SCCs(G_p);
             for( auto p : *SCCs){
-                if( p.second.size() < 2 ) continue;
                 std::vector<Int_pair>* SCC_edges = new std::vector<Int_pair>((p.second).begin(), (p.second).end());
                 if( !check_descending_SD(SCC_edges)) return false;
             }
@@ -114,15 +137,19 @@ bool Graph::check_SD(void){
                 delete SCCs;
                 SCCs = new Map<int,Int_pair_SET>();
             }
+            delete G_p;
         }
+        delete SubSG;
+        delete G;
     }
+    delete SG;
     return true;
 }
 
 
 std::vector<std::vector<Int_pair>*>* Graph::get_subgraphs(std::vector<Int_pair>* G){
     int n = G->size();
-    if( n < 3 ) return nullptr;
+    if( n < 2 ) return nullptr;
     std::vector<std::vector<Int_pair>*>* SG = new std::vector<std::vector<Int_pair>*>();
     int count = std::pow(2, n);
     for (int i = count - 1; i > 0; i--) {
@@ -132,34 +159,13 @@ std::vector<std::vector<Int_pair>*>* Graph::get_subgraphs(std::vector<Int_pair>*
                 edges->push_back(G->at(j));
             }
         }
-        if( edges->size() < 2){
-            delete edges;
-            continue;
-        }
-        for( auto p : *edges){
-            std::cout << "<" << p.first << "," << p.second << "> ";
-        }
-        std::cout << std::endl;
+        // if( edges->size() < 2){
+        //     delete edges;
+        //     continue;
+        // }
         SG->push_back(edges);
     }
     return SG;
-    // int n = G->size();
-    // if( n < 3 ) return nullptr;
-    // std::vector<std::vector<Int_pair>*>* SG = new std::vector<std::vector<Int_pair>*>();
-    // for (int i = 0; i < n; i++) {
-    //     std::vector<Int_pair>* edges = new std::vector<Int_pair>();
-    //     for (int j = 0; j < n; j++) {
-    //         if (j != i ){
-    //             edges->push_back(G->at(j));
-    //         }
-    //     }
-    //     for( auto p : *edges){
-    //         std::cout << "<" << p.first << "," << p.second << "> ";
-    //     }
-    //     std::cout << std::endl;
-    //     SG->push_back(edges);
-    // }
-    // return SG;
 }
 
 void Graph::mark_nodes(int u){
@@ -209,7 +215,7 @@ void  Graph::extract_SCC(int u){
     }
 }
 
-bool Graph::get_SCCs(std::vector<Int_pair>* e){
+void Graph::get_SCCs(std::vector<Int_pair>* e){
     bool non_trivial = false;
     this->adj = new std::list<int>[max_node];
     for( Int_pair p : *e ){
@@ -232,10 +238,6 @@ bool Graph::get_SCCs(std::vector<Int_pair>* e){
             extract_SCC(i);
         }
     }
-    for( auto SCC : *SCCs ){
-        if( SCC.second.size() > 1 ) return true;
-    }
-    return false;
 }
 
 void Graph::print_SCCs(void){
