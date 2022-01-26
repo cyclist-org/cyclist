@@ -34,8 +34,9 @@ void Sloped_relation::initialize(void){
 
 
 Sloped_relation::Sloped_relation(int max_source_height, int max_dest_height){
-    this->num_heights = max_source_height+1;
-    if( max_dest_height > this->num_heights ) num_heights = max_dest_height;
+    num_heights = max_source_height+1;
+    if( max_dest_height+1 > num_heights )
+        num_heights = max_dest_height+1;
 
     repr_matrix = (int**)malloc(sizeof(int*) * num_heights);
     for( int i = 0 ; i < num_heights ; i++ ){
