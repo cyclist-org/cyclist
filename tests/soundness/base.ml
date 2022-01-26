@@ -8,22 +8,23 @@ let speclist =
   ; ("-s", Arg.Set Stats.do_statistics, ": print statistics") ]
 
 let usage =
-  "usage: " ^ Sys.argv.(0) ^ " [-d] [-s] [-spot|-ext [-ff][-scc][-idem][-min]] [<size>]"
+  "usage: " ^ Sys.argv.(0) ^ " [-d] [-s] [-spot|-ext [-ff][-scc][-idem][-min]] <param_1> ... <param_n>"
 
-let size = ref 1
+let params = ref []
 
-let set_num_nodes n =
+let add_param n =
   try
     let n = int_of_string n in
     if n < 1 then
       raise (Arg.Bad "Must specify a positive size parameter")
     else
-      size := n
+      params := n :: !params
   with Failure _ ->
     raise (Arg.Bad "Must specify an integer size parameter")
 
 let () =
-  Arg.parse speclist set_num_nodes usage
+  Arg.parse speclist add_param usage ;
+  params := List.rev !params
 
 let runtest ?(minimize=true) build_prf =
   let () = gc_setup () in

@@ -24,9 +24,10 @@ include Base
   Int.Map.singleton 0 node *)
 
 let prf () =
-  let tags = List.init !size (fun n -> n) in
-  let tps = List.init !size (fun h -> (h, (h+1) mod !size)) in
-  Soundcheck.build_proof [(0, tags, [(0, tps, [(!size-1,0)])])]
+  let size = List.hd !params in
+  let tags = List.init size (fun n -> n) in
+  let tps = List.init size (fun h -> (h, (h+1) mod size)) in
+  Soundcheck.build_proof [(0, tags, [(0, tps, [(size-1,0)])])]
 
 ;;
 

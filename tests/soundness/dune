@@ -1,24 +1,3 @@
-(library
- (name base)
- (public_name cyclist.test.soundness)
- (libraries lib generic)
- (modules base))
-
-(executable
- (name test1)
- (public_name test1)
- (modules test1)
- (libraries generic lib base))
-
-(executable
- (name test2)
- (public_name test2)
- (modules test2)
- (libraries generic lib base))
-
-
-(executable
- (name test3)
- (public_name test3)
- (modules test3)
- (libraries generic lib base))
+(executables
+ (names test1 test2 test3 test4)
+ (libraries generic lib))

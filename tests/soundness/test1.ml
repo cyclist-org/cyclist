@@ -45,16 +45,17 @@ include Base
   prf *)
 
 let prf () =
+  let size = List.hd !params in
   let nodes =
     List.init
-      !size
+      size
       (fun n -> 
         let n = n + 1 in
         (n, [n], [(0, [(n, 0)], [])])) in
   let root =
     let succs =
       List.init
-        !size
+        size
         (fun n -> 
           let n = n + 1 in
           (n, [(0, n)], [(0, n)])) in
