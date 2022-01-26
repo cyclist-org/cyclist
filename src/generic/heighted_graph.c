@@ -105,9 +105,9 @@ void clean_up(Relation_LIST*** ccl,
 // Destructor
 Heighted_graph::~Heighted_graph(void) {
     for(Int_SET* heights : HeightsOf){
-        delete heights;
+        if( heights ) delete heights;
     }
-    delete edges;
+    if( edges ) delete edges;
     clean_up(Ccl, h_change_, max_nodes, rejected);
     // std::thread t(clean_up, Ccl, h_change_, max_nodes, rejected);
     // t.join();
@@ -227,7 +227,7 @@ bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
                 }
             }
         }
-        delete R2;
+        if( R2 ) delete R2;
     }
 
     auto end = std::chrono::system_clock::now();
@@ -344,7 +344,7 @@ bool Heighted_graph::relational_check(int opts){
                                 if (to_delete == left) left--;
                                 if (to_delete == right) right--;
                                 (Ccl[source][sink])->erase(to_delete);
-                                delete S;
+                                if( S ) delete S;
                                 break;
                             }
                             else if (result == eq || result == gt) {
@@ -387,7 +387,7 @@ bool Heighted_graph::relational_check(int opts){
                         insertion_time += (end - start);
                         ccl_size++;
                     } else {
-                        delete R;
+                        if ( R ) delete R;
                     }
 
                     if (fail_now) { return false; }
@@ -419,7 +419,6 @@ bool Heighted_graph::sd_check() {
         }
     }
     }
-    if( edges->size() < 2 ) return false;
     Graph G(edges,&HeightsOf,h_change_, num_nodes(),max_height);
     return G.check_SD();
 }

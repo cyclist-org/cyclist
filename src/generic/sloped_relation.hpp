@@ -22,8 +22,7 @@ private:
 public:
     int max_height = -1;
     int min_height = 0;
-    int a = 0;
-    int b = 0;
+    int num_heights = 0;
     int** repr_matrix;          // A canonical matrix represinting the relation
 
     Sloped_relation(int max_source_heights, int max_dest_height);
