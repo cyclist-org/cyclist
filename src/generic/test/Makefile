@@ -30,7 +30,7 @@ graph.o: ../graph.c ../graph.hpp ../sloped_relation.hpp
 	g++ -I ../ -L/opt/lib -g -c ../graph.c -o graph.o
 
 .PHONY: clean tests test-suite tests-rel
-.SILENT: tests tests-rel tests-sd test-suite test_success test_failure tests-no-opts tests-ff tests-scc tests-min tests-idem tests-ff-scc tests-min-scc tests-ff-idem
+.SILENT: tests tests-rel tests-sd test-suite-rel test-suite-sd test_success test_failure tests-no-opts tests-ff tests-scc tests-min tests-idem tests-ff-scc tests-min-scc tests-ff-idem
 
 clean: 
 	rm -f ./*.o soundness
@@ -41,30 +41,30 @@ tests-rel: tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-scc te
 
 tests-no-opts:
 	echo "NO OPTIMSATIONS";
-	make -s test-suite
+	make -s test-suite-rel
 tests-ff:
 	echo "FAST-FAIL"
-	export FLAGS=f; make -s test-suite
+	export FLAGS=f; make -s test-suite-rel
 tests-scc:
 	echo "SCC LOOP CHECK"
-	export FLAGS=s; make -s test-suite
+	export FLAGS=s; make -s test-suite-rel
 tests-idem:
 	echo "IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=i; make -s test-suite
+	export FLAGS=i; make -s test-suite-rel
 tests-min:
 	echo "MINIMAL CCL"
-	export FLAGS=m; make -s test-suite
+	export FLAGS=m; make -s test-suite-rel
 tests-ff-scc:
 	echo "FAST-FAIL, SCC LOOP CHECK"
-	export FLAGS=fs; make -s test-suite
+	export FLAGS=fs; make -s test-suite-rel
 tests-ff-idem:
 	echo "FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=fi; make -s test-suite
+	export FLAGS=fi; make -s test-suite-rel
 tests-min-scc:
 	echo "MINIMAL CCL, SCC LOOP CHECK"
-	export FLAGS=ms; make -s test-suite
+	export FLAGS=ms; make -s test-suite-rel
 
-test-suite: soundness
+test-suite-rel: soundness
 	$(call test_success, graph_1)
 	$(call test_failure, graph_2)
 	$(call test_success, graph_3)
@@ -81,7 +81,27 @@ test-suite: soundness
 	$(call test_success, graph_10)
 	$(call test_failure, graph_11)
 	$(call test_failure, graph_12)
+	$(call test_success, graph_13)
 
 tests-sd:
 	echo "SPRENGER-DAM"
-	export FLAGS=D; make -s test-suite
+	export FLAGS=D; make -s test-suite-sd
+
+test-suite-sd: soundness
+	$(call test_success, graph_1)
+	$(call test_failure, graph_2)
+	$(call test_success, graph_3)
+	$(call test_success, graph_4)
+	$(call test_success, graph_5)
+	$(call test_failure, graph_6)
+	$(call test_failure, graph_7)
+	$(call test_failure, graph_8)
+	$(call test_failure, graph_8a)
+	$(call test_success, graph_8b)
+	$(call test_failure, graph_9)
+	$(call test_failure, graph_9a)
+	$(call test_failure, graph_9b)
+	$(call test_success, graph_10)
+	$(call test_failure, graph_11)
+	$(call test_failure, graph_12)
+	$(call test_failure, graph_13)
