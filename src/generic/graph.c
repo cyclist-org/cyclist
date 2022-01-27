@@ -162,15 +162,26 @@ bool Graph::check_SD(void){
     for( std::vector<Int_pair>* G : *SG){
 
         if( result ){
-            auto SubSG = get_subgraphs(G);
-            if( SubSG == nullptr ) continue;
-            for( std::vector<Int_pair>* G_p : *SubSG){
-                if( result && !check_SCCs_SD_decreasing(G_p) ) result = false;
-                delete G_p;
+
+            int n = G->size();
+            if( n < 2 ){
+                delete G;
+                continue;
             }
-            delete SubSG;
+            int count = std::pow(2, n);
+            
+            for (int i = count - 1; i > 0; i--) {
+                std::vector<Int_pair>* SubSG = new std::vector<Int_pair>();
+                for (int j = 0; j < n; j++) {
+                    if ((i & (1 << j)) != 0){
+                        SubSG->push_back(G->at(j));
+                    }
+                }
+                if( result && !check_SCCs_SD_decreasing(SubSG) ) result = false;
+                delete SubSG;
+            }
+
         }
-        
         delete G;
     }
     delete SG;
