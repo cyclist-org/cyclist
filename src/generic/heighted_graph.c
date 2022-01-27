@@ -290,13 +290,14 @@ bool Heighted_graph::relational_check(int opts){
 
     // Now compute the CCL
     bool done = false;
-    while (!done) {
+    // while (!done) {
         ccl_iterations++;
         // reset loop flag
         done = true;
         for (int source = 0; source < num_nodes; source++) {
-        for (int middle = 0; middle < num_nodes; middle++) {
         for (int sink = 0; sink < num_nodes; sink++) {
+        for (int middle = 0; middle < num_nodes; middle++) {
+
 
             for (
                 auto left = Ccl[source][middle]->begin();
@@ -397,7 +398,7 @@ bool Heighted_graph::relational_check(int opts){
         }
         }
         }
-    }
+    // }
 
     // If not using fast-fail, then check for self-loops in the computed CCL
     if ((opts & FAIL_FAST) == 0) {

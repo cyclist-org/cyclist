@@ -32,8 +32,11 @@ private:
     void                    extract_SCC(int u);
     void                    get_SCCs(std::vector<Int_pair>*);
     bool                    check_descending_SD(std::vector<Int_pair>*);
-    // bool                    check_descending_SD_singleton(std::vector<Int_pair>*);
+    bool                    check_descending_SD_singleton(void);
     bool                    enumerate_and_check_SD(int,std::vector<int>*,Map<int,int>*,std::vector<int>*,std::vector<Int_pair>*);
+    bool                    check_SCCs_SD_decreasing(std::vector<Int_pair>*,std::vector<std::vector<Int_pair>*>*);
+    bool                    check_SCCs_SD_decreasing(std::vector<std::vector<Int_pair>*>*);
+    bool                    check_SCCs_SD_decreasing(std::vector<Int_pair>*);
 
     std::vector<std::vector<Int_pair>*>* get_subgraphs(std::vector<Int_pair>*);
 
@@ -41,12 +44,8 @@ public:
 
     Graph(std::vector<Int_pair>*,std::vector<Int_SET*>*,Sloped_relation***,int,int);
     ~Graph(void);
-
     bool check_SD(void);
-
     void print_SCCs(void);
-
-    void a();
 
 };
 
