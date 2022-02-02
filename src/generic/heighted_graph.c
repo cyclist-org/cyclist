@@ -261,19 +261,23 @@ bool Heighted_graph::relational_check(int opts){
     // It doesn't make sense to combine the idempotence and the SCC-based loop check
     assert(((opts & USE_IDEMPOTENCE) == 0) || ((opts & USE_SCC_CHECK) == 0));
 
-    /* N.B. It is useless to combine the fast-fail and minimality optimisations.
-            The point of the minimality optimisation is to not have to check for
-            self-loops in all sloped relations. But when applying the minimality
-            optimisation, it can be that we replace a sloped relation with a
-            self-loop by one without a self-loop. Therefore, if checking for
-            self-loops on-the-fly, we would still end up having to check every
-            sloped relation anyway.
+    /* N.B. Initially, we though that it is useless to combine the fast-fail and
+            minimality optimisations, since the point of the minimality
+            optimisation is to not have to check for self-loops in all sloped
+            relations. So when applying the minimality optimisation, it can be
+            that we replace a sloped relation with a self-loop by one without a
+            self-loop. Therefore, if checking for self-loops on-the-fly, we
+            would still end up having to check every sloped relation anyway.
 
-            If both flags are set, then we ignore (unset) fast-fail
+            However, experimentally, we did not see sloped relations being
+            replaced in the CCL when using the minimality optimisation. Instead,
+            we only observed that newly computed relations were rejected,
+            leading to the CCL being significantly smaller in some cases.
+            So, this being the case, it **does** make sense to combine it with
+            fast-fail: if we detect that we need to add a newly computed sloped
+            relation to the CCL, at that point we check the self-loop, and
+            otherwise we simply reject the relation and fail.
      */
-    if ((opts & USE_MINIMALITY) != 0) {
-        opts &= ~FAIL_FAST;
-    }
 
     // If fail-fast, then need to check initial sloped relations for self-loops
     if ((opts & FAIL_FAST) != 0) {
@@ -373,8 +377,8 @@ bool Heighted_graph::relational_check(int opts){
                             && ((opts & FAIL_FAST) != 0)
                             && source == sink
                             && !(check_self_loop(R, source, opts))) {
-                        fail_now = true;
-                        need_to_add = false;
+                        rejected->push_back(R);
+                        return false;
                     }
 
                     if (need_to_add) {
@@ -389,8 +393,6 @@ bool Heighted_graph::relational_check(int opts){
                     } else {
                         rejected->push_back(R);
                     }
-
-                    if (fail_now) { return false; }
                 }
             }
 
