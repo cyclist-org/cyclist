@@ -54,6 +54,7 @@ public:
     static const int USE_SCC_CHECK;
     static const int USE_IDEMPOTENCE;
     static const int USE_MINIMALITY;
+    static const int COMPUTE_FULL_CCL;
     static const int USE_SD;
 
     static int parse_flags(const std::string flags);

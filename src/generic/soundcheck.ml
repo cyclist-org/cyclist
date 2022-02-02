@@ -688,6 +688,7 @@ module RelationalCheck = struct
     let flag_use_scc_check = 0b0010
     let flag_use_idempotence = 0b0100
     let flag_use_minimality = 0b1000
+    let flag_compute_full_ccl = 0b10000
 
     let opts = ref 0
   
@@ -716,6 +717,8 @@ module RelationalCheck = struct
           "Cannot use both minimality and idempotence - ignoring minimality!"
       else
         opts := !opts lor flag_use_minimality
+    let compute_full_ccl () =
+      opts := !opts lor flag_compute_full_ccl
 
     let check_proof p =
       let process_succ n (n', tps, prog) =
@@ -761,7 +764,8 @@ include (RelationalCheck.Ext : sig
   val fail_fast : unit -> unit
   val use_scc_check : unit -> unit
   val use_idempotence : unit -> unit
-  val use_minimality : unit -> unit    
+  val use_minimality : unit -> unit
+  val compute_full_ccl : unit -> unit
 end)
 
 let arg_opts =
@@ -773,7 +777,7 @@ let arg_opts =
     ("-scc", Arg.Unit use_scc_check, ": use SCC check in relation-based validity check") ;
     ("-idem", Arg.Unit use_idempotence, ": use idempotency optimisation in relation-based validity check") ;
     ("-min", Arg.Unit use_minimality, ": use minimality optimisation in relation-based validity check") ;
-
+    ("-full", Arg.Unit compute_full_ccl, ": compute the full CCL") ;
   ]
 
 module CheckCache = Hashtbl

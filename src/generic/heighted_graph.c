@@ -13,11 +13,12 @@
 
 // N.B. These MUST match the corresponding constants in the OCaml code
 //      Look in soundcheck.ml
-const int Heighted_graph::FAIL_FAST       = 0b00001;
-const int Heighted_graph::USE_SCC_CHECK   = 0b00010;
-const int Heighted_graph::USE_IDEMPOTENCE = 0b00100;
-const int Heighted_graph::USE_MINIMALITY  = 0b01000;
-const int Heighted_graph::USE_SD          = 0b10000;
+const int Heighted_graph::FAIL_FAST        = 0b000001;
+const int Heighted_graph::USE_SCC_CHECK    = 0b000010;
+const int Heighted_graph::USE_IDEMPOTENCE  = 0b000100;
+const int Heighted_graph::USE_MINIMALITY   = 0b001000;
+const int Heighted_graph::COMPUTE_FULL_CCL = 0b010000;
+const int Heighted_graph::USE_SD           = 0b100000;
 
 int Heighted_graph::parse_flags(const std::string flags_s) {
     int flags = 0;
@@ -27,6 +28,7 @@ int Heighted_graph::parse_flags(const std::string flags_s) {
             case 's': flags |= USE_SCC_CHECK; break;
             case 'i': flags |= USE_IDEMPOTENCE; break;
             case 'm': flags |= USE_MINIMALITY; break;
+            case 'A': flags |= COMPUTE_FULL_CCL; break;
             case 'D': flags |= USE_SD; break;
         }
     }
@@ -292,8 +294,8 @@ bool Heighted_graph::relational_check(int opts){
     int num_nodes = this->num_nodes();
 
     // Now compute the CCL
-    bool done = false;
-    while (!done) {
+    bool done;
+    do {
         ccl_iterations++;
         // reset loop flag
         done = true;
@@ -399,7 +401,7 @@ bool Heighted_graph::relational_check(int opts){
         }
         }
         }
-    }
+    } while (((opts & COMPUTE_FULL_CCL) != 0) && !done);
 
     // If not using fast-fail, then check for self-loops in the computed CCL
     if ((opts & FAIL_FAST) == 0) {

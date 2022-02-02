@@ -37,32 +37,65 @@ clean:
 
 tests: tests-rel tests-sd
 
-tests-rel: tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-scc tests-ff-idem tests-min-scc
+tests-rel: tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-min tests-ff-scc tests-ff-idem tests-min-scc tests-ff-min-scc tests-1-ff tests-1-scc tests-1-idem tests-1-min tests-1-ff-min tests-1-ff-scc tests-1-ff-idem tests-1-min-scc tests-1-ff-min-scc
 
 tests-no-opts:
 	echo "NO OPTIMSATIONS";
-	make -s test-suite-rel
+	export FLAGS=A; make -s test-suite-rel
 tests-ff:
 	echo "FAST-FAIL"
-	export FLAGS=f; make -s test-suite-rel
+	export FLAGS=Af; make -s test-suite-rel
 tests-scc:
 	echo "SCC LOOP CHECK"
-	export FLAGS=s; make -s test-suite-rel
+	export FLAGS=As; make -s test-suite-rel
 tests-idem:
 	echo "IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=i; make -s test-suite-rel
+	export FLAGS=Ai; make -s test-suite-rel
 tests-min:
 	echo "MINIMAL CCL"
-	export FLAGS=m; make -s test-suite-rel
+	export FLAGS=Am; make -s test-suite-rel
+tests-ff-min:
+	echo "FAST-FAIL, MINIMAL CCL"
+	export FLAGS=Afm; make -s test-suite-rel
 tests-ff-scc:
 	echo "FAST-FAIL, SCC LOOP CHECK"
-	export FLAGS=fs; make -s test-suite-rel
+	export FLAGS=Afs; make -s test-suite-rel
 tests-ff-idem:
 	echo "FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=fi; make -s test-suite-rel
+	export FLAGS=Afi; make -s test-suite-rel
 tests-min-scc:
 	echo "MINIMAL CCL, SCC LOOP CHECK"
+	export FLAGS=Ams; make -s test-suite-rel
+tests-ff-min-scc:
+	echo "MINIMAL CCL, SCC LOOP CHECK"
+	export FLAGS=Afms; make -s test-suite-rel
+tests-1-ff:
+	echo "FAST-FAIL"
+	export FLAGS=f; make -s test-suite-rel
+tests-1-scc:
+	echo "SCC LOOP CHECK"
+	export FLAGS=s; make -s test-suite-rel
+tests-1-idem:
+	echo "IDEMPOTENT RELATIONS ONLY"
+	export FLAGS=i; make -s test-suite-rel
+tests-1-min:
+	echo "MINIMAL CCL"
+	export FLAGS=m; make -s test-suite-rel
+tests-1-ff-min:
+	echo "FAST-FAIL, MINIMAL CCL"
+	export FLAGS=fm; make -s test-suite-rel
+tests-1-ff-scc:
+	echo "FAST-FAIL, SCC LOOP CHECK"
+	export FLAGS=fs; make -s test-suite-rel
+tests-1-ff-idem:
+	echo "FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
+	export FLAGS=fi; make -s test-suite-rel
+tests-1-min-scc:
+	echo "MINIMAL CCL, SCC LOOP CHECK"
 	export FLAGS=ms; make -s test-suite-rel
+tests-1-ff-min-scc:
+	echo "MINIMAL CCL, SCC LOOP CHECK"
+	export FLAGS=fms; make -s test-suite-rel
 
 test-suite-rel: soundness
 	$(call test_success, graph_1)
