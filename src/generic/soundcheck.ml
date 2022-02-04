@@ -691,6 +691,7 @@ module RelationalCheck = struct
     let flag_compute_full_ccl = 0b10000
 
     let opts = ref 0
+    let do_stats = ref false
   
     let fail_fast () =
       opts := !opts lor flag_fail_fast
@@ -749,7 +750,7 @@ module RelationalCheck = struct
           failwith "Unexpected soundness check method!" in
       (* debug (fun () -> "Composition Closure:\n") ; *)
       (* if !do_debug then print_ccl() ; *)
-      if !do_debug then print_stats ();
+      if !do_stats then print_stats ();
       destroy_hgraph () ;
       if retval then Stats.MC.accept () else Stats.MC.reject () ;
       debug (fun () ->
@@ -766,6 +767,7 @@ include (RelationalCheck.Ext : sig
   val use_idempotence : unit -> unit
   val use_minimality : unit -> unit
   val compute_full_ccl : unit -> unit
+  val do_stats : bool ref
 end)
 
 let arg_opts =
@@ -778,6 +780,7 @@ let arg_opts =
     ("-idem", Arg.Unit use_idempotence, ": use idempotency optimisation in relation-based validity check") ;
     ("-min", Arg.Unit use_minimality, ": use minimality optimisation in relation-based validity check") ;
     ("-full", Arg.Unit compute_full_ccl, ": compute the full CCL") ;
+    ("-rel-stats", Arg.Set do_stats, ": print out profiling stats for the relation-based validity check")
   ]
 
 module CheckCache = Hashtbl
