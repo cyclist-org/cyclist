@@ -45,7 +45,7 @@ for n in ${inputs[@]}; do
   for i in ${!opts_with_sd[@]}; do
     opt=${opts_with_sd[i]}
     suffix=$(echo "$opt" | sed -r 's/\s+//g')
-    (set -x; time dune exec tests/soundness/test1.exe -- $opt -rel-stats $n) >> "$logdir/benchmarks_${now}$suffix.log" 2>&1
+    (set -x; time dune exec --context=test2-benchmarks tests/soundness/test2.exe -- $opt -rel-stats $n) >> "$logdir/benchmarks_${now}$suffix.log" 2>&1
   done
 done
 
