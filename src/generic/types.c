@@ -28,4 +28,9 @@ enum comparison {
   noncomp // Incomparable
 };
 
+enum SD_decrease_type {
+  STD,
+  XTD
+};
+
 #endif

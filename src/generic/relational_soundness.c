@@ -107,3 +107,12 @@ extern "C" value sd_check() {
   v_res = Val_bool(retval);
   CAMLreturn(v_res);
 }
+
+extern "C" value xsd_check() {
+  CAMLparam0();
+  CAMLlocal1(v_res);
+  assert(hg);
+  bool retval = (hg->xsd_check());
+  v_res = Val_bool(retval);
+  CAMLreturn(v_res);
+}

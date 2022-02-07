@@ -51,6 +51,8 @@ int main(int argc, char** argv) {
         bool result;
         if ((opts & Heighted_graph::USE_SD) != 0) {
             result = hg.sd_check();
+        } else if ((opts & Heighted_graph::USE_XSD) != 0) {
+            result = hg.xsd_check();
         } else {
             result = hg.relational_check(opts);
             // hg.print_Ccl();

@@ -13,12 +13,13 @@
 
 // N.B. These MUST match the corresponding constants in the OCaml code
 //      Look in soundcheck.ml
-const int Heighted_graph::FAIL_FAST        = 0b000001;
-const int Heighted_graph::USE_SCC_CHECK    = 0b000010;
-const int Heighted_graph::USE_IDEMPOTENCE  = 0b000100;
-const int Heighted_graph::USE_MINIMALITY   = 0b001000;
-const int Heighted_graph::COMPUTE_FULL_CCL = 0b010000;
-const int Heighted_graph::USE_SD           = 0b100000;
+const int Heighted_graph::FAIL_FAST        = 0b0000001;
+const int Heighted_graph::USE_SCC_CHECK    = 0b0000010;
+const int Heighted_graph::USE_IDEMPOTENCE  = 0b0000100;
+const int Heighted_graph::USE_MINIMALITY   = 0b0001000;
+const int Heighted_graph::COMPUTE_FULL_CCL = 0b0010000;
+const int Heighted_graph::USE_SD           = 0b0100000;
+const int Heighted_graph::USE_XSD          = 0b1000000;
 
 int Heighted_graph::parse_flags(const std::string flags_s) {
     int flags = 0;
@@ -30,8 +31,10 @@ int Heighted_graph::parse_flags(const std::string flags_s) {
             case 'm': flags |= USE_MINIMALITY; break;
             case 'A': flags |= COMPUTE_FULL_CCL; break;
             case 'D': flags |= USE_SD; break;
+            case 'X': flags |= USE_XSD; break;
         }
     }
+    assert(((flags & USE_SD) == 0) || ((flags & USE_XSD) == 0));
     return flags;
 }
 
@@ -413,7 +416,7 @@ bool Heighted_graph::relational_check(int opts){
     return true;
 }
 
-bool Heighted_graph::sd_check() {
+bool Heighted_graph::set_based_check(SD_decrease_type SD_DEC_TYPE) {
     int size_ = this->num_nodes();
     for( int node = 0; node < size_; node++ ){
     for( int node_ = 0; node_ < size_; node_++ ){
@@ -424,7 +427,15 @@ bool Heighted_graph::sd_check() {
     }
     }
     Graph G(edges,&HeightsOf,h_change_, num_nodes(),max_height);
-    return G.check_SD();
+    return G.check_SD(SD_DEC_TYPE);
+}
+
+bool Heighted_graph::sd_check() {
+    return set_based_check(STD);
+}
+
+bool Heighted_graph::xsd_check() {
+    return set_based_check(XTD);
 }
 
 void Heighted_graph::print_Ccl(void){

@@ -26,16 +26,19 @@ heighted_graph.o: ../heighted_graph.hpp ../heighted_graph.c ../sloped_relation.h
 sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
 	g++ -I ../ -L/opt/lib -g -c ../sloped_relation.c -o sloped_relation.o
 
-graph.o: ../graph.c ../graph.hpp ../sloped_relation.hpp
+graph.o: ../graph.c ../graph.hpp ../sloped_relation.hpp ../thread_pool.hpp
 	g++ -I ../ -L/opt/lib -g -c ../graph.c -o graph.o
 
-.PHONY: clean tests test-suite tests-rel
-.SILENT: tests tests-rel tests-sd test-suite-rel test-suite-sd test_success test_failure tests-no-opts tests-ff tests-scc tests-min tests-idem tests-ff-scc tests-min-scc tests-ff-idem
+.PHONY: clean tests test-suite-rel test-suite-sd tests-rel tests-set tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-min tests-ff-scc tests-ff-idem tests-min-scc tests-ff-min-scc tests-1-ff tests-1-scc tests-1-idem tests-1-min tests-1-ff-min tests-1-ff-scc tests-1-ff-idem tests-1-min-scc tests-1-ff-min-scc tests-sd tests-xsd
+
+.SILENT: tests tests-rel tests-set tests-sd tests-xsd test-suite-rel test-suite-sd test_success test_failure tests-no-opts tests-ff tests-scc tests-min tests-idem tests-ff-scc tests-min-scc tests-ff-idem
 
 clean: 
 	rm -f ./*.o soundness
 
-tests: tests-rel tests-sd
+tests: tests-rel tests-set
+
+tests-set: tests-sd tests-xsd
 
 tests-rel: tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-min tests-ff-scc tests-ff-idem tests-min-scc tests-ff-min-scc tests-1-ff tests-1-scc tests-1-idem tests-1-min tests-1-ff-min tests-1-ff-scc tests-1-ff-idem tests-1-min-scc tests-1-ff-min-scc
 
@@ -119,6 +122,10 @@ test-suite-rel: soundness
 tests-sd:
 	echo "SPRENGER-DAM"
 	export FLAGS=D; make -s test-suite-sd
+
+tests-xsd:
+	echo "EXTENDED SPRENGER-DAM"
+	export FLAGS=X; make -s test-suite-sd
 
 test-suite-sd: soundness
 	$(call test_success, graph_1)

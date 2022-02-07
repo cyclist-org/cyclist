@@ -44,6 +44,7 @@ private:
     std::chrono::duration<double, DURATION> loop_check_time;
 
     bool check_self_loop(Sloped_relation *R, int node, int opts);
+    bool set_based_check(SD_decrease_type SD_DEC_TYPE);
     bool check_Ccl(int opts);
 
 public:
@@ -56,6 +57,7 @@ public:
     static const int USE_MINIMALITY;
     static const int COMPUTE_FULL_CCL;
     static const int USE_SD;
+    static const int USE_XSD;
 
     static int parse_flags(const std::string flags);
 
@@ -73,6 +75,7 @@ public:
     int num_edges(void);
     bool relational_check(int opts);
     bool sd_check();
+    bool xsd_check();
     void print_Ccl(void);
     void print_statistics(void);
 };

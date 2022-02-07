@@ -20,7 +20,10 @@ val use_external : unit -> unit
 val use_sprengerdam : unit -> unit
 (** Flag to indicate whether trace condition check should be done by the
     Sprenger-Dam method (only implemented in external C++ code). *)
-
+val use_xtd_sprengerdam : unit -> unit
+(** Flag to indicate whether trace condition check should be done by the
+    Extended Sprenger-Dam method (only implemented in external C++ code). *)
+    
 val fail_fast : unit -> unit
 (** Set fail_fast flag for C++ relation-based trace condition check *)
 val use_scc_check : unit -> unit
