@@ -119,7 +119,7 @@ let speclist =
   ]
 
 let usage =
-  "usage: " ^ Sys.argv.(0) ^ " [-d] [-s] [-spot|-ext] [<size>]"
+  "usage: " ^ Sys.argv.(0) ^ " [-d] [-s] [-spot|-rel-ext|SD [-full][-ff][-scc][-idem][-min][-rel-stats]]"
 
 let () =
   Arg.parse speclist (fun _ -> ()) usage
@@ -128,18 +128,26 @@ let () =
   let () = gc_setup () in
   let () = Format.set_margin (Sys.command "exit $(tput cols)") in
   let buf = Buffer.create 2014 in
+  let comment = ref false in
   while true do
     let ready = 
       try
         let c = input_char stdin in
-        let () = Buffer.add_char buf c in
-        Char.equal c ';'
+        let () =
+          if not !comment && Char.equal c '#'
+            then comment := true 
+          else if Char.equal c '\n'
+            then comment := false in
+        let () = 
+          if not !comment then Buffer.add_char buf c in
+        not !comment && Char.equal c ';'
       with End_of_file -> true in
     if ready then
       let input = Buffer.contents buf in
       let () = Buffer.clear buf in
       match (parse_string (spaces >> eof) input ()) with
       | Success _ ->
+        (* if input consists of nothing but spaces *)
         exit 0
       | Failed _ ->
         let (prf, init) =
