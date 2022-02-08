@@ -40,7 +40,7 @@ done
 # -rel-ext -min -scc -ff n = 375 ~475s
 # -rel-ext -min -scc -ff n = 379 OUT OF MEMORY
 
-inputs="1 $(seq 25 25 375)"
+inputs="1 $(seq 20 20 180)"
 for n in ${inputs[@]}; do
   for i in ${!opts[@]}; do
     opt=${opts_with_sd[i]}
