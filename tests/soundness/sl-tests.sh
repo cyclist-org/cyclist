@@ -4,7 +4,7 @@ logdir=$1
 
 opts=("-spot" "-SD" "-rel-ext" "-rel-ext -min" "-rel-ext -scc" "-rel-ext -ff" "-rel-ext -min -scc" "-rel-ext -min -ff" "-rel-ext -min -scc -ff" "-rel-ext -full" "-rel-ext -full -min" "-rel-ext -full -scc" "-rel-ext -full -ff" "-rel-ext -full -min -scc" "-rel-ext -full -min -ff" "-rel-ext -full -min -scc -ff" )
 
-now=$(date +"%y-%m-%d_%H-%M-%S")
+now=$(date +"%Y-%m-%d_%H-%M-%S")
 
 for i in ${!opts[@]}; do
   opt=${opts[i]}
