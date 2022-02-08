@@ -735,14 +735,15 @@ module RelationalCheck = struct
               else add_stay n h n' h')
           (tps) ;
         in
-      let process_node n (tags, succs) =
-        Int.Set.iter (add_height n) tags ;
-        List.iter (process_succ n) succs ; in
+      let add_heights n (tags, _) =
+        Int.Set.iter (add_height n) tags in
+      let add_edges n (_, succs) =
+        List.iter (process_succ n) succs in
       Stats.MC.call () ;
       debug (fun () -> "Checking soundness starts...") ;
       create_hgraph (Lib.Int.Map.cardinal p) ;
-      Int.Map.iter (fun n _ -> add_node n) p ;
-      Int.Map.iter process_node p ;
+      Int.Map.iter add_heights p ;
+      Int.Map.iter add_edges p ;
       (* debug (fun () -> "Built height graph") ; *)
       let retval = 
         match !soundness_method with

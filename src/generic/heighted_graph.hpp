@@ -26,6 +26,7 @@ private:
     std::vector<int>        max_heights;
     std::vector<Int_pair>*  edges;
 
+    int flags;
 
     int                     ccl_initial_size;
     int                     ccl_size;
@@ -60,6 +61,7 @@ public:
     static const int USE_XSD;
 
     static int parse_flags(const std::string flags);
+    static void print_flags(int flags);
 
     Heighted_graph(int max_nodes);
     ~Heighted_graph(void);

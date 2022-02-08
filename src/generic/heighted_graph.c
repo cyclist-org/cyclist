@@ -38,6 +38,16 @@ int Heighted_graph::parse_flags(const std::string flags_s) {
     return flags;
 }
 
+void Heighted_graph::print_flags(int flags) {
+    if ((flags & FAIL_FAST) != 0) std::cout << "FAIL_FAST" << std::endl;
+    if ((flags & USE_SCC_CHECK) != 0) std::cout << "USE_SCC_CHECK" << std::endl;
+    if ((flags & USE_IDEMPOTENCE) != 0) std::cout << "USE_IDEMPOTENCE" << std::endl;
+    if ((flags & USE_MINIMALITY) != 0) std::cout << "USE_MINIMALITY" << std::endl;
+    if ((flags & COMPUTE_FULL_CCL) != 0) std::cout << "COMPUTE_FULL_CCL" << std::endl;
+    if ((flags & USE_SD) != 0) std::cout << "USE_SD" << std::endl;
+    if ((flags & USE_XSD) != 0) std::cout << "USE_XSD" << std::endl;
+}
+
 // Construcor
 Heighted_graph::Heighted_graph(int max_nodes) {
 
@@ -160,6 +170,8 @@ void Heighted_graph::add_edge(int source, int sink) {
 
 void Heighted_graph::add_hchange(int source, int source_h, int sink, int sink_h, slope s) {
     add_edge(source, sink);
+    add_height(source, source_h);
+    add_height(sink, sink_h);
     int src_idx = node_idxs[source];
     int sink_idx = node_idxs[sink];
     h_change_[src_idx][sink_idx]->add(height_idxs[source_h], height_idxs[sink_h], s);
@@ -255,6 +267,8 @@ bool Heighted_graph::check_Ccl(int opts) {
 }
 
 bool Heighted_graph::relational_check(int opts){
+
+    this->flags = opts;
 
     // if ((opts & FAIL_FAST) != 0) std::cout << "Fail Fast\n";
     // if ((opts & USE_SCC_CHECK) != 0) std::cout << "Use SCC Check\n";
@@ -431,10 +445,12 @@ bool Heighted_graph::set_based_check(SD_decrease_type SD_DEC_TYPE) {
 }
 
 bool Heighted_graph::sd_check() {
+    this->flags |= USE_SD;
     return set_based_check(STD);
 }
 
 bool Heighted_graph::xsd_check() {
+    this->flags |= USE_XSD;
     return set_based_check(XTD);
 }
 
@@ -453,6 +469,7 @@ void Heighted_graph::print_Ccl(void){
 }
 
 void Heighted_graph::print_statistics(void) {
+    print_flags(this->flags);
     std::cout << "Initial CCL size: " << ccl_initial_size << std::endl;
     std::cout << "Final CCL size: " << ccl_size << std::endl;
     std::cout << "Number of iterations to compute CCL: " << ccl_iterations << std::endl;
