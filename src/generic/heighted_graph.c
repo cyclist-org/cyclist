@@ -328,7 +328,6 @@ bool Heighted_graph::relational_check(int opts){
             ) {
                 Sloped_relation* P = *left;
                 P->initialize();
-                if (P->size() == 0) continue;
                 for (
                     auto right = Ccl[middle][sink]->begin();
                     right != Ccl[middle][sink]->end();
@@ -336,14 +335,12 @@ bool Heighted_graph::relational_check(int opts){
                 ) {
                     Sloped_relation* Q = *right;
                     Q->initialize();
-                    if (Q->size() == 0) continue;
                     start = std::chrono::system_clock::now();
                     Sloped_relation* R = P->compose(*Q);
                     end = std::chrono::system_clock::now();
                     compose_time += (end - start);
                     compositions++;
                     total_size_sum += R->size();
-                    if (R->size() == 0) continue;
 
                     bool need_to_add = true;
                     auto loop_start = std::chrono::system_clock::now();
