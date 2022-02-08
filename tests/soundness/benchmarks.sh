@@ -2,7 +2,7 @@
 
 logdir=$1
 
-now=$(date +"%yyyy-%m-%d_%H-%M-%S")
+now=$(date +"%Y-%m-%d_%H-%M-%S")
 
 spot_suffix="${now}_spot.log"
 rel_suffix="${now}_rel.log"
@@ -42,7 +42,7 @@ done
 
 inputs="1 $(seq 25 25 375)"
 for n in ${inputs[@]}; do
-  for i in ${!opts_with_sd[@]}; do
+  for i in ${!opts[@]}; do
     opt=${opts_with_sd[i]}
     suffix=$(echo "$opt" | sed -r 's/\s+//g')
     (set -x; time dune exec --context=test2-benchmarks tests/soundness/test2.exe -- $opt -rel-stats $n) >> "$logdir/test2_benchmarks_${now}$suffix.log" 2>&1
