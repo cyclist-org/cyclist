@@ -27,15 +27,15 @@ Graph::Graph(std::vector<Int_pair>* edges,std::vector<Int_SET*>* HeightsOf,Slope
 
 Graph::~Graph(void){
     delete node_idxs;
-    if( slope_change_functions ){
-         for( int i = 0 ; i < max_node ; i++ ){
-             for(int j = 0 ; j < max_node ; j++ ){
-                 delete slope_change_functions[i][j];
-             }
-             delete slope_change_functions[i];
-         }
-         delete slope_change_functions;
-    }
+    // if( slope_change_functions ){
+    //      for( int i = 0 ; i < max_node ; i++ ){
+    //          for(int j = 0 ; j < max_node ; j++ ){
+    //              delete slope_change_functions[i][j];
+    //          }
+    //          delete slope_change_functions[i];
+    //      }
+    //      delete slope_change_functions;
+    // }
 }
 
 bool Graph::check_SCCs_SD_decreasing(SD_decrease_type SD_DEC_TYPE,std::vector<std::vector<Int_pair>*>* SG,Map<int,Int_pair_SET>* SCCs){

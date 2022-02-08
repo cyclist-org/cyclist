@@ -26,7 +26,7 @@ heighted_graph.o: ../heighted_graph.hpp ../heighted_graph.c ../sloped_relation.h
 sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
 	g++ -I ../ -L/opt/lib -g -c ../sloped_relation.c -o sloped_relation.o
 
-graph.o: ../graph.c ../graph.hpp ../sloped_relation.hpp ../thread_pool.hpp
+graph.o: ../graph.c ../graph.hpp ../sloped_relation.hpp
 	g++ -I ../ -L/opt/lib -g -c ../graph.c -o graph.o
 
 .PHONY: clean tests test-suite-rel test-suite-sd tests-rel tests-set tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-min tests-ff-scc tests-ff-idem tests-min-scc tests-ff-min-scc tests-1-ff tests-1-scc tests-1-idem tests-1-min tests-1-ff-min tests-1-ff-scc tests-1-ff-idem tests-1-min-scc tests-1-ff-min-scc tests-sd tests-xsd
