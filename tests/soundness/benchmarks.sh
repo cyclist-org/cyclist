@@ -1,6 +1,11 @@
 #!/bin/bash
 
 logdir=$1
+iterations=$2
+
+if [ -z "$iterations" ]; then
+  iterations=1
+fi
 
 now=$(date +"%Y-%m-%d_%H-%M-%S")
 
@@ -26,7 +31,9 @@ for n in ${inputs[@]}; do
   for i in ${!opts_with_sd[@]}; do
     opt=${opts_with_sd[i]}
     suffix=$(echo "$opt" | sed -r 's/\s+//g')
-    (set -x; time dune exec tests/soundness/test1.exe -- $opt -rel-stats $n) >> "$logdir/test1_benchmarks_${now}$suffix.log" 2>&1
+    for j in $(seq 1 1 $iterations); do
+      (set -x; time dune exec tests/soundness/test1.exe -- $opt -rel-stats $n) >> "$logdir/test1_benchmarks_${now}$suffix.$j.log" 2>&1
+    done
   done
 done
 
@@ -45,7 +52,9 @@ for n in ${inputs[@]}; do
   for i in ${!opts[@]}; do
     opt=${opts_with_sd[i]}
     suffix=$(echo "$opt" | sed -r 's/\s+//g')
-    (set -x; time dune exec --context=test2-benchmarks tests/soundness/test2.exe -- $opt -rel-stats $n) >> "$logdir/test2_benchmarks_${now}$suffix.log" 2>&1
+    for j in $(seq 1 1 $iterations); do
+      (set -x; time dune exec --context=test2-benchmarks tests/soundness/test2.exe -- $opt -rel-stats $n) >> "$logdir/test2_benchmarks_${now}$suffix.$j.log" 2>&1
+    done
   done
 done
 
@@ -57,6 +66,8 @@ for n in ${inputs[@]}; do
   for i in ${!opts[@]}; do
     opt=${opts[i]}
     suffix=$(echo "$opt" | sed -r 's/\s+//g')
-    (set -x; time dune exec tests/soundness/test3.exe -- $opt -rel-stats $n) >> "$logdir/test3_benchmarks_${now}$suffix.log" 2>&1
+    for j in $(seq 1 1 $iterations); do
+      (set -x; time dune exec tests/soundness/test3.exe -- $opt -rel-stats $n) >> "$logdir/test3_benchmarks_${now}$suffix.$j.log" 2>&1
+    done
   done
 done
