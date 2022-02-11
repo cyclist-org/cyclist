@@ -1,6 +1,6 @@
 TEST_EXE=./soundness
 
-TIMEOUT := $(if $(TIMEOUT),$(TIMEOUT),2)
+TIMEOUT := $(if $(TIMEOUT),$(TIMEOUT),60)
 
 define test_success
 	echo "TEST: $(1), FLAGS=$$FLAGS"
@@ -119,6 +119,10 @@ test-suite-rel: soundness
 	$(call test_failure, graph_12)
 	$(call test_success, graph_13)
 	$(call test_failure, graph_14)
+	$(call test_failure, graph_15)
+	$(call test_failure, graph_16a)
+	$(call test_failure, graph_16b)
+	$(call test_failure, graph_16c)
 
 tests-sd:
 	echo "SPRENGER-DAM"
@@ -147,3 +151,7 @@ test-suite-sd: soundness
 	$(call test_failure, graph_12)
 	$(call test_failure, graph_13)
 	$(call test_failure, graph_14)
+	$(call test_failure, graph_15)
+	$(call test_failure, graph_16a)
+	$(call test_failure, graph_16b)
+	$(call test_failure, graph_16c)
