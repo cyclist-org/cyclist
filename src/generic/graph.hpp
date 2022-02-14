@@ -49,7 +49,7 @@ private:
 
     void                    mark_nodes(int,std::list<int>*,int*,int*,std::stack<int>*,bool*);
     void                    extract_SCC(int,Map<int,Int_pair_SET>*,std::list<int>*,int*,int*,std::stack<int>*,bool*);
-    void                    get_SCCs(std::vector<Int_pair>*,Map<int,Int_pair_SET>*);
+    void                    get_SCCs(std::vector<Int_pair>*,Map<int,Int_pair_SET>*,int max_node);
 
     bool                    check_descending_SD(std::vector<Int_pair>*);
     bool                    check_descending_SD_singleton(void);

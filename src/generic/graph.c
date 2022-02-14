@@ -317,8 +317,8 @@ void  Graph::extract_SCC(int u,Map<int,Int_pair_SET>* SCCs,std::list<int>* adj,i
     }
 }
 
-void Graph::get_SCCs(std::vector<Int_pair>* e,Map<int,Int_pair_SET>* SCCs){
-    int max_node = 99999;
+void Graph::get_SCCs(std::vector<Int_pair>* e,Map<int,Int_pair_SET>* SCCs, int max_node){
+    // int max_node = 99999;
     std::list<int>* adj = new std::list<int>[max_node];
     int* disc = new int[max_node];
     int* low = new int[max_node];
@@ -472,7 +472,7 @@ bool Graph::check_set_choice_decrease(std::vector<Pair<Int_pair,Int_pair>>* ext_
         }
         mapped_edges->push_back(Int_pair(node_idxs_->at(e.first),node_idxs_->at(e.second)));
     }
-    get_SCCs(mapped_edges,SCCs);
+    get_SCCs(mapped_edges,SCCs,mapped_edges->size());
     
     // check covers all edges
     for( auto SCC : *SCCs){
