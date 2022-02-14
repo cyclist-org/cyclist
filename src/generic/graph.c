@@ -472,7 +472,7 @@ bool Graph::check_set_choice_decrease(std::vector<Pair<Int_pair,Int_pair>>* ext_
         }
         mapped_edges->push_back(Int_pair(node_idxs_->at(e.first),node_idxs_->at(e.second)));
     }
-    get_SCCs(mapped_edges,SCCs,mapped_edges->size());
+    get_SCCs(mapped_edges,SCCs,mapped_edges->size()+1);
     
     // check covers all edges
     for( auto SCC : *SCCs){
