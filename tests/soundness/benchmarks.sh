@@ -8,9 +8,7 @@ if [ -z "$iterations" ]; then
 fi
 
 now=$(date +"%Y-%m-%d_%H-%M-%S")
-
-spot_suffix="${now}_spot.log"
-rel_suffix="${now}_rel.log"
+sha=$(git rev-parse --short HEAD)
 
 opts=("-spot" "-rel-ext -full -ff" "-rel-ext -ff" "-rel-ext -min -ff" "-rel-ext -scc -ff" "-rel-ext -min -scc -ff")
 
@@ -32,7 +30,7 @@ for n in ${inputs[@]}; do
     opt=${opts_with_sd[i]}
     suffix=$(echo "$opt" | sed -r 's/\s+//g')
     for j in $(seq 1 1 $iterations); do
-      (set -x; time dune exec tests/soundness/test1.exe -- $opt -rel-stats $n) >> "$logdir/test1_benchmarks_${now}$suffix.$j.log" 2>&1
+      (set -x; time dune exec tests/soundness/test1.exe -- $opt -rel-stats $n) >> "$logdir/test1_benchmarks_${sha}_${now}$suffix.$j.log" 2>&1
     done
   done
 done
@@ -53,7 +51,7 @@ for n in ${inputs[@]}; do
     opt=${opts_with_sd[i]}
     suffix=$(echo "$opt" | sed -r 's/\s+//g')
     for j in $(seq 1 1 $iterations); do
-      (set -x; time dune exec --context=test2-benchmarks tests/soundness/test2.exe -- $opt -rel-stats $n) >> "$logdir/test2_benchmarks_${now}$suffix.$j.log" 2>&1
+      (set -x; time dune exec --context=test2-benchmarks tests/soundness/test2.exe -- $opt -rel-stats $n) >> "$logdir/test2_benchmarks_${sha}_${now}$suffix.$j.log" 2>&1
     done
   done
 done
@@ -67,7 +65,7 @@ for n in ${inputs[@]}; do
     opt=${opts[i]}
     suffix=$(echo "$opt" | sed -r 's/\s+//g')
     for j in $(seq 1 1 $iterations); do
-      (set -x; time dune exec tests/soundness/test3.exe -- $opt -rel-stats $n) >> "$logdir/test3_benchmarks_${now}$suffix.$j.log" 2>&1
+      (set -x; time dune exec tests/soundness/test3.exe -- $opt -rel-stats $n) >> "$logdir/test3_benchmarks_${sha}_${now}$suffix.$j.log" 2>&1
     done
   done
 done
