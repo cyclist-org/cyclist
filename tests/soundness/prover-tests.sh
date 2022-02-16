@@ -16,6 +16,6 @@ for i in ${!opts[@]}; do
   opt=${opts[i]}
   suffix=$(echo "$opt" | sed -r 's/\s+//g')
   for j in $(seq 1 1 $iterations); do
-    (set -x; TST_OPTS="$opt -s -p" make sl-tests) > "$logdir/sl-tests_${sha}_$now$suffix.$j.log" 2>&1
+    (set -x; TST_OPTS="$opt -s -p" make sl-tests fo-tests) > "$logdir/sl-tests_${sha}_$now$suffix.$j.log" 2>&1
   done
 done
