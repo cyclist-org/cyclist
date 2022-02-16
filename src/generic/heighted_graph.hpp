@@ -15,16 +15,17 @@
 
 class Heighted_graph {
 private:
-    int                     max_nodes;
-    int                     number_of_edges;
-    Map<int, int>           node_idxs;
-    Map<int, int>           height_idxs;
-    std::vector<Int_SET*>   HeightsOf;
-    Sloped_relation***      h_change_;
-    Relation_LIST***        Ccl;
-    Relation_LIST*          rejected;
-    std::vector<int>        max_heights;
-    std::vector<Int_pair>*  edges;
+    int                         max_nodes;
+    int                         number_of_edges;
+    Map<int, int>               node_idxs;
+    std::vector<Map<int, int>*> height_idxs;
+    std::vector<Int_SET*>       HeightsOf;
+    Sloped_relation***          h_change_;
+    Relation_LIST***            Ccl;
+    Relation_LIST*              rejected;
+    std::vector<Int_pair>*      edges;
+
+    int max_height = -1;
 
     int flags;
 
@@ -49,8 +50,6 @@ private:
     bool check_Ccl(int opts);
 
 public:
-    int max_height = -1;
-
     // Option flags
     static const int FAIL_FAST;
     static const int USE_SCC_CHECK;

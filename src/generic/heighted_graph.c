@@ -119,10 +119,13 @@ void clean_up(Relation_LIST*** ccl,
 
 // Destructor
 Heighted_graph::~Heighted_graph(void) {
-    for(Int_SET* heights : HeightsOf){
-        if( heights ) delete heights;
+    for (Map<int, int>* idx_map : height_idxs) {
+        if (idx_map) delete idx_map;
     }
-    if( edges ) delete edges;
+    for (Int_SET* heights : HeightsOf) {
+        if (heights) delete heights;
+    }
+    if (edges) delete edges;
     std::thread t(clean_up, Ccl, h_change_, max_nodes, rejected);
     t.detach();
 }
@@ -133,34 +136,36 @@ void Heighted_graph::add_node(int n) {
         int next_idx = node_idxs.size();
         assert(next_idx < max_nodes);
         node_idxs[n] = next_idx;
+        height_idxs.push_back(new Map<int, int>());
         HeightsOf.push_back(new Int_SET());
-        max_heights.push_back(int(0));
     }
 }
 
-void Heighted_graph::add_height(int n, int h_) {
+void Heighted_graph::add_height(int n, int h) {
     add_node(n);
-    int h;
-    if (height_idxs.find(h_) == height_idxs.end()) {
-        int next_idx = height_idxs.size();
-        height_idxs.insert(Int_pair(h_,next_idx));
+    int n_idx = node_idxs.at(n);
+    Map<int, int>* heights = height_idxs[n_idx];
+    if (heights->find(h) == heights->end()) {
+        int next_idx = heights->size();
+        heights->insert(Int_pair(h, next_idx));
     }
-    h = height_idxs.at(h_);
-    int idx = node_idxs.at(n);
-    HeightsOf[idx]->insert(h);
-    if( max_heights[idx] < h ) max_heights[idx] = h;
-    if( max_height < h ) max_height = h;
+    int h_idx = heights->at(h);
+    HeightsOf[n_idx]->insert(h_idx);
+    if( max_height < h_idx ) max_height = h_idx;
 }
 
 void Heighted_graph::add_edge(int source, int sink) {
     add_node(source);
     add_node(sink);
-    int src_idx = node_idxs[source];
-    int sink_idx = node_idxs[sink];
-    if ( h_change_[src_idx][sink_idx] == 0 ) {
+    int src_idx = node_idxs.at(source);
+    int sink_idx = node_idxs.at(sink);
+    if (h_change_[src_idx][sink_idx] == 0) {
         number_of_edges++;
         edges->push_back(Int_pair(src_idx,sink_idx));
-        Sloped_relation* R = new Sloped_relation(max_heights[src_idx],max_heights[sink_idx]);
+        int num_src_heights = height_idxs[src_idx]->size();
+        int num_dst_heights = height_idxs[sink_idx]->size();
+        Sloped_relation* R =
+            new Sloped_relation(num_src_heights, num_dst_heights);
         h_change_[src_idx][sink_idx] = R;
         Ccl[src_idx][sink_idx]->push_back(R);
         ccl_initial_size++;
@@ -173,8 +178,10 @@ void Heighted_graph::add_hchange(int source, int source_h, int sink, int sink_h,
     add_height(source, source_h);
     add_height(sink, sink_h);
     int src_idx = node_idxs[source];
+    int src_h_idx = height_idxs[src_idx]->at(source_h);
     int sink_idx = node_idxs[sink];
-    h_change_[src_idx][sink_idx]->add(height_idxs[source_h], height_idxs[sink_h], s);
+    int sink_h_idx = height_idxs[sink_idx]->at(sink_h);
+    h_change_[src_idx][sink_idx]->add(src_h_idx, sink_h_idx, s);
 }
 
 void Heighted_graph::add_stay(int source_node, int source_h, int sink_node, int sink_h) {

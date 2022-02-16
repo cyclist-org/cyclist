@@ -15,24 +15,33 @@ private:
     Map<int,Int_pair_SET*>* forward_map;        
     Map<int,Int_pair_SET*>* backward_map;
     Map<Int_pair,int>* slope_map;
-    bool initialized = false;                           // Flag for checking if relation has been initialized
     
+    // Flag for checking if relation has been initialized
+    bool initialized = false;
+    
+    // A canonical matrix representing the relation
+    int** repr_matrix;
 
-    
+    // Dimensions of the array representation
+    int num_src_heights = 0;
+    int num_dst_heights = 0;
+
+    Sloped_relation(Map<int,Int_pair_SET*>* forward_map_,
+                    Map<int,Int_pair_SET*>* backward_map_,
+                    Map<Int_pair,int>* slope_map_,
+                    int num_src_heights_,
+                    int num_dst_heights_)
+        : forward_map(forward_map_),
+          backward_map(backward_map_),
+          slope_map(slope_map_),
+          num_src_heights(num_src_heights_),
+          num_dst_heights(num_dst_heights_),
+          initialized(true)
+        {}
+
 public:
-    int max_height = -1;
-    int min_height = 0;
-    int num_heights = 0;
-    int** repr_matrix;          // A canonical matrix represinting the relation
-
-    Sloped_relation(int max_source_heights, int max_dest_height);
-
-
     Sloped_relation(void){}
-    Sloped_relation(Map<int,Int_pair_SET*>* forward_map_,Map<int,Int_pair_SET*>* backward_map_, Map<Int_pair,int>* slope_map_,int max_height_ = -1,int min_height_ = 0)
-        : forward_map(forward_map_), backward_map(backward_map_), slope_map(slope_map_), max_height(max_height_), min_height(min_height_){
-            initialized = true;
-        }
+    Sloped_relation(int num_src_heights, int num_dst_heights);
     Sloped_relation( const Sloped_relation& R );
     Sloped_relation( Sloped_relation&& R );
     Sloped_relation& operator=( const Sloped_relation& R );
@@ -42,13 +51,16 @@ public:
     void initialize(void);
 
     int size(void) const;
+
+    // Requires h1 < num_src_heights, h2 < num_dst_heights
     void add( int h1, int h2, slope s );
+    
     Int_pair_SET* get_forward_slopes( int h );
     Int_pair_SET* get_backward_slopes( int h );
     Map<Int_pair,int>* get_slopes(void);
     Sloped_relation* compose( Sloped_relation& other );
     Sloped_relation* compute_transitive_closure(void);
-    void add_or_replace(int h1, int h2, slope s);
+
     void clear(void);
     friend bool operator< ( const Sloped_relation& R, const Sloped_relation& L );
     friend bool operator== ( const Sloped_relation& R, const Sloped_relation& L );

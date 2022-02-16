@@ -1,3 +1,4 @@
+#include <cassert>
 #include <iostream>
 #include <ostream>
 #include <set>
@@ -9,8 +10,8 @@
 
 void Sloped_relation::initialize(void){
     if( initialized ) return;
-    for( int i = 0 ; i < num_heights ; i++ ){
-        for( int j = 0 ; j < num_heights ; j++ ){
+    for( int i = 0 ; i < num_src_heights ; i++ ){
+        for( int j = 0 ; j < num_dst_heights ; j++ ){
             if( repr_matrix[i][j] != Undef ){
                 auto exists = forward_map->find(i);
                 if( exists == forward_map->end() ){
@@ -33,15 +34,15 @@ void Sloped_relation::initialize(void){
 }
 
 
-Sloped_relation::Sloped_relation(int max_source_height, int max_dest_height){
-    num_heights = max_source_height+1;
-    if( max_dest_height+1 > num_heights )
-        num_heights = max_dest_height+1;
+Sloped_relation::Sloped_relation(int num_src_heights, int num_dst_heights){
+    this->num_src_heights = num_src_heights;
+    this->num_dst_heights = num_dst_heights;
 
-    repr_matrix = (int**)malloc(sizeof(int*) * num_heights);
-    for( int i = 0 ; i < num_heights ; i++ ){
-        repr_matrix[i] = (int*)malloc(sizeof(int) * num_heights);
-        for( int j = 0 ; j < num_heights ; j++ ){
+    repr_matrix = (int**)malloc(sizeof(int*) * num_src_heights);
+
+    for( int i = 0 ; i < num_src_heights ; i++ ){
+        repr_matrix[i] = (int*)malloc(sizeof(int) * num_dst_heights);
+        for( int j = 0 ; j < num_dst_heights ; j++ ){
             repr_matrix[i][j] = Undef;
         }
     }
@@ -51,13 +52,14 @@ Sloped_relation::Sloped_relation(int max_source_height, int max_dest_height){
     this->slope_map = new Map<Int_pair,int>();
 }
 
-Sloped_relation::Sloped_relation( const Sloped_relation& R){
+Sloped_relation::Sloped_relation(const Sloped_relation& R){
     this->forward_map = new Map<int,Int_pair_SET*>();
     this->backward_map = new Map<int,Int_pair_SET*>();
     this->slope_map = new Map<Int_pair,int>();
-    this->max_height = R.max_height;
-    this->min_height = R.min_height;
+    this->num_src_heights = R.num_src_heights;
+    this->num_dst_heights = R.num_dst_heights;
     this->initialized = R.initialized;
+    // Question: why do we not create a repr_matrix this new relation?
     for( auto pair : *(R.forward_map) ){
         (this->forward_map)->insert(Pair<int,Int_pair_SET*>(pair.first,new Int_pair_SET(*(pair.second))));
     }
@@ -69,17 +71,19 @@ Sloped_relation::Sloped_relation( const Sloped_relation& R){
     }
 }
 
-Sloped_relation::Sloped_relation( Sloped_relation&& R){
+Sloped_relation::Sloped_relation(Sloped_relation&& R){
     this->forward_map = R.forward_map;
     this->backward_map = R.backward_map;
     this->slope_map = R.slope_map;
-    this->max_height = R.max_height;
-    this->min_height = R.min_height;
+    this->num_src_heights = R.num_src_heights;
+    this->num_dst_heights = R.num_dst_heights;
     this->initialized = R.initialized;
 
     R.forward_map = nullptr;
     R.backward_map = nullptr;
     R.slope_map = nullptr;
+
+    // Question: why do we not copy the repr_matrix pointer and set to null in R?
 }
 
 Sloped_relation& Sloped_relation::operator=(const Sloped_relation& R){
@@ -88,6 +92,8 @@ Sloped_relation& Sloped_relation::operator=(const Sloped_relation& R){
         this->forward_map = new Map<int,Int_pair_SET*>();
         this->backward_map = new Map<int,Int_pair_SET*>();
         this->slope_map = new Map<Int_pair,int>();
+        this->num_src_heights = R.num_src_heights;
+        this->num_dst_heights = R.num_dst_heights;
         this->initialized = true;
         if( (R.forward_map) != 0 && R.backward_map != 0){
             for( auto pair : *(R.forward_map)){
@@ -100,6 +106,7 @@ Sloped_relation& Sloped_relation::operator=(const Sloped_relation& R){
                 (this->slope_map)->insert(pair);
             }
         }
+        // Question: why do we not deal with repr_matrix here?
     }
     return *this;
 }
@@ -110,70 +117,69 @@ Sloped_relation& Sloped_relation::operator=(Sloped_relation&& R){
         this->forward_map = R.forward_map;
         this->backward_map = R.backward_map;
         this->slope_map = R.slope_map;
+        this->num_src_heights = R.num_src_heights;
+        this->num_dst_heights = R.num_dst_heights;
         this->initialized = R.initialized;
         R.forward_map = nullptr;
         R.backward_map = nullptr;
         R.slope_map = nullptr;
+        // Question: why do we not copy the repr_matrix pointer and set to null in R?
     }
     return *this;
 }
 
 void Sloped_relation::add(int h1, int h2, slope s) {
 
-    if( min_height == 0 ) min_height = h1;
-    if( max_height < h1 ) max_height = h1;
-    if( max_height < h2 ) max_height = h2;
-    if( min_height > h1) min_height = h1;
-    if( min_height > h2) min_height = h2;
+    assert (h1 < num_src_heights);
+    assert (h2 < num_dst_heights);
 
-    // std::cout << h1 << " " << h2 << std::endl;
     if( !initialized ){
         if( repr_matrix[h1][h2] < s){
             repr_matrix[h1][h2] = s;
         }
     } 
-    else{
-    // Add forward mapping
-    auto exists_h1 = forward_map->find(h1);
-    if( exists_h1 == forward_map->end() ){
-        forward_map->insert(Pair<int,Int_pair_SET*>(h1,new Int_pair_SET()));
-    }
-    Int_pair h1_other(h2, 1-s);
-    int h1_count = (forward_map->at(h1))->count(h1_other);
-    // If slope is Downward, we want to overwrite an existing Stay mapping
-    if( s == Downward ){
-        (forward_map->at(h1))->erase(h1_other);
-    }
-    // Don't overwrite an existing Downward mapping with a Stay
-    if( s == Downward || h1_count == 0 ){
-        (forward_map->at(h1))->insert(Int_pair(h2, s));
-    }
+    else {
+        // Add forward mapping
+        auto exists_h1 = forward_map->find(h1);
+        if( exists_h1 == forward_map->end() ){
+            forward_map->insert(Pair<int,Int_pair_SET*>(h1,new Int_pair_SET()));
+        }
+        Int_pair h1_other(h2, 1-s);
+        int h1_count = (forward_map->at(h1))->count(h1_other);
+        // If slope is Downward, we want to overwrite an existing Stay mapping
+        if( s == Downward ){
+            (forward_map->at(h1))->erase(h1_other);
+        }
+        // Don't overwrite an existing Downward mapping with a Stay
+        if( s == Downward || h1_count == 0 ){
+            (forward_map->at(h1))->insert(Int_pair(h2, s));
+        }
 
-    // Add backward mapping
-    auto exists_h2 = backward_map->find(h2);
-    if( exists_h2 == backward_map->end() ){
-        backward_map->insert(Pair<int,Int_pair_SET*>(h2,new Int_pair_SET()));
-    }
-    Int_pair h2_other(h1, 1-s);
-    int h2_count = (backward_map->at(h2))->count(h2_other);
-    // If slope is Downward, we want to overwrite an existing Stay mapping
-    if( s == Downward ){
-        (backward_map->at(h2))->erase(h2_other);
-    }
-    // Don't overwrite an existing Downward mapping with a Stay
-    if( s == Downward || h2_count == 0 ){
-        (backward_map->at(h2))->insert(Int_pair(h1, s));
-    }
+        // Add backward mapping
+        auto exists_h2 = backward_map->find(h2);
+        if( exists_h2 == backward_map->end() ){
+            backward_map->insert(Pair<int,Int_pair_SET*>(h2,new Int_pair_SET()));
+        }
+        Int_pair h2_other(h1, 1-s);
+        int h2_count = (backward_map->at(h2))->count(h2_other);
+        // If slope is Downward, we want to overwrite an existing Stay mapping
+        if( s == Downward ){
+            (backward_map->at(h2))->erase(h2_other);
+        }
+        // Don't overwrite an existing Downward mapping with a Stay
+        if( s == Downward || h2_count == 0 ){
+            (backward_map->at(h2))->insert(Int_pair(h1, s));
+        }
 
-    Int_pair p3(h1,h2);
-    auto exists_s = slope_map->find(p3);
-    if( exists_s == slope_map->end() ){
-        slope_map->insert(Pair<Int_pair,int>(p3,s));
-    }
-    // Don't overwrite an existing Downward mapping with a Stay
-    else if( s == Downward || slope_map->at(p3) != Downward ){
-        slope_map->at(p3) = s;
-    }
+        Int_pair p3(h1,h2);
+        auto exists_s = slope_map->find(p3);
+        if( exists_s == slope_map->end() ){
+            slope_map->insert(Pair<Int_pair,int>(p3,s));
+        }
+        // Don't overwrite an existing Downward mapping with a Stay
+        else if( s == Downward || slope_map->at(p3) != Downward ){
+            slope_map->at(p3) = s;
+        }
     }
 }
   
@@ -244,8 +250,12 @@ Sloped_relation* Sloped_relation::compose(Sloped_relation& other){
             }
         }
     }
-    int haha = this->max_height > other.max_height ? this->max_height : other.max_height;
-    return new Sloped_relation(composed_forward_map,composed_backward_map,composed_slope_map,haha);
+    return
+        new Sloped_relation(composed_forward_map,
+                            composed_backward_map,
+                            composed_slope_map,
+                            this->num_src_heights,
+                            other.num_dst_heights);
 }
 
 Sloped_relation::~Sloped_relation(void){
@@ -299,6 +309,7 @@ int Sloped_relation::size(void) const{
 }
 
 void Sloped_relation::clear(void){
+    // Question: why do we not delete repr_matrix here?
     for( auto pair : *(forward_map) ){
         if( pair.second ) delete pair.second;
     }
@@ -390,7 +401,7 @@ comparison Sloped_relation::compare(const Sloped_relation& other){
 
 void fill_order(int v, bool* visited, std::stack<int>* s, slope** g, int n){
     visited[v] = true;
-    for(int i = 0; i <= n; ++i)
+    for(int i = 0; i < n; ++i)
         if(g[v][i] != Undef)
             if(!visited[i])
                 fill_order(i, visited, s, g, n);
@@ -401,7 +412,7 @@ void fill_order(int v, bool* visited, std::stack<int>* s, slope** g, int n){
 bool find_scc(int v, bool* visited, slope** g, int n){
     visited[v] = true;
     bool found = false;
-    for (int i = 0 ; i <= n; ++i) {
+    for (int i = 0 ; i < n; ++i) {
         if(g[i][v] != Undef) {
             if (!visited[i]) {
                 if(g[i][v] == Downward) {
@@ -418,12 +429,14 @@ bool find_scc(int v, bool* visited, slope** g, int n){
 }
 
 bool Sloped_relation::has_downward_SCC(void){
-    slope** g = (slope**)malloc( (max_height + 1) * sizeof(slope*));
-    bool* visited = (bool*)malloc((max_height + 1) * sizeof(bool));
-    for( int i = 0 ; i <= max_height; i++ ){
-        g[i] = (slope*)malloc((max_height + 1) * sizeof(slope));
+    int num_heights =
+        (num_src_heights > num_dst_heights) ? num_src_heights : num_dst_heights;
+    slope** g = (slope**)malloc( num_heights * sizeof(slope*));
+    bool* visited = (bool*)malloc(num_heights * sizeof(bool));
+    for( int i = 0 ; i < num_heights; i++ ){
+        g[i] = (slope*)malloc(num_heights * sizeof(slope));
         visited[i] = false;
-        for( int j = 0 ; j < max_height + 1 ; j++ ){
+        for( int j = 0 ; j < num_heights ; j++ ){
             g[i][j] = Undef;
         }
     }
@@ -432,11 +445,11 @@ bool Sloped_relation::has_downward_SCC(void){
         g[(pair.first).first][(pair.first).second] = static_cast<slope>(pair.second);
     }
     std::stack<int> s;
-    for(int i = min_height; i <= max_height; i++)
+    for(int i = 0; i < num_heights; i++)
         if(!visited[i])
-            fill_order(i, visited, &s, g, max_height);
+            fill_order(i, visited, &s, g, num_heights);
 
-    for( int i = 0 ; i <= max_height; i++) {
+    for( int i = 0 ; i < num_heights; i++) {
         visited[i] = false;
     }
     bool found = false;
@@ -447,13 +460,13 @@ bool Sloped_relation::has_downward_SCC(void){
             if (g[v][v] == Downward) {
                 found = true;
             } else {
-                found = find_scc(v, visited, g, max_height);
+                found = find_scc(v, visited, g, num_heights);
             }
         }
     }
     
    
-    for( int i = 0 ; i <= max_height ; i++ ){
+    for( int i = 0 ; i < num_heights ; i++ ){
         delete g[i];
     }
     delete g;
