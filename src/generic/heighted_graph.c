@@ -371,7 +371,8 @@ bool Heighted_graph::relational_check(int opts){
                                 if (to_delete == left) left--;
                                 if (to_delete == right) right--;
                                 (Ccl[source][sink])->erase(to_delete);
-                                rejected->push_back(S);
+                                // rejected->push_back(S);
+                                delete S;
                                 break;
                             }
                             else if (result == eq || result == gt) {
@@ -400,7 +401,8 @@ bool Heighted_graph::relational_check(int opts){
                             && ((opts & FAIL_FAST) != 0)
                             && source == sink
                             && !(check_self_loop(R, source, opts))) {
-                        rejected->push_back(R);
+                        // rejected->push_back(R);
+                        delete R;
                         return false;
                     }
 
@@ -414,7 +416,8 @@ bool Heighted_graph::relational_check(int opts){
                         insertion_time += (end - start);
                         ccl_size++;
                     } else {
-                        rejected->push_back(R);
+                        // rejected->push_back(R);
+                        delete R;
                     }
                 }
             }
