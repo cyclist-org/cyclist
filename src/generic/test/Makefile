@@ -132,6 +132,8 @@ test-suite-rel: soundness
 	$(call test_success, graph_16.09)
 	$(call test_success, graph_16.10)
 	$(call test_failure, graph_17)
+	$(call test_success, graph_18)
+	$(call test_success, graph_19)
 
 tests-sd:
 	echo "SPRENGER-DAM"
@@ -158,7 +160,7 @@ test-suite-sd: soundness
 	$(call test_success, graph_10)
 	$(call test_failure, graph_11)
 	$(call test_failure, graph_12)
-	$(call test_failure, graph_13)
+	$(call test_failure, graph_13) # succeeds with relational
 	$(call test_failure, graph_14)
 	$(call test_failure, graph_15)
 	$(call test_success, graph_16.00)
@@ -173,6 +175,8 @@ test-suite-sd: soundness
 	$(call test_success, graph_16.09)
 	$(call test_success, graph_16.10)
 	$(call test_failure, graph_17)
+	$(call test_success, graph_18)
+	$(call test_failure, graph_19)
 
 test-suite-xsd: soundness
 	$(call test_success, graph_1)
@@ -206,3 +210,5 @@ test-suite-xsd: soundness
 	$(call test_success, graph_16.09)
 	$(call test_success, graph_16.10)
 	$(call test_failure, graph_17)
+	$(call test_success, graph_18)
+	$(call test_success, graph_19)
