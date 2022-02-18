@@ -13,7 +13,7 @@ sha=$(git rev-parse --short HEAD)
 opts=("-spot" "-rel-ext -full -ff" "-rel-ext -ff" "-rel-ext -min -ff" "-rel-ext -scc -ff" "-rel-ext -min -scc -ff")
 
 opts_with_sd=("${opts[@]}")
-opts_with_sd+=("-SD")
+opts_with_sd+=("-SD -XSD")
 
 # Experiments run on Ubuntu 20.04.3, 16GB RAM
 # Experiements run with Spot 2.10.4
@@ -22,12 +22,12 @@ opts_with_sd+=("-SD")
 # test1.exe - positive examples, n varies, p = 1
 
 # -rel-ext -min -scc -ff n = 450 ~60s
-# -rel-ext -min -scc -ff n = 457 OUT OF MEMORY
+# -rel-ext -min -scc -ff n = 457 OUT OF MEMORY (before 9e40c42)
 
 inputs="1 $(seq 25 25 450)"
 for n in ${inputs[@]}; do
-  for i in ${!opts_with_sd[@]}; do
-    opt=${opts_with_sd[i]}
+  for i in ${!opts[@]}; do
+    opt=${opts[i]}
     suffix=$(echo "$opt" | sed -r 's/\s+//g')
     for j in $(seq 1 1 $iterations); do
       (set -x; time dune exec tests/soundness/test1.exe -- $opt -rel-stats $n) >> "$logdir/test1_benchmarks_${sha}_${now}$suffix.$j.log" 2>&1
@@ -43,7 +43,7 @@ done
 # -rel-ext -min -scc -ff n = 300 ~200s
 # -rel-ext -min -scc -ff n = 350 ~365s
 # -rel-ext -min -scc -ff n = 375 ~475s
-# -rel-ext -min -scc -ff n = 379 OUT OF MEMORY
+# -rel-ext -min -scc -ff n = 379 OUT OF MEMORY (before 9e40c42)
 
 inputs="1 $(seq 20 20 180)"
 for n in ${inputs[@]}; do
@@ -59,7 +59,9 @@ done
 
 # test3.exe - negative example
 
-inputs="1 $(seq 250 250 20000)"
+# -rel-ext -min -scc -ff n = 21639 OUT OF MEMORY (before 9e40c42)
+
+inputs="1 $(seq 250 250 4750)"
 for n in ${inputs[@]}; do
   for i in ${!opts[@]}; do
     opt=${opts[i]}
