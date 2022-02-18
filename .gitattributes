@@ -1,0 +1,2 @@
+tests/soundness/results/*.log filter=lfs diff=lfs merge=lfs -text
+tests/soundness/results/benchmarks.ods filter=lfs diff=lfs merge=lfs -text
