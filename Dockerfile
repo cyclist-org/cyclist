@@ -8,8 +8,8 @@ ENV TERM linux
 
 USER root
 
-RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get --allow-releaseinfo-change update && apt-get install -y --no-install-recommends apt-utils
+RUN apt-get --allow-releaseinfo-change update && apt-get install -y --no-install-recommends \
       autoconf \
       m4 \
       pkg-config \
