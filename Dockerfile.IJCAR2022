@@ -49,12 +49,14 @@ RUN \
 # Install Cyclist
 
 RUN \
+  cd /home/opam && \
   git clone https://github.com/ngorogiannis/cyclist.git && \
   cd cyclist && \
   eval `opam config env` && \
   opam update && \
-  git checkout relation-based-soundness && \
+  git checkout IJCAR2022-Submission && \
   opam install -y --deps-only ./cyclist.opam && \
   mv dune-workspace.IJCAR2022 dune-workspace && \
   dune build
 
+WORKDIR /home/opam/cyclist
