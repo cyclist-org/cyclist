@@ -9,5 +9,5 @@ $(TESTS): %.tst:
 	@echo "$@"
 	-@while read -r SEQ; do \
 		echo -n "\t"; \
-		(cd "$(ROOT)" && timeout "$$(($(TIMEOUT) + 1))" dune exec $(CMD) -- $(TST_OPTS) -t $(TIMEOUT) -S "$$SEQ" || echo "Not proved (timeout)") ;\
+		(cd "$(ROOT)" && timeout "$$(($(TIMEOUT) + 1))" dune exec $(CMD) -- -D $(DEFS) $(TST_OPTS) -t $(TIMEOUT) -S "$$SEQ" || echo "Not proved (timeout)") ;\
 	done < "$@"
