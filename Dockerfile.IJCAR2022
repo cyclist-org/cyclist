@@ -33,6 +33,8 @@ RUN \
   wget http://www.lrde.epita.fr/dload/spot/spot-2.10.4.tar.gz && \
   tar -xzf spot-2.10.4.tar.gz && cd spot-2.10.4 && \
   ./configure --prefix=/opt/spot/accset-32 --disable-python && \
+  make && make install && make clean && \
+  ./configure --prefix=/opt/spot/accset-32768 --enable-max-accsets=32768 --disable-python && \
   make && make install && make clean
 
 USER opam
