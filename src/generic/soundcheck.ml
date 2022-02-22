@@ -247,7 +247,12 @@ module BuchiCheck = struct
   external set_progress_pair : int -> int -> int -> int -> unit
     = "set_progress_pair"
   external check_soundness : unit -> bool = "check_soundness_buchi"
+  external get_paut_hoa : unit -> string = "get_proof_aut_hoa"
+  external get_taut_hoa : unit -> string = "get_trace_aut_hoa"
   external set_initial_vertex : int -> unit = "set_initial_vertex"
+
+  let print_paut = ref false
+  let print_taut = ref false
   
     (* check global soundness condition on proof *)
   let check_proof ?(init=0) p =
@@ -274,9 +279,17 @@ module BuchiCheck = struct
     Int.Map.iter create_succs p ;
     set_initial_vertex init ;
     Int.Map.iter create_trace_pairs p ;
+    if !print_paut then begin
+      print_endline "Proof Automaton" ;
+      print_endline (get_paut_hoa ()) ;
+    end ;
+    if !print_taut then begin
+      print_endline "Trace Automaton" ;
+      print_endline (get_taut_hoa ()) ;
+    end ;
     let retval = check_soundness () in
-    destroy_aut () ;
     if retval then Stats.MC.accept () else Stats.MC.reject () ;
+    destroy_aut () ;
     debug (fun () ->
         "Checking soundness ends, result=" ^ if retval then "OK" else "NOT OK" ) ;
     retval
@@ -755,11 +768,11 @@ module RelationalCheck = struct
           xsd_check ()
         | _ ->
           failwith "Unexpected soundness check method!" in
+      if retval then Stats.MC.accept () else Stats.MC.reject () ;
       (* debug (fun () -> "Composition Closure:\n") ; *)
       (* if !do_debug then print_ccl() ; *)
       if !do_stats then print_stats ();
       destroy_hgraph () ;
-      if retval then Stats.MC.accept () else Stats.MC.reject () ;
       debug (fun () ->
           "Checking soundness ends, result=" ^ if retval then "OK" else "NOT OK" ) ;
       retval
@@ -780,6 +793,8 @@ end)
 let arg_opts =
   [
     ("-spot", Arg.Unit use_spot, ": use the spot model checker to verify pre-proof validity") ;
+    ("-print-paut", Arg.Set BuchiCheck.print_paut, ": print the proof automaton in HOA format" ) ;
+    ("-print-taut", Arg.Set BuchiCheck.print_taut, ": print the trace automaton in HOA format" ) ;
     ("-rel-ext", Arg.Unit use_external, ": use external C++ relation-based check to verify pre-proof validity") ;
     ("-SD", Arg.Unit use_sprengerdam, ": use Sprenger-Dam check to verify pre-proof validity") ;
     ("-XSD", Arg.Unit use_xtd_sprengerdam, ": use Extended Sprenger-Dam check to verify pre-proof validity") ;

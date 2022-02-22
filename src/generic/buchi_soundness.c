@@ -9,13 +9,15 @@
 #include <spot/twa/twaproduct.hh>
 #include <spot/twaalgos/gtec/gtec.hh>
 #include <spot/twaalgos/dot.hh>
+#include <spot/twaalgos/hoa.hh>
 #include <spot/twaalgos/remfin.hh>
 #include <iostream>
-
+#include <sstream>
 
 extern "C" {
 #include <memory.h>
 #include <mlvalues.h>
+#include <alloc.h>
 }
 
 #include "proof_aut.hpp"
@@ -105,6 +107,27 @@ extern "C" void set_progress_pair(value v1_, value v2_, value t1_, value t2_) {
 	assert( bdd_map.find(v2) != bdd_map.end() );
 	proof->set_progress_pair(bdd_map[v1], bdd_map[v2], t1, t2);
 	CAMLreturn0;
+}
+
+extern "C" value get_proof_aut_hoa() {
+	CAMLparam0();
+
+	assert(proof);
+	std::stringstream res;
+	spot::print_hoa(res, proof);
+
+	return caml_copy_string(res.str().c_str());
+}
+
+extern "C" value get_trace_aut_hoa() {
+	CAMLparam0();
+
+	assert(proof);
+	spot::const_twa_ptr ta = std::make_shared<TraceAutomaton>(*proof);
+	std::stringstream res;
+	spot::print_hoa(res, ta);
+
+	return caml_copy_string(res.str().c_str());
 }
 
 extern "C" value check_soundness_buchi() {
