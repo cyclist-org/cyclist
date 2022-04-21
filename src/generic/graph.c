@@ -51,6 +51,9 @@ void Graph::ExtractAllPaths( std::set<Int_pair>* edges,int max_node) {
             DiscoverAllPathsUtil(i,j,visited,path,index,pathExist);
         }
     }
+    delete[] adj;
+    delete visited;
+    delete path;
 } 
 
 
@@ -199,6 +202,9 @@ void Graph::get_SCSs(){
         // std::cout << std::endl;
         SCSs.insert(combined_cycles);
     }
+    delete edges;
+    delete rev_node_idx;
+    delete node_idx;
 }
 
 Graph::Graph(std::vector<Int_pair>* edges,std::vector<Int_SET*>* HeightsOf,Sloped_relation*** h_change_ , int max_node , int max_height){
