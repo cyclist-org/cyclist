@@ -333,6 +333,7 @@ bool Heighted_graph::relational_check(int opts){
                 left != Ccl[source][middle]->end();
                 left++
             ) {
+                bool continue_left = false;
                 Sloped_relation* P = *left;
                 P->initialize();
                 for (
@@ -368,10 +369,14 @@ bool Heighted_graph::relational_check(int opts){
                                 ccl_replacements++;
                                 ccl_size--;
                                 auto to_delete = outer--;
-                                if (to_delete == left) left--;
-                                if (to_delete == right) right--;
+                                if (to_delete == left){
+                                    continue_left = true;
+                                    left--;
+                                }
+                                if (to_delete == right) {
+                                    right--;
+                                }
                                 (Ccl[source][sink])->erase(to_delete);
-                                // rejected->push_back(S);
                                 delete S;
                                 break;
                             }
@@ -401,7 +406,6 @@ bool Heighted_graph::relational_check(int opts){
                             && ((opts & FAIL_FAST) != 0)
                             && source == sink
                             && !(check_self_loop(R, source, opts))) {
-                        // rejected->push_back(R);
                         delete R;
                         return false;
                     }
@@ -415,8 +419,10 @@ bool Heighted_graph::relational_check(int opts){
                         end = std::chrono::system_clock::now();
                         insertion_time += (end - start);
                         ccl_size++;
+                        if (continue_left) {
+                            break;
+                        }
                     } else {
-                        // rejected->push_back(R);
                         delete R;
                     }
                 }
