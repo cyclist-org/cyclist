@@ -30,9 +30,10 @@ Hand-crafted heighted graph corresponding to the "standard" proof of 2-Hydra.
 
 Not SD, but is XSD.
 
-## Graph 20
+## Graphs 20a and 20b
 
-Heighted graph corresponding to proof found by Cyclist for
-benchmarks/fo/12-r-example.tst when using XSD, in commit 115c6fd.
+Heighted graphs corresponding to proofs found by Cyclist for
+benchmarks/fo/12-r-example.tst and benchmarks/fo/13-2-hydra.tst, respectively,
+when using XSD, in commit 6ee38be.
 
 Not ID
