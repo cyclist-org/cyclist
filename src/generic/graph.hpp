@@ -35,8 +35,11 @@ private:
     std::set<std::vector<Pair<Int_pair,Int_pair>>>* ext_graphs = nullptr;
 
     Map<int,std::vector<std::vector<Int_pair>>> test;
+    std::set<std::vector<Int_pair>>             ECycles;
 
     std::set<std::set<Int_pair>> SCSs;
+
+    std::set<std::set<int>> Paths;
 
     std::vector<NodeList>*      AK;
     std::vector<int>*           Stack;
@@ -44,7 +47,12 @@ private:
     std::vector<NodeList>*      B;
     int                         N;
     int                         S;
+    std::list<int>* adj;
 
+
+
+    void                    DiscoverAllPathsUtil(int,int, bool*,int*,int,bool);
+    void                    ExtractAllPaths( std::set<Int_pair>* ,int);
 
 
     void                    mark_nodes(int,std::list<int>*,int*,int*,std::stack<int>*,bool*);
@@ -63,6 +71,7 @@ private:
     bool                    check_set_choice_decrease(std::vector<Pair<Int_pair,Int_pair>>*,std::vector<Int_pair>*);
     std::set<Map<int,int>>* enumerate_slope_changing_functions(Int_pair);
 
+    void                    get_ECycles();
     void                    get_SCSs();
     bool                    circuit(int);
     void                    unblock(int);

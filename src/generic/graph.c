@@ -8,6 +8,51 @@
 
 
 
+void Graph::DiscoverAllPathsUtil(int v1, int v2, bool* visited, int* path, int index,bool pathExist) { 
+    visited[v1] = true;
+    path[index]=v1;
+    index++;
+    if(v1==v2){
+        int i;
+        if( !pathExist ) pathExist=true;
+        std::set<int> p;
+        for( i=0 ; i<index-1 ; i++){
+            p.insert(path[i]);
+        }
+        p.insert(path[i]);
+        Paths.insert(p);
+    }
+    else{
+        std::list<int>::iterator i; 
+        for ( i = adj[v1].begin() ; i != adj[v1].end() ; ++i){
+            if( !visited[*i] )  DiscoverAllPathsUtil(*i, v2, visited, path, index,pathExist); 
+        }
+    }
+    index--;
+    visited[v1]=false;
+} 
+  
+// DFS traversal of the vertices reachable from v. 
+// It uses recursive prinAllPathsUtil 
+void Graph::ExtractAllPaths( std::set<Int_pair>* edges,int max_node) { 
+    adj = new std::list<int>[max_node]; 
+    for( auto e : *edges){
+        adj[e.first].push_back(e.second);
+    }
+    bool *visited = new bool[max_node]; 
+    for( int i = 0 ; i < max_node ; i++){
+        visited[i] = false;
+    }
+    int *path = new int[max_node];    
+    int index = 0;
+    bool pathExist=false;
+    for(int i = 0 ; i < max_node ; i++ ){
+        for( int j = 0 ; j < max_node ; j++ ){
+            DiscoverAllPathsUtil(i,j,visited,path,index,pathExist);
+        }
+    }
+} 
+
 
 
 
@@ -32,6 +77,7 @@ void Graph::output(){
             (exists->second).push_back(cycle);
         }
     }
+    ECycles.insert(cycle);
 }
 
 void Graph::unblock(int U){
@@ -76,7 +122,8 @@ bool Graph::circuit(int V){
     return F;
 }
 
-void Graph::get_SCSs(){
+
+void Graph::get_ECycles(){
     N = max_node+1;
     AK = new std::vector<NodeList>(N);
     B = new std::vector<NodeList>(N);
@@ -96,23 +143,61 @@ void Graph::get_SCSs(){
         circuit(S);
         ++S;
     }
-    // if( n < 2 ) return;
+
+    // for( auto pair : test ){
+    //     std::cout << "ECycles with the node " << pair.first - 1 << ":" << std::endl;
+    //     auto cycles = pair.second;
+    //     for( auto edges : cycles ){
+    //         for(auto e : edges ){
+    //             std::cout << "<" << e.first << "," << e.second << ">";
+    //         }
+    //         std::cout << std::endl << "---------------" << std::endl;;
+    //     }
+    // }
+}
+
+void Graph::get_SCSs(){
+    get_ECycles();
+
+
+    //init nodes in CycleGraph
+    Map<std::vector<Int_pair>,int>* rev_node_idx = new Map<std::vector<Int_pair>,int>();
+    Map<int,std::vector<Int_pair>>* node_idx = new Map<int,std::vector<Int_pair>>();
+    int i = 0;
+    for( auto cycle : ECycles ){
+        rev_node_idx->insert(std::pair(cycle,i));
+        node_idx->insert(std::pair(i,cycle));
+        i++;
+    }
+
+
+    //init edges in CycleGraph
+    std::set<Int_pair>* edges = new std::set<Int_pair>();
     for( auto pair : test ){
         auto cycles = pair.second;
-        int n = cycles.size();
-        int count = 1 << n;
-        for (int i = count - 1; i > 0; i--) {
-            std::set<Int_pair> combined_cycles;
-            for (int j = 0; j < n; j++) {
-                if ((i & (1 << j)) != 0){
-                    auto cycle = cycles.at(j);
-                    for( auto edge : cycle ) {
-                        combined_cycles.insert(edge);
-                    }
-                }
+        for( auto c1 : cycles ){
+            for( auto c2 : cycles ){
+                if( c1 == c2 ) continue;
+                edges->insert(Int_pair(rev_node_idx->at(c1),rev_node_idx->at(c2)));
+                edges->insert(Int_pair(rev_node_idx->at(c2),rev_node_idx->at(c1)));
             }
-            SCSs.insert(combined_cycles);
         }
+    }
+    ExtractAllPaths(edges,i);
+
+    for(auto p : Paths ){
+        std::set<Int_pair> combined_cycles;
+        for(auto v : p){
+            auto cycle = node_idx->at(v);
+            for( auto edge : cycle ) {
+                combined_cycles.insert(edge);
+            }
+        }
+        // for( auto edge : combined_cycles ) {
+        //     std::cout << "<" << edge.first << "," << edge.second << "> ";
+        // }
+        // std::cout << std::endl;
+        SCSs.insert(combined_cycles);
     }
 }
 
@@ -161,6 +246,10 @@ bool Graph::check_SD(SD_decrease_type SD_DEC_TYPE){
 
     for( std::set<Int_pair> G : SCSs){
         std::vector<Int_pair>* SCC_edges = new std::vector<Int_pair>(G.begin(), G.end());
+        // for( auto e : *SCC_edges){
+        //     std::cout << "<" << e.first << "," << e.second << "> ";
+        // }
+        // std::cout << std::endl;
         bool result = true;
         switch( SD_DEC_TYPE ){
             case XTD: 
