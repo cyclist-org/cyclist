@@ -37,3 +37,8 @@ benchmarks/fo/12-r-example.tst and benchmarks/fo/13-2-hydra.tst, respectively,
 when using XSD, in commit 6ee38be.
 
 Not ID
+
+# Graph 21
+
+Heighted graph found during proof search for benchmarks/fo/05-p-and-q.tst that
+makes XSD seg fault, in commit 8be7684.
