@@ -1,6 +1,6 @@
 TEST_EXE=./soundness
 
-FLAGS:=-xc++ -std=c++17
+CFLAGS:=-xc++ -std=c++17
 
 TIMEOUT := $(if $(TIMEOUT),$(TIMEOUT),60)
 
@@ -20,16 +20,16 @@ soundness: main.o sloped_relation.o heighted_graph.o graph.o
 	g++ -pthread -g -o soundness main.o sloped_relation.o heighted_graph.o graph.o
 
 main.o: main.cpp ../heighted_graph.hpp 
-	g++ ${FLAGS} -I ../ -L/opt/lib -g -c main.cpp -o main.o
+	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c main.cpp -o main.o
 
 heighted_graph.o: ../heighted_graph.hpp ../heighted_graph.c ../sloped_relation.hpp ../types.c
-	g++ ${FLAGS} -pthread -I ../ -L/usr/lib -L/opt/lib -g -c ../heighted_graph.c -o heighted_graph.o
+	g++ ${CFLAGS} -pthread -I ../ -L/usr/lib -L/opt/lib -g -c ../heighted_graph.c -o heighted_graph.o
 
 sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
-	g++ ${FLAGS} -I ../ -L/opt/lib -g -c ../sloped_relation.c -o sloped_relation.o
+	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../sloped_relation.c -o sloped_relation.o
 
 graph.o: ../graph.c ../graph.hpp ../sloped_relation.hpp
-	g++ ${FLAGS} -I ../ -L/opt/lib -g -c ../graph.c -o graph.o
+	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../graph.c -o graph.o
 
 .PHONY: clean tests test-suite-rel test-suite-sd test-suite-xsd tests-rel tests-set tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-min tests-ff-scc tests-ff-idem tests-min-scc tests-ff-min-scc tests-1-ff tests-1-scc tests-1-idem tests-1-min tests-1-ff-min tests-1-ff-scc tests-1-ff-idem tests-1-min-scc tests-1-ff-min-scc tests-sd tests-xsd
 
