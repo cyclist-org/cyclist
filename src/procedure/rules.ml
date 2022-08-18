@@ -549,7 +549,6 @@ let symex_parallel_rule =
       (* Test that pre_f is of the form (lab : phi) * (lab : psi) *)
       (*  let post_constraints, post_f = Form.dest post in  *)
       (* Test that post_f is of the form (lab : phi') * (lab : psi') *)
-<<<<<<< HEAD
       let cont = Cmd.get_cont cmd in 
       fix_tps
         [ ( [ ((* pre_constraints : (lab : phi) *) pre, Cmd.mk_seq cmd1 cont, post (* post_constraints : (lab : phi') *))
@@ -558,16 +557,6 @@ let symex_parallel_rule =
           , "Create branches (||)" ) ]
         
     with
-=======
-        let cont = Cmd.get_cont cmd in 
-        fix_tps
-          [ ( [ ((* pre_constraints : (lab : phi) *) pre, Cmd.mk_seq cmd1 cont, post (* post_constraints : (lab : phi') *))
-              ; ((* pre_constraints : (lab : psi) *) pre, Cmd.mk_seq cmd2 cont, post (* post_constraints : (lab : psi') *) )
-              ]
-            , "Parallel III" ) ]
-      else [] 
-    with  
->>>>>>> e0257b802144fba76d0fd47bda97be3695e038f3
     | Not_symheap | WrongCmd -> []
   in
   wrap rl

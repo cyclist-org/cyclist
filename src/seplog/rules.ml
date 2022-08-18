@@ -36,7 +36,7 @@ let lemma_option_descr_str ?(line_prefix = "\t") () =
     if lemma_equal !lemma_level level then " (default)" else ""
   in
   line_prefix ^ "0 -- do not attempt to apply any lemmas"
-  ^ default_str NO_LEMMAS ^ "\n" ^ line_prefix
+  ^ default_str NO_LEMMAS ^ "\n" ^ line_prefix  
   ^ "1 -- only apply lemmas containing predicate instances"
   ^ default_str ONLY_WITH_PREDICATES
   ^ "\n" ^ line_prefix

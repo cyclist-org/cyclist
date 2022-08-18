@@ -1,5 +1,5 @@
 open Lib
-open   Symbols
+open Symbols
 
 open Generic
 

@@ -823,10 +823,10 @@ struct
             "Calculating points-to base of rule: " ^ Indrule.to_string rl )
       in
       let body, _ = Indrule.dest rl in
-      let eqs, deqs, ptos, _ = Heap.dest body in
+      let eqs, deqs, ptos, _ = Pheap.dest body in
       let constraints = (eqs, deqs) in
       if
-        (not (Heap.inconsistent body))
+        (not (Pheap.inconsistent body))
         && Int.( > ) (Ptos.cardinal ptos) 0
       then
         let gen_mdls (t, ts) mdls =

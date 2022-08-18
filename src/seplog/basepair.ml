@@ -34,7 +34,7 @@ module BasePair = struct
       (Allocated.to_list v) symb_rb.str symb_comma.sep Heap.pp g symb_rp.str
 
   let vars (v, h) = Term.Set.union (Allocated.vars v) (Heap.vars h)
-
+ 
   let norm (v, h) =
     let h' = Heap.norm h in
     let v' = Allocated.endomap_fst (fun x -> Uf.find x h'.Heap.eqs) v in
@@ -74,7 +74,7 @@ module BasePair = struct
           )
         v h'.SH.deqs
     in
-    let h' = SH.with_deqs h' deqs in
+    let h' = SH.with_deqs h' deqs in  
     let v = Allocated.union v v' in
     (v, h')
 
@@ -83,11 +83,11 @@ module BasePair = struct
     let h, _ = Indrule.dest case in
     (* let () = assert (Tpreds.cardinal h.inds = Blist.length cbps) in *)
     let ys =
-      Ptos.map_to Allocated.add Allocated.empty Pto.record_type h.SH.ptos
+      Ptos.map_to Allocated.add Allocated.empty Pto.record_type h.heap.SH.ptos
     in
-    let h' = SH.with_ptos h Ptos.empty in
+    let h' = SH.with_ptos h.heap Ptos.empty in
     let h' = SH.with_inds h' Tpreds.empty in
-    Blist.fold_left2 unfold (ys, h') (Tpreds.to_list h.SH.inds) cbps
+    Blist.fold_left2 unfold (ys, h') (Tpreds.to_list h.heap.SH.inds) cbps
 
   let gen case cbps =
     let args = Indrule.formals case in
