@@ -1,16 +1,20 @@
 #include "heighted_graph.hpp"
 #include "sloped_relation.hpp"
 #include "types.c"
-#include "graph.hpp"
+#include "generic_graph.hpp"
 
 #include <cassert>
 #include <chrono>
 #include <iostream>
 #include <fstream>
 #include <set>
+#include <unordered_set>
 #include <thread>
 #include <utility>
 
+//=============================================================
+// Flag init
+//=============================================================
 // N.B. These MUST match the corresponding constants in the OCaml code
 //      Look in soundcheck.ml
 const int Heighted_graph::FAIL_FAST        = 0b0000001;
@@ -20,35 +24,9 @@ const int Heighted_graph::USE_MINIMALITY   = 0b0001000;
 const int Heighted_graph::COMPUTE_FULL_CCL = 0b0010000;
 const int Heighted_graph::USE_SD           = 0b0100000;
 const int Heighted_graph::USE_XSD          = 0b1000000;
-
-int Heighted_graph::parse_flags(const std::string flags_s) {
-    int flags = 0;
-    for (char c : flags_s) {
-        switch (c) {
-            case 'f': flags |= FAIL_FAST; break;
-            case 's': flags |= USE_SCC_CHECK; break;
-            case 'i': flags |= USE_IDEMPOTENCE; break;
-            case 'm': flags |= USE_MINIMALITY; break;
-            case 'A': flags |= COMPUTE_FULL_CCL; break;
-            case 'D': flags |= USE_SD; break;
-            case 'X': flags |= USE_XSD; break;
-        }
-    }
-    assert(((flags & USE_SD) == 0) || ((flags & USE_XSD) == 0));
-    return flags;
-}
-
-void Heighted_graph::print_flags(int flags) {
-    if ((flags & FAIL_FAST) != 0) std::cout << "FAIL_FAST" << std::endl;
-    if ((flags & USE_SCC_CHECK) != 0) std::cout << "USE_SCC_CHECK" << std::endl;
-    if ((flags & USE_IDEMPOTENCE) != 0) std::cout << "USE_IDEMPOTENCE" << std::endl;
-    if ((flags & USE_MINIMALITY) != 0) std::cout << "USE_MINIMALITY" << std::endl;
-    if ((flags & COMPUTE_FULL_CCL) != 0) std::cout << "COMPUTE_FULL_CCL" << std::endl;
-    if ((flags & USE_SD) != 0) std::cout << "USE_SD" << std::endl;
-    if ((flags & USE_XSD) != 0) std::cout << "USE_XSD" << std::endl;
-}
-
-// Construcor
+//=============================================================
+// Essential class methods
+//=============================================================
 Heighted_graph::Heighted_graph(int max_nodes) {
 
     assert(max_nodes >= 0);
@@ -104,20 +82,17 @@ void clean_up(Relation_LIST*** ccl,
             }
             delete ccl[source][sink];
         }
-        delete h_change_[source];
-        delete ccl[source];
+        free(h_change_[source]);
+        free(ccl[source]);
     }
-    delete ccl;
-    delete h_change_;
-
+    free(ccl);
+    free(h_change_);
     for (Sloped_relation* R : *rejected){
         delete R;
     }
     delete rejected;
-
 }
 
-// Destructor
 Heighted_graph::~Heighted_graph(void) {
     for (Map<int, int>* idx_map : height_idxs) {
         if (idx_map) delete idx_map;
@@ -126,153 +101,14 @@ Heighted_graph::~Heighted_graph(void) {
         if (heights) delete heights;
     }
     if (edges) delete edges;
-    std::thread t(clean_up, Ccl, h_change_, max_nodes, rejected);
-    t.detach();
+    clean_up(Ccl, h_change_, max_nodes, rejected);
+    // std::thread t(clean_up, Ccl, h_change_, max_nodes, rejected);
+    // t.detach();
 }
 
-// Methods for constructing the height graph
-void Heighted_graph::add_node(int n) {
-    if (node_idxs.find(n) == node_idxs.end()) {
-        int next_idx = node_idxs.size();
-        assert(next_idx < max_nodes);
-        node_idxs[n] = next_idx;
-        height_idxs.push_back(new Map<int, int>());
-        HeightsOf.push_back(new Int_SET());
-    }
-}
-
-void Heighted_graph::add_height(int n, int h) {
-    add_node(n);
-    int n_idx = node_idxs.at(n);
-    Map<int, int>* heights = height_idxs[n_idx];
-    if (heights->find(h) == heights->end()) {
-        int next_idx = heights->size();
-        heights->insert(Int_pair(h, next_idx));
-    }
-    int h_idx = heights->at(h);
-    HeightsOf[n_idx]->insert(h_idx);
-    if( max_height < h_idx ) max_height = h_idx;
-}
-
-void Heighted_graph::add_edge(int source, int sink) {
-    add_node(source);
-    add_node(sink);
-    int src_idx = node_idxs.at(source);
-    int sink_idx = node_idxs.at(sink);
-    if (h_change_[src_idx][sink_idx] == 0) {
-        number_of_edges++;
-        edges->push_back(Int_pair(src_idx,sink_idx));
-        int num_src_heights = height_idxs[src_idx]->size();
-        int num_dst_heights = height_idxs[sink_idx]->size();
-        Sloped_relation* R =
-            new Sloped_relation(num_src_heights, num_dst_heights);
-        h_change_[src_idx][sink_idx] = R;
-        Ccl[src_idx][sink_idx]->push_back(R);
-        ccl_initial_size++;
-        ccl_size++;
-    }
-}
-
-void Heighted_graph::add_hchange(int source, int source_h, int sink, int sink_h, slope s) {
-    add_edge(source, sink);
-    add_height(source, source_h);
-    add_height(sink, sink_h);
-    int src_idx = node_idxs[source];
-    int src_h_idx = height_idxs[src_idx]->at(source_h);
-    int sink_idx = node_idxs[sink];
-    int sink_h_idx = height_idxs[sink_idx]->at(sink_h);
-    h_change_[src_idx][sink_idx]->add(src_h_idx, sink_h_idx, s);
-}
-
-void Heighted_graph::add_stay(int source_node, int source_h, int sink_node, int sink_h) {
-    add_hchange(source_node, source_h, sink_node, sink_h, Stay);
-}
-
-void Heighted_graph::add_decrease(int source_node, int source_h, int sink_node, int sink_h) {
-    add_hchange(source_node, source_h, sink_node, sink_h, Downward);
-}
-
-int Heighted_graph::num_nodes(void) {
-    return node_idxs.size();
-}
-
-int Heighted_graph::num_edges(void) {
-    return number_of_edges;
-}
-
-bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
-
-    auto start = std::chrono::system_clock::now();
-    loop_checks++;
-    checked_size_sum += R->size();
-
-    bool result = false;
-
-    if ((opts & USE_SCC_CHECK) != 0) {
-        result = R->has_downward_SCC();
-    } else {
-        // Compute R composed with R if using the idempotent method
-        // or the transitive closure otherwise (i.e. using the standard method)
-        Sloped_relation* R2 = 
-            ((opts & USE_IDEMPOTENCE) != 0)
-                ? R->compose(*R)
-                : R->compute_transitive_closure();
-
-        // If we're using the idempotent method and the relation is not
-        // idempotent then trivially return true
-        if (((opts & USE_IDEMPOTENCE) != 0) && !(*R2 == *R)) {
-            result = true;
-            loop_checks--;
-            checked_size_sum -= R->size();
-        } else {
-            // Otherwise, check we have a self-loop in the relevant relation
-            Map<Int_pair,int>* slopes = R2->get_slopes();
-
-            if (HeightsOf[node]->size() < slopes->size()) {
-                // Iterate over all heights h in the node, to see if (h, h) is
-                // mapped to the Downward slope.
-                for( int h : *(HeightsOf.at(node)) ){
-                    auto exists = slopes->find(Int_pair(h,h));
-                    if( exists != slopes->end() && exists->second == Downward ){
-                        result = true;
-                        break;
-                    }
-                }
-            } else {
-                // Only iterate over all entries in the transitive closure of R
-                // if this will be quicker then going over the heights
-                for(auto it = slopes->begin(); it != slopes->end(); it++) {
-                    Int_pair heights = it->first;
-                    if (heights.first == heights.second && it->second == Downward) {
-                        result = true;
-                        break;
-                    }
-                }
-            }
-        }
-        rejected->push_back(R2);
-    }
-
-    auto end = std::chrono::system_clock::now();
-    loop_check_time += end - start;
-
-    return result;
-}
-
-bool Heighted_graph::check_Ccl(int opts) {
-    int num_nodes = this->num_nodes();
-    for( int node = 0; node < num_nodes; node++ ){
-        Relation_LIST* Ccl_nd = Ccl[node][node];
-        for( Sloped_relation* R : *Ccl_nd ){
-            R->initialize();
-            if(!check_self_loop(R, node, opts)) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
+//=============================================================
+// Infinite descent main algorithms
+//=============================================================
 bool Heighted_graph::relational_check(int opts){
 
     this->flags = opts;
@@ -443,20 +279,6 @@ bool Heighted_graph::relational_check(int opts){
     return true;
 }
 
-bool Heighted_graph::set_based_check(SD_decrease_type SD_DEC_TYPE) {
-    int size_ = this->num_nodes();
-    for( int node = 0; node < size_; node++ ){
-    for( int node_ = 0; node_ < size_; node_++ ){
-        Relation_LIST* Ccl_nd = Ccl[node][node_];
-        for( Sloped_relation* R : *Ccl_nd ){
-            R->initialize();
-        }
-    }
-    }
-    Graph G(edges,&HeightsOf,h_change_, num_nodes(),max_height);
-    return G.check_SD(SD_DEC_TYPE);
-}
-
 bool Heighted_graph::sd_check() {
     this->flags |= USE_SD;
     return set_based_check(STD);
@@ -465,6 +287,88 @@ bool Heighted_graph::sd_check() {
 bool Heighted_graph::xsd_check() {
     this->flags |= USE_XSD;
     return set_based_check(XTD);
+}
+
+//=============================================================
+// Methods for constructing the height graph
+//=============================================================
+void Heighted_graph::add_node(int n) {
+    if (node_idxs.find(n) == node_idxs.end()) {
+        int next_idx = node_idxs.size();
+        assert(next_idx < max_nodes);
+        node_idxs[n] = next_idx;
+        height_idxs.push_back(new Map<int, int>());
+        HeightsOf.push_back(new Int_SET());
+    }
+}
+
+void Heighted_graph::add_height(int n, int h) {
+    // for each node the heights are mapped in an increasing order,
+    // i.e the heights are local -- node 1 and 2 might have height 4
+    // but for them locally one could have it as 0 and the other as 2 !!!
+    add_node(n);
+    int n_idx = node_idxs.at(n);
+    Map<int, int>* heights = height_idxs[n_idx];
+    if (heights->find(h) == heights->end()) {
+        int next_idx = heights->size();
+        heights->insert(Int_pair(h, next_idx));
+    }
+    int h_idx = heights->at(h);
+    HeightsOf[n_idx]->insert(h_idx);
+    if( max_height < h_idx ) max_height = h_idx;
+    if( HeightsOf[n_idx]->size() > this->max_height_set_size ){
+        this->max_height_set_size =  HeightsOf[n_idx]->size();
+    }
+}
+
+void Heighted_graph::add_edge(int source, int sink) {
+    add_node(source);
+    add_node(sink);
+    int src_idx = node_idxs.at(source);
+    int sink_idx = node_idxs.at(sink);
+    if (h_change_[src_idx][sink_idx] == 0) {
+        number_of_edges++;
+        edges->push_back(Int_pair(src_idx,sink_idx));
+        int num_src_heights = height_idxs[src_idx]->size();
+        int num_dst_heights = height_idxs[sink_idx]->size();
+        Sloped_relation* R =
+            new Sloped_relation(num_src_heights, num_dst_heights);
+        h_change_[src_idx][sink_idx] = R;
+        Ccl[src_idx][sink_idx]->push_back(R);
+        ccl_initial_size++;
+        ccl_size++;
+    }
+}
+
+void Heighted_graph::add_hchange(int source, int source_h, int sink, int sink_h, slope s) {
+    add_edge(source, sink);
+    add_height(source, source_h);
+    add_height(sink, sink_h);
+    int src_idx = node_idxs[source];
+    int src_h_idx = height_idxs[src_idx]->at(source_h);
+    int sink_idx = node_idxs[sink];
+    int sink_h_idx = height_idxs[sink_idx]->at(sink_h);
+    h_change_[src_idx][sink_idx]->add(src_h_idx, sink_h_idx, s);
+}
+
+void Heighted_graph::add_stay(int source_node, int source_h, int sink_node, int sink_h) {
+    add_hchange(source_node, source_h, sink_node, sink_h, Stay);
+}
+
+void Heighted_graph::add_decrease(int source_node, int source_h, int sink_node, int sink_h) {
+    add_hchange(source_node, source_h, sink_node, sink_h, Downward);
+}
+
+
+//=============================================================
+// Misc.
+//=============================================================
+int Heighted_graph::num_nodes(void) {
+    return node_idxs.size();
+}
+
+int Heighted_graph::num_edges(void) {
+    return number_of_edges;
 }
 
 void Heighted_graph::print_Ccl(void){
@@ -508,3 +412,122 @@ void Heighted_graph::print_statistics(void) {
               << ((compositions == 0) ? 0 : (total_size_sum / compositions))
               << std::endl;
 }
+
+int Heighted_graph::parse_flags(const std::string flags_s) {
+    int flags = 0;
+    for (char c : flags_s) {
+        switch (c) {
+            case 'f': flags |= FAIL_FAST; break;
+            case 's': flags |= USE_SCC_CHECK; break;
+            case 'i': flags |= USE_IDEMPOTENCE; break;
+            case 'm': flags |= USE_MINIMALITY; break;
+            case 'A': flags |= COMPUTE_FULL_CCL; break;
+            case 'D': flags |= USE_SD; break;
+            case 'X': flags |= USE_XSD; break;
+        }
+    }
+    assert(((flags & USE_SD) == 0) || ((flags & USE_XSD) == 0));
+    return flags;
+}
+
+void Heighted_graph::print_flags(int flags) {
+    if ((flags & FAIL_FAST) != 0) std::cout << "FAIL_FAST" << std::endl;
+    if ((flags & USE_SCC_CHECK) != 0) std::cout << "USE_SCC_CHECK" << std::endl;
+    if ((flags & USE_IDEMPOTENCE) != 0) std::cout << "USE_IDEMPOTENCE" << std::endl;
+    if ((flags & USE_MINIMALITY) != 0) std::cout << "USE_MINIMALITY" << std::endl;
+    if ((flags & COMPUTE_FULL_CCL) != 0) std::cout << "COMPUTE_FULL_CCL" << std::endl;
+    if ((flags & USE_SD) != 0) std::cout << "USE_SD" << std::endl;
+    if ((flags & USE_XSD) != 0) std::cout << "USE_XSD" << std::endl;
+}
+
+//=============================================================
+// Helper functions
+//=============================================================
+bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
+
+    auto start = std::chrono::system_clock::now();
+    loop_checks++;
+    checked_size_sum += R->size();
+
+    bool result = false;
+
+    if ((opts & USE_SCC_CHECK) != 0) {
+        result = R->has_downward_SCC();
+    } else {
+        // Compute R composed with R if using the idempotent method
+        // or the transitive closure otherwise (i.e. using the standard method)
+        Sloped_relation* R2 = 
+            ((opts & USE_IDEMPOTENCE) != 0)
+                ? R->compose(*R)
+                : R->compute_transitive_closure();
+
+        // If we're using the idempotent method and the relation is not
+        // idempotent then trivially return true
+        if (((opts & USE_IDEMPOTENCE) != 0) && !(*R2 == *R)) {
+            result = true;
+            loop_checks--;
+            checked_size_sum -= R->size();
+        } else {
+            // Otherwise, check we have a self-loop in the relevant relation
+            Map<Int_pair,int>* slopes = R2->get_slopes();
+
+            if (HeightsOf[node]->size() < slopes->size()) {
+                // Iterate over all heights h in the node, to see if (h, h) is
+                // mapped to the Downward slope.
+                for( int h : *(HeightsOf.at(node)) ){
+                    auto exists = slopes->find(Int_pair(h,h));
+                    if( exists != slopes->end() && exists->second == Downward ){
+                        result = true;
+                        break;
+                    }
+                }
+            } else {
+                // Only iterate over all entries in the transitive closure of R
+                // if this will be quicker then going over the heights
+                for(auto it = slopes->begin(); it != slopes->end(); it++) {
+                    Int_pair heights = it->first;
+                    if (heights.first == heights.second && it->second == Downward) {
+                        result = true;
+                        break;
+                    }
+                }
+            }
+        }
+        rejected->push_back(R2);
+    }
+
+    auto end = std::chrono::system_clock::now();
+    loop_check_time += end - start;
+
+    return result;
+}
+
+bool Heighted_graph::check_Ccl(int opts) {
+    int num_nodes = this->num_nodes();
+    for( int node = 0; node < num_nodes; node++ ){
+        Relation_LIST* Ccl_nd = Ccl[node][node];
+        for( Sloped_relation* R : *Ccl_nd ){
+            R->initialize();
+            if(!check_self_loop(R, node, opts)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool Heighted_graph::set_based_check(SD_decrease_type SD_DEC_TYPE) {
+    generic_graph G;
+    G.set_edges(edges,num_nodes());
+    switch( SD_DEC_TYPE ){
+        case STD: 
+            return G.check_SD(SD_DEC_TYPE,&HeightsOf,h_change_);
+            break;
+        case XTD: 
+            return G.check_XSD(&HeightsOf,h_change_,this->max_height_set_size);
+            break;
+    }
+    return false;
+}
+
+//=============================================================

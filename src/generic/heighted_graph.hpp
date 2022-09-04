@@ -26,6 +26,8 @@ private:
     std::vector<Int_pair>*      edges;
 
     int max_height = -1;
+    int max_height_set_size = 0;
+
 
     int flags;
 
@@ -50,6 +52,7 @@ private:
     bool check_Ccl(int opts);
 
 public:
+
     // Option flags
     static const int FAIL_FAST;
     static const int USE_SCC_CHECK;

@@ -8,32 +8,8 @@
 #include "types.c"
 
 
-void Sloped_relation::initialize(void){
-    if( initialized ) return;
-    for( int i = 0 ; i < num_src_heights ; i++ ){
-        for( int j = 0 ; j < num_dst_heights ; j++ ){
-            if( repr_matrix[i][j] != Undef ){
-                auto exists = forward_map->find(i);
-                if( exists == forward_map->end() ){
-                    forward_map->insert(Pair<int,Int_pair_SET*>(i,new Int_pair_SET()));
-                }
-                (forward_map->at(i))->insert(Int_pair(j,(int)repr_matrix[i][j]));
-                exists = backward_map->find(j);
-                 if( exists == backward_map->end() ){
-                    backward_map->insert(Pair<int,Int_pair_SET*>(j,new Int_pair_SET()));
-                }
-                (backward_map->at(j))->insert(Int_pair(i,(int)repr_matrix[i][j]));
-                slope_map->insert(Pair<Int_pair,int>(Int_pair(i,j),(int)repr_matrix[i][j]));
-            }
-        }
-        delete repr_matrix[i];
-    }
-    delete repr_matrix;
-    initialized = true;
-    return;
-}
-
-
+//==================================================================
+// USE : ON CREATION
 Sloped_relation::Sloped_relation(int num_src_heights, int num_dst_heights){
     this->num_src_heights = num_src_heights;
     this->num_dst_heights = num_dst_heights;
@@ -128,6 +104,61 @@ Sloped_relation& Sloped_relation::operator=(Sloped_relation&& R){
     return *this;
 }
 
+//==================================================================
+// USE : ON DISTRUCTION
+Sloped_relation::~Sloped_relation(void){
+    clear();
+}
+
+
+void Sloped_relation::clear(void){
+    // Question: why do we not delete repr_matrix here?
+
+    if( repr_matrix ){
+        for( int i = 0 ; i < num_src_heights ; i++ ){
+            free(repr_matrix[i]);
+        }
+        free(repr_matrix);
+    }
+
+    for( auto pair : *(forward_map) ){
+        if( pair.second ) delete pair.second;
+    }
+    for( auto pair : *(backward_map) ){
+        if( pair.second ) delete pair.second;
+    }
+    delete forward_map;
+    delete backward_map;
+    delete slope_map;
+}
+
+//==================================================================
+// USE : GET AND SET
+void Sloped_relation::initialize(void){
+    if( initialized ) return;
+    for( int i = 0 ; i < num_src_heights ; i++ ){
+        for( int j = 0 ; j < num_dst_heights ; j++ ){
+            if( repr_matrix[i][j] != Undef ){
+                auto exists = forward_map->find(i);
+                if( exists == forward_map->end() ){
+                    forward_map->insert(Pair<int,Int_pair_SET*>(i,new Int_pair_SET()));
+                }
+                (forward_map->at(i))->insert(Int_pair(j,(int)repr_matrix[i][j]));
+                exists = backward_map->find(j);
+                 if( exists == backward_map->end() ){
+                    backward_map->insert(Pair<int,Int_pair_SET*>(j,new Int_pair_SET()));
+                }
+                (backward_map->at(j))->insert(Int_pair(i,(int)repr_matrix[i][j]));
+                slope_map->insert(Pair<Int_pair,int>(Int_pair(i,j),(int)repr_matrix[i][j]));
+            }
+        }
+        // free(repr_matrix[i]);
+    }
+    // free(repr_matrix);
+    initialized = true;
+    return;
+}
+
 void Sloped_relation::add(int h1, int h2, slope s) {
 
     assert (h1 < num_src_heights);
@@ -203,6 +234,12 @@ Map<Int_pair,int>* Sloped_relation::get_slopes(void){
     return slope_map;
 }
 
+int Sloped_relation::size(void) const{
+    return slope_map->size();
+}
+
+//==================================================================
+// USE : USEFUL COMPUTATION METHODS
 
 Sloped_relation* Sloped_relation::compose(Sloped_relation& other){
     Map<int,Int_pair_SET*>* composed_forward_map = new Map<int,Int_pair_SET*>();
@@ -258,11 +295,6 @@ Sloped_relation* Sloped_relation::compose(Sloped_relation& other){
                             other.num_dst_heights);
 }
 
-Sloped_relation::~Sloped_relation(void){
-    clear();
-}
-
-
 Sloped_relation* Sloped_relation::compute_transitive_closure(void){
     Sloped_relation* R = new Sloped_relation(*this);
     bool done = false;
@@ -285,58 +317,6 @@ Sloped_relation* Sloped_relation::compute_transitive_closure(void){
         delete R_prime;
     }
     return R;
-}
-
-bool operator< (const Sloped_relation& R, const Sloped_relation& L){
-    return (R.slope_map < L.slope_map);
-}
-
-
-bool operator== (const Sloped_relation& R, const Sloped_relation& L){
-    if( (R.slope_map)->size() != (L.slope_map)->size() ){
-        return false;
-    }
-    for( auto r : *(R.slope_map) ){
-        auto exists = (L.slope_map)->find(r.first);
-        if( exists == (L.slope_map)->end() ) return false;
-        if( r.second != exists->second ) return false;
-    }
-    return true;
-}
-
-int Sloped_relation::size(void) const{
-    return slope_map->size();
-}
-
-void Sloped_relation::clear(void){
-    // Question: why do we not delete repr_matrix here?
-    for( auto pair : *(forward_map) ){
-        if( pair.second ) delete pair.second;
-    }
-    for( auto pair : *(backward_map) ){
-        if( pair.second ) delete pair.second;
-    }
-    delete forward_map;
-    delete backward_map;
-    delete slope_map;
-}
-
-std::ostream& operator<<(std::ostream& os, const Sloped_relation& r) {
-    os << "--------------------------------------------" << std::endl;
-    os << "Size of relation: " << r.size() << std::endl;
-    os << "--------------------------------------------" << std::endl;
-    for( auto binding : *(r.slope_map) ){
-        os << "\tsource height: " << binding.first.first;;
-        os << ", dest height: " << binding.first.second;
-        os << ", slope:" << binding.second;
-        os << std::endl;
-    }
-    os << "============================================" << std::endl;
-    return os;
-}
-
-void Sloped_relation::print_(void){
-    std::cout << *this;
 }
 
 comparison Sloped_relation::compare(const Sloped_relation& other){
@@ -399,6 +379,9 @@ comparison Sloped_relation::compare(const Sloped_relation& other){
 }
 
 
+//==================================================================
+// USE : SCC
+
 void fill_order(int v, bool* visited, std::stack<int>* s, slope** g, int n){
     visited[v] = true;
     for(int i = 0; i < n; ++i)
@@ -407,7 +390,6 @@ void fill_order(int v, bool* visited, std::stack<int>* s, slope** g, int n){
                 fill_order(i, visited, s, g, n);
     s->push(v);
 }
-
 
 bool find_scc(int v, bool* visited, slope** g, int n){
     visited[v] = true;
@@ -467,10 +449,47 @@ bool Sloped_relation::has_downward_SCC(void){
     
    
     for( int i = 0 ; i < num_heights ; i++ ){
-        delete g[i];
+        free(g[i]);
     }
-    delete g;
-    delete visited;
+    free(g);
+    free(visited);
 
     return found;
+}
+
+//==================================================================
+// MISC
+
+std::ostream& operator<<(std::ostream& os, const Sloped_relation& r) {
+    os << "--------------------------------------------" << std::endl;
+    os << "Size of relation: " << r.size() << std::endl;
+    os << "--------------------------------------------" << std::endl;
+    for( auto binding : *(r.slope_map) ){
+        os << "\tsource height: " << binding.first.first;;
+        os << ", dest height: " << binding.first.second;
+        os << ", slope:" << binding.second;
+        os << std::endl;
+    }
+    os << "============================================" << std::endl;
+    return os;
+}
+
+bool operator== (const Sloped_relation& R, const Sloped_relation& L){
+    if( (R.slope_map)->size() != (L.slope_map)->size() ){
+        return false;
+    }
+    for( auto r : *(R.slope_map) ){
+        auto exists = (L.slope_map)->find(r.first);
+        if( exists == (L.slope_map)->end() ) return false;
+        if( r.second != exists->second ) return false;
+    }
+    return true;
+}
+
+bool operator< (const Sloped_relation& R, const Sloped_relation& L){
+    return (R.slope_map < L.slope_map);
+}
+
+void Sloped_relation::print_(void){
+    std::cout << *this;
 }
