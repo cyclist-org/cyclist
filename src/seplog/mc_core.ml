@@ -840,7 +840,7 @@ struct
           cross_models constraints pto_models mdls
         in
         let mdls = Ptos.fold gen_mdls ptos (itp_emp ()) in
-        SymHeapHash.replace base body (ModelBase.Hashset.to_list mdls)
+        SymHeapHash.replace base body.heap (ModelBase.Hashset.to_list mdls)
     in
     let () = Defs.rule_iter calc_abstractions defs in
     base

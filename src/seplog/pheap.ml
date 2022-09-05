@@ -174,3 +174,6 @@ let star ?(augment_deqs = true) f g =
   | _ -> true
 
 *)
+
+let has_untagged_preds ph =
+    Heap.has_untagged_preds ph.heap

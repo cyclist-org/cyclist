@@ -5,7 +5,7 @@ open Generic
 
 include BasicType
 
-val mk : Pheap.t -> Pred.t -> t
+val mk : Heap.t -> Pred.t -> t
 
 val dest : t -> Pheap.t * Pred.t
 

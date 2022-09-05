@@ -1,6 +1,6 @@
 (** Points-to atom, consisting of a pair of a term and a list of terms. *)
 
-include Lib.BasicType with type t = Term.t * Term.FList.t
+include Lib.BasicType with type t = Perms.t * Tags.Elt.t * (Term.t * Term.FList.t)
 
 val subst : Subst.t -> t -> t
 

@@ -124,7 +124,7 @@ module Defs = struct
   let check_consistency defs =
     rule_iter
       (fun rl ->
-        try check_form_wf defs (Ord_constraints.empty, [Indrule.body rl.heap])
+        try check_form_wf defs (Ord_constraints.empty, [Indrule.body rl])
         with Invalid_argument s ->
           failwith
             ( "Error in definition of "

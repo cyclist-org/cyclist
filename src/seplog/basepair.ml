@@ -151,7 +151,7 @@ let choose_iter f ys =
 let gen_pairs f case cmap pmap attmap =
   let h, (pred, _) = Indrule.dest case in
   let candidates =
-    Tpreds.map_to_list (fun (_, (i, _)) -> PredMap.find i pmap) h.SH.inds
+    Tpreds.map_to_list (fun (_, (i, _)) -> PredMap.find i pmap) h.heap.SH.inds
   in
   let s = RuleMap.find case cmap in
   let s' = PredMap.find pred pmap in

@@ -2,7 +2,7 @@
 open Lib
 open Generic
 
-include BasicType with type t = Tags.Elt.t * Pred.t
+include BasicType with type t = Perm.t * Tags.Elt.t * Pred.t
 
 val equal_upto_tags : t -> t -> bool
 (** Compare for equality two tagged predicates while ignoring tags. *)
