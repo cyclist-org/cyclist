@@ -7,9 +7,28 @@ type abstract1
 
 type abstract2
 
+(* For labels we're going to use Tags.Elt.t *)
+
+(* Issues with representing disjointness constraints
+
+    a#b_1, ..., a#b_n 
+    a = a1 * a2
+    a1#b_1, ..., a1#b_n, a2#b_1, ..., a2#b_n
+*)
+
+(* Compositions are sets of (label * label list)
+
+    a = a_1 * ... * a_n : (label * label list)
+    b = b_1 * ... * b_n
+
+*)
+
+
 type symheap = private
   { eqs: Uf.t
   ; deqs: Deqs.t
+ (* ; disj: Disjoints.t   a set of disjointness contraints over labels *)
+ (* ; comps : Compositions.t  a set of composition constraints over labels *)
   ; ptos: Ptos.t
   ; inds: Tpreds.t
   ; mutable _terms: abstract1
