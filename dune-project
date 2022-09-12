@@ -24,7 +24,9 @@
   (mparser-re (>= 1.3))
   (hashcons (>= 1.0.1))
   (hashset (>= 1.0.0))
-  (ocamlgraph (>= 1.8.7))))
+  (ocamlgraph (>= 1.8.7))
+  (zarith (>= 1.12.0))))
+  
 
 (formatting disabled)
 
