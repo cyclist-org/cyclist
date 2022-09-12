@@ -3,12 +3,23 @@ open Symbols
 open MParser
 include Pair.Make (Term) (Term.FList)
 
+(*  Pair.Make 
+    (Pair.Make (Permissions) (Tags.Elt))
+    (Pair.Make (Term) (Term.FList)) 
+    *)
+
+
 let subst theta (lv, rvs) =
   (Subst.apply theta lv, Term.FList.subst theta rvs)
 
 let unify ?(update_check = Fun._true) (x, xs) (y, ys) cont init_state =
   Unify.Unidirectional.unify_trm_list ~update_check (x :: xs) (y :: ys) cont
     init_state
+
+(* let unify ?(update_check = Fun._true) ((p, l), (x, xs)) ((p, l)(y, ys)) cont init_state =
+Unify.Unidirectional.unify_trm_list ~update_check (x :: xs) (y :: ys) cont
+  init_state
+  *)
 
 let biunify ?(update_check = Fun._true) (x, xs) (y, ys) cont init_state =
   Unify.Bidirectional.unify_trm_list ~update_check (x :: xs) (y :: ys) cont

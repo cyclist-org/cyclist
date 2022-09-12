@@ -15,13 +15,10 @@ type t = permFraction
 (* Constructors *)
 let one = 
     {num = 1; den = 1}
-
-let zero = 
-    {num = 0; den = 1}
-
+ 
 
 (* Some other arithmetic fraction manipulation procedures *)
-(* Multiply both num and den by n, getting and equiv fraction *)
+(* Multiply both num and den by n, getting an equiv fraction *)
 let equivFract f n =
     {num = f.num * n; den = f.den * n}
 
@@ -78,17 +75,17 @@ let rec  simplifyFrac f =
 (* Permission specific procedures *)
 
 (* Returns a i-th fraction of p *)
-let splitith p i = 
+let split_ith p i = 
       simplifyFrac {num = p.num; den = p.den*i}
 
 (* Returns a half of p    *)
 let half p = 
-      splitith p 2 
+      split_ith p 2 
     
 
 (* Returns a third of p *)
 let third p = 
-      splitith p 3
+      split_ith p 3
 
 
 (* Addition *)
