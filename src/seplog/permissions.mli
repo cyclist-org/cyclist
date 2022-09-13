@@ -13,7 +13,7 @@ open Generic
 (*
   e.g. 0.25x + 0.5yz
 
-  i.e. you need to represent arbitrary polynomials
+  i.e. you need to represent arbitrary polynomials  
        which are going to be sums of products of variables and constants
 
        So maybe you'd choose a list of lists representation?
@@ -35,9 +35,6 @@ val one : t
 (* Basic arithmetics *)
  
 
+val split_ith: t -> int -> t
 val half: t -> t
 val third: t -> t
-val split_ith: t -> int -> t
-
-val add: t -> t -> t
-  
