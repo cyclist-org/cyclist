@@ -4,11 +4,8 @@
 open Lib
 open Generic
 
-(* Keep this type abstract? *)
-(* type permFraction = private
-  { num: int
-  ; den: int} *)
-
+(* Keep this type abstract *)
+ 
 (* Underlying representation will have to be terms over variables and numeric constants *)
 (*
   e.g. 0.25x + 0.5yz
@@ -22,9 +19,7 @@ open Generic
        For the multiset, use the Multiset container module in Lib
 *)
 
-(* Use zarith package for arbitrary precision rational constants? *)
-
-include BasicType (* with type t  = permFraction *)
+include BasicType
 
 (* Add an instance of VarManager for representing variables in permissions *)
 
@@ -32,9 +27,8 @@ include BasicType (* with type t  = permFraction *)
 val one : t
  
  
-(* Basic arithmetics *)
+(* Basic arithmetics 
  
-
 val split_ith: t -> int -> t
 val half: t -> t
-val third: t -> t
+val third: t -> t*)
