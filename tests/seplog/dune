@@ -1,0 +1,18 @@
+ (library 
+ (name testsFolder)
+ (public_name cyclist.tests)
+ (libraries lib generic mparser zarith ounit2)
+ (modules
+   (:standard 
+      \ permission_test)))
+
+(toplevel
+ (name sltop)
+ (libraries lib generic seplog zarith)) 
+
+
+(test
+ (name permission_test)
+ (modules permission_test)
+ (libraries oUnit lib generic seplog zarith)) 
+ 

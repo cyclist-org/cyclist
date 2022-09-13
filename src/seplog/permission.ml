@@ -36,6 +36,22 @@ let one = {
    label= LabelMgr.anonymous
    }
  
+let pi = {
+      permis= Q.one; 
+      label= LabelMgr.anonymous
+      }
+    
+let two = {
+   permis= Q.mul Q.one (Q.of_int 2); 
+   label= LabelMgr.anonymous
+   }
+  
+let half = {
+   permis= Q.div Q.one (Q.of_int 2); 
+   label= LabelMgr.anonymous
+   }
+ 
+
 
 (* BasicType required procedures *)  
 

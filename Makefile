@@ -37,7 +37,8 @@ TOPLEVEL := src/seplog/sl.top
 
 TEST_TARGETS := \
 	tests/test_slterm_bug1.native \
-	tests/test_slterm_bug2.native
+	tests/test_slterm_bug2.native \
+	tests/seplog
 
 .PHONY: all native byte toplevel check docs
 

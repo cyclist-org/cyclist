@@ -25,7 +25,8 @@ include BasicType
 
 (* Constructors *)
 val one : t
- 
+val two : t
+val half : t 
  
 (* Basic arithmetics 
  
