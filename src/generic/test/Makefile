@@ -219,7 +219,7 @@ test-suite-xsd: soundness
 #	$(call test_success, graph_16.10)
 	$(call test_failure, graph_17)
 	$(call test_success, graph_18)
-	$(call test_success, graph_19)
+	$(call test_failure, graph_19)
 	$(call test_failure, graph_20a)
 	$(call test_failure, graph_20b)
 	$(call test_failure, graph_21)

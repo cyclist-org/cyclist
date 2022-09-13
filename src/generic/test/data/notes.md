@@ -28,7 +28,7 @@ It's not the "standard" proof of 2-Hydra.
 
 Hand-crafted heighted graph corresponding to the "standard" proof of 2-Hydra.
 
-Not SD, but is XSD.
+ID, but not SD or XSD.
 
 ## Graphs 20a and 20b
 
