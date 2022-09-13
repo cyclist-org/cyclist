@@ -521,7 +521,7 @@ bool Heighted_graph::set_based_check(SD_decrease_type SD_DEC_TYPE) {
     G.set_edges(edges,num_nodes());
     switch( SD_DEC_TYPE ){
         case STD: 
-            return G.check_SD(SD_DEC_TYPE,&HeightsOf,h_change_);
+            return G.check_SD(&HeightsOf,h_change_);
             break;
         case XTD: 
             return G.check_XSD(&HeightsOf,h_change_,this->max_height_set_size);

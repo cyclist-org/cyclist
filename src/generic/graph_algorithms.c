@@ -262,7 +262,7 @@ Set<Int_pair_SET>* graph_algorithms::clone_SCSs(){
 //******************************************
 //==========================================
 //USE : SPRENGER DAM
-bool graph_algorithms::check_SD(SD_decrease_type SD_DEC_TYPE,Vec<Int_SET*>* HeightsOf, Sloped_relation*** h_change_, Vec<Pair<int,int>>* edges_, int max_node_){
+bool graph_algorithms::check_SD(Vec<Int_SET*>* HeightsOf, Sloped_relation*** h_change_, Vec<Pair<int,int>>* edges_, int max_node_){
     this->h_change_ = h_change_;
     this->HeightsOf = HeightsOf;
 

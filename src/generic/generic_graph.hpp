@@ -46,8 +46,8 @@ public:
         algorithms.get_ECycles(mapped_edges,max_node);
     }
 
-    bool check_SD(SD_decrease_type SD_DEC_TYPE,std::vector<Int_SET*>* HeightsOf,Sloped_relation*** h_change_){ 
-        return algorithms.check_SD(SD_DEC_TYPE,HeightsOf,h_change_,mapped_edges,max_node); 
+    bool check_SD(std::vector<Int_SET*>* HeightsOf,Sloped_relation*** h_change_){ 
+        return algorithms.check_SD(HeightsOf,h_change_,mapped_edges,max_node); 
     }
     void CCG(){
         algorithms.get_CCG(new Set<Int_pair>(mapped_edges->begin(), mapped_edges->end()),max_node);

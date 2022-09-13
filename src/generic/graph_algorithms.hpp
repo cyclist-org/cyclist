@@ -76,7 +76,7 @@ public:
     void get_CCG( Set<Int_pair>* edges,int max_node);
     void get_ECycles(Vec<Int_pair>* edges, int max_node);
     void get_SCSs(Vec<Int_pair>* edges, int max_node);
-    bool check_SD(SD_decrease_type SD_DEC_TYPE,std::vector<Int_SET*>* HeightsOf ,Sloped_relation*** h_change_ ,Vec<Pair<int,int>>* edges_, int max_node_);
+    bool check_SD(std::vector<Int_SET*>* HeightsOf ,Sloped_relation*** h_change_ ,Vec<Pair<int,int>>* edges_, int max_node_);
 
 
 
