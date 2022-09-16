@@ -2,12 +2,15 @@
 
 open Lib 
 
-(* Using zarith package Q for arbitrary precision rational constants  *)
+ 
 
+(* Using zarith package Q for arbitrary precision rational constants  *)
 (* a) FRACTION Let's start by defining it as a fraction. I'll implement the rest of the polynomial (see .mli file) later *)
 type permFraction = Q.t
 
 (* b) VARMANAGER *)
+
+
 (* Function needed for instantiation of VarManager to define the labels *)
 let classify_labelname s =
    assert (not (String.equal s "")) ;
@@ -15,20 +18,22 @@ let classify_labelname s =
    else VarManager.FREE
  
  (* Instantiation of varManager for the Labels *)
- module LabelMgr = (val VarManager.mk 0 "_" classify_labelname : VarManager.S)
- 
+module LabelMgr = (val VarManager.mk 0 "_" classify_labelname : VarManager.S)
+   
  
 module Label = LabelMgr.Var
+ 
+(* let used_labels = ref Label.empty *)
 
-(* type prodTerm = Multiset.Make (permFraction) *) 
 
-(* module PermPair = Pair.Make (Q) (Label) // This doesn't work because Q is not a BasicType *)
- type t =  {
+type t =  {
    permis: Q.t; 
    label: Label.t 
    } 
  
  
+
+
 
 (* Constructors *)
 let one = {
@@ -36,9 +41,9 @@ let one = {
    label= LabelMgr.anonymous
    }
  
-let pi = {
+let pi used_labels = {
       permis= Q.one; 
-      label= LabelMgr.anonymous
+      label= LabelMgr.fresh_fvar used_labels
       }
     
 let two = {

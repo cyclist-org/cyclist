@@ -27,6 +27,7 @@ include BasicType
 val one : t
 val two : t
 val half : t 
+(* val pi : LabelMgr.var_container -> t *)
  
 (* Basic arithmetics 
  
