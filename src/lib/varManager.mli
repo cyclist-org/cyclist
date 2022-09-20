@@ -14,10 +14,11 @@ module type I = sig
   (** [is_unnamed v] returns [true] if and only if [v] is anonymous *)
 
   val mk : string -> var
-  (** [mk_var n exist] returns a variable with name [n]; if [exist] is [true] then 
-        the returned variable will be existential, otherwise it will be free. If the 
-        VarManager already knows about a variable named [n], then this will be returned,
-        otherwise it will generate a fresh variable. *)
+  (** [mk n] returns a variable with name [n]; the variable will be of the sort
+      (anonymous, free, existential) returned by the [classify] function that
+      was given when the VarManager module was created. If the VarManager
+      already knows about a variable named [n], then this will be returned,
+      otherwise it will generate a (globally) fresh variable. *)
 
   val is_exist_var : var Fun.predicate
   (** [is_exist_var v] returns [true] if and only if [v] is an existential variable. *)

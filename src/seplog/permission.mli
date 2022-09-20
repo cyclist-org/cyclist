@@ -8,7 +8,7 @@ open Generic
  
 (* Underlying representation will have to be terms over variables and numeric constants *)
 (*
-  e.g. 0.25x + 0.5yz
+  e.g. 0.25x + 0.5x^2 + 0.5yz
 
   i.e. you need to represent arbitrary polynomials  
        which are going to be sums of products of variables and constants
@@ -24,13 +24,23 @@ include BasicType
 (* Add an instance of VarManager for representing variables in permissions *)
 
 (* Constructors *)
-val one : t
-val two : t
-val half : t 
-(* val pi : LabelMgr.var_container -> t *)
+ val one : t  
+(* val mk_var : string -> t  !!!needed *)
+(* val const : Q.t -> t !! needed *)
  
-(* Basic arithmetics 
+(* Basic arithmetics*)
  
+(* Throw an exception if the int < 1 *)
 val split_ith: t -> int -> t
 val half: t -> t
-val third: t -> t*)
+val third: t -> t 
+ 
+
+(* Should probably be an error if:
+   - the two arguments use different permission variables
+   - the two coefficients sum to greater than 1 
+val sum : t -> t -> t option*)
+
+
+(* Throw exception if 0 >= given Q.t or given Q.t >= 1 
+val mult : t -> Q.t -> t*)

@@ -6,7 +6,9 @@ open Seplog
 
 let p1 = Permission.one
 
-let p2 = Permission.half
+let p2 = Permission.one
+
+let p3 = Permission.half Permission.one
 
 (* let used_labels = Permission.Label.empty *)
 
@@ -17,7 +19,7 @@ let p2 = Permission.half
 let tests = "Test suite for pheap" >::: [
    "equalp1"  >:: (fun _ -> assert_equal p1 p1); 
 
-   "equalp2"  >:: (fun _ -> assert_equal p2 p2); 
+   "equalp2"  >:: (fun _ -> assert_equal p3 (Permission.split_ith p2 2)); 
 ]
 
 
