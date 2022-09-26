@@ -25,8 +25,8 @@ include BasicType
 
 (* Constructors *)
  val one : t  
-(* val mk_var : string -> t  !!!needed *)
-(* val const : Q.t -> t !! needed *)
+(* val mk_var : string -> t   *)
+ val const : Q.t -> t  
  
 (* Basic arithmetics*)
  
@@ -38,9 +38,9 @@ val third: t -> t
 
 (* Should probably be an error if:
    - the two arguments use different permission variables
-   - the two coefficients sum to greater than 1 
-val sum : t -> t -> t option*)
+   - the two coefficients sum to greater than 1  *)
+val add : t -> t -> t (* option *) (*ERROR ! MODIFY THIS. MAKE IT option*)
 
 
-(* Throw exception if 0 >= given Q.t or given Q.t >= 1 
-val mult : t -> Q.t -> t*)
+(* Throw exception if 0 >= given Q.t or given Q.t >= 1 *)
+val mul : t -> Q.t -> t
