@@ -34,6 +34,7 @@ Heighted_graph::Heighted_graph(int max_nodes) {
     this->max_nodes = max_nodes;
     number_of_edges = 0;
 
+#ifdef LOG_STATS
     ccl_initial_size = 0;
     ccl_size = 0;
     ccl_iterations = 0;
@@ -50,6 +51,7 @@ Heighted_graph::Heighted_graph(int max_nodes) {
     need_to_add_compute_time = std::chrono::duration<double, DURATION>::zero();
     insertion_time = std::chrono::duration<double, DURATION>::zero();
     loop_check_time = std::chrono::duration<double, DURATION>::zero();
+#endif
 
     rejected = new Relation_LIST();
 
@@ -148,15 +150,19 @@ bool Heighted_graph::relational_check(int opts){
         }
     }
 
+#ifdef LOG_STATS
     std::chrono::time_point<std::chrono::system_clock> start;
     std::chrono::time_point<std::chrono::system_clock> end;
+#endif
 
     int num_nodes = this->num_nodes();
 
     // Now compute the CCL
     bool done;
     do {
+#ifdef LOG_STATS
         ccl_iterations++;
+#endif
         // reset loop flag
         done = true;
         for (int source = 0; source < num_nodes; source++) {
@@ -179,15 +185,21 @@ bool Heighted_graph::relational_check(int opts){
                 ) {
                     Sloped_relation* Q = *right;
                     Q->initialize();
+#ifdef LOG_STATS
                     start = std::chrono::system_clock::now();
+#endif
                     Sloped_relation* R = P->compose(*Q);
+#ifdef LOG_STATS
                     end = std::chrono::system_clock::now();
                     compose_time += (end - start);
                     compositions++;
                     total_size_sum += R->size();
+#endif
 
                     bool need_to_add = true;
+#ifdef LOG_STATS
                     auto loop_start = std::chrono::system_clock::now();
+#endif
                     for (
                         auto outer = Ccl[source][sink]->begin();
                         outer != Ccl[source][sink]->end();
@@ -195,15 +207,23 @@ bool Heighted_graph::relational_check(int opts){
                     ) {
                         Sloped_relation* S = *outer;
                         S->initialize();
+#ifdef LOG_STATS
                         comparisons++;
+#endif
                         if ((opts & USE_MINIMALITY) != 0) {
+#ifdef LOG_STATS
                             start = std::chrono::system_clock::now();
+#endif
                             comparison result = R->compare(*S);
+#ifdef LOG_STATS
                             end = std::chrono::system_clock::now();
                             compare_time += (end - start);
+#endif
                             if (result == lt) {
+#ifdef LOG_STATS
                                 ccl_replacements++;
                                 ccl_size--;
+#endif
                                 auto to_delete = outer--;
                                 if (to_delete == left){
                                     continue_left = true;
@@ -217,24 +237,34 @@ bool Heighted_graph::relational_check(int opts){
                                 break;
                             }
                             else if (result == eq || result == gt) {
+#ifdef LOG_STATS
                                 ccl_rejections++;
+#endif
                                 need_to_add = false;
                                 break;
                             }
                         } else {
+#ifdef LOG_STATS
                             start = std::chrono::system_clock::now();
+#endif
                             bool equal = (*S == *R);
+#ifdef LOG_STATS
                             end = std::chrono::system_clock::now();
                             compare_time += (end - start);
+#endif
                             if (equal) {
+#ifdef LOG_STATS
                                 ccl_rejections++;
+#endif
                                 need_to_add = false;
                                 break;
                             }
                         }
                     }
+#ifdef LOG_STATS
                     auto loop_end = std::chrono::system_clock::now();
                     need_to_add_compute_time += (loop_end - loop_start);
+#endif
 
                     // If fail-fast, then check for self-loop if necessary
                     bool fail_now = false;
@@ -250,11 +280,15 @@ bool Heighted_graph::relational_check(int opts){
                         // Otherwise, not done with the fixed point computation
                         done = false;
                         // So add the newly computed sloped relation
+#ifdef LOG_STATS
                         start = std::chrono::system_clock::now();
+#endif
                         (Ccl[source][sink])->push_back(R);
+#ifdef LOG_STATS
                         end = std::chrono::system_clock::now();
                         insertion_time += (end - start);
                         ccl_size++;
+#endif
                         if (continue_left) {
                             break;
                         }
@@ -335,8 +369,10 @@ void Heighted_graph::add_edge(int source, int sink) {
             new Sloped_relation(num_src_heights, num_dst_heights);
         h_change_[src_idx][sink_idx] = R;
         Ccl[src_idx][sink_idx]->push_back(R);
+#ifdef LOG_STATS
         ccl_initial_size++;
         ccl_size++;
+#endif
     }
 }
 
@@ -387,6 +423,7 @@ void Heighted_graph::print_Ccl(void){
 
 void Heighted_graph::print_statistics(void) {
     print_flags(this->flags);
+#ifdef LOG_STATS
     std::cout << "Initial CCL size: " << ccl_initial_size << std::endl;
     std::cout << "Final CCL size: " << ccl_size << std::endl;
     std::cout << "Number of iterations to compute CCL: " << ccl_iterations << std::endl;
@@ -411,6 +448,7 @@ void Heighted_graph::print_statistics(void) {
     std::cout << "Average size of all computed sloped relations: "
               << ((compositions == 0) ? 0 : (total_size_sum / compositions))
               << std::endl;
+#endif
 }
 
 int Heighted_graph::parse_flags(const std::string flags_s) {
@@ -445,9 +483,11 @@ void Heighted_graph::print_flags(int flags) {
 //=============================================================
 bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
 
+#ifdef LOG_STATS
     auto start = std::chrono::system_clock::now();
     loop_checks++;
     checked_size_sum += R->size();
+#endif
 
     bool result = false;
 
@@ -465,8 +505,10 @@ bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
         // idempotent then trivially return true
         if (((opts & USE_IDEMPOTENCE) != 0) && !(*R2 == *R)) {
             result = true;
+#ifdef LOG_STATS
             loop_checks--;
             checked_size_sum -= R->size();
+#endif
         } else {
             // Otherwise, check we have a self-loop in the relevant relation
             Map<Int_pair,int>* slopes = R2->get_slopes();
@@ -496,8 +538,10 @@ bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
         rejected->push_back(R2);
     }
 
+#ifdef LOG_STATS
     auto end = std::chrono::system_clock::now();
     loop_check_time += end - start;
+#endif
 
     return result;
 }

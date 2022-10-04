@@ -31,6 +31,7 @@ private:
 
     int flags;
 
+#ifdef LOG_STATS
     int                     ccl_initial_size;
     int                     ccl_size;
     int                     ccl_iterations;
@@ -46,6 +47,7 @@ private:
     std::chrono::duration<double, DURATION> need_to_add_compute_time;
     std::chrono::duration<double, DURATION> insertion_time;
     std::chrono::duration<double, DURATION> loop_check_time;
+#endif
 
     bool check_self_loop(Sloped_relation *R, int node, int opts);
     bool set_based_check(SD_decrease_type SD_DEC_TYPE);

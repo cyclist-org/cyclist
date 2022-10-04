@@ -1,0 +1,5 @@
+(lang dune 2.2)
+
+(env
+ (log_stats
+  (c_flags :standard -DLOG_STATS)))
