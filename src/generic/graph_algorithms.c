@@ -445,6 +445,131 @@ void graph_algorithms::get_height_families( Vec<Set<int>>* height_family,Vec< Ve
 }
 
 
+// int graph_algorithms::get_extended_graph(Vec<Set<int>>* height_family,Vec<Map<int,int>>* func_fam,Set<Int_pair>* ext_edges,Map<int,Int_pair>* id_to_ext_edge,Map<Int_pair,int>* ext_edge_to_id){
+//     // create the extended graph 
+
+//     Set<Int_pair> guard;
+//     int ext_node_id = 0;
+//     int curr_edge_id = 0;
+//     int ext_node_1;
+//     int ext_node_2;
+    
+//     for( auto e : *edges ){
+//         for( auto h : height_family->at(e.first) ){
+
+//             Int_pair new_edge_first = Int_pair(e.first,h);
+//             Int_pair new_edge_second = Int_pair(e.second,(func_fam->at(curr_edge_id)).at(h));
+
+//             auto exists = guard.find(new_edge_first);
+//             if( exists == guard.end() ){
+//                 guard.insert(new_edge_first);
+//                 ext_node_1 = ext_node_id;
+//                 id_to_ext_edge->insert(Pair<int,Int_pair>(ext_node_id,new_edge_first));
+//                 ext_edge_to_id->insert(Pair<Int_pair,int>(new_edge_first,ext_node_id++));
+//             }
+//             else ext_node_1 = ext_edge_to_id->at(new_edge_first);
+
+
+//             exists = guard.find(new_edge_second);
+//             if( exists == guard.end() ){
+//                 guard.insert(new_edge_second);
+//                 ext_node_2=ext_node_id;
+//                 id_to_ext_edge->insert(Pair<int,Int_pair>(ext_node_id,new_edge_second));
+//                 ext_edge_to_id->insert(Pair<Int_pair,int>(new_edge_second,ext_node_id++));
+
+//             }
+//             else ext_node_2 = ext_edge_to_id->at(new_edge_second);
+
+//             ext_edges->insert(Int_pair(ext_node_1,ext_node_2));
+//         }
+//         curr_edge_id++;
+//     }
+//     return ext_node_id;
+
+// }
+
+
+// bool graph_algorithms::check_height_family_function_family_decreasing(Vec<Set<int>>* height_family ,Vec<Map<int,int>>* function_family ,Vec<Map<int,int>>*** functions,int curr_edge){
+//     if( curr_edge == edges->size() ){
+
+//         Set<Int_pair>* ext_edges = new Set<Int_pair>();
+//         Map<int,Int_pair> id_to_ext_edge;
+//         Map<Int_pair,int> ext_edge_to_id;
+
+//         int max_node_ext = get_extended_graph(height_family, function_family,ext_edges,&id_to_ext_edge,&ext_edge_to_id);
+
+//         // no edges
+//         if( ext_edges->size() == 0) return true;
+        
+//         // one edge
+//         if( max_node_ext == 1 ){
+//             auto a = id_to_ext_edge.at(ext_edges->begin()->first);
+//             if ( (h_change_[a.first][a.first]->repr_matrix)[a.second][a.second] != Downward )return false;
+//             else return true;
+//         }
+
+//         // else create the actual graph and get SCSs
+//         generic_graph ext_G;
+//         ext_G.set_edges( new Vec<Int_pair>(ext_edges->begin(),ext_edges->end()),max_node_ext);
+//         Set<Int_pair_SET>* SCS_Ext = ext_G.get_SCSs();
+
+
+//         // single SCS single node case
+//         if(SCS_Ext->size() == 1 && ((SCS_Ext->begin())->size() == 1 ) ){
+//             bool result = false;
+//             auto e = *((SCS_Ext->begin())->begin());
+//             int u = (id_to_ext_edge.at(e.first)).first;
+//             int v = (id_to_ext_edge.at(e.second)).first;
+//             if( u == v ){
+//                 h_change_[u][v]->initialize();
+//                 Sloped_relation* S = h_change_[u][v]->compute_transitive_closure();
+//                 Map<Int_pair,int>* slope_map = S->get_slopes();
+//                 for( auto p_ : *slope_map ){
+//                     if( p_.first.first == p_.first.second &&  p_.second == Downward ){
+//                         result = true;
+//                         break;
+//                     }
+//                 }
+//                 delete S;
+//             }
+//             return result;
+//         }
+
+
+//         // normal case
+//         for(Int_pair_SET scs : *SCS_Ext ){
+//             if( scs.size() ){
+//                 bool downward = false;
+//                 Set<Int_pair> guard;
+//                 for( auto e : scs ){
+//                     int u = (id_to_ext_edge.at(e.first)).first;
+//                     int v = (id_to_ext_edge.at(e.second)).first;
+//                     guard.insert(Int_pair(u,v));
+//                     if( h_change_[u][v]->repr_matrix[(id_to_ext_edge.at(e.first)).second][(id_to_ext_edge.at(e.second)).second] == Downward ) downward = true;
+//                 }
+//                 if(!downward && guard.size() == edges->size() ) return false;
+//             }
+//         }
+//         return true;
+
+//     }
+//     else{
+//         Int_pair edge = edges->at(curr_edge);
+//         for( Map<int,int> func : *(functions[edge.first][edge.second]) ){
+//             function_family->push_back(func);
+//             if( check_height_family_function_family_decreasing(height_family,function_family,functions,curr_edge+1) ) return true;;
+//             function_family->pop_back();
+//         }
+//     }
+    
+//     return false;
+// }
+
+
+
+
+
+
 int graph_algorithms::get_extended_graph(Vec<Set<int>>* height_family,Vec<Map<int,int>>* func_fam,Set<Int_pair>* ext_edges,Map<int,Int_pair>* id_to_ext_edge,Map<Int_pair,int>* ext_edge_to_id){
     // create the extended graph 
 
@@ -456,6 +581,11 @@ int graph_algorithms::get_extended_graph(Vec<Set<int>>* height_family,Vec<Map<in
     
     for( auto e : *edges ){
         for( auto h : height_family->at(e.first) ){
+
+            auto x = h_change_[e.first][e.second]->repr_matrix;
+            // int mapped_h = (PLS->at(e.first))->at(h);
+            // int mapped_h_prime = (PLS->at(e.second))->at((func_fam->at(curr_edge_id)).at(h) );
+            // if( x[mapped_h][mapped_h_prime] == Undef ) return -1;
 
             Int_pair new_edge_first = Int_pair(e.first,h);
             Int_pair new_edge_second = Int_pair(e.second,(func_fam->at(curr_edge_id)).at(h));
@@ -488,7 +618,6 @@ int graph_algorithms::get_extended_graph(Vec<Set<int>>* height_family,Vec<Map<in
 
 }
 
-
 bool graph_algorithms::check_height_family_function_family_decreasing(Vec<Set<int>>* height_family ,Vec<Map<int,int>>* function_family ,Vec<Map<int,int>>*** functions,int curr_edge){
     if( curr_edge == edges->size() ){
 
@@ -498,13 +627,15 @@ bool graph_algorithms::check_height_family_function_family_decreasing(Vec<Set<in
 
         int max_node_ext = get_extended_graph(height_family, function_family,ext_edges,&id_to_ext_edge,&ext_edge_to_id);
 
-        // no edges
-        if( ext_edges->size() == 0) return true;
+        if( max_node_ext == -1 ){
+            return false;
+        }
         
         // one edge
         if( max_node_ext == 1 ){
             auto a = id_to_ext_edge.at(ext_edges->begin()->first);
-            if ( (h_change_[a.first][a.first]->repr_matrix)[a.second][a.second] != Downward )return false;
+            int h = (PLS->at(a.first))->at(a.second);
+            if ( (h_change_[a.first][a.first]->repr_matrix)[h][h] != Downward ) return false;
             else return true;
         }
 
@@ -513,6 +644,9 @@ bool graph_algorithms::check_height_family_function_family_decreasing(Vec<Set<in
         ext_G.set_edges( new Vec<Int_pair>(ext_edges->begin(),ext_edges->end()),max_node_ext);
         Set<Int_pair_SET>* SCS_Ext = ext_G.get_SCSs();
 
+        if(SCS_Ext->size() == 0 ){
+            return false;
+        }
 
         // single SCS single node case
         if(SCS_Ext->size() == 1 && ((SCS_Ext->begin())->size() == 1 ) ){
@@ -545,7 +679,9 @@ bool graph_algorithms::check_height_family_function_family_decreasing(Vec<Set<in
                     int u = (id_to_ext_edge.at(e.first)).first;
                     int v = (id_to_ext_edge.at(e.second)).first;
                     guard.insert(Int_pair(u,v));
-                    if( h_change_[u][v]->repr_matrix[(id_to_ext_edge.at(e.first)).second][(id_to_ext_edge.at(e.second)).second] == Downward ) downward = true;
+                    int h1 = (PLS->at(u))->at((id_to_ext_edge.at(e.first)).second);
+                    int h2 = (PLS->at(v))->at((id_to_ext_edge.at(e.second)).second);
+                    if( h_change_[u][v]->repr_matrix[h1][h2] == Downward ) downward = true;
                 }
                 if(!downward && guard.size() == edges->size() ) return false;
             }
@@ -565,6 +701,51 @@ bool graph_algorithms::check_height_family_function_family_decreasing(Vec<Set<in
     return false;
 }
 
+void get_present_heights(Vec<Pair<int,int>>* edges,Sloped_relation*** h_change_,Map<int,Set<int>*>& present_heights, Set<int>& present_height_set_sizes, Map<int,Vec<int>*>& mapped_p_heights, int& max_size_set){
+
+
+    for( auto edge : *edges ){
+        auto exists = present_heights.find(edge.first);
+        if( exists == present_heights.end() ){
+            Set<int>* s = new Set<int>();
+            // s.insert;
+            present_heights.insert(Pair<int,Set<int>*>(edge.first,s));
+        }
+        exists = present_heights.find(edge.second);
+        if( exists == present_heights.end() ){
+            Set<int>* s = new Set<int>();
+            // s.insert;
+            present_heights.insert(Pair<int,Set<int>*>(edge.second,s));
+        }
+        //Map<Int_pair,int>* get_slopes(void);
+        auto x = h_change_[edge.first][edge.second];
+        x->initialize();
+        Map<Int_pair,int>* h1 = x->get_slopes();
+        for( auto p : *h1 ){
+            // std::cout << "asdasd";
+            (present_heights.at(edge.first))->insert((p.first).first);
+            (present_heights.at(edge.second))->insert((p.first).second);
+        }
+    }
+
+
+    for( auto p : present_heights ){
+        // std::cout << "------------------------------" << std::endl;
+        // std::cout << "Node " << p.first << " :" << std::endl;
+        int size = p.second->size();
+        present_height_set_sizes.insert(size);
+        if( size > max_size_set ) max_size_set =size;
+        Vec<int>* map = new Vec<int>();
+        for(auto h : *(p.second) ) map->push_back(h);
+        mapped_p_heights.insert( Pair<int,Vec<int>*>(p.first,map) );
+        // for( auto h : *(p.second) ) std::cout << h << " ,";
+        // std::cout << "\n------------------------------" << std::endl;
+    }
+
+
+}
+
+
 
 bool graph_algorithms::check_XSD(int max_node_,Vec<Int_SET*>* HeightsOf, Sloped_relation*** h_change_, int max_h,Vec<Pair<int,int>>* edges){
 
@@ -576,14 +757,34 @@ bool graph_algorithms::check_XSD(int max_node_,Vec<Int_SET*>* HeightsOf, Sloped_
     this->edges = edges;
 
 
+    Map<int,Set<int>*> present_heights;
+    Map<int,Vec<int>*> mapped_present_heights;
+    Set<int> present_height_set_sizes;
+    Map<Int_pair,Vec<Map<int,int>>> functions;
+    int max_used_heights_size = 0;
+
+    
+
+
+    
+    get_present_heights(edges, h_change_ ,present_heights, present_height_set_sizes, mapped_present_heights, max_used_heights_size);
+
+      Vec<Int_SET*> present_heights_of;
+
+    for(int i =  0 ; i < max_node_ ; i++ ) present_heights_of.push_back( new Int_SET(mapped_present_heights.at(i)->begin(),mapped_present_heights.at(i)->end()));
+
+    this->HeightsOf = &present_heights_of;
+
+
     // Here we get the subsets of the height sets for each size:
     //
     // -- REMEMBER: for each node, we map the heights localy, i.e. if a node has 3 heights they would be {0,1,2}
     //    which works great in optimizing the code and save extra computations.
     //
     // -- This allows us to compute the substets with regards to the amount of heights with one go ( O(heights) instead of O(nodes) ).
-    Vec< Vec<Set<int>>>* height_sets = get_height_power_sets(max_h);
+    Vec< Vec<Set<int>>>* height_sets = get_height_power_sets(max_used_heights_size);
 
+    PLS = &mapped_present_heights;
 
 
     // create families of heights
@@ -591,6 +792,7 @@ bool graph_algorithms::check_XSD(int max_node_,Vec<Int_SET*>* HeightsOf, Sloped_
     Vec<Set<int>>* height_family_temp = new Vec<Set<int>>();
     get_height_families(height_family_temp  , height_sets);
     delete height_family_temp;
+    
 
     if( height_families_and_function_pairs.size() == 0 ) return true;
 

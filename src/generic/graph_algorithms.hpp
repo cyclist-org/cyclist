@@ -73,6 +73,10 @@ private:
 
 
 public:
+
+    Map<int,Vec<int>*>* PLS;
+
+    
     void get_CCG( Set<Int_pair>* edges,int max_node);
     void get_ECycles(Vec<Int_pair>* edges, int max_node);
     void get_SCSs(Vec<Int_pair>* edges, int max_node);
