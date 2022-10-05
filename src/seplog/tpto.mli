@@ -9,4 +9,4 @@ val terms : t -> Term.Set.t
 
 val vars : t -> Term.Set.t
 
-val parse : (t, 'a) MParser.parser
+(* val parse : (t, 'a) MParser.parser *)

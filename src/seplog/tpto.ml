@@ -23,9 +23,9 @@ let terms (lb, pto) =
 let vars (lb, pto) = 
   Pto.vars pto
 
-  let parse st =
+ (* let parse st =
    (Pto.parse
     >>= (fun y -> y)
     <?> "tpto")
     st
-     
+   *)  
