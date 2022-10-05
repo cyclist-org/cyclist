@@ -396,7 +396,9 @@ void graph_algorithms::get_functions_for_edge_wrt_height_family( int max , Vec<i
         Map<int,int> m;
         int i = 0;
         for( int h : *h1 ){
-            if( (h_change_[u][v]->repr_matrix)[h][ind->at(i)] == Undef) return;
+            int h_ = (PLS->at(u))->at(h);
+            int h_p = (PLS->at(v))->at(ind->at(i));
+            if( (h_change_[u][v]->repr_matrix)[h_][h_p] == Undef) return;
             m.insert(Int_pair(h,ind->at(i++)));
         }
         mapp->push_back(m);
@@ -409,6 +411,7 @@ void graph_algorithms::get_functions_for_edge_wrt_height_family( int max , Vec<i
         }
     }
 }
+
 
 
 void graph_algorithms::get_height_families( Vec<Set<int>>* height_family,Vec< Vec<Set<int>>>* height_sets, int node ){
@@ -443,130 +446,6 @@ void graph_algorithms::get_height_families( Vec<Set<int>>* height_family,Vec< Ve
         }
     }
 }
-
-
-// int graph_algorithms::get_extended_graph(Vec<Set<int>>* height_family,Vec<Map<int,int>>* func_fam,Set<Int_pair>* ext_edges,Map<int,Int_pair>* id_to_ext_edge,Map<Int_pair,int>* ext_edge_to_id){
-//     // create the extended graph 
-
-//     Set<Int_pair> guard;
-//     int ext_node_id = 0;
-//     int curr_edge_id = 0;
-//     int ext_node_1;
-//     int ext_node_2;
-    
-//     for( auto e : *edges ){
-//         for( auto h : height_family->at(e.first) ){
-
-//             Int_pair new_edge_first = Int_pair(e.first,h);
-//             Int_pair new_edge_second = Int_pair(e.second,(func_fam->at(curr_edge_id)).at(h));
-
-//             auto exists = guard.find(new_edge_first);
-//             if( exists == guard.end() ){
-//                 guard.insert(new_edge_first);
-//                 ext_node_1 = ext_node_id;
-//                 id_to_ext_edge->insert(Pair<int,Int_pair>(ext_node_id,new_edge_first));
-//                 ext_edge_to_id->insert(Pair<Int_pair,int>(new_edge_first,ext_node_id++));
-//             }
-//             else ext_node_1 = ext_edge_to_id->at(new_edge_first);
-
-
-//             exists = guard.find(new_edge_second);
-//             if( exists == guard.end() ){
-//                 guard.insert(new_edge_second);
-//                 ext_node_2=ext_node_id;
-//                 id_to_ext_edge->insert(Pair<int,Int_pair>(ext_node_id,new_edge_second));
-//                 ext_edge_to_id->insert(Pair<Int_pair,int>(new_edge_second,ext_node_id++));
-
-//             }
-//             else ext_node_2 = ext_edge_to_id->at(new_edge_second);
-
-//             ext_edges->insert(Int_pair(ext_node_1,ext_node_2));
-//         }
-//         curr_edge_id++;
-//     }
-//     return ext_node_id;
-
-// }
-
-
-// bool graph_algorithms::check_height_family_function_family_decreasing(Vec<Set<int>>* height_family ,Vec<Map<int,int>>* function_family ,Vec<Map<int,int>>*** functions,int curr_edge){
-//     if( curr_edge == edges->size() ){
-
-//         Set<Int_pair>* ext_edges = new Set<Int_pair>();
-//         Map<int,Int_pair> id_to_ext_edge;
-//         Map<Int_pair,int> ext_edge_to_id;
-
-//         int max_node_ext = get_extended_graph(height_family, function_family,ext_edges,&id_to_ext_edge,&ext_edge_to_id);
-
-//         // no edges
-//         if( ext_edges->size() == 0) return true;
-        
-//         // one edge
-//         if( max_node_ext == 1 ){
-//             auto a = id_to_ext_edge.at(ext_edges->begin()->first);
-//             if ( (h_change_[a.first][a.first]->repr_matrix)[a.second][a.second] != Downward )return false;
-//             else return true;
-//         }
-
-//         // else create the actual graph and get SCSs
-//         generic_graph ext_G;
-//         ext_G.set_edges( new Vec<Int_pair>(ext_edges->begin(),ext_edges->end()),max_node_ext);
-//         Set<Int_pair_SET>* SCS_Ext = ext_G.get_SCSs();
-
-
-//         // single SCS single node case
-//         if(SCS_Ext->size() == 1 && ((SCS_Ext->begin())->size() == 1 ) ){
-//             bool result = false;
-//             auto e = *((SCS_Ext->begin())->begin());
-//             int u = (id_to_ext_edge.at(e.first)).first;
-//             int v = (id_to_ext_edge.at(e.second)).first;
-//             if( u == v ){
-//                 h_change_[u][v]->initialize();
-//                 Sloped_relation* S = h_change_[u][v]->compute_transitive_closure();
-//                 Map<Int_pair,int>* slope_map = S->get_slopes();
-//                 for( auto p_ : *slope_map ){
-//                     if( p_.first.first == p_.first.second &&  p_.second == Downward ){
-//                         result = true;
-//                         break;
-//                     }
-//                 }
-//                 delete S;
-//             }
-//             return result;
-//         }
-
-
-//         // normal case
-//         for(Int_pair_SET scs : *SCS_Ext ){
-//             if( scs.size() ){
-//                 bool downward = false;
-//                 Set<Int_pair> guard;
-//                 for( auto e : scs ){
-//                     int u = (id_to_ext_edge.at(e.first)).first;
-//                     int v = (id_to_ext_edge.at(e.second)).first;
-//                     guard.insert(Int_pair(u,v));
-//                     if( h_change_[u][v]->repr_matrix[(id_to_ext_edge.at(e.first)).second][(id_to_ext_edge.at(e.second)).second] == Downward ) downward = true;
-//                 }
-//                 if(!downward && guard.size() == edges->size() ) return false;
-//             }
-//         }
-//         return true;
-
-//     }
-//     else{
-//         Int_pair edge = edges->at(curr_edge);
-//         for( Map<int,int> func : *(functions[edge.first][edge.second]) ){
-//             function_family->push_back(func);
-//             if( check_height_family_function_family_decreasing(height_family,function_family,functions,curr_edge+1) ) return true;;
-//             function_family->pop_back();
-//         }
-//     }
-    
-//     return false;
-// }
-
-
-
 
 
 
