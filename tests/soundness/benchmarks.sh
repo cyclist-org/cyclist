@@ -22,7 +22,7 @@ base_opts=("-spot" "-rel-ext -full -ff" "-rel-ext -ff" "-rel-ext -min -ff" "-rel
 # -rel-ext -min -scc -ff n = 457 OUT OF MEMORY (before 9e40c42)
 
 opts=("${base_opts[@]}")
-opts+=("-SD -XSD")
+opts+=("-SD" "-XSD")
 
 inputs="1 $(seq 25 25 450)"
 for n in ${inputs[@]}; do
