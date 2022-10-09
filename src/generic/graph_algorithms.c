@@ -412,15 +412,12 @@ void graph_algorithms::get_functions_for_edge_wrt_height_family( int max , Vec<i
     }
 }
 
-
-
 void graph_algorithms::get_height_families( Vec<Set<int>>* height_family,Vec< Vec<Set<int>>>* height_sets, int node ){
-    
     if( node == max_node_ ){
         
-        Vec<Map<int,int>>*** functions = (Vec<Map<int,int>>***)malloc(max_node_ * sizeof(Vec<Map<int,int>>**));
-        for( int i = 0 ; i < max_node_ ; i++){
-            functions[i] = (Vec<Map<int,int>>**)malloc(max_node_ * sizeof(Vec<Map<int,int>>*));
+        Vec<Map<int,int>>*** functions = (Vec<Map<int,int>>***)malloc( (max_node_+1) * sizeof(Vec<Map<int,int>>**));
+        for( int i = 0 ; i < max_node_+1 ; i++){
+            functions[i] = (Vec<Map<int,int>>**)malloc((max_node_+1) * sizeof(Vec<Map<int,int>>*));
         }
 
         Vec<int>* ind = new Vec<int>();
@@ -447,8 +444,6 @@ void graph_algorithms::get_height_families( Vec<Set<int>>* height_family,Vec< Ve
     }
 }
 
-
-
 int graph_algorithms::get_extended_graph(Vec<Set<int>>* height_family,Vec<Map<int,int>>* func_fam,Set<Int_pair>* ext_edges,Map<int,Int_pair>* id_to_ext_edge,Map<Int_pair,int>* ext_edge_to_id){
     // create the extended graph 
 
@@ -461,7 +456,7 @@ int graph_algorithms::get_extended_graph(Vec<Set<int>>* height_family,Vec<Map<in
     for( auto e : *edges ){
         for( auto h : height_family->at(e.first) ){
 
-            auto x = h_change_[e.first][e.second]->repr_matrix;
+            // auto x = h_change_[e.first][e.second]->repr_matrix;
             // int mapped_h = (PLS->at(e.first))->at(h);
             // int mapped_h_prime = (PLS->at(e.second))->at((func_fam->at(curr_edge_id)).at(h) );
             // if( x[mapped_h][mapped_h_prime] == Undef ) return -1;
@@ -493,6 +488,7 @@ int graph_algorithms::get_extended_graph(Vec<Set<int>>* height_family,Vec<Map<in
         }
         curr_edge_id++;
     }
+    
     return ext_node_id;
 
 }
@@ -505,7 +501,7 @@ bool graph_algorithms::check_height_family_function_family_decreasing(Vec<Set<in
         Map<Int_pair,int> ext_edge_to_id;
 
         int max_node_ext = get_extended_graph(height_family, function_family,ext_edges,&id_to_ext_edge,&ext_edge_to_id);
-
+        
         if( max_node_ext == -1 ){
             return false;
         }
@@ -583,6 +579,7 @@ bool graph_algorithms::check_height_family_function_family_decreasing(Vec<Set<in
 void get_present_heights(Vec<Pair<int,int>>* edges,Sloped_relation*** h_change_,Map<int,Set<int>*>& present_heights, Set<int>& present_height_set_sizes, Map<int,Vec<int>*>& mapped_p_heights, int& max_size_set){
 
 
+
     for( auto edge : *edges ){
         auto exists = present_heights.find(edge.first);
         if( exists == present_heights.end() ){
@@ -607,7 +604,7 @@ void get_present_heights(Vec<Pair<int,int>>* edges,Sloped_relation*** h_change_,
         }
     }
 
-
+    int i = 0;
     for( auto p : present_heights ){
         // std::cout << "------------------------------" << std::endl;
         // std::cout << "Node " << p.first << " :" << std::endl;
@@ -616,7 +613,8 @@ void get_present_heights(Vec<Pair<int,int>>* edges,Sloped_relation*** h_change_,
         if( size > max_size_set ) max_size_set =size;
         Vec<int>* map = new Vec<int>();
         for(auto h : *(p.second) ) map->push_back(h);
-        mapped_p_heights.insert( Pair<int,Vec<int>*>(p.first,map) );
+        // mapped_p_heights.insert( Pair<int,Vec<int>*>(p.first,map) );
+        mapped_p_heights.insert( Pair<int,Vec<int>*>(i++,map) );
         // for( auto h : *(p.second) ) std::cout << h << " ,";
         // std::cout << "\n------------------------------" << std::endl;
     }
@@ -624,10 +622,7 @@ void get_present_heights(Vec<Pair<int,int>>* edges,Sloped_relation*** h_change_,
 
 }
 
-
-
 bool graph_algorithms::check_XSD(int max_node_,Vec<Int_SET*>* HeightsOf, Sloped_relation*** h_change_, int max_h,Vec<Pair<int,int>>* edges){
-
 
     // We initialize the internal pointer to elemenate clutter and too-many parameter passing to functions.
     this->HeightsOf = HeightsOf;
@@ -648,12 +643,13 @@ bool graph_algorithms::check_XSD(int max_node_,Vec<Int_SET*>* HeightsOf, Sloped_
     
     get_present_heights(edges, h_change_ ,present_heights, present_height_set_sizes, mapped_present_heights, max_used_heights_size);
 
-      Vec<Int_SET*> present_heights_of;
-
-    for(int i =  0 ; i < max_node_ ; i++ ) present_heights_of.push_back( new Int_SET(mapped_present_heights.at(i)->begin(),mapped_present_heights.at(i)->end()));
+    Vec<Int_SET*> present_heights_of;
+    int size = mapped_present_heights.size();
+    this->max_node_ = size;
+    for(int i =  0 ; i < size ; i++ ) present_heights_of.push_back( new Int_SET(mapped_present_heights.at(i)->begin(),mapped_present_heights.at(i)->end()));
 
     this->HeightsOf = &present_heights_of;
-
+    
 
     // Here we get the subsets of the height sets for each size:
     //
@@ -664,23 +660,26 @@ bool graph_algorithms::check_XSD(int max_node_,Vec<Int_SET*>* HeightsOf, Sloped_
     Vec< Vec<Set<int>>>* height_sets = get_height_power_sets(max_used_heights_size);
 
     PLS = &mapped_present_heights;
-
+    
 
     // create families of heights
     // -- height_family     : this is a vector of heights sub-sets for each node (created recursively).
     Vec<Set<int>>* height_family_temp = new Vec<Set<int>>();
     get_height_families(height_family_temp  , height_sets);
     delete height_family_temp;
+
+    
+        
     
 
     if( height_families_and_function_pairs.size() == 0 ) return true;
 
     
-
     // get all the SCSs of the heighted graph
     get_SCSs(this->edges,max_node_);
 
-    
+      
+   
     
     // check if each SCS is set descending 
     for( auto scs : SCSs ){
@@ -719,6 +718,11 @@ bool graph_algorithms::check_XSD(int max_node_,Vec<Int_SET*>* HeightsOf, Sloped_
             return false;
         }
     }
+
+    for(auto p : present_heights) delete p.second;
+    for(auto p : present_heights_of) delete p;
+    delete height_sets;
+
     return true;
 }
 
