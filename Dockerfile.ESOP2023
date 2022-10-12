@@ -54,9 +54,10 @@ RUN \
   cd cyclist && \
   eval `opam config env` && \
   opam update && \
-  git checkout IJCAR2022-Rebuttal && \
+  git checkout ESOP2023-Submission && \
   opam install -y --deps-only ./cyclist.opam && \
-  mv dune-workspace.IJCAR2022 dune-workspace && \
+  rm -f dune-workspace && \
+  mv dune-workspace.ESOP2023 dune-workspace && \
   dune build
 
 WORKDIR /home/opam/cyclist

@@ -1,6 +1,11 @@
 (lang dune 2.2)
 
 (env
+ (log_stats
+  (c_flags :standard -DLOG_STATS)
+  (env-vars
+   (PKG_CONFIG_PATH "/opt/spot/accset-32/lib/pkgconfig")
+   (LD_LIBRARY_PATH "/opt/spot/accset-32/lib")))
  (accset-5 
   (env-vars
    (PKG_CONFIG_PATH "/opt/spot/accset-32/lib/pkgconfig")
