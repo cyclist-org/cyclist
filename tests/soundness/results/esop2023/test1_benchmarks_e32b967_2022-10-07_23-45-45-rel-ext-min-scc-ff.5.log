@@ -1,0 +1,150 @@
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 1
+OK
+
+real	0m0.154s
+user	0m0.128s
+sys	0m0.041s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 25
+OK
+
+real	0m0.162s
+user	0m0.099s
+sys	0m0.074s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 50
+OK
+
+real	0m0.177s
+user	0m0.148s
+sys	0m0.044s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 75
+OK
+
+real	0m0.232s
+user	0m0.198s
+sys	0m0.048s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 100
+OK
+
+real	0m0.327s
+user	0m0.294s
+sys	0m0.049s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 125
+OK
+
+real	0m0.497s
+user	0m0.437s
+sys	0m0.071s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 150
+OK
+
+real	0m0.734s
+user	0m0.682s
+sys	0m0.064s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 175
+OK
+
+real	0m1.093s
+user	0m1.037s
+sys	0m0.068s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 200
+OK
+
+real	0m1.565s
+user	0m1.526s
+sys	0m0.053s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 225
+OK
+
+real	0m2.148s
+user	0m2.101s
+sys	0m0.060s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 250
+OK
+
+real	0m2.908s
+user	0m2.832s
+sys	0m0.082s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 275
+OK
+
+real	0m3.982s
+user	0m3.902s
+sys	0m0.091s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 300
+OK
+
+real	0m5.044s
+user	0m4.958s
+sys	0m0.091s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 325
+OK
+
+real	0m7.038s
+user	0m6.951s
+sys	0m0.091s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 350
+OK
+
+real	0m9.045s
+user	0m8.937s
+sys	0m0.117s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 375
+OK
+
+real	0m13.300s
+user	0m13.116s
+sys	0m0.185s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 400
+OK
+
+real	0m15.943s
+user	0m15.820s
+sys	0m0.129s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 425
+OK
+
+real	0m23.881s
+user	0m23.764s
+sys	0m0.118s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 450
+OK
+
+real	0m25.569s
+user	0m25.417s
+sys	0m0.152s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 475
+OK
+
+real	0m35.825s
+user	0m35.634s
+sys	0m0.185s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 500
+OK
+
+real	0m37.678s
+user	0m37.480s
+sys	0m0.188s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 525
+OK
+
+real	0m47.171s
+user	0m46.998s
+sys	0m0.166s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 550
+OK
+
+real	0m57.893s
+user	0m57.632s
+sys	0m0.233s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 575
+OK
+
+real	0m59.903s
+user	0m59.663s
+sys	0m0.229s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff 600
+OK
+
+real	1m10.554s
+user	1m10.265s
+sys	0m0.248s

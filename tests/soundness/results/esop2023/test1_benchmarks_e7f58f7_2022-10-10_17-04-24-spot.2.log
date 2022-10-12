@@ -1,0 +1,192 @@
++ dune exec tests/soundness/test1.exe -- -spot 1
+OK
+
+real	0m0.165s
+user	0m0.126s
+sys	0m0.051s
++ dune exec tests/soundness/test1.exe -- -spot 25
+OK
+
+real	0m0.164s
+user	0m0.130s
+sys	0m0.048s
++ dune exec tests/soundness/test1.exe -- -spot 50
+OK
+
+real	0m0.166s
+user	0m0.131s
+sys	0m0.048s
++ dune exec tests/soundness/test1.exe -- -spot 75
+OK
+
+real	0m0.182s
+user	0m0.147s
+sys	0m0.045s
++ dune exec tests/soundness/test1.exe -- -spot 100
+OK
+
+real	0m0.174s
+user	0m0.131s
+sys	0m0.057s
++ dune exec tests/soundness/test1.exe -- -spot 125
+OK
+
+real	0m0.171s
+user	0m0.150s
+sys	0m0.034s
++ dune exec tests/soundness/test1.exe -- -spot 150
+OK
+
+real	0m0.177s
+user	0m0.128s
+sys	0m0.063s
++ dune exec tests/soundness/test1.exe -- -spot 175
+OK
+
+real	0m0.181s
+user	0m0.129s
+sys	0m0.064s
++ dune exec tests/soundness/test1.exe -- -spot 200
+OK
+
+real	0m0.181s
+user	0m0.134s
+sys	0m0.060s
++ dune exec tests/soundness/test1.exe -- -spot 225
+OK
+
+real	0m0.182s
+user	0m0.142s
+sys	0m0.054s
++ dune exec tests/soundness/test1.exe -- -spot 250
+OK
+
+real	0m0.186s
+user	0m0.155s
+sys	0m0.041s
++ dune exec tests/soundness/test1.exe -- -spot 275
+OK
+
+real	0m0.210s
+user	0m0.159s
+sys	0m0.062s
++ dune exec tests/soundness/test1.exe -- -spot 300
+OK
+
+real	0m0.213s
+user	0m0.170s
+sys	0m0.055s
++ dune exec tests/soundness/test1.exe -- -spot 325
+OK
+
+real	0m0.223s
+user	0m0.177s
+sys	0m0.056s
++ dune exec tests/soundness/test1.exe -- -spot 350
+OK
+
+real	0m0.217s
+user	0m0.171s
+sys	0m0.059s
++ dune exec tests/soundness/test1.exe -- -spot 375
+OK
+
+real	0m0.220s
+user	0m0.176s
+sys	0m0.057s
++ dune exec tests/soundness/test1.exe -- -spot 400
+OK
+
+real	0m0.242s
+user	0m0.176s
+sys	0m0.080s
++ dune exec tests/soundness/test1.exe -- -spot 425
+OK
+
+real	0m0.228s
+user	0m0.179s
+sys	0m0.062s
++ dune exec tests/soundness/test1.exe -- -spot 450
+OK
+
+real	0m0.231s
+user	0m0.173s
+sys	0m0.072s
++ dune exec tests/soundness/test1.exe -- -spot 475
+OK
+
+real	0m0.235s
+user	0m0.198s
+sys	0m0.050s
++ dune exec tests/soundness/test1.exe -- -spot 500
+OK
+
+real	0m0.235s
+user	0m0.204s
+sys	0m0.043s
++ dune exec tests/soundness/test1.exe -- -spot 525
+OK
+
+real	0m0.305s
+user	0m0.276s
+sys	0m0.042s
++ dune exec tests/soundness/test1.exe -- -spot 550
+OK
+
+real	0m0.313s
+user	0m0.268s
+sys	0m0.054s
++ dune exec tests/soundness/test1.exe -- -spot 575
+OK
+
+real	0m0.322s
+user	0m0.271s
+sys	0m0.062s
++ dune exec tests/soundness/test1.exe -- -spot 600
+OK
+
+real	0m0.325s
+user	0m0.266s
+sys	0m0.073s
++ dune exec tests/soundness/test1.exe -- -spot 1000
+OK
+
+real	0m0.447s
+user	0m0.414s
+sys	0m0.045s
++ dune exec tests/soundness/test1.exe -- -spot 1500
+OK
+
+real	0m1.043s
+user	0m0.983s
+sys	0m0.069s
++ dune exec tests/soundness/test1.exe -- -spot 2000
+OK
+
+real	0m1.289s
+user	0m1.238s
+sys	0m0.062s
++ dune exec tests/soundness/test1.exe -- -spot 2500
+OK
+
+real	0m3.059s
+user	0m2.999s
+sys	0m0.066s
++ dune exec tests/soundness/test1.exe -- -spot 3000
+OK
+
+real	0m3.657s
+user	0m3.618s
+sys	0m0.053s
++ dune exec tests/soundness/test1.exe -- -spot 3500
+OK
+
+real	0m4.451s
+user	0m4.423s
+sys	0m0.041s
++ dune exec tests/soundness/test1.exe -- -spot 4000
+OK
+
+real	0m5.002s
+user	0m4.956s
+sys	0m0.057s
