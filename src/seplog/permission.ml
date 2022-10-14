@@ -1,7 +1,8 @@
 (** Type representing permissions (for Concurrent Separation Logic automation) *)
 
 open Lib 
-
+open Symbols
+open MParser
 
 (* Using zarith package Q for arbitrary precision rational constants  *)
 (* a) FRACTION Let's start by defining it as a fraction. I'll implement the rest of the polynomial (see .mli file) later *)
@@ -26,7 +27,7 @@ type t =  Q.t * PerVar.t option
 (*let one =  (Q.one, PerVarMgr.anonymous) *)
 let one =  (Q.one, None)
 
-let mk s = (Q.one, PerVarMgr.mk s)
+let mk s = (Q.one, Some (PerVarMgr.mk s))
 
 (* let mk_var s = (Q.one, PerVarMgr.mk s) *)
 
@@ -59,10 +60,22 @@ let equal p1 p2 = (compare p1 p2 == 0)
 let hash (f,v) =  (Float.hash (Q.to_float f))  (* Incorrect*)
        
 (* let to_string p = String.cat (Q.to_string p.permis) (Var.to_string p.label) *)
-let to_string (f,v) = String.cat (Q.to_string f) (PerVar.to_string v)
+let to_string (f,v) = (* String.cat *) (Q.to_string f) ^ (PerVar.to_string v)
 let to_string (f,_) = Q.to_string f
 
-let pp fmt p = Format.fprintf fmt "%s" (to_string p) 
+let pp fmt p = Format.fprintf fmt "%s" (to_string p)
+
+let parse st =
+  (
+    Tokens.squares
+     (parse_ident
+      >>= fun f ->
+      try
+        return (Q.of_string f, None)
+      with _ ->
+        return (mk f)
+     )
+  )  st
   
 (* Permission specific procedures *)
 

@@ -27,7 +27,9 @@ include BasicType
  val one : t  
 (* val mk_var : string -> t   *)
  val const : Q.t -> t  
- 
+
+val mk : string -> t
+
 (* Basic arithmetics*)
  
 (* Throw an exception if the int < 1 *)
@@ -44,3 +46,5 @@ val add : t -> t -> t (* option *) (*ERROR ! MODIFY THIS. MAKE IT option*)
 
 (* Throw exception if 0 >= given Q.t or given Q.t >= 1 *)
 val mul : t -> Q.t -> t
+
+val parse : (t, 'a) MParser.parser
