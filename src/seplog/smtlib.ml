@@ -65,7 +65,7 @@ let parse_pred =
     >>= fun predsym ->
     many parse_exp
     >>= fun params ->
-    let tpred = (Tags.anonymous, (predsym, params)) in
+    let tpred = ((Permission.one, Tags.anonymous), (predsym, params)) in
     return (Heap.mk_ind tpred) )
   <?> "parse_pred"
 

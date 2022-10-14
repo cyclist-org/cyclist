@@ -1,8 +1,9 @@
 (** Type representing permissions (for Concurrent Separation Logic automation) *)
 
 open Lib 
-open Symbols
 open MParser
+open MParser_RE
+
 
 (* Using zarith package Q for arbitrary precision rational constants  *)
 (* a) FRACTION Let's start by defining it as a fraction. I'll implement the rest of the polynomial (see .mli file) later *)
@@ -27,11 +28,13 @@ type t =  Q.t * PerVar.t option
 (*let one =  (Q.one, PerVarMgr.anonymous) *)
 let one =  (Q.one, None)
 
+
 let mk s = (Q.one, Some (PerVarMgr.mk s))
 
-(* let mk_var s = (Q.one, PerVarMgr.mk s) *)
+let mk_var s = (Q.one, PerVarMgr.mk s)  
 
 let const q = (q, None)
+
 
 (* Split *)
 let split_ith (p, l) i = (Q.mul p (Q.div Q.one (Q.of_int i)), l)
@@ -65,17 +68,6 @@ let to_string (f,_) = Q.to_string f
 
 let pp fmt p = Format.fprintf fmt "%s" (to_string p)
 
-let parse st =
-  (
-    Tokens.squares
-     (parse_ident
-      >>= fun f ->
-      try
-        return (Q.of_string f, None)
-      with _ ->
-        return (mk f)
-     )
-  )  st
   
 (* Permission specific procedures *)
 
@@ -96,3 +88,38 @@ let add (f1, v1) (f2, v2) =
 
 
 let mul (f, v) n = (Q.mul f n, v) 
+
+
+(* Example of a parse function (from form.ml) *)
+(* let parse st =
+       (sep_by1 Prod.parse (parse_symb symb_or) |>> of_list <?> "Form") st
+*)
+(* Or from tags.ml *)
+(* let parse st =
+   ( Tokens.squares
+       ( regexp (make_regexp "[a-z][0-9]*[']?")
+       << spaces
+       >>= fun name -> return (VM.mk name) )
+   <?> "Tag" )
+     st
+*)
+(* Parse a permission *)
+(* let parse st =
+ *    ( Tokens.squares
+ *        ( regexp (make_regexp "[0-9]([.][0-9])?")  (\*(make_regexp "[a-z]*")*\)
+ *        << spaces
+ *        >>= fun frac -> return (const frac) )   (\*  return (mk frac varName) )*\)
+ *    <?> "Perm" )
+ *    st *)
+   
+let parse st =
+  (
+    Tokens.squares
+     (parse_ident
+      >>= fun f ->
+      try
+        return (Q.of_string f, None)
+      with _ ->
+        return (mk f)
+     ) <?> "Perm"
+  )  st

@@ -91,7 +91,7 @@ let fold (f, (predsym, args)) h =
   in
   let do_fold (theta, tagpairs) =
     let f' = Heap.subst_tags tagpairs (Heap.subst theta f) in
-    let newpred = (freshtag, (predsym, Term.FList.subst theta args)) in
+    let newpred = ((Permission.one, freshtag), (predsym, Term.FList.subst theta args)) in
     let h' = Heap.add_ind (Heap.diff h f') newpred in
     (theta, h')
   in

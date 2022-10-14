@@ -217,7 +217,7 @@ let complete_tags avoid h =
             else
               let avoid' = Tags.union avoid (Tpreds.tags inds') in
               let t = Tags.fresh_evar avoid' in
-              (t, pred)
+              ((fst (fst p), t), pred)
           in
           Tpreds.add p' inds' )
         h.inds Tpreds.empty

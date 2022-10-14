@@ -309,10 +309,11 @@ let pred_intro_rule =
       let (_, h), (_, h') = Seq.dest seq in
       let linds, rinds = Pair.map Tpreds.elements (h.SH.inds, h'.SH.inds) in
       let cp = Blist.cartesian_product linds rinds in
-      let matches eq ((t, (id, vs)), (t', (id', vs'))) =
+      let matches eq (((perm, t), (id, vs)), ((perm', t'), (id', vs'))) =
         Predsym.equal id id'
         && Blist.for_all (Fun.neg Term.is_exist_var) vs
         && Blist.for_all (Fun.neg Term.is_exist_var) vs'
+        && Permission.equal perm perm'
         && Tags.is_free_var t
         && (Tags.is_exist_var t' || Tags.Elt.equal t t')
         && Blist.for_all2 eq vs vs'
@@ -485,7 +486,7 @@ let ruf_rl defs seq =
     let (cs, l), (cs', r) = Seq.dest seq in
     let seq_vars = Seq.vars seq in
     let seq_tags = Seq.tags seq in
-    let right_unfold ((tag, (ident, _)) as p) =
+    let right_unfold (((_, tag), (ident, _)) as p) =
       if not (Defs.mem ident defs) then []
       else
         let r' = SH.del_ind r p in
@@ -515,7 +516,7 @@ let luf defs =
       let (cs, l), (cs', r) = Seq.dest seq in
       let seq_vars = Seq.vars seq in
       let seq_tags = Seq.tags seq in
-      let left_unfold ((tag, (ident, _)) as p) =
+      let left_unfold (((_, tag), (ident, _)) as p) =
         if not (Defs.mem ident defs) then None
         else
           let l = SH.with_inds l (Tpreds.remove p l.SH.inds) in
