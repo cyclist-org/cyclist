@@ -470,7 +470,7 @@ let abd_deref =
                 Heap.star
                   (Heap.mk_pto (newx, pto_params))
                   (Heap.mk_ind
-                     (Tags.anonymous, (fresh_ident, newparams @ pto_params)))
+                     ((Tags.anonymous, Permission.one), (fresh_ident, newparams @ pto_params)))
               in
               Defs.add
                 (Preddef.mk ([Indrule.mk clause head], ident))
@@ -534,12 +534,12 @@ let abd_det_guard =
                       (Uf.of_list [pair])
                       Deqs.empty Ptos.empty
                       (Tpreds.singleton
-                         (Tags.anonymous, (fresh_ident, newparams)))
+                         ((Tags.anonymous, Permission.one), (fresh_ident, newparams)))
                   in
                   let clause_deq =
                     Heap.mk Uf.empty (Deqs.singleton pair) Ptos.empty
                       (Tpreds.singleton
-                         (Tags.anonymous, (fresh_ident', newparams)))
+                         ((Tags.anonymous, Permission.one), (fresh_ident', newparams)))
                   in
                   Defs.add
                     (Preddef.mk
@@ -620,8 +620,8 @@ let abd_back_rule =
                 let cl =
                   Heap.with_inds Heap.empty
                     (Tpreds.of_list
-                       [ (Tags.anonymous, (c', perm))
-                       ; (Tags.anonymous, (fresh_ident, newparams)) ])
+                       [ ((Tags.anonymous, Permission.one), (c', perm))
+                       ; ((Tags.anonymous, Permission.one), (fresh_ident, newparams)) ])
                 in
                 Defs.add
                   (Preddef.mk ([Indrule.mk cl (c, newparams)], c))
