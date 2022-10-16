@@ -5,24 +5,24 @@ open Generic
 
 open MParser
 
-module TPred = Pair.Make (Pair.Make (Permission) (Tags.Elt)) (Pred)
+module TPred = Pair.Make (Pair.Make (Tags.Elt) (Permission)) (Pred)
 include TPred
 
-let subst theta ((perm, tag), pred) = ((perm, tag), Pred.subst theta pred)
+let subst theta ((tag, perm), pred) = ((tag, perm), Pred.subst theta pred)
 
 let equal_upto_tags (_, p1) (_, p2) = Pred.equal p1 p2
 
-let subst_tag tagpairs ((perm, tag), pred) = ((perm, Tagpairs.apply_to_tag tagpairs tag), pred)
+let subst_tag tagpairs ((tag, perm), pred) = ((Tagpairs.apply_to_tag tagpairs tag, perm), pred)
 
-let unify ?(tagpairs = false) ?(update_check = Fun._true) ((_, t), pred) ((_, t'), pred')
+let unify ?(tagpairs = false) ?(update_check = Fun._true) ((t, _), pred) ((t', _), pred')
     cont init_state =
   Pred.unify ~update_check pred pred'
     ( if tagpairs then Unify.Unidirectional.unify_tag ~update_check t t' cont
     else cont )
     init_state
 
-let biunify ?(tagpairs = false) ?(update_check = Fun._true) ((_, t), pred)
-    ((_, t'), pred') cont init_state =
+let biunify ?(tagpairs = false) ?(update_check = Fun._true) ((t, _), pred)
+    ((t', _), pred') cont init_state =
   Pred.biunify ~update_check pred pred'
     ( if tagpairs then Unify.Bidirectional.unify_tag ~update_check t t' cont
     else cont )
@@ -34,24 +34,24 @@ let args tpred = Pred.args (snd tpred)
 
 let arity tpred = Pred.arity (snd tpred)
 
-let tag ((_, t), _) = t
+let tag ((t, _), _) = t
 
-let tags ((_, tag), _) = Tags.singleton tag
+let tags ((tag, _), _) = Tags.singleton tag
 
 let terms tpred = Pred.terms (snd tpred)
 
 let vars tpred = Term.filter_vars (terms tpred)
 
-let tag_is_free ((_, x), _) = Tags.is_free_var x
+let tag_is_free ((x, _), _) = Tags.is_free_var x
 
-let tag_is_exist ((_, x), _) = Tags.is_exist_var x
+let tag_is_exist ((x, _), _) = Tags.is_exist_var x
 
-let is_tagged ((_, x), _) = not (Tags.is_anonymous x)
+let is_tagged ((x, _), _) = not (Tags.is_anonymous x)
 
-let to_string ((perm, tag), (pred, args)) =
+let to_string ((tag, perm), (pred, args)) =
   Predsym.to_string pred
-  ^ (Permission.to_string perm)
   ^ (if Tags.is_anonymous tag then "" else sqbracket (Tags.Elt.to_string tag))
+  ^ (Permission.to_string perm)
   ^ bracket (Term.FList.to_string_sep symb_comma.sep args)
 
 let parse ?(allow_tags = true) st =
@@ -65,7 +65,7 @@ let parse ?(allow_tags = true) st =
          << spaces
          >>= fun arg_list -> (
            let tag = Option.dest Tags.anonymous Fun.id opt_tag in
-           return ((perm, tag), (pred, arg_list)))
+           return ((tag, perm), (pred, arg_list)))
         )
       )
       <?> "ind" )
@@ -75,10 +75,10 @@ let norm eqs (t, pred) = (t, Pred.norm eqs pred)
 
 let of_string = mk_of_string parse
 
-let pp fmt ((perm, tag), pred) =
+let pp fmt ((tag, perm), pred) =
   Format.fprintf fmt "@[%a%s%s%s%s%s@]" Predsym.pp (Pred.predsym pred)
-    (Permission.to_string perm)
     (if Tags.is_anonymous tag then "" else sqbracket (Tags.Elt.to_string tag))
+    (Permission.to_string perm)
     symb_lp.str
     (Term.FList.to_string_sep symb_comma.sep (Pred.args pred))
     symb_rp.str

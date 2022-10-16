@@ -27,7 +27,7 @@ let tags inds =
   Tags.of_list
     (Option.list_get
        (Blist.map
-          (fun p -> Option.mk (Tpred.is_tagged p) (snd (fst p)))
+          (fun p -> Option.mk (Tpred.is_tagged p) (fst (fst p)))
           (to_list inds)))
 
 let strip_tags inds = map_to Pred.MSet.add Pred.MSet.empty snd inds
@@ -51,7 +51,7 @@ let freshen_tags inds' inds =
           (Tagpairs.mk_free_subst all_tags free)
           (Tagpairs.mk_ex_subst all_tags ex)
       in
-      map (fun ((perm, tag), head) -> ((perm, Tagpairs.apply_to_tag subst tag), head)) inds
+      map (fun ((tag, perm), head) -> ((Tagpairs.apply_to_tag subst tag, perm), head)) inds
 
 let unify ?(total = true) ?(tagpairs = true) ?(update_check = Fun._true) inds
     inds' cont init_state =
