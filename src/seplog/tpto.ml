@@ -23,9 +23,24 @@ let terms (lb, pto) =
 let vars (lb, pto) = 
   Pto.vars pto
 
- (* let parse st =
-   (Pto.parse
-    >>= (fun y -> y)
-    <?> "tpto")
-    st
-   *)  
+let parse ?(allow_tags = true) st =
+  (Pto.parse
+   >>= (fun pt ->
+       (if allow_tags then option Tags.Elt.parse else return None)
+       >>= fun opt_tag ->
+       Permission.parse
+       >>= fun perm ->
+       (
+         let tag = Option.dest Tags.anonymous Fun.id opt_tag in
+         return ((tag, perm), pt)
+       )
+     )
+       <?> "tpto")
+    st  
+
+let of_string = mk_of_string parse
+
+let pp fmt ((tag, perm), pt) =
+  Format.fprintf fmt "@[%a%s%s@]" Pto.pp pt
+    (if Tags.is_anonymous tag then "" else sqbracket (Tags.Elt.to_string tag))
+    (Permission.to_string perm)

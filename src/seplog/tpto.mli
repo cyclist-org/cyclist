@@ -9,4 +9,7 @@ val terms : t -> Term.Set.t
 
 val vars : t -> Term.Set.t
 
-(* val parse : (t, 'a) MParser.parser *)
+val parse :  ?allow_tags:bool -> (t, 'a) MParser.parser
+
+val of_string : string -> t
+

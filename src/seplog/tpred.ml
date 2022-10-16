@@ -68,7 +68,7 @@ let parse ?(allow_tags = true) st =
            return ((tag, perm), (pred, arg_list)))
         )
       )
-      <?> "ind" )
+      <?> "tind" )
     st
 
 let norm eqs (t, pred) = (t, Pred.norm eqs pred)
