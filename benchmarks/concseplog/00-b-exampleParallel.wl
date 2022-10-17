@@ -1,7 +1,7 @@
 fields: next;
 
 proc main(x, y)
-	precondition: ls(y,x) * ls[a](x,nil); 
+	precondition: ls(y,x) * ls(x,nil)[a][1/2]; 
 	postcondition: ls(y,nil);
 {
 	 

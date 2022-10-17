@@ -104,22 +104,22 @@ let mul (f, v) n = (Q.mul f n, v)
      st
 *)
 (* Parse a permission *)
-(* let parse st =
- *    ( Tokens.squares
- *        ( regexp (make_regexp "[0-9]([.][0-9])?")  (\*(make_regexp "[a-z]*")*\)
- *        << spaces
- *        >>= fun frac -> return (const frac) )   (\*  return (mk frac varName) )*\)
- *    <?> "Perm" )
- *    st *)
-   
 let parse st =
-  (
-    Tokens.squares
-     (parse_ident
-      >>= fun f ->
-      try
-        return (Q.of_string f, None)
-      with _ ->
-        return (mk f)
-     ) <?> "Perm"
-  )  st
+   ( Tokens.squares
+       ( regexp (make_regexp "[0-9]([/][0-9])?")  (*(make_regexp "[a-z]*")*)
+       << spaces
+       >>= fun frac -> return (Q.of_string frac, None) )   (*  return (mk frac varName) )*)
+   <?> "Perm" )
+   st
+   
+(* let parse st =
+ *   (
+ *     Tokens.squares
+ *      (parse_ident
+ *       >>= fun f ->
+ *       try
+ *         return (Q.of_string f, None)
+ *       with _ ->
+ *         return (mk f)
+ *      ) <?> "Perm"
+ *   )  st *)
