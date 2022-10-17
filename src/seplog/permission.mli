@@ -41,15 +41,13 @@ val third: t -> t
 
 (* Should probably be an error if:
    - the two arguments use different permission variables
-   - the two coefficients sum to greater than 1  *)
-val add : t -> t -> t (* option *) (*ERROR ! MODIFY THIS. MAKE IT option*)
+   - the two coefficients sum to greater than 1 and variable is anonymous*)
+val add : t -> t -> t (* option *)  
 
 
 (* Throw exception if 0 >= given Q.t or given Q.t >= 1 *)
 val mul : t -> Q.t -> t
 
 
-(* Parse a permission *) 
-(* val parse: t -> (t, 'a) MParser.t *)
-
+(* Parse a permission *)  
 val parse : (t, 'a) MParser.parser
