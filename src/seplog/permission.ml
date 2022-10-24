@@ -23,13 +23,10 @@ type t =  Q.t * PerVar.t option
 
 
 (* Constructors *)
-
 let one =  (Q.one, None)
-
 let const q = (q, None)
 
 let mk s = (Q.one, Some (PerVarMgr.mk s))
-
 let mk_var s = (Q.one, PerVarMgr.mk s)  
 
 
@@ -44,8 +41,7 @@ let oneHalf = split_ith one 2
 let pi = (Q.one, PerVarMgr.mk "pi")
 
 
- 
-(* BasicType required procedures *)  
+ (* BasicType required procedures *)  
 let compare (f1, v1) (f2, v2) =  
    if (PerVar.equal v1 v2) 
       then Q.compare f1 f2
@@ -56,7 +52,8 @@ let compare (f1, _) (f2, _) =
 
 let equal p1 p2 = (compare p1 p2 == 0)
 
-let hash (f,v) =  (Float.hash (Q.to_float f))  (* Incorrect*)
+let hash (f,v) = Float.hash (Q.to_float f) + PerVar.hash v 
+let hash (f,_) = Float.hash (Q.to_float f)
        
 let to_string (f,v) = (Q.to_string f) ^ (PerVar.to_string v)
 let to_string (f,_) = Q.to_string f
@@ -69,11 +66,15 @@ exception IncorrectPermission of string
 
 (* Addition *)
 let add (f1, v1) (f2, v2) = 
-   if (v1 == v2)
-      then (Q.add f1 f2, v1) 
-      else raise (IncorrectPermission "Labels need to be the same")
+   if (v1 != v2 || (Q.add f1 f2) > Q.one) 
+      then raise (IncorrectPermission "Permission sum not defined for these two Permission values")
+      else (Q.add f1 f2, v1) 
   
-let mul (f, v) n = (Q.mul f n, v) 
+(* Multiplication *)
+let mul (f, v) n = 
+   if  (Q.mul f n <= Q.zero || (Q.mul f n) >= Q.one) 
+      then raise (IncorrectPermission "Permission multiplication not defined")
+      else (Q.mul f n, v) 
 
 
 (* Parse a permission *)

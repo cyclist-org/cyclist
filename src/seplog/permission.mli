@@ -39,9 +39,9 @@ val half: t -> t
 val third: t -> t 
  
 
-(* Should probably be an error if:
+(* Throw exception if:
    - the two arguments use different permission variables
-   - the two coefficients sum to greater than 1 and variable is anonymous*)
+   - the two coefficients sum to greater than 1 (Shall we check that the variable is anonymous?)*)
 val add : t -> t -> t (* option *)  
 
 
