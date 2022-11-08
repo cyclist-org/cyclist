@@ -1,5 +1,6 @@
 fields: next;
-   
+  
+{ [a][pi](tree x)}
 proc main(x)
 	precondition: [a][pi] tree(x); 
 	postcondition: [a][pi] tree(x);

@@ -31,7 +31,8 @@ let mk_var s = (Q.one, PerVarMgr.mk s)
 
 
 (* Split *)
-let split_ith (p, l) i = (Q.mul p (Q.div Q.one (Q.of_int i)), l)
+(* let split_ith (p, l) i = (Q.mul p (Q.div Q.one (Q.of_int i)), l) *)
+let split_ith (p, l) i = (Q.div p (Q.of_int i), l)
 
 let half t = split_ith t 2
 let third t = split_ith t 3
@@ -72,7 +73,7 @@ let add (f1, v1) (f2, v2) =
   
 (* Multiplication *)
 let mul (f, v) n = 
-   if  (Q.mul f n <= Q.zero || (Q.mul f n) >= Q.one) 
+   if  (Q.mul f n < Q.zero || (Q.mul f n) > Q.one) 
       then raise (IncorrectPermission "Permission multiplication not defined")
       else (Q.mul f n, v) 
 
