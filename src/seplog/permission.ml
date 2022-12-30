@@ -83,7 +83,14 @@ let parse st =
    ( Tokens.squares
        ( regexp (make_regexp "[0-9]([/][0-9])?")  (*(make_regexp "[a-z]*")*)
        << spaces
-       >>= fun frac -> return (Q.of_string frac, None) )   (*  return (mk frac varName) )*)
+       >>= fun frac ->
+       (option parse_ident)
+       >>= fun ident_opt ->
+       let f = Q.of_string frac in
+       (* check that f <= 1.0 , i.e., (f > Z.one)*)
+          (* if not, then fail with a nice error message , raise (IncorrectPermission "Permission bigger than 1 is not defined") *)
+       let id = Option.map PerVarMgr.mk ident_opt in
+       return (f, id) )   (*  return (mk frac varName) )*)
    <?> "Perm" )
    st
    
