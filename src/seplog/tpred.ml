@@ -55,15 +55,17 @@ let to_string ((tag, perm), (pred, args)) =
   ^ bracket (Term.FList.to_string_sep symb_comma.sep args)
 
 let parse ?(allow_tags = true) st =
-  ( Pred.parse
+  ( Predsym.parse
   >>= (fun pred ->
         (if allow_tags then option Tags.Elt.parse else return None)
         >>= fun opt_tag ->
         (if allow_tags then option Permission.parse else return None)
         >>= fun opt_perm ->
+        Tokens.parens (Tokens.comma_sep Term.parse) << spaces
+        >>= fun arg_list ->
         let tag = Option.dest Tags.anonymous Fun.id opt_tag in
         let perm = Option.dest Permission.one Fun.id opt_perm in
-        return ((tag, perm), pred))
+        return ((tag, perm), (pred, arg_list)))
       <?> "tind" )
     st
 
