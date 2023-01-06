@@ -139,6 +139,7 @@ test-suite-rel: soundness
 	$(call test_failure, graph_20a)
 	$(call test_failure, graph_20b)
 	$(call test_failure, graph_21)
+	$(call test_success, graph_22)
 
 tests-sd:
 	echo "SPRENGER-DAM"
@@ -185,6 +186,7 @@ test-suite-sd: soundness
 	$(call test_failure, graph_20a)
 	$(call test_failure, graph_20b)
 	$(call test_failure, graph_21)
+	$(call test_failure, graph_22)
 
 test-suite-xsd: soundness
 	$(call test_success, graph_1)
@@ -223,3 +225,4 @@ test-suite-xsd: soundness
 	$(call test_failure, graph_20a)
 	$(call test_failure, graph_20b)
 	$(call test_failure, graph_21)
+	$(call test_failure, graph_22)
