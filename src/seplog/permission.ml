@@ -86,11 +86,13 @@ let parse st =
        >>= fun frac ->
        (option parse_ident)
        >>= fun ident_opt ->
-       let f = Q.of_string frac in
-       (* check that f <= 1.0 , i.e., (f > Z.one)*)
+          (* check that f <= 1.0 , i.e., (f > Z.one)*)
           (* if not, then fail with a nice error message , raise (IncorrectPermission "Permission bigger than 1 is not defined") *)
-       let id = Option.map PerVarMgr.mk ident_opt in
-       return (f, id) )   (*  return (mk frac varName) )*)
+         if (Q.of_string frac > Q.one) 
+            then raise (IncorrectPermission "Permission bigger than 1 not defined") 
+            else let f = Q.of_string frac in  
+               let id = Option.map PerVarMgr.mk ident_opt in
+               return (f, id) )   (*  return (mk frac varName) )*)
    <?> "Perm" )
    st
    
