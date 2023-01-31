@@ -86,8 +86,8 @@ let parse st =
        >>= fun frac ->
        (option parse_ident)
        >>= fun ident_opt ->
-         if (Q.of_string frac > Q.one) 
-            then raise (IncorrectPermission "Permission bigger than 1 not defined") 
+         if ((Q.compare (Q.of_string frac) Q.one) == 1)
+            then raise (IncorrectPermission "Permission bigger than 1 not defined ") 
             else let f = Q.of_string frac in  
                let id = Option.map PerVarMgr.mk ident_opt in
     return (f, id) )   (*  return (mk frac varName) )*)
