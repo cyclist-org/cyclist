@@ -1,11 +1,11 @@
 fields: next;
 
 proc main(x, y)
-	precondition: ls(y,x) * [a][1]ls(x,nil); 
+	precondition: ls(y,x) * ls[a][1](x,nil); 
 	postcondition: ls(y,nil);
 {
 	z := x;
-	assert (ls(y,z) * [a][1]ls(z,nil));
+	assert (ls(y,z) * ls[a][1](z,nil));
 	(while z!=nil do
 		z := z.next;
 		assert([b'] < [a] : ls(y, z) * ls[b'](z,nil))
