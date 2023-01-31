@@ -364,6 +364,12 @@ let mk_symex f =
   wrap rl
 
 (* symbolic execution rules *)
+(* symbolic execution assign rule *)
+  (*
+  {x = e /\ P } C {Q}
+  --------------------
+  {P} x = e ; C {Q}
+  *)
 let symex_assign_rule =
   let rl ((pre, cmd, _) as seq) =
     try
@@ -439,6 +445,10 @@ let symex_new_rule =
   in
   mk_symex rl
 
+  (* SKIP RULE*)
+  (*            *)
+  (* ---------- *)
+  (* {A}skip{A} *)
 let symex_skip_rule =
   let rl (pre, cmd, _) =
     try
@@ -498,6 +508,24 @@ let symex_while_rule =
     | Not_symheap | WrongCmd -> []
   in
   wrap rl
+
+  let symex_parallel_rule =
+    let rl (pre, cmd, post) =
+      try
+        let _, _ = Form.dest pre in
+        let cmd1, cmd2 = Cmd.dest_parallel cmd in
+        let cont = Cmd.get_cont cmd in 
+        fix_tps
+          [ ( [ (pre, Cmd.mk_seq cmd1 cont, post)
+              ; (pre, Cmd.mk_seq cmd2 cont, post)
+              ]
+            , "Parallel" ) ]
+      with
+      | Not_symheap | WrongCmd -> []
+    in
+    wrap rl
+
+
 
 let proc_unfold_str = "Proc Unf. "
 

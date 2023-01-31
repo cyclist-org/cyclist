@@ -149,6 +149,7 @@ module Cmd = struct
     | While of Cond.t * t
     | ProcCall of string * Term.FList.t
     | Assert of Form.t
+    | Parallel of t * t
 
   and basic_t = {label: int option; cmd: cmd_t}
 
@@ -216,6 +217,11 @@ module Cmd = struct
   let is_while c =
     is_not_empty c && match get_cmd c with While _ -> true | _ -> false
 
+  let is_parallel c = 
+    is_not_empty c && match get_cmd c with Parallel _ -> true | _ -> false  
+  
+  
+
   let mklc c = {label= None; cmd= c}
 
   let mk_basic c = [{label= None; cmd= c}]
@@ -282,6 +288,12 @@ module Cmd = struct
           >>= fun cond ->
           parse_symb keyw_do >> parse
           >>= fun cmd -> parse_symb keyw_od >>$ Some (While (cond, cmd)) )
+    <|> attempt
+          ( parse_symb symb_lp >> parse
+          >>= fun cmd1 ->
+          parse_symb symb_parallel >> parse
+          >>= fun cmd2 -> 
+          parse_symb symb_rp >>$ Some (Parallel (cmd1, cmd2)) )
     (*   | v = var; FLD_SEL; fld = IDENT; ASSIGN; t = term *)
     <|> attempt
           ( parse_ident
@@ -369,9 +381,14 @@ module Cmd = struct
     | IfElse (cond, cmd, cmd') -> (cond, cmd, cmd')
     | _ -> raise WrongCmd
 
+
   let _dest_while = function
     | While (cond, cmd) -> (cond, cmd)
     | _ -> raise WrongCmd
+ 
+  let _dest_parallel = function
+    | Parallel (cmd, cmd') -> (cmd, cmd')
+    | _ -> raise WrongCmd   
 
   let _dest_proc_call = function
     | ProcCall (p, args) -> (p, args)
@@ -413,6 +430,8 @@ module Cmd = struct
 
   let dest_ifelse = dest_cmd _dest_ifelse
 
+  let dest_parallel = dest_cmd _dest_parallel
+
   let dest_while = dest_cmd _dest_while
 
   let dest_branching = dest_cmd _dest_branching
@@ -452,6 +471,12 @@ module Cmd = struct
             let subc', n' = aux (n + 1) subc in
             let c' = {label= Some n; cmd= While (cond, subc')} in
             let l', n'' = aux n' l in
+            (c' :: l', n'') 
+        | Parallel (subc1, subc2) ->
+            let subc1', n' = aux (n + 1) subc1 in
+            let subc2', n'' = aux (n' + 1) subc2 in
+            let c' = {label= Some n; cmd= Parallel (subc1', subc2')} in
+            let l', n'' = aux n'' l in
             (c' :: l', n'') )
     in
     fst (aux 0 c)
@@ -467,6 +492,7 @@ module Cmd = struct
           (Term.Set.union (Cond.vars cond) (terms cmd))
           (terms cmd')
     | While (cond, cmd) -> Term.Set.union (Cond.vars cond) (terms cmd)
+    | Parallel (cmd, cmd') -> Term.Set.union (terms cmd) (terms cmd')
     | ProcCall (p, args) -> Term.Set.of_list args
 
   and terms l =
@@ -488,6 +514,10 @@ module Cmd = struct
     | If (_, cmd) | While (_, cmd) -> modifies ~strict cmd
     | IfElse (_, cmd, cmd') ->
         Term.Set.union (modifies ~strict cmd) (modifies ~strict cmd')
+    | Parallel (cmd, cmd') ->
+        Term.Set.union (modifies ~strict cmd) (modifies ~strict cmd')
+  
+  
 
   and modifies ?(strict = true) l =
     Blist.fold_left
@@ -505,6 +535,8 @@ module Cmd = struct
         Term.equal x x' && Term.equal e e' && Field.equal f f'
     | ProcCall (p, args), ProcCall (p', args') ->
         String.equal p p' && Blist.equal Term.equal args args'
+    | Parallel (cmd1, cmd2), Parallel (cmd1', cmd2') ->
+        equal cmd1 cmd1' && equal cmd2 cmd2' 
     | While (cond, cmd), While (cond', cmd') | If (cond, cmd), If (cond', cmd')
       ->
         Cond.equal cond cond' && equal cmd cmd'
@@ -540,6 +572,7 @@ module Cmd = struct
     | IfElse (cond, cmd, cmd') ->
         IfElse (Cond.subst theta cond, subst theta cmd, subst theta cmd')
     | While (cond, cmd) -> While (Cond.subst theta cond, subst theta cmd)
+    | Parallel(cmd, cmd') -> Parallel(subst theta cmd, subst theta cmd') (*To be double checked*)
 
   and subst theta cmd =
     match cmd with
@@ -623,6 +656,8 @@ module Cmd = struct
             (pp ~abbr (indent + !indent_by))
             cmd
             (String.make (!number_width + indent + 2) ' ' ^ keyw_od.str)
+    | Parallel(cmd, cmd') -> 
+      Format.fprintf fmt "%s" symb_parallel.str  (* IMPORTANT! TO BE MODIFIED*)
 
   and pp_lcmd ?(abbr = false) indent fmt c =
     Format.fprintf fmt "%a%a" (pp_label ~abbr indent) c (pp_cmd ~abbr indent) c

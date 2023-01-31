@@ -60,6 +60,8 @@ let symb_ind_sep = make_symb "|"
 
 let symb_assign = make_symb ":="
 
+let symb_parallel = make_symb "||"
+
 let symb_bang = make_symb "!"
 
 let symb_caret = make_symb "^"
