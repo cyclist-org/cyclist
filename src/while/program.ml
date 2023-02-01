@@ -686,7 +686,7 @@ module Cmd = struct
       match c.cmd with
       | ProcCall _ | Assert _ -> false
       | If (_, c) | While (_, c) -> is_while_prog c && is_while_prog cs
-      | IfElse (_, c, c') ->
+      | IfElse (_, c, c') | Parallel(c, c') ->
           is_while_prog c && is_while_prog c' && is_while_prog cs
       | _ -> is_while_prog cs )
 
@@ -697,7 +697,7 @@ module Cmd = struct
         match c.cmd with
         | ProcCall (p, _) -> Strng.Set.add p rest
         | If (_, c) | While (_, c) -> Strng.Set.union rest (get_dependencies c)
-        | IfElse (_, c, c') ->
+        | IfElse (_, c, c') | Parallel(c, c') ->
             Strng.Set.union_of_list
               [rest; get_dependencies c; get_dependencies c']
         | _ -> rest )

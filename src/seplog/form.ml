@@ -17,6 +17,7 @@ let dest : t -> Ord_constraints.t * Heap.t = function
   | cs, [s] -> (cs, s)
   | _ -> raise Not_symheap
 
+  
 let constraints_sep cs =
   if Ord_constraints.is_empty cs then symb_nullstr else symb_colon
 
