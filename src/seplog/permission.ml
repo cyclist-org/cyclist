@@ -67,13 +67,13 @@ exception IncorrectPermission of string
 
 (* Addition *)
 let add (f1, v1) (f2, v2) = 
-   if (v1 != v2 || (Q.add f1 f2) > Q.one) 
+   if (v1 != v2 || Q.gt (Q.add f1 f2) Q.one) 
       then raise (IncorrectPermission "Permission sum not defined for these two Permission values")
       else (Q.add f1 f2, v1) 
   
 (* Multiplication *)
 let mul (f, v) n = 
-   if  (Q.mul f n < Q.zero || (Q.mul f n) > Q.one) 
+   if  (Q.lt (Q.mul f n) Q.zero || Q.gt (Q.mul f n) Q.one) 
       then raise (IncorrectPermission "Permission multiplication not defined")
       else (Q.mul f n, v) 
 

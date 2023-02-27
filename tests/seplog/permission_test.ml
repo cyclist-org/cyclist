@@ -6,9 +6,10 @@ open Seplog
 
 let p1 = Permission.one
 
-let p05 = Permission.half p1
+let p05 = Permission.split_ith p1 2 (* Permission.half p1 *)
 
-let p25 = Permission.split_ith p05 2
+let p25 = Permission.split_ith p1 4
+
 
 (* let used_labels = Permission.Label.empty *)
 
