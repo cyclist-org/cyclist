@@ -1,7 +1,6 @@
 #include "heighted_graph.hpp"
 #include "sloped_relation.hpp"
 #include "types.c"
-#include "generic_graph.hpp"
 
 #include <cassert>
 #include <chrono>
@@ -313,16 +312,6 @@ bool Heighted_graph::relational_check(int opts){
     return true;
 }
 
-bool Heighted_graph::sd_check() {
-    this->flags |= USE_SD;
-    return set_based_check(STD);
-}
-
-bool Heighted_graph::xsd_check() {
-    this->flags |= USE_XSD;
-    return set_based_check(XTD);
-}
-
 //=============================================================
 // Methods for constructing the height graph
 //=============================================================
@@ -341,12 +330,23 @@ void Heighted_graph::add_height(int n, int h) {
     // i.e the heights are local -- node 1 and 2 might have height 4
     // but for them locally one could have it as 0 and the other as 2 !!!
     add_node(n);
+
+    int h_idx_aut = h_map.size();
+    auto found = h_map.find(h);
+    if( found == h_map.end() ){
+        h_map.insert(Int_pair(h,h_idx_aut));
+        rev_h_map.push_back(h);
+        max_height_aut = h_idx_aut;
+    }
+
     int n_idx = node_idxs.at(n);
     Map<int, int>* heights = height_idxs[n_idx];
     if (heights->find(h) == heights->end()) {
         int next_idx = heights->size();
         heights->insert(Int_pair(h, next_idx));
     }
+
+    
     int h_idx = heights->at(h);
     HeightsOf[n_idx]->insert(h_idx);
     if( max_height < h_idx ) max_height = h_idx;
@@ -560,18 +560,174 @@ bool Heighted_graph::check_Ccl(int opts) {
     return true;
 }
 
-bool Heighted_graph::set_based_check(SD_decrease_type SD_DEC_TYPE) {
-    generic_graph G;
-    G.set_edges(edges,num_nodes());
-    switch( SD_DEC_TYPE ){
-        case STD: 
-            return G.check_SD(&HeightsOf,h_change_);
-            break;
-        case XTD: 
-            return G.check_XSD(&HeightsOf,h_change_,this->max_height_set_size);
-            break;
+//=============================================================
+
+
+
+void Heighted_graph::init_automata(void){
+    for( int src = 0 ; src < max_nodes ; src++ ){
+        for( int sink = 0 ; sink < max_nodes ; sink++ ){
+            if( h_change_[src][sink] == 0 ) continue;
+            relation_encoding.insert(Pair<Int_pair,int>( Int_pair(src,sink), relation_id++) );
+        }
     }
-    return false;
+
+    max_height_aut = max_height_aut*2;
+
+    dict = spot::make_bdd_dict();
+    aut_ipath = make_twa_graph(dict);
+    aut_trace = make_twa_graph(dict);
+
+    aut_ipath->set_buchi();
+    aut_ipath->new_states(max_nodes);
+    aut_ipath->set_init_state(0);
+
+    s_init_tr = max_height_aut+2;
+    aut_trace->set_buchi();
+    aut_trace->new_states(s_init_tr+1);
+    aut_trace->set_init_state(s_init_tr);
+
+    // ap_size = ceil(log2(pow(3,pow(max_height,2))));
+    // ap_size = ceil(log2(number_of_edges))+ 1;
+    ap_size = ceil(log2(relation_id+1));
 }
 
-//=============================================================
+void Heighted_graph::register_AP(void){
+    for(int64_t i=0; i < ap_size ; ++i) {
+        std::stringstream ss;
+        ss << "p_" << i;
+        propositions.push_back( bdd_ithvar(aut_ipath->register_ap(ss.str())) );
+        aut_trace->register_ap(ss.str());
+    }
+}
+
+int Heighted_graph::get_slope(int src,int sink ,int h1 ,int h2){
+
+    int s = Undef;
+
+    if( h_change_[src][sink] != 0 ){
+
+        Map<int, int>* heights_src = height_idxs[src];
+        Map<int, int>* heights_sink = height_idxs[sink];
+        auto R_slopes = h_change_[src][sink]->repr_matrix;
+
+        auto exists_h1 = heights_src->find( rev_h_map[h1] );
+        if ( exists_h1 != heights_src->end()) {
+            auto exists_h2 = heights_sink->find( rev_h_map[h2] );
+            if ( exists_h2 != heights_sink->end()) {
+                s = R_slopes[exists_h1->second][exists_h2->second];
+            }
+        }
+    }
+    return s;
+}
+
+int64_t Heighted_graph::encode(int src, int sink){
+
+    int64_t code = 0;
+    for( int h1 = 0 ; h1 <= max_height_aut ; h1++ ){
+        for( int h2 = 0 ; h2 <= max_height_aut ; h2++ ){
+            int s = get_slope(src,sink,h1,h2);
+            code = code * 3;
+            if( s == Stay) code = code + 1;
+            else if( s == Downward ) code = code + 2;
+        }
+    }
+    return code;
+}
+
+void Heighted_graph::generate_atomic_BDD(){
+
+    for( int src = 0 ; src < max_nodes ; src++ ){
+        for( int sink = 0 ; sink < max_nodes ; sink++ ){
+            if( h_change_[src][sink] == 0 ) continue;
+            int64_t code = relation_encoding.at(Int_pair(src,sink));
+            bdd curr_bdd = bddtrue;
+
+            // if( h_change_copy[src][sink] != 0 ) code = encode(src,sink);
+
+            for( int64_t i = 0 ; i < ap_size ; ++i ){
+                bdd b = propositions[i];
+                curr_bdd &= ((code % 2) ?  b : bdd_not(b) );
+                code >>=1;
+            }
+
+            bdd_encoding_global.insert( Pair<Int_pair,bdd>(Int_pair(src,sink) , curr_bdd ));
+
+        }
+    }
+}
+
+void Heighted_graph::add_transitions(void){
+
+
+// Init path automata
+    for( int src = 0 ; src < max_nodes ; src++ ){
+        for( int sink = 0 ; sink < max_nodes ; sink++ ){
+            if( h_change_[src][sink] == 0 ) continue;
+            bdd curr_bdd = bdd_encoding_global.at(Int_pair(src,sink));
+            aut_ipath->new_edge(src, sink, curr_bdd, {0});
+        }
+    }
+
+// init trace automata
+    // initial to all states
+    bdd trace_init_bdd = bddfalse;
+    Vec<bdd> init_to_h(max_height_aut+2,bddfalse);
+    for( int src = 0 ; src < max_nodes ; src++ ){
+        for( int sink = 0 ; sink < max_nodes ; sink++ ){
+            if( h_change_[src][sink] == 0 ) continue;
+            bdd curr_bdd = bdd_encoding_global.at(Int_pair(src,sink));
+            trace_init_bdd |= curr_bdd ;
+            for( int h = 0 ; h <= max_height_aut+1 ; h++ ) init_to_h[h] |= curr_bdd;
+        }
+    }
+    aut_trace->new_edge(s_init_tr, s_init_tr, trace_init_bdd);
+    for( int h = 0 ; h <= max_height_aut+1 ; h++ ) aut_trace->new_edge(s_init_tr, h, init_to_h[h]);
+
+    // h to h'
+    for( int h1 = 0 ; h1 <= max_height_aut+1 ; h1++ ){
+        for( int h2 = 0 ; h2 <= max_height_aut+1 ; h2++ ){
+
+            bool has_edge = false;
+            bool accepting = false;
+            bdd letter_acc = bddfalse;
+            bdd letter_not_acc = bddfalse;
+
+
+            for( int src = 0 ; src < max_nodes ; src++ ){
+                for( int sink = 0 ; sink < max_nodes ; sink++ ){
+                    if( h_change_[src][sink] == 0 ) continue;
+
+                    bdd curr_bdd = bdd_encoding_global.at(Int_pair(src,sink));
+                    
+                    int s = get_slope(src,sink,h1,h2);
+
+                    if( s == Stay ){
+                        has_edge = true;
+                        letter_not_acc |= curr_bdd;
+                    } 
+                    else if( s == Downward ){
+                        accepting = true;
+                        letter_acc |= curr_bdd;
+                    }  
+                }
+            }
+
+            if( has_edge ) aut_trace->new_edge(h1, h2, letter_not_acc);
+            if( accepting ) aut_trace->new_edge(h1, h2, letter_acc,{0});
+        }
+    }
+
+}
+
+
+bool Heighted_graph::check_automata_soundness(){
+    init_automata();
+    register_AP();
+    generate_atomic_BDD();
+    add_transitions();
+
+    return spot::contains(aut_trace,aut_ipath);
+
+}

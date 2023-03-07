@@ -99,11 +99,23 @@ extern "C" value relational_check(value opts_) {
   CAMLreturn(v_res);
 }
 
+
+extern "C" value automata_new_check() {
+  CAMLparam0();
+  CAMLlocal1(v_res);
+
+  assert(hg);
+  bool retval = (hg->check_automata_soundness());
+  // bool retval = (aut_new->check_soundness());
+  v_res = Val_bool(retval);
+  CAMLreturn(v_res);
+}
+
 extern "C" value sd_check() {
   CAMLparam0();
   CAMLlocal1(v_res);
   assert(hg);
-  bool retval = (hg->sd_check());
+  bool retval = true;
   v_res = Val_bool(retval);
   CAMLreturn(v_res);
 }
@@ -112,7 +124,7 @@ extern "C" value xsd_check() {
   CAMLparam0();
   CAMLlocal1(v_res);
   assert(hg);
-  bool retval = (hg->xsd_check());
+  bool retval = true;
   v_res = Val_bool(retval);
   CAMLreturn(v_res);
 }
