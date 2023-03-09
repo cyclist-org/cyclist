@@ -16,20 +16,17 @@ endef
 
 all: soundness tests
 
-soundness: main.o sloped_relation.o heighted_graph.o  graph_algorithms.o
-	g++ -pthread -g -o soundness main.o sloped_relation.o heighted_graph.o  graph_algorithms.o
+soundness: main.o sloped_relation.o heighted_graph.o  
+	g++ -pthread  -lspot -lbddx -g -o soundness main.o sloped_relation.o heighted_graph.o
 
 main.o: main.cpp ../heighted_graph.hpp 
-	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c main.cpp -o main.o
+	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c main.cpp -o main.o  -lspot -lbddx
 
 heighted_graph.o: ../heighted_graph.hpp ../heighted_graph.c ../sloped_relation.hpp ../types.c
 	g++ ${CFLAGS} -pthread -I ../ -L/usr/lib -L/opt/lib -g -c ../heighted_graph.c -o heighted_graph.o
 
 sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
 	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../sloped_relation.c -o sloped_relation.o
-
-graph_algorithms.o: ../graph_algorithms.c ../graph_algorithms.hpp ../sloped_relation.hpp
-	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../graph_algorithms.c -o graph_algorithms.o
 
 .PHONY: clean tests test-suite-rel test-suite-sd test-suite-xsd tests-rel tests-set tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-min tests-ff-scc tests-ff-idem tests-min-scc tests-ff-min-scc tests-1-ff tests-1-scc tests-1-idem tests-1-min tests-1-ff-min tests-1-ff-scc tests-1-ff-idem tests-1-min-scc tests-1-ff-min-scc tests-sd tests-xsd
 

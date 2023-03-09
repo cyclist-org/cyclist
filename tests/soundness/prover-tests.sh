@@ -7,8 +7,8 @@ if [ -z "$iterations" ]; then
   iterations=1
 fi
 
-opts=("-spot" "-SD" "-XSD" "-rel-ext" "-rel-ext -min" "-rel-ext -scc" "-rel-ext -ff" "-rel-ext -min -scc" "-rel-ext -min -ff" "-rel-ext -min -scc -ff" "-rel-ext -full" "-rel-ext -full -min" "-rel-ext -full -scc" "-rel-ext -full -ff" "-rel-ext -full -min -scc" "-rel-ext -full -min -ff" "-rel-ext -full -min -scc -ff" )
-
+# opts=("-spot" "-SD" "-XSD" "-rel-ext" "-rel-ext -min" "-rel-ext -scc" "-rel-ext -ff" "-rel-ext -min -scc" "-rel-ext -min -ff" "-rel-ext -min -scc -ff" "-rel-ext -full" "-rel-ext -full -min" "-rel-ext -full -scc" "-rel-ext -full -ff" "-rel-ext -full -min -scc" "-rel-ext -full -min -ff" "-rel-ext -full -min -scc -ff" )
+opts=("-spot-new")
 now=$(date +"%Y-%m-%d_%H-%M-%S")
 sha=$(git rev-parse --short HEAD)
 
@@ -17,6 +17,6 @@ for i in ${!opts[@]}; do
   suffix=$(echo "$opt" | sed -r 's/\s+//g')
   for j in $(seq 1 1 $iterations); do
     (set -x; TST_OPTS="$opt -s -p" make sl-tests) > "$logdir/sl-tests_${sha}_$now$suffix.$j.log" 2>&1
-    (set -x; TST_OPTS="$opt -s -p" make fo-tests) > "$logdir/fo-tests_${sha}_$now$suffix.$j.log" 2>&1
+    # (set -x; TST_OPTS="$opt -s -p" make fo-tests) > "$logdir/fo-tests_${sha}_$now$suffix.$j.log" 2>&1
   done
 done

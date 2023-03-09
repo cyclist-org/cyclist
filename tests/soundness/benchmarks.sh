@@ -10,10 +10,10 @@ fi
 now=$(date +"%Y-%m-%d_%H-%M-%S")
 sha=$(git rev-parse --short HEAD)
 
-base_opts=("-spot" "-rel-ext -min -scc -ff")
+# base_opts=("-spot" "-rel-ext -min -scc -ff")
 
-xtd_opts=("${base_opts[@]}")
-xtd_opts+=("-rel-ext -full -ff" "-rel-ext -ff" "-rel-ext -min -ff" "-rel-ext -scc -ff")
+# xtd_opts=("${base_opts[@]}")
+# xtd_opts+=("-rel-ext -full -ff" "-rel-ext -ff" "-rel-ext -min -ff" "-rel-ext -scc -ff")
 
 # Experiments run on Ubuntu 20.04.3, 16GB RAM
 # Experiements run with Spot 2.10.4
@@ -24,9 +24,10 @@ xtd_opts+=("-rel-ext -full -ff" "-rel-ext -ff" "-rel-ext -min -ff" "-rel-ext -sc
 # -rel-ext -min -scc -ff n = 450 ~60s
 # -rel-ext -min -scc -ff n = 457 OUT OF MEMORY (before 9e40c42)
 
-opts=("${base_opts[@]}")
+# opts=("${base_opts[@]}")
 # SD and XSD run out of memory at about 16 <= n <= 26
 # opts+=("-SD" "-XSD")
+opts=("-spot-new")
 
 inputs="1 $(seq 25 25 600)"
 for n in ${inputs[@]}; do
@@ -49,9 +50,10 @@ done
 # -rel-ext -min -scc -ff n = 375 ~475s
 # -rel-ext -min -scc -ff n = 379 OUT OF MEMORY (before 9e40c42)
 
-opts=("${base_opts[@]}")
+# opts=("${base_opts[@]}")
 # XSD displays exponential behaviour (1s for p = 8, 15s for p = 9, 374s for p = 10)
 # opts+=("-XSD")
+opts=("-spot-new")
 
 inputs="1 $(seq 25 25 300)"
 for n in ${inputs[@]}; do
@@ -69,7 +71,8 @@ done
 
 # -rel-ext -min -scc -ff n = 21639 OUT OF MEMORY (before 9e40c42)
 
-opts=("${base_opts[@]}")
+# opts=("${base_opts[@]}")
+opts=("-spot-new")
 
 inputs="1 $(seq 250 250 4000)"
 for n in ${inputs[@]}; do

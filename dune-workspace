@@ -1,5 +1,21 @@
 (lang dune 2.2)
 
 (env
- (log_stats
-  (c_flags :standard -DLOG_STATS)))
+ (accset-5 
+  (env-vars
+   (PKG_CONFIG_PATH "//home/adham/work/spot/lib/pkgconfig")
+   (LD_LIBRARY_PATH "/home/adham/work/spot/lib/")))
+ (accset-15 
+  (env-vars
+   (PKG_CONFIG_PATH "//home/adham/work/spot/lib/pkgconfig")
+   (LD_LIBRARY_PATH "/home/adham/work/spot/lib/")))
+ (_ 
+  (env-vars
+   (PKG_CONFIG_PATH "//home/adham/work/spot/lib/pkgconfig")
+   (LD_LIBRARY_PATH "/home/adham/work/spot/lib/")))
+)
+
+(context default)
+(context (opam (switch asdsadasd) (name accset-5)   (profile accset-5)))
+(context (opam (switch asdsadasd) (name accset-15)  (profile accset-15)))
+(context (opam (switch asdsadasd) (name test2-benchmarks) (profile accset-15)))

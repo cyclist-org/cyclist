@@ -49,15 +49,15 @@ int main(int argc, char** argv) {
         Heighted_graph hg = Heighted_graph(graph["Node"].size());
         parse_from_json(graph, hg);
         bool result;
-        if ((opts & Heighted_graph::USE_SD) != 0) {
-            result = hg.sd_check();
-        } else if ((opts & Heighted_graph::USE_XSD) != 0) {
-            result = hg.xsd_check();
-        } else {
-            result = hg.relational_check(opts);
+        // if ((opts & Heighted_graph::USE_SD) != 0) {
+        //     result = hg.sd_check();
+        // } else if ((opts & Heighted_graph::USE_XSD) != 0) {
+        //     result = hg.xsd_check();
+        // } else {
+            result = hg.check_automata_soundness();// relational_check(opts);
             // hg.print_Ccl();
-            hg.print_statistics();
-        }
+            // hg.print_statistics();
+        // }
         if( result ){
             std::cout << "SOUND" << std::endl;
         }

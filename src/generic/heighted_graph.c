@@ -565,14 +565,59 @@ bool Heighted_graph::check_Ccl(int opts) {
 
 
 void Heighted_graph::init_automata(void){
+    max_height_aut = max_height_set_size;
+    int idx = 0;
     for( int src = 0 ; src < max_nodes ; src++ ){
         for( int sink = 0 ; sink < max_nodes ; sink++ ){
             if( h_change_[src][sink] == 0 ) continue;
-            relation_encoding.insert(Pair<Int_pair,int>( Int_pair(src,sink), relation_id++) );
+            h_change_[src][sink]->initialize();
+            if( relation_vec.size() == 0 ){
+                Vec<Sloped_relation*> v;
+                v.push_back(h_change_[src][sink]);
+                relation_vec.push_back(v);
+            }
+            else{
+                bool added = false;
+                for( int i=0; i < relation_vec.size() ; i++ ){
+                    if( h_change_[src][sink]->compare(*(relation_vec[i][0])) == eq ){
+                        relation_vec[i].push_back(h_change_[src][sink]);
+                        added = true;
+                        idx = i;
+                        break;
+                    }
+                }
+                if( !added ){
+                    idx = relation_vec.size();
+                    Vec<Sloped_relation*> v;
+                    v.push_back(h_change_[src][sink]);
+                    relation_vec.push_back(v);
+
+                } 
+            }
+            relation_encoding.insert(Pair<Int_pair,int>(Int_pair(src,sink),idx));
+
+            auto temp_code = encode(src,sink);
+            auto exists = code_to_slopes.find(temp_code);
+            if( exists == code_to_slopes.end() ){
+                Int_pair_SET s;
+                code_to_slopes.insert(Pair<int64_t,Int_pair_SET>(temp_code,s));
+            }
+            code_to_slopes.at(temp_code).insert(Int_pair(src,sink));
+
+            // std::cout <<code_to_slopes.at(temp_code).size()<< std::endl;
+
+
+            // if( exists != relation_encoding.end() )
+                // relation_encoding.insert(Pair<Int_pair,int>( Int_pair(src,sink), relation_id++) );
         }
     }
-
-    max_height_aut = max_height_aut*2;
+    // std::cout << relation_vec.size() << std::endl;
+    // std::cout << relation_vec[0].size() << std::endl;
+    // std::cout << relation_vec[1].size() << std::endl;
+    // std::cout << code_to_slopes.size() << std::endl;
+    // std::cout << relation_encoding.size()<< std::endl;
+    // std::cout <<max_height_set_size<< std::endl;
+    // max_height_aut = max_height_set_size;
 
     dict = spot::make_bdd_dict();
     aut_ipath = make_twa_graph(dict);
@@ -589,7 +634,8 @@ void Heighted_graph::init_automata(void){
 
     // ap_size = ceil(log2(pow(3,pow(max_height,2))));
     // ap_size = ceil(log2(number_of_edges))+ 1;
-    ap_size = ceil(log2(relation_id+1));
+    // ap_size = ceil(log2(relation_id+1));
+    ap_size = ceil(log2(relation_vec.size()+1));
 }
 
 void Heighted_graph::register_AP(void){

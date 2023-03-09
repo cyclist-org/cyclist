@@ -101,7 +101,12 @@ private:
     Map<int,int>            h_map;
     Vec<int>                rev_h_map;
     int                     max_height_aut=0;
+
+    Map<int64_t,Int_pair_SET> code_to_slopes;
+    Vec<Vec<Sloped_relation*>> relation_vec;
     //===================================
+
+
 
 public:
 
