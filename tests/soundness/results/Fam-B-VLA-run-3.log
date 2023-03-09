@@ -1,0 +1,78 @@
++ dune exec --context=test2-benchmarks ./tests/soundness/test2.exe -- -spot 1
+OK
+
+real	0m0.091s
+user	0m0.084s
+sys	0m0.039s
++ dune exec --context=test2-benchmarks ./tests/soundness/test2.exe -- -spot 25
+OK
+
+real	0m0.100s
+user	0m0.074s
+sys	0m0.062s
++ dune exec --context=test2-benchmarks ./tests/soundness/test2.exe -- -spot 50
+OK
+
+real	0m0.113s
+user	0m0.111s
+sys	0m0.041s
++ dune exec --context=test2-benchmarks ./tests/soundness/test2.exe -- -spot 75
+OK
+
+real	0m0.133s
+user	0m0.116s
+sys	0m0.052s
++ dune exec --context=test2-benchmarks ./tests/soundness/test2.exe -- -spot 100
+OK
+
+real	0m0.159s
+user	0m0.142s
+sys	0m0.052s
++ dune exec --context=test2-benchmarks ./tests/soundness/test2.exe -- -spot 125
+OK
+
+real	0m0.270s
+user	0m0.205s
+sys	0m0.100s
++ dune exec --context=test2-benchmarks ./tests/soundness/test2.exe -- -spot 150
+OK
+
+real	0m0.270s
+user	0m0.266s
+sys	0m0.038s
++ dune exec --context=test2-benchmarks ./tests/soundness/test2.exe -- -spot 175
+OK
+
+real	0m0.372s
+user	0m0.336s
+sys	0m0.075s
++ dune exec --context=test2-benchmarks ./tests/soundness/test2.exe -- -spot 200
+OK
+
+real	0m0.487s
+user	0m0.476s
+sys	0m0.047s
++ dune exec --context=test2-benchmarks ./tests/soundness/test2.exe -- -spot 225
+OK
+
+real	0m0.527s
+user	0m0.513s
+sys	0m0.046s
++ dune exec --context=test2-benchmarks ./tests/soundness/test2.exe -- -spot 250
+OK
+
+real	0m0.711s
+user	0m0.695s
+sys	0m0.051s
++ dune exec --context=test2-benchmarks ./tests/soundness/test2.exe -- -spot 275
+OK
+
+real	0m0.916s
+user	0m0.867s
+sys	0m0.087s
++ dune exec --context=test2-benchmarks ./tests/soundness/test2.exe -- -spot 300
+OK
+
+real	0m1.084s
+user	0m1.048s
+sys	0m0.071s

@@ -1,0 +1,163 @@
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 1
+FAIL_FAST
+OK
+
+real	0m0.093s
+user	0m0.079s
+sys	0m0.047s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 25
+OK
+
+real	0m0.093s
+user	0m0.092s
+sys	0m0.035s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 50
+USE_SCC_CHECK
+OK
+
+real	0m0.093s
+user	0m0.081s
+sys	0m0.046s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 75
+OK
+
+real	0m0.107s
+user	0m0.099s
+sys	0m0.046s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 100
+OK
+
+real	0m0.101s
+user	0m0.099s
+sys	0m0.040s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 125
+USE_SCC_CHECK
+OK
+
+real	0m0.112s
+user	0m0.116s
+sys	0m0.034s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 150
+OK
+
+real	0m0.114s
+user	0m0.111s
+sys	0m0.044s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 175
+OK
+
+real	0m0.102s
+user	0m0.095s
+sys	0m0.041s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 200
+USE_SCC_CHECK
+OK
+
+real	0m0.117s
+user	0m0.104s
+sys	0m0.055s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 225
+FAIL_FAST
+OK
+
+real	0m0.124s
+user	0m0.132s
+sys	0m0.047s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 250
+USE_IDEMPOTENCE
+OK
+
+real	0m0.151s
+user	0m0.172s
+sys	0m0.067s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 275
+USE_SCC_CHECK
+OK
+
+real	0m0.435s
+user	0m0.399s
+sys	0m0.143s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 300
+OK
+
+real	0m0.145s
+user	0m0.136s
+sys	0m0.077s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 325
+OK
+
+real	0m0.122s
+user	0m0.101s
+sys	0m0.057s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 350
+OK
+
+real	0m0.125s
+user	0m0.134s
+sys	0m0.031s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 375
+OK
+
+real	0m0.160s
+user	0m0.135s
+sys	0m0.064s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 400
+OK
+
+real	0m0.130s
+user	0m0.122s
+sys	0m0.047s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 425
+USE_SCC_CHECK
+OK
+
+real	0m0.125s
+user	0m0.125s
+sys	0m0.038s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 450
+USE_SCC_CHECK
+OK
+
+real	0m0.123s
+user	0m0.096s
+sys	0m0.061s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 475
+OK
+
+real	0m0.159s
+user	0m0.141s
+sys	0m0.055s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 500
+USE_SCC_CHECK
+OK
+
+real	0m0.130s
+user	0m0.113s
+sys	0m0.053s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 525
+FAIL_FAST
+OK
+
+real	0m0.131s
+user	0m0.121s
+sys	0m0.045s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 550
+USE_SCC_CHECK
+OK
+
+real	0m0.148s
+user	0m0.158s
+sys	0m0.053s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 575
+FAIL_FAST
+OK
+
+real	0m0.134s
+user	0m0.112s
+sys	0m0.061s
++ dune exec tests/soundness/test1.exe -- -spot-new -rel-stats 600
+OK
+
+real	0m0.133s
+user	0m0.109s
+sys	0m0.059s

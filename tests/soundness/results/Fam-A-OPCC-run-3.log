@@ -1,0 +1,225 @@
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 1
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m0.044s
+user	0m0.032s
+sys	0m0.012s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 25
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m0.046s
+user	0m0.038s
+sys	0m0.008s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 50
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m0.053s
+user	0m0.047s
+sys	0m0.006s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 75
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m0.073s
+user	0m0.064s
+sys	0m0.009s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 100
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m0.114s
+user	0m0.101s
+sys	0m0.014s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 125
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m0.189s
+user	0m0.179s
+sys	0m0.010s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 150
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m0.289s
+user	0m0.264s
+sys	0m0.026s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 175
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m0.466s
+user	0m0.441s
+sys	0m0.026s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 200
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m0.680s
+user	0m0.661s
+sys	0m0.019s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 225
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m1.213s
+user	0m1.193s
+sys	0m0.018s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 250
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m1.396s
+user	0m1.375s
+sys	0m0.020s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 275
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m2.048s
+user	0m2.008s
+sys	0m0.039s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 300
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m2.793s
+user	0m2.772s
+sys	0m0.019s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 325
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m3.516s
+user	0m3.484s
+sys	0m0.030s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 350
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m5.578s
+user	0m5.538s
+sys	0m0.037s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 375
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m5.584s
+user	0m5.529s
+sys	0m0.052s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 400
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m7.021s
+user	0m6.973s
+sys	0m0.044s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 425
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m9.114s
+user	0m9.070s
+sys	0m0.039s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 450
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m12.421s
+user	0m12.351s
+sys	0m0.063s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 475
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m12.061s
+user	0m12.000s
+sys	0m0.053s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 500
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m12.557s
+user	0m12.452s
+sys	0m0.094s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 525
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m17.634s
+user	0m17.516s
+sys	0m0.093s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 550
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m18.678s
+user	0m18.596s
+sys	0m0.069s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 575
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m19.779s
+user	0m19.706s
+sys	0m0.060s
++ dune exec tests/soundness/test1.exe -- -rel-ext -min -scc -ff -rel-stats 600
+FAIL_FAST
+USE_SCC_CHECK
+USE_MINIMALITY
+OK
+
+real	0m31.121s
+user	0m30.991s
+sys	0m0.111s

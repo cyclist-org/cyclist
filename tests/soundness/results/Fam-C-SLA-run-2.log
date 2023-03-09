@@ -1,0 +1,110 @@
++ dune exec tests/soundness/test3.exe -- -spot-new -rel-stats 1
+OK
+
+real	0m0.105s
+user	0m0.084s
+sys	0m0.060s
++ dune exec tests/soundness/test3.exe -- -spot-new -rel-stats 250
+USE_SCC_CHECK
+NOT OK
+
+real	0m0.115s
+user	0m0.097s
+sys	0m0.055s
++ dune exec tests/soundness/test3.exe -- -spot-new -rel-stats 500
+NOT OK
+
+real	0m0.133s
+user	0m0.116s
+sys	0m0.055s
++ dune exec tests/soundness/test3.exe -- -spot-new -rel-stats 750
+USE_IDEMPOTENCE
+NOT OK
+
+real	0m0.158s
+user	0m0.145s
+sys	0m0.048s
++ dune exec tests/soundness/test3.exe -- -spot-new -rel-stats 1000
+FAIL_FAST
+NOT OK
+
+real	0m0.197s
+user	0m0.144s
+sys	0m0.090s
++ dune exec tests/soundness/test3.exe -- -spot-new -rel-stats 1250
+NOT OK
+
+real	0m0.229s
+user	0m0.185s
+sys	0m0.083s
++ dune exec tests/soundness/test3.exe -- -spot-new -rel-stats 1500
+FAIL_FAST
+NOT OK
+
+real	0m0.259s
+user	0m0.215s
+sys	0m0.078s
++ dune exec tests/soundness/test3.exe -- -spot-new -rel-stats 1750
+NOT OK
+
+real	0m0.295s
+user	0m0.243s
+sys	0m0.091s
++ dune exec tests/soundness/test3.exe -- -spot-new -rel-stats 2000
+NOT OK
+
+real	0m0.368s
+user	0m0.299s
+sys	0m0.109s
++ dune exec tests/soundness/test3.exe -- -spot-new -rel-stats 2250
+USE_SCC_CHECK
+NOT OK
+
+real	0m0.403s
+user	0m0.272s
+sys	0m0.165s
++ dune exec tests/soundness/test3.exe -- -spot-new -rel-stats 2500
+NOT OK
+
+real	0m0.438s
+user	0m0.325s
+sys	0m0.150s
++ dune exec tests/soundness/test3.exe -- -spot-new -rel-stats 2750
+USE_SCC_CHECK
+NOT OK
+
+real	0m0.518s
+user	0m0.399s
+sys	0m0.156s
++ dune exec tests/soundness/test3.exe -- -spot-new -rel-stats 3000
+FAIL_FAST
+NOT OK
+
+real	0m0.552s
+user	0m0.393s
+sys	0m0.194s
++ dune exec tests/soundness/test3.exe -- -spot-new -rel-stats 3250
+NOT OK
+
+real	0m0.689s
+user	0m0.526s
+sys	0m0.200s
++ dune exec tests/soundness/test3.exe -- -spot-new -rel-stats 3500
+USE_SCC_CHECK
+NOT OK
+
+real	0m0.765s
+user	0m0.597s
+sys	0m0.208s
++ dune exec tests/soundness/test3.exe -- -spot-new -rel-stats 3750
+NOT OK
+
+real	0m0.881s
+user	0m0.695s
+sys	0m0.226s
++ dune exec tests/soundness/test3.exe -- -spot-new -rel-stats 4000
+NOT OK
+
+real	0m1.067s
+user	0m0.836s
+sys	0m0.265s
