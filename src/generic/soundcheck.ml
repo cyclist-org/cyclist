@@ -791,11 +791,11 @@ end)
 
 let arg_opts =
   [
-    ("-spot", Arg.Unit use_spot, ": use the spot model checker to verify pre-proof validity") ;
+    ("-VLA", Arg.Unit use_spot, ": use the spot model checker to verify pre-proof validity") ;
     ("-print-paut", Arg.Set BuchiCheck.print_paut, ": print the proof automaton in HOA format" ) ;
     ("-print-taut", Arg.Set BuchiCheck.print_taut, ": print the trace automaton in HOA format" ) ;
-    ("-rel-ext", Arg.Unit use_external, ": use external C++ relation-based check to verify pre-proof validity") ;
-    ("-spot-new", Arg.Unit use_new_spot, ": use oSLA to verify pre-proof validity") ;
+    ("-OP", Arg.Unit use_external, ": use external C++ relation-based check to verify pre-proof validity") ;
+    ("-SLA", Arg.Unit use_new_spot, ": use oSLA to verify pre-proof validity") ;
     ("-ff", Arg.Unit fail_fast, ": use fast fail in relation-based validty check") ;
     ("-scc", Arg.Unit use_scc_check, ": use SCC check in relation-based validity check") ;
     ("-idem", Arg.Unit use_idempotence, ": use idempotency optimisation in relation-based validity check") ;
