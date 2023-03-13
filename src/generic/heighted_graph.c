@@ -567,6 +567,7 @@ bool Heighted_graph::check_Ccl(int opts) {
 void Heighted_graph::init_automata(void){
     max_height_aut = max_height_set_size;
     int idx = 0;
+    //Create an equivilance relation between sloped relations to ensure 1-1 encoding.
     for( int src = 0 ; src < max_nodes ; src++ ){
         for( int sink = 0 ; sink < max_nodes ; sink++ ){
             if( h_change_[src][sink] == 0 ) continue;
