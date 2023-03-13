@@ -596,29 +596,8 @@ void Heighted_graph::init_automata(void){
             }
             relation_encoding.insert(Pair<Int_pair,int>(Int_pair(src,sink),idx));
 
-            auto temp_code = encode(src,sink);
-            auto exists = code_to_slopes.find(temp_code);
-            if( exists == code_to_slopes.end() ){
-                Int_pair_SET s;
-                code_to_slopes.insert(Pair<int64_t,Int_pair_SET>(temp_code,s));
-            }
-            code_to_slopes.at(temp_code).insert(Int_pair(src,sink));
-
-            // std::cout <<code_to_slopes.at(temp_code).size()<< std::endl;
-
-
-            // if( exists != relation_encoding.end() )
-                // relation_encoding.insert(Pair<Int_pair,int>( Int_pair(src,sink), relation_id++) );
         }
     }
-    // std::cout << relation_vec.size() << std::endl;
-    // std::cout << relation_vec[0].size() << std::endl;
-    // std::cout << relation_vec[1].size() << std::endl;
-    // std::cout << code_to_slopes.size() << std::endl;
-    // std::cout << relation_encoding.size()<< std::endl;
-    // std::cout <<max_height_set_size<< std::endl;
-    // max_height_aut = max_height_set_size;
-
     dict = spot::make_bdd_dict();
     aut_ipath = make_twa_graph(dict);
     aut_trace = make_twa_graph(dict);
@@ -631,10 +610,6 @@ void Heighted_graph::init_automata(void){
     aut_trace->set_buchi();
     aut_trace->new_states(s_init_tr+1);
     aut_trace->set_init_state(s_init_tr);
-
-    // ap_size = ceil(log2(pow(3,pow(max_height,2))));
-    // ap_size = ceil(log2(number_of_edges))+ 1;
-    // ap_size = ceil(log2(relation_id+1));
     ap_size = ceil(log2(relation_vec.size()+1));
 }
 
@@ -689,8 +664,6 @@ void Heighted_graph::generate_atomic_BDD(){
             if( h_change_[src][sink] == 0 ) continue;
             int64_t code = relation_encoding.at(Int_pair(src,sink));
             bdd curr_bdd = bddtrue;
-
-            // if( h_change_copy[src][sink] != 0 ) code = encode(src,sink);
 
             for( int64_t i = 0 ; i < ap_size ; ++i ){
                 bdd b = propositions[i];
