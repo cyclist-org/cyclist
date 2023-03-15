@@ -1,5 +1,6 @@
 #include <cassert>
 #include <map>
+#include <spot/twaalgos/contains.hh>
 #include <spot/twaalgos/determinize.hh>
 #include <spot/twaalgos/dualize.hh>
 #include <spot/twaalgos/totgba.hh>
@@ -112,17 +113,9 @@ extern "C" value check_soundness() {
 
 	spot::const_twa_ptr ta = std::make_shared<TraceAutomaton>(*proof);
 	spot::twa_graph_ptr graph = make_twa_graph(ta, spot::twa::prop_set::all());
-	spot::twa_graph_ptr det = 
-		tgba_determinize(
-			graph, false, true, true, 
-			spot::check_stutter_invariance(graph).is_true()
-		);
-	spot::twa_graph_ptr complement = remove_fin(dualize(det));
-
-	spot::const_twa_ptr product = otf_product(proof, complement);
-
-	bool retval = (product->is_empty());
-	
+	spot::twa_graph_ptr prf = make_twa_graph(proof, spot::twa::prop_set::all());
+	bool retval = spot::contains(graph, prf);
+ 
 	//std:: cout << "retval " << retval << '\n';
 
 	v_res = Val_bool(retval);
