@@ -1,12 +1,12 @@
 #include <cassert>
 #include <memory>
 
+#include "heighted_graph.hpp"
+
 extern "C" {
 #include <memory.h>
 #include <mlvalues.h>
 }
-
-#include "heighted_graph.hpp"
 
 static std::shared_ptr<Heighted_graph> hg = 0;
 

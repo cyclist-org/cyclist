@@ -17,13 +17,13 @@ endef
 all: soundness tests
 
 soundness: main.o sloped_relation.o heighted_graph.o  
-	g++ -pthread  -lspot -lbddx -g -o soundness main.o sloped_relation.o heighted_graph.o
+	g++ -g -o soundness main.o sloped_relation.o heighted_graph.o `pkg-config --libs libspot libbddx`
 
 main.o: main.cpp ../heighted_graph.hpp 
-	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c main.cpp -o main.o  -lspot -lbddx
+	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/opt/lib -g -c main.cpp -o main.o
 
 heighted_graph.o: ../heighted_graph.hpp ../heighted_graph.c ../sloped_relation.hpp ../types.c
-	g++ ${CFLAGS} -pthread -I ../ -L/usr/lib -L/opt/lib -g -c ../heighted_graph.c -o heighted_graph.o
+	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/usr/lib -L/opt/lib -g -c ../heighted_graph.c -o heighted_graph.o
 
 sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
 	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../sloped_relation.c -o sloped_relation.o
