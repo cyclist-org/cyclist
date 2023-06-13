@@ -238,6 +238,13 @@ int Sloped_relation::size(void) const{
     return slope_map->size();
 }
 
+slope Sloped_relation::get_slope(int src_h, int dst_h) {
+    if (src_h < this->num_src_heights && dst_h < this->num_dst_heights) {
+        return (slope) this->repr_matrix[src_h][dst_h];
+    }
+    return Undef;
+}
+
 //==================================================================
 // USE : USEFUL COMPUTATION METHODS
 
@@ -255,8 +262,8 @@ Sloped_relation* Sloped_relation::compose(Sloped_relation& other){
             int h3 = p2.first;
             int slope = Stay;
             bool found = false;
-            Int_pair forward;
-            Int_pair backward;
+            // Should check here which of slopes_h1_h2 and slopes_h2_h3 is
+            // smaller, and iterate through that one
             for( Int_pair p3 : *slopes_h1_h2 ){
                 Int_pair p3_down(p3.first,Downward);
                 Int_pair p3_stay(p3.first,Stay);
@@ -271,8 +278,6 @@ Sloped_relation* Sloped_relation::compose(Sloped_relation& other){
                 if( slope == Downward ) break;
             }
             if( found ){
-                forward = Int_pair(h3,slope);
-                backward = Int_pair(h1,slope);
                 auto exists_h1 = composed_forward_map->find(h1);
                 if( exists_h1 == composed_forward_map->end()) {
                     composed_forward_map->insert(Pair<int,Int_pair_SET*>(h1,new Int_pair_SET()));
@@ -281,8 +286,8 @@ Sloped_relation* Sloped_relation::compose(Sloped_relation& other){
                 if( exists_h3 == composed_backward_map->end() ) {
                     composed_backward_map->insert(Pair<int,Int_pair_SET*>(h3,new Int_pair_SET()));
                 }
-                (composed_forward_map->at(h1))->insert(forward);
-                (composed_backward_map->at(h3))->insert(backward);
+                (composed_forward_map->at(h1))->insert(Int_pair(h3,slope));
+                (composed_backward_map->at(h3))->insert(Int_pair(h1,slope));
                 composed_slope_map->insert(Pair<Int_pair,int>(Int_pair(h1,h3),slope));
             }
         }

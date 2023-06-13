@@ -2,21 +2,21 @@ open Lib
 open Parsers
 
 type soundness_method =
-  | SPOT
   | RELATIONAL_OCAML
   | RELATIONAL_CPP
-  | NEW_SPOT
+  | VLA
+  | SLA
 
 
   
 
 let soundness_method = ref RELATIONAL_OCAML
-let use_spot () = 
-  soundness_method := SPOT
 let use_external () = 
   soundness_method := RELATIONAL_CPP
-let use_new_spot () =
-  soundness_method := NEW_SPOT
+let use_vla () = 
+  soundness_method := VLA
+let use_sla () =
+  soundness_method := SLA
   
 module IntPair = struct
   include Pair.Make(Int)(Int)
@@ -693,7 +693,7 @@ module RelationalCheck = struct
     external add_decrease : int -> int -> int -> int -> unit = "add_decr"
     external relational_check : int -> bool = "relational_check"
     (* external sd_check : unit -> bool = "sd_check" *)
-    external automata_new_check : unit -> bool = "automata_new_check"
+    external sla_automata_check : unit -> bool = "sla_automata_check"
     (* external xsd_check : unit -> bool = "xsd_check" *)
     external print_ccl : unit -> unit = "print_ccl"
     external print_stats : unit -> unit = "print_statistics"
@@ -763,8 +763,8 @@ module RelationalCheck = struct
         match !soundness_method with
         | RELATIONAL_CPP ->
           relational_check !opts 
-        | NEW_SPOT ->
-          automata_new_check ()
+        | SLA ->
+          sla_automata_check ()
         | _ ->
           failwith "Unexpected soundness check method!" in
       if retval then Stats.MC.accept () else Stats.MC.reject () ;
@@ -791,11 +791,11 @@ end)
 
 let arg_opts =
   [
-    ("-VLA", Arg.Unit use_spot, ": use the spot model checker to verify pre-proof validity") ;
+    ("-VLA", Arg.Unit use_vla, ": use Spot (vertex language automata construction) to verify pre-proof validity") ;
     ("-print-paut", Arg.Set BuchiCheck.print_paut, ": print the proof automaton in HOA format" ) ;
     ("-print-taut", Arg.Set BuchiCheck.print_taut, ": print the trace automaton in HOA format" ) ;
     ("-OP", Arg.Unit use_external, ": use external C++ relation-based check to verify pre-proof validity") ;
-    ("-SLA", Arg.Unit use_new_spot, ": use oSLA to verify pre-proof validity") ;
+    ("-SLA", Arg.Unit use_sla, ": use Spot (slope language automata construction) to verify pre-proof validity") ;
     ("-ff", Arg.Unit fail_fast, ": use fast fail in relation-based validty check") ;
     ("-scc", Arg.Unit use_scc_check, ": use SCC check in relation-based validity check") ;
     ("-idem", Arg.Unit use_idempotence, ": use idempotency optimisation in relation-based validity check") ;
@@ -848,7 +848,7 @@ let check_proof ?(init=0) ?(minimize=true) prf =
         Stats.MCCache.miss () ;
         let r =
           match !soundness_method with
-          | SPOT ->
+          | VLA ->
             BuchiCheck.check_proof ~init aprf
           | RELATIONAL_OCAML ->
             RelationalCheck.check_proof aprf

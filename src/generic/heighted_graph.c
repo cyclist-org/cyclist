@@ -326,18 +326,13 @@ void Heighted_graph::add_node(int n) {
 }
 
 void Heighted_graph::add_height(int n, int h) {
-    // for each node the heights are mapped in an increasing order,
-    // i.e the heights are local -- node 1 and 2 might have height 4
-    // but for them locally one could have it as 0 and the other as 2 !!!
+
     add_node(n);
 
-    int h_idx_aut = h_map.size();
-    auto found = h_map.find(h);
-    if( found == h_map.end() ){
-        h_map.insert(Int_pair(h,h_idx_aut));
-        rev_h_map.push_back(h);
-        max_height_aut = h_idx_aut;
-    }
+    // for each node the external height IDs are mapped in an increasing order,
+    // i.e the internal heights IDs are local -- node 1 and 2 might both contain
+    // height with external ID 4, the respective corresponding interal IDs might
+    // be different
 
     int n_idx = node_idxs.at(n);
     Map<int, int>* heights = height_idxs[n_idx];
@@ -345,14 +340,13 @@ void Heighted_graph::add_height(int n, int h) {
         int next_idx = heights->size();
         heights->insert(Int_pair(h, next_idx));
     }
-
     
     int h_idx = heights->at(h);
     HeightsOf[n_idx]->insert(h_idx);
-    if( max_height < h_idx ) max_height = h_idx;
-    if( HeightsOf[n_idx]->size() > this->max_height_set_size ){
-        this->max_height_set_size =  HeightsOf[n_idx]->size();
+    if( HeightsOf[n_idx]->size() > this->trace_width ){
+        this->trace_width =  HeightsOf[n_idx]->size();
     }
+
 }
 
 void Heighted_graph::add_edge(int source, int sink) {
@@ -365,7 +359,7 @@ void Heighted_graph::add_edge(int source, int sink) {
         edges->push_back(Int_pair(src_idx,sink_idx));
         int num_src_heights = height_idxs[src_idx]->size();
         int num_dst_heights = height_idxs[sink_idx]->size();
-        Sloped_relation* R =
+        Sloped_relation* R = 
             new Sloped_relation(num_src_heights, num_dst_heights);
         h_change_[src_idx][sink_idx] = R;
         Ccl[src_idx][sink_idx]->push_back(R);
@@ -560,45 +554,74 @@ bool Heighted_graph::check_Ccl(int opts) {
     return true;
 }
 
-//=============================================================
+int Heighted_graph::get_slope(int src, int sink, int h1, int h2) {
 
+    // Get the internal IDs of the src and sink notes
+    int _src = node_idxs.at(src);
+    int _sink = node_idxs.at(sink);
 
+    if (h_change_[_src][_sink] != 0) {
 
-void Heighted_graph::init_automata(void){
-    max_height_aut = max_height_set_size;
-    int idx = 0;
-    //Create an equivilance relation between sloped relations to ensure 1-1 encoding.
+        // Get internal height ID maps for the nodes
+        Map<int, int>* heights_src = height_idxs[_src];
+        Map<int, int>* heights_sink = height_idxs[_sink];
+
+        // If the heights exists in the nodes, look up and return the slope
+        auto src_it = heights_src->find(h1);
+        if (src_it != heights_src->end()) {
+            auto sink_it = heights_sink->find(h2);
+            if (sink_it != heights_sink->end()) {
+                return h_change_[src][sink]->get_slope(*src_it, *sink_it);
+            }
+        }
+
+    }
+
+    // If no edge, or heights do not exist in the nodes
+    return Undef;
+}
+
+bool Heighted_graph::sla_automata_check(){
+
+    spot::bdd_dict_ptr      dict;
+    spot::twa_graph_ptr     aut_ipath;
+    spot::twa_graph_ptr     aut_trace;
+    int                     s_init_ip = 0;
+    int                     s_init_tr = this->trace_width;
+    int64_t                 ap_size = 0;
+    Map<Int_pair,int>       relation_idx;
+    Vec<Sloped_relation*>   relation_vec;
+    Vec<bdd>                propositions;
+    Vec<bdd>                idx_encoding;
+
+    // Construct unique IDs for each distinct sloped relation in the graph
     for( int src = 0 ; src < max_nodes ; src++ ){
         for( int sink = 0 ; sink < max_nodes ; sink++ ){
             if( h_change_[src][sink] == 0 ) continue;
-            h_change_[src][sink]->initialize();
-            if( relation_vec.size() == 0 ){
-                Vec<Sloped_relation*> v;
-                v.push_back(h_change_[src][sink]);
-                relation_vec.push_back(v);
-            }
-            else{
-                bool added = false;
-                for( int i=0; i < relation_vec.size() ; i++ ){
-                    if( h_change_[src][sink]->compare(*(relation_vec[i][0])) == eq ){
-                        relation_vec[i].push_back(h_change_[src][sink]);
-                        added = true;
-                        idx = i;
-                        break;
-                    }
+            Sloped_relation* P = h_change_[src][sink];
+            P->initialize();
+            int idx = 0;
+            bool found = false;
+            for (auto it = relation_vec.begin(); it != relation_vec.end(); it++) {
+                Sloped_relation* Q = *it;
+                if (P->compare(*Q) == eq) {
+                    found = true;
+                    break;
+                } else {
+                    idx++;
                 }
-                if( !added ){
-                    idx = relation_vec.size();
-                    Vec<Sloped_relation*> v;
-                    v.push_back(h_change_[src][sink]);
-                    relation_vec.push_back(v);
-
-                } 
             }
-            relation_encoding.insert(Pair<Int_pair,int>(Int_pair(src,sink),idx));
-
+            if (!found) {
+                relation_vec.push_back(P);
+            }
+            relation_idx.insert(Pair<Int_pair,int>(Int_pair(src,sink),idx));
         }
     }
+
+    /*************************
+     * Initialise the automata
+     *************************/
+
     dict = spot::make_bdd_dict();
     aut_ipath = make_twa_graph(dict);
     aut_trace = make_twa_graph(dict);
@@ -607,147 +630,96 @@ void Heighted_graph::init_automata(void){
     aut_ipath->new_states(max_nodes);
     aut_ipath->set_init_state(0);
 
-    s_init_tr = max_height_aut+2;
     aut_trace->set_buchi();
-    aut_trace->new_states(s_init_tr+1);
+    aut_trace->new_states(this->trace_width + 1);
     aut_trace->set_init_state(s_init_tr);
-    ap_size = ceil(log2(relation_vec.size()+1));
-}
+    ap_size = ceil(log2(relation_vec.size()));
 
-void Heighted_graph::register_AP(void){
-    for(int64_t i=0; i < ap_size ; ++i) {
+
+    /******************************
+     * Register atomic propositions
+     ******************************/
+
+    for(int64_t i=0; i < ap_size; ++i) {
         std::stringstream ss;
         ss << "p_" << i;
         propositions.push_back( bdd_ithvar(aut_ipath->register_ap(ss.str())) );
         aut_trace->register_ap(ss.str());
     }
-}
 
-int Heighted_graph::get_slope(int src,int sink ,int h1 ,int h2){
 
-    int s = Undef;
+    /*********************************
+     * Generate the BDDs for each unique sloped relation (ID)
+     *********************************/
 
-    if( h_change_[src][sink] != 0 ){
-
-        Map<int, int>* heights_src = height_idxs[src];
-        Map<int, int>* heights_sink = height_idxs[sink];
-        auto R_slopes = h_change_[src][sink]->repr_matrix;
-
-        auto exists_h1 = heights_src->find( rev_h_map[h1] );
-        if ( exists_h1 != heights_src->end()) {
-            auto exists_h2 = heights_sink->find( rev_h_map[h2] );
-            if ( exists_h2 != heights_sink->end()) {
-                s = R_slopes[exists_h1->second][exists_h2->second];
-            }
+    for (int idx = 0; idx < relation_vec.size(); idx++) {
+        bdd curr_bdd = bddtrue;
+        int code = idx;
+        for (int64_t i = 0 ; i < ap_size ; i++) {
+            bdd b = propositions[i];
+            curr_bdd &= ((code % 2) ? bdd_not(b) : b );
+            code >>= 1;
         }
+        idx_encoding.push_back(curr_bdd);
     }
-    return s;
-}
 
-int64_t Heighted_graph::encode(int src, int sink){
 
-    int64_t code = 0;
-    for( int h1 = 0 ; h1 <= max_height_aut ; h1++ ){
-        for( int h2 = 0 ; h2 <= max_height_aut ; h2++ ){
-            int s = get_slope(src,sink,h1,h2);
-            code = code * 3;
-            if( s == Stay) code = code + 1;
-            else if( s == Downward ) code = code + 2;
-        }
-    }
-    return code;
-}
+    /*********************************
+     * Create the automata transitions
+     *********************************/
 
-void Heighted_graph::generate_atomic_BDD(){
-
+    //
+    // Path automaton
+    //
     for( int src = 0 ; src < max_nodes ; src++ ){
         for( int sink = 0 ; sink < max_nodes ; sink++ ){
             if( h_change_[src][sink] == 0 ) continue;
-            int64_t code = relation_encoding.at(Int_pair(src,sink));
-            bdd curr_bdd = bddtrue;
-
-            for( int64_t i = 0 ; i < ap_size ; ++i ){
-                bdd b = propositions[i];
-                curr_bdd &= ((code % 2) ?  b : bdd_not(b) );
-                code >>=1;
-            }
-
-            bdd_encoding_global.insert( Pair<Int_pair,bdd>(Int_pair(src,sink) , curr_bdd ));
-
-        }
-    }
-}
-
-void Heighted_graph::add_transitions(void){
-
-
-// Init path automata
-    for( int src = 0 ; src < max_nodes ; src++ ){
-        for( int sink = 0 ; sink < max_nodes ; sink++ ){
-            if( h_change_[src][sink] == 0 ) continue;
-            bdd curr_bdd = bdd_encoding_global.at(Int_pair(src,sink));
+            bdd curr_bdd = idx_encoding[relation_idx.at(Int_pair(src,sink))];
             aut_ipath->new_edge(src, sink, curr_bdd, {0});
         }
     }
 
-// init trace automata
-    // initial to all states
-    bdd trace_init_bdd = bddfalse;
-    Vec<bdd> init_to_h(max_height_aut+2,bddfalse);
-    for( int src = 0 ; src < max_nodes ; src++ ){
-        for( int sink = 0 ; sink < max_nodes ; sink++ ){
-            if( h_change_[src][sink] == 0 ) continue;
-            bdd curr_bdd = bdd_encoding_global.at(Int_pair(src,sink));
-            trace_init_bdd |= curr_bdd ;
-            for( int h = 0 ; h <= max_height_aut+1 ; h++ ) init_to_h[h] |= curr_bdd;
-        }
+    //
+    // Trace automaton
+    //
+
+    // Any relation takes init state to itself, with non-accepting transition
+    aut_trace->new_edge(s_init_tr, s_init_tr, bddtrue);
+
+    // Any relation takes init state to a height, with non-accepting transition
+    for (int h = 0; h < this->trace_width; h++) {
+        aut_trace->new_edge(s_init_tr, h, bddtrue);
     }
-    aut_trace->new_edge(s_init_tr, s_init_tr, trace_init_bdd);
-    for( int h = 0 ; h <= max_height_aut+1 ; h++ ) aut_trace->new_edge(s_init_tr, h, init_to_h[h]);
 
-    // h to h'
-    for( int h1 = 0 ; h1 <= max_height_aut+1 ; h1++ ){
-        for( int h2 = 0 ; h2 <= max_height_aut+1 ; h2++ ){
+    // There are two edges between each pair of heights h1 and h2:
+    //   An accepting edge, recognising all sloped relations R with R(h1, h2, down)
+    //   A non-accepting edge, recognising all sloped relations R with R(h1, h2, stay)
+    for (int h1 = 0 ; h1 < this->trace_width; h1++) {
+        for (int h2 = 0 ; h2 < this->trace_width; h2++) {
 
-            bool has_edge = false;
-            bool accepting = false;
+            // initalise the BDDs for the accepting and non-accepting edges
             bdd letter_acc = bddfalse;
-            bdd letter_not_acc = bddfalse;
+            bdd letter_non_acc = bddfalse;
 
-
-            for( int src = 0 ; src < max_nodes ; src++ ){
-                for( int sink = 0 ; sink < max_nodes ; sink++ ){
-                    if( h_change_[src][sink] == 0 ) continue;
-
-                    bdd curr_bdd = bdd_encoding_global.at(Int_pair(src,sink));
-                    
-                    int s = get_slope(src,sink,h1,h2);
-
-                    if( s == Stay ){
-                        has_edge = true;
-                        letter_not_acc |= curr_bdd;
-                    } 
-                    else if( s == Downward ){
-                        accepting = true;
-                        letter_acc |= curr_bdd;
-                    }  
+            // Iterate through sloped relations and incorporate them into the BDDs
+            for (int i = 0; i < relation_vec.size(); i++) {
+                Sloped_relation* R = relation_vec[i];
+                slope s = R->get_slope(h1, h2);
+                if (s == Downward) {
+                    letter_acc |= idx_encoding[i];
+                } else if (s == Stay) {
+                    letter_non_acc |= idx_encoding[i];
                 }
             }
 
-            if( has_edge ) aut_trace->new_edge(h1, h2, letter_not_acc);
-            if( accepting ) aut_trace->new_edge(h1, h2, letter_acc,{0});
+            aut_trace->new_edge(h1, h2, letter_non_acc);
+            aut_trace->new_edge(h1, h2, letter_acc, {0});
         }
     }
 
-}
-
-
-bool Heighted_graph::check_automata_soundness(){
-    init_automata();
-    register_AP();
-    generate_atomic_BDD();
-    add_transitions();
-
+    /*******************************
+     * Perform the containment check
+     *******************************/
     return spot::contains(aut_trace,aut_ipath);
 
 }

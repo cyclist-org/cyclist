@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
         // } else if ((opts & Heighted_graph::USE_XSD) != 0) {
         //     result = hg.xsd_check();
         // } else {
-            result = hg.check_automata_soundness();// relational_check(opts);
+            result = hg.sla_automata_check();// relational_check(opts);
             // hg.print_Ccl();
             // hg.print_statistics();
         // }

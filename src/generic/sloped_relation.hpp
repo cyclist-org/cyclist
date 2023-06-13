@@ -21,7 +21,7 @@ private:
     bool initialized = false;
     
     // A canonical matrix representing the relation
-    // int** repr_matrix;
+    int** repr_matrix = 0;
 
     // Dimensions of the array representation
     int num_src_heights = 0;
@@ -41,8 +41,6 @@ private:
         {}
 
 public:
-    // A canonical matrix representing the relation
-    int** repr_matrix = 0;
 
     Sloped_relation(void){}
     Sloped_relation(int num_src_heights, int num_dst_heights);
@@ -62,6 +60,8 @@ public:
     Int_pair_SET* get_forward_slopes( int h );
     Int_pair_SET* get_backward_slopes( int h );
     Map<Int_pair,int>* get_slopes(void);
+
+    slope get_slope(int src_h, int dst_h);
 
     Sloped_relation* compose( Sloped_relation& other );
     Sloped_relation* compute_transitive_closure(void);
