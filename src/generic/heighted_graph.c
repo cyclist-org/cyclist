@@ -554,7 +554,7 @@ bool Heighted_graph::check_Ccl(int opts) {
     return true;
 }
 
-int Heighted_graph::get_slope(int src, int sink, int h1, int h2) {
+slope Heighted_graph::get_slope(int src, int sink, int h1, int h2) {
 
     // Get the internal IDs of the src and sink notes
     int _src = node_idxs.at(src);
@@ -571,7 +571,9 @@ int Heighted_graph::get_slope(int src, int sink, int h1, int h2) {
         if (src_it != heights_src->end()) {
             auto sink_it = heights_sink->find(h2);
             if (sink_it != heights_sink->end()) {
-                return h_change_[src][sink]->get_slope(*src_it, *sink_it);
+                int _h1 = src_it->second;
+                int _h2 = sink_it->second;
+                return h_change_[src][sink]->get_slope(_h1, _h2);
             }
         }
 
