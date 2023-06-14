@@ -28,14 +28,14 @@ heighted_graph.o: ../heighted_graph.hpp ../heighted_graph.c ../sloped_relation.h
 sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
 	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../sloped_relation.c -o sloped_relation.o
 
-.PHONY: clean tests test-suite-rel test-suite-sd test-suite-xsd tests-rel tests-set tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-min tests-ff-scc tests-ff-idem tests-min-scc tests-ff-min-scc tests-1-ff tests-1-scc tests-1-idem tests-1-min tests-1-ff-min tests-1-ff-scc tests-1-ff-idem tests-1-min-scc tests-1-ff-min-scc tests-sd tests-xsd
+.PHONY: clean tests test-suite-full test-suite-sd test-suite-xsd tests-rel tests-set tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-min tests-ff-scc tests-ff-idem tests-min-scc tests-ff-min-scc tests-1-ff tests-1-scc tests-1-idem tests-1-min tests-1-ff-min tests-1-ff-scc tests-1-ff-idem tests-1-min-scc tests-1-ff-min-scc tests-sd tests-xsd
 
-.SILENT: tests tests-rel tests-set tests-sd tests-xsd test-suite-rel test-suite-sd test-suite-xsd test_success test_failure tests-no-opts tests-ff tests-scc tests-min tests-idem tests-ff-scc tests-min-scc tests-ff-idem
+.SILENT: tests tests-rel tests-set tests-sd tests-xsd test-suite-full test-suite-sd test-suite-xsd test_success test_failure tests-no-opts tests-ff tests-scc tests-min tests-idem tests-ff-scc tests-min-scc tests-ff-idem
 
 clean: 
 	rm -f ./*.o soundness
 
-tests: tests-rel tests-set
+tests: tests-sla tests-rel tests-set
 
 tests-set: tests-sd tests-xsd
 
@@ -43,63 +43,63 @@ tests-rel: tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-min te
 
 tests-no-opts:
 	echo "NO OPTIMSATIONS";
-	export FLAGS=A; make -s test-suite-rel
+	export FLAGS=a; make -s test-suite-full
 tests-ff:
 	echo "FAST-FAIL"
-	export FLAGS=Af; make -s test-suite-rel
+	export FLAGS=af; make -s test-suite-full
 tests-scc:
 	echo "SCC LOOP CHECK"
-	export FLAGS=As; make -s test-suite-rel
+	export FLAGS=as; make -s test-suite-full
 tests-idem:
 	echo "IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=Ai; make -s test-suite-rel
+	export FLAGS=ai; make -s test-suite-full
 tests-min:
 	echo "MINIMAL CCL"
-	export FLAGS=Am; make -s test-suite-rel
+	export FLAGS=am; make -s test-suite-full
 tests-ff-min:
 	echo "FAST-FAIL, MINIMAL CCL"
-	export FLAGS=Afm; make -s test-suite-rel
+	export FLAGS=afm; make -s test-suite-full
 tests-ff-scc:
 	echo "FAST-FAIL, SCC LOOP CHECK"
-	export FLAGS=Afs; make -s test-suite-rel
+	export FLAGS=afs; make -s test-suite-full
 tests-ff-idem:
 	echo "FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=Afi; make -s test-suite-rel
+	export FLAGS=afi; make -s test-suite-full
 tests-min-scc:
 	echo "MINIMAL CCL, SCC LOOP CHECK"
-	export FLAGS=Ams; make -s test-suite-rel
+	export FLAGS=ams; make -s test-suite-full
 tests-ff-min-scc:
 	echo "MINIMAL CCL, SCC LOOP CHECK"
-	export FLAGS=Afms; make -s test-suite-rel
+	export FLAGS=afms; make -s test-suite-full
 tests-1-ff:
 	echo "FAST-FAIL"
-	export FLAGS=f; make -s test-suite-rel
+	export FLAGS=f; make -s test-suite-full
 tests-1-scc:
 	echo "SCC LOOP CHECK"
-	export FLAGS=s; make -s test-suite-rel
+	export FLAGS=s; make -s test-suite-full
 tests-1-idem:
 	echo "IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=i; make -s test-suite-rel
+	export FLAGS=i; make -s test-suite-full
 tests-1-min:
 	echo "MINIMAL CCL"
-	export FLAGS=m; make -s test-suite-rel
+	export FLAGS=m; make -s test-suite-full
 tests-1-ff-min:
 	echo "FAST-FAIL, MINIMAL CCL"
-	export FLAGS=fm; make -s test-suite-rel
+	export FLAGS=fm; make -s test-suite-full
 tests-1-ff-scc:
 	echo "FAST-FAIL, SCC LOOP CHECK"
-	export FLAGS=fs; make -s test-suite-rel
+	export FLAGS=fs; make -s test-suite-full
 tests-1-ff-idem:
 	echo "FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=fi; make -s test-suite-rel
+	export FLAGS=fi; make -s test-suite-full
 tests-1-min-scc:
 	echo "MINIMAL CCL, SCC LOOP CHECK"
-	export FLAGS=ms; make -s test-suite-rel
+	export FLAGS=ms; make -s test-suite-full
 tests-1-ff-min-scc:
 	echo "MINIMAL CCL, SCC LOOP CHECK"
-	export FLAGS=fms; make -s test-suite-rel
+	export FLAGS=fms; make -s test-suite-full
 
-test-suite-rel: soundness
+test-suite-full: soundness
 	$(call test_success, graph_1)
 	$(call test_failure, graph_2)
 	$(call test_success, graph_3)
@@ -136,6 +136,10 @@ test-suite-rel: soundness
 	$(call test_failure, graph_20a)
 	$(call test_failure, graph_20b)
 	$(call test_failure, graph_21)
+
+tests-sla:
+	echo "SLA"
+	export FLAGS=A; make -s test-suite-full
 
 tests-sd:
 	echo "SPRENGER-DAM"

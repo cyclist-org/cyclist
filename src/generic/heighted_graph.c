@@ -17,13 +17,14 @@
 //=============================================================
 // N.B. These MUST match the corresponding constants in the OCaml code
 //      Look in soundcheck.ml
-const int Heighted_graph::FAIL_FAST        = 0b0000001;
-const int Heighted_graph::USE_SCC_CHECK    = 0b0000010;
-const int Heighted_graph::USE_IDEMPOTENCE  = 0b0000100;
-const int Heighted_graph::USE_MINIMALITY   = 0b0001000;
-const int Heighted_graph::COMPUTE_FULL_CCL = 0b0010000;
-const int Heighted_graph::USE_SD           = 0b0100000;
-const int Heighted_graph::USE_XSD          = 0b1000000;
+const int Heighted_graph::FAIL_FAST        = 0b00000001;
+const int Heighted_graph::USE_SCC_CHECK    = 0b00000010;
+const int Heighted_graph::USE_IDEMPOTENCE  = 0b00000100;
+const int Heighted_graph::USE_MINIMALITY   = 0b00001000;
+const int Heighted_graph::COMPUTE_FULL_CCL = 0b00010000;
+const int Heighted_graph::USE_SD           = 0b00100000;
+const int Heighted_graph::USE_XSD          = 0b01000000;
+const int Heighted_graph::USE_SLA          = 0b10000000;
 
 //=============================================================
 // Constructors / Destructor
@@ -159,9 +160,10 @@ int Heighted_graph::parse_flags(const std::string flags_s) {
             case 's': flags |= USE_SCC_CHECK; break;
             case 'i': flags |= USE_IDEMPOTENCE; break;
             case 'm': flags |= USE_MINIMALITY; break;
-            case 'A': flags |= COMPUTE_FULL_CCL; break;
+            case 'a': flags |= COMPUTE_FULL_CCL; break;
             case 'D': flags |= USE_SD; break;
             case 'X': flags |= USE_XSD; break;
+            case 'A': flags |= USE_SLA; break;
         }
     }
     assert(((flags & USE_SD) == 0) || ((flags & USE_XSD) == 0));

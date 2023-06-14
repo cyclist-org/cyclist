@@ -92,6 +92,7 @@ public:
     static const int COMPUTE_FULL_CCL;
     static const int USE_SD;
     static const int USE_XSD;
+    static const int USE_SLA;
 
     static int parse_flags(const std::string flags);
     static void print_flags(int flags);
