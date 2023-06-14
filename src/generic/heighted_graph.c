@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <chrono>
+#include <cmath>
 #include <iostream>
 #include <fstream>
 #include <set>
@@ -103,8 +104,6 @@ Heighted_graph::~Heighted_graph(void) {
     }
     if (edges) delete edges;
     clean_up(Ccl, h_change_, max_nodes, rejected);
-    // std::thread t(clean_up, Ccl, h_change_, max_nodes, rejected);
-    // t.detach();
 }
 
 //=============================================================
@@ -156,25 +155,16 @@ bool Heighted_graph::relational_check(int opts){
 
     int num_nodes = this->num_nodes();
 
-    // Now compute the CCL
-    bool done;
-    do {
-#ifdef LOG_STATS
-        ccl_iterations++;
-#endif
-        // reset loop flag
-        done = true;
-        for (int source = 0; source < num_nodes; source++) {
-        for (int sink = 0; sink < num_nodes; sink++) {
-        for (int middle = 0; middle < num_nodes; middle++) {
+    // Now compute the ORCL
+    for (int source = 0; source < num_nodes; source++) {
+    for (int sink = 0; sink < num_nodes; sink++) {
 
-
+        for (int middle = 0; middle < source && middle < sink; middle++) {
             for (
                 auto left = Ccl[source][middle]->begin();
                 left != Ccl[source][middle]->end();
                 left++
             ) {
-                bool continue_left = false;
                 Sloped_relation* P = *left;
                 P->initialize();
                 for (
@@ -194,113 +184,84 @@ bool Heighted_graph::relational_check(int opts){
                     compositions++;
                     total_size_sum += R->size();
 #endif
+                    bool added = check_and_add(*Ccl[source][sink], *R);
 
-                    bool need_to_add = true;
-#ifdef LOG_STATS
-                    auto loop_start = std::chrono::system_clock::now();
-#endif
-                    for (
-                        auto outer = Ccl[source][sink]->begin();
-                        outer != Ccl[source][sink]->end();
-                        outer++
-                    ) {
-                        Sloped_relation* S = *outer;
-                        S->initialize();
-#ifdef LOG_STATS
-                        comparisons++;
-#endif
-                        if ((opts & USE_MINIMALITY) != 0) {
-#ifdef LOG_STATS
-                            start = std::chrono::system_clock::now();
-#endif
-                            comparison result = R->compare(*S);
-#ifdef LOG_STATS
-                            end = std::chrono::system_clock::now();
-                            compare_time += (end - start);
-#endif
-                            if (result == lt) {
-#ifdef LOG_STATS
-                                ccl_replacements++;
-                                ccl_size--;
-#endif
-                                auto to_delete = outer--;
-                                if (to_delete == left){
-                                    continue_left = true;
-                                    left--;
-                                }
-                                if (to_delete == right) {
-                                    right--;
-                                }
-                                (Ccl[source][sink])->erase(to_delete);
-                                delete S;
-                                break;
-                            }
-                            else if (result == eq || result == gt) {
-#ifdef LOG_STATS
-                                ccl_rejections++;
-#endif
-                                need_to_add = false;
-                                break;
-                            }
-                        } else {
-#ifdef LOG_STATS
-                            start = std::chrono::system_clock::now();
-#endif
-                            bool equal = (*S == *R);
-#ifdef LOG_STATS
-                            end = std::chrono::system_clock::now();
-                            compare_time += (end - start);
-#endif
-                            if (equal) {
-#ifdef LOG_STATS
-                                ccl_rejections++;
-#endif
-                                need_to_add = false;
-                                break;
-                            }
-                        }
+                    if (!added) {
+                        delete R;
                     }
-#ifdef LOG_STATS
-                    auto loop_end = std::chrono::system_clock::now();
-                    need_to_add_compute_time += (loop_end - loop_start);
-#endif
-
                     // If fail-fast, then check for self-loop if necessary
-                    bool fail_now = false;
-                    if (need_to_add 
-                            && ((opts & FAIL_FAST) != 0)
-                            && source == sink
-                            && !(check_self_loop(R, source, opts))) {
-                        delete R;
+                    else if (((opts & FAIL_FAST) != 0) && source == sink
+                                && !(check_self_loop(R, source, opts))) {
                         return false;
-                    }
-
-                    if (need_to_add) {
-                        // Otherwise, not done with the fixed point computation
-                        done = false;
-                        // So add the newly computed sloped relation
-#ifdef LOG_STATS
-                        start = std::chrono::system_clock::now();
-#endif
-                        (Ccl[source][sink])->push_back(R);
-#ifdef LOG_STATS
-                        end = std::chrono::system_clock::now();
-                        insertion_time += (end - start);
-                        ccl_size++;
-#endif
-                        if (continue_left) {
-                            break;
-                        }
-                    } else {
-                        delete R;
                     }
                 }
             }
+        }
 
+        // Now "tie the loops"
+        // We need to remember the initial end point of Ccl[source][sink]
+        // because the following loops will add to it
+        auto initial_end = Ccl[source][sink]->end();
+        if (source > sink) {
+            for (auto left = Ccl[source][sink]->begin(); left != initial_end; left++) {
+                Sloped_relation* P = *left;
+                P->initialize();
+                for (auto right = Ccl[sink][sink]->begin();
+                     right != Ccl[sink][sink]->end();
+                     right++
+                ) {
+                    Sloped_relation* Q = *right;
+                    Q->initialize();
+#ifdef LOG_STATS
+                    start = std::chrono::system_clock::now();
+#endif
+                    Sloped_relation* R = P->compose(*Q);
+#ifdef LOG_STATS
+                    end = std::chrono::system_clock::now();
+                    compose_time += (end - start);
+                    compositions++;
+                    total_size_sum += R->size();
+#endif
+                    bool added = check_and_add(*Ccl[source][sink], *R);
+                    if (!added) {
+                        delete R;
+                    }                    
+                }
+            }
+        } else if (source == sink) {
+            auto right = Ccl[source][sink]->begin();
+            while (right != Ccl[source][sink]->end()) {
+                Sloped_relation* Q = *right;
+                Q->initialize();
+                for (auto left = Ccl[source][sink]->begin(); left != initial_end; left++) {
+                    Sloped_relation* P = *left;
+                    P->initialize();
+#ifdef LOG_STATS
+                    start = std::chrono::system_clock::now();
+#endif
+                    Sloped_relation* R = P->compose(*Q);
+#ifdef LOG_STATS
+                    end = std::chrono::system_clock::now();
+                    compose_time += (end - start);
+                    compositions++;
+                    total_size_sum += R->size();
+#endif
+                    bool added = check_and_add(*Ccl[source][sink], *R);
+
+                    if (!added) {
+                        delete R;
+                    }
+                    // If fail-fast, then check for self-loop if necessary
+                    else if (((opts & FAIL_FAST) != 0) && source == sink
+                                && !(check_self_loop(R, source, opts))) {
+                        return false;
+                    }
+                }
+                right++;
+            }
         }
-        }
-        }
-    } while (((opts & COMPUTE_FULL_CCL) != 0) && !done);
+    }
+    }
 
     // If not using fast-fail, then check for self-loops in the computed CCL
     if ((opts & FAIL_FAST) == 0) {
@@ -309,6 +270,47 @@ bool Heighted_graph::relational_check(int opts){
         }
     }
 
+    return true;
+}
+
+bool Heighted_graph::check_and_add(Relation_LIST& entry, Sloped_relation& R) {
+
+#ifdef LOG_STATS
+    auto loop_start = std::chrono::system_clock::now();
+#endif
+    for (auto it = entry.begin(); it != entry.end(); it++ ) {
+        Sloped_relation* S = *it;
+        S->initialize();
+#ifdef LOG_STATS
+        comparisons++;
+        start = std::chrono::system_clock::now();
+#endif
+        bool equal = (*S == R);
+#ifdef LOG_STATS
+        end = std::chrono::system_clock::now();
+        compare_time += (end - start);
+#endif
+        if (equal) {
+#ifdef LOG_STATS
+            ccl_rejections++;
+#endif
+            return false;
+        }
+    }
+#ifdef LOG_STATS
+    auto loop_end = std::chrono::system_clock::now();
+    need_to_add_compute_time += (loop_end - loop_start);
+#endif
+    // So add the newly computed sloped relation
+#ifdef LOG_STATS
+    start = std::chrono::system_clock::now();
+#endif
+    entry.push_back(&R);
+#ifdef LOG_STATS
+    end = std::chrono::system_clock::now();
+    insertion_time += (end - start);
+    ccl_size++;
+#endif
     return true;
 }
 
