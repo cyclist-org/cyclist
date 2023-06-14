@@ -482,7 +482,8 @@ bool Heighted_graph::relational_check(int opts){
     return true;
 }
 
-bool Heighted_graph::check_and_add(
+bool Heighted_graph::check_and_add
+     (
         Relation_LIST& entry,
         Sloped_relation& R,
         Map<int64_t, Relation_LIST>& membership
@@ -627,18 +628,34 @@ bool Heighted_graph::check_Ccl(int opts) {
 //=============================================================
 // Slope Language Automata Construction for Infinite Descent
 //=============================================================
-bool Heighted_graph::sla_automata_check(){
+bool Heighted_graph::sla_automata_check() {
 
-    spot::bdd_dict_ptr      dict;
-    spot::twa_graph_ptr     aut_ipath;
-    spot::twa_graph_ptr     aut_trace;
-    int                     s_init_ip = 0;
-    int                     s_init_tr = this->trace_width;
-    int64_t                 ap_size = 0;
-    Map<Int_pair,int>       relation_idx;
-    Vec<Sloped_relation*>   relation_vec;
-    Vec<bdd>                propositions;
-    Vec<bdd>                idx_encoding;
+    // BDD dictionary for the automata
+    spot::bdd_dict_ptr    dict;
+    
+    // Number of atomic propositions (bits) to use to represent letters accepted
+    // by the automata
+    int64_t               ap_size = 0;
+    
+    // Initial states of the respective automata
+    int                   s_init_ip = this->max_nodes;
+    int                   s_init_tr = this->trace_width;
+    
+    // References to the automata objects themselves
+    spot::twa_graph_ptr   aut_ipath;
+    spot::twa_graph_ptr   aut_trace;
+
+    // A vector of the unique sloped relations occurring in the graph
+    Vec<Sloped_relation*> relation_vec;
+    // Mapping from edges to unique ID of the sloped relation along the edge
+    Map<Int_pair,int>     relation_idx;
+
+    // Vector of BDDs corresponding to singleton atomic propositions (bits)
+    Vec<bdd>              propositions;
+
+    // Vector of BDDs corresponding to the sloped relations
+    // Ordering of this vector matches up with the [relation_vec] vector
+    Vec<bdd>              idx_encoding;
 
     // Construct unique IDs for each distinct sloped relation in the graph
     for( int src = 0 ; src < max_nodes ; src++ ){
@@ -664,6 +681,7 @@ bool Heighted_graph::sla_automata_check(){
         }
     }
 
+
     /*************************
      * Initialise the automata
      *************************/
@@ -673,8 +691,8 @@ bool Heighted_graph::sla_automata_check(){
     aut_trace = make_twa_graph(dict);
 
     aut_ipath->set_buchi();
-    aut_ipath->new_states(max_nodes);
-    aut_ipath->set_init_state(0);
+    aut_ipath->new_states(this->max_nodes + 1);
+    aut_ipath->set_init_state(s_init_ip);
 
     aut_trace->set_buchi();
     aut_trace->new_states(this->trace_width + 1);
@@ -717,12 +735,25 @@ bool Heighted_graph::sla_automata_check(){
     //
     // Path automaton
     //
+
+    // Set up transitions corresponding to graph edges
     for( int src = 0 ; src < max_nodes ; src++ ){
         for( int sink = 0 ; sink < max_nodes ; sink++ ){
             if( h_change_[src][sink] == 0 ) continue;
             bdd curr_bdd = idx_encoding[relation_idx.at(Int_pair(src,sink))];
             aut_ipath->new_edge(src, sink, curr_bdd, {0});
         }
+    }
+
+    // Set up transitions from the initial state to the states corresponding
+    // to graph nodes
+    for (int sink = 0; sink < max_nodes; sink++) {
+        bdd curr_bdd = bddfalse;
+        for (int src = 0; src < max_nodes; src++) {
+            if (h_change_[src][sink] == 0) continue;
+            curr_bdd |= idx_encoding[relation_idx.at(Int_pair(src,sink))];
+        }
+        aut_ipath->new_edge(s_init_ip, sink, curr_bdd, {0});
     }
 
     //
@@ -766,6 +797,6 @@ bool Heighted_graph::sla_automata_check(){
     /*******************************
      * Perform the containment check
      *******************************/
-    return spot::contains(aut_trace,aut_ipath);
+    return spot::contains(aut_trace, aut_ipath);
 
 }
