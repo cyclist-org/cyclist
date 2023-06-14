@@ -16,7 +16,6 @@
 #define Int_SET             Set<int>
 #define Int_pair            std::pair<int,int>
 #define Int_pair_SET        std::set<std::pair<int,int>>
-#define Sloped_Relation_SET Set<Sloped_relation*>
 #define Relation_LIST       std::list<Sloped_relation*>
 
 
