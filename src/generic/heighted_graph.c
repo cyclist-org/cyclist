@@ -24,8 +24,9 @@ const int Heighted_graph::USE_MINIMALITY   = 0b0001000;
 const int Heighted_graph::COMPUTE_FULL_CCL = 0b0010000;
 const int Heighted_graph::USE_SD           = 0b0100000;
 const int Heighted_graph::USE_XSD          = 0b1000000;
+
 //=============================================================
-// Essential class methods
+// Constructors / Destructor
 //=============================================================
 Heighted_graph::Heighted_graph(int max_nodes) {
 
@@ -107,7 +108,203 @@ Heighted_graph::~Heighted_graph(void) {
 }
 
 //=============================================================
-// Infinite descent main algorithms
+// Getters
+//=============================================================
+int Heighted_graph::num_nodes(void) {
+    return node_idxs.size();
+}
+
+int Heighted_graph::num_edges(void) {
+    return number_of_edges;
+}
+
+slope Heighted_graph::get_slope(int src, int sink, int h1, int h2) {
+
+    // Get the internal IDs of the src and sink notes
+    int _src = node_idxs.at(src);
+    int _sink = node_idxs.at(sink);
+
+    if (h_change_[_src][_sink] != 0) {
+
+        // Get internal height ID maps for the nodes
+        Map<int, int>* heights_src = height_idxs[_src];
+        Map<int, int>* heights_sink = height_idxs[_sink];
+
+        // If the heights exists in the nodes, look up and return the slope
+        auto src_it = heights_src->find(h1);
+        if (src_it != heights_src->end()) {
+            auto sink_it = heights_sink->find(h2);
+            if (sink_it != heights_sink->end()) {
+                int _h1 = src_it->second;
+                int _h2 = sink_it->second;
+                return h_change_[src][sink]->get_slope(_h1, _h2);
+            }
+        }
+
+    }
+
+    // If no edge, or heights do not exist in the nodes
+    return Undef;
+}
+
+//=============================================================
+// Setters
+//=============================================================
+
+int Heighted_graph::parse_flags(const std::string flags_s) {
+    int flags = 0;
+    for (char c : flags_s) {
+        switch (c) {
+            case 'f': flags |= FAIL_FAST; break;
+            case 's': flags |= USE_SCC_CHECK; break;
+            case 'i': flags |= USE_IDEMPOTENCE; break;
+            case 'm': flags |= USE_MINIMALITY; break;
+            case 'A': flags |= COMPUTE_FULL_CCL; break;
+            case 'D': flags |= USE_SD; break;
+            case 'X': flags |= USE_XSD; break;
+        }
+    }
+    assert(((flags & USE_SD) == 0) || ((flags & USE_XSD) == 0));
+    return flags;
+}
+
+//=============================================================
+// Output / Debug
+//=============================================================
+
+void Heighted_graph::print_Ccl(void){
+    int num_nodes = this->num_nodes();
+    for( int source = 0 ; source < num_nodes ; source++ ){
+    for( int sink = 0 ; sink < num_nodes  ; sink++ ){
+        for( auto S : *Ccl[source][sink]){
+            std::cout << "<><><><><><><><><><><><><><><><><><><><><><><><><><><><><>" << std::endl;
+            std::cout << source << " " << sink << std::endl;
+            S->print_();
+            std::cout << "<><><><><><><><><><><><><><><><><><><><><><><><><><><><><>" << std::endl;
+        }
+    }
+    }
+}
+
+void Heighted_graph::print_statistics(void) {
+    print_flags(this->flags);
+#ifdef LOG_STATS
+    std::cout << "Initial CCL size: " << ccl_initial_size << std::endl;
+    std::cout << "Final CCL size: " << ccl_size << std::endl;
+    std::cout << "Number of iterations to compute CCL: " << ccl_iterations << std::endl;
+    std::cout << "CCL Rejections: " << ccl_rejections << std::endl;
+    std::cout << "CCL Replacements: " << ccl_replacements << std::endl;
+    std::cout << "Sloped relations computed: " << compositions << std::endl;
+    std::cout << "Time spent computing sloped relations (ms): "
+              << compose_time.count() << std::endl;
+    std::cout << "Sloped relations compared: " << comparisons << std::endl;
+    std::cout << "Time spent computing \"need to add\" (ms): "
+              << need_to_add_compute_time.count() << std::endl;
+    std::cout << "(of which) time spent comparing sloped relations (ms): "
+              << compare_time.count() << std::endl;
+    std::cout << "Time spent inserting sloped relations (ms): "
+              << insertion_time.count() << std::endl;
+    std::cout << "Number of self-loop checks: " << loop_checks << std::endl;
+    std::cout << "Time spent loop checking (ms): "
+              << loop_check_time.count() << std::endl;
+    std::cout << "Average size of loop-checked sloped relations: "
+              << ((loop_checks == 0) ? 0 : (checked_size_sum / loop_checks))
+              << std::endl;
+    std::cout << "Average size of all computed sloped relations: "
+              << ((compositions == 0) ? 0 : (total_size_sum / compositions))
+              << std::endl;
+#endif
+}
+
+void Heighted_graph::print_flags(int flags) {
+    if ((flags & FAIL_FAST) != 0) std::cout << "FAIL_FAST" << std::endl;
+    if ((flags & USE_SCC_CHECK) != 0) std::cout << "USE_SCC_CHECK" << std::endl;
+    if ((flags & USE_IDEMPOTENCE) != 0) std::cout << "USE_IDEMPOTENCE" << std::endl;
+    if ((flags & USE_MINIMALITY) != 0) std::cout << "USE_MINIMALITY" << std::endl;
+    if ((flags & COMPUTE_FULL_CCL) != 0) std::cout << "COMPUTE_FULL_CCL" << std::endl;
+    if ((flags & USE_SD) != 0) std::cout << "USE_SD" << std::endl;
+    if ((flags & USE_XSD) != 0) std::cout << "USE_XSD" << std::endl;
+}
+
+//=============================================================
+// Methods for constructing the height graph
+//=============================================================
+void Heighted_graph::add_node(int n) {
+    if (node_idxs.find(n) == node_idxs.end()) {
+        int next_idx = node_idxs.size();
+        assert(next_idx < max_nodes);
+        node_idxs[n] = next_idx;
+        height_idxs.push_back(new Map<int, int>());
+        HeightsOf.push_back(new Int_SET());
+    }
+}
+
+void Heighted_graph::add_height(int n, int h) {
+
+    add_node(n);
+
+    // for each node the external height IDs are mapped in an increasing order,
+    // i.e the internal heights IDs are local -- node 1 and 2 might both contain
+    // height with external ID 4, the respective corresponding interal IDs might
+    // be different
+
+    int n_idx = node_idxs.at(n);
+    Map<int, int>* heights = height_idxs[n_idx];
+    if (heights->find(h) == heights->end()) {
+        int next_idx = heights->size();
+        heights->insert(Int_pair(h, next_idx));
+    }
+    
+    int h_idx = heights->at(h);
+    HeightsOf[n_idx]->insert(h_idx);
+    if( HeightsOf[n_idx]->size() > this->trace_width ){
+        this->trace_width =  HeightsOf[n_idx]->size();
+    }
+
+}
+
+void Heighted_graph::add_edge(int source, int sink) {
+    add_node(source);
+    add_node(sink);
+    int src_idx = node_idxs.at(source);
+    int sink_idx = node_idxs.at(sink);
+    if (h_change_[src_idx][sink_idx] == 0) {
+        number_of_edges++;
+        edges->push_back(Int_pair(src_idx,sink_idx));
+        int num_src_heights = height_idxs[src_idx]->size();
+        int num_dst_heights = height_idxs[sink_idx]->size();
+        Sloped_relation* R = 
+            new Sloped_relation(num_src_heights, num_dst_heights);
+        h_change_[src_idx][sink_idx] = R;
+        Ccl[src_idx][sink_idx]->push_back(R);
+#ifdef LOG_STATS
+        ccl_initial_size++;
+        ccl_size++;
+#endif
+    }
+}
+
+void Heighted_graph::add_hchange(int source, int source_h, int sink, int sink_h, slope s) {
+    add_edge(source, sink);
+    add_height(source, source_h);
+    add_height(sink, sink_h);
+    int src_idx = node_idxs[source];
+    int src_h_idx = height_idxs[src_idx]->at(source_h);
+    int sink_idx = node_idxs[sink];
+    int sink_h_idx = height_idxs[sink_idx]->at(sink_h);
+    h_change_[src_idx][sink_idx]->add(src_h_idx, sink_h_idx, s);
+}
+
+void Heighted_graph::add_stay(int source_node, int source_h, int sink_node, int sink_h) {
+    add_hchange(source_node, source_h, sink_node, sink_h, Stay);
+}
+
+void Heighted_graph::add_decrease(int source_node, int source_h, int sink_node, int sink_h) {
+    add_hchange(source_node, source_h, sink_node, sink_h, Downward);
+}
+
+//=============================================================
+// Relational Infinite Descent Check
 //=============================================================
 bool Heighted_graph::relational_check(int opts){
 
@@ -314,169 +511,6 @@ bool Heighted_graph::check_and_add(Relation_LIST& entry, Sloped_relation& R) {
     return true;
 }
 
-//=============================================================
-// Methods for constructing the height graph
-//=============================================================
-void Heighted_graph::add_node(int n) {
-    if (node_idxs.find(n) == node_idxs.end()) {
-        int next_idx = node_idxs.size();
-        assert(next_idx < max_nodes);
-        node_idxs[n] = next_idx;
-        height_idxs.push_back(new Map<int, int>());
-        HeightsOf.push_back(new Int_SET());
-    }
-}
-
-void Heighted_graph::add_height(int n, int h) {
-
-    add_node(n);
-
-    // for each node the external height IDs are mapped in an increasing order,
-    // i.e the internal heights IDs are local -- node 1 and 2 might both contain
-    // height with external ID 4, the respective corresponding interal IDs might
-    // be different
-
-    int n_idx = node_idxs.at(n);
-    Map<int, int>* heights = height_idxs[n_idx];
-    if (heights->find(h) == heights->end()) {
-        int next_idx = heights->size();
-        heights->insert(Int_pair(h, next_idx));
-    }
-    
-    int h_idx = heights->at(h);
-    HeightsOf[n_idx]->insert(h_idx);
-    if( HeightsOf[n_idx]->size() > this->trace_width ){
-        this->trace_width =  HeightsOf[n_idx]->size();
-    }
-
-}
-
-void Heighted_graph::add_edge(int source, int sink) {
-    add_node(source);
-    add_node(sink);
-    int src_idx = node_idxs.at(source);
-    int sink_idx = node_idxs.at(sink);
-    if (h_change_[src_idx][sink_idx] == 0) {
-        number_of_edges++;
-        edges->push_back(Int_pair(src_idx,sink_idx));
-        int num_src_heights = height_idxs[src_idx]->size();
-        int num_dst_heights = height_idxs[sink_idx]->size();
-        Sloped_relation* R = 
-            new Sloped_relation(num_src_heights, num_dst_heights);
-        h_change_[src_idx][sink_idx] = R;
-        Ccl[src_idx][sink_idx]->push_back(R);
-#ifdef LOG_STATS
-        ccl_initial_size++;
-        ccl_size++;
-#endif
-    }
-}
-
-void Heighted_graph::add_hchange(int source, int source_h, int sink, int sink_h, slope s) {
-    add_edge(source, sink);
-    add_height(source, source_h);
-    add_height(sink, sink_h);
-    int src_idx = node_idxs[source];
-    int src_h_idx = height_idxs[src_idx]->at(source_h);
-    int sink_idx = node_idxs[sink];
-    int sink_h_idx = height_idxs[sink_idx]->at(sink_h);
-    h_change_[src_idx][sink_idx]->add(src_h_idx, sink_h_idx, s);
-}
-
-void Heighted_graph::add_stay(int source_node, int source_h, int sink_node, int sink_h) {
-    add_hchange(source_node, source_h, sink_node, sink_h, Stay);
-}
-
-void Heighted_graph::add_decrease(int source_node, int source_h, int sink_node, int sink_h) {
-    add_hchange(source_node, source_h, sink_node, sink_h, Downward);
-}
-
-
-//=============================================================
-// Misc.
-//=============================================================
-int Heighted_graph::num_nodes(void) {
-    return node_idxs.size();
-}
-
-int Heighted_graph::num_edges(void) {
-    return number_of_edges;
-}
-
-void Heighted_graph::print_Ccl(void){
-    int num_nodes = this->num_nodes();
-    for( int source = 0 ; source < num_nodes ; source++ ){
-    for( int sink = 0 ; sink < num_nodes  ; sink++ ){
-        for( auto S : *Ccl[source][sink]){
-            std::cout << "<><><><><><><><><><><><><><><><><><><><><><><><><><><><><>" << std::endl;
-            std::cout << source << " " << sink << std::endl;
-            S->print_();
-            std::cout << "<><><><><><><><><><><><><><><><><><><><><><><><><><><><><>" << std::endl;
-        }
-    }
-    }
-}
-
-void Heighted_graph::print_statistics(void) {
-    print_flags(this->flags);
-#ifdef LOG_STATS
-    std::cout << "Initial CCL size: " << ccl_initial_size << std::endl;
-    std::cout << "Final CCL size: " << ccl_size << std::endl;
-    std::cout << "Number of iterations to compute CCL: " << ccl_iterations << std::endl;
-    std::cout << "CCL Rejections: " << ccl_rejections << std::endl;
-    std::cout << "CCL Replacements: " << ccl_replacements << std::endl;
-    std::cout << "Sloped relations computed: " << compositions << std::endl;
-    std::cout << "Time spent computing sloped relations (ms): "
-              << compose_time.count() << std::endl;
-    std::cout << "Sloped relations compared: " << comparisons << std::endl;
-    std::cout << "Time spent computing \"need to add\" (ms): "
-              << need_to_add_compute_time.count() << std::endl;
-    std::cout << "(of which) time spent comparing sloped relations (ms): "
-              << compare_time.count() << std::endl;
-    std::cout << "Time spent inserting sloped relations (ms): "
-              << insertion_time.count() << std::endl;
-    std::cout << "Number of self-loop checks: " << loop_checks << std::endl;
-    std::cout << "Time spent loop checking (ms): "
-              << loop_check_time.count() << std::endl;
-    std::cout << "Average size of loop-checked sloped relations: "
-              << ((loop_checks == 0) ? 0 : (checked_size_sum / loop_checks))
-              << std::endl;
-    std::cout << "Average size of all computed sloped relations: "
-              << ((compositions == 0) ? 0 : (total_size_sum / compositions))
-              << std::endl;
-#endif
-}
-
-int Heighted_graph::parse_flags(const std::string flags_s) {
-    int flags = 0;
-    for (char c : flags_s) {
-        switch (c) {
-            case 'f': flags |= FAIL_FAST; break;
-            case 's': flags |= USE_SCC_CHECK; break;
-            case 'i': flags |= USE_IDEMPOTENCE; break;
-            case 'm': flags |= USE_MINIMALITY; break;
-            case 'A': flags |= COMPUTE_FULL_CCL; break;
-            case 'D': flags |= USE_SD; break;
-            case 'X': flags |= USE_XSD; break;
-        }
-    }
-    assert(((flags & USE_SD) == 0) || ((flags & USE_XSD) == 0));
-    return flags;
-}
-
-void Heighted_graph::print_flags(int flags) {
-    if ((flags & FAIL_FAST) != 0) std::cout << "FAIL_FAST" << std::endl;
-    if ((flags & USE_SCC_CHECK) != 0) std::cout << "USE_SCC_CHECK" << std::endl;
-    if ((flags & USE_IDEMPOTENCE) != 0) std::cout << "USE_IDEMPOTENCE" << std::endl;
-    if ((flags & USE_MINIMALITY) != 0) std::cout << "USE_MINIMALITY" << std::endl;
-    if ((flags & COMPUTE_FULL_CCL) != 0) std::cout << "COMPUTE_FULL_CCL" << std::endl;
-    if ((flags & USE_SD) != 0) std::cout << "USE_SD" << std::endl;
-    if ((flags & USE_XSD) != 0) std::cout << "USE_XSD" << std::endl;
-}
-
-//=============================================================
-// Helper functions
-//=============================================================
 bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
 
 #ifdef LOG_STATS
@@ -556,35 +590,10 @@ bool Heighted_graph::check_Ccl(int opts) {
     return true;
 }
 
-slope Heighted_graph::get_slope(int src, int sink, int h1, int h2) {
 
-    // Get the internal IDs of the src and sink notes
-    int _src = node_idxs.at(src);
-    int _sink = node_idxs.at(sink);
-
-    if (h_change_[_src][_sink] != 0) {
-
-        // Get internal height ID maps for the nodes
-        Map<int, int>* heights_src = height_idxs[_src];
-        Map<int, int>* heights_sink = height_idxs[_sink];
-
-        // If the heights exists in the nodes, look up and return the slope
-        auto src_it = heights_src->find(h1);
-        if (src_it != heights_src->end()) {
-            auto sink_it = heights_sink->find(h2);
-            if (sink_it != heights_sink->end()) {
-                int _h1 = src_it->second;
-                int _h2 = sink_it->second;
-                return h_change_[src][sink]->get_slope(_h1, _h2);
-            }
-        }
-
-    }
-
-    // If no edge, or heights do not exist in the nodes
-    return Undef;
-}
-
+//=============================================================
+// Slope Language Automata Construction for Infinite Descent
+//=============================================================
 bool Heighted_graph::sla_automata_check(){
 
     spot::bdd_dict_ptr      dict;
