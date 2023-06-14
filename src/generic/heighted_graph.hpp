@@ -77,7 +77,7 @@ private:
     std::chrono::duration<double, DURATION> loop_check_time;
 #endif
 
-    bool check_and_add(Relation_LIST& entry, Sloped_relation& R);
+    bool check_and_add(Relation_LIST& entry, Sloped_relation& R, Map<int64_t, Relation_LIST>& membership);
     bool check_self_loop(Sloped_relation *R, int node, int opts);
     bool check_Ccl(int opts);
 

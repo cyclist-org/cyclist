@@ -70,6 +70,8 @@ public:
 
     friend bool operator< ( const Sloped_relation& R, const Sloped_relation& L );
     friend bool operator== ( const Sloped_relation& R, const Sloped_relation& L );
+
+    int64_t hash(void);
     
     void print_(void);
     friend std::ostream& operator<<(std::ostream& os, const Sloped_relation& r);

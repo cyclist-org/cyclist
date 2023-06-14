@@ -352,9 +352,21 @@ bool Heighted_graph::relational_check(int opts){
 
     int num_nodes = this->num_nodes();
 
-    // Now compute the ORCL
+    // A hashmap for keeping track of membership in the closure element
+    // currently being computed
+    Map<int64_t, Relation_LIST> membership;
+
+    // Now compute the order-reduced closure
     for (int source = 0; source < num_nodes; source++) {
     for (int sink = 0; sink < num_nodes; sink++) {
+
+        // Clear previous contents of the membership hashmap
+        membership.clear();
+        // Initialise contents of membership hashmap for this closure element
+        Sloped_relation* init = h_change_[source][sink];
+        if (init != NULL) {
+            membership[init->hash()].push_back(init);
+        }
 
         for (int middle = 0; middle < source && middle < sink; middle++) {
             for (
@@ -381,7 +393,7 @@ bool Heighted_graph::relational_check(int opts){
                     compositions++;
                     total_size_sum += R->size();
 #endif
-                    bool added = check_and_add(*Ccl[source][sink], *R);
+                    bool added = check_and_add(*Ccl[source][sink], *R, membership);
 
                     if (!added) {
                         delete R;
@@ -419,7 +431,7 @@ bool Heighted_graph::relational_check(int opts){
                     compositions++;
                     total_size_sum += R->size();
 #endif
-                    bool added = check_and_add(*Ccl[source][sink], *R);
+                    bool added = check_and_add(*Ccl[source][sink], *R, membership);
                     if (!added) {
                         delete R;
                     }                    
@@ -443,7 +455,7 @@ bool Heighted_graph::relational_check(int opts){
                     compositions++;
                     total_size_sum += R->size();
 #endif
-                    bool added = check_and_add(*Ccl[source][sink], *R);
+                    bool added = check_and_add(*Ccl[source][sink], *R, membership);
 
                     if (!added) {
                         delete R;
@@ -470,39 +482,60 @@ bool Heighted_graph::relational_check(int opts){
     return true;
 }
 
-bool Heighted_graph::check_and_add(Relation_LIST& entry, Sloped_relation& R) {
+bool Heighted_graph::check_and_add(
+        Relation_LIST& entry,
+        Sloped_relation& R,
+        Map<int64_t, Relation_LIST>& membership
+     )
+{
 
+    bool add = true;
 #ifdef LOG_STATS
     auto loop_start = std::chrono::system_clock::now();
 #endif
-    for (auto it = entry.begin(); it != entry.end(); it++ ) {
-        Sloped_relation* S = *it;
-        S->initialize();
+    int64_t hashval = R.hash();
+    auto mem_entry = membership.find(hashval);
+    if (mem_entry != membership.end()) {
+        Relation_LIST& candidates = mem_entry->second;
+        for (auto it = candidates.begin(); it != candidates.end(); it++) {
+            Sloped_relation* S = *it;
+            S->initialize();
 #ifdef LOG_STATS
-        comparisons++;
-        start = std::chrono::system_clock::now();
+            comparisons++;
+            start = std::chrono::system_clock::now();
 #endif
-        bool equal = (*S == R);
+            bool equal = (*S == R);
 #ifdef LOG_STATS
-        end = std::chrono::system_clock::now();
-        compare_time += (end - start);
+            end = std::chrono::system_clock::now();
+            compare_time += (end - start);
 #endif
-        if (equal) {
+            if (equal) {
 #ifdef LOG_STATS
-            ccl_rejections++;
+                ccl_rejections++;
 #endif
-            return false;
+                add = false;
+                break;
+            }
         }
     }
 #ifdef LOG_STATS
     auto loop_end = std::chrono::system_clock::now();
     need_to_add_compute_time += (loop_end - loop_start);
 #endif
+    if (!add) return false;
     // So add the newly computed sloped relation
 #ifdef LOG_STATS
     start = std::chrono::system_clock::now();
 #endif
+    // Add it to the closure entry
     entry.push_back(&R);
+    // Add it to the membership hashmap
+    if (mem_entry != membership.end()) {
+        // Reuse the iterator here so we don't perform the lookup again
+        (mem_entry->second).push_back(&R);
+    } else {
+        membership[hashval].push_back(&R);
+    }
 #ifdef LOG_STATS
     end = std::chrono::system_clock::now();
     insertion_time += (end - start);

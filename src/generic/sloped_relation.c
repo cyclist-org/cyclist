@@ -498,3 +498,53 @@ bool operator< (const Sloped_relation& R, const Sloped_relation& L){
 void Sloped_relation::print_(void){
     std::cout << *this;
 }
+
+/*
+ * Hash function, based on a bijection between sloped relations and natural
+ * numbers. Since sloped relations are then uniformly distributed we simply
+ * compute the code based on the first 6 heights, which means that hashes of
+ * sloped relations will be evenly distributed over the range [0..3^(6^2)].
+ * This fits into 64 bit integers.
+ **/
+int64_t Sloped_relation::hash(void) {
+
+    int64_t hash = 0;
+
+    int bound =
+        (num_src_heights > num_dst_heights) ? num_src_heights : num_dst_heights;
+    bound = (bound < 6) ? bound : 6;
+    for (int top = bound - 1; top >= 0; top--) {
+        for (int dst = top; dst >= 0; dst--) {
+            hash *= 3;
+            if (dst < num_dst_heights && top < num_src_heights) {
+                auto entry = this->slope_map->find(Int_pair(top, dst));
+                if (entry != this->slope_map->end()) {
+                    int s = entry->second;
+                    if (s == Stay) {
+                        hash += 1;
+                    }
+                    else if (s == Downward) {
+                        hash += 2;
+                    }
+                }
+            }
+        }
+        for (int src = top - 1; src >= 0; src--) {
+            hash *= 3;
+            if (src < num_src_heights && top < num_dst_heights) {
+                auto entry = this->slope_map->find(Int_pair(src, top));
+                if (entry != this->slope_map->end()) {
+                    int s = entry->second;
+                    if (s == Stay) {
+                        hash += 1;
+                    }
+                    else if (s == Downward) {
+                        hash += 2;
+                    }
+                }
+            }
+        }
+    }
+
+    return hash;
+}
