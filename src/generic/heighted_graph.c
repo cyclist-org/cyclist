@@ -354,20 +354,26 @@ bool Heighted_graph::relational_check(int opts){
 
     int num_nodes = this->num_nodes();
 
-    // A hashmap for keeping track of membership in the closure element
-    // currently being computed
-    Map<int64_t, Relation_LIST> membership;
+    // A set for keeping track of sloped relations that have been considered
+    // for the closure element currently being computed
+    Set<std::reference_wrapper<Sloped_relation>, Sloped_relation::linear_order>
+        visited;
+
+    // A list of sloped relations that need to be removed from the current
+    // closure element once it has been computed
+    Relation_LIST preceded;
 
     // Now compute the order-reduced closure
     for (int source = 0; source < num_nodes; source++) {
     for (int sink = 0; sink < num_nodes; sink++) {
 
-        // Clear previous contents of the membership hashmap
-        membership.clear();
-        // Initialise contents of membership hashmap for this closure element
+        // Initialise contents of visited hashmap for this closure element
         Sloped_relation* init = h_change_[source][sink];
         if (init != NULL) {
-            membership[init->hash()].push_back(init);
+            // Important to initialise it here, since initialisation is needed
+            // for the comparison methods
+            init->initialize();
+            visited.insert(*init);
         }
 
         for (int middle = 0; middle < source && middle < sink; middle++) {
@@ -395,9 +401,18 @@ bool Heighted_graph::relational_check(int opts){
                     compositions++;
                     total_size_sum += R->size();
 #endif
-                    bool added = check_and_add(*Ccl[source][sink], *R, membership);
 
-                    if (!added) {
+                    bool fresh =
+                        check_and_add(
+                            *Ccl[source][sink], *R, visited, preceded,
+                            // N.B. Passing the end() iterator as the endpoint
+                            // of the preserved portion indicates that no
+                            // relations should be preserved.
+                            Ccl[source][sink]->end(),
+                            opts
+                        );
+
+                    if (!fresh) {
                         delete R;
                     }
                     // If fail-fast, then check for self-loop if necessary
@@ -409,12 +424,23 @@ bool Heighted_graph::relational_check(int opts){
             }
         }
 
+        // If the closure entry is empty, we can skip to the next iteration
+        if (Ccl[source][sink]->size() == 0) {
+            continue;
+        }
+
         // Now "tie the loops"
         // We need to remember the initial end point of Ccl[source][sink]
         // because the following loops will add to it
-        auto initial_end = Ccl[source][sink]->end();
+        // N.B. Since the closure entry is not empty at this point, we take the
+        // iterator pointing to the last element included in the portion to be
+        // preserved. Since the code in the body of the loops will not remove
+        // any relations up to and including this element, this iterator will
+        // not be invalidated.
+        auto initial_end = --(Ccl[source][sink]->end());
         if (source > sink) {
-            for (auto left = Ccl[source][sink]->begin(); left != initial_end; left++) {
+            bool done = false;
+            for (auto left = Ccl[source][sink]->begin(); !done; left++) {
                 Sloped_relation* P = *left;
                 P->initialize();
                 for (auto right = Ccl[sink][sink]->begin();
@@ -433,10 +459,21 @@ bool Heighted_graph::relational_check(int opts){
                     compositions++;
                     total_size_sum += R->size();
 #endif
-                    bool added = check_and_add(*Ccl[source][sink], *R, membership);
-                    if (!added) {
+
+                    bool fresh =
+                        check_and_add(
+                            *Ccl[source][sink], *R, visited, preceded,
+                            initial_end, opts
+                        );
+
+                    if (!fresh) {
                         delete R;
                     }                    
+                }
+                // If we processed the last element of the initial segment,
+                // set the flag to exit the loop
+                if (left == initial_end) {
+                    done = true;
                 }
             }
         } else if (source == sink) {
@@ -444,7 +481,8 @@ bool Heighted_graph::relational_check(int opts){
             while (right != Ccl[source][sink]->end()) {
                 Sloped_relation* Q = *right;
                 Q->initialize();
-                for (auto left = Ccl[source][sink]->begin(); left != initial_end; left++) {
+                bool done = false;
+                for (auto left = Ccl[source][sink]->begin(); !done; left++) {
                     Sloped_relation* P = *left;
                     P->initialize();
 #ifdef LOG_STATS
@@ -457,9 +495,14 @@ bool Heighted_graph::relational_check(int opts){
                     compositions++;
                     total_size_sum += R->size();
 #endif
-                    bool added = check_and_add(*Ccl[source][sink], *R, membership);
 
-                    if (!added) {
+                    bool fresh =
+                        check_and_add(
+                            *Ccl[source][sink], *R, visited, preceded,
+                            initial_end, opts
+                        );
+
+                    if (!fresh) {
                         delete R;
                     }
                     // If fail-fast, then check for self-loop if necessary
@@ -467,10 +510,47 @@ bool Heighted_graph::relational_check(int opts){
                                 && !(check_self_loop(R, source, opts))) {
                         return false;
                     }
+                    // If we processed the last element of the initial segment,
+                    // set the flag to exit the loop
+                    if (left == initial_end) {
+                        done = true;
+                    }
                 }
+                // Now move to the next relation in the queue
                 right++;
             }
         }
+
+        // Now remove any relations from the preserved segment that have been
+        // recorded as being preceded by a subsequently added relation.
+        // We can do this by walking along the preceded list in lock-step,
+        // because the relations appear in the preceded list in the relative
+        // order that they appear in the closure element.
+        if ((opts & USE_MINIMALITY) != 0) {
+            auto to_remove = preceded.begin();
+            for (auto it = Ccl[source][sink]->begin();
+                 it != Ccl[source][sink]->end() && to_remove != preceded.end();
+                 it++)
+            {
+                // We can compare pointers here, because the elements of the
+                // [preceded] vector are exactly the pointers used in the
+                // closure element vector.
+                if (*to_remove == *it) {
+                    // Remove the relation from the closure element
+                    it = Ccl[source][sink]->erase(it);
+                    // Decrement iterator as it will automatically increment
+                    // in the next loop iteration
+                    it--;
+                    // Make current the next element to remove
+                    to_remove++;
+                }
+            }
+            // Now clear the list of preceded relations
+            preceded.clear();
+        }
+
+        // Clear contents of the visited hashmap for the next iteration
+        visited.clear();
     }
     }
 
@@ -488,63 +568,148 @@ bool Heighted_graph::check_and_add
      (
         Relation_LIST& entry,
         Sloped_relation& R,
-        Map<int64_t, Relation_LIST>& membership
+        Set<std::reference_wrapper<Sloped_relation>, Sloped_relation::linear_order>& visited,
+        Relation_LIST& preceded,
+        Relation_LIST::iterator preserve_end,
+        int opts
      )
 {
 
-    bool add = true;
+    // Add relation R to the visited set if it was not there already
 #ifdef LOG_STATS
-    auto loop_start = std::chrono::system_clock::now();
+    start = std::chrono::system_clock::now();
 #endif
-    int64_t hashval = R.hash();
-    auto mem_entry = membership.find(hashval);
-    if (mem_entry != membership.end()) {
-        Relation_LIST& candidates = mem_entry->second;
-        for (auto it = candidates.begin(); it != candidates.end(); it++) {
-            Sloped_relation* S = *it;
-            S->initialize();
-#ifdef LOG_STATS
-            comparisons++;
-            start = std::chrono::system_clock::now();
-#endif
-            bool equal = (*S == R);
-#ifdef LOG_STATS
-            end = std::chrono::system_clock::now();
-            compare_time += (end - start);
-#endif
-            if (equal) {
-#ifdef LOG_STATS
-                ccl_rejections++;
-#endif
-                add = false;
-                break;
-            }
-        }
-    }
+    auto visited_res = visited.insert(R);
 #ifdef LOG_STATS
     auto loop_end = std::chrono::system_clock::now();
     need_to_add_compute_time += (loop_end - loop_start);
 #endif
-    if (!add) return false;
-    // So add the newly computed sloped relation
+    if (!(visited_res.second)) {
+        // If we've seen the relation before, nothing more to do
+#ifdef LOG_STATS
+        ccl_rejections++;
+#endif
+        return false;
+    }
+#ifdef LOG_STATS
+    // If we get here, the relation was fresh and was already inserted
+    insertion_time += (end - start);
+#endif
+    
+    // If we are only storing the minimal elements then check if R is preceded
+    // by any relation in the current state of the closure element and remove
+    // (or, for those relations that need preserving, mark as removed) any
+    // relations preceded by R
+    bool add = true;
+    if ((opts & USE_MINIMALITY) != 0) {
+
+        // Initialise flag indicating whether we are in the preserved portion
+        bool preserve = true;
+        // If the preserve end iterator points to the end of the list, this
+        // means no relations are to be preserved.
+        if (preserve_end == entry.end()) {
+            preserve = false;
+        }
+
+        // Iterator into the current list of relations marked as being preceded
+        auto cur_preceded = preceded.begin();
+
+        for (auto it = entry.begin(); it != entry.end(); it++) {
+
+            // Get the next relation
+            Sloped_relation* S = *it;
+
+            // If the current relation is already in the list of (preserved but)
+            // preceded relations, then advance iterator to next one,
+            // but no need to compare it with the current candidate relation R
+            if (*cur_preceded == S) {
+
+                cur_preceded++;
+#ifdef LOG_STATS
+                ccl_replacements++;
+#endif
+            }
+            // Otherwise, we do need to compare the current candidate R with the
+            // current relation S
+            else {
+            
+                // Compare it with R
+#ifdef LOG_STATS
+                start = std::chrono::system_clock::now();
+#endif
+                comparison cmp_result = S->compare(R);
+#ifdef LOG_STATS
+                end = std::chrono::system_clock::now();
+                compare_time += (end - start);
+#endif
+                
+                // If < R
+                if (cmp_result == lt) {
+                    // N.B. When we maintain the invariant that the closure
+                    // element is "thin" it cannot happen that there exist
+                    // relations P and Q in the closure element such that
+                    // P < R < Q. So, the relationswe will encounter in this
+                    // loop that are related to R are either all above R or all
+                    // below R. So, we reach this case the first time we
+                    // encounter a relation below R. This means that we can
+                    // break out of the loop now and we won't be missing any
+                    // relations above R that need removing
+                    add = false;
+#ifdef LOG_STATS
+                    ccl_rejections++;
+#endif
+                    break;
+                }
+                
+                // If > R
+                else if (cmp_result == gt) {
+                    // If S in the preserved portion, don't remove it
+                    // immediately but add it to the list of relations to be
+                    // removed at the end
+                    if (preserve) {
+                        preceded.insert(cur_preceded, S);
+                    }
+                    // Otherwise, remove S from the closure element immediately
+                    else {
+                        // The erade method returns an iterator to the element
+                        // immediately following the erased one
+                        it = entry.erase(it);
+                        // So decrement this result since the for loop with then
+                        // increment it again
+                        it--;
+#ifdef LOG_STATS
+                        ccl_replacements++;
+#endif
+                    }
+                }
+
+            }
+
+            // If the preserve portion was non-empty and we have just processed
+            // the last relation that it contains, then unset flag
+            if (preserve && it == preserve_end) {
+                preserve = false;
+            }
+
+        }
+    }
+
+    // If we have not found any relations preceding R, then add it to the
+    // closure entry
+    if (add) {
 #ifdef LOG_STATS
     start = std::chrono::system_clock::now();
 #endif
-    // Add it to the closure entry
-    entry.push_back(&R);
-    // Add it to the membership hashmap
-    if (mem_entry != membership.end()) {
-        // Reuse the iterator here so we don't perform the lookup again
-        (mem_entry->second).push_back(&R);
-    } else {
-        membership[hashval].push_back(&R);
-    }
+        entry.push_back(&R);
 #ifdef LOG_STATS
     end = std::chrono::system_clock::now();
     insertion_time += (end - start);
     ccl_size++;
 #endif
+    }
+
     return true;
+
 }
 
 bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {

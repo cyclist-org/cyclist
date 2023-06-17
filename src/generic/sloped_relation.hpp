@@ -65,13 +65,15 @@ public:
 
     Sloped_relation* compose( Sloped_relation& other );
     Sloped_relation* compute_transitive_closure(void);
-    comparison compare(const Sloped_relation& lhs);
+    comparison compare(const Sloped_relation& other);
     bool has_downward_SCC(void);
 
     friend bool operator< ( const Sloped_relation& R, const Sloped_relation& L );
     friend bool operator== ( const Sloped_relation& R, const Sloped_relation& L );
 
-    int64_t hash(void);
+    struct linear_order {
+        bool operator() (const Sloped_relation& lhs, const Sloped_relation& rhs) const;
+    };
     
     void print_(void);
     friend std::ostream& operator<<(std::ostream& os, const Sloped_relation& r);

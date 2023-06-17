@@ -499,52 +499,81 @@ void Sloped_relation::print_(void){
     std::cout << *this;
 }
 
-/*
- * Hash function, based on a bijection between sloped relations and natural
- * numbers. Since sloped relations are then uniformly distributed we simply
- * compute the code based on the first 6 heights, which means that hashes of
- * sloped relations will be evenly distributed over the range [0..3^(6^2)].
- * This fits into 64 bit integers.
- **/
-int64_t Sloped_relation::hash(void) {
+// Returns true iff lhs < rhs
+bool compare_slope(int lhs, int rhs) {
+    if (lhs == Undef && rhs != Undef) {
+        return true;
+    } else if (lhs == Stay && rhs == Downward) {
+        return true;
+    } else {
+        return false;
+    }
+}
 
-    int64_t hash = 0;
+bool Sloped_relation::linear_order::operator() (const Sloped_relation& lhs, const Sloped_relation& rhs) const {
 
-    int bound =
-        (num_src_heights > num_dst_heights) ? num_src_heights : num_dst_heights;
-    bound = (bound < 6) ? bound : 6;
-    for (int top = bound - 1; top >= 0; top--) {
-        for (int dst = top; dst >= 0; dst--) {
-            hash *= 3;
-            if (dst < num_dst_heights && top < num_src_heights) {
-                auto entry = this->slope_map->find(Int_pair(top, dst));
-                if (entry != this->slope_map->end()) {
-                    int s = entry->second;
-                    if (s == Stay) {
-                        hash += 1;
-                    }
-                    else if (s == Downward) {
-                        hash += 2;
-                    }
+    int max_lhs = 
+        lhs.num_src_heights > lhs.num_dst_heights ?
+            lhs.num_src_heights : lhs.num_dst_heights;
+    int max_rhs = 
+        rhs.num_src_heights > rhs.num_dst_heights ?
+            rhs.num_src_heights : rhs.num_dst_heights;
+    int max = max_lhs > max_rhs ? max_lhs : max_rhs;
+
+    for (int boundary = 0; boundary < max; boundary++) {
+        // First compare the column of the boundary (minus apex)
+        for (int row = 0; row < boundary; row++) {
+            // Calculate the slope of the left-hand relation at this point
+            int lhs_slope = Undef;
+            if (row < lhs.num_src_heights && boundary < lhs.num_dst_heights) {
+                auto entry = lhs.slope_map->find(Int_pair(row, boundary));
+                if (entry != lhs.slope_map->end()) {
+                    lhs_slope = entry->second;
                 }
             }
-        }
-        for (int src = top - 1; src >= 0; src--) {
-            hash *= 3;
-            if (src < num_src_heights && top < num_dst_heights) {
-                auto entry = this->slope_map->find(Int_pair(src, top));
-                if (entry != this->slope_map->end()) {
-                    int s = entry->second;
-                    if (s == Stay) {
-                        hash += 1;
-                    }
-                    else if (s == Downward) {
-                        hash += 2;
-                    }
+            // Calculate the slope of the right-hand relation at this point
+            int rhs_slope = Undef;
+            if (row < rhs.num_src_heights && boundary < rhs.num_dst_heights) {
+                auto entry = rhs.slope_map->find(Int_pair(row, boundary));
+                if (entry != rhs.slope_map->end()) {
+                    rhs_slope = entry->second;
                 }
+            }
+            // Now compare slopes
+            if (lhs_slope == rhs_slope) {
+                continue;
+            } else {
+                return compare_slope(lhs_slope, rhs_slope);
+            }
+        }
+        // Second compare the row of the boundary (including the apex)
+        for (int col = 0; col <= boundary; col++) {
+            // Calculate the slope of the left-hand relation at this point
+            int lhs_slope = Undef;
+            if (boundary < lhs.num_src_heights && col < lhs.num_dst_heights) {
+                auto entry = lhs.slope_map->find(Int_pair(boundary, col));
+                if (entry != lhs.slope_map->end()) {
+                    lhs_slope = entry->second;
+                }
+            }
+            // Calculate the slope of the right-hand relation at this point
+            int rhs_slope = Undef;
+            if (boundary < rhs.num_src_heights && col < rhs.num_dst_heights) {
+                auto entry = rhs.slope_map->find(Int_pair(boundary, col));
+                if (entry != rhs.slope_map->end()) {
+                    rhs_slope = entry->second;
+                }
+            }
+            // Now compare slopes
+            if (lhs_slope == rhs_slope) {
+                continue;
+            } else {
+                return compare_slope(lhs_slope, rhs_slope);
             }
         }
     }
 
-    return hash;
+    // If we get here, then the two relations are equal in this ordering
+    // So it's not the case that lhs < rhs
+    return false;
 }
