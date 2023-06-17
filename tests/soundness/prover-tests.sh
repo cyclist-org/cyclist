@@ -8,7 +8,6 @@ if [ -z "$iterations" ]; then
 fi
 
 opts=("-VLA" "-SLA" "-OP -min -scc -ff" )
-# opts=("-spot-new")
 now=$(date +"%Y-%m-%d_%H-%M-%S")
 sha=$(git rev-parse --short HEAD)
 

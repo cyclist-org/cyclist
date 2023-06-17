@@ -12,9 +12,6 @@ sha=$(git rev-parse --short HEAD)
 
 base_opts=("-VLA" "-SLA" "-OP -min -scc -ff")
 
-# Experiments run on Ubuntu 20.04.3, 16GB RAM
-# Experiements run with Spot 2.10.4
-
 
 # test1.exe - positive examples, n varies, p = 1
 
@@ -36,7 +33,7 @@ done
 
 opts=("${base_opts[@]}")
 
-inputs="1 $(seq 25 25 300)"
+inputs="1 $(seq 25 25 600)"
 for n in ${inputs[@]}; do
   for i in ${!opts[@]}; do
     opt=${opts[i]}
@@ -49,7 +46,6 @@ done
 
 
 # test3.exe - negative example
-
 
 opts=("${base_opts[@]}")
 
