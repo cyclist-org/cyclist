@@ -75,8 +75,8 @@ Heighted_graph::~Heighted_graph(void) {
     for (Int_SET* heights : HeightsOf) {
         if (heights) delete heights;
     }
-    for (int source = 0; source < num_nodes; source++) {
-        for (int sink = 0; sink < num_nodes; sink++) {
+    for (int source = 0; source < max_nodes; source++) {
+        for (int sink = 0; sink < max_nodes ; sink++) {
             Sloped_relation* R = h_change[source][sink];
             if (R != NULL) {
                 delete R;
