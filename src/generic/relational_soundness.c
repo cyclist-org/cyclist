@@ -73,13 +73,6 @@ extern "C" void add_decr(value src_, value src_h_, value snk_, value snk_h_) {
   CAMLreturn0;
 }
 
-extern "C" void print_ccl() {
-  CAMLparam0();
-  assert(hg);
-  hg->print_Ccl();
-  CAMLreturn0;
-}
-
 extern "C" void print_statistics() {
   CAMLparam0();
   assert(hg);

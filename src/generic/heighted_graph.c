@@ -34,7 +34,7 @@ Heighted_graph::Heighted_graph(int max_nodes) {
     assert(max_nodes >= 0);
 
     this->max_nodes = max_nodes;
-    number_of_edges = 0;
+    this->num_edges_ = 0;
 
 #ifdef LOG_STATS
     ccl_initial_size = 0;
@@ -55,46 +55,17 @@ Heighted_graph::Heighted_graph(int max_nodes) {
     loop_check_time = std::chrono::duration<double, DURATION>::zero();
 #endif
 
-    rejected = new Relation_LIST();
-
-    h_change_ =
+    h_change =
         (Sloped_relation***) malloc(sizeof(Sloped_relation**) * max_nodes);
-    Ccl = (Relation_LIST***) malloc(sizeof(Relation_LIST**) * max_nodes);
 
     for(int i = 0; i < max_nodes; i++) {
-        Ccl[i] = (Relation_LIST**) malloc(sizeof(Relation_LIST*) * max_nodes);
-        h_change_[i] =
+        h_change[i] =
             (Sloped_relation**) malloc(sizeof(Sloped_relation*) * max_nodes);
         for (int j = 0; j < max_nodes; j++) {
-            h_change_[i][j] = 0;
-            Ccl[i][j] = new Relation_LIST();
+            h_change[i][j] = NULL;
         }
     }
-    edges = new std::vector<Int_pair>();
 
-}
-
-void clean_up(Relation_LIST*** ccl,
-              Sloped_relation*** h_change_,
-              int num_nodes,
-              Relation_LIST* rejected) {
-
-    for (int source = 0; source < num_nodes; source++) {
-        for (int sink = 0; sink < num_nodes; sink++) {
-            for (Sloped_relation* s : *(ccl[source][sink])) {
-                delete s;
-            }
-            delete ccl[source][sink];
-        }
-        free(h_change_[source]);
-        free(ccl[source]);
-    }
-    free(ccl);
-    free(h_change_);
-    for (Sloped_relation* R : *rejected){
-        delete R;
-    }
-    delete rejected;
 }
 
 Heighted_graph::~Heighted_graph(void) {
@@ -104,8 +75,16 @@ Heighted_graph::~Heighted_graph(void) {
     for (Int_SET* heights : HeightsOf) {
         if (heights) delete heights;
     }
-    if (edges) delete edges;
-    clean_up(Ccl, h_change_, max_nodes, rejected);
+    for (int source = 0; source < num_nodes; source++) {
+        for (int sink = 0; sink < num_nodes; sink++) {
+            Sloped_relation* R = h_change[source][sink];
+            if (R != NULL) {
+                delete R;
+            }
+        }
+        free(h_change[source]);
+    }
+    free(h_change);
 }
 
 //=============================================================
@@ -116,7 +95,7 @@ int Heighted_graph::num_nodes(void) {
 }
 
 int Heighted_graph::num_edges(void) {
-    return number_of_edges;
+    return num_edges_;
 }
 
 slope Heighted_graph::get_slope(int src, int sink, int h1, int h2) {
@@ -125,7 +104,7 @@ slope Heighted_graph::get_slope(int src, int sink, int h1, int h2) {
     int _src = node_idxs.at(src);
     int _sink = node_idxs.at(sink);
 
-    if (h_change_[_src][_sink] != 0) {
+    if (h_change[_src][_sink] != 0) {
 
         // Get internal height ID maps for the nodes
         Map<int, int>* heights_src = height_idxs[_src];
@@ -138,7 +117,7 @@ slope Heighted_graph::get_slope(int src, int sink, int h1, int h2) {
             if (sink_it != heights_sink->end()) {
                 int _h1 = src_it->second;
                 int _h2 = sink_it->second;
-                return h_change_[src][sink]->get_slope(_h1, _h2);
+                return h_change[src][sink]->get_slope(_h1, _h2);
             }
         }
 
@@ -174,14 +153,13 @@ int Heighted_graph::parse_flags(const std::string flags_s) {
 // Output / Debug
 //=============================================================
 
-void Heighted_graph::print_Ccl(void){
-    int num_nodes = this->num_nodes();
-    for( int source = 0 ; source < num_nodes ; source++ ){
-    for( int sink = 0 ; sink < num_nodes  ; sink++ ){
-        for( auto S : *Ccl[source][sink]){
+void print_ccl(Relation_LIST*** ccl, int num_nodes) {
+    for (int source = 0; source < num_nodes; source++) {
+    for (int sink = 0; sink < num_nodes; sink++) {
+        for (auto R : *ccl[source][sink]) {
             std::cout << "<><><><><><><><><><><><><><><><><><><><><><><><><><><><><>" << std::endl;
             std::cout << source << " " << sink << std::endl;
-            S->print_();
+            std::cout << R;
             std::cout << "<><><><><><><><><><><><><><><><><><><><><><><><><><><><><>" << std::endl;
         }
     }
@@ -270,19 +248,13 @@ void Heighted_graph::add_edge(int source, int sink) {
     add_node(sink);
     int src_idx = node_idxs.at(source);
     int sink_idx = node_idxs.at(sink);
-    if (h_change_[src_idx][sink_idx] == 0) {
-        number_of_edges++;
-        edges->push_back(Int_pair(src_idx,sink_idx));
+    if (h_change[src_idx][sink_idx] == NULL) {
+        num_edges_++;
         int num_src_heights = height_idxs[src_idx]->size();
         int num_dst_heights = height_idxs[sink_idx]->size();
         Sloped_relation* R = 
             new Sloped_relation(num_src_heights, num_dst_heights);
-        h_change_[src_idx][sink_idx] = R;
-        Ccl[src_idx][sink_idx]->push_back(R);
-#ifdef LOG_STATS
-        ccl_initial_size++;
-        ccl_size++;
-#endif
+        h_change[src_idx][sink_idx] = R;
     }
 }
 
@@ -294,7 +266,7 @@ void Heighted_graph::add_hchange(int source, int source_h, int sink, int sink_h,
     int src_h_idx = height_idxs[src_idx]->at(source_h);
     int sink_idx = node_idxs[sink];
     int sink_h_idx = height_idxs[sink_idx]->at(sink_h);
-    h_change_[src_idx][sink_idx]->add(src_h_idx, sink_h_idx, s);
+    h_change[src_idx][sink_idx]->add(src_h_idx, sink_h_idx, s);
 }
 
 void Heighted_graph::add_stay(int source_node, int source_h, int sink_node, int sink_h) {
@@ -308,6 +280,54 @@ void Heighted_graph::add_decrease(int source_node, int source_h, int sink_node, 
 //=============================================================
 // Relational Infinite Descent Check
 //=============================================================
+
+void relational_check_cleanup
+    (
+        Relation_LIST*** ccl,
+        int num_nodes,
+        Set<std::reference_wrapper<Sloped_relation>,
+            Sloped_relation::linear_order>&
+                representatives,
+        Sloped_relation*** h_change,
+        Sloped_relation* composition
+    )
+{
+    
+    // Free CCL
+    for (int source = 0; source < num_nodes; source++) {
+        for (int sink = 0; sink < num_nodes; sink++) {
+            delete ccl[source][sink];
+        }
+        free(ccl[source]);
+    }
+    free(ccl);
+
+    // First remove all the Sloped_relation objects stored in h_change from
+    // the representatives set.
+    // The correctness of this relies on the dimensions of ccl containing all
+    // the relations that might occur in h_change; i.e. the dimensions of
+    // h_change might be larger, but any elements outside the dimensions of ccl
+    // are null.
+    for (int source = 0; source < num_nodes; source++) {
+    for (int sink = 0; sink < num_nodes; sink++) {
+        Sloped_relation* R = h_change[source][sink];
+        if (R != NULL) {
+            representatives.erase(*R);
+        }
+    }
+    }
+    // Then delete remaining Sloped_relation objects
+    for (Sloped_relation& R : representatives) {
+        delete &R;
+    }
+
+    // Delete temp Sloped_relation object for storing composition result
+    if (composition != NULL) {
+        delete composition;
+    }
+
+}
+
 bool Heighted_graph::relational_check(int opts){
 
     this->flags = opts;
@@ -340,9 +360,51 @@ bool Heighted_graph::relational_check(int opts){
             otherwise we simply reject the relation and fail.
      */
 
+    // Number of actual nodes in the graph
+    int num_nodes = this->num_nodes();
+
+    // Maintain a set of unique representative objects for sloped relation
+    Set<std::reference_wrapper<Sloped_relation>, Sloped_relation::linear_order>
+        representatives;
+
+    // A single sloped relation for storing the result of composing relations
+    Sloped_relation* composition = NULL;
+
+    // Allocate array to hold CCL, and initialise it with the
+    // (unique representatives of) relations stored in the h_change field
+    // If FAIL_FAST flag is set, also check appropriate relations for self-loops
+    Relation_LIST*** ccl =
+        (Relation_LIST***) malloc(sizeof(Relation_LIST**) * num_nodes);
+    for(int i = 0; i < num_nodes; i++) {
+        ccl[i] = (Relation_LIST**) malloc(sizeof(Relation_LIST*) * num_nodes);
+        for (int j = 0; j < num_nodes; j++) {
+            ccl[i][j] = new Relation_LIST();
+            // If there is sloped relation for the corresponding edge
+            if (h_change[i][j] != NULL) {
+                // Get unique representative of the sloped relation
+                Sloped_relation& rep =
+                    *(representatives.insert(*h_change[i][j]).first);
+                // Ensure the relation is initialised
+                rep.initialize();
+                // Add it to the CCL
+                ccl[i][j]->push_back(&rep);
+#ifdef LOG_STATS
+                ccl_initial_size++;
+                ccl_size++;
+#endif
+            }
+        }
+    }
+
     // If fail-fast, then need to check initial sloped relations for self-loops
+    // We could have done this inline with the initialisation of the CCL, but
+    // given that we will need to reclaim the memory allocated for the CCL in
+    // the case that the check fails, it is more convenient to do this if the
+    // CCL memory allocation has fully completed. So we do the initial self-loop
+    // checks separately here
     if ((opts & FAIL_FAST) != 0) {
-        if (!check_Ccl(opts)) {
+        if (!check_Ccl(ccl, opts)) {
+            relational_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
             return false;
         }
     }
@@ -352,49 +414,60 @@ bool Heighted_graph::relational_check(int opts){
     std::chrono::time_point<std::chrono::system_clock> end;
 #endif
 
-    int num_nodes = this->num_nodes();
-
     // A set for keeping track of sloped relations that have been considered
     // for the closure element currently being computed
-    Set<std::reference_wrapper<Sloped_relation>, Sloped_relation::linear_order>
-        visited;
+    Set<Sloped_relation*> visited;
 
     // A list of sloped relations that need to be removed from the current
     // closure element once it has been computed
     Relation_LIST preceded;
 
+    // initialise sloped relation for storing the result of composing relations
+    composition = new Sloped_relation(this->trace_width, this->trace_width);
+
     // Now compute the order-reduced closure
     for (int source = 0; source < num_nodes; source++) {
     for (int sink = 0; sink < num_nodes; sink++) {
 
-        // Initialise contents of visited hashmap for this closure element
-        Sloped_relation* init = h_change_[source][sink];
-        if (init != NULL) {
-            // Important to initialise it here, since initialisation is needed
-            // for the comparison methods
-            init->initialize();
-            visited.insert(*init);
+        // Initialise contents of visited set for this closure element
+        for (Sloped_relation* R : *ccl[source][sink]) {
+            visited.insert(R);
         }
 
         for (int middle = 0; middle < source && middle < sink; middle++) {
             for (
-                auto left = Ccl[source][middle]->begin();
-                left != Ccl[source][middle]->end();
+                auto left = ccl[source][middle]->begin();
+                left != ccl[source][middle]->end();
                 left++
             ) {
                 Sloped_relation* P = *left;
-                P->initialize();
                 for (
-                    auto right = Ccl[middle][sink]->begin();
-                    right != Ccl[middle][sink]->end();
+                    auto right = ccl[middle][sink]->begin();
+                    right != ccl[middle][sink]->end();
                     right++
                 ) {
                     Sloped_relation* Q = *right;
-                    Q->initialize();
 #ifdef LOG_STATS
                     start = std::chrono::system_clock::now();
 #endif
-                    Sloped_relation* R = P->compose(*Q);
+                    // Compute the composition of P and Q in-place
+                    composition->reset();
+                    composition->compose(*P, *Q);
+                    // Get the unique representative of the composition
+                    auto insert_result = representatives.insert(*composition);
+                    Sloped_relation& R = *(insert_result.first);
+                    // If the representative is the object just computed
+                    // we need to initialise it, and then allocate a new object
+                    // for holding the results of composition
+                    if (insert_result.second) {
+                        R.initialize();
+                        composition =
+                            new Sloped_relation (
+                                    this->trace_width,
+                                    this->trace_width
+                                );
+                    }
+
 #ifdef LOG_STATS
                     end = std::chrono::system_clock::now();
                     compose_time += (end - start);
@@ -404,20 +477,18 @@ bool Heighted_graph::relational_check(int opts){
 
                     bool fresh =
                         check_and_add(
-                            *Ccl[source][sink], *R, visited, preceded,
+                            *ccl[source][sink], R, visited, preceded,
                             // N.B. Passing the end() iterator as the endpoint
                             // of the preserved portion indicates that no
                             // relations should be preserved.
-                            Ccl[source][sink]->end(),
+                            ccl[source][sink]->end(),
                             opts
                         );
 
-                    if (!fresh) {
-                        delete R;
-                    }
                     // If fail-fast, then check for self-loop if necessary
-                    else if (((opts & FAIL_FAST) != 0) && source == sink
-                                && !(check_self_loop(R, source, opts))) {
+                    if (fresh && ((opts & FAIL_FAST) != 0) && source == sink
+                                && !(check_self_loop(R, opts))) {
+                        relational_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
                         return false;
                     }
                 }
@@ -425,34 +496,48 @@ bool Heighted_graph::relational_check(int opts){
         }
 
         // If the closure entry is empty, we can skip to the next iteration
-        if (Ccl[source][sink]->size() == 0) {
+        if (ccl[source][sink]->size() == 0) {
             continue;
         }
 
         // Now "tie the loops"
-        // We need to remember the initial end point of Ccl[source][sink]
+        // We need to remember the initial end point of ccl[source][sink]
         // because the following loops will add to it
         // N.B. Since the closure entry is not empty at this point, we take the
         // iterator pointing to the last element included in the portion to be
         // preserved. Since the code in the body of the loops will not remove
         // any relations up to and including this element, this iterator will
         // not be invalidated.
-        auto initial_end = --(Ccl[source][sink]->end());
+        auto initial_end = --(ccl[source][sink]->end());
         if (source > sink) {
             bool done = false;
-            for (auto left = Ccl[source][sink]->begin(); !done; left++) {
+            for (auto left = ccl[source][sink]->begin(); !done; left++) {
                 Sloped_relation* P = *left;
-                P->initialize();
-                for (auto right = Ccl[sink][sink]->begin();
-                     right != Ccl[sink][sink]->end();
+                for (auto right = ccl[sink][sink]->begin();
+                     right != ccl[sink][sink]->end();
                      right++
                 ) {
                     Sloped_relation* Q = *right;
-                    Q->initialize();
 #ifdef LOG_STATS
                     start = std::chrono::system_clock::now();
 #endif
-                    Sloped_relation* R = P->compose(*Q);
+                    // Compute the composition of P and Q in-place
+                    composition->reset();
+                    composition->compose(*P, *Q);
+                    // Get the unique representative of the composition
+                    auto insert_result = representatives.insert(*composition);
+                    Sloped_relation& R = *(insert_result.first);
+                    // If the representative is the object just computed
+                    // we need to initialise it, and then allocate a new object
+                    // for holding the results of composition
+                    if (insert_result.second) {
+                        R.initialize();
+                        composition =
+                            new Sloped_relation (
+                                    this->trace_width,
+                                    this->trace_width
+                                );
+                    }
 #ifdef LOG_STATS
                     end = std::chrono::system_clock::now();
                     compose_time += (end - start);
@@ -460,15 +545,11 @@ bool Heighted_graph::relational_check(int opts){
                     total_size_sum += R->size();
 #endif
 
-                    bool fresh =
-                        check_and_add(
-                            *Ccl[source][sink], *R, visited, preceded,
-                            initial_end, opts
-                        );
+                    check_and_add(
+                        *ccl[source][sink], R, visited, preceded,
+                        initial_end, opts
+                    );
 
-                    if (!fresh) {
-                        delete R;
-                    }                    
                 }
                 // If we processed the last element of the initial segment,
                 // set the flag to exit the loop
@@ -477,18 +558,32 @@ bool Heighted_graph::relational_check(int opts){
                 }
             }
         } else if (source == sink) {
-            auto right = Ccl[source][sink]->begin();
-            while (right != Ccl[source][sink]->end()) {
+            auto right = ccl[source][sink]->begin();
+            while (right != ccl[source][sink]->end()) {
                 Sloped_relation* Q = *right;
-                Q->initialize();
                 bool done = false;
-                for (auto left = Ccl[source][sink]->begin(); !done; left++) {
+                for (auto left = ccl[source][sink]->begin(); !done; left++) {
                     Sloped_relation* P = *left;
-                    P->initialize();
 #ifdef LOG_STATS
                     start = std::chrono::system_clock::now();
 #endif
-                    Sloped_relation* R = P->compose(*Q);
+                    // Compute the composition of P and Q in-place
+                    composition->reset();
+                    composition->compose(*P, *Q);
+                    // Get the unique representative of the composition
+                    auto insert_result = representatives.insert(*composition);
+                    Sloped_relation& R = *(insert_result.first);
+                    // If the representative is the object just computed
+                    // we need to initialise it, and then allocate a new object
+                    // for holding the results of composition
+                    if (insert_result.second) {
+                        R.initialize();
+                        composition =
+                            new Sloped_relation (
+                                    this->trace_width,
+                                    this->trace_width
+                                );
+                    }
 #ifdef LOG_STATS
                     end = std::chrono::system_clock::now();
                     compose_time += (end - start);
@@ -498,16 +593,14 @@ bool Heighted_graph::relational_check(int opts){
 
                     bool fresh =
                         check_and_add(
-                            *Ccl[source][sink], *R, visited, preceded,
+                            *ccl[source][sink], R, visited, preceded,
                             initial_end, opts
                         );
 
-                    if (!fresh) {
-                        delete R;
-                    }
                     // If fail-fast, then check for self-loop if necessary
-                    else if (((opts & FAIL_FAST) != 0) && source == sink
-                                && !(check_self_loop(R, source, opts))) {
+                    if (fresh && ((opts & FAIL_FAST) != 0) && source == sink
+                                && !(check_self_loop(R, opts))) {
+                        relational_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
                         return false;
                     }
                     // If we processed the last element of the initial segment,
@@ -528,8 +621,8 @@ bool Heighted_graph::relational_check(int opts){
         // order that they appear in the closure element.
         if ((opts & USE_MINIMALITY) != 0) {
             auto to_remove = preceded.begin();
-            for (auto it = Ccl[source][sink]->begin();
-                 it != Ccl[source][sink]->end() && to_remove != preceded.end();
+            for (auto it = ccl[source][sink]->begin();
+                 it != ccl[source][sink]->end() && to_remove != preceded.end();
                  it++)
             {
                 // We can compare pointers here, because the elements of the
@@ -537,7 +630,7 @@ bool Heighted_graph::relational_check(int opts){
                 // closure element vector.
                 if (*to_remove == *it) {
                     // Remove the relation from the closure element
-                    it = Ccl[source][sink]->erase(it);
+                    it = ccl[source][sink]->erase(it);
                     // Decrement iterator as it will automatically increment
                     // in the next loop iteration
                     it--;
@@ -549,17 +642,20 @@ bool Heighted_graph::relational_check(int opts){
             preceded.clear();
         }
 
-        // Clear contents of the visited hashmap for the next iteration
+        // Clear contents of the visited set for the next iteration
         visited.clear();
     }
     }
 
     // If not using fast-fail, then check for self-loops in the computed CCL
     if ((opts & FAIL_FAST) == 0) {
-        if (!check_Ccl(opts)) {
+        if (!check_Ccl(ccl, opts)) {
+            relational_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
             return false;
         }
     }
+
+    relational_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
 
     return true;
 }
@@ -568,7 +664,7 @@ bool Heighted_graph::check_and_add
      (
         Relation_LIST& entry,
         Sloped_relation& R,
-        Set<std::reference_wrapper<Sloped_relation>, Sloped_relation::linear_order>& visited,
+        Set<Sloped_relation*>& visited,
         Relation_LIST& preceded,
         Relation_LIST::iterator preserve_end,
         int opts
@@ -579,7 +675,7 @@ bool Heighted_graph::check_and_add
 #ifdef LOG_STATS
     start = std::chrono::system_clock::now();
 #endif
-    auto visited_res = visited.insert(R);
+    auto visited_res = visited.insert(&R);
 #ifdef LOG_STATS
     auto loop_end = std::chrono::system_clock::now();
     need_to_add_compute_time += (loop_end - loop_start);
@@ -628,6 +724,7 @@ bool Heighted_graph::check_and_add
 #ifdef LOG_STATS
                 ccl_replacements++;
 #endif
+
             }
             // Otherwise, we do need to compare the current candidate R with the
             // current relation S
@@ -712,7 +809,7 @@ bool Heighted_graph::check_and_add
 
 }
 
-bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
+bool Heighted_graph::check_self_loop(Sloped_relation& R, int opts) {
 
 #ifdef LOG_STATS
     auto start = std::chrono::system_clock::now();
@@ -723,18 +820,18 @@ bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
     bool result = false;
 
     if ((opts & USE_SCC_CHECK) != 0) {
-        result = R->has_downward_SCC();
+        result = R.has_downward_SCC();
     } else {
         // Compute R composed with R if using the idempotent method
         // or the transitive closure otherwise (i.e. using the standard method)
         Sloped_relation* R2 = 
             ((opts & USE_IDEMPOTENCE) != 0)
-                ? R->compose(*R)
-                : R->compute_transitive_closure();
+                ? R.compose(R)
+                : R.compute_transitive_closure();
 
         // If we're using the idempotent method and the relation is not
         // idempotent then trivially return true
-        if (((opts & USE_IDEMPOTENCE) != 0) && !(*R2 == *R)) {
+        if (((opts & USE_IDEMPOTENCE) != 0) && !(*R2 == R)) {
             result = true;
 #ifdef LOG_STATS
             loop_checks--;
@@ -742,31 +839,9 @@ bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
 #endif
         } else {
             // Otherwise, check we have a self-loop in the relevant relation
-            Map<Int_pair,int>* slopes = R2->get_slopes();
-
-            if (HeightsOf[node]->size() < slopes->size()) {
-                // Iterate over all heights h in the node, to see if (h, h) is
-                // mapped to the Downward slope.
-                for( int h : *(HeightsOf.at(node)) ){
-                    auto exists = slopes->find(Int_pair(h,h));
-                    if( exists != slopes->end() && exists->second == Downward ){
-                        result = true;
-                        break;
-                    }
-                }
-            } else {
-                // Only iterate over all entries in the transitive closure of R
-                // if this will be quicker then going over the heights
-                for(auto it = slopes->begin(); it != slopes->end(); it++) {
-                    Int_pair heights = it->first;
-                    if (heights.first == heights.second && it->second == Downward) {
-                        result = true;
-                        break;
-                    }
-                }
-            }
+            result = R2->has_self_loop();
         }
-        rejected->push_back(R2);
+        delete R2;
     }
 
 #ifdef LOG_STATS
@@ -777,13 +852,11 @@ bool Heighted_graph::check_self_loop(Sloped_relation* R, int node, int opts) {
     return result;
 }
 
-bool Heighted_graph::check_Ccl(int opts) {
+bool Heighted_graph::check_Ccl(Relation_LIST*** ccl, int opts) {
     int num_nodes = this->num_nodes();
-    for( int node = 0; node < num_nodes; node++ ){
-        Relation_LIST* Ccl_nd = Ccl[node][node];
-        for( Sloped_relation* R : *Ccl_nd ){
-            R->initialize();
-            if(!check_self_loop(R, node, opts)) {
+    for (int node = 0; node < num_nodes; node++) {
+        for (Sloped_relation* R : *ccl[node][node]) {
+            if (!check_self_loop(*R, opts)) {
                 return false;
             }
         }
@@ -827,8 +900,8 @@ bool Heighted_graph::sla_automata_check() {
     // Construct unique IDs for each distinct sloped relation in the graph
     for( int src = 0 ; src < max_nodes ; src++ ){
         for( int sink = 0 ; sink < max_nodes ; sink++ ){
-            if( h_change_[src][sink] == 0 ) continue;
-            Sloped_relation* P = h_change_[src][sink];
+            if( h_change[src][sink] == 0 ) continue;
+            Sloped_relation* P = h_change[src][sink];
             P->initialize();
             int idx = 0;
             bool found = false;
@@ -906,7 +979,7 @@ bool Heighted_graph::sla_automata_check() {
     // Set up transitions corresponding to graph edges
     for( int src = 0 ; src < max_nodes ; src++ ){
         for( int sink = 0 ; sink < max_nodes ; sink++ ){
-            if( h_change_[src][sink] == 0 ) continue;
+            if( h_change[src][sink] == 0 ) continue;
             bdd curr_bdd = idx_encoding[relation_idx.at(Int_pair(src,sink))];
             aut_ipath->new_edge(src, sink, curr_bdd, {0});
         }
@@ -917,7 +990,7 @@ bool Heighted_graph::sla_automata_check() {
     for (int sink = 0; sink < max_nodes; sink++) {
         bdd curr_bdd = bddfalse;
         for (int src = 0; src < max_nodes; src++) {
-            if (h_change_[src][sink] == 0) continue;
+            if (h_change[src][sink] == NULL) continue;
             curr_bdd |= idx_encoding[relation_idx.at(Int_pair(src,sink))];
         }
         aut_ipath->new_edge(s_init_ip, sink, curr_bdd, {0});

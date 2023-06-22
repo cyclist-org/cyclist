@@ -695,7 +695,6 @@ module RelationalCheck = struct
     (* external sd_check : unit -> bool = "sd_check" *)
     external sla_automata_check : unit -> bool = "sla_automata_check"
     (* external xsd_check : unit -> bool = "xsd_check" *)
-    external print_ccl : unit -> unit = "print_ccl"
     external print_stats : unit -> unit = "print_statistics"
 
     (* Flags for applying different optimisations in the C++ code

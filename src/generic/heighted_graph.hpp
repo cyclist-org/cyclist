@@ -6,7 +6,6 @@
 #include <fstream>
 #include <set>
 #include <utility>
-#include <vector>
 #include <cassert>
 #include <memory>
 #include <iostream>
@@ -45,14 +44,11 @@ class Heighted_graph {
 private:
 
     int                         max_nodes;
-    int                         number_of_edges;
+    int                         num_edges_;
     Map<int, int>               node_idxs;
     std::vector<Map<int, int>*> height_idxs;
     std::vector<Int_SET*>       HeightsOf;
-    Sloped_relation***          h_change_;
-    Relation_LIST***            Ccl;
-    Relation_LIST*              rejected;
-    std::vector<Int_pair>*      edges;
+    Sloped_relation***          h_change;
 
     // The maximum number of heights in a node
     int trace_width = 0;
@@ -79,11 +75,11 @@ private:
 
     bool check_and_add(
             Relation_LIST& entry, Sloped_relation& R,
-            Set<std::reference_wrapper<Sloped_relation>, Sloped_relation::linear_order>& visited,
+            Set<Sloped_relation*>& visited,
             Relation_LIST& preceded,
             Relation_LIST::iterator preserve_end, int opts);
-    bool check_self_loop(Sloped_relation *R, int node, int opts);
-    bool check_Ccl(int opts);
+    bool check_self_loop(Sloped_relation& R, int opts);
+    bool check_Ccl(Relation_LIST*** ccl, int opts);
 
 
 public:
@@ -120,7 +116,6 @@ public:
     bool relational_check(int opts);
     bool sla_automata_check(void);
 
-    void print_Ccl(void);
     void print_statistics(void);
 
 };
