@@ -831,7 +831,15 @@ let check_proof ?(init=0) ?(minimize=true) prf =
       in
       try
         debug (fun _ -> mk_to_string pp prf) ;
-        debug (fun () -> "Minimized proof:\n" ^ mk_to_string pp aprf) ;
+        debug (fun _ -> "Minimized proof:\n" ^ mk_to_string pp aprf) ;
+        debug (fun _ -> "Number of proof nodes: " ^ string_of_int (Int.Map.cardinal aprf)) ;
+        debug (fun _ -> 
+          let width =
+            Int.Map.fold
+              (fun _ (tags, _) acc -> Int.max acc (Int.Set.cardinal tags))
+              aprf
+              0 in
+          "Trace width: " ^ string_of_int width) ;
         Stats.MCCache.call () ;
         let r = CheckCache.find ccache aprf in
         Stats.MCCache.end_call () ;
