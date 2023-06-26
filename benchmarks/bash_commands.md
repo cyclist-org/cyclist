@@ -74,35 +74,35 @@ The following script examines each log file in turn and prints out, for each fil
 * The name of the file minus the extension (i.e. the benchmark test name)
 * The number of infinite descent checks generated during proof search
 * The sum of the number of nodes in the graphs checked for infinite descent
-* The mean, median and mode number of nodes in each graph checked
+* The min, max, mean, median and mode number of nodes in the checked graphs
 * The sum of the trace widths of the graphs checked for infinite descent
-* The mean, median and mode trace width of the graphs checked
+* The min, max, mean, median and mode trace width of the checked graphs
 
 It then prints a final line containing the following statistics, over all the log files:
 
 * The total number of infinite descent checks generated during proof search
 * The sum of the number of nodes in the graphs checked for infinite descent
-* The mean, median and mode number of nodes in graphs checked for infinite descent
+* The min, max, mean, median and mode number of nodes in the checked graphs
 * The sum of the trace widths of the graphs checked for infinite descent
-* The mean, median and mode trace width of graphs checked for infinite descent
+* The min, max, mean, median and mode trace width of the checked graphs
 
 ```[bash]
-echo '"Test Case","Num Checks","Sum Num Nodes","Mean Num Nodes","Median Num Nodes","Mode Num Nodes","Sum Trace Widths","Mean Trace Width","Median Trace Width","Mode Trace Width"'; \
+echo '"Test Case","Num Checks","Sum Num Nodes","Min Num Nodes","Max Num Nodes","Mean Num Nodes","Median Num Nodes","Mode Num Nodes","Sum Trace Widths","Min Trace Width","Max Trace Width","Mean Trace Width","Median Trace Width","Mode Trace Width"'; \
 for f in *.log; do
   echo -n "${f%.log} ";
   echo -n "`grep -o 'Checking soundness starts' $f | wc -l`,";
   nodes="`grep -P -o '((?<=nodes: )\d+)|(Checking soundness(?= starts))|(Found soundness)' $f | pcregrep -M -o '\d+(?=\nChecking)'`";
-  if [ -z "$nodes" ]; then echo -n "0,0,0,0,"; else echo -n "`echo "$nodes" | datamash -t "," sum 1 mean 1 median 1 mode 1`,"; fi;
+  if [ -z "$nodes" ]; then echo -n "0,0,0,0,"; else echo -n "`echo "$nodes" | datamash -t "," sum 1 min 1 max 1 mean 1 median 1 mode 1`,"; fi;
   widths="`grep -P -o '((?<=width: )\d+)|(Checking soundness(?= starts))|(Found soundness)' $f | pcregrep -M -o '\d+(?=\nChecking)'`";
-  if [ -z "$widths" ]; then echo -n "0,0,0,0,"; else echo -n "`echo "$widths" | datamash -t "," sum 1 mean 1 median 1 mode 1`"; fi;
+  if [ -z "$widths" ]; then echo -n "0,0,0,0,"; else echo -n "`echo "$widths" | datamash -t "," sum 1 min 1 max 1 mean 1 median 1 mode 1`"; fi;
   echo;
 done; \
 echo -n ","; \
 echo -n "`grep -o 'Checking soundness starts' *.log | wc -l`,"; \
 nodes="`grep -P -h -o '((?<=nodes: )\d+)|(Checking soundness(?= starts))|(Found soundness)' *.log | pcregrep -M -o '\d+(?=\nChecking)'`"; \
-if [ -z "$nodes" ]; then echo -n "0,0,0,0,"; else echo -n "`echo "$nodes" | datamash -t "," sum 1 mean 1 median 1 mode 1`,"; fi; \
+if [ -z "$nodes" ]; then echo -n "0,0,0,0,"; else echo -n "`echo "$nodes" | datamash -t "," sum 1  min 1 max 1 mean 1 median 1 mode 1`,"; fi; \
 widths="`grep -P -h -o '((?<=width: )\d+)|(Checking soundness(?= starts))|(Found soundness)' *.log | pcregrep -M -o '\d+(?=\nChecking)'`"; \
-if [ -z "$widths" ]; then echo -n "0,0,0,0,"; else echo -n "`echo "$widths" | datamash -t "," sum 1 mean 1 median 1 mode 1`"; fi; \
+if [ -z "$widths" ]; then echo -n "0,0,0,0,"; else echo -n "`echo "$widths" | datamash -t "," sum 1  min 1 max 1 mean 1 median 1 mode 1`"; fi; \
 echo;
 ```
 
