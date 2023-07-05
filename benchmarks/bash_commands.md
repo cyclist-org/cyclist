@@ -17,11 +17,13 @@ The log files for failing benchmarks (i.e., those for which a proof is not found
 
 ```[bash]
 for f in benchmarks/fo/*.tst; do
+  i=1;
   while read -r SEQ; do
     tst=${f%.tst}; tst=${tst##*/};
-    logfile="benchmarks/logs/fo-${tst}.log";
+    logfile="benchmarks/logs/fo-${tst}.$i.log";
     (dune exec src/firstorder/prove.exe -- -d -s -p -t 30 -OP -min -scc -ff -S "${SEQ}" > ${logfile} 2>&1);
     if `grep "NOT proved" ${logfile} > /dev/null`; then rm -f ${logfile}; fi;
+    let i=i+1;
   done < "$f";
 done;
 ```
@@ -45,11 +47,13 @@ The following command runs all the separation logic songbird benchmarks, and dum
 
 ```[bash]
 for f in benchmarks/sl/songbird/*.tst; do
+  i=1;
   while read -r SEQ; do
     tst=${f%.tst}; tst=${tst##*/};
-    logfile="benchmarks/logs/songbird-${tst}.log";
+    logfile="benchmarks/logs/songbird-${tst}.$i.log";
     (dune exec src/seplog/prove.exe -- -D examples/songbird.defs -d -s -p -t 30 -OP -min -scc -ff -S "${SEQ}" > ${logfile} 2>&1);
     if `grep "NOT proved" ${logfile} > /dev/null`; then rm -f ${logfile}; fi;
+    let i=i+1;
   done < "$f";
 done;
 ```
@@ -58,11 +62,13 @@ The following command runs all the separation logic ATVA2014 benchmarks, and dum
 
 ```[bash]
 for f in benchmarks/sl/atva-2014/*.tst; do
+  i=1;
   while read -r SEQ; do
     tst=${f%.tst}; tst=${tst##*/};
-    logfile="benchmarks/logs/atva-${tst}.log";
+    logfile="benchmarks/logs/atva-${tst}.$i.log";
     (dune exec src/seplog/prove.exe -- -D examples/IosifEtAl-ATVA2014.defs -d -s -p -t 30 -OP -min -scc -ff -S "${SEQ}" > ${logfile} 2>&1);
     if `grep "NOT proved" ${logfile} > /dev/null`; then rm -f ${logfile}; fi;
+    let i=i+1;
   done < "$f";
 done;
 ```
@@ -92,17 +98,17 @@ for f in *.log; do
   echo -n "${f%.log} ";
   echo -n "`grep -o 'Checking soundness starts' $f | wc -l`,";
   nodes="`grep -P -o '((?<=nodes: )\d+)|(Checking soundness(?= starts))|(Found soundness)' $f | pcregrep -M -o '\d+(?=\nChecking)'`";
-  if [ -z "$nodes" ]; then echo -n "0,0,0,0,"; else echo -n "`echo "$nodes" | datamash -t "," sum 1 min 1 max 1 mean 1 median 1 mode 1`,"; fi;
+  if [ -z "$nodes" ]; then echo -n "0,0,0,0,0,0"; else echo -n "`echo "$nodes" | datamash -t "," sum 1 min 1 max 1 mean 1 median 1 mode 1`,"; fi;
   widths="`grep -P -o '((?<=width: )\d+)|(Checking soundness(?= starts))|(Found soundness)' $f | pcregrep -M -o '\d+(?=\nChecking)'`";
-  if [ -z "$widths" ]; then echo -n "0,0,0,0,"; else echo -n "`echo "$widths" | datamash -t "," sum 1 min 1 max 1 mean 1 median 1 mode 1`"; fi;
+  if [ -z "$widths" ]; then echo -n "0,0,0,0,0,0"; else echo -n "`echo "$widths" | datamash -t "," sum 1 min 1 max 1 mean 1 median 1 mode 1`"; fi;
   echo;
 done; \
 echo -n ","; \
 echo -n "`grep -o 'Checking soundness starts' *.log | wc -l`,"; \
 nodes="`grep -P -h -o '((?<=nodes: )\d+)|(Checking soundness(?= starts))|(Found soundness)' *.log | pcregrep -M -o '\d+(?=\nChecking)'`"; \
-if [ -z "$nodes" ]; then echo -n "0,0,0,0,"; else echo -n "`echo "$nodes" | datamash -t "," sum 1  min 1 max 1 mean 1 median 1 mode 1`,"; fi; \
+if [ -z "$nodes" ]; then echo -n "0,0,0,0,0,0"; else echo -n "`echo "$nodes" | datamash -t "," sum 1  min 1 max 1 mean 1 median 1 mode 1`,"; fi; \
 widths="`grep -P -h -o '((?<=width: )\d+)|(Checking soundness(?= starts))|(Found soundness)' *.log | pcregrep -M -o '\d+(?=\nChecking)'`"; \
-if [ -z "$widths" ]; then echo -n "0,0,0,0,"; else echo -n "`echo "$widths" | datamash -t "," sum 1  min 1 max 1 mean 1 median 1 mode 1`"; fi; \
+if [ -z "$widths" ]; then echo -n "0,0,0,0,0,0"; else echo -n "`echo "$widths" | datamash -t "," sum 1  min 1 max 1 mean 1 median 1 mode 1`"; fi; \
 echo;
 ```
 
