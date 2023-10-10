@@ -13,9 +13,9 @@ val use_vla : unit -> unit
 (** Flag to indicate whether the Spot model checker should be used to verify the
     trace condition for proofs. *)
 
-val use_external : unit -> unit
+val use_ortl : unit -> unit
 (** Flag to indicate whether trace condition check should be done by the
-    relation-based method using external C++ code. *)
+    order-reduced relational method using external C++ code. *)
 
 val use_sla : unit -> unit
 

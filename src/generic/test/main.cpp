@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
         // } else if ((opts & Heighted_graph::USE_XSD) != 0) {
         //     result = hg.xsd_check();
         } else {
-            result = hg.relational_check(opts);
+            result = hg.order_reduced_check(opts);
             // hg.print_Ccl();
             // hg.print_statistics();
         }

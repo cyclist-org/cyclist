@@ -278,10 +278,10 @@ void Heighted_graph::add_decrease(int source_node, int source_h, int sink_node, 
 }
 
 //=============================================================
-// Relational Infinite Descent Check
+// Order-reduced Relational Infinite Descent Check
 //=============================================================
 
-void relational_check_cleanup
+void order_reduced_check_cleanup
     (
         Relation_LIST*** ccl,
         int num_nodes,
@@ -328,7 +328,7 @@ void relational_check_cleanup
 
 }
 
-bool Heighted_graph::relational_check(int opts){
+bool Heighted_graph::order_reduced_check(int opts){
 
     this->flags = opts;
 
@@ -404,7 +404,7 @@ bool Heighted_graph::relational_check(int opts){
     // checks separately here
     if ((opts & FAIL_FAST) != 0) {
         if (!check_Ccl(ccl, opts)) {
-            relational_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
+            order_reduced_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
             return false;
         }
     }
@@ -488,7 +488,7 @@ bool Heighted_graph::relational_check(int opts){
                     // If fail-fast, then check for self-loop if necessary
                     if (fresh && ((opts & FAIL_FAST) != 0) && source == sink
                                 && !(check_self_loop(R, opts))) {
-                        relational_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
+                        order_reduced_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
                         return false;
                     }
                 }
@@ -600,7 +600,7 @@ bool Heighted_graph::relational_check(int opts){
                     // If fail-fast, then check for self-loop if necessary
                     if (fresh && ((opts & FAIL_FAST) != 0) && source == sink
                                 && !(check_self_loop(R, opts))) {
-                        relational_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
+                        order_reduced_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
                         return false;
                     }
                     // If we processed the last element of the initial segment,
@@ -650,12 +650,12 @@ bool Heighted_graph::relational_check(int opts){
     // If not using fast-fail, then check for self-loops in the computed CCL
     if ((opts & FAIL_FAST) == 0) {
         if (!check_Ccl(ccl, opts)) {
-            relational_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
+            order_reduced_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
             return false;
         }
     }
 
-    relational_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
+    order_reduced_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
 
     return true;
 }

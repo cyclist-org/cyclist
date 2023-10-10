@@ -113,7 +113,7 @@ public:
     int num_nodes(void);
     int num_edges(void);
 
-    bool relational_check(int opts);
+    bool order_reduced_check(int opts);
     bool sla_automata_check(void);
 
     void print_statistics(void);

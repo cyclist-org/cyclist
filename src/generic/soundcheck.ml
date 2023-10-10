@@ -3,16 +3,13 @@ open Parsers
 
 type soundness_method =
   | RELATIONAL_OCAML
-  | RELATIONAL_CPP
+  | ORTL_CPP
   | VLA
   | SLA
 
-
-  
-
 let soundness_method = ref RELATIONAL_OCAML
-let use_external () = 
-  soundness_method := RELATIONAL_CPP
+let use_ortl () = 
+  soundness_method := ORTL_CPP
 let use_vla () = 
   soundness_method := VLA
 let use_sla () =
@@ -691,7 +688,7 @@ module RelationalCheck = struct
     external add_edge : int -> int -> unit = "add_edge"
     external add_stay : int -> int -> int -> int -> unit = "add_stay"
     external add_decrease : int -> int -> int -> int -> unit = "add_decr"
-    external relational_check : int -> bool = "relational_check"
+    external order_reduced_check : int -> bool = "order_reduced_check"
     (* external sd_check : unit -> bool = "sd_check" *)
     external sla_automata_check : unit -> bool = "sla_automata_check"
     (* external xsd_check : unit -> bool = "xsd_check" *)
@@ -760,8 +757,8 @@ module RelationalCheck = struct
       (* debug (fun () -> "Built height graph") ; *)
       let retval = 
         match !soundness_method with
-        | RELATIONAL_CPP ->
-          relational_check !opts 
+        | ORTL_CPP ->
+          order_reduced_check !opts 
         | SLA ->
           sla_automata_check ()
         | _ ->
@@ -791,16 +788,16 @@ end)
 let arg_opts =
   [
     ("-VLA", Arg.Unit use_vla, ": use Spot (vertex language automata construction) to verify pre-proof validity") ;
-    ("-print-paut", Arg.Set BuchiCheck.print_paut, ": print the proof automaton in HOA format" ) ;
-    ("-print-taut", Arg.Set BuchiCheck.print_taut, ": print the trace automaton in HOA format" ) ;
-    ("-OP", Arg.Unit use_external, ": use external C++ relation-based check to verify pre-proof validity") ;
     ("-SLA", Arg.Unit use_sla, ": use Spot (slope language automata construction) to verify pre-proof validity") ;
+    ("-OP", Arg.Unit use_ortl, ": use external C++ order-reduced relational check to verify pre-proof validity") ;
     ("-ff", Arg.Unit fail_fast, ": use fast fail in relation-based validty check") ;
     ("-scc", Arg.Unit use_scc_check, ": use SCC check in relation-based validity check") ;
     ("-idem", Arg.Unit use_idempotence, ": use idempotency optimisation in relation-based validity check") ;
     ("-min", Arg.Unit use_minimality, ": use minimality optimisation in relation-based validity check") ;
     ("-full", Arg.Unit compute_full_ccl, ": compute the full CCL") ;
-    ("-rel-stats", Arg.Set do_stats, ": print out profiling stats for the relation-based validity check")
+    ("-rel-stats", Arg.Set do_stats, ": print out profiling stats for the relation-based validity check") ;
+    ("-print-paut", Arg.Set BuchiCheck.print_paut, ": print the proof automaton in HOA format" ) ;
+    ("-print-taut", Arg.Set BuchiCheck.print_taut, ": print the trace automaton in HOA format" ) ;
   ]
 
 module CheckCache = Hashtbl
