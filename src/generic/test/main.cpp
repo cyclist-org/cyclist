@@ -55,10 +55,14 @@ int main(int argc, char** argv) {
         //     result = hg.sd_check();
         // } else if ((opts & Heighted_graph::USE_XSD) != 0) {
         //     result = hg.xsd_check();
-        } else {
+        } else if ((opts & Heighted_graph::USE_ORTL) != 0) {
             result = hg.order_reduced_check(opts);
             // hg.print_Ccl();
             // hg.print_statistics();
+        } else if ((opts & Heighted_graph::USE_FWK) != 0) {
+            result = hg.fwk_check(opts);
+        } else {
+            result = hg.order_reduced_check(opts);
         }
         if( result ){
             std::cout << "SOUND" << std::endl;
@@ -69,6 +73,6 @@ int main(int argc, char** argv) {
         return !result;
     }
 
-    std::cout << "Provide test file name!\n";
+    std::cout << "Provide test file name!" << std::endl;
     return -1;
 }

@@ -17,14 +17,15 @@
 //=============================================================
 // N.B. These MUST match the corresponding constants in the OCaml code
 //      Look in soundcheck.ml
-const int Heighted_graph::FAIL_FAST        = 0b00000001;
-const int Heighted_graph::USE_SCC_CHECK    = 0b00000010;
-const int Heighted_graph::USE_IDEMPOTENCE  = 0b00000100;
-const int Heighted_graph::USE_MINIMALITY   = 0b00001000;
-const int Heighted_graph::COMPUTE_FULL_CCL = 0b00010000;
-const int Heighted_graph::USE_SD           = 0b00100000;
-const int Heighted_graph::USE_XSD          = 0b01000000;
-const int Heighted_graph::USE_SLA          = 0b10000000;
+const int Heighted_graph::FAIL_FAST        = 0b000000001;
+const int Heighted_graph::USE_SCC_CHECK    = 0b000000010;
+const int Heighted_graph::USE_IDEMPOTENCE  = 0b000000100;
+const int Heighted_graph::USE_MINIMALITY   = 0b000001000;
+const int Heighted_graph::USE_SD           = 0b000010000;
+const int Heighted_graph::USE_XSD          = 0b000100000;
+const int Heighted_graph::USE_ORTL         = 0b001000000;
+const int Heighted_graph::USE_FWK          = 0b010000000;
+const int Heighted_graph::USE_SLA          = 0b100000000;
 
 //=============================================================
 // Constructors / Destructor
@@ -139,9 +140,10 @@ int Heighted_graph::parse_flags(const std::string flags_s) {
             case 's': flags |= USE_SCC_CHECK; break;
             case 'i': flags |= USE_IDEMPOTENCE; break;
             case 'm': flags |= USE_MINIMALITY; break;
-            case 'a': flags |= COMPUTE_FULL_CCL; break;
             case 'D': flags |= USE_SD; break;
             case 'X': flags |= USE_XSD; break;
+            case 'O': flags |= USE_ORTL; break;
+            case 'K': flags |= USE_FWK; break;
             case 'A': flags |= USE_SLA; break;
         }
     }
@@ -201,9 +203,11 @@ void Heighted_graph::print_flags(int flags) {
     if ((flags & USE_SCC_CHECK) != 0) std::cout << "USE_SCC_CHECK" << std::endl;
     if ((flags & USE_IDEMPOTENCE) != 0) std::cout << "USE_IDEMPOTENCE" << std::endl;
     if ((flags & USE_MINIMALITY) != 0) std::cout << "USE_MINIMALITY" << std::endl;
-    if ((flags & COMPUTE_FULL_CCL) != 0) std::cout << "COMPUTE_FULL_CCL" << std::endl;
     if ((flags & USE_SD) != 0) std::cout << "USE_SD" << std::endl;
     if ((flags & USE_XSD) != 0) std::cout << "USE_XSD" << std::endl;
+    if ((flags & USE_ORTL) != 0) std::cout << "USE_ORTL" << std::endl;
+    if ((flags & USE_FWK) != 0) std::cout << "USE_FWK" << std::endl;
+    if ((flags & USE_SLA) != 0) std::cout << "USE_SLA" << std::endl;
 }
 
 //=============================================================
@@ -281,9 +285,8 @@ void Heighted_graph::add_decrease(int source_node, int source_h, int sink_node, 
 // Order-reduced Relational Infinite Descent Check
 //=============================================================
 
-void order_reduced_check_cleanup
+void common_cleanup
     (
-        Relation_LIST*** ccl,
         int num_nodes,
         Set<std::reference_wrapper<Sloped_relation>,
             Sloped_relation::linear_order>&
@@ -292,16 +295,6 @@ void order_reduced_check_cleanup
         Sloped_relation* composition
     )
 {
-    
-    // Free CCL
-    for (int source = 0; source < num_nodes; source++) {
-        for (int sink = 0; sink < num_nodes; sink++) {
-            delete ccl[source][sink];
-        }
-        free(ccl[source]);
-    }
-    free(ccl);
-
     // First remove all the Sloped_relation objects stored in h_change from
     // the representatives set.
     // The correctness of this relies on the dimensions of ccl containing all
@@ -325,7 +318,30 @@ void order_reduced_check_cleanup
     if (composition != NULL) {
         delete composition;
     }
+}
 
+void order_reduced_cleanup
+    (
+        Relation_LIST*** ccl,
+        int num_nodes,
+        Set<std::reference_wrapper<Sloped_relation>,
+            Sloped_relation::linear_order>&
+                representatives,
+        Sloped_relation*** h_change,
+        Sloped_relation* composition
+    )
+{
+    
+    // Free CCL
+    for (int source = 0; source < num_nodes; source++) {
+        for (int sink = 0; sink < num_nodes; sink++) {
+            delete ccl[source][sink];
+        }
+        free(ccl[source]);
+    }
+    free(ccl);
+
+    common_cleanup(num_nodes, representatives, h_change, composition);
 }
 
 bool Heighted_graph::order_reduced_check(int opts){
@@ -360,19 +376,26 @@ bool Heighted_graph::order_reduced_check(int opts){
             otherwise we simply reject the relation and fail.
      */
 
-    // Number of actual nodes in the graph
+    // Local copy of number of actual nodes in the graph, to avoid some derefences
     int num_nodes = this->num_nodes();
 
-    // Maintain a set of unique representative objects for sloped relation
+    // Maintain a set of unique representative objects for sloped relations
     Set<std::reference_wrapper<Sloped_relation>, Sloped_relation::linear_order>
         representatives;
 
     // A single sloped relation for storing the result of composing relations
     Sloped_relation* composition = NULL;
 
+    // A set for keeping track of sloped relations that have been considered
+    // for the closure element currently being computed
+    Set<Sloped_relation*> visited;
+
+    // A list of sloped relations that need to be removed from the current
+    // closure element once it has been computed
+    Relation_LIST preceded;
+
     // Allocate array to hold CCL, and initialise it with the
     // (unique representatives of) relations stored in the h_change field
-    // If FAIL_FAST flag is set, also check appropriate relations for self-loops
     Relation_LIST*** ccl =
         (Relation_LIST***) malloc(sizeof(Relation_LIST**) * num_nodes);
     for(int i = 0; i < num_nodes; i++) {
@@ -404,7 +427,7 @@ bool Heighted_graph::order_reduced_check(int opts){
     // checks separately here
     if ((opts & FAIL_FAST) != 0) {
         if (!check_Ccl(ccl, opts)) {
-            order_reduced_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
+            order_reduced_cleanup(ccl, num_nodes, representatives, h_change, composition);
             return false;
         }
     }
@@ -414,15 +437,7 @@ bool Heighted_graph::order_reduced_check(int opts){
     std::chrono::time_point<std::chrono::system_clock> end;
 #endif
 
-    // A set for keeping track of sloped relations that have been considered
-    // for the closure element currently being computed
-    Set<Sloped_relation*> visited;
-
-    // A list of sloped relations that need to be removed from the current
-    // closure element once it has been computed
-    Relation_LIST preceded;
-
-    // initialise sloped relation for storing the result of composing relations
+    // Initialise sloped relation for storing the result of composing relations
     composition = new Sloped_relation(this->trace_width, this->trace_width);
 
     // Now compute the order-reduced closure
@@ -487,8 +502,9 @@ bool Heighted_graph::order_reduced_check(int opts){
 
                     // If fail-fast, then check for self-loop if necessary
                     if (fresh && ((opts & FAIL_FAST) != 0) && source == sink
-                                && !(check_self_loop(R, opts))) {
-                        order_reduced_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
+                                && !(check_self_loop(R, opts)))
+                    {
+                        order_reduced_cleanup(ccl, num_nodes, representatives, h_change, composition);
                         return false;
                     }
                 }
@@ -562,6 +578,7 @@ bool Heighted_graph::order_reduced_check(int opts){
             while (right != ccl[source][sink]->end()) {
                 Sloped_relation* Q = *right;
                 bool done = false;
+                // Q: can we not just use (left != initial_end) instead of !done?
                 for (auto left = ccl[source][sink]->begin(); !done; left++) {
                     Sloped_relation* P = *left;
 #ifdef LOG_STATS
@@ -598,9 +615,10 @@ bool Heighted_graph::order_reduced_check(int opts){
                         );
 
                     // If fail-fast, then check for self-loop if necessary
-                    if (fresh && ((opts & FAIL_FAST) != 0) && source == sink
+                    if (fresh && ((opts & FAIL_FAST) != 0) 
+                                /* && source == sink */ // Not necessary here, we know it's true
                                 && !(check_self_loop(R, opts))) {
-                        order_reduced_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
+                        order_reduced_cleanup(ccl, num_nodes, representatives, h_change, composition);
                         return false;
                     }
                     // If we processed the last element of the initial segment,
@@ -608,6 +626,11 @@ bool Heighted_graph::order_reduced_check(int opts){
                     if (left == initial_end) {
                         done = true;
                     }
+                    // TODO: We should be able to make an optimisation here.
+                    // If the current value of the iterator 'right' is one of
+                    // the relations removed (or recorded as preceded by R)
+                    // during the check_and_add above, then we can break out of
+                    // this inner loop (i.e. set done = true also in this case).
                 }
                 // Now move to the next relation in the queue
                 right++;
@@ -650,12 +673,12 @@ bool Heighted_graph::order_reduced_check(int opts){
     // If not using fast-fail, then check for self-loops in the computed CCL
     if ((opts & FAIL_FAST) == 0) {
         if (!check_Ccl(ccl, opts)) {
-            order_reduced_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
+            order_reduced_cleanup(ccl, num_nodes, representatives, h_change, composition);
             return false;
         }
     }
 
-    order_reduced_check_cleanup(ccl, num_nodes, representatives, h_change, composition);
+    order_reduced_cleanup(ccl, num_nodes, representatives, h_change, composition);
 
     return true;
 }
@@ -712,7 +735,7 @@ bool Heighted_graph::check_and_add
 
         for (auto it = entry.begin(); it != entry.end(); it++) {
 
-            // Get the next relation
+            // Get the next relation for comparison
             Sloped_relation* S = *it;
 
             // If the current relation is already in the list of (preserved but)
@@ -768,7 +791,7 @@ bool Heighted_graph::check_and_add
                     }
                     // Otherwise, remove S from the closure element immediately
                     else {
-                        // The erade method returns an iterator to the element
+                        // The erase method returns an iterator to the element
                         // immediately following the erased one
                         it = entry.erase(it);
                         // So decrement this result since the for loop with then
@@ -864,6 +887,454 @@ bool Heighted_graph::check_Ccl(Relation_LIST*** ccl, int opts) {
     return true;
 }
 
+//===============================================================
+// Flloyd-Warshall-Kleene Algorithm for checking Infinite Descent
+// by computing the composition closure
+//===============================================================
+void fwk_cleanup
+    (
+        Set<Sloped_relation*>*** ccl,
+        Set<Sloped_relation*>*** ccl_next,
+        int num_nodes,
+        Set<std::reference_wrapper<Sloped_relation>,
+            Sloped_relation::linear_order>&
+                representatives,
+        Sloped_relation*** h_change,
+        Sloped_relation* composition
+    )
+{
+    
+    // Free CCL
+    for (int source = 0; source < num_nodes; source++) {
+        for (int sink = 0; sink < num_nodes; sink++) {
+            delete ccl[source][sink];
+            delete ccl_next[source][sink];
+        }
+        free(ccl[source]);
+        free(ccl_next[source]);
+    }
+    free(ccl);
+    free(ccl_next);
+
+    common_cleanup(num_nodes, representatives, h_change, composition);
+}
+
+bool Heighted_graph::fwk_check(int opts) {
+
+    // Record flags
+    this->flags = opts;
+
+    // We cannot combine the idempotence and minimality optimisations.
+    assert(((opts & USE_IDEMPOTENCE) == 0) || ((opts & USE_MINIMALITY) == 0));
+    // It doesn't make sense to combine the idempotence and the SCC-based loop check
+    assert(((opts & USE_IDEMPOTENCE) == 0) || ((opts & USE_SCC_CHECK) == 0));
+
+    // Local copy of number of actual nodes in the graph, to avoid some derefences
+    int num_nodes = this->num_nodes();
+
+    // Maintain a set of unique representative objects for sloped relations
+    Set<std::reference_wrapper<Sloped_relation>, Sloped_relation::linear_order>
+        representatives;
+
+    // A single sloped relation for storing the result of composing relations
+    Sloped_relation* composition = NULL;
+
+    // A set for keeping track of sloped relations that have been considered
+    // for the closure element currently being computed
+    Set<Sloped_relation*> visited;
+
+    // A list of sloped relations that need to be removed from the current
+    // closure element once it has been computed
+    Relation_LIST preceded;
+
+    // Allocate arrays to accumulate CCL and compute next iteration,
+    // and initialise CCL accumulator with the (unique representatives of)
+    // relations stored in the h_change field
+    Set<Sloped_relation*>*** ccl =
+        (Set<Sloped_relation*>***)
+            malloc(sizeof(Set<Sloped_relation*>**) * num_nodes);
+    Set<Sloped_relation*>*** ccl_next =
+        (Set<Sloped_relation*>***)
+            malloc(sizeof(Set<Sloped_relation*>**) * num_nodes);
+    for(int i = 0; i < num_nodes; i++) {
+        ccl[i] =
+            (Set<Sloped_relation*>**)
+                malloc(sizeof(Set<Sloped_relation*>*) * num_nodes);
+        ccl_next[i] =
+            (Set<Sloped_relation*>**)
+                malloc(sizeof(Set<Sloped_relation*>*) * num_nodes);
+        for (int j = 0; j < num_nodes; j++) {
+            ccl[i][j] = new Set<Sloped_relation*>;
+            ccl_next[i][j] = new Set<Sloped_relation*>;
+            // If there is sloped relation for the corresponding edge
+            if (h_change[i][j] != NULL) {
+                // Get unique representative of the sloped relation
+                Sloped_relation& rep =
+                    *(representatives.insert(*h_change[i][j]).first);
+                // Ensure the relation is initialised
+                rep.initialize();
+                // Add it to the CCL
+                ccl[i][j]->insert(&rep);
+            }
+        }
+    }
+
+    // If fail-fast, then need to check initial sloped relations for self-loops
+    // We could have done this inline with the initialisation of the CCL, but
+    // given that we will need to reclaim the memory allocated for the CCL in
+    // the case that the check fails, it is more convenient to do this if the
+    // CCL memory allocation has fully completed. So we do the initial self-loop
+    // checks separately here
+    if ((opts & FAIL_FAST) != 0) {
+        if (!check_Ccl(ccl, opts)) {
+            fwk_cleanup(ccl, ccl_next, num_nodes, representatives, h_change, composition);
+            return false;
+        }
+    }
+
+    // Initialise sloped relation for storing the result of composing relations
+    composition = new Sloped_relation(this->trace_width, this->trace_width);
+
+    // A list of sloped relations, for storing the result of the asteration step
+    Relation_LIST asteration;
+
+    // Now compute the composition closure, using Floyd-Warshall-Kleene
+    for (int k = 0; k < num_nodes; k++) {
+        
+        // First, compute asteration/closure of ccl[k][k], which is used in
+        // all iterations of the inner nested loop
+
+        // Clear previous contents
+        asteration.clear();
+        
+        // Initialise with contents of closure element
+        for (Sloped_relation* R : *ccl[k][k]) {
+            asteration.push_back(R);
+        }
+        
+        // Start with an empty list of visited relations
+        visited.clear();
+        
+        // Now do the closure computation
+        // (note, this for loop is really a while loop, since elements get
+        //  added/removed from the list during the computation)
+        for (auto it = asteration.begin(); it != asteration.end(); it++) {
+            
+            Sloped_relation* Q = *it;
+            
+            for (Sloped_relation* P : *ccl[k][k]) {
+            
+                // Compute the composition of P and Q in-place
+                composition->reset();
+                composition->compose(*P, *Q);                
+            
+                // Get the unique representative of the composition
+                auto insert_result = representatives.insert(*composition);
+                Sloped_relation& R = *(insert_result.first);
+            
+                // If the representative is the same object just computed
+                // we need to initialise it, and then allocate a new object
+                // for holding the results of composition next time
+                if (insert_result.second) {
+                    R.initialize();
+                    composition =
+                        new Sloped_relation (
+                                this->trace_width,
+                                this->trace_width
+                            );
+                }
+
+                // If the new relation already appears in ccl[k][k]
+                // then nothing to do
+                if (ccl[k][k]->find(&R) != ccl[k][k]->end()) {
+                    continue;
+                }
+                
+                // Otherwise check if we have processed this relation before,
+                // adding it to the visited set if not
+                auto visited_res = visited.insert(&R);
+
+                // If this relation has not been previously processed, then we
+                // may need to add it to the closure, as well as remove some
+                // relations already present, depending on whether we are
+                // applying the minimality optimisation
+                if (visited_res.second) {
+
+                    // Start out assuming by default that we should add it
+                    bool add = true;
+
+                    // Flag to record if current element of asteration has been
+                    // removed, meaning we can break out of looping through
+                    // ccl[k][k] once R has been added
+                    bool skip = false;
+
+                    // If we are applying the minimality optimisation then we
+                    // need to go through the asteration set: if we find any
+                    // elements preceding R, we do not add R, and otherwise we
+                    // remove any elements preceded by R
+                    if ((opts & USE_MINIMALITY) != 0) {
+                        // Go through the asteration set to remove any preceded
+                        for (auto it2 = asteration.begin();
+                             it2 != asteration.end();
+                             it2++)
+                        {
+                            // Get the next relation for comparison
+                            Sloped_relation* S = *it2;
+                            // Compare S with R
+                            comparison cmp_result = S->compare(R);
+                            // If S < R, we don't need to add R
+                            if (cmp_result == lt) {
+                                add = false;
+                                break;
+                            }
+                            // If S > R, needs removing from the asteration set
+                            else if (cmp_result == gt) {
+                                // If S is the current element reference by 'it'
+                                // Need to modify outer iterator so that next
+                                // iteration correctly skips over element we
+                                // are going to remove
+                                if (it2 == it) {
+                                    it--;
+                                    skip = true;
+                                }
+                                // Remove S from the asteration set
+                                it2 = asteration.erase(it2);
+                                // Note that erase method returns iterator to
+                                // element following removed one, so decrement
+                                // this for next iteration to correctly skip
+                                // over removed element
+                                it2--;
+                            }
+                        }
+                    }
+
+                    // If we should still add it
+                    if (add) {
+                        // Then do so
+                        asteration.push_back(&R);
+                    }
+
+                    if (skip) {
+                        // Break out of iteration over ccl[k][k] to continue
+                        // processing next relation in the asteration
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Now we compute the next approximation of the CCL, in ccl_next
+
+        for (int i = 0; i < num_nodes; i++) {
+        for (int j = 0; j < num_nodes; j++) {
+
+            // If using the minimality optimisation, then clear the set for
+            // recording processed relations
+            if ((opts & USE_MINIMALITY) != 0) {
+                visited.clear();
+            }
+
+            // Initialise ccl_next[i][j] with ccl[i][j] using copy assignment
+            // Copy assignment needed since we need to preserve ccl[i][j], which
+            // might be used in other iterations of the outer loops
+            *ccl_next[i][j] = *ccl[i][j];
+
+            // Now compute
+            //     ccl[i][k] compose asteration(ccl[k][k]) compose ccl[k][j]
+            // adding the results to ccl_next[i][j]
+            // Note that i = k and j = k are special cases: then the asteration
+            // is equal to some or all this composition already.
+            // Note that to achieve uniformity in the code, the outermost and
+            // innermost loops here serve as "dummy" loops in these special
+            // cases, iterating only once by having the iteration condition
+            // being that the iterator is equal to begin().
+            for (auto left = ccl[i][k]->begin();
+                 i == k ? left == ccl[i][k]->begin() : left != ccl[i][k]->end();
+                 left++)
+            {
+                Sloped_relation* P = NULL;
+                if (i != k) {
+                    P = *left;
+                }
+
+                for (auto mid = asteration.begin();
+                     mid != asteration.end();
+                     mid++)
+                {
+                    Sloped_relation* Q = *mid;
+                    Sloped_relation* PQ = NULL;
+                    if (i == k) {
+                        PQ = Q;
+                    } else {
+                        // Compute the composition of P and Q in-place
+                        composition->reset();
+                        composition->compose(*P, *Q);
+                        // Get the unique representative of the composition
+                        auto insert_result
+                            = representatives.insert(*composition);
+                        PQ = &(insert_result.first->get());
+                        // If the representative is the object just computed
+                        // we need to initialise it, and then allocate a new
+                        // object for holding the results of composition
+                        if (insert_result.second) {
+                            PQ->initialize();
+                        }
+                        composition =
+                            new Sloped_relation (
+                                    this->trace_width,
+                                    this->trace_width
+                                );
+                    }
+
+                    for (auto right = ccl[k][j]->begin();
+                         k == j ? right == ccl[k][j]->begin()
+                                : right != ccl[k][j]->end();
+                        right++)
+                    {
+                        Sloped_relation* PQR = NULL;
+                        if (k == j) {
+                            PQR = PQ;
+                        } else {
+                            Sloped_relation* R = *right;
+                            // Compute the composition of PQ and R in-place
+                            composition->reset();
+                            composition->compose(*PQ, *R);
+                            // Get the unique representative of the composition
+                            auto insert_result
+                                = representatives.insert(*composition);
+                            PQR = &(insert_result.first->get());
+                            // If the representative is the object just computed
+                            // we need to initialise it, and then allocate a new
+                            // object for holding the results of composition
+                            if (insert_result.second) {
+                                PQR->initialize();
+                                composition =
+                                    new Sloped_relation (
+                                            this->trace_width,
+                                            this->trace_width
+                                        );
+                            }
+                        }
+                        bool added = true;
+                        // If not using the minimality optimisation
+                        if ((opts & USE_MINIMALITY) == 0) {
+                            // simply try adding PQR to ccl_next[i][j] directly
+                            auto res = ccl_next[i][j]->insert(PQR);
+                            // If it was already there, then reset added flag
+                            if (!res.second) {
+                                added = false;
+                            }
+                        }
+                        // Otherwise, we need to check if we have processed PQR
+                        // previously and, if not, check whether it precedes or
+                        // is preceded by other relations in ccl_next[i][j]
+                        else {
+                            // If PQR already appears in ccl[i][j], then we can
+                            // simply continue computing the rest of the closure
+                            // elements
+                            if (ccl[i][j]->find(PQR) != ccl[i][j]->end()) {
+                                continue;
+                            }
+                            // If not, check if we have processed PQR before
+                            // adding it to the visited set if not
+                            auto visited_res = visited.insert(PQR);
+                            // If PQR has previously been processed (i.e. the
+                            // insertion was not successful), then reset the
+                            // added flag
+                            if (!visited_res.second) {
+                                added = false;
+                            }
+                            // Otherwise check if need to add it to the closure,
+                            // or remove some relations already present
+                            else {
+                                // Start by assuming PQR needs to be added
+                                bool add = true;
+                                // Check relations currently in ccl_next[i][j]
+                                for (auto it = ccl_next[i][j]->begin();
+                                     it != ccl_next[i][j]->end();
+                                     it++)
+                                {
+                                    // Get the next relation for comparison
+                                    Sloped_relation* S = *it;
+                                    // Compare S with PQR
+                                    comparison cmp_result = S->compare(*PQR);
+                                    // If S < PQR, we don't need to add PQR
+                                    if (cmp_result == lt) {
+                                        add = false;
+                                        break;
+                                    }
+                                    // If S > PQR, S needs removing
+                                    else if (cmp_result == gt) {
+                                        // Remove S from the set
+                                        it = ccl_next[i][j]->erase(it);
+                                        // erase method returns iterator to the
+                                        // next element, so decrement it for
+                                        // next loop iteration to correctly skip
+                                        // over the removed element
+                                        it--;
+                                    }
+                                }
+                                // If we need to add PQR to ccl_next[i][j]
+                                if (add) {
+                                    // Then do so
+                                    ccl_next[i][j]->insert(PQR);
+                                }
+                                // Otherwise reset flag recording whether added
+                                else {
+                                    added = false;
+                                }
+                            }
+                        }
+
+                        // If it was added and we are using fast-fail,
+                        // then check for self-loop if necessary
+                        if (added && ((opts & FAIL_FAST) != 0) && i == j
+                                  && !(check_self_loop(*PQR, opts)))
+                        {
+                            fwk_cleanup(ccl, ccl_next, num_nodes, 
+                                        representatives, h_change,
+                                        composition);
+                            return false;
+                        }
+                    }
+                }
+            }
+
+        }
+        }
+
+        // Lastly, before next iteration, swap over references to
+        // CCL accumulator and the array for storing the next approximation
+        Set<Sloped_relation*>*** tmp = ccl;
+        ccl = ccl_next;
+        ccl_next = tmp;
+
+    }
+
+    // If not using fast-fail, check for self-loops in the fully computed CCL
+    if ((opts & FAIL_FAST) == 0) {
+        if (!check_Ccl(ccl, opts)) {
+            fwk_cleanup(ccl, ccl_next, num_nodes, representatives, h_change, composition);
+            return false;
+        }
+    }
+
+    fwk_cleanup(ccl, ccl_next, num_nodes, representatives, h_change, composition);
+
+    return true;
+}
+
+bool Heighted_graph::check_Ccl(Set<Sloped_relation*>*** ccl, int opts) {
+    int num_nodes = this->num_nodes();
+    for (int node = 0; node < num_nodes; node++) {
+        for (Sloped_relation* R : *ccl[node][node]) {
+            if (!check_self_loop(*R, opts)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 
 //=============================================================
 // Slope Language Automata Construction for Infinite Descent

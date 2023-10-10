@@ -3,6 +3,7 @@ open Parsers
 
 type soundness_method =
   | RELATIONAL_OCAML
+  | FWK_CPP
   | ORTL_CPP
   | VLA
   | SLA
@@ -10,6 +11,8 @@ type soundness_method =
 let soundness_method = ref RELATIONAL_OCAML
 let use_ortl () = 
   soundness_method := ORTL_CPP
+let use_fwk () =
+  soundness_method := FWK_CPP
 let use_vla () = 
   soundness_method := VLA
 let use_sla () =
@@ -689,6 +692,7 @@ module RelationalCheck = struct
     external add_stay : int -> int -> int -> int -> unit = "add_stay"
     external add_decrease : int -> int -> int -> int -> unit = "add_decr"
     external order_reduced_check : int -> bool = "order_reduced_check"
+    external fwk_check : int -> bool = "fwk_check"
     (* external sd_check : unit -> bool = "sd_check" *)
     external sla_automata_check : unit -> bool = "sla_automata_check"
     (* external xsd_check : unit -> bool = "xsd_check" *)
@@ -759,6 +763,8 @@ module RelationalCheck = struct
         match !soundness_method with
         | ORTL_CPP ->
           order_reduced_check !opts 
+        | FWK_CPP ->
+          fwk_check !opts
         | SLA ->
           sla_automata_check ()
         | _ ->
@@ -790,6 +796,7 @@ let arg_opts =
     ("-VLA", Arg.Unit use_vla, ": use Spot (vertex language automata construction) to verify pre-proof validity") ;
     ("-SLA", Arg.Unit use_sla, ": use Spot (slope language automata construction) to verify pre-proof validity") ;
     ("-OP", Arg.Unit use_ortl, ": use external C++ order-reduced relational check to verify pre-proof validity") ;
+    ("-FWK", Arg.Unit use_fwk, ": use external C++ Floyd-Warshall-Kleene relational check to verify pre-proof validity") ;
     ("-ff", Arg.Unit fail_fast, ": use fast fail in relation-based validty check") ;
     ("-scc", Arg.Unit use_scc_check, ": use SCC check in relation-based validity check") ;
     ("-idem", Arg.Unit use_idempotence, ": use idempotency optimisation in relation-based validity check") ;

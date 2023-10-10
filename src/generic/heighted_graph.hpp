@@ -80,6 +80,7 @@ private:
             Relation_LIST::iterator preserve_end, int opts);
     bool check_self_loop(Sloped_relation& R, int opts);
     bool check_Ccl(Relation_LIST*** ccl, int opts);
+    bool check_Ccl(Set<Sloped_relation*>*** ccl, int opts);
 
 
 public:
@@ -89,9 +90,10 @@ public:
     static const int USE_SCC_CHECK;
     static const int USE_IDEMPOTENCE;
     static const int USE_MINIMALITY;
-    static const int COMPUTE_FULL_CCL;
     static const int USE_SD;
     static const int USE_XSD;
+    static const int USE_ORTL;
+    static const int USE_FWK;
     static const int USE_SLA;
 
     static int parse_flags(const std::string flags);
@@ -114,6 +116,7 @@ public:
     int num_edges(void);
 
     bool order_reduced_check(int opts);
+    bool fwk_check(int opts);
     bool sla_automata_check(void);
 
     void print_statistics(void);

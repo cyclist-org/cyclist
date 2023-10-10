@@ -3,22 +3,29 @@
 
 open Lib
 
-(** Abstract proof node type. The only 
-    information stored is a set of tags (integers) and a list of
-    tuples of: successor, set of valid tag transitions and set of
-    progressing tag transitions. *)
+(** Abstract proof node type.
+    The only information stored is
+      - a set of tags (integers) and
+      - a list of tuples of:
+          + successor,
+          + set of valid tag transitions and
+          + set of progressing tag transitions. *)
 type abstract_node
 
 val use_vla : unit -> unit
 (** Flag to indicate whether the Spot model checker should be used to verify the
-    trace condition for proofs. *)
+    trace condition for proofs, using the vertex-language encoding. *)
+val use_sla : unit -> unit
+(** Flag to indicate whether the Spot model checker should be used to verify the
+    trace condition for proofs, using the slope-language encoding. *)
 
 val use_ortl : unit -> unit
 (** Flag to indicate whether trace condition check should be done by the
     order-reduced relational method using external C++ code. *)
-
-val use_sla : unit -> unit
-
+val use_fwk : unit -> unit
+(** Flag to indicate whether trace condition check should be done by the
+    Floyd-Warshall-Kleene relational method using external C++ code. *)
+    
 val fail_fast : unit -> unit
 (** Set fail_fast flag for C++ relation-based trace condition check *)
 val use_scc_check : unit -> unit

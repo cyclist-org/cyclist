@@ -28,9 +28,9 @@ heighted_graph.o: ../heighted_graph.hpp ../heighted_graph.c ../sloped_relation.h
 sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
 	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../sloped_relation.c -o sloped_relation.o
 
-.PHONY: clean tests test-suite-full test-suite-sd test-suite-xsd tests-rel tests-set tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-min tests-ff-scc tests-ff-idem tests-min-scc tests-ff-min-scc tests-1-ff tests-1-scc tests-1-idem tests-1-min tests-1-ff-min tests-1-ff-scc tests-1-ff-idem tests-1-min-scc tests-1-ff-min-scc tests-sd tests-xsd
+.PHONY: clean tests test-suite-full test-suite-sd test-suite-xsd tests-rel tests-set tests-sd tests-xsd tests-ortl tests-fwk tests-ortl-no-opts tests-ortl-ff tests-ortl-scc tests-ortl-idem tests-ortl-min tests-ortl-ff-min tests-ortl-ff-scc tests-ortl-ff-idem tests-ortl-min-scc tests-ortl-ff-min-scc tests-fwk-ff tests-fwk-scc tests-fwk-idem tests-fwk-min tests-fwk-ff-min tests-fwk-ff-scc tests-fwk-ff-idem tests-fwk-min-scc tests-fwk-ff-min-scc
 
-.SILENT: tests tests-rel tests-set tests-sd tests-xsd test-suite-full test-suite-sd test-suite-xsd test_success test_failure tests-no-opts tests-ff tests-scc tests-min tests-idem tests-ff-scc tests-min-scc tests-ff-idem
+.SILENT: tests tests-rel tests-set tests-sd tests-xsd test-suite-full test-suite-sd test-suite-xsd test_success test_failure tests-ortl-no-opts tests-ortl-ff tests-ortl-scc tests-ortl-idem tests-ortl-min tests-ortl-ff-min tests-ortl-ff-scc tests-ortl-ff-idem tests-ortl-min-scc tests-ortl-ff-min-scc tests-fwk-ff tests-fwk-scc tests-fwk-idem tests-fwk-min tests-fwk-ff-min tests-fwk-ff-scc tests-fwk-ff-idem tests-fwk-min-scc tests-fwk-ff-min-scc
 
 clean: 
 	rm -f ./*.o soundness
@@ -39,65 +39,69 @@ tests: tests-sla tests-rel tests-set
 
 tests-set: tests-sd tests-xsd
 
-tests-rel: tests-no-opts tests-ff tests-scc tests-idem tests-min tests-ff-min tests-ff-scc tests-ff-idem tests-min-scc tests-ff-min-scc tests-1-ff tests-1-scc tests-1-idem tests-1-min tests-1-ff-min tests-1-ff-scc tests-1-ff-idem tests-1-min-scc tests-1-ff-min-scc
+tests-ortl: tests-ortl-no-opts tests-ortl-ff tests-ortl-scc tests-ortl-idem tests-ortl-min tests-ortl-ff-min tests-ortl-ff-scc tests-ortl-ff-idem tests-ortl-min-scc tests-ortl-ff-min-scc
 
-tests-no-opts:
+tests-fwk: tests-fwk-ff tests-fwk-scc tests-fwk-idem tests-fwk-min tests-fwk-ff-min tests-fwk-ff-scc tests-fwk-ff-idem tests-fwk-min-scc tests-fwk-ff-min-scc
+
+tests-rel: tests-ortl tests-fwk
+
+tests-ortl-no-opts:
 	echo "NO OPTIMSATIONS";
-	export FLAGS=a; make -s test-suite-full
-tests-ff:
+	export FLAGS=O; make -s test-suite-full
+tests-ortl-ff:
 	echo "FAST-FAIL"
-	export FLAGS=af; make -s test-suite-full
-tests-scc:
+	export FLAGS=Of; make -s test-suite-full
+tests-ortl-scc:
 	echo "SCC LOOP CHECK"
-	export FLAGS=as; make -s test-suite-full
-tests-idem:
+	export FLAGS=Os; make -s test-suite-full
+tests-ortl-idem:
 	echo "IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=ai; make -s test-suite-full
-tests-min:
+	export FLAGS=Oi; make -s test-suite-full
+tests-ortl-min:
 	echo "MINIMAL CCL"
-	export FLAGS=am; make -s test-suite-full
-tests-ff-min:
+	export FLAGS=Om; make -s test-suite-full
+tests-ortl-ff-min:
 	echo "FAST-FAIL, MINIMAL CCL"
-	export FLAGS=afm; make -s test-suite-full
-tests-ff-scc:
+	export FLAGS=Ofm; make -s test-suite-full
+tests-ortl-ff-scc:
 	echo "FAST-FAIL, SCC LOOP CHECK"
-	export FLAGS=afs; make -s test-suite-full
-tests-ff-idem:
+	export FLAGS=Ofs; make -s test-suite-full
+tests-ortl-ff-idem:
 	echo "FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=afi; make -s test-suite-full
-tests-min-scc:
+	export FLAGS=Ofi; make -s test-suite-full
+tests-ortl-min-scc:
 	echo "MINIMAL CCL, SCC LOOP CHECK"
-	export FLAGS=ams; make -s test-suite-full
-tests-ff-min-scc:
+	export FLAGS=Oms; make -s test-suite-full
+tests-ortl-ff-min-scc:
 	echo "MINIMAL CCL, SCC LOOP CHECK"
-	export FLAGS=afms; make -s test-suite-full
-tests-1-ff:
+	export FLAGS=Ofms; make -s test-suite-full
+tests-fwk-ff:
 	echo "FAST-FAIL"
-	export FLAGS=f; make -s test-suite-full
-tests-1-scc:
+	export FLAGS=Kf; make -s test-suite-full
+tests-fwk-scc:
 	echo "SCC LOOP CHECK"
-	export FLAGS=s; make -s test-suite-full
-tests-1-idem:
+	export FLAGS=Ks; make -s test-suite-full
+tests-fwk-idem:
 	echo "IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=i; make -s test-suite-full
-tests-1-min:
+	export FLAGS=Ki; make -s test-suite-full
+tests-fwk-min:
 	echo "MINIMAL CCL"
-	export FLAGS=m; make -s test-suite-full
-tests-1-ff-min:
+	export FLAGS=Km; make -s test-suite-full
+tests-fwk-ff-min:
 	echo "FAST-FAIL, MINIMAL CCL"
-	export FLAGS=fm; make -s test-suite-full
-tests-1-ff-scc:
+	export FLAGS=Kfm; make -s test-suite-full
+tests-fwk-ff-scc:
 	echo "FAST-FAIL, SCC LOOP CHECK"
-	export FLAGS=fs; make -s test-suite-full
-tests-1-ff-idem:
+	export FLAGS=Kfs; make -s test-suite-full
+tests-fwk-ff-idem:
 	echo "FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=fi; make -s test-suite-full
-tests-1-min-scc:
+	export FLAGS=Kfi; make -s test-suite-full
+tests-fwk-min-scc:
 	echo "MINIMAL CCL, SCC LOOP CHECK"
-	export FLAGS=ms; make -s test-suite-full
-tests-1-ff-min-scc:
+	export FLAGS=Kms; make -s test-suite-full
+tests-fwk-ff-min-scc:
 	echo "MINIMAL CCL, SCC LOOP CHECK"
-	export FLAGS=fms; make -s test-suite-full
+	export FLAGS=Kfms; make -s test-suite-full
 
 test-suite-full: soundness
 	$(call test_success, graph_1)

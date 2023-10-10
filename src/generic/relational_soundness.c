@@ -92,6 +92,17 @@ extern "C" value order_reduced_check(value opts_) {
   CAMLreturn(v_res);
 }
 
+extern "C" value fwk_check(value opts_) {
+  CAMLparam1(opts_);
+  CAMLlocal1(v_res);
+
+  assert(hg);
+  int opts = Int_val(opts_);
+  bool retval = (hg->fwk_check(opts));
+
+  v_res = Val_bool(retval);
+  CAMLreturn(v_res);
+}
 
 extern "C" value sla_automata_check() {
   CAMLparam0();
