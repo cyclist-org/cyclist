@@ -1148,13 +1148,19 @@ bool Heighted_graph::fwk_check(int opts) {
             // innermost loops here serve as "dummy" loops in these special
             // cases, iterating only once by having the iteration condition
             // being that the iterator is equal to begin().
+            bool left_done = false;
             for (auto left = ccl[i][k]->begin();
-                 i == k ? left == ccl[i][k]->begin() : left != ccl[i][k]->end();
-                 left++)
+                 (i == k ? !left_done : left != ccl[i][k]->end());
+                 // The following iteration expression only increments iterator
+                 // if i != k
+                 (i == k ? left : left++))
             {
                 Sloped_relation* P = NULL;
                 if (i != k) {
                     P = *left;
+                } else {
+                    // When i == k, we run this loop exactly once
+                    left_done = true;
                 }
 
                 for (auto mid = asteration.begin();
@@ -1186,14 +1192,18 @@ bool Heighted_graph::fwk_check(int opts) {
                                 );
                     }
 
+                    bool right_done = false;
                     for (auto right = ccl[k][j]->begin();
-                         k == j ? right == ccl[k][j]->begin()
-                                : right != ccl[k][j]->end();
-                        right++)
+                         k == j ? !right_done : right != ccl[k][j]->end();
+                        // The following iteration expression only increments
+                        // iterator if k != j
+                        (k == j ? right : right++))
                     {
                         Sloped_relation* PQR = NULL;
                         if (k == j) {
                             PQR = PQ;
+                            // When k == j, we run this loop exactly once
+                            right_done = true;
                         } else {
                             Sloped_relation* R = *right;
                             // Compute the composition of PQ and R in-place
@@ -1270,8 +1280,12 @@ bool Heighted_graph::fwk_check(int opts) {
                                         // erase method returns iterator to the
                                         // next element, so decrement it for
                                         // next loop iteration to correctly skip
-                                        // over the removed element
-                                        it--;
+                                        // over the removed element, but only if
+                                        // there are still elements in the set;
+                                        // Otherwise we get segfault!
+                                        if (ccl_next[i][j]->size() != 0) {
+                                            it--;
+                                        }
                                     }
                                 }
                                 // If we need to add PQR to ccl_next[i][j]
