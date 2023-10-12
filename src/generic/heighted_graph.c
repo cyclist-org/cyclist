@@ -937,7 +937,7 @@ bool Heighted_graph::fwk_check(int opts) {
         representatives;
 
     // A single sloped relation for storing the result of composing relations
-    Sloped_relation* composition = NULL;
+    Sloped_relation* tmp_relation = NULL;
 
     // A set for keeping track of sloped relations that have been considered
     // for the closure element currently being computed
@@ -987,13 +987,24 @@ bool Heighted_graph::fwk_check(int opts) {
     // checks separately here
     if ((opts & FAIL_FAST) != 0) {
         if (!check_Ccl(ccl, opts)) {
-            fwk_cleanup(ccl, ccl_next, num_nodes, representatives, h_change, composition);
+            fwk_cleanup(ccl, ccl_next, num_nodes, representatives, h_change, tmp_relation);
             return false;
         }
     }
 
-    // Initialise sloped relation for storing the result of composing relations
-    composition = new Sloped_relation(this->trace_width, this->trace_width);
+    // Create identity sloped relation
+    tmp_relation = 
+        new Sloped_relation(this->trace_width, this->trace_width, Stay);
+    // Get the unique representative of the relation
+    auto insert_result = representatives.insert(*tmp_relation);
+    Sloped_relation& identity = *(insert_result.first);
+    // If the representative is the same object just computed then we need to
+    // initialise it, and then allocate a new sloped relation object
+    if (insert_result.second) {
+        identity.initialize();
+        tmp_relation = 
+            new Sloped_relation(this->trace_width, this->trace_width);
+    }
 
     // A list of sloped relations, for storing the result of the asteration step
     Relation_LIST asteration;
@@ -1006,6 +1017,17 @@ bool Heighted_graph::fwk_check(int opts) {
 
         // Clear previous contents
         asteration.clear();
+
+        // If the identity sloped relation is not already in ccl[k][k], then
+        // add it as the first element in the asteration list, and record
+        // whether the identity relation appears first (needed later).
+        bool identity_first = true;
+        if (ccl[k][k]->find(&identity) == ccl[k][k]->end()) {
+            // Add the identity relation to the asteration set
+            asteration.push_front(&identity);
+        } else {
+            identity_first = false;
+        }
         
         // Initialise with contents of closure element
         for (Sloped_relation* R : *ccl[k][k]) {
@@ -1025,11 +1047,11 @@ bool Heighted_graph::fwk_check(int opts) {
             for (Sloped_relation* P : *ccl[k][k]) {
             
                 // Compute the composition of P and Q in-place
-                composition->reset();
-                composition->compose(*P, *Q);                
+                tmp_relation->reset();
+                tmp_relation->compose(*P, *Q);                
             
                 // Get the unique representative of the composition
-                auto insert_result = representatives.insert(*composition);
+                auto insert_result = representatives.insert(*tmp_relation);
                 Sloped_relation& R = *(insert_result.first);
             
                 // If the representative is the same object just computed
@@ -1037,7 +1059,7 @@ bool Heighted_graph::fwk_check(int opts) {
                 // for holding the results of composition next time
                 if (insert_result.second) {
                     R.initialize();
-                    composition =
+                    tmp_relation =
                         new Sloped_relation (
                                 this->trace_width,
                                 this->trace_width
@@ -1163,21 +1185,24 @@ bool Heighted_graph::fwk_check(int opts) {
                     left_done = true;
                 }
 
-                for (auto mid = asteration.begin();
-                     mid != asteration.end();
-                     mid++)
-                {
+                auto mid = asteration.begin();
+                // If i == k or j == k, then we can skip the first element of
+                // the asteration set, which is the unit sloped relation
+                if (identity_first && (i == k || j == k)) {
+                    mid++;
+                }
+                for (mid; mid != asteration.end(); mid++) {
                     Sloped_relation* Q = *mid;
                     Sloped_relation* PQ = NULL;
                     if (i == k) {
                         PQ = Q;
                     } else {
                         // Compute the composition of P and Q in-place
-                        composition->reset();
-                        composition->compose(*P, *Q);
+                        tmp_relation->reset();
+                        tmp_relation->compose(*P, *Q);
                         // Get the unique representative of the composition
                         auto insert_result
-                            = representatives.insert(*composition);
+                            = representatives.insert(*tmp_relation);
                         PQ = &(insert_result.first->get());
                         // If the representative is the object just computed
                         // we need to initialise it, and then allocate a new
@@ -1185,7 +1210,7 @@ bool Heighted_graph::fwk_check(int opts) {
                         if (insert_result.second) {
                             PQ->initialize();
                         }
-                        composition =
+                        tmp_relation =
                             new Sloped_relation (
                                     this->trace_width,
                                     this->trace_width
@@ -1207,18 +1232,18 @@ bool Heighted_graph::fwk_check(int opts) {
                         } else {
                             Sloped_relation* R = *right;
                             // Compute the composition of PQ and R in-place
-                            composition->reset();
-                            composition->compose(*PQ, *R);
+                            tmp_relation->reset();
+                            tmp_relation->compose(*PQ, *R);
                             // Get the unique representative of the composition
                             auto insert_result
-                                = representatives.insert(*composition);
+                                = representatives.insert(*tmp_relation);
                             PQR = &(insert_result.first->get());
                             // If the representative is the object just computed
                             // we need to initialise it, and then allocate a new
                             // object for holding the results of composition
                             if (insert_result.second) {
                                 PQR->initialize();
-                                composition =
+                                tmp_relation =
                                     new Sloped_relation (
                                             this->trace_width,
                                             this->trace_width
@@ -1307,7 +1332,7 @@ bool Heighted_graph::fwk_check(int opts) {
                         {
                             fwk_cleanup(ccl, ccl_next, num_nodes, 
                                         representatives, h_change,
-                                        composition);
+                                        tmp_relation);
                             return false;
                         }
                     }
@@ -1328,12 +1353,12 @@ bool Heighted_graph::fwk_check(int opts) {
     // If not using fast-fail, check for self-loops in the fully computed CCL
     if ((opts & FAIL_FAST) == 0) {
         if (!check_Ccl(ccl, opts)) {
-            fwk_cleanup(ccl, ccl_next, num_nodes, representatives, h_change, composition);
+            fwk_cleanup(ccl, ccl_next, num_nodes, representatives, h_change, tmp_relation);
             return false;
         }
     }
 
-    fwk_cleanup(ccl, ccl_next, num_nodes, representatives, h_change, composition);
+    fwk_cleanup(ccl, ccl_next, num_nodes, representatives, h_change, tmp_relation);
 
     return true;
 }

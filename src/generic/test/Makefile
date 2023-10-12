@@ -30,7 +30,7 @@ sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
 
 .PHONY: clean tests test-suite-full test-suite-sd test-suite-xsd tests-rel tests-set tests-sd tests-xsd tests-ortl tests-fwk tests-ortl-no-opts tests-ortl-ff tests-ortl-scc tests-ortl-idem tests-ortl-min tests-ortl-ff-min tests-ortl-ff-scc tests-ortl-ff-idem tests-ortl-min-scc tests-ortl-ff-min-scc tests-fwk-ff tests-fwk-scc tests-fwk-idem tests-fwk-min tests-fwk-ff-min tests-fwk-ff-scc tests-fwk-ff-idem tests-fwk-min-scc tests-fwk-ff-min-scc
 
-.SILENT: tests tests-rel tests-set tests-sd tests-xsd test-suite-full test-suite-sd test-suite-xsd test_success test_failure tests-ortl-no-opts tests-ortl-ff tests-ortl-scc tests-ortl-idem tests-ortl-min tests-ortl-ff-min tests-ortl-ff-scc tests-ortl-ff-idem tests-ortl-min-scc tests-ortl-ff-min-scc tests-fwk-ff tests-fwk-scc tests-fwk-idem tests-fwk-min tests-fwk-ff-min tests-fwk-ff-scc tests-fwk-ff-idem tests-fwk-min-scc tests-fwk-ff-min-scc
+.SILENT: tests tests-rel tests-set tests-sd tests-xsd test-suite-full test-suite-sd test-suite-xsd test_success test_failure tests-ortl-no-opts tests-ortl-ff tests-ortl-scc tests-ortl-idem tests-ortl-min tests-ortl-ff-min tests-ortl-ff-scc tests-ortl-ff-idem tests-ortl-min-scc tests-ortl-ff-min-scc tests-fwk-no-opts tests-fwk-ff tests-fwk-scc tests-fwk-idem tests-fwk-min tests-fwk-ff-min tests-fwk-ff-scc tests-fwk-ff-idem tests-fwk-min-scc tests-fwk-ff-min-scc
 
 clean: 
 	rm -f ./*.o soundness
@@ -41,66 +41,69 @@ tests-set: tests-sd tests-xsd
 
 tests-ortl: tests-ortl-no-opts tests-ortl-ff tests-ortl-scc tests-ortl-idem tests-ortl-min tests-ortl-ff-min tests-ortl-ff-scc tests-ortl-ff-idem tests-ortl-min-scc tests-ortl-ff-min-scc
 
-tests-fwk: tests-fwk-ff tests-fwk-scc tests-fwk-idem tests-fwk-min tests-fwk-ff-min tests-fwk-ff-scc tests-fwk-ff-idem tests-fwk-min-scc tests-fwk-ff-min-scc
+tests-fwk: tests-fwk-no-opts tests-fwk-ff tests-fwk-scc tests-fwk-idem tests-fwk-min tests-fwk-ff-min tests-fwk-ff-scc tests-fwk-ff-idem tests-fwk-min-scc tests-fwk-ff-min-scc
 
 tests-rel: tests-ortl tests-fwk
 
 tests-ortl-no-opts:
-	echo "NO OPTIMSATIONS";
+	echo "ORTL NO OPTIMSATIONS";
 	export FLAGS=O; make -s test-suite-full
 tests-ortl-ff:
-	echo "FAST-FAIL"
+	echo "ORTL FAST-FAIL"
 	export FLAGS=Of; make -s test-suite-full
 tests-ortl-scc:
-	echo "SCC LOOP CHECK"
+	echo "ORTL SCC LOOP CHECK"
 	export FLAGS=Os; make -s test-suite-full
 tests-ortl-idem:
-	echo "IDEMPOTENT RELATIONS ONLY"
+	echo "ORTL IDEMPOTENT RELATIONS ONLY"
 	export FLAGS=Oi; make -s test-suite-full
 tests-ortl-min:
-	echo "MINIMAL CCL"
+	echo "ORTL MINIMAL CCL"
 	export FLAGS=Om; make -s test-suite-full
 tests-ortl-ff-min:
-	echo "FAST-FAIL, MINIMAL CCL"
+	echo "ORTL FAST-FAIL, MINIMAL CCL"
 	export FLAGS=Ofm; make -s test-suite-full
 tests-ortl-ff-scc:
-	echo "FAST-FAIL, SCC LOOP CHECK"
+	echo "ORTL FAST-FAIL, SCC LOOP CHECK"
 	export FLAGS=Ofs; make -s test-suite-full
 tests-ortl-ff-idem:
-	echo "FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
+	echo "ORTL FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
 	export FLAGS=Ofi; make -s test-suite-full
 tests-ortl-min-scc:
-	echo "MINIMAL CCL, SCC LOOP CHECK"
+	echo "ORTL MINIMAL CCL, SCC LOOP CHECK"
 	export FLAGS=Oms; make -s test-suite-full
 tests-ortl-ff-min-scc:
-	echo "MINIMAL CCL, SCC LOOP CHECK"
+	echo "ORTL MINIMAL CCL, SCC LOOP CHECK"
 	export FLAGS=Ofms; make -s test-suite-full
+tests-fwk-no-opts:
+	echo "FWK NO OPTIMSATIONS";
+	export FLAGS=K; make -s test-suite-full
 tests-fwk-ff:
-	echo "FAST-FAIL"
+	echo "FWK FAST-FAIL"
 	export FLAGS=Kf; make -s test-suite-full
 tests-fwk-scc:
-	echo "SCC LOOP CHECK"
+	echo "FWK SCC LOOP CHECK"
 	export FLAGS=Ks; make -s test-suite-full
 tests-fwk-idem:
-	echo "IDEMPOTENT RELATIONS ONLY"
+	echo "FWK IDEMPOTENT RELATIONS ONLY"
 	export FLAGS=Ki; make -s test-suite-full
 tests-fwk-min:
-	echo "MINIMAL CCL"
+	echo "FWK MINIMAL CCL"
 	export FLAGS=Km; make -s test-suite-full
 tests-fwk-ff-min:
-	echo "FAST-FAIL, MINIMAL CCL"
+	echo "FWK FAST-FAIL, MINIMAL CCL"
 	export FLAGS=Kfm; make -s test-suite-full
 tests-fwk-ff-scc:
-	echo "FAST-FAIL, SCC LOOP CHECK"
+	echo "FWK FAST-FAIL, SCC LOOP CHECK"
 	export FLAGS=Kfs; make -s test-suite-full
 tests-fwk-ff-idem:
-	echo "FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
+	echo "FWK FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
 	export FLAGS=Kfi; make -s test-suite-full
 tests-fwk-min-scc:
-	echo "MINIMAL CCL, SCC LOOP CHECK"
+	echo "FWK MINIMAL CCL, SCC LOOP CHECK"
 	export FLAGS=Kms; make -s test-suite-full
 tests-fwk-ff-min-scc:
-	echo "MINIMAL CCL, SCC LOOP CHECK"
+	echo "FWK MINIMAL CCL, SCC LOOP CHECK"
 	export FLAGS=Kfms; make -s test-suite-full
 
 test-suite-full: soundness

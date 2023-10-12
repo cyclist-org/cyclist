@@ -11,7 +11,11 @@
 
 //==================================================================
 // USE : ON CREATION
-Sloped_relation::Sloped_relation(int num_src_heights, int num_dst_heights) {
+Sloped_relation::Sloped_relation(
+        int num_src_heights,
+        int num_dst_heights,
+        slope diagonal)
+{
 
     this->num_src_heights = num_src_heights;
     this->num_dst_heights = num_dst_heights;
@@ -21,7 +25,11 @@ Sloped_relation::Sloped_relation(int num_src_heights, int num_dst_heights) {
     for( int i = 0 ; i < num_src_heights ; i++ ){
         repr_matrix[i] = (int*) malloc(sizeof(int) * num_dst_heights);
         for( int j = 0 ; j < num_dst_heights ; j++ ){
-            repr_matrix[i][j] = Undef;
+            if (i == j) {
+                repr_matrix[i][j] = diagonal;
+            } else  {
+                repr_matrix[i][j] = Undef;
+            }
         }
     }
 

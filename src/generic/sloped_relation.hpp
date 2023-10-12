@@ -37,7 +37,9 @@ private:
 public:
 
 
-    Sloped_relation(int num_src_heights, int num_dst_heights);
+    Sloped_relation(int num_src_heights, int num_dst_heights)
+        : Sloped_relation(num_src_heights, num_dst_heights, Undef) {}
+    Sloped_relation(int num_src_heights, int num_dst_heights, slope diagonal);
 
     // This constructor used in compute_transitive_closure
     Sloped_relation( const Sloped_relation& R );
