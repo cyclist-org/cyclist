@@ -1018,6 +1018,9 @@ bool Heighted_graph::fwk_check(int opts) {
         // Clear previous contents
         asteration.clear();
 
+        // Start with an empty list of visited relations
+        visited.clear();
+        
         // If the identity sloped relation is not already in ccl[k][k], then
         // add it as the first element in the asteration list, and record
         // whether the identity relation appears first (needed later).
@@ -1025,6 +1028,8 @@ bool Heighted_graph::fwk_check(int opts) {
         if (ccl[k][k]->find(&identity) == ccl[k][k]->end()) {
             // Add the identity relation to the asteration set
             asteration.push_front(&identity);
+            // Record it as visited
+            visited.insert(&identity);
         } else {
             identity_first = false;
         }
@@ -1033,9 +1038,6 @@ bool Heighted_graph::fwk_check(int opts) {
         for (Sloped_relation* R : *ccl[k][k]) {
             asteration.push_back(R);
         }
-        
-        // Start with an empty list of visited relations
-        visited.clear();
         
         // Now do the closure computation
         // (note, this for loop is really a while loop, since elements get
