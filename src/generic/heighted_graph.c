@@ -168,6 +168,19 @@ void print_ccl(Relation_LIST*** ccl, int num_nodes) {
     }
 }
 
+void print_ccl(Set<Sloped_relation*>*** ccl, int num_nodes) {
+    for (int source = 0; source < num_nodes; source++) {
+    for (int sink = 0; sink < num_nodes; sink++) {
+        for (auto R : *ccl[source][sink]) {
+            std::cout << "<><><><><><><><><><><><><><><><><><><><><><><><><><><><><>" << std::endl;
+            std::cout << source << " " << sink << std::endl;
+            std::cout << *R;
+            std::cout << "<><><><><><><><><><><><><><><><><><><><><><><><><><><><><>" << std::endl;
+        }
+    }
+    }
+}
+
 void Heighted_graph::print_statistics(void) {
     print_flags(this->flags);
 #ifdef LOG_STATS
