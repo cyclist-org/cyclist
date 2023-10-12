@@ -1317,15 +1317,20 @@ bool Heighted_graph::fwk_check(int opts) {
                                     else if (cmp_result == gt) {
                                         // Remove S from the set
                                         it = ccl_next[i][j]->erase(it);
-                                        // erase method returns iterator to the
-                                        // next element, so decrement it for
-                                        // next loop iteration to correctly skip
-                                        // over the removed element, but only if
-                                        // there are still elements in the set;
-                                        // Otherwise we get segfault!
-                                        if (ccl_next[i][j]->size() != 0) {
-                                            it--;
+                                        // If we removed the last item, then
+                                        // break out of the loop here, since the
+                                        // iteration expression will try to
+                                        // increment past the end of the container
+                                        if (ccl_next[i][j]->size() == 0) {
+                                            break;
                                         }
+                                        // If there are still elements, then
+                                        // decrement iterator so that next loop
+                                        // iteration correctly skips over the
+                                        // removed element, since the erase
+                                        // method returns iterator to the next
+                                        // next element
+                                        it--;
                                     }
                                 }
                                 // If we need to add PQR to ccl_next[i][j]
