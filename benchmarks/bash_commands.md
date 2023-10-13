@@ -21,7 +21,7 @@ for f in benchmarks/fo/*.tst; do
   while read -r SEQ; do
     tst=${f%.tst}; tst=${tst##*/};
     logfile="benchmarks/logs/fo-${tst}.$i.log";
-    (dune exec src/firstorder/prove.exe -- -d -s -p -t 30 -OP -min -scc -ff -S "${SEQ}" > ${logfile} 2>&1);
+    (dune exec src/firstorder/prove.exe -- -d -s -p -t 30 -OR -min -scc -ff -S "${SEQ}" > ${logfile} 2>&1);
     if `grep "NOT proved" ${logfile} > /dev/null`; then rm -f ${logfile}; fi;
     let i=i+1;
   done < "$f";
@@ -36,7 +36,7 @@ for f in benchmarks/sl/base/*.tst; do
   while read -r SEQ; do
     tst=${f%.tst}; tst=${tst##*/};
     logfile="benchmarks/logs/base-${tst}.$i.log";
-    (dune exec src/seplog/prove.exe -- -d -s -p -t 30 -OP -min -scc -ff -S "${SEQ}" > ${logfile} 2>&1);
+    (dune exec src/seplog/prove.exe -- -d -s -p -t 30 -OR -min -scc -ff -S "${SEQ}" > ${logfile} 2>&1);
     if `grep "NOT proved" ${logfile} > /dev/null`; then rm -f ${logfile}; fi;
     let i=i+1;
   done < "$f";
@@ -51,7 +51,7 @@ for f in benchmarks/sl/songbird/*.tst; do
   while read -r SEQ; do
     tst=${f%.tst}; tst=${tst##*/};
     logfile="benchmarks/logs/songbird-${tst}.$i.log";
-    (dune exec src/seplog/prove.exe -- -D examples/songbird.defs -d -s -p -t 30 -OP -min -scc -ff -S "${SEQ}" > ${logfile} 2>&1);
+    (dune exec src/seplog/prove.exe -- -D examples/songbird.defs -d -s -p -t 30 -OR -min -scc -ff -S "${SEQ}" > ${logfile} 2>&1);
     if `grep "NOT proved" ${logfile} > /dev/null`; then rm -f ${logfile}; fi;
     let i=i+1;
   done < "$f";
@@ -66,7 +66,7 @@ for f in benchmarks/sl/atva-2014/*.tst; do
   while read -r SEQ; do
     tst=${f%.tst}; tst=${tst##*/};
     logfile="benchmarks/logs/atva-${tst}.$i.log";
-    (dune exec src/seplog/prove.exe -- -D examples/IosifEtAl-ATVA2014.defs -d -s -p -t 30 -OP -min -scc -ff -S "${SEQ}" > ${logfile} 2>&1);
+    (dune exec src/seplog/prove.exe -- -D examples/IosifEtAl-ATVA2014.defs -d -s -p -t 30 -OR -min -scc -ff -S "${SEQ}" > ${logfile} 2>&1);
     if `grep "NOT proved" ${logfile} > /dev/null`; then rm -f ${logfile}; fi;
     let i=i+1;
   done < "$f";

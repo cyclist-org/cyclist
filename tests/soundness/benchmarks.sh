@@ -10,7 +10,7 @@ fi
 now=$(date +"%Y-%m-%d_%H-%M-%S")
 sha=$(git rev-parse --short HEAD)
 
-base_opts=("-VLA" "-SLA" "-OP -min -scc -ff")
+base_opts=("-VLA" "-SLA" "-OR -min -scc -ff")
 
 
 # test1.exe - positive examples, n varies, p = 1

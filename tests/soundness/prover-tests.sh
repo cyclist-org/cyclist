@@ -7,7 +7,7 @@ if [ -z "$iterations" ]; then
   iterations=1
 fi
 
-opts=("-VLA" "-SLA" "-OP -min -scc -ff" )
+opts=("-VLA" "-SLA" "-OR -min -scc -ff" )
 now=$(date +"%Y-%m-%d_%H-%M-%S")
 sha=$(git rev-parse --short HEAD)
 

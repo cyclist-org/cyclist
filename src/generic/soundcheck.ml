@@ -795,7 +795,7 @@ let arg_opts =
   [
     ("-VLA", Arg.Unit use_vla, ": use Spot (vertex language automata construction) to verify pre-proof validity") ;
     ("-SLA", Arg.Unit use_sla, ": use Spot (slope language automata construction) to verify pre-proof validity") ;
-    ("-OP", Arg.Unit use_ortl, ": use external C++ order-reduced relational check to verify pre-proof validity") ;
+    ("-OR", Arg.Unit use_ortl, ": use external C++ order-reduced relational check to verify pre-proof validity") ;
     ("-FWK", Arg.Unit use_fwk, ": use external C++ Floyd-Warshall-Kleene relational check to verify pre-proof validity") ;
     ("-ff", Arg.Unit fail_fast, ": use fast fail in relation-based validty check") ;
     ("-scc", Arg.Unit use_scc_check, ": use SCC check in relation-based validity check") ;
