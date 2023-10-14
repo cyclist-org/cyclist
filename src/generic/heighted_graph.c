@@ -17,15 +17,16 @@
 //=============================================================
 // N.B. These MUST match the corresponding constants in the OCaml code
 //      Look in soundcheck.ml
-const int Heighted_graph::FAIL_FAST        = 0b000000001;
-const int Heighted_graph::USE_SCC_CHECK    = 0b000000010;
-const int Heighted_graph::USE_IDEMPOTENCE  = 0b000000100;
-const int Heighted_graph::USE_MINIMALITY   = 0b000001000;
-const int Heighted_graph::USE_SD           = 0b000010000;
-const int Heighted_graph::USE_XSD          = 0b000100000;
-const int Heighted_graph::USE_ORTL         = 0b001000000;
-const int Heighted_graph::USE_FWK          = 0b010000000;
-const int Heighted_graph::USE_SLA          = 0b100000000;
+const int Heighted_graph::FAIL_FAST        = 0b0000000001;
+const int Heighted_graph::USE_SCC_CHECK    = 0b0000000010;
+const int Heighted_graph::USE_IDEMPOTENCE  = 0b0000000100;
+const int Heighted_graph::USE_MINIMALITY   = 0b0000001000;
+const int Heighted_graph::USE_SD           = 0b0000010000;
+const int Heighted_graph::USE_XSD          = 0b0000100000;
+const int Heighted_graph::USE_ORTL         = 0b0001000000;
+const int Heighted_graph::USE_FWK          = 0b0010000000;
+const int Heighted_graph::USE_SLA          = 0b0100000000;
+const int Heighted_graph::USE_VLA          = 0b1000000000;
 
 //=============================================================
 // Constructors / Destructor
@@ -145,9 +146,9 @@ int Heighted_graph::parse_flags(const std::string flags_s) {
             case 'O': flags |= USE_ORTL; break;
             case 'K': flags |= USE_FWK; break;
             case 'A': flags |= USE_SLA; break;
+            case 'V': flags |= USE_VLA; break;
         }
     }
-    assert(((flags & USE_SD) == 0) || ((flags & USE_XSD) == 0));
     return flags;
 }
 
@@ -1395,9 +1396,180 @@ bool Heighted_graph::check_Ccl(Set<Sloped_relation*>*** ccl, int opts) {
     return true;
 }
 
-//=============================================================
-// Slope Language Automata Construction for Infinite Descent
-//=============================================================
+//======================================================
+// Automata Constructions for  Checking Infinite Descent
+//======================================================
+
+/*
+ * Creates and registers atomic propositions with the given automata,
+ * using them as "bits" to create BDDs encoding binary representation of IDs
+ * for each alphabet letter.
+ * 
+ * N.B. This assumes that [alphabet_vec] has already allocated space to store
+ * at least [size] elements. Behaviour is undefined if this doesn't hold.
+ * It also assumes that the elements stored in the vector are equal to bddtrue.
+ */
+void init_alphabet(
+    int size,
+    spot::twa_graph_ptr path_aut,
+    spot::twa_graph_ptr trace_aut,
+    Vec<bdd>& alphabet_vec
+) {
+    // First, register atomic propositions.
+    // Note that atomic propositions are given an ID according to the order
+    // that they are created in, so we could simply use loop counters below
+    // when generating the associated BDDs using the bdd_ithvar function.
+    // However, the documentation doesn't specify that the IDs are created like
+    // this, so it's safer to store the IDs returned by the register_ap method
+    // in case this changes in future releases.
+    int ap_size = ceil(log2(size));
+    Vec<int> propositions(ap_size);
+    for(int i=0; i < ap_size; ++i) {
+        std::stringstream ss;
+        ss << "p_" << i;
+        propositions[i] = path_aut->register_ap(ss.str());
+        trace_aut->register_ap(ss.str());
+    }
+
+    // Now, generate the BDDs for each letter of the alphabet
+    Vec<bdd> idx_encoding(size, bddtrue);
+    for (int idx = 0; idx < size; idx++) {
+        assert (alphabet_vec[idx] == bddtrue);
+        int code = idx;
+        for (int i = 0; i < ap_size; i++) {
+            bdd p = bdd_ithvar(propositions[i]);
+            alphabet_vec[idx] &= ((code & 0b1) ? bdd_not(p) : p);
+            code >>= 1;
+        }
+    }    
+}
+
+bool Heighted_graph::vla_automata_check() {
+
+    // BDD dictionary for the automata
+    spot::bdd_dict_ptr    dict;
+
+    int                   num_nodes = this->num_nodes();
+    
+    // Number of atomic propositions (bits) to use to represent letters accepted
+    // by the automata
+    int                   ap_size = ceil(log2(num_nodes));
+
+    // Number of states in the automata
+    int                   num_states_ip = num_nodes + 1;
+    int                   num_states_tr = 1 + (num_nodes * this->trace_width);
+    
+    // Initial states of the respective automata
+    int                   s_init_ip = num_states_ip - 1;
+    int                   s_init_tr = num_states_tr - 1;
+    
+    // References to the automata objects themselves
+    spot::twa_graph_ptr   aut_ipath;
+    spot::twa_graph_ptr   aut_trace;
+
+    /*************************
+     * Initialise the automata
+     *************************/
+
+    dict = spot::make_bdd_dict();
+    aut_ipath = make_twa_graph(dict);
+    aut_trace = make_twa_graph(dict);
+
+    aut_ipath->set_buchi();
+    aut_ipath->new_states(num_states_ip);
+    aut_ipath->set_init_state(s_init_ip);
+
+    aut_trace->set_buchi();
+    aut_trace->new_states(num_states_tr);
+    aut_trace->set_init_state(s_init_tr);
+
+    /******************************
+     * Set up the automata alphabet
+     ******************************/
+
+    Vec<bdd> idx_encoding(num_nodes, bddtrue);
+    init_alphabet(num_nodes, aut_ipath, aut_trace, idx_encoding);
+
+
+    /*********************************
+     * Create the automata transitions
+     *********************************/
+
+    //
+    // Path automaton
+    //
+
+    // Set up transitions corresponding to graph edges
+    for (int src = 0; src < this->max_nodes; src++) {
+        for (int sink = 0; sink < this->max_nodes; sink++) {
+            if (h_change[src][sink] != NULL) {
+                aut_ipath->new_edge(src, sink, idx_encoding[sink], {0});
+            } else {
+                // There should not be any edges between "non-existent" nodes
+                assert(src < num_nodes && sink < num_nodes);
+            }
+        }
+    }
+
+    // Set up transitions from the initial state to the states corresponding
+    // to graph nodes
+    for (int sink = 0; sink < num_nodes; sink++) {
+        aut_ipath->new_edge(s_init_ip, sink, idx_encoding[sink], {0});
+    }
+
+    //
+    // Path automaton
+    //
+
+    // Any node takes init state to itself, with non-accepting transition
+    aut_trace->new_edge(s_init_tr, s_init_tr, bddtrue);
+
+    // The init state moves to every (node, height) state, with a non-accepting
+    // transition recognising the node
+    for (int n = 0; n < num_nodes; n++) {
+        for (int h = 0; h < this->trace_width; h++) {
+            aut_trace->new_edge(
+                    s_init_tr,
+                    (n * this->trace_width) + h,
+                    idx_encoding[n]
+                );
+        }
+    }
+
+    // Now mirror the transitions in the underlying heighted graph
+    for (int src = 0; src < num_nodes; src++) {
+    for (int sink = 0; sink < num_nodes; sink++) {
+        if (h_change[src][sink] != NULL) {
+            for (int h_src = 0; h_src < this->trace_width; h_src++) {
+            for (int h_sink = 0; h_sink < this->trace_width; h_sink++) {
+                slope s = h_change[src][sink]->get_slope(h_src, h_sink);
+                if (s == Stay) {
+                    aut_trace->new_edge(
+                            (src * this->trace_width) + h_src,
+                            (sink * this->trace_width) + h_sink,
+                            idx_encoding[sink]
+                        );
+                } else if (s == Downward) {
+                    aut_trace->new_edge(
+                            (src * this->trace_width) + h_src,
+                            (sink * this->trace_width) + h_sink,
+                            idx_encoding[sink],
+                            {0}
+                        );
+                }
+            }
+            }
+        }
+    }
+    }
+
+    /*******************************
+     * Perform the containment check
+     *******************************/
+    return spot::contains(aut_trace, aut_ipath);
+
+}
+
 bool Heighted_graph::sla_automata_check() {
 
     // BDD dictionary for the automata
@@ -1410,9 +1582,13 @@ bool Heighted_graph::sla_automata_check() {
     // Number of vertices in the graph
     int                   num_nodes = this->num_nodes();
     
+    // Number of states in the automata
+    int                   num_states_ip = num_nodes + 1;
+    int                   num_states_tr = this->trace_width + 1;
+
     // Initial states of the respective automata
-    int                   s_init_ip = num_nodes;
-    int                   s_init_tr = this->trace_width;
+    int                   s_init_ip = num_states_ip - 1;
+    int                   s_init_tr = num_states_tr - 1;
     
     // References to the automata objects themselves
     spot::twa_graph_ptr   aut_ipath;
@@ -1424,15 +1600,16 @@ bool Heighted_graph::sla_automata_check() {
     Map<Int_pair,int>     relation_idx;
 
     // Construct unique IDs for each distinct sloped relation in the graph
-    for( int src = 0 ; src < max_nodes ; src++ ){
-        for( int sink = 0 ; sink < max_nodes ; sink++ ){
-            if( h_change[src][sink] == NULL ) continue;
+    for (int src = 0; src < max_nodes; src++) {
+        for (int sink = 0; sink < max_nodes; sink++) {
+            if (h_change[src][sink] == NULL) continue;
             assert(src < num_nodes && sink < num_nodes);
             Sloped_relation* P = h_change[src][sink];
             P->initialize();
             int idx = 0;
             bool found = false;
-            for (auto it = relation_vec.begin(); it != relation_vec.end(); it++) {
+            for (auto it = relation_vec.begin(); it != relation_vec.end(); it++)
+            {
                 Sloped_relation* Q = *it;
                 if (P->compare(*Q) == eq) {
                     found = true;
@@ -1458,50 +1635,24 @@ bool Heighted_graph::sla_automata_check() {
     aut_trace = make_twa_graph(dict);
 
     aut_ipath->set_buchi();
-    aut_ipath->new_states(num_nodes + 1);
+    aut_ipath->new_states(num_states_ip);
     aut_ipath->set_init_state(s_init_ip);
 
     aut_trace->set_buchi();
-    aut_trace->new_states(this->trace_width + 1);
+    aut_trace->new_states(num_states_tr);
     aut_trace->set_init_state(s_init_tr);
     ap_size = ceil(log2(relation_vec.size()));
 
 
     /******************************
-     * Register atomic propositions
+     * Set up the automata alphabet
      ******************************/
 
-    // Note that atomic propositions are given an ID according to the order
-    // that they are created in, so we could simply use loop counters below
-    // when generating the associated BDDs using the bdd_ithvar function.
-    // However, the documentation doesn't specify that the IDs are created like
-    // this, so it's safer to store the IDs returned by the register_ap method
-    // in case this changes in future releases.
-    Vec<int> propositions(ap_size);
-    for(int i=0; i < ap_size; ++i) {
-        std::stringstream ss;
-        ss << "p_" << i;
-        propositions[i] = aut_ipath->register_ap(ss.str());
-        aut_trace->register_ap(ss.str());
-    }
-
-
-    /********************************************************
-     * Generate the BDDs for each unique sloped relation (ID)
-     ********************************************************/
-
-    // Vector of BDDs corresponding to the sloped relations
-    // Ordering of this vector matches up with the [relation_vec] vector
     Vec<bdd> idx_encoding(relation_vec.size(), bddtrue);
-
-    for (int idx = 0; idx < relation_vec.size(); idx++) {
-        int code = idx;
-        for (int i = 0 ; i < ap_size ; i++) {
-            bdd p = bdd_ithvar(propositions[i]);
-            idx_encoding[idx] &= ((code & 0b1) ? bdd_not(p) : p);
-            code >>= 1;
-        }
-    }
+    // After calling the method to initialise the alphabet, the BDDs in the
+    // [idx_encoding] vector are the alphabet letters representing the sloped
+    // relations at the corresponding indices of the [relation_vec] vector
+    init_alphabet(relation_vec.size(), aut_ipath, aut_trace, idx_encoding);
 
 
     /*********************************
@@ -1513,21 +1664,23 @@ bool Heighted_graph::sla_automata_check() {
     //
 
     // Set up transitions corresponding to graph edges
-    for (int src = 0 ; src < num_nodes ; src++) {
-        for (int sink = 0 ; sink < num_nodes ; sink++) {
-            if (h_change[src][sink] == 0) continue;
-            bdd curr_bdd = idx_encoding[relation_idx.at(Int_pair(src,sink))];
-            aut_ipath->new_edge(src, sink, curr_bdd, {0});
+    for (int src = 0; src < num_nodes; src++) {
+        for (int sink = 0; sink < num_nodes; sink++) {
+            if (h_change[src][sink] != NULL) {
+                bdd curr_bdd = idx_encoding[relation_idx.at(Int_pair(src,sink))];
+                aut_ipath->new_edge(src, sink, curr_bdd, {0});
+            }
         }
     }
 
     // Set up transitions from the initial state to the states corresponding
     // to graph nodes
-    for (int sink = 0; sink < max_nodes; sink++) {
+    for (int sink = 0; sink < num_nodes; sink++) {
         bdd curr_bdd = bddfalse;
-        for (int src = 0; src < max_nodes; src++) {
-            if (h_change[src][sink] == NULL) continue;
-            curr_bdd |= idx_encoding[relation_idx.at(Int_pair(src,sink))];
+        for (int src = 0; src < num_nodes; src++) {
+            if (h_change[src][sink] != NULL) {
+                curr_bdd |= idx_encoding[relation_idx.at(Int_pair(src,sink))];
+            }
         }
         aut_ipath->new_edge(s_init_ip, sink, curr_bdd, {0});
     }
@@ -1547,8 +1700,8 @@ bool Heighted_graph::sla_automata_check() {
     // There are two edges between each pair of heights h1 and h2:
     //   An accepting edge, recognising all sloped relations R with R(h1, h2, down)
     //   A non-accepting edge, recognising all sloped relations R with R(h1, h2, stay)
-    for (int h1 = 0 ; h1 < this->trace_width; h1++) {
-        for (int h2 = 0 ; h2 < this->trace_width; h2++) {
+    for (int h1 = 0; h1 < this->trace_width; h1++) {
+        for (int h2 = 0; h2 < this->trace_width; h2++) {
 
             // initalise the BDDs for the accepting and non-accepting edges
             bdd letter_acc = bddfalse;

@@ -95,6 +95,7 @@ public:
     static const int USE_ORTL;
     static const int USE_FWK;
     static const int USE_SLA;
+    static const int USE_VLA;
 
     static int parse_flags(const std::string flags);
     static void print_flags(int flags);
@@ -118,6 +119,7 @@ public:
     bool order_reduced_check(int opts);
     bool fwk_check(int opts);
     bool sla_automata_check(void);
+    bool vla_automata_check(void);
 
     void print_statistics(void);
 

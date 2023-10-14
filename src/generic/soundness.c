@@ -114,20 +114,30 @@ extern "C" value sla_automata_check() {
   CAMLreturn(v_res);
 }
 
-extern "C" value sd_check() {
+extern "C" value vla_automata_check() {
   CAMLparam0();
   CAMLlocal1(v_res);
+
   assert(hg);
-  bool retval = true;
+  bool retval = (hg->vla_automata_check());
   v_res = Val_bool(retval);
   CAMLreturn(v_res);
 }
 
-extern "C" value xsd_check() {
-  CAMLparam0();
-  CAMLlocal1(v_res);
-  assert(hg);
-  bool retval = true;
-  v_res = Val_bool(retval);
-  CAMLreturn(v_res);
-}
+// extern "C" value sd_check() {
+//   CAMLparam0();
+//   CAMLlocal1(v_res);
+//   assert(hg);
+//   bool retval = true;
+//   v_res = Val_bool(retval);
+//   CAMLreturn(v_res);
+// }
+
+// extern "C" value xsd_check() {
+//   CAMLparam0();
+//   CAMLlocal1(v_res);
+//   assert(hg);
+//   bool retval = true;
+//   v_res = Val_bool(retval);
+//   CAMLreturn(v_res);
+// }

@@ -12,6 +12,9 @@ open Lib
           + set of progressing tag transitions. *)
 type abstract_node
 
+val use_legacy : unit -> unit
+(** Flag to indicate that the legacy encoding using Spot model checker should be
+    used to verify the trace condition for proofs. *)
 val use_vla : unit -> unit
 (** Flag to indicate whether the Spot model checker should be used to verify the
     trace condition for proofs, using the vertex-language encoding. *)

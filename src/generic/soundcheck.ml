@@ -3,12 +3,15 @@ open Parsers
 
 type soundness_method =
   | RELATIONAL_OCAML
+  | SPOT_LEGACY
   | FWK_CPP
   | ORTL_CPP
   | VLA
   | SLA
 
 let soundness_method = ref RELATIONAL_OCAML
+let use_legacy () =
+  soundness_method := SPOT_LEGACY
 let use_ortl () = 
   soundness_method := ORTL_CPP
 let use_fwk () =
@@ -236,7 +239,7 @@ let valid prf init =
         (get_subg n))
     prf
 
-module BuchiCheck = struct
+module LegacyCheck = struct
 
   external create_aut : int -> unit = "create_aut"
   external destroy_aut : unit -> unit = "destroy_aut"
@@ -693,8 +696,9 @@ module RelationalCheck = struct
     external add_decrease : int -> int -> int -> int -> unit = "add_decr"
     external order_reduced_check : int -> bool = "order_reduced_check"
     external fwk_check : int -> bool = "fwk_check"
-    (* external sd_check : unit -> bool = "sd_check" *)
     external sla_automata_check : unit -> bool = "sla_automata_check"
+    external vla_automata_check : unit -> bool = "vla_automata_check"
+    (* external sd_check : unit -> bool = "sd_check" *)
     (* external xsd_check : unit -> bool = "xsd_check" *)
     external print_stats : unit -> unit = "print_statistics"
 
@@ -767,6 +771,8 @@ module RelationalCheck = struct
           fwk_check !opts
         | SLA ->
           sla_automata_check ()
+        | VLA ->
+          vla_automata_check ()
         | _ ->
           failwith "Unexpected soundness check method!" in
       if retval then Stats.MC.accept () else Stats.MC.reject () ;
@@ -793,6 +799,7 @@ end)
 
 let arg_opts =
   [
+    ("-legacy", Arg.Unit use_legacy, ": use legacy Spot (VLA) encoding to verify pre-proof validity") ;
     ("-VLA", Arg.Unit use_vla, ": use Spot (vertex language automata construction) to verify pre-proof validity") ;
     ("-SLA", Arg.Unit use_sla, ": use Spot (slope language automata construction) to verify pre-proof validity") ;
     ("-OR", Arg.Unit use_ortl, ": use external C++ order-reduced relational check to verify pre-proof validity") ;
@@ -803,8 +810,8 @@ let arg_opts =
     ("-min", Arg.Unit use_minimality, ": use minimality optimisation in relation-based validity check") ;
     ("-full", Arg.Unit compute_full_ccl, ": compute the full CCL") ;
     ("-rel-stats", Arg.Set do_stats, ": print out profiling stats for the relation-based validity check") ;
-    ("-print-paut", Arg.Set BuchiCheck.print_paut, ": print the proof automaton in HOA format" ) ;
-    ("-print-taut", Arg.Set BuchiCheck.print_taut, ": print the trace automaton in HOA format" ) ;
+    ("-print-paut", Arg.Set LegacyCheck.print_paut, ": print the proof automaton in HOA format" ) ;
+    ("-print-taut", Arg.Set LegacyCheck.print_taut, ": print the trace automaton in HOA format" ) ;
   ]
 
 module CheckCache = Hashtbl
@@ -859,8 +866,8 @@ let check_proof ?(init=0) ?(minimize=true) prf =
         Stats.MCCache.miss () ;
         let r =
           match !soundness_method with
-          | VLA ->
-            BuchiCheck.check_proof ~init aprf
+          | SPOT_LEGACY ->
+            LegacyCheck.check_proof ~init aprf
           | RELATIONAL_OCAML ->
             RelationalCheck.check_proof aprf
           | _ ->

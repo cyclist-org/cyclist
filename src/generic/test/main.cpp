@@ -51,16 +51,18 @@ int main(int argc, char** argv) {
         bool result;
         if ((opts & Heighted_graph::USE_SLA) != 0) {
             result = hg.sla_automata_check();
-        // } else if ((opts & Heighted_graph::USE_SD) != 0) {
-        //     result = hg.sd_check();
-        // } else if ((opts & Heighted_graph::USE_XSD) != 0) {
-        //     result = hg.xsd_check();
+        } else if ((opts & Heighted_graph::USE_VLA) != 0) {
+            result = hg.vla_automata_check();
         } else if ((opts & Heighted_graph::USE_ORTL) != 0) {
             result = hg.order_reduced_check(opts);
             // hg.print_Ccl();
             // hg.print_statistics();
         } else if ((opts & Heighted_graph::USE_FWK) != 0) {
             result = hg.fwk_check(opts);
+        // } else if ((opts & Heighted_graph::USE_SD) != 0) {
+        //     result = hg.sd_check();
+        // } else if ((opts & Heighted_graph::USE_XSD) != 0) {
+        //     result = hg.xsd_check();
         } else {
             result = hg.order_reduced_check(opts);
         }
