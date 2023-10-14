@@ -1405,10 +1405,13 @@ bool Heighted_graph::sla_automata_check() {
     
     // Number of atomic propositions (bits) to use to represent letters accepted
     // by the automata
-    int64_t               ap_size = 0;
+    int                   ap_size = 0;
+
+    // Number of vertices in the graph
+    int                   num_nodes = this->num_nodes();
     
     // Initial states of the respective automata
-    int                   s_init_ip = this->max_nodes;
+    int                   s_init_ip = num_nodes;
     int                   s_init_tr = this->trace_width;
     
     // References to the automata objects themselves
@@ -1420,17 +1423,11 @@ bool Heighted_graph::sla_automata_check() {
     // Mapping from edges to unique ID of the sloped relation along the edge
     Map<Int_pair,int>     relation_idx;
 
-    // Vector of BDDs corresponding to singleton atomic propositions (bits)
-    Vec<bdd>              propositions;
-
-    // Vector of BDDs corresponding to the sloped relations
-    // Ordering of this vector matches up with the [relation_vec] vector
-    Vec<bdd>              idx_encoding;
-
     // Construct unique IDs for each distinct sloped relation in the graph
     for( int src = 0 ; src < max_nodes ; src++ ){
         for( int sink = 0 ; sink < max_nodes ; sink++ ){
-            if( h_change[src][sink] == 0 ) continue;
+            if( h_change[src][sink] == NULL ) continue;
+            assert(src < num_nodes && sink < num_nodes);
             Sloped_relation* P = h_change[src][sink];
             P->initialize();
             int idx = 0;
@@ -1461,7 +1458,7 @@ bool Heighted_graph::sla_automata_check() {
     aut_trace = make_twa_graph(dict);
 
     aut_ipath->set_buchi();
-    aut_ipath->new_states(this->max_nodes + 1);
+    aut_ipath->new_states(num_nodes + 1);
     aut_ipath->set_init_state(s_init_ip);
 
     aut_trace->set_buchi();
@@ -1474,27 +1471,36 @@ bool Heighted_graph::sla_automata_check() {
      * Register atomic propositions
      ******************************/
 
-    for(int64_t i=0; i < ap_size; ++i) {
+    // Note that atomic propositions are given an ID according to the order
+    // that they are created in, so we could simply use loop counters below
+    // when generating the associated BDDs using the bdd_ithvar function.
+    // However, the documentation doesn't specify that the IDs are created like
+    // this, so it's safer to store the IDs returned by the register_ap method
+    // in case this changes in future releases.
+    Vec<int> propositions(ap_size);
+    for(int i=0; i < ap_size; ++i) {
         std::stringstream ss;
         ss << "p_" << i;
-        propositions.push_back( bdd_ithvar(aut_ipath->register_ap(ss.str())) );
+        propositions[i] = aut_ipath->register_ap(ss.str());
         aut_trace->register_ap(ss.str());
     }
 
 
-    /*********************************
+    /********************************************************
      * Generate the BDDs for each unique sloped relation (ID)
-     *********************************/
+     ********************************************************/
+
+    // Vector of BDDs corresponding to the sloped relations
+    // Ordering of this vector matches up with the [relation_vec] vector
+    Vec<bdd> idx_encoding(relation_vec.size(), bddtrue);
 
     for (int idx = 0; idx < relation_vec.size(); idx++) {
-        bdd curr_bdd = bddtrue;
         int code = idx;
-        for (int64_t i = 0 ; i < ap_size ; i++) {
-            bdd b = propositions[i];
-            curr_bdd &= ((code % 2) ? bdd_not(b) : b );
+        for (int i = 0 ; i < ap_size ; i++) {
+            bdd p = bdd_ithvar(propositions[i]);
+            idx_encoding[idx] &= ((code & 0b1) ? bdd_not(p) : p);
             code >>= 1;
         }
-        idx_encoding.push_back(curr_bdd);
     }
 
 
@@ -1507,9 +1513,9 @@ bool Heighted_graph::sla_automata_check() {
     //
 
     // Set up transitions corresponding to graph edges
-    for( int src = 0 ; src < max_nodes ; src++ ){
-        for( int sink = 0 ; sink < max_nodes ; sink++ ){
-            if( h_change[src][sink] == 0 ) continue;
+    for (int src = 0 ; src < num_nodes ; src++) {
+        for (int sink = 0 ; sink < num_nodes ; sink++) {
+            if (h_change[src][sink] == 0) continue;
             bdd curr_bdd = idx_encoding[relation_idx.at(Int_pair(src,sink))];
             aut_ipath->new_edge(src, sink, curr_bdd, {0});
         }
