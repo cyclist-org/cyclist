@@ -1422,17 +1422,17 @@ void init_alphabet(
     // However, the documentation doesn't specify that the IDs are created like
     // this, so it's safer to store the IDs returned by the register_ap method
     // in case this changes in future releases.
-    int ap_size = ceil(log2(size));
+    int ap_size = (size <= 0) ? 0 : ceil(log2(size));
     Vec<int> propositions(ap_size);
     for(int i=0; i < ap_size; ++i) {
         std::stringstream ss;
         ss << "p_" << i;
         propositions[i] = path_aut->register_ap(ss.str());
-        trace_aut->register_ap(ss.str());
+        int ap_idx = trace_aut->register_ap(ss.str());
+        assert (propositions[i] == ap_idx);
     }
 
     // Now, generate the BDDs for each letter of the alphabet
-    Vec<bdd> idx_encoding(size, bddtrue);
     for (int idx = 0; idx < size; idx++) {
         assert (alphabet_vec[idx] == bddtrue);
         int code = idx;
@@ -1451,10 +1451,6 @@ bool Heighted_graph::vla_automata_check() {
 
     int                   num_nodes = this->num_nodes();
     
-    // Number of atomic propositions (bits) to use to represent letters accepted
-    // by the automata
-    int                   ap_size = ceil(log2(num_nodes));
-
     // Number of states in the automata
     int                   num_states_ip = num_nodes + 1;
     int                   num_states_tr = 1 + (num_nodes * this->trace_width);
@@ -1575,10 +1571,6 @@ bool Heighted_graph::sla_automata_check() {
     // BDD dictionary for the automata
     spot::bdd_dict_ptr    dict;
     
-    // Number of atomic propositions (bits) to use to represent letters accepted
-    // by the automata
-    int                   ap_size = 0;
-
     // Number of vertices in the graph
     int                   num_nodes = this->num_nodes();
     
@@ -1641,7 +1633,6 @@ bool Heighted_graph::sla_automata_check() {
     aut_trace->set_buchi();
     aut_trace->new_states(num_states_tr);
     aut_trace->set_init_state(s_init_tr);
-    ap_size = ceil(log2(relation_vec.size()));
 
 
     /******************************

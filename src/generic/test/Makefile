@@ -28,22 +28,117 @@ heighted_graph.o: ../heighted_graph.hpp ../heighted_graph.c ../sloped_relation.h
 sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
 	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../sloped_relation.c -o sloped_relation.o
 
-.PHONY: clean tests test-suite-full test-suite-sd test-suite-xsd tests-rel tests-set tests-sd tests-xsd tests-ortl tests-fwk tests-ortl-no-opts tests-ortl-ff tests-ortl-scc tests-ortl-idem tests-ortl-min tests-ortl-ff-min tests-ortl-ff-scc tests-ortl-ff-idem tests-ortl-min-scc tests-ortl-ff-min-scc tests-fwk-ff tests-fwk-scc tests-fwk-idem tests-fwk-min tests-fwk-ff-min tests-fwk-ff-scc tests-fwk-ff-idem tests-fwk-min-scc tests-fwk-ff-min-scc
+.PHONY: \
+    clean \
+    tests \
+    test-suite-full \
+    test-suite-sd \
+    test-suite-xsd \
+    tests-rel \
+    tests-set \
+    tests-automata \
+    tests-sd \
+    tests-xsd \
+    tests-sla \
+    tests-vla \
+    tests-ortl \
+    tests-ortl-no-opts \
+    tests-ortl-ff \
+    tests-ortl-scc \
+    tests-ortl-idem \
+    tests-ortl-min \
+    tests-ortl-ff-min \
+    tests-ortl-ff-scc \
+    tests-ortl-ff-idem \
+    tests-ortl-min-scc \
+    tests-ortl-ff-min-scc \
+    tests-fwk \
+    tests-fwk-no-opts \
+    tests-fwk-ff \
+    tests-fwk-scc \
+    tests-fwk-idem \
+    tests-fwk-min \
+    tests-fwk-ff-min \
+    tests-fwk-ff-scc \
+    tests-fwk-ff-idem \
+    tests-fwk-min-scc \
+    tests-fwk-ff-min-scc
 
-.SILENT: tests tests-rel tests-set tests-sd tests-xsd test-suite-full test-suite-sd test-suite-xsd test_success test_failure tests-ortl-no-opts tests-ortl-ff tests-ortl-scc tests-ortl-idem tests-ortl-min tests-ortl-ff-min tests-ortl-ff-scc tests-ortl-ff-idem tests-ortl-min-scc tests-ortl-ff-min-scc tests-fwk-no-opts tests-fwk-ff tests-fwk-scc tests-fwk-idem tests-fwk-min tests-fwk-ff-min tests-fwk-ff-scc tests-fwk-ff-idem tests-fwk-min-scc tests-fwk-ff-min-scc
+.SILENT: \
+    tests \
+    test-suite-full \
+    test-suite-sd \
+    test-suite-xsd \
+    tests-rel \
+    tests-set \
+    tests-automata \
+    tests-sd \
+    tests-xsd \
+    tests-sla \
+    tests-vla \
+    tests-ortl \
+    tests-ortl-no-opts \
+    tests-ortl-ff \
+    tests-ortl-scc \
+    tests-ortl-idem \
+    tests-ortl-min \
+    tests-ortl-ff-min \
+    tests-ortl-ff-scc \
+    tests-ortl-ff-idem \
+    tests-ortl-min-scc \
+    tests-ortl-ff-min-scc \
+    tests-fwk \
+    tests-fwk-no-opts \
+    tests-fwk-ff \
+    tests-fwk-scc \
+    tests-fwk-idem \
+    tests-fwk-min \
+    tests-fwk-ff-min \
+    tests-fwk-ff-scc \
+    tests-fwk-ff-idem \
+    tests-fwk-min-scc \
+    tests-fwk-ff-min-scc
 
 clean: 
 	rm -f ./*.o soundness
 
-tests: tests-sla tests-rel tests-set
+tests: tests-automata tests-rel
 
 tests-set: tests-sd tests-xsd
-
-tests-ortl: tests-ortl-no-opts tests-ortl-ff tests-ortl-scc tests-ortl-idem tests-ortl-min tests-ortl-ff-min tests-ortl-ff-scc tests-ortl-ff-idem tests-ortl-min-scc tests-ortl-ff-min-scc
-
-tests-fwk: tests-fwk-no-opts tests-fwk-ff tests-fwk-scc tests-fwk-idem tests-fwk-min tests-fwk-ff-min tests-fwk-ff-scc tests-fwk-ff-idem tests-fwk-min-scc tests-fwk-ff-min-scc
-
 tests-rel: tests-ortl tests-fwk
+tests-automata: tests-sla tests-vla
+
+tests-ortl: \
+    tests-ortl-no-opts \
+    tests-ortl-ff \
+    tests-ortl-scc \
+    tests-ortl-idem \
+    tests-ortl-min \
+    tests-ortl-ff-min \
+    tests-ortl-ff-scc \
+    tests-ortl-ff-idem \
+    tests-ortl-min-scc \
+    tests-ortl-ff-min-scc
+
+tests-fwk: \
+    tests-fwk-no-opts \
+    tests-fwk-ff \
+    tests-fwk-scc \
+    tests-fwk-idem \
+    tests-fwk-min \
+    tests-fwk-ff-min \
+    tests-fwk-ff-scc \
+    tests-fwk-ff-idem \
+    tests-fwk-min-scc \
+    tests-fwk-ff-min-scc
+
+tests-sla:
+	echo "SLA"
+	export FLAGS=A; make -s test-suite-full
+
+tests-vla:
+	echo "VLA"
+	export FLAGS=V; make -s test-suite-full
 
 tests-ortl-no-opts:
 	echo "ORTL NO OPTIMSATIONS";
@@ -75,6 +170,7 @@ tests-ortl-min-scc:
 tests-ortl-ff-min-scc:
 	echo "ORTL MINIMAL CCL, SCC LOOP CHECK"
 	export FLAGS=Ofms; make -s test-suite-full
+
 tests-fwk-no-opts:
 	echo "FWK NO OPTIMSATIONS";
 	export FLAGS=K; make -s test-suite-full
@@ -105,6 +201,14 @@ tests-fwk-min-scc:
 tests-fwk-ff-min-scc:
 	echo "FWK MINIMAL CCL, SCC LOOP CHECK"
 	export FLAGS=Kfms; make -s test-suite-full
+
+tests-sd:
+	echo "SPRENGER-DAM"
+	export FLAGS=D; make -s test-suite-sd
+
+tests-xsd:
+	echo "EXTENDED SPRENGER-DAM"
+	export FLAGS=X; make -s test-suite-xsd
 
 test-suite-full: soundness
 	$(call test_success, graph_1)
@@ -144,18 +248,7 @@ test-suite-full: soundness
 	$(call test_failure, graph_20b)
 	$(call test_failure, graph_21)
 	$(call test_success, graph_22)
-
-tests-sla:
-	echo "SLA"
-	export FLAGS=A; make -s test-suite-full
-
-tests-sd:
-	echo "SPRENGER-DAM"
-	export FLAGS=D; make -s test-suite-sd
-
-tests-xsd:
-	echo "EXTENDED SPRENGER-DAM"
-	export FLAGS=X; make -s test-suite-xsd
+	$(call test_success, graph_23)
 
 test-suite-sd: soundness
 	$(call test_success, graph_1)

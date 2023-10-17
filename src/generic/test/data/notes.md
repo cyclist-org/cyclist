@@ -48,3 +48,8 @@ makes XSD seg fault, in commit 8be7684.
 Heighted graph found during proof search for benchmarks/fo/13-2-hydra.tst.
 This is a simpler example than graph_19 of a graph that is ID, but is neither
 SD nor XSD.
+
+# Graph 23
+
+A degenerate example, with one node and no edges. Added to check against bug in
+SLA code found in c94abc9.
