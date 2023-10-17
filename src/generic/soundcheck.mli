@@ -25,6 +25,9 @@ val use_sla : unit -> unit
 val use_ortl : unit -> unit
 (** Flag to indicate whether trace condition check should be done by the
     order-reduced relational method using external C++ code. *)
+val set_node_order : int -> unit
+(** Specify which node order to use in the order-reduced relational method. *)
+
 val use_fwk : unit -> unit
 (** Flag to indicate whether trace condition check should be done by the
     Floyd-Warshall-Kleene relational method using external C++ code. *)

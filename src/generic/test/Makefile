@@ -5,13 +5,13 @@ CFLAGS:=-xc++ -std=c++17
 TIMEOUT := $(if $(TIMEOUT),$(TIMEOUT),60)
 
 define test_success
-	echo "TEST: $(1), FLAGS=$$FLAGS"
-	(timeout $(TIMEOUT) $(TEST_EXE) $(1); EXIT_CODE=$$?; if [ $$EXIT_CODE -eq 0 ]; then echo "TEST PASSED"; elif [ $$EXIT_CODE -eq 124 ]; then echo "TIMEOUT"; else echo "TEST NOT PASSED"; fi; exit 0)
+	echo "TEST: $(1), SPEC=$$SPEC"
+	(timeout $(TIMEOUT) $(TEST_EXE) $(1) $(SPEC); EXIT_CODE=$$?; if [ $$EXIT_CODE -eq 0 ]; then echo "TEST PASSED"; elif [ $$EXIT_CODE -eq 124 ]; then echo "TIMEOUT"; else echo "TEST NOT PASSED"; fi; exit 0)
 endef
 
 define test_failure
-	echo "TEST: $(1), FLAGS=$$FLAGS"
-	(timeout $(TIMEOUT) $(TEST_EXE) $(1); EXIT_CODE=$$?; if [ ! $$EXIT_CODE -eq 0 ] && [ ! $$EXIT_CODE -eq 124 ]; then echo "TEST PASSED"; elif [ $$EXIT_CODE -eq 124 ]; then echo "TIMEOUT"; else echo "TEST NOT PASSED"; fi; exit 0)
+	echo "TEST: $(1), SPEC=$$SPEC"
+	(timeout $(TIMEOUT) $(TEST_EXE) $(1) $(SPEC); EXIT_CODE=$$?; if [ ! $$EXIT_CODE -eq 0 ] && [ ! $$EXIT_CODE -eq 124 ]; then echo "TEST PASSED"; elif [ $$EXIT_CODE -eq 124 ]; then echo "TIMEOUT"; else echo "TEST NOT PASSED"; fi; exit 0)
 endef
 
 all: soundness tests
@@ -134,81 +134,81 @@ tests-fwk: \
 
 tests-sla:
 	echo "SLA"
-	export FLAGS=A; make -s test-suite-full
+	export SPEC=S; make -s test-suite-full
 
 tests-vla:
 	echo "VLA"
-	export FLAGS=V; make -s test-suite-full
+	export SPEC=V; make -s test-suite-full
 
 tests-ortl-no-opts:
 	echo "ORTL NO OPTIMSATIONS";
-	export FLAGS=O; make -s test-suite-full
+	export SPEC=O; make -s test-suite-full
 tests-ortl-ff:
 	echo "ORTL FAST-FAIL"
-	export FLAGS=Of; make -s test-suite-full
+	export SPEC=Of; make -s test-suite-full
 tests-ortl-scc:
 	echo "ORTL SCC LOOP CHECK"
-	export FLAGS=Os; make -s test-suite-full
+	export SPEC=Os; make -s test-suite-full
 tests-ortl-idem:
 	echo "ORTL IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=Oi; make -s test-suite-full
+	export SPEC=Oi; make -s test-suite-full
 tests-ortl-min:
 	echo "ORTL MINIMAL CCL"
-	export FLAGS=Om; make -s test-suite-full
+	export SPEC=Om; make -s test-suite-full
 tests-ortl-ff-min:
 	echo "ORTL FAST-FAIL, MINIMAL CCL"
-	export FLAGS=Ofm; make -s test-suite-full
+	export SPEC=Ofm; make -s test-suite-full
 tests-ortl-ff-scc:
 	echo "ORTL FAST-FAIL, SCC LOOP CHECK"
-	export FLAGS=Ofs; make -s test-suite-full
+	export SPEC=Ofs; make -s test-suite-full
 tests-ortl-ff-idem:
 	echo "ORTL FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=Ofi; make -s test-suite-full
+	export SPEC=Ofi; make -s test-suite-full
 tests-ortl-min-scc:
 	echo "ORTL MINIMAL CCL, SCC LOOP CHECK"
-	export FLAGS=Oms; make -s test-suite-full
+	export SPEC=Oms; make -s test-suite-full
 tests-ortl-ff-min-scc:
 	echo "ORTL MINIMAL CCL, SCC LOOP CHECK"
-	export FLAGS=Ofms; make -s test-suite-full
+	export SPEC=Ofms; make -s test-suite-full
 
 tests-fwk-no-opts:
 	echo "FWK NO OPTIMSATIONS";
-	export FLAGS=K; make -s test-suite-full
+	export SPEC=F; make -s test-suite-full
 tests-fwk-ff:
 	echo "FWK FAST-FAIL"
-	export FLAGS=Kf; make -s test-suite-full
+	export SPEC=Ff; make -s test-suite-full
 tests-fwk-scc:
 	echo "FWK SCC LOOP CHECK"
-	export FLAGS=Ks; make -s test-suite-full
+	export SPEC=Fs; make -s test-suite-full
 tests-fwk-idem:
 	echo "FWK IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=Ki; make -s test-suite-full
+	export SPEC=Fi; make -s test-suite-full
 tests-fwk-min:
 	echo "FWK MINIMAL CCL"
-	export FLAGS=Km; make -s test-suite-full
+	export SPEC=Fm; make -s test-suite-full
 tests-fwk-ff-min:
 	echo "FWK FAST-FAIL, MINIMAL CCL"
-	export FLAGS=Kfm; make -s test-suite-full
+	export SPEC=Ffm; make -s test-suite-full
 tests-fwk-ff-scc:
 	echo "FWK FAST-FAIL, SCC LOOP CHECK"
-	export FLAGS=Kfs; make -s test-suite-full
+	export SPEC=Ffs; make -s test-suite-full
 tests-fwk-ff-idem:
 	echo "FWK FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
-	export FLAGS=Kfi; make -s test-suite-full
+	export SPEC=Ffi; make -s test-suite-full
 tests-fwk-min-scc:
 	echo "FWK MINIMAL CCL, SCC LOOP CHECK"
-	export FLAGS=Kms; make -s test-suite-full
+	export SPEC=Fms; make -s test-suite-full
 tests-fwk-ff-min-scc:
 	echo "FWK MINIMAL CCL, SCC LOOP CHECK"
-	export FLAGS=Kfms; make -s test-suite-full
+	export SPEC=Ffms; make -s test-suite-full
 
 tests-sd:
 	echo "SPRENGER-DAM"
-	export FLAGS=D; make -s test-suite-sd
+	export SPEC=D; make -s test-suite-sd
 
 tests-xsd:
 	echo "EXTENDED SPRENGER-DAM"
-	export FLAGS=X; make -s test-suite-xsd
+	export SPEC=X; make -s test-suite-xsd
 
 test-suite-full: soundness
 	$(call test_success, graph_1)

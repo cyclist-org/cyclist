@@ -80,13 +80,20 @@ extern "C" void print_statistics() {
   CAMLreturn0;
 }
 
-extern "C" value order_reduced_check(value opts_) {
-  CAMLparam1(opts_);
+extern "C" value order_reduced_check(value node_order_, value opts_) {
+  CAMLparam2(node_order_, opts_);
   CAMLlocal1(v_res);
 
-  assert(hg);
+  int node_order = Int_val(node_order_);
   int opts = Int_val(opts_);
-  bool retval = (hg->order_reduced_check(opts));
+
+  assert(hg);
+  assert(Heighted_graph::is_valid_node_order(node_order));
+
+  Heighted_graph::NODE_ORDER ord =
+    static_cast<Heighted_graph::NODE_ORDER>(node_order);
+
+  bool retval = (hg->order_reduced_check(ord, opts));
 
   v_res = Val_bool(retval);
   CAMLreturn(v_res);

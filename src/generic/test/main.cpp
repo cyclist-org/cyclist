@@ -32,14 +32,35 @@ void parse_from_json(json &graph, Heighted_graph &hg){
     std::cout << "Done! , Edge size: " << hg.num_edges() << std::endl;
 }
 
+int usage(char* arg0) {
+    std::cout
+        << "Usage: "
+        << arg0
+        << " <filename>"
+        << " <spec-string>"
+        << std::endl
+        << "<spec-string> ::= O [<order-id>] ([i]|([m][s])) [f]"
+        << "(Order-reduced)"
+        << std::endl
+        << "                | F ([i]|([m][s])) [f]"
+        << "(Floyd-Warshall-Kleene)"
+        << std::endl
+        << "                | V"
+        << "(Vertex-language Automaton encoding)"
+        << std::endl
+        << "                | S"
+        << "(Slope-language Automaton encoding)"
+        << std::endl;
+    return -1;
+}
+
 int main(int argc, char** argv) {
+
     if(argc > 1){
+
         std::string path = std::string("./data/");
         path = path + argv[1] + ".json";
-        int opts = 0;
-        if(const char* flags = std::getenv("FLAGS")) {
-            opts = Heighted_graph::parse_flags(flags);
-        }
+
         // Get JSON data
         std::ifstream graph_data(path.c_str());
         json graph;
@@ -48,33 +69,65 @@ int main(int argc, char** argv) {
         // Create heighted graph object
         Heighted_graph hg = Heighted_graph(graph["Node"].size());
         parse_from_json(graph, hg);
+
         bool result;
-        if ((opts & Heighted_graph::USE_SLA) != 0) {
-            result = hg.sla_automata_check();
-        } else if ((opts & Heighted_graph::USE_VLA) != 0) {
-            result = hg.vla_automata_check();
-        } else if ((opts & Heighted_graph::USE_ORTL) != 0) {
-            result = hg.order_reduced_check(opts);
+
+        if (argc < 3) {
+            result = hg.order_reduced_check(Heighted_graph::GIVEN_ORDER, opts);
+        }
+        else if (*argv[2] == '\0' || *argv[2] == 'O') {
+            Heighted_graph::NODE_ORDER order;
+            const char* spec = (*argv[2] == '\0') ? argv[2] : argv[2]++;
+            switch (*spec) {
+                case '1': {
+                    order = Heighted_graph::DEGREE_OUT_IN_ASC;
+                    spec++;
+                    break;
+                }
+                case '2': {
+                    order = Heighted_graph::DEGREE_OUT_IN_DESC;
+                    spec++;
+                    break;
+                }
+                default: {
+                    order = Heighted_graph::GIVEN_ORDER;
+                    if (*spec != '\0') { spec++; }
+                }
+            }
+            opts = Heighted_graph::parse_flags(spec);
+            result = hg.order_reduced_check(order, opts);
             // hg.print_Ccl();
             // hg.print_statistics();
-        } else if ((opts & Heighted_graph::USE_FWK) != 0) {
-            result = hg.fwk_check(opts);
-        // } else if ((opts & Heighted_graph::USE_SD) != 0) {
-        //     result = hg.sd_check();
-        // } else if ((opts & Heighted_graph::USE_XSD) != 0) {
-        //     result = hg.xsd_check();
         } else {
-            result = hg.order_reduced_check(opts);
+            switch (*argv[2]) {
+                case 'F': {
+                    opts = Heighted_graph::parse_flags(argv[2]++);
+                    result = hg.fwk_check(opts);
+                    break;
+                }
+                case 'V': {
+                    result = hg.vla_automata_check();
+                    break;
+                }
+                case 'S': {
+                    result = hg.sla_automata_check();
+                    break;
+                }
+                default: {
+                    return usage(argv[0]);
+                }
+            }
         }
-        if( result ){
+
+        // Output result
+        if (result) {
             std::cout << "SOUND" << std::endl;
-        }
-        else {
+        } else {
             std::cout << "UNSOUND" << std::endl;
         }
+
         return !result;
     }
 
-    std::cout << "Provide test file name!" << std::endl;
-    return -1;
+    return usage(argv[0]);
 }

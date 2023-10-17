@@ -2,6 +2,7 @@
 #include "sloped_relation.hpp"
 #include "types.c"
 
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <cmath>
@@ -21,12 +22,6 @@ const int Heighted_graph::FAIL_FAST        = 0b0000000001;
 const int Heighted_graph::USE_SCC_CHECK    = 0b0000000010;
 const int Heighted_graph::USE_IDEMPOTENCE  = 0b0000000100;
 const int Heighted_graph::USE_MINIMALITY   = 0b0000001000;
-const int Heighted_graph::USE_SD           = 0b0000010000;
-const int Heighted_graph::USE_XSD          = 0b0000100000;
-const int Heighted_graph::USE_ORTL         = 0b0001000000;
-const int Heighted_graph::USE_FWK          = 0b0010000000;
-const int Heighted_graph::USE_SLA          = 0b0100000000;
-const int Heighted_graph::USE_VLA          = 0b1000000000;
 
 //=============================================================
 // Constructors / Destructor
@@ -89,6 +84,20 @@ Heighted_graph::~Heighted_graph(void) {
     free(h_change);
 }
 
+// Should return true iff [order] corresponds to an enumeration value of the
+// NODE_ORDER enum
+bool Heighted_graph::is_valid_node_order(int order) {
+
+    switch (order) {
+        case 0:
+        case 1:
+        case 2:
+            return true;
+    }
+
+    return false;
+}
+
 //=============================================================
 // Getters
 //=============================================================
@@ -141,12 +150,6 @@ int Heighted_graph::parse_flags(const std::string flags_s) {
             case 's': flags |= USE_SCC_CHECK; break;
             case 'i': flags |= USE_IDEMPOTENCE; break;
             case 'm': flags |= USE_MINIMALITY; break;
-            case 'D': flags |= USE_SD; break;
-            case 'X': flags |= USE_XSD; break;
-            case 'O': flags |= USE_ORTL; break;
-            case 'K': flags |= USE_FWK; break;
-            case 'A': flags |= USE_SLA; break;
-            case 'V': flags |= USE_VLA; break;
         }
     }
     return flags;
@@ -217,11 +220,6 @@ void Heighted_graph::print_flags(int flags) {
     if ((flags & USE_SCC_CHECK) != 0) std::cout << "USE_SCC_CHECK" << std::endl;
     if ((flags & USE_IDEMPOTENCE) != 0) std::cout << "USE_IDEMPOTENCE" << std::endl;
     if ((flags & USE_MINIMALITY) != 0) std::cout << "USE_MINIMALITY" << std::endl;
-    if ((flags & USE_SD) != 0) std::cout << "USE_SD" << std::endl;
-    if ((flags & USE_XSD) != 0) std::cout << "USE_XSD" << std::endl;
-    if ((flags & USE_ORTL) != 0) std::cout << "USE_ORTL" << std::endl;
-    if ((flags & USE_FWK) != 0) std::cout << "USE_FWK" << std::endl;
-    if ((flags & USE_SLA) != 0) std::cout << "USE_SLA" << std::endl;
 }
 
 //=============================================================
@@ -358,7 +356,31 @@ void order_reduced_cleanup
     common_cleanup(num_nodes, representatives, h_change, composition);
 }
 
-bool Heighted_graph::order_reduced_check(int opts){
+bool deg_out_in_asc(
+        const Pair<int, Pair<int, int>>& lhs,
+        const Pair<int, Pair<int, int>>& rhs
+    )
+{
+    return
+        lhs.second.first < rhs.second.first
+            ||
+        (lhs.second.first == rhs.second.first
+            && lhs.second.second < rhs.second.second);
+}
+
+bool deg_out_in_desc(
+        const Pair<int, Pair<int, int>>& lhs,
+        const Pair<int, Pair<int, int>>& rhs
+    )
+{
+    return
+        lhs.second.first > rhs.second.first
+            ||
+        (lhs.second.first == rhs.second.first
+            && lhs.second.second > rhs.second.second);
+}
+
+bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts) {
 
     this->flags = opts;
 
@@ -408,23 +430,64 @@ bool Heighted_graph::order_reduced_check(int opts){
     // closure element once it has been computed
     Relation_LIST preceded;
 
-    // Allocate array to hold CCL, and initialise it with the
-    // (unique representatives of) relations stored in the h_change field
+    // Allocate array to hold CCL
     Relation_LIST*** ccl =
         (Relation_LIST***) malloc(sizeof(Relation_LIST**) * num_nodes);
     for(int i = 0; i < num_nodes; i++) {
         ccl[i] = (Relation_LIST**) malloc(sizeof(Relation_LIST*) * num_nodes);
         for (int j = 0; j < num_nodes; j++) {
             ccl[i][j] = new Relation_LIST();
-            // If there is sloped relation for the corresponding edge
-            if (h_change[i][j] != NULL) {
+        }
+    }
+
+    //
+    // First, compute the specified ordering on the nodes of the heighted graph
+    //
+
+    Vec<Pair<int, Pair<int, int>>> node_order(num_nodes);
+    for (int i = 0; i < num_nodes; i++) {
+        node_order[i].first = i;
+        if (order != GIVEN_ORDER) {
+            // Compute the in/out-degree
+            node_order[i].second.first = 0;
+            node_order[i].second.second = 0;
+            for (int j = 0; j < num_nodes; j++) {
+                // Update the out-degree
+                if (h_change[i][j] != NULL) {
+                    node_order[i].second.first++;
+                }
+                // Update the in-degree
+                if (h_change[j][i] != NULL) {
+                    node_order[i].second.second++;
+                }
+            }
+        }
+    }
+    // Sort the vector
+    switch (order) {
+        case DEGREE_OUT_IN_ASC:
+            std::sort(node_order.begin(), node_order.end(), deg_out_in_asc);
+            break;
+        case DEGREE_OUT_IN_DESC:
+            std::sort(node_order.begin(), node_order.end(), deg_out_in_desc);
+            break;
+    }
+
+    // initialise the CCL with the (unique representatives of) relations stored
+    // in the h_change field, according to the node ordering computed above
+    for (int i = 0; i < num_nodes; i++) {
+        int nd_i = node_order[i].first;
+        for (int j = 0; j < num_nodes; j++) {
+            int nd_j = node_order[j].first;
+            // If there is a sloped relation for the corresponding edge
+            Sloped_relation* R_ptr = h_change[nd_i][nd_j];
+            if (R_ptr != NULL) {
                 // Get unique representative of the sloped relation
-                Sloped_relation& rep =
-                    *(representatives.insert(*h_change[i][j]).first);
+                Sloped_relation& R = *(representatives.insert(*R_ptr).first);
                 // Ensure the relation is initialised
-                rep.initialize();
+                R.initialize();
                 // Add it to the CCL
-                ccl[i][j]->push_back(&rep);
+                ccl[i][j]->push_back(&R);
 #ifdef LOG_STATS
                 ccl_initial_size++;
                 ccl_size++;

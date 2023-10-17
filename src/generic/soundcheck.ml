@@ -20,6 +20,15 @@ let use_vla () =
   soundness_method := VLA
 let use_sla () =
   soundness_method := SLA
+
+let node_order = ref 0
+let set_node_order order =
+  (* Whatever bounds checking is performed here should be consistent with the
+     enumeration values defined in the C++ code: check heighted_graph.hpp *)
+  if (order < 0 || order > 2) then
+    prerr_endline "Invalid node order specified!"
+  else
+    node_order := order
   
 module IntPair = struct
   include Pair.Make(Int)(Int)
@@ -694,7 +703,7 @@ module RelationalCheck = struct
     external add_edge : int -> int -> unit = "add_edge"
     external add_stay : int -> int -> int -> int -> unit = "add_stay"
     external add_decrease : int -> int -> int -> int -> unit = "add_decr"
-    external order_reduced_check : int -> bool = "order_reduced_check"
+    external order_reduced_check : int -> int -> bool = "order_reduced_check"
     external fwk_check : int -> bool = "fwk_check"
     external sla_automata_check : unit -> bool = "sla_automata_check"
     external vla_automata_check : unit -> bool = "vla_automata_check"
@@ -722,7 +731,7 @@ module RelationalCheck = struct
         prerr_endline
           "Cannot use both idempotence and SCC-based loop check - ignoring SCC-based loop check!"
       else
-      opts := !opts lor flag_use_scc_check
+        opts := !opts lor flag_use_scc_check
     let use_idempotence () =
       let use_min = not (Int.equal (!opts land flag_use_minimality) 0) in
       let use_scc = not (Int.equal (!opts land flag_use_scc_check) 0) in
@@ -766,7 +775,7 @@ module RelationalCheck = struct
       let retval = 
         match !soundness_method with
         | ORTL_CPP ->
-          order_reduced_check !opts 
+          order_reduced_check !node_order !opts
         | FWK_CPP ->
           fwk_check !opts
         | SLA ->
@@ -804,10 +813,15 @@ let arg_opts =
     ("-SLA", Arg.Unit use_sla, ": use Spot (slope language automata construction) to verify pre-proof validity") ;
     ("-OR", Arg.Unit use_ortl, ": use external C++ order-reduced relational check to verify pre-proof validity") ;
     ("-FWK", Arg.Unit use_fwk, ": use external C++ Floyd-Warshall-Kleene relational check to verify pre-proof validity") ;
+    ("-ord", Arg.Int set_node_order, 
+        "<int>: specify which node order to use in the order-reduced relational check.\n" ^
+        "\t0 - Natural Ordering\n" ^
+        "\t1 - Out-degree, In-degree (lexicographically) ascending\n" ^
+        "\t2 - Out-degree, In-degree (lexicographically) descending") ;
     ("-ff", Arg.Unit fail_fast, ": use fast fail in relation-based validty check") ;
-    ("-scc", Arg.Unit use_scc_check, ": use SCC check in relation-based validity check") ;
-    ("-idem", Arg.Unit use_idempotence, ": use idempotency optimisation in relation-based validity check") ;
-    ("-min", Arg.Unit use_minimality, ": use minimality optimisation in relation-based validity check") ;
+    ("-scc", Arg.Unit use_scc_check, ": use SCC check in relation-based validity checks") ;
+    ("-idem", Arg.Unit use_idempotence, ": use idempotency optimisation in relation-based validity checks") ;
+    ("-min", Arg.Unit use_minimality, ": use minimality optimisation in relation-based validity checks") ;
     ("-full", Arg.Unit compute_full_ccl, ": compute the full CCL") ;
     ("-rel-stats", Arg.Set do_stats, ": print out profiling stats for the relation-based validity check") ;
     ("-print-paut", Arg.Set LegacyCheck.print_paut, ": print the proof automaton in HOA format" ) ;

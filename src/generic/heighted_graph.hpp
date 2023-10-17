@@ -90,12 +90,12 @@ public:
     static const int USE_SCC_CHECK;
     static const int USE_IDEMPOTENCE;
     static const int USE_MINIMALITY;
-    static const int USE_SD;
-    static const int USE_XSD;
-    static const int USE_ORTL;
-    static const int USE_FWK;
-    static const int USE_SLA;
-    static const int USE_VLA;
+
+    enum NODE_ORDER {
+        GIVEN_ORDER = 0,
+        DEGREE_OUT_IN_ASC = 1,
+        DEGREE_OUT_IN_DESC = 2
+    };
 
     static int parse_flags(const std::string flags);
     static void print_flags(int flags);
@@ -116,7 +116,9 @@ public:
     int num_nodes(void);
     int num_edges(void);
 
-    bool order_reduced_check(int opts);
+    static bool is_valid_node_order(int order);
+
+    bool order_reduced_check(NODE_ORDER order, int opts);
     bool fwk_check(int opts);
     bool sla_automata_check(void);
     bool vla_automata_check(void);
