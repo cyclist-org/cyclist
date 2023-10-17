@@ -42,3 +42,9 @@ Not ID
 
 Heighted graph found during proof search for benchmarks/fo/05-p-and-q.tst that
 makes XSD seg fault, in commit 8be7684.
+
+# Graph 22
+
+Heighted graph found during proof search for benchmarks/fo/13-2-hydra.tst.
+This is a simpler example than graph_19 of a graph that is ID, but is neither
+SD nor XSD.
