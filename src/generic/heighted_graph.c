@@ -1177,6 +1177,16 @@ bool Heighted_graph::fwk_check(int opts) {
             // might be used in other iterations of the outer loops
             *ccl_next[i][j] = *ccl[i][j];
 
+            // // TODO: The above method, using copy-assignment, appears to
+            // // display a memory leak, where as manually clearing the old set
+            // // and copying over the elements has a different memory profile.
+            // // It would be good to figure out why.
+            // ccl_next[i][j]->clear();
+            // for (auto it = ccl[i][j]->begin(); it != ccl[i][j]->end(); it++)
+            // {
+            //     ccl_next[i][j]->insert(*it);
+            // }
+
             // Now compute
             //     ccl[i][k] compose asteration(ccl[k][k]) compose ccl[k][j]
             // adding the results to ccl_next[i][j]
