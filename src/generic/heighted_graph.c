@@ -1107,11 +1107,6 @@ bool Heighted_graph::fwk_check(int opts) {
                     // Start out assuming by default that we should add it
                     bool add = true;
 
-                    // Flag to record if current element of asteration has been
-                    // removed, meaning we can break out of looping through
-                    // ccl[k][k] once R has been added
-                    bool skip = false;
-
                     // If we are applying the minimality optimisation then we
                     // need to go through the asteration set: if we find any
                     // elements preceding R, we do not add R, and otherwise we
@@ -1136,7 +1131,6 @@ bool Heighted_graph::fwk_check(int opts) {
                                 // by the outer iterator 'it1', we need to take
                                 // this into account when removing it
                                 if (it2 == it1) {
-                                    skip = true;
                                     if (it2 == asteration.begin()) {
                                         it2 = asteration.erase(it2);
                                         it1 = asteration.begin();
@@ -1162,12 +1156,6 @@ bool Heighted_graph::fwk_check(int opts) {
                     if (add) {
                         // Then do so
                         asteration.push_back(&R);
-                    }
-
-                    if (skip) {
-                        // Break out of iteration over ccl[k][k] to continue
-                        // processing next relation in the asteration
-                        break;
                     }
                 }
             }
