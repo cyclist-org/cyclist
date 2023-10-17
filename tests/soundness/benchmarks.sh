@@ -41,9 +41,9 @@ for n in ${inputs[@]}; do
   done
 done
 
-opts=("-VLA" "-legacy" "-SLA" "-FWK -scc -ff" "-FWK -min -scc -ff" "-OR -scc -ff -ord 1" "-OR -min -scc -ff -ord 1")
+opts=("-VLA" "-legacy" "-SLA" "-OR -scc -ff -ord 1" "-OR -min -scc -ff -ord 1")
 
-inputs="1 $(seq 625 250 2000)"
+inputs="$(seq 625 250 2000)"
 for n in ${inputs[@]}; do
   for i in ${!opts[@]}; do
     opt=${opts[i]}
