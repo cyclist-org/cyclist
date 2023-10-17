@@ -1054,11 +1054,17 @@ bool Heighted_graph::fwk_check(int opts) {
         }
         
         // Now do the closure computation
-        // (note, this for loop is really a while loop, since elements get
-        //  added/removed from the list during the computation)
-        for (auto it = asteration.begin(); it != asteration.end(); it++) {
+        auto it1 = asteration.begin();
+        while (it1 != asteration.end()) {
+
+            // A flag indicating whether the iterator should be incremented at
+            // the end of the loop body. In the case that the minimisation
+            // optimisation is being use, the asteration set may be modified,
+            // and so in some cases, the iterator gets updated within the loop
+            // body and so shouldn't be incremented.
+            bool increment_iterator = true;
             
-            Sloped_relation* Q = *it;
+            Sloped_relation* Q = *it1;
             
             for (Sloped_relation* P : *ccl[k][k]) {
             
@@ -1112,9 +1118,8 @@ bool Heighted_graph::fwk_check(int opts) {
                     // remove any elements preceded by R
                     if ((opts & USE_MINIMALITY) != 0) {
                         // Go through the asteration set to remove any preceded
-                        for (auto it2 = asteration.begin();
-                             it2 != asteration.end();
-                             it2++)
+                        auto it2 = asteration.begin();
+                        while (it2 != asteration.end())
                         {
                             // Get the next relation for comparison
                             Sloped_relation* S = *it2;
@@ -1127,21 +1132,28 @@ bool Heighted_graph::fwk_check(int opts) {
                             }
                             // If S > R, needs removing from the asteration set
                             else if (cmp_result == gt) {
-                                // If S is the current element reference by 'it'
-                                // Need to modify outer iterator so that next
-                                // iteration correctly skips over element we
-                                // are going to remove
-                                if (it2 == it) {
-                                    it--;
+                                // If S is also the element currently referenced
+                                // by the outer iterator 'it1', we need to take
+                                // this into account when removing it
+                                if (it2 == it1) {
                                     skip = true;
+                                    if (it2 == asteration.begin()) {
+                                        it2 = asteration.erase(it2);
+                                        it1 = asteration.begin();
+                                        increment_iterator = false;
+                                    } else {
+                                        it1--;
+                                        it2 = asteration.erase(it2);
+                                    }
                                 }
-                                // Remove S from the asteration set
-                                it2 = asteration.erase(it2);
-                                // Note that erase method returns iterator to
-                                // element following removed one, so decrement
-                                // this for next iteration to correctly skip
-                                // over removed element
-                                it2--;
+                                // Otherwise, simply remove the relation
+                                else {
+                                    it2 = asteration.erase(it2);
+                                }
+                            }
+                            // Otherwise, move to the next relation
+                            else {
+                                it2++;
                             }
                         }
                     }
@@ -1158,6 +1170,11 @@ bool Heighted_graph::fwk_check(int opts) {
                         break;
                     }
                 }
+            }
+
+            // Increment the iterator over the asteration set, if necessary
+            if (increment_iterator) {
+                it1++;
             }
         }
 
@@ -1311,9 +1328,8 @@ bool Heighted_graph::fwk_check(int opts) {
                                 // Start by assuming PQR needs to be added
                                 bool add = true;
                                 // Check relations currently in ccl_next[i][j]
-                                for (auto it = ccl_next[i][j]->begin();
-                                     it != ccl_next[i][j]->end();
-                                     it++)
+                                auto it = ccl_next[i][j]->begin();
+                                while (it != ccl_next[i][j]->end())
                                 {
                                     // Get the next relation for comparison
                                     Sloped_relation* S = *it;
@@ -1328,20 +1344,8 @@ bool Heighted_graph::fwk_check(int opts) {
                                     else if (cmp_result == gt) {
                                         // Remove S from the set
                                         it = ccl_next[i][j]->erase(it);
-                                        // If we removed the last item, then
-                                        // break out of the loop here, since the
-                                        // iteration expression will try to
-                                        // increment past the end of the container
-                                        if (ccl_next[i][j]->size() == 0) {
-                                            break;
-                                        }
-                                        // If there are still elements, then
-                                        // decrement iterator so that next loop
-                                        // iteration correctly skips over the
-                                        // removed element, since the erase
-                                        // method returns iterator to the next
-                                        // next element
-                                        it--;
+                                    } else {
+                                        it++;
                                     }
                                 }
                                 // If we need to add PQR to ccl_next[i][j]
