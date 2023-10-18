@@ -72,6 +72,8 @@ int main(int argc, char** argv) {
 
         bool result;
 
+        int opts = 0;
+
         if (argc < 3) {
             result = hg.order_reduced_check(Heighted_graph::GIVEN_ORDER, opts);
         }
