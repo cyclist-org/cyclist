@@ -4,6 +4,12 @@ CFLAGS:=-xc++ -std=c++17
 
 TIMEOUT := $(if $(TIMEOUT),$(TIMEOUT),60)
 
+# Specification for combinations of optimisations used in relational checks
+RELATIONAL_OPTIMISATIONS = "" "f" "s" "i" "m" "fm" "fs" "fi" "ms" "fms"
+
+# Specification of node orders used for the order-reduced relations checks
+NODE_ORDERS = "0" "1" "2"
+
 define test_success
 	echo "TEST: $(1), SPEC=$$SPEC"
 	(timeout $(TIMEOUT) $(TEST_EXE) $(1) $(SPEC); EXIT_CODE=$$?; if [ $$EXIT_CODE -eq 0 ]; then echo "TEST PASSED"; elif [ $$EXIT_CODE -eq 124 ]; then echo "TIMEOUT"; else echo "TEST NOT PASSED"; fi; exit 0)
@@ -42,27 +48,7 @@ sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
     tests-sla \
     tests-vla \
     tests-ortl \
-    tests-ortl-no-opts \
-    tests-ortl-ff \
-    tests-ortl-scc \
-    tests-ortl-idem \
-    tests-ortl-min \
-    tests-ortl-ff-min \
-    tests-ortl-ff-scc \
-    tests-ortl-ff-idem \
-    tests-ortl-min-scc \
-    tests-ortl-ff-min-scc \
-    tests-fwk \
-    tests-fwk-no-opts \
-    tests-fwk-ff \
-    tests-fwk-scc \
-    tests-fwk-idem \
-    tests-fwk-min \
-    tests-fwk-ff-min \
-    tests-fwk-ff-scc \
-    tests-fwk-ff-idem \
-    tests-fwk-min-scc \
-    tests-fwk-ff-min-scc
+    tests-fwk
 
 .SILENT: \
     tests \
@@ -77,27 +63,7 @@ sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
     tests-sla \
     tests-vla \
     tests-ortl \
-    tests-ortl-no-opts \
-    tests-ortl-ff \
-    tests-ortl-scc \
-    tests-ortl-idem \
-    tests-ortl-min \
-    tests-ortl-ff-min \
-    tests-ortl-ff-scc \
-    tests-ortl-ff-idem \
-    tests-ortl-min-scc \
-    tests-ortl-ff-min-scc \
-    tests-fwk \
-    tests-fwk-no-opts \
-    tests-fwk-ff \
-    tests-fwk-scc \
-    tests-fwk-idem \
-    tests-fwk-min \
-    tests-fwk-ff-min \
-    tests-fwk-ff-scc \
-    tests-fwk-ff-idem \
-    tests-fwk-min-scc \
-    tests-fwk-ff-min-scc
+    tests-fwk
 
 clean: 
 	rm -f ./*.o soundness
@@ -108,29 +74,17 @@ tests-set: tests-sd tests-xsd
 tests-rel: tests-ortl tests-fwk
 tests-automata: tests-sla tests-vla
 
-tests-ortl: \
-    tests-ortl-no-opts \
-    tests-ortl-ff \
-    tests-ortl-scc \
-    tests-ortl-idem \
-    tests-ortl-min \
-    tests-ortl-ff-min \
-    tests-ortl-ff-scc \
-    tests-ortl-ff-idem \
-    tests-ortl-min-scc \
-    tests-ortl-ff-min-scc
+tests-ortl:
+	for ORDER in $(NODE_ORDERS); do \
+		for OPTIMISATION in $(RELATIONAL_OPTIMISATIONS); do \
+			export SPEC="O$$ORDER$$OPTIMISATION"; make -s test-suite-full; \
+		done; \
+	done
 
-tests-fwk: \
-    tests-fwk-no-opts \
-    tests-fwk-ff \
-    tests-fwk-scc \
-    tests-fwk-idem \
-    tests-fwk-min \
-    tests-fwk-ff-min \
-    tests-fwk-ff-scc \
-    tests-fwk-ff-idem \
-    tests-fwk-min-scc \
-    tests-fwk-ff-min-scc
+tests-fwk:
+	for OPTIMISATION in $(RELATIONAL_OPTIMISATIONS); do \
+		export SPEC="F$$OPTIMISATION"; make -s test-suite-full; \
+	done; \
 
 tests-sla:
 	echo "SLA"
@@ -139,68 +93,6 @@ tests-sla:
 tests-vla:
 	echo "VLA"
 	export SPEC=V; make -s test-suite-full
-
-tests-ortl-no-opts:
-	echo "ORTL NO OPTIMSATIONS";
-	export SPEC=O; make -s test-suite-full
-tests-ortl-ff:
-	echo "ORTL FAST-FAIL"
-	export SPEC=Of; make -s test-suite-full
-tests-ortl-scc:
-	echo "ORTL SCC LOOP CHECK"
-	export SPEC=Os; make -s test-suite-full
-tests-ortl-idem:
-	echo "ORTL IDEMPOTENT RELATIONS ONLY"
-	export SPEC=Oi; make -s test-suite-full
-tests-ortl-min:
-	echo "ORTL MINIMAL CCL"
-	export SPEC=Om; make -s test-suite-full
-tests-ortl-ff-min:
-	echo "ORTL FAST-FAIL, MINIMAL CCL"
-	export SPEC=Ofm; make -s test-suite-full
-tests-ortl-ff-scc:
-	echo "ORTL FAST-FAIL, SCC LOOP CHECK"
-	export SPEC=Ofs; make -s test-suite-full
-tests-ortl-ff-idem:
-	echo "ORTL FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
-	export SPEC=Ofi; make -s test-suite-full
-tests-ortl-min-scc:
-	echo "ORTL MINIMAL CCL, SCC LOOP CHECK"
-	export SPEC=Oms; make -s test-suite-full
-tests-ortl-ff-min-scc:
-	echo "ORTL MINIMAL CCL, SCC LOOP CHECK"
-	export SPEC=Ofms; make -s test-suite-full
-
-tests-fwk-no-opts:
-	echo "FWK NO OPTIMSATIONS";
-	export SPEC=F; make -s test-suite-full
-tests-fwk-ff:
-	echo "FWK FAST-FAIL"
-	export SPEC=Ff; make -s test-suite-full
-tests-fwk-scc:
-	echo "FWK SCC LOOP CHECK"
-	export SPEC=Fs; make -s test-suite-full
-tests-fwk-idem:
-	echo "FWK IDEMPOTENT RELATIONS ONLY"
-	export SPEC=Fi; make -s test-suite-full
-tests-fwk-min:
-	echo "FWK MINIMAL CCL"
-	export SPEC=Fm; make -s test-suite-full
-tests-fwk-ff-min:
-	echo "FWK FAST-FAIL, MINIMAL CCL"
-	export SPEC=Ffm; make -s test-suite-full
-tests-fwk-ff-scc:
-	echo "FWK FAST-FAIL, SCC LOOP CHECK"
-	export SPEC=Ffs; make -s test-suite-full
-tests-fwk-ff-idem:
-	echo "FWK FAST-FAIL, IDEMPOTENT RELATIONS ONLY"
-	export SPEC=Ffi; make -s test-suite-full
-tests-fwk-min-scc:
-	echo "FWK MINIMAL CCL, SCC LOOP CHECK"
-	export SPEC=Fms; make -s test-suite-full
-tests-fwk-ff-min-scc:
-	echo "FWK MINIMAL CCL, SCC LOOP CHECK"
-	export SPEC=Ffms; make -s test-suite-full
 
 tests-sd:
 	echo "SPRENGER-DAM"
