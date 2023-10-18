@@ -43,7 +43,7 @@ done
 
 opts=("-VLA" "-legacy" "-SLA" "-OR -scc -ff -ord 1" "-OR -min -scc -ff -ord 1")
 
-inputs="$(seq 625 250 2000)"
+inputs="$(seq 700 100 2000)"
 for n in ${inputs[@]}; do
   for i in ${!opts[@]}; do
     opt=${opts[i]}
