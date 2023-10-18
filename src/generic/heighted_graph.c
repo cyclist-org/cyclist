@@ -440,45 +440,51 @@ bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts) {
         }
     }
 
-    //
-    // First, compute the specified ordering on the nodes of the heighted graph
-    //
+    // Use a pointer to avoid allocating memory unless necessary
+    Vec<Pair<int, Pair<int, int>>>* node_order = NULL;
 
-    Vec<Pair<int, Pair<int, int>>> node_order(num_nodes);
-    for (int i = 0; i < num_nodes; i++) {
-        node_order[i].first = i;
-        if (order != GIVEN_ORDER) {
-            // Compute the in/out-degree
-            node_order[i].second.first = 0;
-            node_order[i].second.second = 0;
-            for (int j = 0; j < num_nodes; j++) {
-                // Update the out-degree
-                if (h_change[i][j] != NULL) {
-                    node_order[i].second.first++;
-                }
-                // Update the in-degree
-                if (h_change[j][i] != NULL) {
-                    node_order[i].second.second++;
+    // If we are not using the given order, compute the specified ordering and
+    // store the result in [node_order]
+    if (order != GIVEN_ORDER) {
+
+        node_order = new Vec<Pair<int, Pair<int, int>>>(num_nodes);
+        for (int i = 0; i < num_nodes; i++) {
+            (*node_order)[i].first = i;
+            if (order != GIVEN_ORDER) {
+                // Compute the in/out-degree
+                (*node_order)[i].second.first = 0;
+                (*node_order)[i].second.second = 0;
+                for (int j = 0; j < num_nodes; j++) {
+                    // Update the out-degree
+                    if (h_change[i][j] != NULL) {
+                        (*node_order)[i].second.first++;
+                    }
+                    // Update the in-degree
+                    if (h_change[j][i] != NULL) {
+                        (*node_order)[i].second.second++;
+                    }
                 }
             }
         }
-    }
-    // Sort the vector
-    switch (order) {
-        case DEGREE_OUT_IN_ASC:
-            std::sort(node_order.begin(), node_order.end(), deg_out_in_asc);
-            break;
-        case DEGREE_OUT_IN_DESC:
-            std::sort(node_order.begin(), node_order.end(), deg_out_in_desc);
-            break;
+        // Sort the vector
+        switch (order) {
+            case DEGREE_OUT_IN_ASC:
+                std::sort(node_order->begin(), node_order->end(), deg_out_in_asc);
+                break;
+            case DEGREE_OUT_IN_DESC:
+                std::sort(node_order->begin(), node_order->end(), deg_out_in_desc);
+                break;
+        }
+
     }
 
-    // initialise the CCL with the (unique representatives of) relations stored
-    // in the h_change field, according to the node ordering computed above
+    // initialise the CCL with the (unique representatives of) relations
+    // stored in the h_change field, according to the node ordering computed
+    // above when not using the given order
     for (int i = 0; i < num_nodes; i++) {
-        int nd_i = node_order[i].first;
+        int nd_i = (node_order != NULL) ? (*node_order)[i].first : i;
         for (int j = 0; j < num_nodes; j++) {
-            int nd_j = node_order[j].first;
+            int nd_j = (node_order != NULL) ? (*node_order)[j].first : j;
             // If there is a sloped relation for the corresponding edge
             Sloped_relation* R_ptr = h_change[nd_i][nd_j];
             if (R_ptr != NULL) {
@@ -494,6 +500,11 @@ bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts) {
 #endif
             }
         }
+    }
+
+    // Delete vector used for computing node ordering, if it was created
+    if (node_order != NULL) {
+        delete node_order;
     }
 
     // If fail-fast, then need to check initial sloped relations for self-loops
