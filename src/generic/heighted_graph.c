@@ -23,6 +23,8 @@ const int Heighted_graph::USE_SCC_CHECK    = 0b0000000010;
 const int Heighted_graph::USE_IDEMPOTENCE  = 0b0000000100;
 const int Heighted_graph::USE_MINIMALITY   = 0b0000001000;
 
+const int Heighted_graph::PRINT_CCL        = 0b0000010000;
+
 //=============================================================
 // Constructors / Destructor
 //=============================================================
@@ -150,6 +152,7 @@ int Heighted_graph::parse_flags(const std::string flags_s) {
             case 's': flags |= USE_SCC_CHECK; break;
             case 'i': flags |= USE_IDEMPOTENCE; break;
             case 'm': flags |= USE_MINIMALITY; break;
+            case 'p': flags |= PRINT_CCL; break;
         }
     }
     return flags;
@@ -165,7 +168,7 @@ void print_ccl(Relation_LIST*** ccl, int num_nodes) {
         for (auto R : *ccl[source][sink]) {
             std::cout << "<><><><><><><><><><><><><><><><><><><><><><><><><><><><><>" << std::endl;
             std::cout << source << " " << sink << std::endl;
-            std::cout << R;
+            std::cout << *R;
             std::cout << "<><><><><><><><><><><><><><><><><><><><><><><><><><><><><>" << std::endl;
         }
     }
@@ -515,6 +518,9 @@ bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts) {
     // checks separately here
     if ((opts & FAIL_FAST) != 0) {
         if (!check_Ccl(ccl, opts)) {
+            if ((opts & PRINT_CCL) != 0) {
+                print_ccl(ccl, num_nodes);
+            }
             order_reduced_cleanup(ccl, num_nodes, representatives, h_change, composition);
             return false;
         }
@@ -592,6 +598,9 @@ bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts) {
                     if (fresh && ((opts & FAIL_FAST) != 0) && source == sink
                                 && !(check_self_loop(R, opts)))
                     {
+                        if ((opts & PRINT_CCL) != 0) {
+                            print_ccl(ccl, num_nodes);
+                        }
                         order_reduced_cleanup(ccl, num_nodes, representatives, h_change, composition);
                         return false;
                     }
@@ -706,6 +715,9 @@ bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts) {
                     if (fresh && ((opts & FAIL_FAST) != 0) 
                                 /* && source == sink */ // Not necessary here, we know it's true
                                 && !(check_self_loop(R, opts))) {
+                        if ((opts & PRINT_CCL) != 0) {
+                            print_ccl(ccl, num_nodes);
+                        }
                         order_reduced_cleanup(ccl, num_nodes, representatives, h_change, composition);
                         return false;
                     }
@@ -761,9 +773,16 @@ bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts) {
     // If not using fast-fail, then check for self-loops in the computed CCL
     if ((opts & FAIL_FAST) == 0) {
         if (!check_Ccl(ccl, opts)) {
+            if ((opts & PRINT_CCL) != 0) {
+                print_ccl(ccl, num_nodes);
+            }
             order_reduced_cleanup(ccl, num_nodes, representatives, h_change, composition);
             return false;
         }
+    }
+
+    if ((opts & PRINT_CCL) != 0) {
+        print_ccl(ccl, num_nodes);
     }
 
     order_reduced_cleanup(ccl, num_nodes, representatives, h_change, composition);
@@ -1075,6 +1094,9 @@ bool Heighted_graph::fwk_check(int opts) {
     // checks separately here
     if ((opts & FAIL_FAST) != 0) {
         if (!check_Ccl(ccl, opts)) {
+            if ((opts & PRINT_CCL) != 0) {
+                print_ccl(ccl, num_nodes);
+            }
             fwk_cleanup(ccl, ccl_next, num_nodes, representatives, h_change, tmp_relation);
             return false;
         }
@@ -1427,6 +1449,9 @@ bool Heighted_graph::fwk_check(int opts) {
                         if (added && ((opts & FAIL_FAST) != 0) && i == j
                                   && !(check_self_loop(*PQR, opts)))
                         {
+                            if ((opts & PRINT_CCL) != 0) {
+                                print_ccl(ccl, num_nodes);
+                            }
                             fwk_cleanup(ccl, ccl_next, num_nodes, 
                                         representatives, h_change,
                                         tmp_relation);
@@ -1450,9 +1475,16 @@ bool Heighted_graph::fwk_check(int opts) {
     // If not using fast-fail, check for self-loops in the fully computed CCL
     if ((opts & FAIL_FAST) == 0) {
         if (!check_Ccl(ccl, opts)) {
+            if ((opts & PRINT_CCL) != 0) {
+                print_ccl(ccl, num_nodes);
+            }
             fwk_cleanup(ccl, ccl_next, num_nodes, representatives, h_change, tmp_relation);
             return false;
         }
+    }
+
+    if ((opts & PRINT_CCL) != 0) {
+        print_ccl(ccl, num_nodes);
     }
 
     fwk_cleanup(ccl, ccl_next, num_nodes, representatives, h_change, tmp_relation);
@@ -1473,7 +1505,7 @@ bool Heighted_graph::check_Ccl(Set<Sloped_relation*>*** ccl, int opts) {
 }
 
 //======================================================
-// Automata Constructions for  Checking Infinite Descent
+// Automata Constructions for Checking Infinite Descent
 //======================================================
 
 /*

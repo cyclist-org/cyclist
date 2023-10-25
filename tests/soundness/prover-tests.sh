@@ -7,9 +7,10 @@ if [ -z "$iterations" ]; then
   iterations=1
 fi
 
-opts=("-VLA" "-legacy" "-SLA" "-FWK -scc -ff" "-FWK -min -scc -ff" "-OR -scc -ff -ord 0" "-OR -scc -ff -ord 1" "-OR -scc -ff -ord 2" "-OR -min -scc -ff -ord 0" "-OR -min -scc -ff -ord 1" "-OR -min -scc -ff -ord 2")
 now=$(date +"%Y-%m-%d_%H-%M-%S")
 sha=$(git rev-parse --short HEAD)
+
+opts=("-VLA" "-legacy" "-SLA" "-FWK -scc -ff" "-FWK -min -scc -ff" "-OR -scc -ff -ord 0" "-OR -scc -ff -ord 1" "-OR -scc -ff -ord 2" "-OR -min -scc -ff -ord 0" "-OR -min -scc -ff -ord 1" "-OR -min -scc -ff -ord 2")
 
 for i in ${!opts[@]}; do
   opt=${opts[i]}

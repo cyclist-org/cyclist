@@ -39,10 +39,10 @@ int usage(char* arg0) {
         << " <filename>"
         << " <spec-string>"
         << std::endl
-        << "<spec-string> ::= O [<order-id>] ([i]|([m][s])) [f]"
+        << "<spec-string> ::= O [<order-id>] ([i]|([m][s])) [f][p]"
         << "(Order-reduced)"
         << std::endl
-        << "                | F ([i]|([m][s])) [f]"
+        << "                | F ([i]|([m][s])) [f][p]"
         << "(Floyd-Warshall-Kleene)"
         << std::endl
         << "                | V"
@@ -98,7 +98,6 @@ int main(int argc, char** argv) {
             }
             opts = Heighted_graph::parse_flags(spec);
             result = hg.order_reduced_check(order, opts);
-            // hg.print_Ccl();
             // hg.print_statistics();
         } else {
             switch (*argv[2]) {

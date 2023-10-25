@@ -91,6 +91,8 @@ public:
     static const int USE_IDEMPOTENCE;
     static const int USE_MINIMALITY;
 
+    static const int PRINT_CCL;
+
     enum NODE_ORDER {
         GIVEN_ORDER = 0,
         DEGREE_OUT_IN_ASC = 1,
