@@ -53,3 +53,12 @@ SD nor XSD.
 
 A degenerate example, with one node and no edges. Added to check against bug in
 SLA code found in c94abc9.
+
+# Graphs 24 and 25
+
+Had crafted examples to demonstrate the difference in the sizes of the full
+and order-reduced composition closures. Both satisfy ID.
+
+Graph 25 demonstrates a bug in the implementation of Tarjan's SCC algorithm in
+sloped_relation.c discovered in commit fd2546f, which incorrectly reports that
+this example is UNSOUND (i.e. does NOT satisfy ID).

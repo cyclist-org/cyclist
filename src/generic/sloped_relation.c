@@ -503,32 +503,87 @@ bool Sloped_relation::has_self_loop(void) {
 //==================================================================
 // USE : SCC
 
-void fill_order(int v, bool* visited, std::stack<int>& s, int** g, int rows, int cols) {
-    visited[v] = true;
-    for(int i = 0; i < rows || i < cols; ++i)
-        if(v < rows && i < cols && g[v][i] != Undef)
-            if(!visited[i])
-                fill_order(i, visited, s, g, rows, cols);
-    s.push(v);
-}
+/**
+ * Tarjan's algorithm for finding strongly-connected components.
+ * Reference: https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
+ * Slightly modified to return true if we find an edge inside a
+ * strongly-connected component with a Downward slope.
+ */
+bool find_scc
+    (
+        int n,
+        std::stack<int>& s,
+        bool* on_stack,
+        int* idxs,
+        int* low_links,
+        int& next_idx,
+        int** repr_matrix,
+        int num_src_heights,
+        int num_dst_heights
+    )
+{
 
-bool find_scc(int v, bool* visited, int** g, int rows, int cols) {
-    visited[v] = true;
-    bool found = false;
-    for (int i = 0 ; i < rows || i < cols; ++i) {
-        if (i < rows && v < cols && g[i][v] != Undef) {
-            if (!visited[i]) {
-                if(g[i][v] == Downward) {
+    idxs[n] = next_idx++;
+    low_links[n] = idxs[n];
+    on_stack[n] = true;
+    s.push(n);
+
+    // Consider successors of n
+    if (n < num_src_heights) {
+        for (int m = 0; m < num_dst_heights; m++) {
+            slope slp = (slope) repr_matrix[n][m];
+            if (slp == Undef) {
+                continue;
+            }
+            // If successor m has not been visited yet
+            if (idxs[m] == -1) {
+                // Recurse on it
+                bool result = 
+                    find_scc(m, s, on_stack, idxs, low_links, next_idx,
+                             repr_matrix, num_src_heights, num_dst_heights);
+                if (result) {
                     return true;
                 }
-                if (find_scc(i, visited, g, rows, cols)) {
-                    found = true;
-                    break;
+                low_links[n] = 
+                    low_links[n] < low_links[m] ? low_links[n] : low_links[m];
+            }
+            // Otherwise, if successor is in the stack then it is in the current
+            // strongly-connected component
+            else if (on_stack[m]) {
+                // If the edge has a downward slope, then we can return true
+                // immediately
+                if (slp == Downward) {
+                    return true;
                 }
+                // Otherwise, update low_link for this height, as per original
+                // algorithm
+                else {
+                    low_links[n] = 
+                        low_links[n] < idxs[m] ? low_links[n] : idxs[m];
+                }
+            }
+            // Otherwise successor is in an already processed strongly-connected
+            // component
+            else {
+                // Do nothing
             }
         }
     }
-    return found;
+
+    // If the height n is the root of a discovered strongly-connected component
+    // then remove that component from the stack
+    if (low_links[n] == idxs[n]) {
+        int m = -1;
+        while (m != n) {
+            m = s.top();
+            s.pop();
+            on_stack[m] = false;
+        }
+    }
+
+    // We did not find a downward slope in this strongly-connected component
+    return false;
+
 }
 
 bool Sloped_relation::has_downward_SCC(void) {
@@ -537,47 +592,42 @@ bool Sloped_relation::has_downward_SCC(void) {
         return *(this->has_down_scc);
     }
 
+    // Allocate new boolean to store result and initialise
+    this->has_down_scc = (bool*) malloc(sizeof(bool));
+    *(this->has_down_scc) = false;
+
     int num_heights =
         (num_src_heights > num_dst_heights) ? num_src_heights : num_dst_heights;
     
-    bool* visited = (bool*)malloc(num_heights * sizeof(bool));
+    bool* on_stack = (bool*) malloc(num_heights * sizeof(bool));
+    int*  idxs = (int*) malloc(num_heights * sizeof(int));
+    int*  low_links = (int*) malloc(num_heights * sizeof(int));
     
-    for( int i = 0 ; i < num_heights; i++ ){
-        visited[i] = false;
+    for (int i = 0 ; i < num_heights; i++) {
+        on_stack[i] = false;
+        idxs[i] = -1;
+        low_links[i] = -1;
     }
-
 
     std::stack<int> s;
 
-    for(int i = 0; i < num_heights; i++)
-        if(!visited[i])
-            fill_order(i, visited, s, repr_matrix, num_src_heights, num_dst_heights);
-
-    for( int i = 0 ; i < num_heights; i++) {
-        visited[i] = false;
-    }
     bool found = false;
-    while (!s.empty() && !found){
-        int v = s.top();
-        s.pop();
-        if (!visited[v]){
-            if (v < num_src_heights && v < num_dst_heights 
-                    && repr_matrix[v][v] == Downward) {
-                found = true;
-            } else {
-                found = find_scc(v, visited, repr_matrix, num_src_heights, num_dst_heights);
-            }
+    int next_idx = 0;
+    for (int n = 0; n < num_heights; n++) {
+        if (idxs[n] == -1
+                && find_scc(n, s, on_stack, idxs, low_links, next_idx,
+                            repr_matrix, num_src_heights, num_dst_heights))
+        {
+            *(this->has_down_scc) = true;
+            break;
         }
     }
-    
-    free(visited);
 
-    // Allocate new boolean to store result
-    this->has_down_scc = (bool*) malloc(sizeof(bool));
-    // Store the result
-    *(this->has_down_scc) = found;
+    free(on_stack);
+    free(idxs);
+    free(low_links);
 
-    return found;
+    return *(this->has_down_scc);
 }
 
 //==================================================================

@@ -141,6 +141,8 @@ test-suite-full: soundness
 	$(call test_failure, graph_21)
 	$(call test_success, graph_22)
 	$(call test_success, graph_23)
+	$(call test_success, graph_24)
+	$(call test_success, graph_25)
 
 test-suite-sd: soundness
 	$(call test_success, graph_1)
