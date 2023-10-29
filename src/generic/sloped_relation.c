@@ -525,11 +525,15 @@ bool find_scc
 
     idxs[n] = next_idx++;
     low_links[n] = idxs[n];
-    on_stack[n] = true;
-    s.push(n);
 
-    // Consider successors of n
+    // Only need to push this node to the stack and process it if it might have
+    // edges coming out of it
     if (n < num_src_heights) {
+        
+        on_stack[n] = true;
+        s.push(n);
+
+        // Consider successors of n
         for (int m = 0; m < num_dst_heights; m++) {
             slope slp = (slope) repr_matrix[n][m];
             if (slp == Undef) {
@@ -568,16 +572,16 @@ bool find_scc
                 // Do nothing
             }
         }
-    }
 
-    // If the height n is the root of a discovered strongly-connected component
-    // then remove that component from the stack
-    if (low_links[n] == idxs[n]) {
-        int m = -1;
-        while (m != n) {
-            m = s.top();
-            s.pop();
-            on_stack[m] = false;
+        // If the height n is the root of a discovered strongly-connected
+        // component then remove that component from the stack
+        if (low_links[n] == idxs[n]) {
+            int m = -1;
+            while (m != n) {
+                m = s.top();
+                s.pop();
+                on_stack[m] = false;
+            }
         }
     }
 
