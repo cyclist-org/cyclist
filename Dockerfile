@@ -1,4 +1,4 @@
-FROM ocaml/opam2
+FROM ocaml/opam
 
 LABEL maintainer="Reuben N. S. Rowe (reuben.rowe@rhul.ac.uk)"
 
@@ -15,6 +15,14 @@ RUN apt-get --allow-releaseinfo-change update && apt-get install -y --no-install
       pkg-config \
       software-properties-common \
   && sudo rm -rf /var/lib/apt/lists/*
+
+# Install Git LFS
+RUN (curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash) && \
+  apt-get update && \
+  apt-get install -y --no-install-recommends git-lfs && \
+  rm -rf /var/lib/apt/lists/*
+
+# Install Spot
 RUN (curl -s https://www.lrde.epita.fr/repo/debian.gpg | apt-key add -) \
   && echo 'deb http://www.lrde.epita.fr/repo/debian/ stable/' >> /etc/apt/sources.list \
   && apt-get update \
