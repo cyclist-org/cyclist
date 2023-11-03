@@ -21,7 +21,7 @@ RUN apt-get --allow-releaseinfo-change update && apt-get install -y --no-install
 
 RUN \
   mkdir /usr/local/src/spot && cd /usr/local/src/spot && \
-  wget http://www.lrde.epita.fr/dload/spot/spot-2.10.4.tar.gz && \
+  wget https://www.lrde.epita.fr/dload/spot/spot-2.10.4.tar.gz && \
   tar -xzf spot-2.10.4.tar.gz && cd spot-2.10.4 && \
   ./configure --prefix=/opt/spot/accset-32 --disable-python && \
   make && make install && make clean && \
