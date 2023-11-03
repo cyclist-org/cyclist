@@ -1,6 +1,4 @@
-FROM ocaml/opam2
-
-LABEL maintainer="Reuben N. S. Rowe (reuben.rowe@rhul.ac.uk)"
+FROM ocaml/opam:debian-ocaml-4.14
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -19,13 +17,6 @@ RUN apt-get --allow-releaseinfo-change update && apt-get install -y --no-install
   wget \
 && sudo rm -rf /var/lib/apt/lists/*
 
-# Install Git LFS
-
-RUN (curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash) && \
-  apt-get update && \
-  apt-get install -y --no-install-recommends git-lfs && \
-  rm -rf /var/lib/apt/lists/*
-
 # Install Spot
 
 RUN \
@@ -37,6 +28,12 @@ RUN \
   ./configure --prefix=/opt/spot/accset-32768 --enable-max-accsets=32768 --disable-python && \
   make && make install && make clean
 
+# Copy Cyclist source code from current directory
+
+COPY . /home/cyclist
+
+RUN chmod -R a+rw /home/cyclist
+
 USER opam
 
 # Use remote OPAM repository
@@ -46,18 +43,13 @@ RUN \
   opam repository set-url default https://opam.ocaml.org/ && \
   opam update
 
-# Install Cyclist
+# Compile Cyclist
 
 RUN \
-  cd /home/opam && \
-  git clone https://github.com/ngorogiannis/cyclist.git && \
-  cd cyclist && \
+  cd /home/cyclist && \
   eval `opam config env` && \
   opam update && \
-  git checkout CADE && \
   opam install -y --deps-only ./cyclist.opam && \
-  rm -f dune-workspace && \
-  mv dune-workspace.CADE2023 dune-workspace && \
   dune build
 
-WORKDIR /home/opam/cyclist
+WORKDIR /home/cyclist

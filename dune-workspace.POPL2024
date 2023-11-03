@@ -1,11 +1,6 @@
 (lang dune 2.2)
 
 (env
- (log_stats
-  (c_flags :standard -DLOG_STATS)
-  (env-vars
-   (PKG_CONFIG_PATH "/opt/spot/accset-32/lib/pkgconfig")
-   (LD_LIBRARY_PATH "/opt/spot/accset-32/lib")))
  (accset-5 
   (env-vars
    (PKG_CONFIG_PATH "/opt/spot/accset-32/lib/pkgconfig")
@@ -21,6 +16,6 @@
 )
 
 (context default)
-(context (opam (switch 4.10) (name accset-5)   (profile accset-5)))
-(context (opam (switch 4.10) (name accset-15)  (profile accset-15)))
-(context (opam (switch 4.10) (name test2-benchmarks) (profile accset-15)))
+(context (opam (switch 4.14) (name accset-5)         (profile accset-5)))
+(context (opam (switch 4.14) (name accset-15)        (profile accset-15)))
+(context (opam (switch 4.14) (name test2-benchmarks) (profile accset-15)))
