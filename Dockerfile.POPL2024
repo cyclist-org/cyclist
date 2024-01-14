@@ -50,6 +50,7 @@ RUN \
   eval `opam config env` && \
   opam update && \
   opam install -y --deps-only ./cyclist.opam && \
+  rm -f dune-workspace && mv dune-workspace.POPL2024 dune-workspace && \
   dune build
 
 WORKDIR /home/cyclist
