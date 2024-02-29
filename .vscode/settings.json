@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "heighted_graph.hpp": "c",
+        "sloped_relation.hpp": "c"
+    }
+}

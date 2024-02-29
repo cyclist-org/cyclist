@@ -131,6 +131,28 @@ extern "C" value vla_automata_check() {
   CAMLreturn(v_res);
 }
 
+extern "C" value sledgehammer_check(value node_order_, value opts_) {
+  CAMLparam2(node_order_, opts_);
+  CAMLlocal1(v_res);
+
+  int node_order = Int_val(node_order_);
+  int opts = Int_val(opts_);
+
+  assert(hg);
+  assert(Heighted_graph::is_valid_node_order(node_order));
+
+  Heighted_graph::NODE_ORDER ord =
+    static_cast<Heighted_graph::NODE_ORDER>(node_order);
+
+  Sledgehammer sledgehammer(hg.get(), ord, opts);
+
+  bool retval = (sledgehammer.check_soundness());
+
+  v_res = Val_bool(retval);
+  CAMLreturn(v_res);
+}
+
+
 // extern "C" value sd_check() {
 //   CAMLparam0();
 //   CAMLlocal1(v_res);
