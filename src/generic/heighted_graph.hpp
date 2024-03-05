@@ -105,6 +105,8 @@ public:
     Heighted_graph(int max_nodes);
     ~Heighted_graph(void);
 
+    static Heighted_graph* clone(Heighted_graph* hg);
+
     // Methods for constructing the height graph
     void add_node(int n);
     void add_height(int n, int h);
@@ -120,8 +122,8 @@ public:
 
     static bool is_valid_node_order(int order);
 
-    bool order_reduced_check(NODE_ORDER order, int opts);
-    bool fwk_check(int opts);
+    bool order_reduced_check(NODE_ORDER order, int opts, bool* should_halt);
+    bool fwk_check(int opts, bool* should_halt);
     bool sla_automata_check(void);
     bool vla_automata_check(void);
 

@@ -2,6 +2,7 @@
 #include <memory>
 
 #include "heighted_graph.hpp"
+#include "sledgehammer.hpp"
 
 extern "C" {
 #include <memory.h>
@@ -93,7 +94,8 @@ extern "C" value order_reduced_check(value node_order_, value opts_) {
   Heighted_graph::NODE_ORDER ord =
     static_cast<Heighted_graph::NODE_ORDER>(node_order);
 
-  bool retval = (hg->order_reduced_check(ord, opts));
+  bool should_halt = false;
+  bool retval = (hg->order_reduced_check(ord, opts, &should_halt));
 
   v_res = Val_bool(retval);
   CAMLreturn(v_res);
@@ -105,7 +107,9 @@ extern "C" value fwk_check(value opts_) {
 
   assert(hg);
   int opts = Int_val(opts_);
-  bool retval = (hg->fwk_check(opts));
+
+  bool should_halt = false;
+  bool retval = (hg->fwk_check(opts, &should_halt));
 
   v_res = Val_bool(retval);
   CAMLreturn(v_res);

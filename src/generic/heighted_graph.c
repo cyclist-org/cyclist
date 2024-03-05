@@ -86,6 +86,40 @@ Heighted_graph::~Heighted_graph(void) {
     free(h_change);
 }
 
+Heighted_graph* Heighted_graph::clone(Heighted_graph* hg)
+{
+    Heighted_graph* cloned = new Heighted_graph(hg->max_nodes);
+
+    cloned->node_idxs = hg->node_idxs;
+    
+    cloned->height_idxs = std::vector<std::map<int,int>*>();
+    for (size_t i = 0; i < cloned->height_idxs.size(); i++)
+    {
+        cloned->height_idxs[i] = new std::map<int,int>(*(hg->height_idxs[i]));
+    };  
+    
+    cloned->HeightsOf = std::vector<std::set<int>*>(hg->HeightsOf.size());
+    for (size_t i = 0; i < cloned->HeightsOf.size(); i++)
+    {
+        cloned->HeightsOf[i]= new std::set<int>(*(hg->HeightsOf[i]));
+    };
+    
+
+    cloned->num_edges_ = hg->num_edges_;
+    cloned->trace_width = hg->trace_width;
+    for (size_t i = 0; i < cloned->max_nodes; i++)
+    {
+        for (size_t j = 0; j < cloned->max_nodes; j++)
+        {
+            if(hg->h_change[i][j]){
+                cloned->h_change[i][j] = new Sloped_relation(*(hg->h_change[i][j]));
+            }
+        }
+    }
+    
+    return cloned;
+}
+
 // Should return true iff [order] corresponds to an enumeration value of the
 // NODE_ORDER enum
 bool Heighted_graph::is_valid_node_order(int order) {
@@ -383,7 +417,7 @@ bool deg_out_in_desc(
             && lhs.second.second > rhs.second.second);
 }
 
-bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts) {
+bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts, bool* should_halt) {
 
     this->flags = opts;
 
@@ -1026,7 +1060,7 @@ void fwk_cleanup
     common_cleanup(num_nodes, representatives, h_change, composition);
 }
 
-bool Heighted_graph::fwk_check(int opts) {
+bool Heighted_graph::fwk_check(int opts, bool* should_halt) {
 
     // Record flags
     this->flags = opts;
