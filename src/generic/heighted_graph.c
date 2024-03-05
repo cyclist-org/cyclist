@@ -589,6 +589,9 @@ bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts, bool* shoul
                     right != ccl[middle][sink]->end();
                     right++
                 ) {
+                    if(*should_halt){
+                        return false;
+                    }
                     Sloped_relation* Q = *right;
 #ifdef LOG_STATS
                     start = std::chrono::system_clock::now();
@@ -1385,6 +1388,9 @@ bool Heighted_graph::fwk_check(int opts, bool* should_halt) {
                         // iterator if k != j
                         (k == j ? right : right++))
                     {
+                        if(*should_halt){
+                            return false;
+                        }
                         Sloped_relation* PQR = NULL;
                         if (k == j) {
                             PQR = PQ;

@@ -18,6 +18,10 @@ tests/mutant/*
 .projectSettings
 .settings/
 
+# VSCode Files #
+################
+.vscode
+
 # Ocaml Executables #
 #####################
 *.native

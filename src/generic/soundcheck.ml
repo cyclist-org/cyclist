@@ -8,6 +8,7 @@ type soundness_method =
   | ORTL_CPP
   | VLA
   | SLA
+  | SLEDGEHAMMER
 
 let soundness_method = ref RELATIONAL_OCAML
 let use_legacy () =
@@ -20,6 +21,8 @@ let use_vla () =
   soundness_method := VLA
 let use_sla () =
   soundness_method := SLA
+let use_sledgehammer () =
+  soundness_method := SLEDGEHAMMER
 
 let node_order = ref 0
 let set_node_order order =
@@ -707,6 +710,8 @@ module RelationalCheck = struct
     external fwk_check : int -> bool = "fwk_check"
     external sla_automata_check : unit -> bool = "sla_automata_check"
     external vla_automata_check : unit -> bool = "vla_automata_check"
+    external sledgehammer_check: int -> int -> bool = "sledgehammer_check"
+
     (* external sd_check : unit -> bool = "sd_check" *)
     (* external xsd_check : unit -> bool = "xsd_check" *)
     external print_stats : unit -> unit = "print_statistics"
@@ -782,6 +787,8 @@ module RelationalCheck = struct
           sla_automata_check ()
         | VLA ->
           vla_automata_check ()
+        | SLEDGEHAMMER ->
+          sledgehammer_check !node_order !opts
         | _ ->
           failwith "Unexpected soundness check method!" in
       if retval then Stats.MC.accept () else Stats.MC.reject () ;
@@ -813,6 +820,7 @@ let arg_opts =
     ("-SLA", Arg.Unit use_sla, ": use Spot (slope language automata construction) to verify pre-proof validity") ;
     ("-OR", Arg.Unit use_ortl, ": use external C++ order-reduced relational check to verify pre-proof validity") ;
     ("-FWK", Arg.Unit use_fwk, ": use external C++ Floyd-Warshall-Kleene relational check to verify pre-proof validity") ;
+    ("-SH", Arg.Unit use_sledgehammer, ": use sledgehammer (combines complete and incomplete methods) to verify pre-proof validity") ;
     ("-ord", Arg.Int set_node_order, 
         "<int>: specify which node order to use in the order-reduced relational check.\n" ^
         "\t0 - Natural Ordering\n" ^
