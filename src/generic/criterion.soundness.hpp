@@ -14,6 +14,6 @@ protected:
 
 public:
     virtual SoundnessCheckResult check_soundness() = 0;
-    void halt();
+    virtual void halt();
 };
 
