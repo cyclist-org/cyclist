@@ -1,25 +1,18 @@
 #include "types.c"
 #include "criterion.soundness.hpp"
+#include "criterion.automata_based.c"
 #include "heighted_graph.hpp"
 
-class SlaCriterion : public SoundnessCriterion
+class SlaCriterion : public AutomataBasedCriterion
 {
-private:
-    Heighted_graph* hg;
 
 public:
-    SlaCriterion(Heighted_graph* hg)
+    SlaCriterion(Heighted_graph *hg) : AutomataBasedCriterion(hg)
     {
-        this->hg = hg;
-    }
-    ~SlaCriterion()
-    {
-        delete this->hg;
     }
 
-    SoundnessCheckResult check_soundness()
+    bool automata_check()
     {
-        bool result = this->hg->sla_automata_check();
-        return (result ? SoundnessCheckResult::sound : SoundnessCheckResult::unsound);
+        return this->hg->sla_automata_check();
     }
 };

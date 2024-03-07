@@ -10,13 +10,10 @@
 
 Sledgehammer::Sledgehammer(Heighted_graph *hg, Heighted_graph::NODE_ORDER order, int opts)
 {
-    // this->soundness_criteria[0] = std::make_shared<VlaCriterion>(Heighted_graph::clone(hg));
-    // this->soundness_criteria[1] = std::make_shared<SlaCriterion>(Heighted_graph::clone(hg));
-    // this->soundness_criteria[2] = std::make_shared<FwkCriterion>(Heighted_graph::clone(hg), opts);
-    // this->soundness_criteria[3] = std::make_shared<OrderReducedCriterion>(Heighted_graph::clone(hg), order, opts);
-    this->soundness_criteria[0] = std::make_shared<FwkCriterion>(Heighted_graph::clone(hg), opts);
-    this->soundness_criteria[1] = std::make_shared<OrderReducedCriterion>(Heighted_graph::clone(hg), order, opts);
-
+    this->soundness_criteria[0] = std::make_shared<VlaCriterion>(Heighted_graph::clone(hg));
+    this->soundness_criteria[1] = std::make_shared<SlaCriterion>(Heighted_graph::clone(hg));
+    this->soundness_criteria[2] = std::make_shared<FwkCriterion>(Heighted_graph::clone(hg), opts);
+    this->soundness_criteria[3] = std::make_shared<OrderReducedCriterion>(Heighted_graph::clone(hg), order, opts);
 }
 
 Sledgehammer::~Sledgehammer()
