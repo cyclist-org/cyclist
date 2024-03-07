@@ -55,7 +55,7 @@ bool Sledgehammer::wait_for_any_future()
                 if (curr_result != SoundnessCheckResult::dontKnow)
                 {
                     printf("criterion number %zu done first\n", i);
-                    return curr_result;
+                    return curr_result == SoundnessCheckResult::sound;
                 }
             }
         }

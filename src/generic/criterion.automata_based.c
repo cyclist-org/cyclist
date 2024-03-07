@@ -37,7 +37,6 @@ public:
     }
     ~AutomataBasedCriterion()
     {
-        std::cout << "destructing\n";
         delete this->hg;
     }
 
