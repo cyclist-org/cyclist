@@ -72,7 +72,7 @@ public:
 
     void halt()
     {
-        if (!(this->is_done))
+        if (!(this->is_done) && this->spot_pid > 0)
         {
             Message killed_msg = Message::killed;
             // TODO: this might be dangerous if halt is invoked after `check_soundness` is done
