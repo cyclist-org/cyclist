@@ -22,10 +22,10 @@ endef
 
 all: soundness tests
 
-soundness: main.o sloped_relation.o heighted_graph.o  
-	g++ -g -o soundness main.o sloped_relation.o heighted_graph.o `pkg-config --libs libspot libbddx`
+soundness: main.o sloped_relation.o heighted_graph.o criterion.soundness.o sledgehammer.o 
+	g++ -g -o soundness main.o sloped_relation.o heighted_graph.o criterion.soundness.o sledgehammer.o `pkg-config --libs libspot libbddx`
 
-main.o: main.cpp ../heighted_graph.hpp 
+main.o: main.cpp ../heighted_graph.hpp ../sledgehammer.hpp
 	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/opt/lib -g -c main.cpp -o main.o
 
 heighted_graph.o: ../heighted_graph.hpp ../heighted_graph.c ../sloped_relation.hpp ../types.c
@@ -33,6 +33,15 @@ heighted_graph.o: ../heighted_graph.hpp ../heighted_graph.c ../sloped_relation.h
 
 sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
 	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../sloped_relation.c -o sloped_relation.o
+
+sledgehammer.o: ../sledgehammer.hpp ../sledgehammer.c ../criterion.soundness.hpp ../criterion.soundness.c  ../criterion.automata_based.c \
+	../criterion.order_reduced.c ../criterion.fwk.c ../criterion.sla.c ../criterion.vla.c \
+	../heighted_graph.hpp ../sloped_relation.hpp ../types.c
+	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/usr/lib -L/opt/lib -g -c ../sledgehammer.c -o sledgehammer.o
+
+criterion.soundness.o: ../criterion.soundness.c ../criterion.soundness.hpp 
+	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../criterion.soundness.c -o criterion.soundness.o
+
 
 .PHONY: \
     clean \
@@ -93,6 +102,14 @@ tests-sla:
 tests-vla:
 	echo "VLA"
 	export SPEC=V; make -s test-suite-full
+
+tests-sh:
+	echo "SLEDGEHAMMER"
+	for ORDER in $(NODE_ORDERS); do \
+		for OPTIMISATION in $(RELATIONAL_OPTIMISATIONS); do \
+			export SPEC="H$$ORDER$$OPTIMISATION"; make -s test-suite-full; \
+		done; \
+	done
 
 tests-sd:
 	echo "SPRENGER-DAM"
