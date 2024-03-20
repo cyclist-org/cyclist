@@ -2,6 +2,7 @@
 #include "json.hpp"
 #include "../types.c"
 #include "../heighted_graph.hpp"
+#include "../sledgehammer.hpp"
 
 using json = nlohmann::json;
 
@@ -77,9 +78,9 @@ int main(int argc, char** argv) {
         if (argc < 3) {
             result = hg.order_reduced_check(Heighted_graph::GIVEN_ORDER, opts);
         }
-        else if (*argv[2] == '\0' || *argv[2] == 'O') {
+        else if (*argv[2] == '\0' || *argv[2] == 'O' || *argv[2] == 'H') {
             Heighted_graph::NODE_ORDER order;
-            const char* spec = (*argv[2] == '\0') ? argv[2] : argv[2]++;
+            const char* spec = (*argv[2] == '\0') ? argv[2] : argv[2]+1;
             switch (*spec) {
                 case '1': {
                     order = Heighted_graph::DEGREE_OUT_IN_ASC;
@@ -97,7 +98,15 @@ int main(int argc, char** argv) {
                 }
             }
             opts = Heighted_graph::parse_flags(spec);
-            result = hg.order_reduced_check(order, opts);
+
+            if(*argv[2] == 'O'){
+                result = hg.order_reduced_check(order, opts);
+            } else if (*argv[2] == 'H'){
+                Sledgehammer sledgehammer(&hg, order, opts);
+                result = sledgehammer.check_soundness();
+            } else {
+                return usage(argv[0]);
+            }
             // hg.print_statistics();
         } else {
             switch (*argv[2]) {
