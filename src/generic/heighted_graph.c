@@ -419,7 +419,7 @@ bool deg_out_in_desc(
 
 bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts) {
     bool should_halt = false;
-    this->order_reduced_check(order, opts, &should_halt);
+    return this->order_reduced_check(order, opts, &should_halt);
 }
 
 bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts, bool* should_halt) {
@@ -1070,7 +1070,7 @@ void fwk_cleanup
 
 bool Heighted_graph::fwk_check(int opts) {
     bool should_halt = false;
-    this->fwk_check(opts, &should_halt);
+    return this->fwk_check(opts, &should_halt);
 }
 
 bool Heighted_graph::fwk_check(int opts, bool* should_halt) {
