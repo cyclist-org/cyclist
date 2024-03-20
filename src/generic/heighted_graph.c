@@ -417,6 +417,11 @@ bool deg_out_in_desc(
             && lhs.second.second > rhs.second.second);
 }
 
+bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts) {
+    bool should_halt = false;
+    this->order_reduced_check(order, opts, &should_halt);
+}
+
 bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts, bool* should_halt) {
 
     this->flags = opts;
@@ -1061,6 +1066,11 @@ void fwk_cleanup
     free(ccl_next);
 
     common_cleanup(num_nodes, representatives, h_change, composition);
+}
+
+bool Heighted_graph::fwk_check(int opts) {
+    bool should_halt = false;
+    this->fwk_check(opts, &should_halt);
 }
 
 bool Heighted_graph::fwk_check(int opts, bool* should_halt) {

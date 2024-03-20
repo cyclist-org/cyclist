@@ -122,7 +122,9 @@ public:
 
     static bool is_valid_node_order(int order);
 
+    bool order_reduced_check(NODE_ORDER order, int opts);
     bool order_reduced_check(NODE_ORDER order, int opts, bool* should_halt);
+    bool fwk_check(int opts);
     bool fwk_check(int opts, bool* should_halt);
     bool sla_automata_check(void);
     bool vla_automata_check(void);
