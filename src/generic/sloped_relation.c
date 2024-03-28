@@ -634,6 +634,16 @@ bool Sloped_relation::has_downward_SCC(void) {
     return *(this->has_down_scc);
 }
 
+bool Sloped_relation::has_downward_slope() {
+    this->initialize();
+    for (auto slope : *(this->slope_map)){
+        if (slope.second == Downward){
+            return true;
+        }
+    }
+    return false;
+}
+
 //==================================================================
 // MISC
 
