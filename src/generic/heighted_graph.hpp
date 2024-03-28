@@ -117,6 +117,8 @@ public:
 
     slope get_slope(int src, int sink ,int source_h, int sink_h);
 
+    Map<int,Int_SET*> *get_flat_edges();
+
     int num_nodes(void);
     int num_edges(void);
 
@@ -130,7 +132,6 @@ public:
     bool vla_automata_check(void);
 
     void print_statistics(void);
-
 };
 
 #endif

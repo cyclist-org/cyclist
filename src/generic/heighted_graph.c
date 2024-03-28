@@ -174,6 +174,28 @@ slope Heighted_graph::get_slope(int src, int sink, int h1, int h2) {
     return Undef;
 }
 
+Map<int, Int_SET*>* Heighted_graph::get_flat_edges() {
+    Map<int, Int_SET *>* flat_edges = new Map<int, Int_SET *>();
+    for (size_t i = 0; i < this->num_nodes(); i++)
+    {
+        flat_edges->insert(std::pair(i, new Int_SET()));
+    }
+
+    auto h_change = this->h_change;
+    int num_nodes = this->num_nodes();
+    for (size_t i = 0; i < num_nodes; i++)
+    {
+        for (size_t j = 0; j < num_nodes; j++)
+        {
+            if ((h_change[i][j] != NULL) && (!(h_change[i][j]->has_downward_slope())))
+            {
+                flat_edges->at(i)->insert(j);
+            }
+        }
+    }
+    return flat_edges;
+}
+
 //=============================================================
 // Setters
 //=============================================================
