@@ -21,7 +21,11 @@ public:
 
     SoundnessCheckResult check_soundness()
     {
+         auto start = std::chrono::system_clock::now();
         bool result = this->hg->fwk_check(this->opts, &(this->should_halt));
+        auto end = std::chrono::system_clock::now();
+        auto duration = end - start;
+        printf("fwk took %dus\n", duration);
         return (result ? SoundnessCheckResult::sound : SoundnessCheckResult::unsound);
     }
 };

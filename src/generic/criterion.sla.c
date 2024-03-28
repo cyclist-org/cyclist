@@ -13,6 +13,11 @@ public:
 
     bool automata_check()
     {
-        return this->hg->sla_automata_check();
+        auto start =  std::chrono::system_clock::now();
+        bool result = this->hg->sla_automata_check();
+        auto end = std::chrono::system_clock::now();
+        auto duration = end - start;
+        printf("sla took %dus\n", duration);
+        return result;
     }
 };

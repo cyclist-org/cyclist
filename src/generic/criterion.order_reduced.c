@@ -22,7 +22,12 @@ public:
 
     SoundnessCheckResult check_soundness()
     {
+        auto start = std::chrono::system_clock::now();
         bool result = this->hg->order_reduced_check(this->order, this->opts, &(this->should_halt));
+        auto end = std::chrono::system_clock::now();
+        auto duration = end - start;
+        printf("order reduced took %dus\n", duration);
+
         return (result ? SoundnessCheckResult::sound : SoundnessCheckResult::unsound);
     }
 };

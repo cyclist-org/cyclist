@@ -35,7 +35,7 @@ sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
 	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../sloped_relation.c -o sloped_relation.o
 
 sledgehammer.o: ../sledgehammer.hpp ../sledgehammer.c ../criterion.soundness.hpp ../criterion.soundness.c  ../criterion.automata_based.c \
-	../criterion.order_reduced.c ../criterion.fwk.c ../criterion.sla.c ../criterion.vla.c \
+	../criterion.order_reduced.c ../criterion.fwk.c ../criterion.sla.c ../criterion.vla.c ../criterion.flat_cycles.c \
 	../heighted_graph.hpp ../sloped_relation.hpp ../types.c
 	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/usr/lib -L/opt/lib -g -c ../sledgehammer.c -o sledgehammer.o
 

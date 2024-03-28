@@ -16,4 +16,3 @@ public:
     virtual SoundnessCheckResult check_soundness() = 0;
     virtual void halt();
 };
-

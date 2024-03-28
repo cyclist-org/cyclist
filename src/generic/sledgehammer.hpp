@@ -5,7 +5,7 @@
 #include <future>
 
 // Make sure this matches the criteria assigned in the ctor
-const size_t CRITERIA_AMOUNT = 4;
+const size_t CRITERIA_AMOUNT = 5;
 const int FUTURE_WAIT_TIME_MS = 5;
 
 class Sledgehammer
