@@ -3,15 +3,15 @@
 #include "criterion.automata_based.c"
 #include "heighted_graph.hpp"
 
-class VlaCriterion : public AutomataBasedCriterion
+class VlaCriterion : public ProcessBasedCriterion
 {
 
 public:
-    VlaCriterion(Heighted_graph *hg) : AutomataBasedCriterion(hg)
+    VlaCriterion(Heighted_graph *hg) : ProcessBasedCriterion(hg)
     {
     }
 
-    bool automata_check()
+    bool soundness_check()
     {
         auto start = std::chrono::system_clock::now();
         bool result = this->hg->vla_automata_check();

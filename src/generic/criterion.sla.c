@@ -3,15 +3,15 @@
 #include "criterion.automata_based.c"
 #include "heighted_graph.hpp"
 
-class SlaCriterion : public AutomataBasedCriterion
+class SlaCriterion : public ProcessBasedCriterion
 {
 
 public:
-    SlaCriterion(Heighted_graph *hg) : AutomataBasedCriterion(hg)
+    SlaCriterion(Heighted_graph *hg) : ProcessBasedCriterion(hg)
     {
     }
 
-    bool automata_check()
+    bool soundness_check()
     {
         auto start =  std::chrono::system_clock::now();
         bool result = this->hg->sla_automata_check();

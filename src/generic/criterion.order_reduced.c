@@ -1,8 +1,8 @@
 #include "types.c"
-#include "criterion.soundness.hpp"
+#include "criterion.automata_based.c"
 #include "heighted_graph.hpp"
 
-class OrderReducedCriterion : public SoundnessCriterion
+class OrderReducedCriterion : public ProcessBasedCriterion
 {
 private:
     Heighted_graph *hg;
@@ -10,17 +10,13 @@ private:
     int opts;
 
 public:
-    OrderReducedCriterion(Heighted_graph *hg, Heighted_graph::NODE_ORDER order, int opts)
+    OrderReducedCriterion(Heighted_graph *hg, Heighted_graph::NODE_ORDER order, int opts) : ProcessBasedCriterion(hg)
     {
         this->opts = opts;
         this->hg = hg;
     }
-    ~OrderReducedCriterion()
-    {
-        delete this->hg;
-    }
 
-    SoundnessCheckResult check_soundness()
+    bool soundness_check()
     {
         auto start = std::chrono::system_clock::now();
         bool result = this->hg->order_reduced_check(this->order, this->opts, &(this->should_halt));
@@ -28,6 +24,6 @@ public:
         auto duration = end - start;
         printf("order reduced took %dus\n", duration);
 
-        return (result ? SoundnessCheckResult::sound : SoundnessCheckResult::unsound);
+        return result;
     }
 };

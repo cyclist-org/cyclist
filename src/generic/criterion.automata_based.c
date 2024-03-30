@@ -7,10 +7,10 @@
 #include <stdexcept>
 #include <signal.h>
 
-class AutomataBasedCriterion : public SoundnessCriterion
+class ProcessBasedCriterion : public SoundnessCriterion
 {
 private:
-    pid_t spot_pid;
+    pid_t criterion_pid;
     int pipe_fd[2];
     bool is_done = false;
 
@@ -23,10 +23,10 @@ private:
 
 protected:
     Heighted_graph *hg;
-    virtual bool automata_check() = 0;
+    virtual bool soundness_check() = 0;
 
 public:
-    AutomataBasedCriterion(Heighted_graph *hg)
+    ProcessBasedCriterion(Heighted_graph *hg)
     {
         this->hg = hg;
         int pipe_result = pipe(this->pipe_fd);
@@ -35,19 +35,18 @@ public:
             throw std::runtime_error("failed creating pipe");
         }
     }
-    ~AutomataBasedCriterion()
+    ~ProcessBasedCriterion()
     {
         delete this->hg;
     }
 
-
     SoundnessCheckResult check_soundness()
     {
         Message result[1];
-        this->spot_pid = fork();
-        if (this->spot_pid == 0)
+        this->criterion_pid = fork();
+        if (this->criterion_pid == 0)
         {
-            bool is_sound = this->automata_check();
+            bool is_sound = this->soundness_check();
             Message msg = is_sound ? Message::sound : Message::unsound;
             write(this->pipe_fd[1], &msg, sizeof(Message));
             close(this->pipe_fd[1]);
@@ -72,11 +71,11 @@ public:
 
     void halt()
     {
-        if (!(this->is_done) && this->spot_pid > 0)
+        if (!(this->is_done) && this->criterion_pid > 0)
         {
             Message killed_msg = Message::killed;
             // TODO: this might be dangerous if halt is invoked after `check_soundness` is done
-            kill(this->spot_pid, SIGKILL);
+            kill(this->criterion_pid, SIGKILL);
             write(this->pipe_fd[1], &killed_msg, sizeof(Message));
         }
     }
