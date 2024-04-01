@@ -1,5 +1,5 @@
 #include "types.c"
-#include "criterion.automata_based.c"
+#include "criterion.process_based.c"
 #include "heighted_graph.hpp"
 
 class FwkCriterion : public ProcessBasedCriterion
@@ -17,11 +17,11 @@ public:
 
     bool soundness_check()
     {
-        auto start = std::chrono::system_clock::now();
+        // auto start = std::chrono::system_clock::now();
         bool result = this->hg->fwk_check(this->opts, &(this->should_halt));
-        auto end = std::chrono::system_clock::now();
-        auto duration = end - start;
-        printf("fwk took %dus\n", duration);
+        // auto end = std::chrono::system_clock::now();
+        // auto duration = end - start;
+        // printf("fwk took %dus\n", duration);
         return result;
     }
 };

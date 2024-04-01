@@ -26,11 +26,11 @@ public:
 
     SoundnessCheckResult check_soundness()
     {
-        auto start = std::chrono::system_clock::now();
+        // auto start = std::chrono::system_clock::now();
         bool does_flat_cycle_exist = this->dg->contains_cycle();
-        auto end = std::chrono::system_clock::now();
-        auto duration = end - start;
-        printf("flat cycles took %dus\n", duration);
+        // auto end = std::chrono::system_clock::now();
+        // auto duration = end - start;
+        // printf("flat cycles took %dus\n", duration);
 
         if (does_flat_cycle_exist)
         {

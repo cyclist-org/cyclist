@@ -1,5 +1,5 @@
 #include "types.c"
-#include "criterion.automata_based.c"
+#include "criterion.process_based.c"
 #include "heighted_graph.hpp"
 
 class OrderReducedCriterion : public ProcessBasedCriterion
@@ -18,11 +18,11 @@ public:
 
     bool soundness_check()
     {
-        auto start = std::chrono::system_clock::now();
+        // auto start = std::chrono::system_clock::now();
         bool result = this->hg->order_reduced_check(this->order, this->opts, &(this->should_halt));
-        auto end = std::chrono::system_clock::now();
-        auto duration = end - start;
-        printf("order reduced took %dus\n", duration);
+        // auto end = std::chrono::system_clock::now();
+        // auto duration = end - start;
+        // printf("order reduced took %dus\n", duration);
 
         return result;
     }
