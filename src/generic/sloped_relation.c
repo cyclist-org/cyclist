@@ -156,6 +156,8 @@ void Sloped_relation::reset(void){
 // USE : GET AND SET
 void Sloped_relation::initialize(void){
 
+    std::lock_guard lock(this->initialize_mutex);
+
     // Don't do anything if already initialised
     if (slope_map != NULL) {
         return;

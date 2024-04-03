@@ -22,6 +22,8 @@ private:
     // Use this pointer to avoid recomputing this
     bool* has_down_scc = NULL;
 
+    std::mutex initialize_mutex;
+
     Sloped_relation(Map<int,Int_pair_SET*>* forward_map_,
                     Map<int,Int_pair_SET*>* backward_map_,
                     Map<Int_pair,int>* slope_map_,

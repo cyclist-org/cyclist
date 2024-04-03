@@ -5,15 +5,15 @@
 #include <future>
 
 // Make sure this matches the criteria assigned in the ctor
-const size_t CRITERIA_AMOUNT = 4;
+// const size_t CRITERIA_AMOUNT = 3;
 const int FUTURE_WAIT_TIME_MS = 3;
 
 class Sledgehammer
 {
 private:
     Heighted_graph *hg;
-    std::shared_ptr<SoundnessCriterion> soundness_criteria[CRITERIA_AMOUNT];
-    std::future<SoundnessCheckResult> soundness_results_futures[CRITERIA_AMOUNT];
+    Vec<std::shared_ptr<SoundnessCriterion>> soundness_criteria;
+    Vec<std::future<SoundnessCheckResult>> soundness_results_futures;
 
     void start_all_criteria();
     bool wait_for_any_future();

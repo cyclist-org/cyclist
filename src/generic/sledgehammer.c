@@ -11,13 +11,10 @@
 
 Sledgehammer::Sledgehammer(Heighted_graph *hg, Heighted_graph::NODE_ORDER order, int opts)
 {
-    this->soundness_criteria[0] = std::make_shared<VlaCriterion>(Heighted_graph::clone(hg));
-    this->soundness_criteria[1] = std::make_shared<SlaCriterion>(Heighted_graph::clone(hg));
-    // // this->soundness_criteria[2] = std::make_shared<FwkCriterion>(Heighted_graph::clone(hg), opts);
-    // this->soundness_criteria[3] = std::make_shared<OrderReducedCriterion>(Heighted_graph::clone(hg), order, opts);
-    // this->soundness_criteria[4] = std::make_shared<FlatCyclesCriterion>(Heighted_graph::clone(hg));
-    this->soundness_criteria[2] = std::make_shared<OrderReducedCriterion>(Heighted_graph::clone(hg), order, opts);
-    this->soundness_criteria[3] = std::make_shared<FlatCyclesCriterion>(Heighted_graph::clone(hg));
+    this->soundness_criteria.push_back(std::make_shared<VlaCriterion>(hg));
+    this->soundness_criteria.push_back(std::make_shared<SlaCriterion>(hg));
+    this->soundness_criteria.push_back(std::make_shared<OrderReducedCriterion>(hg, order, opts));
+    this->soundness_criteria.push_back(std::make_shared<FlatCyclesCriterion>(hg));
 }
 
 Sledgehammer::~Sledgehammer()
@@ -34,11 +31,12 @@ bool Sledgehammer::check_soundness()
 
 void Sledgehammer::start_all_criteria()
 {
-    for (size_t i = 0; i < CRITERIA_AMOUNT; i++)
+    for (size_t i = 0; i < this->soundness_criteria.size(); i++)
     {
-        this->soundness_results_futures[i] = std::async(
-            &SoundnessCriterion::check_soundness,
-            this->soundness_criteria[i]);
+        this->soundness_results_futures.push_back(
+            std::async(
+                &SoundnessCriterion::check_soundness,
+                this->soundness_criteria[i]));
     };
 }
 
@@ -48,9 +46,9 @@ bool Sledgehammer::wait_for_any_future()
 
     Int_SET criteria_that_are_done;
 
-    while (criteria_that_are_done.size() < CRITERIA_AMOUNT)
+    while (criteria_that_are_done.size() < this->soundness_criteria.size())
     {
-        for (size_t i = 0; i < CRITERIA_AMOUNT; i++)
+        for (size_t i = 0; i < this->soundness_criteria.size(); i++)
         {
             if (criteria_that_are_done.find(i) != criteria_that_are_done.end())
             {
@@ -58,7 +56,7 @@ bool Sledgehammer::wait_for_any_future()
             }
             std::future<SoundnessCheckResult> *curr_future = &(this->soundness_results_futures[i]);
             std::future_status curr_future_status =
-                curr_future->wait_for(std::chrono::milliseconds(FUTURE_WAIT_TIME_MS));
+                curr_future->wait_for(std::chrono::microseconds(FUTURE_WAIT_TIME_MS));
             if (curr_future_status == std::future_status::ready)
             {
                 criteria_that_are_done.insert(i);
@@ -77,7 +75,7 @@ bool Sledgehammer::wait_for_any_future()
 
 void Sledgehammer::halt_all_criteria()
 {
-    for (size_t i = 0; i < CRITERIA_AMOUNT; i++)
+    for (size_t i = 0; i < this->soundness_criteria.size(); i++)
     {
         this->soundness_criteria[i]->halt();
     }
