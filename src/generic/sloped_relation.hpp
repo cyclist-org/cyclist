@@ -88,6 +88,8 @@ public:
     struct linear_order {
         bool operator() (const Sloped_relation& lhs, const Sloped_relation& rhs) const;
     };
+
+    const Map<Int_pair,int>* get_slope_map();
     
     void print_(void);
     friend std::ostream& operator<<(std::ostream& os, const Sloped_relation& r);

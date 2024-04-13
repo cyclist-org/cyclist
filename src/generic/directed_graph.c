@@ -4,6 +4,7 @@ class DirectedGraph
 {
 private:
     Map<int, Int_SET *> *neighbours_map;
+    bool *should_halt;
 
     bool is_cycle_reachable_from(int node, Vec<int> *visited, Int_SET *fresh_nodes)
     {
@@ -11,6 +12,10 @@ private:
         auto node_neighbours = this->neighbours_map->at(node);
         for (int neighbour : *node_neighbours)
         {
+            if (this->should_halt)
+            {
+                return false;
+            }
             if (find(visited->begin(), visited->end(), neighbour) != visited->end())
             {
                 return true;
@@ -29,7 +34,7 @@ private:
     }
 
 public:
-    DirectedGraph() {}
+    DirectedGraph(bool *should_halt) : should_halt(should_halt) {}
     DirectedGraph(Map<int, Int_SET *> *neighbours_map)
     {
         this->neighbours_map = neighbours_map;
@@ -48,11 +53,19 @@ public:
         Int_SET fresh_nodes;
         for (auto node_neighbours : (*this->neighbours_map))
         {
+            if (this->should_halt)
+            {
+                return false;
+            }
             fresh_nodes.insert(node_neighbours.first);
         }
 
         while (fresh_nodes.size() > 0)
         {
+            if (this->should_halt)
+            {
+                return false;
+            }
             int node = *fresh_nodes.begin();
             fresh_nodes.erase(node);
             Vec<int> visited({node});

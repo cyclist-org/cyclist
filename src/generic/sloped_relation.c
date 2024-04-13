@@ -286,6 +286,10 @@ slope Sloped_relation::get_slope(int src_h, int dst_h) {
     return Undef;
 }
 
+const Map<Int_pair,int>* Sloped_relation::get_slope_map() {
+    return this->slope_map;
+}
+
 //==================================================================
 // USE : USEFUL COMPUTATION METHODS
 

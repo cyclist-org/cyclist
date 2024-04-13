@@ -131,6 +131,8 @@ public:
     bool sla_automata_check(void);
     bool vla_automata_check(void);
 
+    std::string to_string();
+
     void print_statistics(void);
 };
 

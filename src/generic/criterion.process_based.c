@@ -40,28 +40,33 @@ public:
     {
         close(this->pipe_fd[0]);
         close(this->pipe_fd[1]);
-        delete this->hg;
+        // delete this->hg;
     }
 
     SoundnessCheckResult check_soundness()
     {
         Message result[1];
+        // auto start = std::chrono::system_clock::now();
         this->criterion_pid = fork();
         if (this->criterion_pid == 0)
         {
-            signal(SIGTERM, ProcessBasedCriterion::handle_signal);
+            // auto start_in_process = std::chrono::system_clock::now();
             bool is_sound = this->soundness_check();
             Message msg = is_sound ? Message::sound : Message::unsound;
             write(this->pipe_fd[1], &msg, sizeof(Message));
             close(this->pipe_fd[1]);
+            // auto end = std::chrono::system_clock::now();
+            // printf("%s process soundness check took %lu us\n", this->criterion_name.c_str() ,end - start);
+            // printf("%s inner process soundness check took %lu us\n", this->criterion_name.c_str() , end - start_in_process);
             exit(1);
             return SoundnessCheckResult::dontKnow;
         }
-        else
+        else if(this->criterion_pid > 0)
         {
             read(this->pipe_fd[0], result, sizeof(result));
+            // auto end = std::chrono::system_clock::now();
+            // printf("%s thread got process result after %lu us\n", this->criterion_name.c_str() , end - start);
             this->is_done = true;
-            // close(this->pipe_fd[0]);
             switch (*result)
             {
             case Message::sound:
@@ -71,18 +76,13 @@ public:
             case Message::killed:
                 return SoundnessCheckResult::dontKnow;
             }
+        } else {
+            throw std::runtime_error("failed creating process");
         }
-    }
-
-    static void handle_signal(int signum)
-    {
-        printf("got signal %d\n", signum);
-        exit(1);
     }
 
     void halt()
     {
-        // if (!(this->is_done) && this->criterion_pid > 0)
         if (this->criterion_pid > 0)
         {
             Message killed_msg = Message::killed;
@@ -93,8 +93,8 @@ public:
             if (!(this->is_done))
             {
                 int write_result = write(this->pipe_fd[1], &killed_msg, sizeof(Message));
-                // int close_result = close(this->pipe_fd[1]);
-                if(write_result<0){
+                if (write_result < 0)
+                {
                     printf("error writing killed message\n");
                 }
             }

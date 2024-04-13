@@ -12,6 +12,7 @@ private:
 public:
     OrderReducedCriterion(Heighted_graph *hg, Heighted_graph::NODE_ORDER order, int opts) : ProcessBasedCriterion(hg)
     {
+        this->criterion_name = "OR";
         this->opts = opts;
         this->hg = hg;
     }

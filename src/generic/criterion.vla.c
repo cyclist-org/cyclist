@@ -9,6 +9,7 @@ class VlaCriterion : public ProcessBasedCriterion
 public:
     VlaCriterion(Heighted_graph *hg) : ProcessBasedCriterion(hg)
     {
+        this->criterion_name = "VLA";
     }
 
     bool soundness_check()

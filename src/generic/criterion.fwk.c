@@ -11,6 +11,7 @@ private:
 public:
     FwkCriterion(Heighted_graph *hg, int opts) : ProcessBasedCriterion(hg)
     {
+        this->criterion_name = "FWK";
         this->opts = opts;
         this->hg = hg;
     }

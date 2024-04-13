@@ -281,6 +281,24 @@ void Heighted_graph::print_flags(int flags) {
     if ((flags & USE_MINIMALITY) != 0) std::cout << "USE_MINIMALITY" << std::endl;
 }
 
+std::string Heighted_graph::to_string() {
+    std::string result = "";
+    for (size_t i = 0; i < this->max_nodes; i++){
+        for (size_t j = 0; j < this->max_nodes; j++){
+            Sloped_relation* curr_relation = this->h_change[i][j];
+            if(curr_relation != NULL){
+                curr_relation->initialize();
+                for(auto const& [positions, edge_slope] : (*curr_relation->get_slope_map())) {
+                    result += "[(" + std::to_string(i) + "," + std::to_string(positions.first) + "),(" +
+                    std::to_string(j) + "," + std::to_string(positions.second)  +")," + (edge_slope == slope::Stay ? "stay" : "down") +"]";
+                }
+            }
+        }
+    }
+    return result;
+    
+}
+
 //=============================================================
 // Methods for constructing the height graph
 //=============================================================
