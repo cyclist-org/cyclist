@@ -274,6 +274,49 @@ bool Sloped_relation::add(int h1, int h2, slope s) {
 
     return true;
 }
+
+void Sloped_relation::remove(int h1, int h2, slope s) {
+    assert (h1 < num_src_heights);
+    assert (h2 < num_dst_heights);
+
+    // Update the matrix representation
+    repr_matrix[h1][h2] = slope::Undef;
+
+    // If the maps have been initialised, update them too
+    if (slope_map != NULL) {
+        // Remove forward mapping
+        auto exists_h1 = forward_map->find(h1);
+        if( exists_h1 != forward_map->end() ){
+            forward_map->at(h1)->erase(Int_pair(h2, s));
+            if(forward_map->at(h1)->size() == 0) {
+                forward_map->erase(h1);
+            }
+        }
+
+        // Add backward mapping
+        auto exists_h2 = backward_map->find(h2);
+        if( exists_h2 != backward_map->end() ){
+            backward_map->at(h2)->erase(Int_pair(h1, s));
+            if(backward_map->at(h2)->size() == 0) {
+                backward_map->erase(h2);
+            }
+        }
+
+        Int_pair p3(h1, h2);
+        auto exists_s = slope_map->find(p3);
+        if( exists_s != slope_map->end() ){
+            slope_map->erase(p3);
+        }
+    }
+
+    // New edge in the relation may invalidate negative status of the relation
+    // having a downward SCC, but not a positive status
+    if (this->has_down_scc != NULL && !(*(this->has_down_scc))) {
+        free(this->has_down_scc);
+    }
+
+
+}
   
 int Sloped_relation::size(void) const{
     return slope_map->size();
@@ -286,8 +329,20 @@ slope Sloped_relation::get_slope(int src_h, int dst_h) {
     return Undef;
 }
 
+const Map<int,Int_pair_SET*>* Sloped_relation::get_forward_map() {
+    return this->forward_map;
+}
+
 const Map<Int_pair,int>* Sloped_relation::get_slope_map() {
     return this->slope_map;
+}
+
+Int_pair_SET* Sloped_relation::get_height_neighbours(int src_height) {
+    try {
+        return this->forward_map->at(src_height);
+    } catch (std::out_of_range) {
+        return NULL;
+    }
 }
 
 //==================================================================

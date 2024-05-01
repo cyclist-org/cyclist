@@ -56,6 +56,7 @@ public:
 
     // Requires h1 < num_src_heights, h2 < num_dst_heights
     bool add (int h1, int h2, slope s);
+    void remove (int h1, int h2, slope s);
 
     slope get_slope(int src_h, int dst_h);
 
@@ -89,7 +90,9 @@ public:
         bool operator() (const Sloped_relation& lhs, const Sloped_relation& rhs) const;
     };
 
+    const Map<int,Int_pair_SET*>* get_forward_map();
     const Map<Int_pair,int>* get_slope_map();
+    Int_pair_SET* get_height_neighbours(int src_height);
     
     void print_(void);
     friend std::ostream& operator<<(std::ostream& os, const Sloped_relation& r);
