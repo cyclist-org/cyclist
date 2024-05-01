@@ -1,3 +1,4 @@
+#pragma once
 #include "types.c"
 
 class DirectedGraph
@@ -6,30 +7,35 @@ private:
     Map<int, Int_SET *> *neighbours_map;
     bool *should_halt;
 
-    bool is_cycle_reachable_from(int node, Vec<int> *visited, Int_SET *fresh_nodes)
+    bool is_cycle_reachable_from(int node, Vec<int> *curr_path, Int_SET *fresh_nodes)
     {
-        fresh_nodes->erase(node);
+        curr_path->push_back(node);
         auto node_neighbours = this->neighbours_map->at(node);
         for (int neighbour : *node_neighbours)
         {
+            if (fresh_nodes->find(neighbour) == fresh_nodes->end())
+            {
+                continue;
+            }
             if (this->should_halt)
             {
+                fresh_nodes->erase(node);
                 return false;
             }
-            if (find(visited->begin(), visited->end(), neighbour) != visited->end())
+            if (find(curr_path->begin(), curr_path->end(), neighbour) != curr_path->end())
             {
+                fresh_nodes->erase(node);
                 return true;
             }
-            visited->push_back(neighbour);
-            if (is_cycle_reachable_from(neighbour, visited, fresh_nodes))
+            // curr_path->push_back(neighbour);
+            if (is_cycle_reachable_from(neighbour, curr_path, fresh_nodes))
             {
+                fresh_nodes->erase(node);
                 return true;
             }
         }
-        if (node_neighbours->size() == 0)
-        {
-            visited->pop_back();
-        }
+        fresh_nodes->erase(node);
+        curr_path->pop_back();
         return false;
     }
 
@@ -67,13 +73,25 @@ public:
                 return false;
             }
             int node = *fresh_nodes.begin();
-            fresh_nodes.erase(node);
-            Vec<int> visited({node});
+            // fresh_nodes.erase(node);
+            // Vec<int> visited({node});
+            Vec<int> visited;
             if (this->is_cycle_reachable_from(node, &visited, &fresh_nodes))
             {
                 return true;
             }
         }
         return false;
+    }
+
+    void print()
+    {
+        for (const auto &[node, neighbours] : *(this->neighbours_map))
+        {
+            for (const auto &neighbour : *neighbours)
+            {
+                printf("%d->%d\n", node, neighbour);
+            }
+        }
     }
 };
