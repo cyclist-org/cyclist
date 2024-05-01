@@ -82,6 +82,20 @@ private:
     bool check_Ccl(Relation_LIST*** ccl, int opts);
     bool check_Ccl(Set<Sloped_relation*>*** ccl, int opts);
 
+    void find_scc(
+        int n,
+        std::stack<int>& s,
+        bool* on_stack,
+        int* idxs,
+        int* low_links,
+        int& next_idx,
+        Vec<Int_pair>& extended_nodes,
+        Map<Int_pair, int>& extended_nodes_idxs,
+        Vec<Set<Int_pair>>& SCCs
+    );
+    Vec<Int_pair> get_extended_nodes();
+
+    void remove_hchange(int source_idx, int source_h_idx, int sink_idx, int sink_h_idx, slope s);
 
 public:
 
@@ -115,9 +129,14 @@ public:
     void add_stay(int source_node, int source_h, int sink_node, int sink_h);
     void add_decrease(int source_node, int source_h, int sink_node, int sink_h);
 
+    void remove_down_edges_not_in_any_SCC();
+
     slope get_slope(int src, int sink ,int source_h, int sink_h);
 
     Map<int,Int_SET*> *get_flat_edges();
+    Vec<Set<Int_pair>> get_SCCs();
+    Vec<Pair<Int_pair, int[3]>> get_edges();
+
 
     int num_nodes(void);
     int num_edges(void);
