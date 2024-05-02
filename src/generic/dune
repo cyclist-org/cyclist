@@ -11,7 +11,9 @@
   (names
     proof proof_aut trace legacy_soundness
     types sloped_relation heighted_graph soundness
-    sledgehammer criterion.fwk criterion.order_reduced
+    sledgehammer 
+    criterion.process_based
+    criterion.fwk criterion.order_reduced
     criterion.sla criterion.vla 
     criterion.flat_cycles
     criterion.soundness)

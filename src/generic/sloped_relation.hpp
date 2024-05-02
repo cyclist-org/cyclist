@@ -3,6 +3,8 @@
 
 #include "types.c"
 
+#include <mutex>
+
 class Sloped_relation {
 
 private:

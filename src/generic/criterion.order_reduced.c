@@ -1,5 +1,5 @@
 #include "types.c"
-#include "criterion.process_based.c"
+#include "criterion.process_based.hpp"
 #include "heighted_graph.hpp"
 
 class OrderReducedCriterion : public ProcessBasedCriterion

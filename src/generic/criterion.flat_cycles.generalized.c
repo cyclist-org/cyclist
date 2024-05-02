@@ -1,5 +1,3 @@
-#pragma once
-
 #include "types.c"
 #include "criterion.soundness.hpp"
 #include "heighted_graph.hpp"
