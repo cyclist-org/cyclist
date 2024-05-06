@@ -37,3 +37,7 @@ _build/
 # Local temporal files on Gadi's working copy
 *[#]*
 *~
+
+# Heighted graphs files
+graphs/*
+src/generic/test/graphs
