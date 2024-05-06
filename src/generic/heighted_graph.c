@@ -233,12 +233,7 @@ void Heighted_graph::remove_down_edges_not_in_any_SCC(){
         }
     }
     }
-}
-
-Vec<Pair<Int_pair, int[3]>> Heighted_graph::get_edges(){
-    Vec<Pair<Int_pair, int[3]>> edges;
-    ///////////////////////////////////// TODO
-    return edges;
+    
 }
 
 /**
@@ -485,20 +480,25 @@ void Heighted_graph::print_flags(int flags) {
 
 std::string Heighted_graph::to_string() {
     std::string result = "";
-    for (size_t i = 0; i < this->max_nodes; i++){
-        for (size_t j = 0; j < this->max_nodes; j++){
+    for (size_t i = 0; i < this->max_nodes; i++) {
+        for (size_t j = 0; j < this->max_nodes; j++) {
             Sloped_relation* curr_relation = this->h_change[i][j];
-            if(curr_relation != NULL){
+            if (curr_relation != NULL) {
                 curr_relation->initialize();
-                for(auto const& [positions, edge_slope] : (*curr_relation->get_slope_map())) {
-                    result += "[(" + std::to_string(i) + "," + std::to_string(positions.first) + "),(" +
-                    std::to_string(j) + "," + std::to_string(positions.second)  +")," + (edge_slope == slope::Stay ? "stay" : "down") +"]";
+                auto curr_slope_map = *curr_relation->get_slope_map();
+                if (curr_slope_map.size() == 0) {
+                    // There is an edge with no height changes
+                    result += "[(" + std::to_string(i) + ",),(" + std::to_string(j) + ",),]";
+                } else {
+                    for (auto const& [heights, edge_slope] : curr_slope_map) {
+                        result += "[(" + std::to_string(i) + "," + std::to_string(heights.first) + "),(" +
+                        std::to_string(j) + "," + std::to_string(heights.second)  +")," + (edge_slope == slope::Stay ? "stay" : "down") +"]";
+                    }
                 }
-            }
+            } 
         }
     }
     return result;
-    
 }
 
 //=============================================================
