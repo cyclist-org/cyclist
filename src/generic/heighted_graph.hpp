@@ -135,7 +135,6 @@ public:
 
     Map<int,Int_SET*> *get_flat_edges();
     Vec<Set<Int_pair>> get_SCCs();
-    Vec<Pair<Int_pair, int[3]>> get_edges();
 
 
     int num_nodes(void);
