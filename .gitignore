@@ -20,7 +20,7 @@ tests/mutant/*
 
 # VSCode Files #
 ################
-.vscode
+.vscode/
 
 # Ocaml Executables #
 #####################
