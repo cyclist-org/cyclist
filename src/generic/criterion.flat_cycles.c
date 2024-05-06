@@ -1,7 +1,7 @@
 #include "types.c"
 #include "criterion.soundness.hpp"
 #include "heighted_graph.hpp"
-#include "directed_graph.c"
+#include "directed_graph.hpp"
 
 class FlatCyclesCriterion : public SoundnessCriterion
 {
