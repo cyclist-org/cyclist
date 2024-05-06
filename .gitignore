@@ -1,3 +1,5 @@
+# LaTeX files #
+###############
 *.aux
 examples/*.pdf
 *.backup
@@ -11,6 +13,7 @@ examples/mutant_CAV06
 examples/mutant_CAV06/*
 tests/mutant
 tests/mutant/*
+
 # Eclipse Files #
 #################
 .paths
@@ -22,7 +25,7 @@ tests/mutant/*
 ################
 .vscode/
 
-# Ocaml Executables #
+# OCaml Executables #
 #####################
 *.native
 *.byte

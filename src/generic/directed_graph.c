@@ -1,4 +1,3 @@
-#pragma once
 #include "types.c"
 
 class DirectedGraph
