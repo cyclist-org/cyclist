@@ -54,14 +54,13 @@ public:
             bool is_sound = this->soundness_check();
             Message msg = is_sound ? Message::sound : Message::unsound;
             write(this->pipe_fd[1], &msg, sizeof(Message));
-            close(this->pipe_fd[1]);
             // auto end = std::chrono::system_clock::now();
             // printf("%s process soundness check took %lu us\n", this->criterion_name.c_str() ,end - start);
             // printf("%s inner process soundness check took %lu us\n", this->criterion_name.c_str() , end - start_in_process);
             exit(1);
             return SoundnessCheckResult::dontKnow;
         }
-        else if(this->criterion_pid > 0)
+        else if (this->criterion_pid > 0)
         {
             read(this->pipe_fd[0], result, sizeof(result));
             // auto end = std::chrono::system_clock::now();
@@ -76,7 +75,9 @@ public:
             case Message::killed:
                 return SoundnessCheckResult::dontKnow;
             }
-        } else {
+        }
+        else
+        {
             throw std::runtime_error("failed creating process");
         }
     }
