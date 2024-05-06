@@ -3,35 +3,9 @@
 #include "../types.c"
 #include "../heighted_graph.hpp"
 #include "../sledgehammer.hpp"
+#include "heighted_graph_parser.cpp"
 
 using json = nlohmann::json;
-
-void parse_from_json(json &graph, Heighted_graph &hg){
-    //====================== parse nodes
-    std::cout << "Parsing Nodes: ";
-    for( auto& element : graph["Node"] ){
-        int id = element[0];
-        for( int h : element[1] ){
-            hg.add_height(id, h);
-        }
-    }
-    std::cout << "Done! , Node size: " << hg.num_nodes() << std::endl;
-
-    //====================== parse edges
-    std::cout << "Parsing Edges: ";
-    for( auto& element : graph["Edge"] ){
-        int source = element[0][0];
-        int sink = element[0][1];
-        hg.add_edge(source, sink);
-        for( auto& truple : element[1]){
-            int source_h = truple[0];
-            int sink_h = truple[1];
-            slope s = static_cast<slope>(truple[2]);
-            hg.add_hchange(source, source_h, sink, sink_h, s);
-        }
-    }
-    std::cout << "Done! , Edge size: " << hg.num_edges() << std::endl;
-}
 
 int usage(char* arg0) {
     std::cout
@@ -56,11 +30,11 @@ int usage(char* arg0) {
 }
 
 int main(int argc, char** argv) {
-
     if(argc > 1){
 
-        std::string path = std::string("./data/");
-        path = path + argv[1] + ".json";
+        // std::string path = std::string("./data/");
+        // path = path + argv[1] + ".json";
+        std::string path = argv[1];
 
         // Get JSON data
         std::ifstream graph_data(path.c_str());
@@ -75,12 +49,15 @@ int main(int argc, char** argv) {
 
         int opts = 0;
 
+        auto start = std::chrono::system_clock::now();
+
         if (argc < 3) {
             result = hg.order_reduced_check(Heighted_graph::GIVEN_ORDER, opts);
         }
         else if (*argv[2] == '\0' || *argv[2] == 'O' || *argv[2] == 'H') {
             Heighted_graph::NODE_ORDER order;
             const char* spec = (*argv[2] == '\0') ? argv[2] : argv[2]+1;
+
             switch (*spec) {
                 case '1': {
                     order = Heighted_graph::DEGREE_OUT_IN_ASC;
@@ -135,6 +112,9 @@ int main(int argc, char** argv) {
         } else {
             std::cout << "UNSOUND" << std::endl;
         }
+
+        auto end = std::chrono::system_clock::now();
+        std::cout << std::chrono::duration_cast<std::chrono::microseconds>((end-start)).count() << "us" << std::endl;
 
         return !result;
     }
