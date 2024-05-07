@@ -25,8 +25,8 @@ all: soundness tests
 soundness: main.o sloped_relation.o heighted_graph.o criterion.soundness.o sledgehammer.o 
 	g++ -g -o soundness main.o sloped_relation.o heighted_graph.o criterion.soundness.o sledgehammer.o `pkg-config --libs libspot libbddx`
 
-run_on_graphs: run_on_graphs.o sloped_relation.o heighted_graph.o heighted_graph_parser.o criterion.soundness.o sledgehammer.o
-	g++ -g -o run_on_graphs run_on_graphs.o sloped_relation.o heighted_graph.o  criterion.soundness.o sledgehammer.o `pkg-config --libs libspot libbddx`
+run_on_graphs: run_on_graphs.o sloped_relation.o heighted_graph.o heighted_graph_parser.o criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o
+	g++ -g -o run_on_graphs run_on_graphs.o sloped_relation.o heighted_graph.o  criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o `pkg-config --libs libspot libbddx`
 
 run_on_graphs.o: run_on_graphs.cpp ../heighted_graph.hpp ./heighted_graph_parser.cpp
 	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/opt/lib -g -c run_on_graphs.cpp -o run_on_graphs.o
@@ -43,16 +43,22 @@ heighted_graph.o: ../heighted_graph.hpp ../heighted_graph.c ../sloped_relation.h
 sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
 	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../sloped_relation.c -o sloped_relation.o
 
-sledgehammer.o: ../sledgehammer.hpp ../sledgehammer.c ../criterion.soundness.hpp ../criterion.soundness.c  ../criterion.process_based.c \
+sledgehammer.o: ../sledgehammer.hpp ../sledgehammer.c ../criterion.soundness.hpp ../criterion.soundness.c \
+	../criterion.process_based.hpp ../criterion.process_based.c \
 	../criterion.order_reduced.c ../criterion.fwk.c ../criterion.sla.c ../criterion.vla.c \
+	../directed_graph.hpp ../directed_graph.c \
 	../criterion.flat_cycles.c ../criterion.flat_cycles.generalized.c ../criterion.no_flat_extended_cycles.c \
-	../heighted_graph.hpp ../sloped_relation.hpp ../types.c \
-	../directed_graph.c
+	../heighted_graph.hpp ../sloped_relation.hpp ../types.c 
 	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/usr/lib -L/opt/lib -g -c ../sledgehammer.c -o sledgehammer.o
 
 criterion.soundness.o: ../criterion.soundness.c ../criterion.soundness.hpp 
 	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../criterion.soundness.c -o criterion.soundness.o
 
+criterion.process_based.o: ../criterion.process_based.c ../criterion.process_based.hpp ../types.c ../criterion.soundness.hpp ../heighted_graph.hpp
+	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/opt/lib -g -c ../criterion.process_based.c -o criterion.process_based.o
+
+directed_graph.o: ../directed_graph.c ../directed_graph.hpp ../types.c
+	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../directed_graph.c -o directed_graph.o
 
 .PHONY: \
     clean \
