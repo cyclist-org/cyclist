@@ -13,9 +13,11 @@
     types sloped_relation heighted_graph soundness
     sledgehammer 
     criterion.process_based
+    directed_graph graph
     criterion.fwk criterion.order_reduced
     criterion.sla criterion.vla 
-    criterion.flat_cycles criterion.flat_cycles.generalized criterion.no_flat_extended_cycles
+    criterion.flat_cycles criterion.flat_cycles.generalized
+    criterion.sprenger_dam criterion.no_flat_extended_cycles
     criterion.soundness)
   (flags :standard -xc++ -std=c++17 (:include c_flags.sexp))
   (include_dirs %{ocaml_where}/caml))

@@ -87,7 +87,7 @@ public:
 
     
 
-    Graph(std::vector<Int_pair>*,std::vector<Int_SET*>*,Sloped_relation***,int,int);
+    Graph(std::vector<Int_pair>*, std::vector<Int_SET*>*, Sloped_relation***, int);
     ~Graph(void);
     bool check_SD(SD_decrease_type);
     void print_SCCs(Map<int,Int_pair_SET>*);
