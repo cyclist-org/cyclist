@@ -696,11 +696,14 @@ bool Sloped_relation::has_downward_SCC(void) {
 }
 
 bool Sloped_relation::has_downward_slope() {
-    this->initialize();
-    for (auto slope : *(this->slope_map)){
-        if (slope.second == Downward){
-            return true;
-        }
+    for (size_t src = 0; src < this->num_src_heights; src++)
+    {
+        for (size_t dst = 0; dst < this->num_dst_heights; dst++)
+        {
+            if(this->repr_matrix[src][dst] == Downward) {
+                return true;
+            }
+        }  
     }
     return false;
 }

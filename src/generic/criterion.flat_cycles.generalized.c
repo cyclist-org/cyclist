@@ -16,10 +16,10 @@ private:
 public:
     GeneralizedFlatCyclesCriterion(Heighted_graph *hg)
     {
-        this->hg = Heighted_graph::clone(hg);
+        this->hg = hg;
         this->hg->remove_down_edges_not_in_any_SCC();
         Map<int, Int_SET *> *flat_edges = this->hg->get_flat_edges();
-        this->dg = new DirectedGraph(flat_edges);
+        this->dg = new DirectedGraph(flat_edges, hg->num_nodes());
     }
     ~GeneralizedFlatCyclesCriterion()
     {

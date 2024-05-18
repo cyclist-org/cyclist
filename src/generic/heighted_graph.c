@@ -181,7 +181,6 @@ Map<int, Int_SET*>* Heighted_graph::get_flat_edges() {
         flat_edges->insert(std::pair(i, new Int_SET()));
     }
 
-    auto h_change = this->h_change;
     int num_nodes = this->num_nodes();
     for (size_t i = 0; i < num_nodes; i++)
     {
@@ -194,6 +193,90 @@ Map<int, Int_SET*>* Heighted_graph::get_flat_edges() {
         }
     }
     return flat_edges;
+}
+
+Map<Int_pair, Int_pair_SET*>* Heighted_graph::get_stay_extended_edges() {
+    Map<Int_pair, Int_pair_SET*>* edges = new Map<Int_pair, Int_pair_SET*>();
+    int num_nodes = this->num_nodes();
+    for (size_t i = 0; i < num_nodes; i++)
+    {
+        for (size_t j = 0; j < num_nodes; j++)
+        {
+            Sloped_relation* rel = h_change[i][j];
+            if ((rel != NULL))
+            {
+                for (const auto& [edge, slp] : *(rel->get_slope_map())) {
+                    int i_height = edge.first;
+                    int j_height = edge.second;
+                    Int_pair src = Int_pair(i, i_height);
+                    Int_pair sink = Int_pair(j, j_height);
+
+                    if (slp == slope::Stay) {
+                        if (edges->find(src) == edges->end()) {
+                            (*edges)[src] = new Int_pair_SET();
+                        }
+                        (*edges)[src]->insert(sink);
+                    }
+                }
+            }
+        }
+    }
+
+    return edges;
+}
+
+Map<Int_pair, Int_pair_SET*>* Heighted_graph::get_extended_edges() {
+    Map<Int_pair, Int_pair_SET*>* edges = new Map<Int_pair, Int_pair_SET*>();
+    int num_nodes = this->num_nodes();
+    for (size_t i = 0; i < num_nodes; i++)
+    {
+        for (size_t j = 0; j < num_nodes; j++)
+        {
+            Sloped_relation* rel = h_change[i][j];
+            if ((rel != NULL))
+            {
+                for (const auto& [edge, slp] : *(rel->get_slope_map())) {
+                    int i_height = edge.first;
+                    int j_height = edge.second;
+                    Int_pair src = Int_pair(i, i_height);
+                    Int_pair sink = Int_pair(j, j_height);
+
+                    if (edges->find(src) == edges->end()) {
+                        (*edges)[src] = new Int_pair_SET();
+                    }
+                    (*edges)[src]->insert(sink);
+                }
+            }
+        }
+    }
+
+    return edges;
+}
+
+Vec<Int_pair> * Heighted_graph::get_edges() {
+    Vec<Int_pair>* edges = new Vec<Int_pair>();
+    int num_nodes = this->num_nodes();
+    for (size_t i = 0; i < num_nodes; i++)
+    {
+        for (size_t j = 0; j < num_nodes; j++)
+        {
+            if (this->h_change[i][j] != NULL)
+            {
+                edges->push_back(Int_pair(i,j));
+            }
+        }
+    }
+    return edges;
+}
+
+int Heighted_graph::get_max_nodes() {
+    return this->max_nodes;
+}
+Sloped_relation*** Heighted_graph::get_h_change() {
+    return this->h_change;
+}
+std::vector<Int_SET*>* Heighted_graph::get_HeightsOf() {
+    return &this->HeightsOf;
 }
 
 //=============================================================

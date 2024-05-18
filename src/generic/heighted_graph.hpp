@@ -134,6 +134,13 @@ public:
     slope get_slope(int src, int sink ,int source_h, int sink_h);
 
     Map<int,Int_SET*> *get_flat_edges();
+    Map<Int_pair, Int_pair_SET*> *get_stay_extended_edges();
+    Map<Int_pair, Int_pair_SET*> *get_extended_edges();
+
+    Vec<Int_pair> *get_edges();
+    int get_max_nodes();
+    Sloped_relation*** get_h_change();
+    std::vector<Int_SET*>* get_HeightsOf();
     Vec<Set<Int_pair>> get_SCCs();
 
 

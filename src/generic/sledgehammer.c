@@ -27,44 +27,44 @@ Sledgehammer::~Sledgehammer()
 
 bool Sledgehammer::check_soundness()
 {
-    std::string graph_str = this->hg->to_string();
+    // std::string graph_str = this->hg->to_string();
     // this->hg->remove_down_edges_not_in_any_SCC();
 
     // flat cycles: complete unsound
-    // auto flat_cycles_start = std::chrono::system_clock::now();
+    auto flat_cycles_start = std::chrono::system_clock::now();
 
-    // // FlatCyclesCriterion flat_cycles_criterion(this->hg);
-    // // auto resultFC = flat_cycles_criterion.check_soundness();
+    FlatCyclesCriterion flat_cycles_criterion(this->hg);
+    auto resultFC = flat_cycles_criterion.check_soundness();
 
     // Heighted_graph* cloned_hg = Heighted_graph::clone(hg);
     // GeneralizedFlatCyclesCriterion generalized_flat_cycles_criterion(cloned_hg);
     // auto resultFC = generalized_flat_cycles_criterion.check_soundness();
 
-    // auto flat_cycles_end = std::chrono::system_clock::now();
-    // if (resultFC == SoundnessCheckResult::unsound)
-    // {
-    //     printf("FC returned true negative after %lu us\n", flat_cycles_end-flat_cycles_start);
-    //     fflush(stdout);
-    //     // printf("unsound %s\n", graph_str.c_str());
-    //     // fflush(stdout);
-    //     return false;
-    // }
-
-    
-    // Sprenger Dam: sound incomplete
-    Heighted_graph* cloned_hg = Heighted_graph::clone(this->hg);
-    auto sprenger_dam_start = std::chrono::system_clock::now();
-    SprengerDamCriterion sprenger_dam_criterion(cloned_hg);
-    auto resultSD = sprenger_dam_criterion.check_soundness();
-    auto sprenger_dam_end = std::chrono::system_clock::now();
-    if (resultSD == SoundnessCheckResult::sound)
+    auto flat_cycles_end = std::chrono::system_clock::now();
+    if (resultFC == SoundnessCheckResult::unsound)
     {
-        printf("SD returned true negative after %lu us\n", sprenger_dam_end - sprenger_dam_start);
+        printf("FC returned true negative after %lu us\n", flat_cycles_end-flat_cycles_start);
         fflush(stdout);
         // printf("unsound %s\n", graph_str.c_str());
         // fflush(stdout);
-        return true;
+        return false;
     }
+
+    
+    // Sprenger Dam: sound incomplete
+    // Heighted_graph* cloned_hg = Heighted_graph::clone(this->hg);
+    // auto sprenger_dam_start = std::chrono::system_clock::now();
+    // SprengerDamCriterion sprenger_dam_criterion(cloned_hg);
+    // auto resultSD = sprenger_dam_criterion.check_soundness();
+    // auto sprenger_dam_end = std::chrono::system_clock::now();
+    // if (resultSD == SoundnessCheckResult::sound)
+    // {
+    //     printf("SD returned true negative after %lu us\n", sprenger_dam_end - sprenger_dam_start);
+    //     fflush(stdout);
+    //     // printf("unsound %s\n", graph_str.c_str());
+    //     // fflush(stdout);
+    //     return true;
+    // }
 
 
     // no flat extended cycles: sound incomplete
@@ -81,8 +81,8 @@ bool Sledgehammer::check_soundness()
     auto OR_start = std::chrono::system_clock::now();
     auto result1 = this->hg->order_reduced_check(this->order, this->opts);
     auto OR_end = std::chrono::system_clock::now();
-    printf("OR returned after %lu us\n", OR_end - OR_start);
-    // printf("FC+OR returned after %lu us\n", OR_end - flat_cycles_start);
+    // printf("OR returned after %lu us\n", OR_end - OR_start);
+    printf("FC+OR returned after %lu us\n", OR_end - flat_cycles_start);
     fflush(stdout);
 
     // printf("%s %s\n", result1 ? "sound" : "unsound", graph_str.c_str());

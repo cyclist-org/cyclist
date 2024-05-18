@@ -160,12 +160,8 @@ void Graph::get_ECycles(){
 }
 
 void Graph::get_SCSs(){
-    auto start = std::chrono::system_clock::now();
     get_ECycles();
-    auto end = std::chrono::system_clock::now();
-    printf("getting elementary cycles took %d us\n", end-start);
-
-
+    
     //init nodes in CycleGraph
     Map<std::vector<Int_pair>,int>* rev_node_idx = new Map<std::vector<Int_pair>,int>();
     Map<int,std::vector<Int_pair>>* node_idx = new Map<int,std::vector<Int_pair>>();
@@ -190,10 +186,7 @@ void Graph::get_SCSs(){
         }
     }
 
-    start = std::chrono::system_clock::now();
     ExtractAllPaths(edges,i);
-    end = std::chrono::system_clock::now();
-    printf("extracting all paths took %d us\n", end-start);
    
 
     for(auto p : Paths ){
@@ -249,10 +242,7 @@ Graph::~Graph(void){
 }
 
 bool Graph::check_SD(SD_decrease_type SD_DEC_TYPE){
-    auto start = std::chrono::system_clock::now();
     get_SCSs();
-    auto end = std::chrono::system_clock::now();
-    printf("getting SCSs took %d us\n", end-start);
    
     if( SCSs.size() == 0 ) return true;
     else if(SCSs.size() == 1 && ((SCSs.begin())->size() == 1 )){
