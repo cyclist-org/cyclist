@@ -205,12 +205,12 @@ Map<Int_pair, Int_pair_SET*>* Heighted_graph::get_stay_extended_edges() {
             Sloped_relation* rel = h_change[i][j];
             if ((rel != NULL))
             {
-                for (const auto& [edge, slp] : *(rel->get_slope_map())) {
-                    int i_height = edge.first;
-                    int j_height = edge.second;
+                // rel->initialize();
+                for (int i_height = 0; i_height < rel->get_num_src_heights(); i_height++) {
+                for (int j_height = 0; j_height < rel->get_num_dst_heights(); j_height++) {
                     Int_pair src = Int_pair(i, i_height);
                     Int_pair sink = Int_pair(j, j_height);
-
+                    slope slp = rel->get_slope(i_height, j_height);
                     if (slp == slope::Stay) {
                         if (edges->find(src) == edges->end()) {
                             (*edges)[src] = new Int_pair_SET();
@@ -218,6 +218,21 @@ Map<Int_pair, Int_pair_SET*>* Heighted_graph::get_stay_extended_edges() {
                         (*edges)[src]->insert(sink);
                     }
                 }
+                }
+                
+                // for (const auto& [edge, slp] : *(rel->get_slope_map())) {
+                //     int i_height = edge.first;
+                //     int j_height = edge.second;
+                //     Int_pair src = Int_pair(i, i_height);
+                //     Int_pair sink = Int_pair(j, j_height);
+
+                //     if (slp == slope::Stay) {
+                //         if (edges->find(src) == edges->end()) {
+                //             (*edges)[src] = new Int_pair_SET();
+                //         }
+                //         (*edges)[src]->insert(sink);
+                //     }
+                // }
             }
         }
     }

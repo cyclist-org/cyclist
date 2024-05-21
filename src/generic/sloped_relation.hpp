@@ -61,6 +61,8 @@ public:
     void remove (int h1, int h2, slope s);
 
     slope get_slope(int src_h, int dst_h);
+    int get_num_src_heights();
+    int get_num_dst_heights();
 
     // Computes the composition of [left] and [right]
     // The result is computed and stored in-place, in the receiver

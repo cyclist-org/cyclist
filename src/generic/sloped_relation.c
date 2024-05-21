@@ -329,6 +329,13 @@ slope Sloped_relation::get_slope(int src_h, int dst_h) {
     return Undef;
 }
 
+int Sloped_relation::get_num_src_heights() {
+    return this->num_src_heights;
+}
+int Sloped_relation::get_num_dst_heights() {
+    return this->num_dst_heights;
+}
+
 const Map<int,Int_pair_SET*>* Sloped_relation::get_forward_map() {
     return this->forward_map;
 }
