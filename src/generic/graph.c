@@ -52,8 +52,8 @@ void Graph::ExtractAllPaths( std::set<Int_pair>* edges,int max_node) {
         }
     }
     delete[] adj;
-    delete visited;
-    delete path;
+    delete[] visited;
+    delete[] path;
 } 
 
 
@@ -161,8 +161,7 @@ void Graph::get_ECycles(){
 
 void Graph::get_SCSs(){
     get_ECycles();
-
-
+    
     //init nodes in CycleGraph
     Map<std::vector<Int_pair>,int>* rev_node_idx = new Map<std::vector<Int_pair>,int>();
     Map<int,std::vector<Int_pair>>* node_idx = new Map<int,std::vector<Int_pair>>();
@@ -186,7 +185,9 @@ void Graph::get_SCSs(){
             }
         }
     }
+
     ExtractAllPaths(edges,i);
+   
 
     for(auto p : Paths ){
         std::set<Int_pair> combined_cycles;
@@ -207,10 +208,9 @@ void Graph::get_SCSs(){
     delete node_idx;
 }
 
-Graph::Graph(std::vector<Int_pair>* edges,std::vector<Int_SET*>* HeightsOf,Sloped_relation*** h_change_ , int max_node , int max_height){
+Graph::Graph(std::vector<Int_pair>* edges, std::vector<Int_SET*>* HeightsOf, Sloped_relation*** h_change_ , int max_node){
     this->edges = edges;
     this->max_node = max_node;
-    this->max_height = max_height;
     this->HeightsOf = HeightsOf;
     this->h_change_ = h_change_;
     this->node_idxs = new Map<int,int>();
@@ -227,6 +227,7 @@ Graph::Graph(std::vector<Int_pair>* edges,std::vector<Int_SET*>* HeightsOf,Slope
 }
 
 Graph::~Graph(void){
+    delete edges;
     delete node_idxs;
     if( slope_change_functions != nullptr ){
         for( int i = 0 ; i < max_node ; i++ ){
@@ -241,7 +242,6 @@ Graph::~Graph(void){
 }
 
 bool Graph::check_SD(SD_decrease_type SD_DEC_TYPE){
-
     get_SCSs();
    
     if( SCSs.size() == 0 ) return true;
@@ -298,7 +298,7 @@ bool Graph::enumerate_and_check_SD(int curr,std::vector<int>* node_idxs_,Map<int
         for( auto e: *edges){
             int h1 = indicies->at(rev_node_idxs->at(e.first));
             int h2 = indicies->at(rev_node_idxs->at(e.second));
-            Map<Int_pair,int>* slope_map = h_change_[e.first][e.second]->get_slopes();
+            const Map<Int_pair,int>* slope_map = h_change_[e.first][e.second]->get_slope_map();
             auto exists = slope_map->find(Int_pair(h1,h2));
             if(exists == slope_map->end()){
                 valid = false;
@@ -353,7 +353,7 @@ bool Graph::check_descending_SD_singleton(){
     auto e = *(SCSs.begin()->begin());
     if( e.first == e.second ){
         Sloped_relation* S = h_change_[e.first][e.second]->compute_transitive_closure();
-        Map<Int_pair,int>* slope_map = S->get_slopes();
+        const Map<Int_pair,int>* slope_map = S->get_slope_map();
         for( auto p_ : *slope_map ){
             if( p_.first.first == p_.first.second &&  p_.second == Downward ){
                 result = true;
@@ -440,10 +440,10 @@ void Graph::get_SCCs(std::vector<Int_pair>* e,Map<int,Int_pair_SET>* SCCs, int m
         }
     }
     delete[] adj;
-    delete disc;
-    delete low;
+    delete[] disc;
+    delete[] low;
     delete st;
-    delete stackMember;
+    delete[] stackMember;
 }
 
 void Graph::print_SCCs(Map<int,Int_pair_SET>* SCCs){
@@ -461,7 +461,7 @@ void Graph::print_SCCs(Map<int,Int_pair_SET>* SCCs){
 
 void Graph::get_functions(std::vector<int>* dom,std::vector<int>* cod,std::set<Map<int,int>>* function_vec,Int_SET* heights_second,Int_pair edge){
     if( dom->size() == cod->size() ){
-        Map<Int_pair,int>* slope_map = h_change_[edge.first][edge.second]->get_slopes();
+        const Map<Int_pair,int>* slope_map = h_change_[edge.first][edge.second]->get_slope_map();
         Map<int,int> function = Map<int,int>();
 
         int size = dom->size();
@@ -538,7 +538,7 @@ bool Graph::check_set_choice_decrease(std::vector<Pair<Int_pair,Int_pair>>* ext_
         int e1 = edges->at(0).first;
         int e2 = edges->at(0).second;
         Sloped_relation* S = h_change_[e1][e2]->compute_transitive_closure();
-        Map<Int_pair,int>* slope_map = S->get_slopes();
+        const Map<Int_pair,int>* slope_map = S->get_slope_map();
         for( auto p_ : *slope_map ){
             if( p_.first.first == p_.first.second &&  p_.second == Downward ){
                 result = true;
@@ -581,7 +581,7 @@ bool Graph::check_set_choice_decrease(std::vector<Pair<Int_pair,Int_pair>>* ext_
                 int h1 = (rev_node_idx->at(e.first)).second;
                 int h2 = (rev_node_idx->at(e.second)).second;
                 Sloped_relation* R = h_change_[e1][e2];
-                auto slopes = R->get_slopes();
+                auto slopes = R->get_slope_map();
                 if(slopes->at(Int_pair(h1,h2)) == Downward){
                     has_downwards_edge = true;
                 }

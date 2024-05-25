@@ -11,22 +11,31 @@ RELATIONAL_OPTIMISATIONS = "" "f" "s" "i" "m" "fm" "fs" "fi" "ms" "fms"
 NODE_ORDERS = "0" "1" "2"
 
 define test_success
-	echo "TEST: $(1), SPEC=$$SPEC"
+	echo "TEST: $(1), SPEC=$$SPEC";\
 	(timeout $(TIMEOUT) $(TEST_EXE) $(1) $(SPEC); EXIT_CODE=$$?; if [ $$EXIT_CODE -eq 0 ]; then echo "TEST PASSED"; elif [ $$EXIT_CODE -eq 124 ]; then echo "TIMEOUT"; else echo "TEST NOT PASSED"; fi; exit 0)
 endef
 
 define test_failure
-	echo "TEST: $(1), SPEC=$$SPEC"
+	echo "TEST: $(1), SPEC=$$SPEC";\
 	(timeout $(TIMEOUT) $(TEST_EXE) $(1) $(SPEC); EXIT_CODE=$$?; if [ ! $$EXIT_CODE -eq 0 ] && [ ! $$EXIT_CODE -eq 124 ]; then echo "TEST PASSED"; elif [ $$EXIT_CODE -eq 124 ]; then echo "TIMEOUT"; else echo "TEST NOT PASSED"; fi; exit 0)
 endef
 
 all: soundness tests
 
-soundness: main.o sloped_relation.o heighted_graph.o criterion.soundness.o sledgehammer.o 
-	g++ -g -o soundness main.o sloped_relation.o heighted_graph.o criterion.soundness.o sledgehammer.o `pkg-config --libs libspot libbddx`
+soundness: main.o sloped_relation.o heighted_graph.o graph.o criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o 
+	g++ -g -o soundness main.o sloped_relation.o heighted_graph.o graph.o criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o `pkg-config --libs libspot libbddx`
 
-main.o: main.cpp ../heighted_graph.hpp ../sledgehammer.hpp
+run_on_graphs: run_on_graphs.o sloped_relation.o heighted_graph.o graph.o heighted_graph_parser.o criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o
+	g++ -g -o run_on_graphs run_on_graphs.o sloped_relation.o heighted_graph.o graph.o criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o `pkg-config --libs libspot libbddx`
+
+run_on_graphs.o: run_on_graphs.cpp ../heighted_graph.hpp ./heighted_graph_parser.cpp
+	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/opt/lib -g -c run_on_graphs.cpp -o run_on_graphs.o
+
+main.o: main.cpp ../heighted_graph.hpp ../sledgehammer.hpp ./heighted_graph_parser.cpp
 	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/opt/lib -g -c main.cpp -o main.o
+
+heighted_graph_parser.o: heighted_graph_parser.cpp ../heighted_graph.hpp ../sledgehammer.hpp
+	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/opt/lib -g -c heighted_graph_parser.cpp -o heighted_graph_parser.o
 
 heighted_graph.o: ../heighted_graph.hpp ../heighted_graph.c ../sloped_relation.hpp ../types.c
 	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/usr/lib -L/opt/lib -g -c ../heighted_graph.c -o heighted_graph.o
@@ -34,14 +43,27 @@ heighted_graph.o: ../heighted_graph.hpp ../heighted_graph.c ../sloped_relation.h
 sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
 	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../sloped_relation.c -o sloped_relation.o
 
-sledgehammer.o: ../sledgehammer.hpp ../sledgehammer.c ../criterion.soundness.hpp ../criterion.soundness.c  ../criterion.process_based.c \
-	../criterion.order_reduced.c ../criterion.fwk.c ../criterion.sla.c ../criterion.vla.c ../criterion.flat_cycles.c \
-	../heighted_graph.hpp ../sloped_relation.hpp ../types.c
+sledgehammer.o: ../sledgehammer.hpp ../sledgehammer.c ../criterion.soundness.hpp ../criterion.soundness.c \
+	../criterion.process_based.hpp ../criterion.process_based.c \
+	../criterion.order_reduced.c ../criterion.fwk.c ../criterion.sla.c ../criterion.vla.c \
+	../directed_graph.hpp ../directed_graph.c \
+	../graph.hpp ../graph.c \
+	../criterion.flat_cycles.c ../criterion.flat_cycles.generalized.c \
+	../criterion.sprenger_dam.c ../criterion.no_flat_extended_cycles.c \
+	../heighted_graph.hpp ../sloped_relation.hpp ../types.c 
 	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/usr/lib -L/opt/lib -g -c ../sledgehammer.c -o sledgehammer.o
 
 criterion.soundness.o: ../criterion.soundness.c ../criterion.soundness.hpp 
 	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../criterion.soundness.c -o criterion.soundness.o
 
+criterion.process_based.o: ../criterion.process_based.c ../criterion.process_based.hpp ../types.c ../criterion.soundness.hpp ../heighted_graph.hpp
+	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/opt/lib -g -c ../criterion.process_based.c -o criterion.process_based.o
+
+directed_graph.o: ../directed_graph.c ../directed_graph.hpp ../types.c
+	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../directed_graph.c -o directed_graph.o
+
+graph.o: ../graph.c ../graph.hpp ../sloped_relation.hpp ../types.c
+	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../graph.c -o graph.o
 
 .PHONY: \
     clean \
@@ -77,6 +99,18 @@ criterion.soundness.o: ../criterion.soundness.c ../criterion.soundness.hpp
 clean: 
 	rm -f ./*.o soundness
 
+run-on-graphs-sh-single: run_on_graphs
+	./run_on_graphs delete_me_graphs H0fms
+	
+run-on-graphs-sh-new: run_on_graphs
+	./run_on_graphs graphs H0fms
+
+run-on-graphs-sh: soundness
+	export SPEC="H0fms"; make -s run-on-graphs
+
+run-on-single-graph-sh: soundness
+	$(TEST_EXE) $(file) H0fms;
+
 tests: tests-automata tests-rel
 
 tests-set: tests-sd tests-xsd
@@ -105,11 +139,11 @@ tests-vla:
 
 tests-sh:
 	echo "SLEDGEHAMMER"
-	for ORDER in $(NODE_ORDERS); do \
-		for OPTIMISATION in $(RELATIONAL_OPTIMISATIONS); do \
-			export SPEC="H$$ORDER$$OPTIMISATION"; make -s test-suite-full; \
-		done; \
-	done
+	export SPEC="H0fms"; make -s test-suite-full; \
+
+tests-sh-deleteme:
+	echo "SLEDGEHAMMER"
+	export SPEC="H0fms"; make -s test-suite-one; \
 
 tests-sd:
 	echo "SPRENGER-DAM"

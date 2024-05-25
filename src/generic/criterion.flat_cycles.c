@@ -1,7 +1,7 @@
 #include "types.c"
 #include "criterion.soundness.hpp"
 #include "heighted_graph.hpp"
-#include "directed_graph.c"
+#include "directed_graph.hpp"
 
 class FlatCyclesCriterion : public SoundnessCriterion
 {
@@ -14,7 +14,7 @@ public:
     {
         this->hg = hg;
         Map<int, Int_SET *> *flat_edges = this->hg->get_flat_edges();
-        this->dg = new DirectedGraph(flat_edges);
+        this->dg = new DirectedGraph(flat_edges, hg->num_nodes());
     }
     ~FlatCyclesCriterion()
     {
