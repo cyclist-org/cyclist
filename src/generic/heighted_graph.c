@@ -205,7 +205,6 @@ Map<Int_pair, Int_pair_SET*>* Heighted_graph::get_stay_extended_edges() {
             Sloped_relation* rel = h_change[i][j];
             if ((rel != NULL))
             {
-                // rel->initialize();
                 for (int i_height = 0; i_height < rel->get_num_src_heights(); i_height++) {
                 for (int j_height = 0; j_height < rel->get_num_dst_heights(); j_height++) {
                     Int_pair src = Int_pair(i, i_height);
@@ -219,20 +218,6 @@ Map<Int_pair, Int_pair_SET*>* Heighted_graph::get_stay_extended_edges() {
                     }
                 }
                 }
-                
-                // for (const auto& [edge, slp] : *(rel->get_slope_map())) {
-                //     int i_height = edge.first;
-                //     int j_height = edge.second;
-                //     Int_pair src = Int_pair(i, i_height);
-                //     Int_pair sink = Int_pair(j, j_height);
-
-                //     if (slp == slope::Stay) {
-                //         if (edges->find(src) == edges->end()) {
-                //             (*edges)[src] = new Int_pair_SET();
-                //         }
-                //         (*edges)[src]->insert(sink);
-                //     }
-                // }
             }
         }
     }
@@ -341,15 +326,8 @@ void Heighted_graph::find_scc_and_remove_down_edges_not_in_it
         if(edge_relation == NULL) {
             continue;
         }
-        // edge_relation->initialize();
 
         Vec<Int_pair> neighbour_heights_idxs_and_slopes = edge_relation->get_height_neighbours(height_idx);
-        // Int_pair_SET* neighbour_heights_idxs_and_slopes_p = edge_relation->get_height_neighbours(height_idx);
-        // if (neighbour_heights_idxs_and_slopes_p == NULL) {
-        //     continue;
-        // }
-        // Int_pair_SET neighbour_heights_idxs_and_slopes = *neighbour_heights_idxs_and_slopes_p;
-        
         for (Int_pair neighbour_height_idx_and_slope : neighbour_heights_idxs_and_slopes) {
             int neighbour_height_idx = neighbour_height_idx_and_slope.first;
             int slp = neighbour_height_idx_and_slope.second;
@@ -410,15 +388,6 @@ Vec<Int_pair> Heighted_graph::get_extended_nodes() {
         }
         }
 
-        // edge_relation->initialize();
-
-        // auto slope_map = *(edge_relation->get_slope_map());
-        // for (const auto& [heights, slope] : slope_map){
-        //     int node_height_idx = heights.first;
-        //     int neighbour_height_idx = heights.second;
-        //     extended_nodes.insert(Int_pair(node_idx, node_height_idx));
-        //     extended_nodes.insert(Int_pair(neighbour_node_idx, neighbour_height_idx));
-        // }
     }
     }
     return Vec(extended_nodes.begin(), extended_nodes.end());
