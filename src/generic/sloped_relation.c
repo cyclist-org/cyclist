@@ -344,12 +344,20 @@ const Map<Int_pair,int>* Sloped_relation::get_slope_map() {
     return this->slope_map;
 }
 
-Int_pair_SET* Sloped_relation::get_height_neighbours(int src_height) {
-    try {
-        return this->forward_map->at(src_height);
-    } catch (std::out_of_range) {
-        return NULL;
+// Int_pair_SET* Sloped_relation::get_height_neighbours(int src_height) {
+Vec<Int_pair> Sloped_relation::get_height_neighbours(int src_height) {
+    Vec<Int_pair> neighbours; 
+    for (int dst_height=0; dst_height<this->num_dst_heights; dst_height++){
+        int slp = this->repr_matrix[src_height][dst_height];
+        if(slp != Undef) {
+            neighbours.push_back(Int_pair(dst_height, slp));
+        }
     }
+    return neighbours;
+}
+
+const int* const * Sloped_relation::get_repr_matrix() {
+    return this->repr_matrix;
 }
 
 //==================================================================
