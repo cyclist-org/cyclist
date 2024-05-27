@@ -309,36 +309,11 @@ bool is_extended_edge_in_any_SCC(int source_idx, int source_h_idx, int sink_idx,
     return false;
 }
 
-void Heighted_graph::remove_down_edges_not_in_any_SCC(){
-    auto SCCs = this->get_SCCs();
-
-    for (size_t node_idx = 0; node_idx < this->num_nodes(); node_idx++) {
-    for (size_t neighbour_node_idx = 0; neighbour_node_idx < this->num_nodes(); neighbour_node_idx++) {
-        Sloped_relation* rel = this->h_change[node_idx][neighbour_node_idx];
-        if (rel != NULL) {
-            rel->initialize();
-            auto slope_map = *(rel->get_slope_map());
-            for (const auto& [heights, slp] : slope_map) {
-                int node_height_idx = heights.first;
-                int neighbour_height_idx = heights.second;
-                if (
-                    slp == slope::Downward &&
-                    !is_extended_edge_in_any_SCC(node_idx, node_height_idx, neighbour_node_idx, neighbour_height_idx, SCCs)
-                ){
-                    this->remove_hchange(node_idx, node_height_idx, neighbour_node_idx, neighbour_height_idx, static_cast<slope>(slp));
-                }
-            }
-        }
-    }
-    }
-    
-}
-
 /**
  * Tarjan's algorithm for finding strongly-connected components.
  * Reference: https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
  */
-void Heighted_graph::find_scc
+void Heighted_graph::find_scc_and_remove_down_edges_not_in_it
     (
         int n,
         std::stack<int>& s,
@@ -347,8 +322,7 @@ void Heighted_graph::find_scc
         int* low_links,
         int& next_idx,
         Vec<Int_pair>& extended_nodes,
-        Map<Int_pair, int>& extended_nodes_idxs,
-        Vec<Set<Int_pair>>& SCCs
+        Map<Int_pair, int>& extended_nodes_idxs
     )
 {
     Int_pair extended_node = extended_nodes[n];
@@ -367,14 +341,16 @@ void Heighted_graph::find_scc
         if(edge_relation == NULL) {
             continue;
         }
-        edge_relation->initialize();
+        // edge_relation->initialize();
 
-        Int_pair_SET* neighbour_heights_idxs_and_slopes = edge_relation->get_height_neighbours(height_idx);
-        if (neighbour_heights_idxs_and_slopes == NULL) {
-            continue;
-        }
-
-        for (Int_pair neighbour_height_idx_and_slope : *neighbour_heights_idxs_and_slopes) {
+        Vec<Int_pair> neighbour_heights_idxs_and_slopes = edge_relation->get_height_neighbours(height_idx);
+        // Int_pair_SET* neighbour_heights_idxs_and_slopes_p = edge_relation->get_height_neighbours(height_idx);
+        // if (neighbour_heights_idxs_and_slopes_p == NULL) {
+        //     continue;
+        // }
+        // Int_pair_SET neighbour_heights_idxs_and_slopes = *neighbour_heights_idxs_and_slopes_p;
+        
+        for (Int_pair neighbour_height_idx_and_slope : neighbour_heights_idxs_and_slopes) {
             int neighbour_height_idx = neighbour_height_idx_and_slope.first;
             int slp = neighbour_height_idx_and_slope.second;
             int m = extended_nodes_idxs.at(Int_pair(neighbour_node_idx, neighbour_height_idx));
@@ -382,9 +358,12 @@ void Heighted_graph::find_scc
             // If successor m has not been visited yet
             if (idxs[m] == -1) {
                 // Recurse on it
-                find_scc(m, s, on_stack, idxs, low_links, next_idx, extended_nodes, extended_nodes_idxs, SCCs);
+                find_scc_and_remove_down_edges_not_in_it(m, s, on_stack, idxs, low_links, next_idx, extended_nodes, extended_nodes_idxs);
                 low_links[n] = 
                     low_links[n] < low_links[m] ? low_links[n] : low_links[m];
+                if (idxs[n]<low_links[m] && (slp == slope::Downward)) {
+                    this->remove_hchange(node_idx, height_idx, neighbour_node_idx, neighbour_height_idx, static_cast<slope>(slp));
+                }
             }
             // Otherwise, if successor is in the stack then it is in the current
             // strongly-connected component
@@ -395,7 +374,9 @@ void Heighted_graph::find_scc
             // Otherwise successor is in an already processed strongly-connected
             // component
             else {
-                // Do nothing
+                if (slp == slope::Downward) {
+                    this->remove_hchange(node_idx, height_idx, neighbour_node_idx, neighbour_height_idx, slope::Downward);
+                }
             }
         }
     }
@@ -404,26 +385,10 @@ void Heighted_graph::find_scc
     // component then remove that component from the stack
     if (low_links[n] == idxs[n]) {
         int m = -1;
-        Set<Int_pair> SCC;
         while (m != n) {
             m = s.top();
             s.pop();
             on_stack[m] = false;
-            SCC.insert(extended_nodes[m]);
-        }
-        
-        if (SCC.size()==1) {
-            auto [node, height] = *SCC.begin();
-            Sloped_relation* node_self_rel = this->h_change[node][node];
-            // Only add the 1-vertex-SCC if it is a self loop
-            if(
-                (node_self_rel != NULL) && 
-                (node_self_rel->get_slope(height, height)) != slope::Undef
-            ) {
-                SCCs.push_back(SCC);
-            }
-        } else {
-            SCCs.push_back(SCC);
         }
     }
 }
@@ -436,22 +401,37 @@ Vec<Int_pair> Heighted_graph::get_extended_nodes() {
         if(edge_relation == NULL){
             continue;
         }
-        edge_relation->initialize();
 
-        auto slope_map = *(edge_relation->get_slope_map());
-        for (const auto& [heights, slope] : slope_map){
-            int node_height_idx = heights.first;
-            int neighbour_height_idx = heights.second;
+        const int* const* relation_repr_matrix = edge_relation->get_repr_matrix();
+        for (int node_height_idx=0; node_height_idx< edge_relation->get_num_src_heights(); node_height_idx++){
+        for (int neighbour_height_idx=0; neighbour_height_idx< edge_relation->get_num_dst_heights(); neighbour_height_idx++){
             extended_nodes.insert(Int_pair(node_idx, node_height_idx));
             extended_nodes.insert(Int_pair(neighbour_node_idx, neighbour_height_idx));
         }
+        }
+
+        // edge_relation->initialize();
+
+        // auto slope_map = *(edge_relation->get_slope_map());
+        // for (const auto& [heights, slope] : slope_map){
+        //     int node_height_idx = heights.first;
+        //     int neighbour_height_idx = heights.second;
+        //     extended_nodes.insert(Int_pair(node_idx, node_height_idx));
+        //     extended_nodes.insert(Int_pair(neighbour_node_idx, neighbour_height_idx));
+        // }
     }
     }
     return Vec(extended_nodes.begin(), extended_nodes.end());
 }
 
-Vec<Set<Int_pair>> Heighted_graph::get_SCCs() {
+void Heighted_graph::remove_down_edges_not_in_any_SCC() {
+
+    auto start = std::chrono::system_clock::now();
     Vec<Int_pair> extended_nodes = this->get_extended_nodes();
+    auto end = std::chrono::system_clock::now();
+    printf("get_extended_nodes took %d us\n", end-start);
+
+    start = std::chrono::system_clock::now();
 
     int num_of_extended_nodes = extended_nodes.size();
     Map<Int_pair, int> extended_nodes_idxs;
@@ -461,7 +441,7 @@ Vec<Set<Int_pair>> Heighted_graph::get_SCCs() {
     }
     
 
-    Vec<Set<Int_pair>> SCCs;
+    // Vec<Set<Int_pair>> SCCs;
     bool* on_stack = (bool*) malloc(num_of_extended_nodes * sizeof(bool));
     int*  idxs = (int*) malloc(num_of_extended_nodes * sizeof(int));
     int*  low_links = (int*) malloc(num_of_extended_nodes * sizeof(int));
@@ -476,9 +456,16 @@ Vec<Set<Int_pair>> Heighted_graph::get_SCCs() {
 
     bool found = false;
     int next_idx = 0;
+    
+
+    end = std::chrono::system_clock::now();
+    printf("preparing to go over all SCCs took %d us\n", end-start);
+
+    start = std::chrono::system_clock::now();
+
     for (int n = 0; n < num_of_extended_nodes; n++) {
         if (idxs[n] == -1) {
-            find_scc(n, s, on_stack, idxs, low_links, next_idx, extended_nodes, extended_nodes_idxs, SCCs);
+            find_scc_and_remove_down_edges_not_in_it(n, s, on_stack, idxs, low_links, next_idx, extended_nodes, extended_nodes_idxs);
         }
     }
 
@@ -486,7 +473,8 @@ Vec<Set<Int_pair>> Heighted_graph::get_SCCs() {
     free(idxs);
     free(low_links);
 
-    return SCCs;
+    end = std::chrono::system_clock::now();
+    printf("going over all SCCs took %d us\n", end-start);
 }
 
 

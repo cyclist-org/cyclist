@@ -82,7 +82,7 @@ private:
     bool check_Ccl(Relation_LIST*** ccl, int opts);
     bool check_Ccl(Set<Sloped_relation*>*** ccl, int opts);
 
-    void find_scc(
+    void find_scc_and_remove_down_edges_not_in_it(
         int n,
         std::stack<int>& s,
         bool* on_stack,
@@ -90,8 +90,7 @@ private:
         int* low_links,
         int& next_idx,
         Vec<Int_pair>& extended_nodes,
-        Map<Int_pair, int>& extended_nodes_idxs,
-        Vec<Set<Int_pair>>& SCCs
+        Map<Int_pair, int>& extended_nodes_idxs
     );
     Vec<Int_pair> get_extended_nodes();
 
