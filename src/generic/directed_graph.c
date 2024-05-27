@@ -1,6 +1,8 @@
 #include "directed_graph.hpp"
 #include "types.c"
 
+#include <algorithm>
+
 bool DirectedGraph::is_cycle_reachable_from(int node, Vec<int> *curr_path, bool* fresh_nodes)
 {
     curr_path->push_back(node);
