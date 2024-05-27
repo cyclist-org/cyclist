@@ -32,9 +32,8 @@ int usage(char* arg0) {
 int main(int argc, char** argv) {
     if(argc > 1){
 
-        // std::string path = std::string("./data/");
-        // path = path + argv[1] + ".json";
-        std::string path = argv[1];
+        std::string path = std::string("./data/");
+        path = path + argv[1] + ".json";
 
         // Get JSON data
         std::ifstream graph_data(path.c_str());

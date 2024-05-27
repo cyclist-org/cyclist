@@ -103,10 +103,11 @@ run-on-graphs-sh-single: run_on_graphs
 	./run_on_graphs delete_me_graphs H0fms
 	
 run-on-graphs-sh-new: run_on_graphs
+	# ./run_on_graphs ../../../graphs/unminimized/sl H0fms
 	./run_on_graphs graphs H0fms
-
-run-on-graphs-sh: soundness
-	export SPEC="H0fms"; make -s run-on-graphs
+run-on-graphs-or-new: run_on_graphs
+	# ./run_on_graphs ../../../graphs/unminimized/sl H0fms
+	./run_on_graphs graphs O0fms
 
 run-on-single-graph-sh: soundness
 	$(TEST_EXE) $(file) H0fms;

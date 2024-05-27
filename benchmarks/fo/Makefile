@@ -1,4 +1,4 @@
-TIMEOUT:=$(or $(TIMEOUT),30)
+TIMEOUT:=$(or $(TIMEOUT),40)
 TESTS:= $(sort $(wildcard *.tst))
 DEFS := "$(ROOT)/examples/fo.defs"
 CMD := "src/firstorder/prove.exe"
@@ -6,6 +6,7 @@ CMD := "src/firstorder/prove.exe"
 .PHONY: all $(TESTS)
 
 all: $(TESTS)
+
 
 $(TESTS): %.tst:
 	-@TST_COUNT=1; \

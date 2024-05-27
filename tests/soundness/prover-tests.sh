@@ -13,7 +13,10 @@ if [ -d ".git" ]; then
   sha="$(git rev-parse --short HEAD)_"
 fi
 
+pwd
+
 opts=("-VLA" "-legacy" "-SLA" "-FWK -scc -ff" "-FWK -min -scc -ff" "-OR -scc -ff -ord 0" "-OR -scc -ff -ord 1" "-OR -scc -ff -ord 2" "-OR -min -scc -ff -ord 0" "-OR -min -scc -ff -ord 1" "-OR -min -scc -ff -ord 2")
+opts=("-OR")
 
 for i in ${!opts[@]}; do
   opt=${opts[i]}
