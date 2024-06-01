@@ -41,19 +41,43 @@ def graph_prover_tests(data):
     plt.legend()
     plt.show()
 
+# x = [1]+list(range(250,4250,250))
+# plot = plt.subplot(2,1,1)
+# plot.plot(x,[1,23,40,59,76,93,113,130,153,159,200,213,267,247,257,276,298], label="flat cycles")
+# plot.plot(x,[1148,1648,2339,3336,4654,5694,7595,9409,17564,14631,20343,30178,32555,37780,53928,67922,73107], label="SLA")
+# plot.legend()
+# plot.set_title("net soundness check run time")
+# plot.set_xlabel("number of nodes")
+# plot.set_ylabel("microseconds")
+# plot = plt.subplot(2,1,2)
+# plot.plot(x,[1,23,40,59,76,93,113,130,153,159,200,213,267,247,257,276,298], label="flat cycles")
+# plot.plot(x,[1148,1648,2339,3336,4654,5694,7595,9409,17564,14631,20343,30178,32555,37780,53928,67922,73107], label="SLA")
+# plot.legend()
+# plot.set_title("net soundness check run time (log scale)")
+# plot.set_xlabel("number of nodes")
+# plot.set_ylabel("microseconds")
+# plot.set_yscale("log")
+# plt.show()
+
+
 parsed_input_str = input()
 
 parsed_input = json.loads(parsed_input_str)
 
+
+graph_lines = ["-","--","-.",":","-."]
 for i,test in enumerate(parsed_input, start=1):
-    plot = plt.subplot(1,len(parsed_input),i)
+    # plot = plt.subplot(1,len(parsed_input),i)
+    plot = plt.subplot(len(parsed_input),1,i)
     plot.set_title(test["name"])
-    for method in test["groups"]:
-        plot.plot(method["x"], method["y"], label=method["label"])
+    for i,method in enumerate(test["groups"]):
+        plot.plot(method["x"], method["y"], graph_lines[i], label=method["label"])
         if "x_label" in test:
             plot.set_xlabel(test["x_label"])
         if "y_label" in test:
             plot.set_ylabel(test["y_label"])
+        if "y_scale" in test:
+            plot.set_yscale(test["y_scale"])
         plot.legend()
 plt.show()
 

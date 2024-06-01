@@ -848,7 +848,10 @@ let check_proof ?(init=0) ?(minimize=true) prf =
     in
     let aprf =
       if minimize
-        then minimize_abs_proof prf init
+        then let () = Stats.Minimization.call() in
+          let prf = minimize_abs_proof prf init in
+          let () = Stats.Minimization.end_call() in
+          prf
         else prf in
     if (Int.Map.is_empty aprf) then
       true
@@ -899,3 +902,4 @@ let check_proof ?(init=0) ?(minimize=true) prf =
         (*     limit := 10 * !limit                                                           *)
         (*   end ;                                                                            *)
         r
+        

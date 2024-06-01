@@ -155,7 +155,7 @@ int main(int argc, char **argv)
                 }
 
                 auto end = std::chrono::system_clock::now();
-                std::cout << std::chrono::duration_cast<std::chrono::microseconds>((end - start)).count() << "us" << std::endl;
+                std::cout << "run on graph took " << std::chrono::duration_cast<std::chrono::microseconds>((end - start)).count() << "us" << std::endl;
             }
         }
     }

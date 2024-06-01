@@ -40,6 +40,9 @@ module Gen = TimeStats ()
 
 module Invalidity = TimeStats ()
 
+module Minimization = TimeStats ()
+
+
 module CacheStats (E : sig end) = struct
   let queries = ref 0
 
@@ -68,8 +71,13 @@ module MCCache = CacheStats ()
 
 let gen_print () =
   if !do_statistics then (
+    Printf.printf "GENERAL: Minimization took: %.0f ms\n"
+      (1000.0 *. !Minimization.cpu_time) ;
     Printf.printf "GENERAL: Elapsed process time: %.0f ms\n"
       (1000.0 *. !Gen.cpu_time) ;
+    Printf.printf
+      "MODCHECK: Absolute time spent model checking: %f ms\n"
+      (1000.0 *. !MC.cpu_time) ;
     Printf.printf
       "MODCHECK: Percentage of process time spent model checking: %.0f%%\n"
       ( if Stdlib.( = ) !Gen.cpu_time 0. then 0.
@@ -100,4 +108,5 @@ let reset () =
   MC.reset () ;
   CC.reset () ;
   MCCache.reset () ;
-  Invalidity.reset ()
+  Invalidity.reset ();
+  Minimization.reset ()

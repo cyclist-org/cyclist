@@ -24,19 +24,22 @@ const toTestSummary = (filePath) => {
     const fileContents = readFileSync(`${proverLogsDir}/${filePath}`).toString();
 
     const sequentName = fileContents.match(/(?<=test case: )(\S+)/g);
-    const modelCheckPercentageOfElapsedTime = fileContents.match(/(?<=MODCHECK: Percentage of process time spent model checking: )(\d+)/g).map(Number);
-    const modelCheckRejectionRatio = fileContents
+    const modelChecksPercentageOfElapsedTime = fileContents.match(/(?<=MODCHECK: Percentage of process time spent model checking: )(\d+)/g).map(Number);
+    const modelChecksRejection = fileContents
         .match(/(?<=MODCHECK: Rejected )(\d+) out of (\d+) calls/g)
         .map(match => match.match(/(\d+) out of (\d+) calls/).slice(1, 3).map(Number))
-        .map(([amount, outOf]) => amount / outOf);
+        .map(([amountOfRejectedChecks, amountOfChecks]) => ({ amountOfRejectedChecks, amountOfChecks }));
+    const modelChecksRejectionRatio = modelChecksRejection.map(({ amountOfChecks, amountOfRejectedChecks }) => amountOfRejectedChecks / amountOfChecks);
     const elapsedTimes = fileContents.match(/(?<=GENERAL: Elapsed process time: )(\d+)/g).map(Number);
 
     return {
         criterionName,
         testTypeName,
         sequentName,
-        modelCheckPercentageOfElapsedTime,
-        modelCheckRejectionRatio,
+        modelChecksPercentageOfElapsedTime,
+        modelChecksAmount: modelChecksRejection.map(x => x.amountOfChecks),
+        modelChecksRejectionAmount: modelChecksRejection.map(x => x.amountOfRejectedChecks),
+        modelChecksRejectionRatio,
         elapsedTimes
     };
 };
@@ -68,11 +71,11 @@ const averageEveryColumn = (accAverage, currResult, _, results) => ({
     elapsedTimes: accAverage.elapsedTimes
         .map((time, idx) => time + currResult.elapsedTimes[idx])
         .map(x => x / results.length),
-    modelCheckPercentageOfElapsedTime: accAverage.modelCheckPercentageOfElapsedTime
-        .map((time, idx) => time + currResult.modelCheckPercentageOfElapsedTime[idx])
+    modelChecksPercentageOfElapsedTime: accAverage.modelChecksPercentageOfElapsedTime
+        .map((time, idx) => time + currResult.modelChecksPercentageOfElapsedTime[idx])
         .map(x => x / results.length),
-    modelCheckRejectionRatio: accAverage.modelCheckRejectionRatio
-        .map((time, idx) => time + currResult.modelCheckRejectionRatio[idx])
+    modelChecksRejectionRatio: accAverage.modelChecksRejectionRatio
+        .map((time, idx) => time + currResult.modelChecksRejectionRatio[idx])
         .map(x => x / results.length)
 });
 
@@ -91,33 +94,63 @@ const averageOverTestTypes = ([methodName, results]) => [
         ])
 ];
 
-/**
- * 
- * @param {[string,[string,ReturnType<typeof toTestSummary>][]]} resultsGroupedByMethodAndTestType 
- * @returns {Group}
- */
-const proverLogsToDurationsGroup = resultsGroupedByMethodAndTestType => ({
-    label: resultsGroupedByMethodAndTestType[0],
-    x: Array.from({ length: resultsGroupedByMethodAndTestType[1].reduce((acc, curr) => acc.concat(curr[1].elapsedTimes), []).length }).map((_, i) => i + 1),
-    y: resultsGroupedByMethodAndTestType[1].reduce((acc, curr) => acc.concat(curr[1].elapsedTimes), [])
-    // x: Array.from({ length: resultsGroupedByMethodAndTestType[1][0][1].elapsedTimes.length }).map((_, i) => i + 1),
-    // y: resultsGroupedByMethodAndTestType[1][0][1].elapsedTimes
+const concatTestTypes = (acc, curr) => acc.concat(curr[1]);
+
+
+const proverLogsToGroupOfProperty = property => resultsGroupedByType => ({
+    label: resultsGroupedByType[0],
+    x: Array.from({ length: resultsGroupedByType[1].length }).map((_, i) => i + 1),
+    y: resultsGroupedByType[1].map(x => x[property])
 });
 
 /**
  * 
- * @param {[string,[string,ReturnType<typeof toTestSummary>][]]} resultsGroupedByMethodAndTestType 
- * @returns {Group}
+ * @param {*} results 
+ * @param {"OR"|"SH"|"SLA|"VLA"} methodName 
+ * @param {"elapsedTimes"|"modelChecksPercentageOfElapsedTime"|"modelChecksAmount"|"modelChecksRejectionAmount"|"modelChecksRejectionRatio"|"sequentName"} property 
+ * @returns 
  */
-const proverLogsToModelCheckPercentageGroup = resultsGroupedByMethodAndTestType => ({
-    label: resultsGroupedByMethodAndTestType[0],
-    x: Array.from({ length: resultsGroupedByMethodAndTestType[1].reduce((acc, curr) => acc.concat(curr[1].modelCheckPercentageOfElapsedTime), []).length }).map((_, i) => i + 1),
-    y: resultsGroupedByMethodAndTestType[1].reduce((acc, curr) => acc.concat(curr[1].modelCheckPercentageOfElapsedTime), [])
-    // x: Array.from({ length: resultsGroupedByMethodAndTestType[1][0][1].modelCheckPercentageOfElapsedTime.length }).map((_, i) => i + 1),
-    // y: resultsGroupedByMethodAndTestType[1][0][1].modelCheckPercentageOfElapsedTime
-});
+const sortResultsBy = (results, methodName, property) => {
+    const resultsToSortBy = results.find(methodResults => methodResults[0] == methodName)[1];
+    const enumeratedResultsToSortBy = resultsToSortBy.map((result, idx) => ({ idx, result }));
+    const sortedEnumeratedResultsToSortBy = enumeratedResultsToSortBy.sort((a, b) => a.result[property] - b.result[property]);
 
-const proverLogsDir = "./tests/prover_logs_with_SH2";
+    return results.map(([methodName, methodResults]) => [
+        methodName,
+        sortedEnumeratedResultsToSortBy.map(sortedResult => methodResults[sortedResult.idx])
+    ]);
+};
+
+/**
+ * 
+ * @param {*} sortedRunsResults 
+ * @param {"OR"|"SH"|"SLA|"VLA"} methodName 
+ */
+const calculateOverheadsPercentage = (results, methodName) => {
+    const baseline = results.find(methodResults => methodResults[0] == methodName)[1];
+    return results.map(([methodName, methodResults]) => [
+        methodName,
+        methodResults.map((result, idx) => ({ overheadPercentage: ((result.elapsedTimes - baseline[idx].elapsedTimes) / baseline[idx].elapsedTimes) * 100 }))
+    ]);
+};
+
+/**
+ * 
+ * @param {*} results 
+ * @param {"OR"|"SH"|"SLA|"VLA"} methodName 
+ */
+const filterOutTimeouts = (results, methodName) => {
+    const resultsToFilterBy = results.find(methodResults => methodResults[0] == methodName)[1];
+    const enumeratedResultsToFilterBy = resultsToFilterBy.map((result, idx) => ({ idx, result }));
+    const filteredEnumeratedResultsToFilterBy = enumeratedResultsToFilterBy.filter(x => /*x.result.elapsedTimes < 28000 &&*/ x.result.elapsedTimes > 200);
+
+    return results.map(([methodName, methodResults]) => [
+        methodName,
+        methodResults.filter((_, idx) => filteredEnumeratedResultsToFilterBy.find(x => x.idx == idx))
+    ]);
+};
+
+const proverLogsDir = "./tests/prover_logs_with_SH3";
 const parseProverTests = () => {
     const testFileNames = readdirSync(proverLogsDir);
     const runs = Object.entries(testFileNames
@@ -125,12 +158,37 @@ const parseProverTests = () => {
         .reduce(groupByMethod, {})
     )
         .map(averageOverTestTypes);
-    const durationsGroups = runs.map(proverLogsToDurationsGroup).map(x=>{x.y.sort((a,b)=>a-b); return x;});
-    const modelCheckPercentageOfElapsedTimeGroups = runs.map(proverLogsToModelCheckPercentageGroup).map(x => { x.y.sort((a, b) => a - b); return x; });
+
+    const runsResults = runs.map(([method, runs]) => [
+        method,
+        runs.map(([testType, runs]) => [
+            testType,
+            runs.elapsedTimes.map((_, idx) => ({
+                elapsedTimes: runs.elapsedTimes[idx],
+                modelChecksPercentageOfElapsedTime: runs.modelChecksPercentageOfElapsedTime[idx],
+                modelChecksAmount: runs.modelChecksAmount[idx],
+                modelChecksRejectionAmount: runs.modelChecksRejectionAmount[idx],
+                modelChecksRejectionRatio: runs.modelChecksRejectionRatio[idx],
+                sequentName: runs.sequentName[idx],
+            }))
+        ])
+            .reduce(concatTestTypes, [])
+    ]);
+
+    const filteredRunsResults = filterOutTimeouts(runsResults, "OR");
+    const sortedRunsResults = sortResultsBy(filteredRunsResults, "OR", "elapsedTimes");
+
+    const overheads = calculateOverheadsPercentage(sortedRunsResults, "OR").map(proverLogsToGroupOfProperty("overheadPercentage"));
+
+    const durationsGroups = sortedRunsResults.map(proverLogsToGroupOfProperty("elapsedTimes"));
+    const modelCheckPercentageOfElapsedTimeGroups = sortedRunsResults.map(proverLogsToGroupOfProperty("modelChecksPercentageOfElapsedTime"));
+    const modelChecksAmount = sortedRunsResults.map(proverLogsToGroupOfProperty("modelChecksAmount"));
 
     console.log(JSON.stringify([
-        { name: "prover durations", x_label: "test number", y_label: "ms", groups: durationsGroups },
-        { name: "model check time percentage", x_label: "test number", y_label: "%", groups: modelCheckPercentageOfElapsedTimeGroups }
+        { name: "prover durations", y_label: "ms", groups: durationsGroups },
+        { name: "% Overhead", groups: overheads },
+        { name: "model check time percentage", y_label: "%", groups: modelCheckPercentageOfElapsedTimeGroups },
+        { name: "model check amount", groups: modelChecksAmount }
     ]));
 };
 
@@ -170,7 +228,7 @@ const worstcaseToGraph = ([name, runsPerMethod]) => ({
 });
 
 function parseTestsBenchmarks() {
-    const logsDirPath = "./tests/logs3";
+    const logsDirPath = "./tests/logs4";
     const fileNamesGroupedByTestName = readdirSync(logsDirPath).reduce((acc, curr) => {
         const testName = curr.split("_")[0];
         const testPath = join(logsDirPath, curr);
@@ -204,7 +262,7 @@ function parseTestsBenchmarks() {
 
 /**
  * @typedef {{label: string, x: number[], y: number[]}} Group
- * @typedef {{name: string, x_label: string?, y_label:string?, groups: Group[]}} Graph
+ * @typedef {{name: string, x_label: string?, y_label:string?, y_scale?: "log", groups: Group[]}} Graph
  * @typedef {Group[][]} Result
  */
 
@@ -219,6 +277,6 @@ const result = [[
     }
 ]];
 
-// parseProverTests();
-parseTestsBenchmarks();
+parseProverTests();
+// parseTestsBenchmarks();
 
