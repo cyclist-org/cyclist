@@ -2,11 +2,4 @@
 
 (env
  (log_stats
-  (c_flags :standard -DLOG_STATS))
- (_ 
-  (env-vars
-   (PKG_CONFIG_PATH "/Users/matanshaked/usr/lib/pkgconfig")
-   (LD_LIBRARY_PATH "/Users/matanshaked/usr/lib")))
-   ; (PKG_CONFIG_PATH "/Users/matanshaked/test_env_spot/accset-32768/lib/pkgconfig")
-   ; (LD_LIBRARY_PATH "/Users/matanshaked/test_env_spot/accset-32768/lib")))
-)
+  (c_flags :standard -DLOG_STATS)))
