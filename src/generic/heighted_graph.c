@@ -398,7 +398,7 @@ void Heighted_graph::remove_down_edges_not_in_any_SCC() {
     auto start = std::chrono::system_clock::now();
     Vec<Int_pair> extended_nodes = this->get_extended_nodes();
     auto end = std::chrono::system_clock::now();
-    printf("get_extended_nodes took %d us\n", end-start);
+    printf("get_extended_nodes took %ld us\n", (end-start).count());
 
     start = std::chrono::system_clock::now();
 
@@ -425,10 +425,10 @@ void Heighted_graph::remove_down_edges_not_in_any_SCC() {
 
     bool found = false;
     int next_idx = 0;
-    
+
 
     end = std::chrono::system_clock::now();
-    printf("preparing to go over all SCCs took %d us\n", end-start);
+    printf("preparing to go over all SCCs took %ld us\n", (end-start).count());
 
     start = std::chrono::system_clock::now();
 
@@ -443,7 +443,7 @@ void Heighted_graph::remove_down_edges_not_in_any_SCC() {
     free(low_links);
 
     end = std::chrono::system_clock::now();
-    printf("going over all SCCs took %d us\n", end-start);
+    printf("going over all SCCs took %ld us\n", (end-start).count());
 }
 
 
