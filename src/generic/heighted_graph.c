@@ -927,7 +927,7 @@ bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts, bool* shoul
                     end = std::chrono::system_clock::now();
                     compose_time += (end - start);
                     compositions++;
-                    total_size_sum += R->size();
+                    total_size_sum += R.size();
 #endif
 
                     bool fresh =
@@ -1001,7 +1001,7 @@ bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts, bool* shoul
                     end = std::chrono::system_clock::now();
                     compose_time += (end - start);
                     compositions++;
-                    total_size_sum += R->size();
+                    total_size_sum += R.size();
 #endif
 
                     check_and_add(
@@ -1048,7 +1048,7 @@ bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts, bool* shoul
                     end = std::chrono::system_clock::now();
                     compose_time += (end - start);
                     compositions++;
-                    total_size_sum += R->size();
+                    total_size_sum += R.size();
 #endif
 
                     bool fresh =
@@ -1149,12 +1149,12 @@ bool Heighted_graph::check_and_add
 
     // Add relation R to the visited set if it was not there already
 #ifdef LOG_STATS
-    start = std::chrono::system_clock::now();
+    auto start = std::chrono::system_clock::now();
 #endif
     auto visited_res = visited.insert(&R);
 #ifdef LOG_STATS
-    auto loop_end = std::chrono::system_clock::now();
-    need_to_add_compute_time += (loop_end - loop_start);
+    auto end = std::chrono::system_clock::now();
+    need_to_add_compute_time += (end - start);
 #endif
     if (!(visited_res.second)) {
         // If we've seen the relation before, nothing more to do
@@ -1290,7 +1290,7 @@ bool Heighted_graph::check_self_loop(Sloped_relation& R, int opts) {
 #ifdef LOG_STATS
     auto start = std::chrono::system_clock::now();
     loop_checks++;
-    checked_size_sum += R->size();
+    checked_size_sum += R.size();
 #endif
 
     bool result = false;
@@ -1311,7 +1311,7 @@ bool Heighted_graph::check_self_loop(Sloped_relation& R, int opts) {
             result = true;
 #ifdef LOG_STATS
             loop_checks--;
-            checked_size_sum -= R->size();
+            checked_size_sum -= R.size();
 #endif
         } else {
             // Otherwise, check we have a self-loop in the relevant relation
