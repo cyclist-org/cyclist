@@ -1,20 +1,18 @@
 (lang dune 2.2)
 
 (env
- (accset-5 
+ (accset-5
   (env-vars
    (PKG_CONFIG_PATH "/opt/spot/accset-32/lib/pkgconfig")
    (LD_LIBRARY_PATH "/opt/spot/accset-32/lib")))
- (accset-15 
+ (accset-15
   (env-vars
    (PKG_CONFIG_PATH "/opt/spot/accset-32768/lib/pkgconfig")
    (LD_LIBRARY_PATH "/opt/spot/accset-32768/lib")))
- (_ 
+ (_
   (env-vars
    (PKG_CONFIG_PATH "/opt/spot/accset-32/lib/pkgconfig")
    (LD_LIBRARY_PATH "/opt/spot/accset-32/lib")))
-  ; (PKG_CONFIG_PATH "/Users/matanshaked/test_env_spot/accset-32768/lib/pkgconfig")
-  ; (LD_LIBRARY_PATH "/Users/matanshaked/test_env_spot/accset-32768/lib")))
 )
 
 (context default)

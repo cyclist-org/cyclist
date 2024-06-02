@@ -13,11 +13,11 @@ type soundness_method =
 let soundness_method = ref RELATIONAL_OCAML
 let use_legacy () =
   soundness_method := SPOT_LEGACY
-let use_ortl () = 
+let use_ortl () =
   soundness_method := ORTL_CPP
 let use_fwk () =
   soundness_method := FWK_CPP
-let use_vla () = 
+let use_vla () =
   soundness_method := VLA
 let use_sla () =
   soundness_method := SLA
@@ -32,7 +32,7 @@ let set_node_order order =
     prerr_endline "Invalid node order specified!"
   else
     node_order := order
-  
+
 module IntPair = struct
   include Pair.Make(Int)(Int)
   include Containers.Make(Pair.Make(Int)(Int))
@@ -145,7 +145,7 @@ let remove_dead_nodes prf' =
         match subg with
         | [_] ->
           (tags, [])
-        | _ -> 
+        | _ ->
           (tags, Blist.remove_nth (index_of_child child n) subg)
       in
       prf := Int.Map.add par_idx newparent !prf
@@ -268,7 +268,7 @@ module LegacyCheck = struct
 
   let print_paut = ref false
   let print_taut = ref false
-  
+
     (* check global soundness condition on proof *)
   let check_proof ?(init=0) p =
     Stats.MC.call () ;
@@ -314,7 +314,7 @@ module RelationalCheck = struct
 
   module Slope = struct
 
-    type t = 
+    type t =
       (* | Unknown *)
       | Stay
       | Decrease
@@ -328,7 +328,7 @@ module RelationalCheck = struct
         true
       | _ ->
         false
-    
+
     let ( < ) h h' =
       match (h, h') with
       (* | Unknown, Stay
@@ -347,18 +347,18 @@ module RelationalCheck = struct
       | _ ->
         0
 
-    let max h h' = 
+    let max h h' =
       match (h, h') with
       | Decrease, _
       | _, Decrease ->
         Decrease
-      (* | Stay, _ 
+      (* | Stay, _
       | _, Stay ->
         Stay *)
       | _, _ ->
         (* Unknown *)
         Stay
-    
+
     let pp fmt s =
       Format.fprintf fmt "%s"
         begin match s with
@@ -368,9 +368,9 @@ module RelationalCheck = struct
         | Decrease ->
           "Decrease"
         end
-    
+
     let hash s = Hashtbl.hash s
-    
+
   end
 
   module SlopedRel = struct
@@ -414,7 +414,7 @@ module RelationalCheck = struct
             let k_cmp = cmp_key k k' in
             if Int.(k_cmp <> 0) then
               k_cmp
-            else 
+            else
               let v_cmp = cmp_val v v' in
               if Int.(v_cmp <> 0) then
                 v_cmp
@@ -454,19 +454,19 @@ module RelationalCheck = struct
       let pp fmt (_, _, p) =
         pp IntPair.pp Slope.pp fmt p
       let to_string (_, _, p) =
-        to_string IntPair.pp Slope.pp p 
+        to_string IntPair.pp Slope.pp p
     end
 
     include (HashedKernel : BasicType with type t = HashedKernel.t)
 
     let copy (fd, bk, slopes) =
       let fd' = Int.Hashmap.create (Int.Hashmap.length fd) in
-      let () = 
+      let () =
         Int.Hashmap.iter
           (fun i hs -> Int.Hashmap.add fd' i (Int.Hashset.copy hs))
           (fd) in
       let bk' = Int.Hashmap.create (Int.Hashmap.length bk) in
-      let () = 
+      let () =
         Int.Hashmap.iter
           (fun i hs -> Int.Hashmap.add bk' i (Int.Hashset.copy hs))
           (bk) in
@@ -512,14 +512,14 @@ module RelationalCheck = struct
               false)
         (List.of_seq (IntPair.Hashmap.to_seq slopes))
 
-    let compose (p_fd, _, p_sl) (_, q_bk, q_sl) = 
+    let compose (p_fd, _, p_sl) (_, q_bk, q_sl) =
       let result = empty () in
       let () =
         Int.Hashmap.iter
           (fun h hs ->
             Int.Hashmap.iter
               (fun h' hs' ->
-                let s = 
+                let s =
                   Int.Hashset.fold
                   (fun h'' s ->
                     let s' =
@@ -537,7 +537,7 @@ module RelationalCheck = struct
               q_bk)
           p_fd in
       result
-    
+
     (* Repeat code for relational composition, so as to inline check for whether
        we have reached the fixed point - slightly more efficient than comparing
        new relation for equality with the old one at each iteration. *)
@@ -549,7 +549,7 @@ module RelationalCheck = struct
             (fun h hs ->
               Int.Hashmap.fold
                 (fun h' hs' continue ->
-                  let s = 
+                  let s =
                     Int.Hashset.fold
                     (fun h'' s ->
                       let s' =
@@ -592,7 +592,7 @@ module RelationalCheck = struct
 
   (* Compute the composition closure of the given height graph *)
   let comp_closure (ns, slopes) =
-    let init = 
+    let init =
       Int.Set.fold
         (fun n ccl ->
           Int.Set.fold
@@ -653,7 +653,7 @@ module RelationalCheck = struct
       Int.Map.fold
         (fun n (_, succs) (nodes, slopes) ->
           let nodes = Int.Set.add n nodes in
-          let slopes = 
+          let slopes =
             List.fold_left
               (fun slopes (n', all_tags, prog_tags) ->
                 let hs = SlopedRel.empty () in
@@ -678,7 +678,7 @@ module RelationalCheck = struct
     let () = debug (fun () -> "Composition Closure:\n" ^ mk_to_string pp_closure ccl) in
     let retval =
       try
-        let () = 
+        let () =
           Int.Set.iter (fun n ->
           SlopedRel.Hashset.iter (fun p ->
             let () = debug (fun () -> "Checking " ^ mk_to_string SlopedRel.pp p) in
@@ -695,7 +695,7 @@ module RelationalCheck = struct
     debug (fun () ->
         "Checking soundness ends, result=" ^ if retval then "OK" else "NOT OK" ) ;
     retval
-  
+
   (* Call out to C++ library for relational check *)
   module Ext = struct
 
@@ -728,7 +728,7 @@ module RelationalCheck = struct
 
     let opts = ref 0
     let do_stats = ref false
-  
+
     let fail_fast () =
       opts := !opts lor flag_fail_fast
     let use_scc_check () =
@@ -754,8 +754,6 @@ module RelationalCheck = struct
           "Cannot use both minimality and idempotence - ignoring minimality!"
       else
         opts := !opts lor flag_use_minimality
-    let compute_full_ccl () =
-      opts := !opts lor flag_compute_full_ccl
 
     let check_proof p =
       let process_succ n (n', tps, prog) =
@@ -777,7 +775,7 @@ module RelationalCheck = struct
       Int.Map.iter add_heights p ;
       Int.Map.iter add_edges p ;
       (* debug (fun () -> "Built height graph") ; *)
-      let retval = 
+      let retval =
         match !soundness_method with
         | ORTL_CPP ->
           order_reduced_check !node_order !opts
@@ -799,7 +797,7 @@ module RelationalCheck = struct
       debug (fun () ->
           "Checking soundness ends, result=" ^ if retval then "OK" else "NOT OK" ) ;
       retval
-  
+
   end
 
 end
@@ -809,7 +807,6 @@ include (RelationalCheck.Ext : sig
   val use_scc_check : unit -> unit
   val use_idempotence : unit -> unit
   val use_minimality : unit -> unit
-  val compute_full_ccl : unit -> unit
   val do_stats : bool ref
 end)
 
@@ -821,7 +818,7 @@ let arg_opts =
     ("-OR", Arg.Unit use_ortl, ": use external C++ order-reduced relational check to verify pre-proof validity") ;
     ("-FWK", Arg.Unit use_fwk, ": use external C++ Floyd-Warshall-Kleene relational check to verify pre-proof validity") ;
     ("-SH", Arg.Unit use_sledgehammer, ": use sledgehammer (combines complete and incomplete methods) to verify pre-proof validity") ;
-    ("-ord", Arg.Int set_node_order, 
+    ("-ord", Arg.Int set_node_order,
         "<int>: specify which node order to use in the order-reduced relational check.\n" ^
         "\t0 - Natural Ordering\n" ^
         "\t1 - Out-degree, In-degree (lexicographically) ascending\n" ^
@@ -830,7 +827,6 @@ let arg_opts =
     ("-scc", Arg.Unit use_scc_check, ": use SCC check in relation-based validity checks") ;
     ("-idem", Arg.Unit use_idempotence, ": use idempotency optimisation in relation-based validity checks") ;
     ("-min", Arg.Unit use_minimality, ": use minimality optimisation in relation-based validity checks") ;
-    ("-full", Arg.Unit compute_full_ccl, ": compute the full CCL") ;
     ("-rel-stats", Arg.Set do_stats, ": print out profiling stats for the relation-based validity check") ;
     ("-print-paut", Arg.Set LegacyCheck.print_paut, ": print the proof automaton in HOA format" ) ;
     ("-print-taut", Arg.Set LegacyCheck.print_taut, ": print the trace automaton in HOA format" ) ;
@@ -869,7 +865,7 @@ let check_proof ?(init=0) ?(minimize=true) prf =
         debug (fun _ -> mk_to_string pp prf) ;
         debug (fun _ -> "Minimized proof:\n" ^ mk_to_string pp aprf) ;
         debug (fun _ -> "Number of proof nodes: " ^ string_of_int (Int.Map.cardinal aprf)) ;
-        debug (fun _ -> 
+        debug (fun _ ->
           let width =
             Int.Map.fold
               (fun _ (tags, _) acc -> Int.max acc (Int.Set.cardinal tags))
