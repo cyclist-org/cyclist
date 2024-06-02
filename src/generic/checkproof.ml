@@ -270,6 +270,7 @@ let speclist =
     @
   [
     ("-d", Arg.Set do_debug, ": print debug messages") ;
+    ("-s", Arg.Set Stats.do_statistics, ": print statistics") ;
     ("--json", Arg.Unit (fun () -> input_mode := JSON), "Use JSON input format") ;
     ("--batch", Arg.Set batch_mode, ": batch processing mode") ;
     ("--allow-comments", Arg.Set allow_comments, ": allow line comments in input") ;
@@ -281,11 +282,17 @@ let usage =
 let () =
   Arg.parse speclist (fun _ -> ()) usage
 
-let do_check (prf, init) =
-  if (check_proof ~init prf) then
-    print_endline "YES"
-  else
-    print_endline "NO"
+let do_check (prf, init) = begin
+  Stats.reset ();
+  if (check_proof ~init ~minimize:false prf) then begin
+    print_endline "YES";
+    Stats.gen_print ();
+  end
+  else begin
+    print_endline "NO";
+    Stats.gen_print ();
+  end
+end
 
 let () =
   let () = gc_setup () in
