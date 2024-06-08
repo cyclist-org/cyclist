@@ -267,12 +267,15 @@ let input_mode = ref EDGE_LIST
 
 let input_files = ref []
 
+let should_minimize_proofs = ref true
+
 let speclist =
   Soundcheck.arg_opts
     @
   [
     ("-d", Arg.Set do_debug, ": print debug messages") ;
     ("-s", Arg.Set Stats.do_statistics, ": print statistics") ;
+    ("--unminimized-proofs", Arg.Unit (fun () -> should_minimize_proofs := false), ": keep proofs unminimized") ;
     ("--json", Arg.Unit (fun () -> input_mode := JSON), "Use JSON input format") ;
     ("--allow-comments", Arg.Set allow_comments, ": allow line comments in input") ;
     ("-f", Arg.String (fun f -> input_files := f :: !input_files), ": take input from file") ;
@@ -286,7 +289,7 @@ let () =
 
 let do_check (prf, init) = begin
   Stats.reset ();
-  if (check_proof ~init ~minimize:false prf) then begin
+  if (check_proof ~init ~minimize:!should_minimize_proofs prf) then begin
     print_endline "YES";
     Stats.gen_print ();
   end

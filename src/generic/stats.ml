@@ -71,7 +71,7 @@ module MCCache = CacheStats ()
 
 let gen_print () =
   if !do_statistics then (
-    Printf.printf "GENERAL: Minimization took: %.0f ms\n"
+    Printf.printf "GENERAL: Minimization took: %f ms\n"
       (1000.0 *. !Minimization.cpu_time) ;
     Printf.printf "GENERAL: Elapsed process time: %.0f ms\n"
       (1000.0 *. !Gen.cpu_time) ;
