@@ -1,9 +1,11 @@
 #include "directed_graph.hpp"
 #include "types.c"
 
+#include <stack>
+#include <unordered_set>
 #include <algorithm>
 
-bool DirectedGraph::is_cycle_reachable_from(int node, Vec<int> *curr_path, bool* fresh_nodes)
+bool DirectedGraph::is_cycle_reachable_from(int node, Vec<int> *curr_path, bool *fresh_nodes)
 {
     curr_path->push_back(node);
     auto node_neighbours = this->neighbours_map->at(node);
@@ -13,11 +15,7 @@ bool DirectedGraph::is_cycle_reachable_from(int node, Vec<int> *curr_path, bool*
         {
             continue;
         }
-        if (this->should_halt)
-        {
-            fresh_nodes[node] = false;
-            return false;
-        }
+
         if (find(curr_path->begin(), curr_path->end(), neighbour) != curr_path->end())
         {
             fresh_nodes[node] = false;
@@ -54,19 +52,11 @@ bool DirectedGraph::contains_cycle()
     bool fresh_nodes[this->num_nodes];
     for (int i = 0; i < this->num_nodes; i++)
     {
-        if (this->should_halt)
-        {
-            return false;
-        }
         fresh_nodes[i] = true;
     }
 
     for (int node = 0; node < this->num_nodes; node++)
     {
-        if (this->should_halt)
-        {
-            return false;
-        }
         if (fresh_nodes[node] == false)
         {
             continue;
@@ -78,6 +68,144 @@ bool DirectedGraph::contains_cycle()
         }
     }
     return false;
+}
+
+int DirectedGraph::count_reachable_backedges(int node, Vec<int> *curr_path, bool *fresh_nodes)
+{
+    curr_path->push_back(node);
+    auto node_neighbours = this->neighbours_map->at(node);
+    int curr_backedges_count = 0;
+
+    fresh_nodes[node] = false;
+
+    for (int neighbour : *node_neighbours)
+    {
+        if (find(curr_path->begin(), curr_path->end(), neighbour) != curr_path->end())
+        {
+            fresh_nodes[node] = false;
+            curr_backedges_count++;
+        }
+        if (fresh_nodes[neighbour] == false)
+        {
+            continue;
+        }
+        else
+        {
+            curr_backedges_count += count_reachable_backedges(neighbour, curr_path, fresh_nodes);
+        }
+    }
+    curr_path->pop_back();
+    return curr_backedges_count;
+}
+
+int DirectedGraph::count_backedges()
+{
+    bool fresh_nodes[this->num_nodes];
+    for (int i = 0; i < this->num_nodes; i++)
+    {
+        fresh_nodes[i] = true;
+    }
+
+    int backedges_count = 0;
+    for (int node = 0; node < this->num_nodes; node++)
+    {
+        if (fresh_nodes[node] == false)
+        {
+            continue;
+        }
+        Vec<int> visited;
+        backedges_count += this->count_reachable_backedges(node, &visited, fresh_nodes);
+    }
+    return backedges_count;
+}
+
+void mark_in_cycle_from(Vec<int> *curr_path, int first_node_in_cycle, bool *is_in_cycle)
+{
+    for (int i = curr_path->size() - 1; i >= 0; i--)
+    {
+        int curr_node = (*curr_path)[i];
+        is_in_cycle[curr_node] = true;
+        if (curr_node == first_node_in_cycle)
+        {
+            break;
+        }
+    }
+}
+
+bool DirectedGraph::is_overlapping_cycle_reachable_from(int node, std::stack<int> &s, bool *is_on_stack, int *idxs, int *low_links, int next_idx, std::stack<int> &cycle_low_links_stack)
+{
+    idxs[node] = next_idx;
+    low_links[node] = next_idx;
+    next_idx++;
+    s.push(node);
+    is_on_stack[node] = true;
+
+    auto node_neighbours = this->neighbours_map->at(node);
+
+    for (int neighbour : *node_neighbours)
+    {
+        if (idxs[neighbour] == -1)
+        {
+            if (is_overlapping_cycle_reachable_from(neighbour, s, is_on_stack, idxs, low_links, next_idx, cycle_low_links_stack))
+            {
+                return true;
+            }
+            low_links[node] = std::min(low_links[node], low_links[neighbour]);
+        }
+        else if (is_on_stack[neighbour])
+        {
+            low_links[node] = std::min(low_links[node], idxs[neighbour]);
+            if (!cycle_low_links_stack.empty() && cycle_low_links_stack.top() == low_links[neighbour])
+            {
+                return true;
+            }
+            cycle_low_links_stack.push(low_links[node]);
+        }
+    }
+
+    if (low_links[node] == idxs[node])
+    {
+        int curr_on_scc = -1;
+        if (s.top() != node || (node_neighbours->find(node) != node_neighbours->end()))
+        {
+            cycle_low_links_stack.pop();
+        }
+        while (curr_on_scc != node)
+        {
+            curr_on_scc = s.top();
+            s.pop();
+            is_on_stack[curr_on_scc] = false;
+        }
+    }
+}
+
+bool DirectedGraph::contains_overlapping_cycles()
+{
+    int next_index = 0;
+    std::stack<int> s;
+    std::stack<int> cycle_low_links_stack;
+
+    int idxs[this->num_nodes];
+    int low_links[this->num_nodes];
+    bool is_on_stack[this->num_nodes];
+
+    for (size_t i = 0; i < this->num_nodes; i++)
+    {
+        idxs[i] = -1;
+        low_links[i] = -1;
+        is_on_stack[i] = false;
+    }
+
+    for (int node = 0; node < this->num_nodes; node++)
+    {
+        if (idxs[node] == -1)
+        {
+            if (this->is_overlapping_cycle_reachable_from(node, s, is_on_stack, idxs, low_links, next_index, cycle_low_links_stack))
+            {
+                return true;
+            }
+        }
+    }
 }
 
 void output(Vec<int> *Stack, int V, Vec<Vec<Int_pair> *> *cycles)
