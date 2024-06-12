@@ -174,6 +174,27 @@ slope Heighted_graph::get_slope(int src, int sink, int h1, int h2) {
     return Undef;
 }
 
+Map<int, Int_SET*>* Heighted_graph::get_edges_adjacency_list() {
+    Map<int, Int_SET *>* flat_edges = new Map<int, Int_SET *>();
+    for (size_t i = 0; i < this->num_nodes(); i++)
+    {
+        flat_edges->insert(std::pair(i, new Int_SET()));
+    }
+
+    int num_nodes = this->num_nodes();
+    for (size_t i = 0; i < num_nodes; i++)
+    {
+        for (size_t j = 0; j < num_nodes; j++)
+        {
+            if (h_change[i][j] != NULL)
+            {
+                flat_edges->at(i)->insert(j);
+            }
+        }
+    }
+    return flat_edges;
+}
+
 Map<int, Int_SET*>* Heighted_graph::get_flat_edges() {
     Map<int, Int_SET *>* flat_edges = new Map<int, Int_SET *>();
     for (size_t i = 0; i < this->num_nodes(); i++)
@@ -282,6 +303,101 @@ std::vector<Int_SET*>* Heighted_graph::get_HeightsOf() {
 //=============================================================
 // SCCs
 //=============================================================
+
+void Heighted_graph::find_backedge_dests_and_SCCs(
+    int node,
+    std::stack<int> &s,
+    bool *on_stack,
+    int *idxs,
+    int *low_links,
+    int &next_idx,
+    std::vector<int> &backedge_dests,
+    std::vector<std::vector<int>*> &SCCs
+) {
+    idxs[node] = next_idx++;
+    low_links[node] = idxs[node];
+        
+    on_stack[node] = true;
+    s.push(node);
+
+    // Consider successors of node
+    for (int neighbour = 0; neighbour < this->num_nodes(); neighbour++) {
+        Sloped_relation* edge_relation = this->h_change[node][neighbour];
+        if(edge_relation == NULL) {
+            continue;
+        }
+
+        // If successor has not been visited yet
+        if (idxs[neighbour] == -1) {
+            // Recurse on it
+            find_backedge_dests_and_SCCs(neighbour, s, on_stack, idxs, low_links, next_idx, backedge_dests, SCCs);
+
+            low_links[node] = 
+                low_links[node] < low_links[neighbour] ? low_links[node] : low_links[neighbour];
+        }
+        // Otherwise, if successor is in the stack then it is in the current
+        // strongly-connected component
+        else if (on_stack[neighbour]) {
+            low_links[node] = 
+                low_links[node] < idxs[neighbour] ? low_links[node] : idxs[neighbour];
+            backedge_dests.push_back(neighbour);
+        }
+        // Otherwise successor is in an already processed strongly-connected
+        // component
+    }
+
+    // If node is the root of a discovered strongly-connected
+    // component then remove that component from the stack
+    if (low_links[node] == idxs[node]) {
+        int m = -1;
+        Vec<int> *SCC = new Vec<int>;
+        while (m != node) {
+            m = s.top();
+            s.pop();
+            on_stack[m] = false;
+            SCC->push_back(m);
+        }
+        SCCs.push_back(SCC);
+    }
+}
+
+bool Heighted_graph::calculate_SCCs_and_check_if_has_overlapping_cycles(Vec<Vec<int>*> &SCCs) {
+    int num_nodes = this->num_nodes();
+    bool on_stack[num_nodes];
+    int idxs[num_nodes];
+    int low_links[num_nodes];
+    std::stack<int> s;
+    Vec<int> backedge_dests;
+    
+    for (int i = 0 ; i < num_nodes; i++) {
+        on_stack[i] = false;
+        idxs[i] = -1;
+        low_links[i] = -1;
+    }
+
+    int next_idx = 0;    
+    for (int n = 0; n < num_nodes; n++) {
+        if (idxs[n] == -1) {
+            find_backedge_dests_and_SCCs(n, s, on_stack, idxs, low_links, next_idx, backedge_dests, SCCs);
+        }
+    }
+
+    std::unordered_set<int> backedge_dests_low_links;
+    for (int backedge_dest_node : backedge_dests)
+    {
+        int low_link = low_links[backedge_dest_node];
+        if (backedge_dests_low_links.find(low_link) != backedge_dests_low_links.end())
+        {
+            return true;
+        }
+        backedge_dests_low_links.insert(low_link);
+    }
+    return false;
+}
+
+bool Heighted_graph::does_node_SCC_contain_a_down_extended_SCC(Vec<int>* node_SCC) {
+    
+}
 
 bool is_extended_edge_in_any_SCC(int source_idx, int source_h_idx, int sink_idx, int sink_h_idx, Vec<Set<Int_pair>>& SCCs){
     Int_pair source(source_idx, source_h_idx);

@@ -92,6 +92,16 @@ private:
         Vec<Int_pair>& extended_nodes,
         Map<Int_pair, int>& extended_nodes_idxs
     );
+    void find_backedge_dests_and_SCCs(
+        int node,
+        std::stack<int> &s,
+        bool *on_stack,
+        int *idxs,
+        int *low_links,
+        int &next_idx,
+        std::vector<int> &backedge_dests,
+        std::vector<std::vector<int>*> &SCCs
+    );
     Vec<Int_pair> get_extended_nodes();
 
     void remove_hchange(int source_idx, int source_h_idx, int sink_idx, int sink_h_idx, slope s);
@@ -129,9 +139,14 @@ public:
     void add_decrease(int source_node, int source_h, int sink_node, int sink_h);
 
     void remove_down_edges_not_in_any_SCC();
+    
+    bool calculate_SCCs_and_check_if_has_overlapping_cycles(Vec<Vec<int>*> &SCCs);
+    bool does_node_SCC_contain_a_down_extended_SCC(Vec<int>* node_SCC);
+
 
     slope get_slope(int src, int sink ,int source_h, int sink_h);
 
+    Map<int,Int_SET*> *get_edges_adjacency_list();
     Map<int,Int_SET*> *get_flat_edges();
     Map<Int_pair, Int_pair_SET*> *get_stay_extended_edges();
     Map<Int_pair, Int_pair_SET*> *get_extended_edges();
