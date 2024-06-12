@@ -132,7 +132,7 @@ void mark_in_cycle_from(Vec<int> *curr_path, int first_node_in_cycle, bool *is_i
     }
 }
 
-bool DirectedGraph::is_overlapping_cycle_reachable_from(int node, std::stack<int> &s, bool *is_on_stack, int *idxs, int *low_links, int next_idx, std::stack<int> &cycle_low_links_stack)
+bool DirectedGraph::is_overlapping_cycle_reachable_from(int node, std::stack<int> &s, bool *is_on_stack, int *idxs, int *low_links, int &next_idx, std::vector<int> &backedge_dests)
 {
     idxs[node] = next_idx;
     low_links[node] = next_idx;
@@ -146,7 +146,7 @@ bool DirectedGraph::is_overlapping_cycle_reachable_from(int node, std::stack<int
     {
         if (idxs[neighbour] == -1)
         {
-            if (is_overlapping_cycle_reachable_from(neighbour, s, is_on_stack, idxs, low_links, next_idx, cycle_low_links_stack))
+            if (is_overlapping_cycle_reachable_from(neighbour, s, is_on_stack, idxs, low_links, next_idx, backedge_dests))
             {
                 return true;
             }
@@ -155,21 +155,13 @@ bool DirectedGraph::is_overlapping_cycle_reachable_from(int node, std::stack<int
         else if (is_on_stack[neighbour])
         {
             low_links[node] = std::min(low_links[node], idxs[neighbour]);
-            if (!cycle_low_links_stack.empty() && cycle_low_links_stack.top() == low_links[neighbour])
-            {
-                return true;
-            }
-            cycle_low_links_stack.push(low_links[node]);
+            backedge_dests.push_back(neighbour);
         }
     }
 
     if (low_links[node] == idxs[node])
     {
         int curr_on_scc = -1;
-        if (s.top() != node || (node_neighbours->find(node) != node_neighbours->end()))
-        {
-            cycle_low_links_stack.pop();
-        }
         while (curr_on_scc != node)
         {
             curr_on_scc = s.top();
@@ -183,7 +175,7 @@ bool DirectedGraph::contains_overlapping_cycles()
 {
     int next_index = 0;
     std::stack<int> s;
-    std::stack<int> cycle_low_links_stack;
+    std::vector<int> backedge_dests;
 
     int idxs[this->num_nodes];
     int low_links[this->num_nodes];
@@ -200,12 +192,24 @@ bool DirectedGraph::contains_overlapping_cycles()
     {
         if (idxs[node] == -1)
         {
-            if (this->is_overlapping_cycle_reachable_from(node, s, is_on_stack, idxs, low_links, next_index, cycle_low_links_stack))
+            if (this->is_overlapping_cycle_reachable_from(node, s, is_on_stack, idxs, low_links, next_index, backedge_dests))
             {
                 return true;
             }
         }
     }
+
+    std::unordered_set<int> backedge_dests_low_links;
+    for (int backedge_dest_node : backedge_dests)
+    {
+        int low_link = low_links[backedge_dest_node];
+        if (backedge_dests_low_links.find(low_link) != backedge_dests_low_links.end())
+        {
+            return true;
+        }
+        backedge_dests_low_links.insert(low_link);
+    }
+    return false;
 }
 
 void output(Vec<int> *Stack, int V, Vec<Vec<Int_pair> *> *cycles)

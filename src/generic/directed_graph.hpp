@@ -11,7 +11,8 @@ private:
     bool *should_halt;
 
     bool is_cycle_reachable_from(int node, Vec<int> *curr_path, bool *fresh_nodes);
-    bool is_overlapping_cycle_reachable_from(int node, std::stack<int> &s, bool *is_on_stack, int *idxs, int *low_links, int next_idx, std::stack<int> & cycle_low_links_stack);
+    // bool is_overlapping_cycle_reachable_from(int node, std::stack<int> &s, bool *is_on_stack, int *idxs, int *low_links, int next_idx, std::stack<int> & backedge_dests_stack);
+    bool is_overlapping_cycle_reachable_from(int node, std::stack<int> &s, bool *is_on_stack, int *idxs, int *low_links, int &next_idx, std::vector<int> & backedge_dests);
     int count_reachable_backedges(int node, Vec<int> *curr_path, bool *fresh_nodes);
 
 public:
