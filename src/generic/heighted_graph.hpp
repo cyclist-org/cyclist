@@ -92,7 +92,7 @@ private:
         Vec<Int_pair>& extended_nodes,
         Map<Int_pair, int>& extended_nodes_idxs
     );
-    void find_backedge_dests_and_SCCs(
+    void find_backedge_dests_and_SCCs_reachable_from(
         int node,
         std::stack<int> &s,
         bool *on_stack,
@@ -101,6 +101,16 @@ private:
         int &next_idx,
         std::vector<int> &backedge_dests,
         std::vector<std::vector<int>*> &SCCs
+    );
+    bool is_down_extended_SCC_reachable_in_node_SCC_from(
+        Vec<int>* node_SCC,
+        Int_pair extended_node,
+        std::stack<Int_pair> &s,
+        std::stack<slope> &slopes_stack,
+        Int_pair_SET on_stack,
+        std::map<Int_pair, int> &idxs,
+        std::map<Int_pair, int> &low_links,
+        int &next_idx
     );
     Vec<Int_pair> get_extended_nodes();
 
@@ -143,6 +153,7 @@ public:
     bool calculate_SCCs_and_check_if_has_overlapping_cycles(Vec<Vec<int>*> &SCCs);
     bool does_node_SCC_contain_a_down_extended_SCC(Vec<int>* node_SCC);
 
+    bool has_self_edge(int node_idx);
 
     slope get_slope(int src, int sink ,int source_h, int sink_h);
 

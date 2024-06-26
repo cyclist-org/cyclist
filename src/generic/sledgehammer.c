@@ -10,6 +10,7 @@
 #include "criterion.flat_cycles.generalized.c"
 #include "criterion.sprenger_dam.c"
 #include "criterion.no_flat_extended_cycles.c"
+#include "criterion.descending_unicycles.c"
 #include <future>
 #include <unistd.h>
 
@@ -27,26 +28,28 @@ Sledgehammer::~Sledgehammer()
 
 bool Sledgehammer::check_soundness()
 {
-    auto check_soundness_start = std::chrono::system_clock::now();
+    // auto check_soundness_start = std::chrono::system_clock::now();
 
     // std::string graph_str = this->hg->to_string();
+    // printf("%s\n", graph_str.c_str());
+    // fflush(stdout);
     // this->hg->remove_down_edges_not_in_any_SCC();
 
     // flat cycles: complete unsound
-    auto flat_cycles_start = std::chrono::system_clock::now();
+    // auto flat_cycles_start = std::chrono::system_clock::now();
 
-    // FlatCyclesCriterion flat_cycles_criterion(this->hg);
-    // auto resultFC = flat_cycles_criterion.check_soundness();
+    FlatCyclesCriterion flat_cycles_criterion(this->hg);
+    auto resultFC = flat_cycles_criterion.check_soundness();
 
-    Heighted_graph* cloned_hg = Heighted_graph::clone(hg);
-    GeneralizedFlatCyclesCriterion generalized_flat_cycles_criterion(cloned_hg);
-    auto resultFC = generalized_flat_cycles_criterion.check_soundness();
+    // Heighted_graph* cloned_hg = Heighted_graph::clone(hg);
+    // GeneralizedFlatCyclesCriterion generalized_flat_cycles_criterion(cloned_hg);
+    // auto resultFC = generalized_flat_cycles_criterion.check_soundness();
 
-    auto flat_cycles_end = std::chrono::system_clock::now();
+    // auto flat_cycles_end = std::chrono::system_clock::now();
     if (resultFC == SoundnessCheckResult::unsound)
     {
-        printf("FC returned true negative after %lu us\n", flat_cycles_end-flat_cycles_start);
-        fflush(stdout);
+        // printf("FC returned true negative after %lu us\n", flat_cycles_end-flat_cycles_start);
+        // fflush(stdout);
 
         // printf("unsound %s\n", graph_str.c_str());
         // fflush(stdout);
@@ -80,12 +83,23 @@ bool Sledgehammer::check_soundness()
     //     return true;
     // }
 
-    auto OR_start = std::chrono::system_clock::now();
+
+    DescendingUnicyclesCriterion descending_unicycles_criterion(hg);
+    auto resultDU = descending_unicycles_criterion.check_soundness();
+    if (resultDU == SoundnessCheckResult::sound) {
+        return true;
+    }
+    if (resultDU == SoundnessCheckResult::unsound) {
+        return false;
+    }
+
+
+    // auto OR_start = std::chrono::system_clock::now();
     auto result1 = this->hg->order_reduced_check(this->order, this->opts);
-    auto OR_end = std::chrono::system_clock::now();
+    // auto OR_end = std::chrono::system_clock::now();
     // printf("OR returned after %lu us\n", OR_end - OR_start);
-    printf("FC+OR returned after %lu us\n", OR_end - check_soundness_start);
-    fflush(stdout);
+    // printf("FC+OR returned after %lu us\n", OR_end - check_soundness_start);
+    // fflush(stdout);
 
     // printf("%s %s\n", result1 ? "sound" : "unsound", graph_str.c_str());
     // fflush(stdout);
