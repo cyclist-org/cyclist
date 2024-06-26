@@ -91,19 +91,19 @@ Heighted_graph* Heighted_graph::clone(Heighted_graph* hg)
     Heighted_graph* cloned = new Heighted_graph(hg->max_nodes);
 
     cloned->node_idxs = hg->node_idxs;
-    
+
     cloned->height_idxs = std::vector<std::map<int,int>*>();
     for (size_t i = 0; i < cloned->height_idxs.size(); i++)
     {
         cloned->height_idxs[i] = new std::map<int,int>(*(hg->height_idxs[i]));
-    };  
-    
+    };
+
     cloned->HeightsOf = std::vector<std::set<int>*>(hg->HeightsOf.size());
     for (size_t i = 0; i < cloned->HeightsOf.size(); i++)
     {
         cloned->HeightsOf[i]= new std::set<int>(*(hg->HeightsOf[i]));
     };
-    
+
 
     cloned->num_edges_ = hg->num_edges_;
     cloned->trace_width = hg->trace_width;
@@ -116,7 +116,7 @@ Heighted_graph* Heighted_graph::clone(Heighted_graph* hg)
             }
         }
     }
-    
+
     return cloned;
 }
 
@@ -547,7 +547,7 @@ void Heighted_graph::find_scc_and_remove_down_edges_not_in_it
 
     idxs[n] = next_idx++;
     low_links[n] = idxs[n];
-        
+
     on_stack[n] = true;
     s.push(n);
 
@@ -568,7 +568,7 @@ void Heighted_graph::find_scc_and_remove_down_edges_not_in_it
             if (idxs[m] == -1) {
                 // Recurse on it
                 find_scc_and_remove_down_edges_not_in_it(m, s, on_stack, idxs, low_links, next_idx, extended_nodes, extended_nodes_idxs);
-                low_links[n] = 
+                low_links[n] =
                     low_links[n] < low_links[m] ? low_links[n] : low_links[m];
                 if (idxs[n]<low_links[m] && (slp == slope::Downward)) {
                     this->remove_hchange(node_idx, height_idx, neighbour_node_idx, neighbour_height_idx, static_cast<slope>(slp));
@@ -577,7 +577,7 @@ void Heighted_graph::find_scc_and_remove_down_edges_not_in_it
             // Otherwise, if successor is in the stack then it is in the current
             // strongly-connected component
             else if (on_stack[m]) {
-                low_links[n] = 
+                low_links[n] =
                     low_links[n] < idxs[m] ? low_links[n] : idxs[m];
             }
             // Otherwise successor is in an already processed strongly-connected
@@ -629,7 +629,7 @@ void Heighted_graph::remove_down_edges_not_in_any_SCC() {
     auto start = std::chrono::system_clock::now();
     Vec<Int_pair> extended_nodes = this->get_extended_nodes();
     auto end = std::chrono::system_clock::now();
-    printf("get_extended_nodes took %d us\n", end-start);
+    printf("get_extended_nodes took %ld us\n", (end-start).count());
 
     start = std::chrono::system_clock::now();
 
@@ -639,13 +639,13 @@ void Heighted_graph::remove_down_edges_not_in_any_SCC() {
     {
         extended_nodes_idxs[extended_nodes[i]] = i;
     }
-    
+
 
     // Vec<Set<Int_pair>> SCCs;
     bool* on_stack = (bool*) malloc(num_of_extended_nodes * sizeof(bool));
     int*  idxs = (int*) malloc(num_of_extended_nodes * sizeof(int));
     int*  low_links = (int*) malloc(num_of_extended_nodes * sizeof(int));
-    
+
     for (int i = 0 ; i < num_of_extended_nodes; i++) {
         on_stack[i] = false;
         idxs[i] = -1;
@@ -656,10 +656,10 @@ void Heighted_graph::remove_down_edges_not_in_any_SCC() {
 
     bool found = false;
     int next_idx = 0;
-    
+
 
     end = std::chrono::system_clock::now();
-    printf("preparing to go over all SCCs took %d us\n", end-start);
+    printf("preparing to go over all SCCs took %ld us\n", (end-start).count());
 
     start = std::chrono::system_clock::now();
 
@@ -674,7 +674,7 @@ void Heighted_graph::remove_down_edges_not_in_any_SCC() {
     free(low_links);
 
     end = std::chrono::system_clock::now();
-    printf("going over all SCCs took %d us\n", end-start);
+    printf("going over all SCCs took %ld us\n", (end-start).count());
 }
 
 
@@ -781,7 +781,7 @@ std::string Heighted_graph::to_string() {
                         std::to_string(j) + "," + std::to_string(heights.second)  +")," + (edge_slope == slope::Stay ? "stay" : "down") +"]";
                     }
                 }
-            } 
+            }
         }
     }
     return result;
@@ -815,7 +815,7 @@ void Heighted_graph::add_height(int n, int h) {
         int next_idx = heights->size();
         heights->insert(Int_pair(h, next_idx));
     }
-    
+
     int h_idx = heights->at(h);
     HeightsOf[n_idx]->insert(h_idx);
     if( HeightsOf[n_idx]->size() > this->trace_width ){
@@ -833,7 +833,7 @@ void Heighted_graph::add_edge(int source, int sink) {
         num_edges_++;
         int num_src_heights = height_idxs[src_idx]->size();
         int num_dst_heights = height_idxs[sink_idx]->size();
-        Sloped_relation* R = 
+        Sloped_relation* R =
             new Sloped_relation(num_src_heights, num_dst_heights);
         h_change[src_idx][sink_idx] = R;
     }
@@ -915,7 +915,7 @@ void order_reduced_cleanup
         Sloped_relation* composition
     )
 {
-    
+
     // Free CCL
     for (int source = 0; source < num_nodes; source++) {
         for (int sink = 0; sink < num_nodes; sink++) {
@@ -1158,7 +1158,7 @@ bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts, bool* shoul
                     end = std::chrono::system_clock::now();
                     compose_time += (end - start);
                     compositions++;
-                    total_size_sum += R->size();
+                    total_size_sum += R.size();
 #endif
 
                     bool fresh =
@@ -1232,7 +1232,7 @@ bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts, bool* shoul
                     end = std::chrono::system_clock::now();
                     compose_time += (end - start);
                     compositions++;
-                    total_size_sum += R->size();
+                    total_size_sum += R.size();
 #endif
 
                     check_and_add(
@@ -1279,7 +1279,7 @@ bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts, bool* shoul
                     end = std::chrono::system_clock::now();
                     compose_time += (end - start);
                     compositions++;
-                    total_size_sum += R->size();
+                    total_size_sum += R.size();
 #endif
 
                     bool fresh =
@@ -1289,7 +1289,7 @@ bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts, bool* shoul
                         );
 
                     // If fail-fast, then check for self-loop if necessary
-                    if (fresh && ((opts & FAIL_FAST) != 0) 
+                    if (fresh && ((opts & FAIL_FAST) != 0)
                                 /* && source == sink */ // Not necessary here, we know it's true
                                 && !(check_self_loop(R, opts))) {
                         if ((opts & PRINT_CCL) != 0) {
@@ -1380,12 +1380,12 @@ bool Heighted_graph::check_and_add
 
     // Add relation R to the visited set if it was not there already
 #ifdef LOG_STATS
-    start = std::chrono::system_clock::now();
+    auto start = std::chrono::system_clock::now();
 #endif
     auto visited_res = visited.insert(&R);
 #ifdef LOG_STATS
-    auto loop_end = std::chrono::system_clock::now();
-    need_to_add_compute_time += (loop_end - loop_start);
+    auto end = std::chrono::system_clock::now();
+    need_to_add_compute_time += (end - start);
 #endif
     if (!(visited_res.second)) {
         // If we've seen the relation before, nothing more to do
@@ -1398,7 +1398,7 @@ bool Heighted_graph::check_and_add
     // If we get here, the relation was fresh and was already inserted
     insertion_time += (end - start);
 #endif
-    
+
     // If we are only storing the minimal elements then check if R is preceded
     // by any relation in the current state of the closure element and remove
     // (or, for those relations that need preserving, mark as removed) any
@@ -1436,7 +1436,7 @@ bool Heighted_graph::check_and_add
             // Otherwise, we do need to compare the current candidate R with the
             // current relation S
             else {
-            
+
                 // Compare it with R
 #ifdef LOG_STATS
                 start = std::chrono::system_clock::now();
@@ -1446,7 +1446,7 @@ bool Heighted_graph::check_and_add
                 end = std::chrono::system_clock::now();
                 compare_time += (end - start);
 #endif
-                
+
                 // If < R
                 if (cmp_result == lt) {
                     // N.B. When we maintain the invariant that the closure
@@ -1464,7 +1464,7 @@ bool Heighted_graph::check_and_add
 #endif
                     break;
                 }
-                
+
                 // If > R
                 else if (cmp_result == gt) {
                     // If S in the preserved portion, don't remove it
@@ -1521,7 +1521,7 @@ bool Heighted_graph::check_self_loop(Sloped_relation& R, int opts) {
 #ifdef LOG_STATS
     auto start = std::chrono::system_clock::now();
     loop_checks++;
-    checked_size_sum += R->size();
+    checked_size_sum += R.size();
 #endif
 
     bool result = false;
@@ -1531,7 +1531,7 @@ bool Heighted_graph::check_self_loop(Sloped_relation& R, int opts) {
     } else {
         // Compute R composed with R if using the idempotent method
         // or the transitive closure otherwise (i.e. using the standard method)
-        Sloped_relation* R2 = 
+        Sloped_relation* R2 =
             ((opts & USE_IDEMPOTENCE) != 0)
                 ? R.compose(R)
                 : R.compute_transitive_closure();
@@ -1542,7 +1542,7 @@ bool Heighted_graph::check_self_loop(Sloped_relation& R, int opts) {
             result = true;
 #ifdef LOG_STATS
             loop_checks--;
-            checked_size_sum -= R->size();
+            checked_size_sum -= R.size();
 #endif
         } else {
             // Otherwise, check we have a self-loop in the relevant relation
@@ -1587,7 +1587,7 @@ void fwk_cleanup
         Sloped_relation* composition
     )
 {
-    
+
     // Free CCL
     for (int source = 0; source < num_nodes; source++) {
         for (int sink = 0; sink < num_nodes; sink++) {
@@ -1685,7 +1685,7 @@ bool Heighted_graph::fwk_check(int opts, bool* should_halt) {
     }
 
     // Create identity sloped relation
-    tmp_relation = 
+    tmp_relation =
         new Sloped_relation(this->trace_width, this->trace_width, Stay);
     // Get the unique representative of the relation
     auto insert_result = representatives.insert(*tmp_relation);
@@ -1694,7 +1694,7 @@ bool Heighted_graph::fwk_check(int opts, bool* should_halt) {
     // initialise it, and then allocate a new sloped relation object
     if (insert_result.second) {
         identity.initialize();
-        tmp_relation = 
+        tmp_relation =
             new Sloped_relation(this->trace_width, this->trace_width);
     }
 
@@ -1703,7 +1703,7 @@ bool Heighted_graph::fwk_check(int opts, bool* should_halt) {
 
     // Now compute the composition closure, using Floyd-Warshall-Kleene
     for (int k = 0; k < num_nodes; k++) {
-        
+
         // First, compute asteration/closure of ccl[k][k], which is used in
         // all iterations of the inner nested loop
 
@@ -1712,7 +1712,7 @@ bool Heighted_graph::fwk_check(int opts, bool* should_halt) {
 
         // Start with an empty list of visited relations
         visited.clear();
-        
+
         // If the identity sloped relation is not already in ccl[k][k], then
         // add it as the first element in the asteration list, and record
         // whether the identity relation appears first (needed later).
@@ -1725,12 +1725,12 @@ bool Heighted_graph::fwk_check(int opts, bool* should_halt) {
         } else {
             identity_first = false;
         }
-        
+
         // Initialise with contents of closure element
         for (Sloped_relation* R : *ccl[k][k]) {
             asteration.push_back(R);
         }
-        
+
         // Now do the closure computation
         auto it1 = asteration.begin();
         while (it1 != asteration.end()) {
@@ -1741,19 +1741,19 @@ bool Heighted_graph::fwk_check(int opts, bool* should_halt) {
             // and so in some cases, the iterator gets updated within the loop
             // body and so shouldn't be incremented.
             bool increment_iterator = true;
-            
+
             Sloped_relation* Q = *it1;
-            
+
             for (Sloped_relation* P : *ccl[k][k]) {
-            
+
                 // Compute the composition of P and Q in-place
                 tmp_relation->reset();
-                tmp_relation->compose(*P, *Q);                
-            
+                tmp_relation->compose(*P, *Q);
+
                 // Get the unique representative of the composition
                 auto insert_result = representatives.insert(*tmp_relation);
                 Sloped_relation& R = *(insert_result.first);
-            
+
                 // If the representative is the same object just computed
                 // we need to initialise it, and then allocate a new object
                 // for holding the results of composition next time
@@ -1771,7 +1771,7 @@ bool Heighted_graph::fwk_check(int opts, bool* should_halt) {
                 if (ccl[k][k]->find(&R) != ccl[k][k]->end()) {
                     continue;
                 }
-                
+
                 // Otherwise check if we have processed this relation before,
                 // adding it to the visited set if not
                 auto visited_res = visited.insert(&R);
@@ -2037,7 +2037,7 @@ bool Heighted_graph::fwk_check(int opts, bool* should_halt) {
                             if ((opts & PRINT_CCL) != 0) {
                                 print_ccl(ccl, num_nodes);
                             }
-                            fwk_cleanup(ccl, ccl_next, num_nodes, 
+                            fwk_cleanup(ccl, ccl_next, num_nodes,
                                         representatives, h_change,
                                         tmp_relation);
                             return false;
@@ -2097,7 +2097,7 @@ bool Heighted_graph::check_Ccl(Set<Sloped_relation*>*** ccl, int opts) {
  * Creates and registers atomic propositions with the given automata,
  * using them as "bits" to create BDDs encoding binary representation of IDs
  * for each alphabet letter.
- * 
+ *
  * N.B. This assumes that [alphabet_vec] has already allocated space to store
  * at least [size] elements. Behaviour is undefined if this doesn't hold.
  * It also assumes that the elements stored in the vector are equal to bddtrue.
@@ -2134,7 +2134,7 @@ void init_alphabet(
             alphabet_vec[idx] &= ((code & 0b1) ? bdd_not(p) : p);
             code >>= 1;
         }
-    }    
+    }
 }
 
 bool Heighted_graph::vla_automata_check() {
@@ -2143,15 +2143,15 @@ bool Heighted_graph::vla_automata_check() {
     spot::bdd_dict_ptr    dict;
 
     int                   num_nodes = this->num_nodes();
-    
+
     // Number of states in the automata
     int                   num_states_ip = num_nodes + 1;
     int                   num_states_tr = 1 + (num_nodes * this->trace_width);
-    
+
     // Initial states of the respective automata
     int                   s_init_ip = num_states_ip - 1;
     int                   s_init_tr = num_states_tr - 1;
-    
+
     // References to the automata objects themselves
     spot::twa_graph_ptr   aut_ipath;
     spot::twa_graph_ptr   aut_trace;
@@ -2263,10 +2263,10 @@ bool Heighted_graph::sla_automata_check() {
 
     // BDD dictionary for the automata
     spot::bdd_dict_ptr    dict;
-    
+
     // Number of vertices in the graph
     int                   num_nodes = this->num_nodes();
-    
+
     // Number of states in the automata
     int                   num_states_ip = num_nodes + 1;
     int                   num_states_tr = this->trace_width + 1;
@@ -2274,7 +2274,7 @@ bool Heighted_graph::sla_automata_check() {
     // Initial states of the respective automata
     int                   s_init_ip = num_states_ip - 1;
     int                   s_init_tr = num_states_tr - 1;
-    
+
     // References to the automata objects themselves
     spot::twa_graph_ptr   aut_ipath;
     spot::twa_graph_ptr   aut_trace;
