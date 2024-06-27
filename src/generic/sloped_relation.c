@@ -317,7 +317,7 @@ void Sloped_relation::remove(int h1, int h2, slope s) {
 
 
 }
-  
+
 int Sloped_relation::size(void) const{
     return slope_map->size();
 }
@@ -346,7 +346,7 @@ const Map<Int_pair,int>* Sloped_relation::get_slope_map() {
 
 // Int_pair_SET* Sloped_relation::get_height_neighbours(int src_height) {
 Vec<Int_pair> Sloped_relation::get_height_neighbours(int src_height) {
-    Vec<Int_pair> neighbours; 
+    Vec<Int_pair> neighbours;
     for (int dst_height=0; dst_height<this->num_dst_heights; dst_height++){
         int slp = this->repr_matrix[src_height][dst_height];
         if(slp != Undef) {
@@ -605,7 +605,7 @@ bool find_scc
     // Only need to push this node to the stack and process it if it might have
     // edges coming out of it
     if (n < num_src_heights) {
-        
+
         on_stack[n] = true;
         s.push(n);
 
@@ -618,13 +618,20 @@ bool find_scc
             // If successor m has not been visited yet
             if (idxs[m] == -1) {
                 // Recurse on it
-                bool result = 
+                bool result =
                     find_scc(m, s, on_stack, idxs, low_links, next_idx,
                              repr_matrix, num_src_heights, num_dst_heights);
+                // If the recursion found a downward slope, we can propagate
                 if (result) {
                     return true;
                 }
-                low_links[n] = 
+                // Otherwise this edge might be the downward slope
+                else if (idxs[n] >= low_links[m] && slp == Downward) {
+                    return true;
+                }
+                // If we have not found the downward slope yet
+                // continue as normal and update low link
+                low_links[n] =
                     low_links[n] < low_links[m] ? low_links[n] : low_links[m];
             }
             // Otherwise, if successor is in the stack then it is in the current
@@ -638,7 +645,7 @@ bool find_scc
                 // Otherwise, update low_link for this height, as per original
                 // algorithm
                 else {
-                    low_links[n] = 
+                    low_links[n] =
                         low_links[n] < idxs[m] ? low_links[n] : idxs[m];
                 }
             }
@@ -678,11 +685,11 @@ bool Sloped_relation::has_downward_SCC(void) {
 
     int num_heights =
         (num_src_heights > num_dst_heights) ? num_src_heights : num_dst_heights;
-    
+
     bool* on_stack = (bool*) malloc(num_heights * sizeof(bool));
     int*  idxs = (int*) malloc(num_heights * sizeof(int));
     int*  low_links = (int*) malloc(num_heights * sizeof(int));
-    
+
     for (int i = 0 ; i < num_heights; i++) {
         on_stack[i] = false;
         idxs[i] = -1;
@@ -718,7 +725,7 @@ bool Sloped_relation::has_downward_slope() {
             if(this->repr_matrix[src][dst] == Downward) {
                 return true;
             }
-        }  
+        }
     }
     return false;
 }
@@ -779,10 +786,10 @@ bool compare_slope(int lhs, int rhs) {
 
 bool Sloped_relation::linear_order::operator() (const Sloped_relation& lhs, const Sloped_relation& rhs) const {
 
-    int max_lhs = 
+    int max_lhs =
         lhs.num_src_heights > lhs.num_dst_heights ?
             lhs.num_src_heights : lhs.num_dst_heights;
-    int max_rhs = 
+    int max_rhs =
         rhs.num_src_heights > rhs.num_dst_heights ?
             rhs.num_src_heights : rhs.num_dst_heights;
     int max = max_lhs > max_rhs ? max_lhs : max_rhs;
