@@ -430,8 +430,11 @@ bool Heighted_graph::is_down_extended_SCC_reachable_in_node_SCC_from(
             // If successor has not been visited yet
             if (idxs.find(extended_neighbour) == idxs.end()) {
                 // Recurse on it
-                // is_down_extended_SCC_reachable_in_node_SCC_from(node_SCC, extended_neighbour, s, slopes_stack, on_stack, idxs, low_links, next_idx);
                 if (is_down_extended_SCC_reachable_in_node_SCC_from(node_SCC, extended_neighbour, s, slopes_stack, on_stack, idxs, low_links, next_idx)){
+                    return true;
+                }
+                // This edge might be the downward slope
+                else if (idxs[extended_node] >= low_links[extended_neighbour] && slp == slope::Downward) {
                     return true;
                 };
                 low_links[extended_node] = 
@@ -440,6 +443,9 @@ bool Heighted_graph::is_down_extended_SCC_reachable_in_node_SCC_from(
             // Otherwise, if successor is in the stack then it is in the current
             // strongly-connected component
             else if (on_stack.find(extended_neighbour) != on_stack.end()) {
+                if (slp == slope::Downward) {
+                    return true;
+                }
                 low_links[extended_node] = 
                     low_links[extended_node] < idxs[extended_neighbour] ? low_links[extended_node] : idxs[extended_neighbour];
             }
@@ -452,36 +458,12 @@ bool Heighted_graph::is_down_extended_SCC_reachable_in_node_SCC_from(
     // component then remove that component from the stack
     if (low_links[extended_node] == idxs[extended_node]) {
         Int_pair curr_extended_node;
-        int SCC_size = 0;
         slope slp = slope::Undef;
-        Vec<Int_pair> SCC;
         do {
             curr_extended_node = s.top();
             s.pop();
             on_stack.erase(curr_extended_node);
-            SCC_size++;
-            SCC.push_back(curr_extended_node);
         } while (curr_extended_node != extended_node);
-        
-        for (const auto [n1,h1] : SCC) {
-        for (const auto [n2,h2] : SCC) {
-            Sloped_relation* rel = this->h_change[n1][n2];
-            if (rel !=NULL) {
-                slope slp = rel->get_slope(h1,h2);
-                if(slp == slope::Downward) {
-                    return true;
-                }
-            }
-        }
-        }
-        // for (int i = 0; i < SCC_size-1; i++)
-        // {
-        //     slp = slopes_stack.top();
-        //     slopes_stack.pop();
-        //     if (slp == slope::Downward) {
-        //         return true;
-        //     }
-        // }
     }
     return false;
 }
