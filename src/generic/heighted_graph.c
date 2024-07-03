@@ -507,6 +507,55 @@ bool is_extended_edge_in_any_SCC(int source_idx, int source_h_idx, int sink_idx,
     return false;
 }
 
+
+bool Heighted_graph::explore_height(int edge_idx, Vec<int>& heights_stack, const Vec<Int_pair>& cycle, bool visited_down_slope) {
+    Int_pair edge = cycle[edge_idx];
+    if (heights_stack.size() > cycle.size()) {
+        if (heights_stack.front() == heights_stack.back()){
+            if (heights_stack.size()>0) {
+                heights_stack.pop_back();
+            }
+            return visited_down_slope;
+        } else {
+            return false;
+        }
+    }
+    
+    Sloped_relation *rel = this->h_change[edge.first][edge.second];
+    int node_height = heights_stack.back();
+    auto neighbour_heights_and_slopes = rel->get_height_neighbours(node_height);
+
+    for (const auto& [neighbour_height, slp] : neighbour_heights_and_slopes) {
+        heights_stack.push_back(neighbour_height);
+        int top_of_stack = heights_stack.back();
+
+        visited_down_slope = visited_down_slope || slp == slope::Downward;
+        if (this->explore_height(edge_idx+1, heights_stack, cycle, visited_down_slope)) {
+            heights_stack.pop_back();
+            return true;
+        }
+    }
+    if (heights_stack.size()>0) {
+        heights_stack.pop_back();
+    } 
+    return false;
+}
+
+bool Heighted_graph::is_cycle_oneshot(const Vec<Int_pair>& cycle){
+    Vec<int> heights_stack;
+    const auto [first_node, second_node] = cycle[0];
+    int first_node_heights_amount = this->h_change[first_node][second_node]->get_num_src_heights();
+    for (int node_height=0 ; node_height<first_node_heights_amount; node_height++) {
+        heights_stack.push_back(node_height);
+        if (this->explore_height(0, heights_stack, cycle, false)) {
+            return true;
+        }
+        heights_stack.clear();
+    }
+    return false;
+}
+
+
 /**
  * Tarjan's algorithm for finding strongly-connected components.
  * Reference: https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
