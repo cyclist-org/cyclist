@@ -23,6 +23,7 @@ private:
     // strongly connected component containing a down slope.
     // Use this pointer to avoid recomputing this
     bool* has_down_scc = NULL;
+    bool has_down_slope = false;
 
     std::mutex initialize_mutex;
 

@@ -708,7 +708,58 @@ void Heighted_graph::remove_down_edges_not_in_any_SCC() {
     printf("going over all SCCs took %ld us\n", (end-start).count());
 }
 
+bool Heighted_graph::is_flat_cycle_reachable_from(int node, Vec<int>* curr_path, bool* fresh_nodes) {
+    curr_path->push_back(node);
+    int num_nodes = this->num_nodes();
+    for (int neighbour=0; neighbour<num_nodes; neighbour++) {
+        if (fresh_nodes[neighbour] == false)
+        {
+            continue;
+        }
+        Sloped_relation* rel = this->h_change[node][neighbour];
+        if (rel == NULL || rel->has_downward_slope()) {
+            continue;
+        }
+        
+        if (find(curr_path->begin(), curr_path->end(), neighbour) != curr_path->end())
+        {
+            fresh_nodes[node] = false;
+            return true;
+        }
+        if (is_flat_cycle_reachable_from(neighbour, curr_path, fresh_nodes))
+        {
+            fresh_nodes[node] = false;
+            return true;
+        }
+    }
+    fresh_nodes[node] = false;
+    curr_path->pop_back();
+    return false;
+}
 
+bool Heighted_graph::has_flat_cycle() {
+    int num_nodes = this->num_nodes();
+
+    bool fresh_nodes[num_nodes];
+    for (int i = 0; i < num_nodes; i++)
+    {
+        fresh_nodes[i] = true;
+    }
+
+    for (int node = 0; node < num_nodes; node++)
+    {
+        if (fresh_nodes[node] == false)
+        {
+            continue;
+        }
+        Vec<int> visited;
+        if (this->is_flat_cycle_reachable_from(node, &visited, fresh_nodes))
+        {
+            return true;
+        }
+    }
+    return false;
+}
 
 //=============================================================
 // Setters

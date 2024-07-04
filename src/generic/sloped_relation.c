@@ -79,6 +79,7 @@ Sloped_relation::Sloped_relation(const Sloped_relation& R) {
         *(this->has_down_scc) = *(R.has_down_scc);
     }
 
+    this->has_down_slope = R.has_down_slope;
 }
 
 //==================================================================
@@ -149,6 +150,7 @@ void Sloped_relation::reset(void){
     if (has_down_scc != NULL) {
         free(has_down_scc);
     }
+    this->has_down_slope = false;
 
 }
 
@@ -271,6 +273,8 @@ bool Sloped_relation::add(int h1, int h2, slope s) {
     if (this->has_down_scc != NULL && !(*(this->has_down_scc))) {
         free(this->has_down_scc);
     }
+
+    this->has_down_slope = this->has_down_slope || s == slope::Downward;
 
     return true;
 }
@@ -718,16 +722,17 @@ bool Sloped_relation::has_downward_SCC(void) {
 }
 
 bool Sloped_relation::has_downward_slope() {
-    for (size_t src = 0; src < this->num_src_heights; src++)
-    {
-        for (size_t dst = 0; dst < this->num_dst_heights; dst++)
-        {
-            if(this->repr_matrix[src][dst] == Downward) {
-                return true;
-            }
-        }
-    }
-    return false;
+    // for (size_t src = 0; src < this->num_src_heights; src++)
+    // {
+    //     for (size_t dst = 0; dst < this->num_dst_heights; dst++)
+    //     {
+    //         if(this->repr_matrix[src][dst] == Downward) {
+    //             return true;
+    //         }
+    //     }
+    // }
+    // return false;
+    return this->has_down_slope;
 }
 
 //==================================================================

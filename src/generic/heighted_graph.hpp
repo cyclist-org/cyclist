@@ -114,6 +114,8 @@ private:
     );
     Vec<Int_pair> get_extended_nodes();
 
+    bool is_flat_cycle_reachable_from(int node, Vec<int>* curr_path, bool* fresh_nodes);
+
     bool explore_height(int edge_idx, Vec<int>& heights_stack, const Vec<Int_pair>& cycle, bool visited_down_slope);
 
     void remove_hchange(int source_idx, int source_h_idx, int sink_idx, int sink_h_idx, slope s);
@@ -151,6 +153,8 @@ public:
     void add_decrease(int source_node, int source_h, int sink_node, int sink_h);
 
     void remove_down_edges_not_in_any_SCC();
+
+    bool has_flat_cycle();
     
     bool calculate_SCCs_and_check_if_has_overlapping_cycles(Vec<Vec<int>*> &SCCs);
     bool does_node_SCC_contain_a_down_extended_SCC(Vec<int>* node_SCC);
