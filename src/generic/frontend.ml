@@ -45,7 +45,7 @@ module Make (Prover : Prover.S) = struct
         @ Soundcheck.arg_opts )
 
   let usage =
-    ref ("usage: " ^ Sys.argv.(0) ^ " [-p/d/s] [-l <file>] [-t/m/M/L <int>] [-spot|-rel-ext|-SD|-XSD [-ff][-scc][-idem][-min][-rel-stats]]")
+    ref ("usage: " ^ Sys.argv.(0) ^ " [-p/d/s] [-l <file>] [-t/m/M/L <int>] [-VLA|-SLA|-OR|-FWK|-legacy [-ff] [-scc] [-idem] [-min] [-rel-stats]]")
 
   let die msg spec_list usage =
     print_endline msg ;

@@ -1,6 +1,9 @@
 open Lib
 open Parsers
 
+open MParser
+open   MParser_RE
+
 type soundness_method =
   | RELATIONAL_OCAML
   | SPOT_LEGACY
@@ -47,27 +50,30 @@ let compose t1 t2 =
         t2 a )
     t1 IntPair.Set.empty
 
-(* An abstract node is a set of tags, and a list of successor node IDs along
-   with, for each successor, a list of the tag pairs and strictly progressing
-   tag pairs *)
-type abstract_node = Int.Set.t * (int * IntPair.Set.t * IntPair.Set.t) list
+(* An abstract node consists of:
+     - a flag indicating whether the node is a bud
+     - a set of tags
+     - a list of successor node IDs along with, for each successor,
+        a list of the tag pairs and strictly progressing tag pairs
+*)
+type abstract_node = bool * Int.Set.t * (int * IntPair.Set.t * IntPair.Set.t) list
 
 (* An abstract proof is a map from node IDs to abstract nodes *)
 type t = abstract_node Int.Map.t
 
-let get_tags n = fst n
+let get_tags (_, tags, _) = tags
 
-let get_subg n = snd n
+let get_subg (_, _, children) = children
 
 let is_leaf n = Blist.is_empty (get_subg n)
 
 let in_children child n =
   Blist.exists (fun (i, _, _) -> Int.equal i child) (get_subg n)
 
-let index_of_child child (_, subg) =
-  Blist.find_index (fun (i, _, _) -> Int.equal i child) subg
+let index_of_child child n =
+  Blist.find_index (fun (i, _, _) -> Int.equal i child) (get_subg n)
 
-let mk_abs_node tags succs tps_pair =
+let mk_abs_node ?(bud=false) tags succs tps_pair =
   let tags = Tags.to_ints tags in
   let subg =
     List.map2
@@ -81,7 +87,7 @@ let mk_abs_node tags succs tps_pair =
         (i, tps, tps') )
       succs tps_pair
   in
-  (tags, subg)
+  (bud, tags, subg)
 
 let build_proof nodes =
   Int.Map.of_list
@@ -95,7 +101,7 @@ let build_proof nodes =
                , IntPair.Set.of_list progpairs ) )
              premises
          in
-         (id, (Int.Set.of_list tags, List.rev premises)) )
+         (id, (false, Int.Set.of_list tags, List.rev premises)) )
        nodes)
 
 (* has one child and is not a self loop *)
@@ -115,38 +121,19 @@ let fathers_grandchild prf idx n =
           prf
   | _ -> invalid_arg "fathers_grandchild2"
 
-let pp_proof_node fmt n =
-  let aux fmt (tags, subg) =
-    Format.fprintf fmt "tags=%a " Int.Set.pp tags ;
-    if Blist.is_empty subg then Format.pp_print_string fmt "leaf"
-    else
-      Blist.pp pp_semicolonsp
-        (fun fmt (i, tv, tp) ->
-          Format.fprintf fmt "(goal=%a, valid=%a, prog=%a)" Format.pp_print_int
-            i IntPair.Set.pp tv IntPair.Set.pp tp )
-        fmt subg
-  in
-  Format.fprintf fmt "@[%a@]" aux n
-
-let pp fmt prf =
-  Format.open_vbox 0 ;
-  Int.Map.iter
-    (fun idx n -> Format.fprintf fmt "%i: %a@\n" idx pp_proof_node n)
-    prf ;
-  Format.close_box ()
-
 let remove_dead_nodes prf' =
   let prf = ref prf' in
   let process_node child par_idx n =
     if not (in_children child n) then ()
     else
       let newparent =
-        let tags, subg = n in
+        let bud, tags, subg = n in
         match subg with
         | [_] ->
-          (tags, [])
+          (* If we have removed the only child of this node, it can no longer be a bud *)
+          (false, tags, [])
         | _ ->
-          (tags, Blist.remove_nth (index_of_child child n) subg)
+          (bud, tags, Blist.remove_nth (index_of_child child n) subg)
       in
       prf := Int.Map.add par_idx newparent !prf
   in
@@ -169,7 +156,7 @@ let fuse_single_nodes prf' init =
   let process_node child grand_child tv tp par_idx n =
     if not (in_children child n) then ()
     else
-      let par_tags, par_subg = n in
+      let bud, par_tags, par_subg = n in
       let pos = index_of_child child n in
       let _, par_tv, par_tp = List.nth par_subg pos in
       let newsubg =
@@ -180,10 +167,10 @@ let fuse_single_nodes prf' init =
               [compose par_tp tp; compose par_tv tp; compose par_tp tv] )
           pos par_subg
       in
-      prf := Int.Map.add par_idx (par_tags, newsubg) !prf
+      prf := Int.Map.add par_idx (bud, par_tags, newsubg) !prf
   in
   let fuse_node idx = function
-    | tags, [(child, tv, tp)] ->
+    | bud, tags, [(child, tv, tp)] ->
         Int.Map.iter (fun p n -> process_node idx child tv tp p n) !prf ;
         prf := Int.Map.remove idx !prf
     | _ -> invalid_arg "fuse_node"
@@ -251,6 +238,421 @@ let valid prf init =
         (get_subg n))
     prf
 
+let size prf =
+  Int.Map.cardinal prf
+let trace_width prf =
+  Int.Map.fold
+    (fun _ (_, tags, _) acc -> Int.max acc (Int.Set.cardinal tags))
+    (prf)
+    (0)
+let num_buds prf =
+  Int.Map.fold
+    (fun _ (bud, _, _) acc -> if bud then acc + 1 else acc)
+    (prf)
+    (0)
+
+(* Module type for concrete representations of abstract proofs *)
+module type Representation = sig
+  val pp : Format.formatter -> t -> unit
+  val to_string : t -> string
+  val parse : (t, 's) MParser.parser
+end
+
+let parse_tagpairs s =
+  (Tokens.braces
+    (Tokens.comma_sep
+      (Tokens.parens
+        (Tokens.decimal >>= (fun t ->
+         Tokens.comma >>
+         Tokens.decimal |>> (fun t' ->
+         (t, t'))))))) s
+
+module NodeList = struct
+
+  let pp_proof_node fmt n =
+    let aux fmt (bud, tags, subg) =
+      Format.fprintf fmt "tags=%a " Int.Set.pp tags ;
+      if Blist.is_empty subg then Format.pp_print_string fmt "leaf"
+      else
+        if bud then Format.pp_print_string fmt "bud " ;
+        Blist.pp pp_commasp
+          (fun fmt (i, tv, tp) ->
+            Format.fprintf fmt
+              "(goal=%a, valid=%a, prog=%a)"
+                Format.pp_print_int i
+                IntPair.Set.pp tv
+                IntPair.Set.pp tp)
+          fmt subg
+    in
+    Format.fprintf fmt "@[%a@]" aux n
+
+  let pp fmt prf =
+    Format.open_vbox 0 ;
+    Int.Map.iter
+      (fun idx n -> Format.fprintf fmt "%i: %a@\n" idx pp_proof_node n)
+      prf ;
+    Format.fprintf fmt ";" ;
+    Format.close_box ()
+
+  let to_string = mk_to_string pp
+
+  let parse_fieldname name s =
+    (optional (Tokens.symbol name >> Tokens.symbol "=")) s
+  let parse_tags s =
+    (parse_fieldname "tags" >>
+     Tokens.braces (Tokens.comma_sep Tokens.decimal) |>> Int.Set.of_list) s
+  let parse_subg s =
+    (Tokens.parens (
+      (parse_fieldname "goal" >>
+       Tokens.decimal << Tokens.comma >>= (fun id ->
+       parse_fieldname "valid" >>
+       parse_tagpairs << Tokens.comma >>= (fun valid ->
+       parse_fieldname "prog" >>
+       parse_tagpairs |>> (fun prog ->
+       (id, IntPair.Set.of_list valid, IntPair.Set.of_list prog)))))
+    )) s
+  let parse_line s =
+    (
+      Tokens.decimal >>= (fun id ->
+      Tokens.colon >>
+      parse_tags >>= (fun tags ->
+      (Tokens.symbol "leaf" >>$ (id, (false, tags, [])))
+        <|>
+      (Tokens.symbol "bud" >> parse_subg |>> (fun subg ->
+       (id, (true, tags, [subg]))))
+        <|>
+      (Tokens.comma_sep parse_subg |>> (fun subg ->
+       (id, (false, tags, subg))) )
+      ))
+    ) s
+  let parse s =
+    (many parse_line << Tokens.semi |>> Int.Map.of_list) s
+
+end
+
+include (NodeList : Representation)
+
+module EdgeList = struct
+
+  let pp_line fmt (src, dst, backlink, prog, nonprog) =
+    Format.fprintf fmt "@[%i %s %i : %a, %a@]"
+      src
+      (if backlink then "-->" else "->")
+      dst
+      IntPair.Set.pp prog
+      IntPair.Set.pp nonprog
+
+  let pp fmt prf =
+    Format.open_vbox 0 ;
+    Int.Map.iter
+      (fun idx (bud, _, subg) ->
+        List.iter
+          (fun (dst, tv, tp) ->
+            Format.fprintf fmt "%a@\n"
+              pp_line
+              (idx, dst, bud, tp, IntPair.Set.diff tv tp))
+          subg)
+      prf ;
+    Format.fprintf fmt ";" ;
+    Format.close_box ()
+
+  let to_string = mk_to_string pp
+
+  let parse_line s =
+    (
+      Tokens.decimal >>= (fun src ->
+      ((attempt (Tokens.symbol "->") >>$ false)
+            <|> (Tokens.symbol "-->" >>$ true)) >>= (fun backlink ->
+      Tokens.decimal << Tokens.colon >>= (fun dest ->
+      parse_tagpairs << Tokens.comma >>= (fun prog ->
+      parse_tagpairs |>> (fun nonprog ->
+      let prog = IntPair.Set.of_list prog in
+      let nonprog = IntPair.Set.of_list nonprog in
+      (src, dest, backlink, prog, nonprog))))))
+    ) s
+
+    let mk_prf lines =
+      let open Int.Map in
+      let add_entry nodemap (src, dest, backlink, prog, nonprog) =
+        let all = IntPair.Set.union prog nonprog in
+        let src_tags =
+          IntPair.Set.fold (fun (t,_) ts -> Int.Set.add t ts) all Int.Set.empty in
+        let dest_tags =
+          IntPair.Set.fold (fun (_,t) ts -> Int.Set.add t ts) all Int.Set.empty in
+        let () =
+          assert (
+            match (find_opt src nodemap) with
+            | None ->
+              true
+            | Some (_, _, subg) ->
+              not (List.exists (fun (dest', _, _) -> Int.equal dest dest') subg)
+          ) in
+        let nodemap =
+          update
+            src
+            (function
+              | None ->
+                Some (backlink, src_tags, [(dest, all, prog)])
+              | Some (bud, heights, subg) ->
+                let heights = Int.Set.union heights src_tags in
+                Some (bud || backlink, heights, List.rev ((dest, all, prog) :: subg)))
+            nodemap in
+        let nodemap =
+          update
+            dest
+            (function
+              | None ->
+                Some (false, dest_tags, [])
+              | Some (bud, heights, subg) ->
+                let heights = Int.Set.union heights dest_tags in
+                Some (bud, heights, subg))
+            nodemap in
+        nodemap in
+      List.fold_left add_entry empty lines
+
+    let parse s =
+      (many parse_line << Tokens.semi |>> mk_prf) s
+
+end
+
+module JSON = struct
+
+  let pp_heights fmt heights =
+    Format.fprintf fmt "\"Height\" : @[[%a]@]"
+      (Blist.pp pp_commasp Int.pp) (Int.Set.to_list heights)
+
+  let pp_buds fmt buds =
+    Format.fprintf fmt "\"Bud\" : @[[%a]@]"
+      (Blist.pp pp_commasp Int.pp) buds
+
+  let pp_nodes fmt nodes =
+    let pp_node fmt (idx, heights) =
+      Format.fprintf fmt "[%i, @[[%a]@]]"
+        idx
+        (Blist.pp pp_commasp Int.pp) (Int.Set.to_list heights) in
+    let aux fmt =
+      function
+      | []    ->
+        Format.fprintf fmt "@]"
+      | nodes ->
+        Format.fprintf fmt "@;" ;
+        Blist.pp (fun fmt () -> Format.fprintf fmt ",@;") pp_node fmt nodes ;
+        Format.fprintf fmt "@]@;" in
+    Format.fprintf fmt "@[<v 4>\"Node\" : [%a]" aux nodes
+
+  let pp_edges fmt edges =
+    let pp_slope fmt (src, dst, slope) =
+      Format.fprintf fmt "[%i,%i,%i]" src dst slope in
+    let pp_edge fmt (src, dst, slopes) =
+      Format.fprintf fmt "[[%i,%i],[@[%a@]]]"
+        src
+        dst
+        (Blist.pp pp_commasp pp_slope) slopes in
+    let aux fmt =
+      function
+      | []    ->
+        Format.fprintf fmt "@]"
+      | edges ->
+        Format.fprintf fmt "@;" ;
+        Blist.pp (fun fmt () -> Format.fprintf fmt ",@;") pp_edge fmt edges ;
+        Format.fprintf fmt "@]@;" in
+    Format.fprintf fmt "@[<v 4>\"Edge\" : [%a]" aux edges
+
+  let pp fmt prf =
+    let nodes, buds =
+      Int.Map.fold
+        (fun idx (bud, heights, _) (nodes, buds) ->
+          let nodes = (idx, heights) :: nodes in
+          let buds = if bud then idx :: buds else buds in
+          nodes, buds)
+        prf
+        (Blist.empty, Blist.empty) in
+    let nodes = List.rev nodes in
+    let buds = List.rev buds in
+    let heights =
+      List.fold_left
+        (fun all_heights (_, heights) -> Int.Set.union heights all_heights)
+        Int.Set.empty
+        nodes in
+    let edges =
+      List.concat
+        (List.rev
+          (Int.Map.fold
+            (fun src (_, _, subg) all_edges ->
+              let edges =
+                List.fold_left
+                  (fun edges (dst, tv, tp) ->
+                    (* TODO: get rid of the magic "slope" numbers '0' and '1' *)
+                    let prog =
+                      IntPair.Set.map_to_list (fun (t, t') -> (t, t', 1)) tp in
+                    let nonprog =
+                      let nonprog = IntPair.Set.diff tv tp in
+                      IntPair.Set.map_to_list (fun (t, t') -> (t, t', 0)) nonprog in
+                    (src, dst, nonprog @ prog) :: edges)
+                  Blist.empty
+                  subg
+              in
+              (List.rev edges) :: all_edges)
+            prf
+            Blist.empty))
+    in
+    Format.fprintf fmt "@[<v 4>{@;%a,@;%a,@;%a,@;%a@.}@]"
+      pp_nodes nodes
+      pp_buds buds
+      pp_edges edges
+      pp_heights heights
+
+  let to_string = mk_to_string pp
+
+  let parse_element_id s =
+    (((Tokens.symbol "Node") >>$ `Nodes)
+      <|>
+     ((Tokens.symbol "Bud") >>$ `Buds)
+      <|>
+     ((Tokens.symbol "Edge") >>$ `Edges)
+      <|>
+     ((Tokens.symbol "Height") >>$ `Heights)) s
+
+  let parse_element s =
+    let parse_int_list s =
+      (Tokens.comma_sep Tokens.decimal) s in
+    let parse_int_pair s =
+      (
+        Tokens.squares (
+        Tokens.decimal << Tokens.comma >>= (fun x ->
+        Tokens.decimal |>> (fun y ->
+        (x, y))))
+      ) s in
+    let parse_slope_triple s =
+      (
+        Tokens.squares (
+        Tokens.decimal << Tokens.comma >>= (fun x ->
+        Tokens.decimal << Tokens.comma >>= (fun y ->
+        Tokens.decimal |>> (fun z ->
+        (x, y, z)))))
+      ) s in
+    let parse_node s =
+      (
+        Tokens.squares (
+        Tokens.decimal << Tokens.comma >>= (fun node_id ->
+        (Tokens.squares parse_int_list) |>> (fun heights ->
+        (node_id, Int.Set.of_list heights))))
+      ) s in
+    let parse_edge s =
+      (
+        Tokens.squares (
+        parse_int_pair << Tokens.comma >>= (fun edge ->
+        Tokens.squares (Tokens.comma_sep (parse_slope_triple)) |>> (fun slopes ->
+        (edge, slopes))))
+      ) s in
+    ((between (char '"') (char '"') parse_element_id <?> "Node | Bud | Edge | Height")
+        << spaces << Tokens.colon >>= (fun id ->
+     Tokens.squares
+      (match id with
+       | `Nodes ->
+          Tokens.comma_sep (spaces >> parse_node << spaces)
+          |>> (fun nodes -> `Nodes nodes)
+       | `Buds ->
+         parse_int_list
+         |>> (fun buds -> `Buds buds)
+       | `Edges ->
+         Tokens.comma_sep (spaces >> parse_edge << spaces)
+         |>> (fun edges -> `Edges edges)
+       | `Heights ->
+         parse_int_list
+         |>> (fun heights -> `Heights heights))
+    )) s
+
+  let parse s =
+    let mk_prf nodes buds edges =
+      (* Create bindings for all nodes, with their heights, and empty lists for:
+            - child node IDs
+            - tag pairs for corresponding edge *)
+      let abs_nodes =
+        List.fold_left
+          (fun abs_nodes (node, heights) ->
+            if Int.Map.mem node abs_nodes then
+              let () =
+                prerr_endline
+                  (Format.sprintf
+                    "Warning: ignoring duplicate node declaration: %i" node) in
+              abs_nodes
+            else
+              let bud = List.mem node buds in
+              Int.Map.add node (bud, heights, [], []) abs_nodes)
+          (Int.Map.empty)
+          (nodes) in
+      (* Now iterate over edges to add information to the map *)
+      let abs_nodes =
+        List.fold_left
+          (fun abs_nodes ((src, dest), slopes) ->
+            Int.Map.update
+              (src)
+              (Option.map
+                (fun ((bud, heights, succs, slopes') as binding) ->
+                  (* Duplicates in this list are not handled by the
+                     proof minimisation procedure *)
+                  if List.mem dest succs then
+                    let () =
+                      prerr_endline
+                        (Format.sprintf
+                          "Warning: ignoring duplicate edge declaration (%i, %i)"
+                          src dest) in
+                    binding
+                  else
+                    let tps, prog_tps =
+                      List.fold_left
+                        (fun (tps, prog_tps) (src_height, dst_height, slope) ->
+                          let tp = (src_height, dst_height) in
+                          let tps = tp :: tps in
+                          (* TODO: get rid of this magic number '1' *)
+                          if Int.equal slope 1
+                            then (tps, tp::prog_tps)
+                            else (tps, prog_tps))
+                        ([], [])
+                        (slopes) in
+                    let tps = IntPair.Set.of_list tps in
+                    let prog_tps = IntPair.Set.of_list prog_tps in
+                    (bud, heights, dest::succs, (tps, prog_tps)::slopes')))
+              (abs_nodes))
+          (abs_nodes)
+          (edges) in
+      (* Now transform the bindings into the right shape *)
+      Int.Map.map
+        (fun (bud, heights, succs, slopes) ->
+          let subg =
+            List.map2
+              (fun subg (all_tps, prog_tps) -> (subg, all_tps, prog_tps))
+              succs
+              slopes in
+          (bud, heights, subg))
+        (abs_nodes) in
+    let mk_prf =
+      function
+      | (_, Some nodes, buds, Some edges) ->
+        let buds = Option.dest Blist.empty Fun.id buds in
+        mk_prf nodes buds edges
+      | _ ->
+        invalid_arg "Missing information!" in
+    let fold_elem (heights, nodes, buds, edges) =
+      function
+      | `Heights heights ->
+        (Some heights, nodes, buds, edges)
+      | `Nodes nodes ->
+        (heights, Some nodes, buds, edges)
+      | `Buds buds ->
+        (heights, nodes, Some buds, edges)
+      | `Edges edges ->
+        (heights, nodes, buds, Some edges) in
+    (Tokens.braces (Tokens.comma_sep parse_element) |>> (fun elems ->
+     mk_prf (List.fold_left fold_elem (None, None, None, None) elems))) s
+
+end
+
+(* **************** *)
+(* Soundness checks *)
+(* **************** *)
+
 module LegacyCheck = struct
 
   external create_aut : int -> unit = "create_aut"
@@ -273,10 +675,10 @@ module LegacyCheck = struct
   let check_proof ?(init=0) p =
     Stats.MC.call () ;
     let create_tags i n = Int.Set.iter (tag_vertex i) (get_tags n) in
-    let create_succs i (_, l) =
+    let create_succs i (_, _, l) =
       Blist.iter (fun (j, _, _) -> set_successor i j) l
     in
-    let create_trace_pairs i (_, l) =
+    let create_trace_pairs i (_, _, l) =
       let do_tag_transitions (j, tvs, tps) =
         IntPair.Set.iter (fun (k, m) -> set_trace_pair i j k m) tvs ;
         IntPair.Set.iter (fun (k, m) -> set_progress_pair i j k m) tps
@@ -651,7 +1053,7 @@ module RelationalCheck = struct
     Stats.MC.call () ;
     let to_height_graph p =
       Int.Map.fold
-        (fun n (_, succs) (nodes, slopes) ->
+        (fun n (_, _, succs) (nodes, slopes) ->
           let nodes = Int.Set.add n nodes in
           let slopes =
             List.fold_left
@@ -765,13 +1167,13 @@ module RelationalCheck = struct
               else add_stay n h n' h')
           (tps) ;
         in
-      let add_heights n (tags, _) =
+      let add_heights n (_, tags, _) =
         Int.Set.iter (add_height n) tags in
-      let add_edges n (_, succs) =
+      let add_edges n (_, _, succs) =
         List.iter (process_succ n) succs in
       Stats.MC.call () ;
       debug (fun () -> "Checking soundness starts...") ;
-      create_hgraph (Lib.Int.Map.cardinal p) ;
+      create_hgraph (size p) ;
       Int.Map.iter add_heights p ;
       Int.Map.iter add_edges p ;
       (* debug (fun () -> "Built height graph") ; *)
@@ -810,6 +1212,67 @@ include (RelationalCheck.Ext : sig
   val do_stats : bool ref
 end)
 
+(* Which concrete representation to use for abstract proofs *)
+type repr_t =
+| NODE_LIST
+| EDGE_LIST
+| JSON
+
+let repr = ref NODE_LIST
+
+let set_repr =
+  function
+  | "node" ->
+    repr := NODE_LIST
+  | "edge" ->
+    repr := EDGE_LIST
+  | "json" ->
+    repr := JSON
+  | _ ->
+    invalid_arg "Soundcheck.set_repr"
+
+let representation () =
+  match !repr with
+  | NODE_LIST ->
+    (module NodeList : Representation)
+  | EDGE_LIST ->
+    (module EdgeList : Representation)
+  | JSON ->
+    (module JSON : Representation)
+
+let repr_suf () =
+  match !repr with
+  | NODE_LIST ->
+    ".node"
+  | EDGE_LIST ->
+    ".edge"
+  | JSON ->
+    ".json"
+
+(* Config for dumping abstract proof graphs to file *)
+let dump_graphs = ref false
+let graph_dump_dir = ref Filename.current_dir_name
+let graph_filename_prefix = ref String.empty
+let next_graph_id =
+  let graph_id = ref 0 in
+  fun () ->
+    let id = !graph_id in
+    let () = graph_id := !graph_id + 1 in
+    id
+let mk_graph_filename_stub id minimised =
+  let base = "graph" in
+  let base =
+    if not (String.equal !graph_filename_prefix String.empty) then
+      base ^ "-" ^ !graph_filename_prefix
+    else
+      base in
+  let base = Format.sprintf "%s-%010i" base id in
+  let base =
+    Format.sprintf "%s%s"
+      base
+      (if minimised then ".minimised" else String.empty) in
+  Filename.concat !graph_dump_dir base
+
 let arg_opts =
   [
     ("-legacy", Arg.Unit use_legacy, ": use legacy Spot (VLA) encoding to verify pre-proof validity") ;
@@ -830,6 +1293,10 @@ let arg_opts =
     ("-rel-stats", Arg.Set do_stats, ": print out profiling stats for the relation-based validity check") ;
     ("-print-paut", Arg.Set LegacyCheck.print_paut, ": print the proof automaton in HOA format" ) ;
     ("-print-taut", Arg.Set LegacyCheck.print_taut, ": print the trace automaton in HOA format" ) ;
+    ("--dump-graphs", Arg.Set dump_graphs, ": dump abstract proof graphs to file") ;
+    ("--graph-dir", Arg.Set_string graph_dump_dir, ": directory for storing abstract proof graphs (default: current directory)") ;
+    ("--graph-prefix", Arg.Set_string graph_filename_prefix, ": filename prefix for dumping abstract proof graphs") ;
+    ("-R", Arg.Symbol (["node";"edge";"json"], set_repr), ": the concrete representation to use for abstract proof graphs (node list [default], edge list, or JSON)") ;
   ]
 
 module CheckCache = Hashtbl
@@ -837,7 +1304,19 @@ module CheckCache = Hashtbl
 let ccache = CheckCache.create 1000
 (* let limit = ref 1 *)
 
+
 let check_proof ?(init=0) ?(minimize=true) prf =
+  let module Repr = (val representation ()) in
+  let debug_output prf =
+    begin
+      debug (fun _ -> Repr.to_string prf) ;
+      debug (fun _ -> Format.sprintf "Number of proof nodes: %i" (size prf)) ;
+      debug (fun _ -> Format.sprintf "Number of buds: %i" (num_buds prf)) ;
+      debug (fun _ -> Format.sprintf "Trace width: %i" (trace_width prf))
+    end in
+  let prf_id = next_graph_id () in
+  let () = debug (fun _ -> Format.sprintf "Proof ID: %i" prf_id) in
+  let () = debug_output prf in
   if (Int.Map.is_empty prf) then
     true
   else
@@ -846,60 +1325,85 @@ let check_proof ?(init=0) ?(minimize=true) prf =
         pp Format.std_formatter prf ;
         assert false )
     in
-    let aprf =
+    let prf' =
       if minimize
-        then let () = Stats.Minimization.call() in
+        then
+          let () = Stats.Minimization.call() in
           let prf = minimize_abs_proof prf init in
           let () = Stats.Minimization.end_call() in
+          let () = debug (fun _ -> "Minimized proof:") in
+          let () = debug_output prf in
           prf
-        else prf in
-    if (Int.Map.is_empty aprf) then
+        else
+          prf in
+    if (Int.Map.is_empty prf') then
       true
     else
       let () =
-        if not (valid aprf init) then (
-          pp Format.std_formatter aprf ;
-          assert false )
-      in
+        if not (valid prf' init) then (
+          pp Format.std_formatter prf' ;
+          assert false ) in
+      let () =
+        if !dump_graphs && minimize then
+          (* Output original proof to file *)
+          let out_file = mk_graph_filename_stub prf_id false in
+          let c = open_out (out_file ^ (repr_suf ())) in
+          let () =
+            begin
+              output_string c (Repr.to_string prf) ;
+              close_out_noerr c ;
+            end in
+          let c = open_out (out_file ^ ".stats") in
+          begin
+            Printf.fprintf c "Number of proof nodes: %i\n" (size prf) ;
+            Printf.fprintf c "Number of buds: %i\n" (num_buds prf) ;
+            Printf.fprintf c "Trace width: %i\n" (trace_width prf) ;
+            close_out_noerr c ;
+          end in
       try
-        debug (fun _ -> mk_to_string pp prf) ;
-        debug (fun _ -> "Minimized proof:\n" ^ mk_to_string pp aprf) ;
-        debug (fun _ -> "Number of proof nodes: " ^ string_of_int (Int.Map.cardinal aprf)) ;
-        debug (fun _ ->
-          let width =
-            Int.Map.fold
-              (fun _ (tags, _) acc -> Int.max acc (Int.Set.cardinal tags))
-              aprf
-              0 in
-          "Trace width: " ^ string_of_int width) ;
         Stats.MCCache.call () ;
-        let r = CheckCache.find ccache aprf in
+        let is_valid = CheckCache.find ccache prf' in
         Stats.MCCache.end_call () ;
         Stats.MCCache.hit () ;
         let () =
           debug (fun _ ->
               "Found soundness result in the cache: "
-              ^ if r then "OK" else "NOT OK" )
+              ^ if is_valid then "OK" else "NOT OK" )
         in
-        r
+        is_valid
       with Not_found ->
         Stats.MCCache.end_call () ;
         Stats.MCCache.miss () ;
-        let r =
+        let () =
+          if (!dump_graphs) then
+            let out_file = mk_graph_filename_stub prf_id minimize in
+            let c = open_out (out_file ^ (repr_suf ())) in
+            let () =
+              begin
+                output_string c (Repr.to_string prf') ;
+                close_out_noerr c ;
+              end in
+            let c = open_out (out_file ^ ".stats") in
+            begin
+              Printf.fprintf c "Number of proof nodes: %i\n" (size prf') ;
+              Printf.fprintf c "Number of buds: %i\n" (num_buds prf') ;
+              Printf.fprintf c "Trace width: %i\n" (trace_width prf') ;
+              close_out_noerr c ;
+            end in
+        let is_valid =
           match !soundness_method with
           | SPOT_LEGACY ->
-            LegacyCheck.check_proof ~init aprf
+            LegacyCheck.check_proof ~init prf'
           | RELATIONAL_OCAML ->
-            RelationalCheck.check_proof aprf
+            RelationalCheck.check_proof prf'
           | _ ->
-            RelationalCheck.Ext.check_proof aprf in
+            RelationalCheck.Ext.check_proof prf' in
         Stats.MCCache.call () ;
-        CheckCache.add ccache aprf r ;
+        CheckCache.add ccache prf' is_valid ;
         Stats.MCCache.end_call () ;
         (* if CheckCache.length ccache > !limit then                                          *)
         (*   begin                                                                            *)
         (*     debug (fun () -> "Soundness cache passed limit: " ^ (string_of_int !limit)) ;  *)
         (*     limit := 10 * !limit                                                           *)
         (*   end ;                                                                            *)
-        r
-        
+        is_valid
