@@ -2,6 +2,9 @@ let do_debug = ref false
 
 let debug f = if !do_debug then print_endline (f ()) else ()
 
+(* A string specified on the command line to identify the current Cyclist execution run *)
+let run_identifier = ref String.empty
+
 (* boost::hash_combine *)
 (* size_t hash_combine( size_t lhs, size_t rhs ) {     *)
 (*   lhs^= rhs + 0x9e3779b9 + (lhs << 6) + (lhs >> 2); *)
@@ -36,7 +39,7 @@ module HashtablePrinter = struct
   module type S = sig
     type 'a t
     type key
-    val pp : 
+    val pp :
       (Format.formatter -> key -> unit) -> (Format.formatter -> 'a -> unit)
         -> Format.formatter -> 'a t -> unit
     val to_string :
@@ -45,7 +48,7 @@ module HashtablePrinter = struct
   end
 
   module Make (H : Hashtbl.S)
-    : S with type 'a t := 'a H.t with type key := H.key = 
+    : S with type 'a t := 'a H.t with type key := H.key =
   struct
     type 'a t = 'a H.t
     type key = H.key

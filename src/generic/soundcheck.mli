@@ -71,9 +71,6 @@ val arg_opts : (string * Arg.spec * string) list
 val check_proof : ?init:int -> ?minimize:bool -> t -> bool
 (** Validate, minimise, check soundness of proof/graph and memoise. *)
 
-val pp : Format.formatter -> t -> unit
-(** Pretty print abstract proof. As alias for [NodeList.pp] *)
-
 (** Module type for concrete representations of abstract proofs *)
 module type Representation = sig
   val pp : Format.formatter -> t -> unit
@@ -84,11 +81,12 @@ module type Representation = sig
   (** Parse an abstract proof from the concrete representation *)
 end
 
-val representation : unit -> (module Representation)
-(** The concrete representation to be used *)
-
 (* Concrete representations for abstract proofs *)
 
 module NodeList : Representation
 module EdgeList : Representation
 module JSON : Representation
+
+(** Parse and pretty print functions from the representation selected by the
+    command line arguments. *)
+include Representation

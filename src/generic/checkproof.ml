@@ -96,10 +96,9 @@ let process_stdin parser =
 let () =
   let () = gc_setup () in
   let () = Format.set_margin (Sys.command "exit $(tput cols)") in
-  let module Repr : Soundcheck.Representation = (val Soundcheck.representation ()) in
   let parser =
     sep_end_by
-      (spaces >> Repr.parse << spaces)
+      (spaces >> parse << spaces)
       ((skip Tokens.semi << spaces) <|> spaces) in
   match !input_files with
   | [] ->

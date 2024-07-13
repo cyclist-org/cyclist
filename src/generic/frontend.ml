@@ -35,6 +35,7 @@ module Make (Prover : Prover.S) = struct
           , ": set both depths to <int>." )
         ; ("-p", Arg.Set show_proof, ": show proof")
         ; ("-d", Arg.Set do_debug, ": print debug messages")
+        ; ("--id", Arg.Set_string run_identifier, ": identifier for the execution, used in debug output" )
         ; ("-s", Arg.Set Stats.do_statistics, ": print statistics")
         ; ("-l", Arg.Set_string latex_path, ": write proofs to <file>")
         ; ( "-t"

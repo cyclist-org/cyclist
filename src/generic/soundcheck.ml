@@ -291,7 +291,6 @@ module NodeList = struct
     Int.Map.iter
       (fun idx n -> Format.fprintf fmt "%i: %a@\n" idx pp_proof_node n)
       prf ;
-    Format.fprintf fmt ";" ;
     Format.close_box ()
 
   let to_string = mk_to_string pp
@@ -326,7 +325,7 @@ module NodeList = struct
       ))
     ) s
   let parse s =
-    (many parse_line << Tokens.semi |>> Int.Map.of_list) s
+    (many1 parse_line |>> Int.Map.of_list) s
 
 end
 
@@ -353,7 +352,6 @@ module EdgeList = struct
               (idx, dst, bud, tp, IntPair.Set.diff tv tp))
           subg)
       prf ;
-    Format.fprintf fmt ";" ;
     Format.close_box ()
 
   let to_string = mk_to_string pp
@@ -411,7 +409,7 @@ module EdgeList = struct
       List.fold_left add_entry empty lines
 
     let parse s =
-      (many parse_line << Tokens.semi |>> mk_prf) s
+      (many1 parse_line |>> mk_prf) s
 
 end
 
@@ -648,6 +646,71 @@ module JSON = struct
      mk_prf (List.fold_left fold_elem (None, None, None, None) elems))) s
 
 end
+
+(* Which concrete representation to use for abstract proofs *)
+type repr_t =
+| NODE_LIST
+| EDGE_LIST
+| JSON
+
+let repr = ref NODE_LIST
+
+let set_repr =
+  function
+  | "node" ->
+    repr := NODE_LIST
+  | "edge" ->
+    repr := EDGE_LIST
+  | "json" ->
+    repr := JSON
+  | _ ->
+    invalid_arg "Soundcheck.set_repr"
+
+let pp fmt prf =
+  match !repr with
+  | NODE_LIST ->
+    NodeList.pp fmt prf
+  | EDGE_LIST ->
+    EdgeList.pp fmt prf
+  | JSON ->
+    JSON.pp fmt prf
+
+let to_string prf =
+  match !repr with
+  | NODE_LIST ->
+    NodeList.to_string prf
+  | EDGE_LIST ->
+    EdgeList.to_string prf
+  | JSON ->
+    JSON.to_string prf
+
+let parse s =
+  match !repr with
+  | NODE_LIST ->
+    NodeList.parse s
+  | EDGE_LIST ->
+    EdgeList.parse s
+  | JSON ->
+    JSON.parse s
+
+let representation () =
+  match !repr with
+  | NODE_LIST ->
+    (module NodeList : Representation)
+  | EDGE_LIST ->
+    (module EdgeList : Representation)
+  | JSON ->
+    (module JSON : Representation)
+
+let repr_suf () =
+  match !repr with
+  | NODE_LIST ->
+    ".node"
+  | EDGE_LIST ->
+    ".edge"
+  | JSON ->
+    ".json"
+
 
 (* **************** *)
 (* Soundness checks *)
@@ -1212,66 +1275,28 @@ include (RelationalCheck.Ext : sig
   val do_stats : bool ref
 end)
 
-(* Which concrete representation to use for abstract proofs *)
-type repr_t =
-| NODE_LIST
-| EDGE_LIST
-| JSON
-
-let repr = ref NODE_LIST
-
-let set_repr =
-  function
-  | "node" ->
-    repr := NODE_LIST
-  | "edge" ->
-    repr := EDGE_LIST
-  | "json" ->
-    repr := JSON
-  | _ ->
-    invalid_arg "Soundcheck.set_repr"
-
-let representation () =
-  match !repr with
-  | NODE_LIST ->
-    (module NodeList : Representation)
-  | EDGE_LIST ->
-    (module EdgeList : Representation)
-  | JSON ->
-    (module JSON : Representation)
-
-let repr_suf () =
-  match !repr with
-  | NODE_LIST ->
-    ".node"
-  | EDGE_LIST ->
-    ".edge"
-  | JSON ->
-    ".json"
-
 (* Config for dumping abstract proof graphs to file *)
 let dump_graphs = ref false
 let graph_dump_dir = ref Filename.current_dir_name
-let graph_filename_prefix = ref String.empty
 let next_graph_id =
   let graph_id = ref 0 in
   fun () ->
     let id = !graph_id in
     let () = graph_id := !graph_id + 1 in
     id
-let mk_graph_filename_stub id minimised =
-  let base = "graph" in
+let mk_graph_name id minimised =
+  let base = !Lib.run_identifier in
   let base =
-    if not (String.equal !graph_filename_prefix String.empty) then
-      base ^ "-" ^ !graph_filename_prefix
+    if not (String.equal base String.empty) then
+      base ^ ".graph"
     else
-      base in
+      base ^ "graph" in
   let base = Format.sprintf "%s-%010i" base id in
   let base =
     Format.sprintf "%s%s"
       base
       (if minimised then ".minimised" else String.empty) in
-  Filename.concat !graph_dump_dir base
+  base
 
 let arg_opts =
   [
@@ -1295,7 +1320,6 @@ let arg_opts =
     ("-print-taut", Arg.Set LegacyCheck.print_taut, ": print the trace automaton in HOA format" ) ;
     ("--dump-graphs", Arg.Set dump_graphs, ": dump abstract proof graphs to file") ;
     ("--graph-dir", Arg.Set_string graph_dump_dir, ": directory for storing abstract proof graphs (default: current directory)") ;
-    ("--graph-prefix", Arg.Set_string graph_filename_prefix, ": filename prefix for dumping abstract proof graphs") ;
     ("-R", Arg.Symbol (["node";"edge";"json"], set_repr), ": the concrete representation to use for abstract proof graphs (node list [default], edge list, or JSON)") ;
   ]
 
@@ -1306,15 +1330,22 @@ let ccache = CheckCache.create 1000
 
 
 let check_proof ?(init=0) ?(minimize=true) prf =
-  let module Repr = (val representation ()) in
+  let prf_id = next_graph_id () in
   let debug_output prf =
     begin
-      debug (fun _ -> Repr.to_string prf) ;
+      debug (fun _ -> to_string prf) ;
       debug (fun _ -> Format.sprintf "Number of proof nodes: %i" (size prf)) ;
       debug (fun _ -> Format.sprintf "Number of buds: %i" (num_buds prf)) ;
       debug (fun _ -> Format.sprintf "Trace width: %i" (trace_width prf))
     end in
-  let prf_id = next_graph_id () in
+  let debug_stats prf minimised is_valid =
+    debug (fun _ ->
+      Format.sprintf "Proof summary: %s, %i, %i, %i, %s"
+        (mk_graph_name prf_id minimised)
+        (size prf)
+        (num_buds prf)
+        (trace_width prf)
+        (if is_valid then "VALID" else "INVALID")) in
   let () = debug (fun _ -> Format.sprintf "Proof ID: %i" prf_id) in
   let () = debug_output prf in
   if (Int.Map.is_empty prf) then
@@ -1346,50 +1377,30 @@ let check_proof ?(init=0) ?(minimize=true) prf =
       let () =
         if !dump_graphs && minimize then
           (* Output original proof to file *)
-          let out_file = mk_graph_filename_stub prf_id false in
-          let c = open_out (out_file ^ (repr_suf ())) in
-          let () =
-            begin
-              output_string c (Repr.to_string prf) ;
-              close_out_noerr c ;
-            end in
-          let c = open_out (out_file ^ ".stats") in
+          let out_file_basename =
+            Filename.concat !graph_dump_dir (mk_graph_name prf_id false) in
+          let c = open_out (out_file_basename ^ (repr_suf ())) in
           begin
-            Printf.fprintf c "Number of proof nodes: %i\n" (size prf) ;
-            Printf.fprintf c "Number of buds: %i\n" (num_buds prf) ;
-            Printf.fprintf c "Trace width: %i\n" (trace_width prf) ;
+            output_string c (to_string prf) ;
             close_out_noerr c ;
           end in
       try
         Stats.MCCache.call () ;
-        let is_valid = CheckCache.find ccache prf' in
+        let (prf_id', is_valid) = CheckCache.find ccache prf' in
         Stats.MCCache.end_call () ;
         Stats.MCCache.hit () ;
         let () =
           debug (fun _ ->
-              "Found soundness result in the cache: "
-              ^ if is_valid then "OK" else "NOT OK" )
-        in
+            Format.sprintf
+              "Found soundness result in the cache (Proof ID: %i): %s"
+                (prf_id')
+                (if is_valid then "OK" else "NOT OK")) in
+        let () =
+          if !dump_graphs && minimize then debug_stats prf false is_valid in
         is_valid
       with Not_found ->
         Stats.MCCache.end_call () ;
         Stats.MCCache.miss () ;
-        let () =
-          if (!dump_graphs) then
-            let out_file = mk_graph_filename_stub prf_id minimize in
-            let c = open_out (out_file ^ (repr_suf ())) in
-            let () =
-              begin
-                output_string c (Repr.to_string prf') ;
-                close_out_noerr c ;
-              end in
-            let c = open_out (out_file ^ ".stats") in
-            begin
-              Printf.fprintf c "Number of proof nodes: %i\n" (size prf') ;
-              Printf.fprintf c "Number of buds: %i\n" (num_buds prf') ;
-              Printf.fprintf c "Trace width: %i\n" (trace_width prf') ;
-              close_out_noerr c ;
-            end in
         let is_valid =
           match !soundness_method with
           | SPOT_LEGACY ->
@@ -1399,11 +1410,23 @@ let check_proof ?(init=0) ?(minimize=true) prf =
           | _ ->
             RelationalCheck.Ext.check_proof prf' in
         Stats.MCCache.call () ;
-        CheckCache.add ccache prf' is_valid ;
+        CheckCache.add ccache prf' (prf_id, is_valid) ;
         Stats.MCCache.end_call () ;
         (* if CheckCache.length ccache > !limit then                                          *)
         (*   begin                                                                            *)
         (*     debug (fun () -> "Soundness cache passed limit: " ^ (string_of_int !limit)) ;  *)
         (*     limit := 10 * !limit                                                           *)
         (*   end ;                                                                            *)
+        let () =
+          if (!dump_graphs) then
+            let () = debug_stats prf false is_valid in
+            let () = if minimize then debug_stats prf' true is_valid in
+            let out_file_basename =
+              Filename.concat !graph_dump_dir
+                              (mk_graph_name prf_id minimize) in
+            let c = open_out (out_file_basename ^ (repr_suf ())) in
+            begin
+              output_string c (to_string prf') ;
+              close_out_noerr c ;
+            end in
         is_valid
