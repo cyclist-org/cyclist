@@ -9,7 +9,8 @@ $(TESTS): %.tst:
 	-@TST_COUNT=1; \
 	TST_NAME=$@; \
 	while read -r SEQ; do \
-		echo "test case: cyclist-sl-$${TST_NAME%.tst}.$$TST_COUNT"; \
+		TST_CASE="cyclist-sl-$${TST_NAME%.tst}.$$TST_COUNT"; \
+		echo "test case: $$TST_CASE"; \
 		TST_COUNT=$$(($$TST_COUNT+1)); \
-		(cd "$(ROOT)" && timeout "$$(($(TIMEOUT) + 1))" dune exec $(CMD) -- $(TST_OPTS) -t $(TIMEOUT) -S "$$SEQ" || echo "Not proved (timeout)") ;\
+		(cd "$(ROOT)" && timeout "$$(($(TIMEOUT) + 1))" dune exec $(CMD) -- -t $(TIMEOUT) -S "$$SEQ" --id="$$TST_CASE" $(TST_OPTS) || echo "Not proved (timeout)"); \
 	done < "$@"
