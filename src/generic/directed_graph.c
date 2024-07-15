@@ -287,6 +287,7 @@ Vec<Vec<Int_pair> *> *DirectedGraph::get_elementary_cycles()
 
     Map<int, NodeList> *AK = new Map<int, NodeList>();
 
+
     int max_node = -1;
     for (const auto &[v, neighbours] : *this->neighbours_map)
     {
@@ -301,6 +302,9 @@ Vec<Vec<Int_pair> *> *DirectedGraph::get_elementary_cycles()
                 max_node = neighbour;
             }
             (*AK)[v].push_back(neighbour + 1);
+            if((*AK)[neighbour].size() == 0) {
+                (*AK)[neighbour] = NodeList();
+            }
         }
     }
 
@@ -311,7 +315,7 @@ Vec<Vec<Int_pair> *> *DirectedGraph::get_elementary_cycles()
     Stack->clear();
     int S = 1;
 
-    while (S < N)
+    while (S <= N)
     {
         for (int I = S; I <= N; ++I)
         {
