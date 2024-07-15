@@ -170,7 +170,7 @@ let fuse_single_nodes prf' init =
       prf := Int.Map.add par_idx (bud, par_tags, newsubg) !prf
   in
   let fuse_node idx = function
-    | bud, tags, [(child, tv, tp)] ->
+    | false, tags, [(child, tv, tp)] ->
         Int.Map.iter (fun p n -> process_node idx child tv tp p n) !prf ;
         prf := Int.Map.remove idx !prf
     | _ -> invalid_arg "fuse_node"
@@ -179,8 +179,9 @@ let fuse_single_nodes prf' init =
   (* if a parent points to the child of the node to be fused then *)
   (* we would run into difficulties when updating that parent to point *)
   (* directly to the grandchild, so we avoid that altogether *)
-  let p idx n =
+  let p idx ((bud, _, _) as n) =
     (not (Int.equal idx init))
+    && not bud
     && is_single_node idx n
     && not (fathers_grandchild !prf idx n)
   in
