@@ -124,7 +124,7 @@ private:
         Set_shared_ptr<Int_pair> progressing_traces
     );
 
-    Vec_shared_ptr<Vec_shared_ptr<int>> get_traces_of_cycle(Vec_shared_ptr<int> cycle, int cycle_idx);
+    Vec_shared_ptr<Vec_shared_ptr<int>> get_traces_of_cycle(Vec_shared_ptr<int> cycle, int cycle_idx, Set_shared_ptr<Int_pair> progressing_traces);
 
     bool is_flat_cycle_reachable_from(int node, Vec<int>* curr_path, bool* fresh_nodes);
 
@@ -190,7 +190,13 @@ public:
         bool is_cyclic_normal_form;
     };
     StructuralConnectivityRelation get_structural_connectivity_relation();
-    Vec_shared_ptr<Pair<Int_pair, Int_pair>> get_trace_manifold_graph(
+
+    struct TraceManifoldGraph {
+        Vec_shared_ptr<Vec_shared_ptr<Int_pair>> trace_node_per_cycle;
+        Vec_shared_ptr<Pair<Int_pair, Int_pair>> edges;
+        Set_shared_ptr<Int_pair> progressing_trace_nodes;
+    };
+    TraceManifoldGraph get_trace_manifold_graph(
         StructuralConnectivityRelation structural_connectivity_relation
     );
 

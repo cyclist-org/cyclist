@@ -19,10 +19,10 @@
 #define Relation_LIST       std::list<Sloped_relation*>
 
 template <typename T>
-using Vec_shared_ptr std::shared_ptr<Vec<T>>;
+using Vec_shared_ptr = std::shared_ptr<Vec<T>>;
 
 template <typename T>
-using Set_shared_ptr std::shared_ptr<Set<T>>;
+using Set_shared_ptr = std::shared_ptr<Set<T>>;
 
 typedef std::list<int> NodeList;
 
