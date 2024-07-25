@@ -12,15 +12,12 @@ let allow_comments = ref false
 
 let input_files = ref []
 
-let minimize = ref true
-
 let speclist =
   Soundcheck.arg_opts
     @
   [
     ("-d", Arg.Set do_debug, ": print debug messages") ;
     ("-s", Arg.Set Stats.do_statistics, ": print statistics") ;
-    ("--unminimized-proofs", Arg.Clear minimize, ": keep proofs unminimized") ;
     ("--allow-comments", Arg.Set allow_comments, ": allow line comments in input") ;
     ("-f", Arg.String (fun f -> input_files := f :: !input_files), ": take input from file") ;
   ]
@@ -34,7 +31,7 @@ let () =
 let do_check prf =
   begin
     Stats.reset ();
-    if (check_proof ~minimize:!minimize prf) then begin
+    if (check_proof prf) then begin
       print_endline "YES";
       Stats.gen_print ();
     end
