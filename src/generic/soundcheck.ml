@@ -1396,8 +1396,7 @@ let check_proof ?(init=0) ?(minimize=true) prf =
               "Found soundness result in the cache (Proof ID: %i): %s"
                 (prf_id')
                 (if is_valid then "OK" else "NOT OK")) in
-        let () =
-          if !dump_graphs && minimize then debug_stats prf false is_valid in
+        let () = if minimize then debug_stats prf false is_valid in
         is_valid
       with Not_found ->
         Stats.MCCache.end_call () ;
@@ -1418,10 +1417,10 @@ let check_proof ?(init=0) ?(minimize=true) prf =
         (*     debug (fun () -> "Soundness cache passed limit: " ^ (string_of_int !limit)) ;  *)
         (*     limit := 10 * !limit                                                           *)
         (*   end ;                                                                            *)
+        let () = debug_stats prf false is_valid in
+        let () = if minimize then debug_stats prf' true is_valid in
         let () =
           if (!dump_graphs) then
-            let () = debug_stats prf false is_valid in
-            let () = if minimize then debug_stats prf' true is_valid in
             let out_file_basename =
               Filename.concat !graph_dump_dir
                               (mk_graph_name prf_id minimize) in
