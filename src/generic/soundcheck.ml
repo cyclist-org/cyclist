@@ -1167,7 +1167,7 @@ module RelationalCheck = struct
 
     external create_hgraph : int -> unit = "create_hgraph"
     external destroy_hgraph : unit -> unit = "destroy_hgraph"
-    external add_node : int -> unit = "add_node"
+    external add_node : int -> bool -> unit = "add_node"
     external add_height : int -> int -> unit = "add_height"
     external add_edge : int -> int -> unit = "add_edge"
     external add_stay : int -> int -> int -> int -> unit = "add_stay"
@@ -1231,6 +1231,8 @@ module RelationalCheck = struct
               else add_stay n h n' h')
           (tps) ;
         in
+      let add_node_ n (is_bud, _, _) =
+        add_node n is_bud in
       let add_heights n (_, tags, _) =
         Int.Set.iter (add_height n) tags in
       let add_edges n (_, _, succs) =
@@ -1238,6 +1240,7 @@ module RelationalCheck = struct
       Stats.MC.call () ;
       debug (fun () -> "Checking soundness starts...") ;
       create_hgraph (size p) ;
+      Int.Map.iter add_node_ p ;
       Int.Map.iter add_heights p ;
       Int.Map.iter add_edges p ;
       (* debug (fun () -> "Built height graph") ; *)
