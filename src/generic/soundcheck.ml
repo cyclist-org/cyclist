@@ -1302,6 +1302,9 @@ let mk_graph_name id minimised =
       (if minimised then ".minimised" else String.empty) in
   base
 
+(* Config for whether to minimise proof graphs *)
+let minimize_proofs = ref true
+
 let arg_opts =
   [
     ("-legacy", Arg.Unit use_legacy, ": use legacy Spot (VLA) encoding to verify pre-proof validity") ;
@@ -1319,6 +1322,7 @@ let arg_opts =
     ("-scc", Arg.Unit use_scc_check, ": use SCC check in relation-based validity checks") ;
     ("-idem", Arg.Unit use_idempotence, ": use idempotency optimisation in relation-based validity checks") ;
     ("-min", Arg.Unit use_minimality, ": use minimality optimisation in relation-based validity checks") ;
+    ("--unminimized-proofs", Arg.Clear minimize_proofs, ": keep proofs unminimized") ;
     ("-rel-stats", Arg.Set do_stats, ": print out profiling stats for the relation-based validity check") ;
     ("-print-paut", Arg.Set LegacyCheck.print_paut, ": print the proof automaton in HOA format" ) ;
     ("-print-taut", Arg.Set LegacyCheck.print_taut, ": print the trace automaton in HOA format" ) ;
@@ -1333,7 +1337,7 @@ let ccache = CheckCache.create 1000
 (* let limit = ref 1 *)
 
 
-let check_proof ?(init=0) ?(minimize=true) prf =
+let check_proof ?(init=0) ?(minimize) prf =
   let prf_id = next_graph_id () in
   let debug_output prf =
     begin
@@ -1360,6 +1364,18 @@ let check_proof ?(init=0) ?(minimize=true) prf =
         pp Format.std_formatter prf ;
         assert false )
     in
+    let minimize =
+      match minimize with
+      | None ->
+        !minimize_proofs
+      | Some b ->
+        let () =
+          if b && (not !minimize_proofs) then
+            debug
+              (fun _ ->
+                "Command line specification to keep proof graphs unminimised \
+                is being ignored!") in
+        b in
     let prf' =
       if minimize
         then
@@ -1399,8 +1415,7 @@ let check_proof ?(init=0) ?(minimize=true) prf =
               "Found soundness result in the cache (Proof ID: %i): %s"
                 (prf_id')
                 (if is_valid then "OK" else "NOT OK")) in
-        let () =
-          if !dump_graphs && minimize then debug_stats prf false is_valid in
+        let () = if minimize then debug_stats prf false is_valid in
         is_valid
       with Not_found ->
         Stats.MCCache.end_call () ;
@@ -1421,10 +1436,10 @@ let check_proof ?(init=0) ?(minimize=true) prf =
         (*     debug (fun () -> "Soundness cache passed limit: " ^ (string_of_int !limit)) ;  *)
         (*     limit := 10 * !limit                                                           *)
         (*   end ;                                                                            *)
+        let () = debug_stats prf false is_valid in
+        let () = if minimize then debug_stats prf' true is_valid in
         let () =
           if (!dump_graphs) then
-            let () = debug_stats prf false is_valid in
-            let () = if minimize then debug_stats prf' true is_valid in
             let out_file_basename =
               Filename.concat !graph_dump_dir
                               (mk_graph_name prf_id minimize) in

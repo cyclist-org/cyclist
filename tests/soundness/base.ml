@@ -26,13 +26,13 @@ let () =
   Arg.parse speclist add_param usage ;
   params := List.rev !params
 
-let runtest ?(minimize=true) build_prf =
+let runtest ?(minimize) build_prf =
   let () = gc_setup () in
   let () = Format.set_margin (Sys.command "exit $(tput cols)") in
   let () = Stats.reset () in
   let () = Stats.Gen.call () in
   let prf = build_prf () in
-  let res = Soundcheck.check_proof ~minimize prf in
+  let res = Soundcheck.check_proof ?minimize prf in
   let () = Stats.Gen.end_call () in
   let () = if !Stats.do_statistics then Stats.gen_print () in
   match res with
