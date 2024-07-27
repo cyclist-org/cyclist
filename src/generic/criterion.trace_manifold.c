@@ -8,54 +8,36 @@ class TraceManifoldCriterion : public SoundnessCriterion
 private:
     Heighted_graph *hg;
 
-    bool can_extend_path_to_submanifold_from(
+    void can_extend_path_to_submanifold_from(
         Int_pair trace_node,
         const Vec_shared_ptr<int> cycles_subset,
         Heighted_graph::TraceManifoldGraph trace_manifold_graph,
         Vec_shared_ptr<Int_pair> structural_connectivity_relation,
         Vec<bool> &is_cycle_visited,
-        Vec<Int_pair> &curr_path)
+        Vec<Int_pair> &visited_trace_nodes)
     {
-
         int cycle_idx = trace_node.first;
         is_cycle_visited[cycle_idx] = true;
-        curr_path.push_back(trace_node);
-
-        if (curr_path.size() == cycles_subset->size())
-        {
-            bool are_all_cycles_in_subset_visited = true;
-            for (bool is_curr_cycle_visited : is_cycle_visited)
-            {
-                are_all_cycles_in_subset_visited = are_all_cycles_in_subset_visited && is_curr_cycle_visited;
-            }
-            printf("EEEEEEEEEEEEEE %d\n", are_all_cycles_in_subset_visited);
-            if (are_all_cycles_in_subset_visited &&
-                this->every_two_structurly_adjacent_cycles_have_an_edge(cycles_subset, structural_connectivity_relation, trace_manifold_graph.edges) &&
-                this->exists_progressing_trace_node(curr_path, trace_manifold_graph.progressing_trace_nodes))
-            {
-                return true;
-            }
-            return false;
-        }
+        visited_trace_nodes.push_back(trace_node);
 
         for (const auto &[edge_first, edge_second] : *trace_manifold_graph.edges)
         {
             if (edge_first == trace_node || edge_second == trace_node)
             {
                 Int_pair neighbour = edge_first == trace_node ? edge_second : edge_first;
-                if (!is_cycle_visited[neighbour.first])
+                if (std::find(visited_trace_nodes.begin(), visited_trace_nodes.end(), neighbour) == visited_trace_nodes.end())
                 {
+                    this->can_extend_path_to_submanifold_from(neighbour, cycles_subset, trace_manifold_graph, structural_connectivity_relation, is_cycle_visited, visited_trace_nodes);
                     // curr_path.push_back(neighbour);
-                    bool can_extend_path_to_submanifold = this->can_extend_path_to_submanifold_from(neighbour, cycles_subset, trace_manifold_graph, structural_connectivity_relation, is_cycle_visited, curr_path);
-                    curr_path.pop_back();
-                    if (can_extend_path_to_submanifold)
-                    {
-                        return true;
-                    }
+                    // bool can_extend_path_to_submanifold = this->can_extend_path_to_submanifold_from(neighbour, cycles_subset, trace_manifold_graph, structural_connectivity_relation, is_cycle_visited, visited_trace_nodes);
+                    // if (can_extend_path_to_submanifold)
+                    // {
+                    //     return true;
+                    // }
                 }
             }
         }
-        return false;
+        // return false;
     }
 
     bool
@@ -65,17 +47,35 @@ private:
         Vec_shared_ptr<Int_pair> structural_connectivity_relation)
     {
         int first_node_in_set = cycles_subset->at(0);
-        Vec<bool> is_cycle_visited(cycles_subset->size());
+        Vec<Int_pair> visited_trace_nodes;
+        Vec<bool> is_cycle_visited(trace_manifold_graph.trace_node_per_cycle->size());
+        // Vec<bool> is_cycle_visited(cycles_subset->size());
         Vec<Int_pair> curr_path;
 
         for (auto &trace_node : *(trace_manifold_graph.trace_node_per_cycle->at(first_node_in_set)))
         {
             std::fill(is_cycle_visited.begin(), is_cycle_visited.end(), false);
-            printf("SSSSSSSSSSS %d,%d\n",trace_node.first, trace_node.second);
-            if (this->can_extend_path_to_submanifold_from(trace_node, cycles_subset, trace_manifold_graph, structural_connectivity_relation, is_cycle_visited, curr_path))
+            visited_trace_nodes.clear();
+
+            can_extend_path_to_submanifold_from(trace_node, cycles_subset, trace_manifold_graph, structural_connectivity_relation, is_cycle_visited, visited_trace_nodes);
+
+            bool are_all_cycles_in_subset_visited = true;
+            for (int cycle_idx : *cycles_subset)
             {
-                return true;
-            };
+                are_all_cycles_in_subset_visited = are_all_cycles_in_subset_visited && is_cycle_visited[cycle_idx];
+            }
+            if (are_all_cycles_in_subset_visited)
+            {
+                if (this->every_two_structurly_adjacent_cycles_have_an_edge(cycles_subset, structural_connectivity_relation, trace_manifold_graph.edges) &&
+                    this->exists_progressing_trace_node(visited_trace_nodes, cycles_subset, trace_manifold_graph.progressing_trace_nodes))
+                {
+                    return true;
+                }
+            }
+            // if (this->can_extend_path_to_submanifold_from(trace_node, cycles_subset, trace_manifold_graph, structural_connectivity_relation, is_cycle_visited, visited_trace_nodes))
+            // {
+            //     return true;
+            // };
             curr_path.clear();
         }
         return false;
@@ -133,11 +133,12 @@ private:
         return false;
     }
 
-    bool exists_progressing_trace_node(Vec<Int_pair> &path, Set_shared_ptr<Int_pair> progressing_trace_nodes)
+    bool exists_progressing_trace_node(Vec<Int_pair> &path, const Vec_shared_ptr<int> &cycles_subset, Set_shared_ptr<Int_pair> progressing_trace_nodes)
     {
         for (const auto &trace_node : path)
         {
-            if (progressing_trace_nodes->find(trace_node) != progressing_trace_nodes->end())
+            if (progressing_trace_nodes->find(trace_node) != progressing_trace_nodes->end() &&
+                std::find(cycles_subset->begin(), cycles_subset->end(), trace_node.first) != cycles_subset->end())
             {
                 return true;
             }
@@ -220,7 +221,7 @@ private:
         // memset(is_visited, false, amount_of_cycles_in_subset);
         Vec<int> visited_cycles_idxs;
         this->traverse_cycles_subset_from(cycles_subset->at(0), visited_cycles_idxs, cycles_subset, structural_connectivity_relation);
-        return visited_cycles_idxs.size() == cycles_subset->size(); 
+        return visited_cycles_idxs.size() == cycles_subset->size();
         // for (int cycle_idx = 0; cycle_idx < amount_of_cycles_in_subset; cycle_idx++)
         // {
         //     if (!is_visited[cycle_idx])
@@ -244,7 +245,8 @@ public:
     SoundnessCheckResult check_soundness()
     {
         Heighted_graph::StructuralConnectivityRelation structural_connectivity_relation = this->hg->get_structural_connectivity_relation();
-        if(!structural_connectivity_relation.is_cyclic_normal_form) {
+        if (!structural_connectivity_relation.is_cyclic_normal_form)
+        {
             return SoundnessCheckResult::dontKnow;
         }
         Heighted_graph::TraceManifoldGraph trace_manifold_graph = this->hg->get_trace_manifold_graph(structural_connectivity_relation);
@@ -258,51 +260,51 @@ public:
         // printf("\n");
         // printf("amount of cycles: %d\n", structural_connectivity_relation.cycles->size());
         // printf("cycles: \n");
-        // for (const auto& c : *structural_connectivity_relation.cycles) {
+        // for (const auto &c : *structural_connectivity_relation.cycles)
+        // {
         //     printf("cycle: ");
-        //     for (int n : *c) {
+        //     for (int n : *c)
+        //     {
         //         printf("%d,", n);
         //     }
         //     printf("\n");
         // }
 
-        printf("progressing traces: \n");
-        for (const auto &pt : *trace_manifold_graph.progressing_trace_nodes)
-        {
-            printf("progressing: %d,%d\n", pt.first, pt.second);
-        }
+        // printf("progressing traces: \n");
+        // for (const auto &pt : *trace_manifold_graph.progressing_trace_nodes)
+        // {
+        //     printf("progressing: %d,%d\n", pt.first, pt.second);
+        // }
 
-        printf("trace manifold graph edges:\n");
-        for (const auto &[src, dest] : *trace_manifold_graph.edges)
-        {
-            printf("(%d,%d)->(%d,%d)\n", src.first, src.second, dest.first, dest.second);
-        }
+        // printf("trace manifold graph edges:\n");
+        // for (const auto &[src, dest] : *trace_manifold_graph.edges)
+        // {
+        //     printf("(%d,%d)->(%d,%d)\n", src.first, src.second, dest.first, dest.second);
+        // }
+        
+        // printf("trace manifold graph traces:\n");
+        // for (const auto &traces_of_cycle : *trace_manifold_graph.trace_node_per_cycle) {
+        // for (const auto &[node, height] : *traces_of_cycle) {
+        //     printf("(%d,%d),", node, height);
+        // }
+        // printf("\n");
+        // }
+
         //////////////////////////////////
 
         const Vec_shared_ptr<Vec_shared_ptr<int>> weakly_structurally_connected_components = this->calculate_weakly_connected_components(structural_connectivity_relation);
-        // printf("amount of wccs: %d\n", weakly_structurally_connected_components->size());
         for (auto weakly_structurally_connected_component : *weakly_structurally_connected_components)
         {
-            // printf("size of current wcc: %d\n", weakly_structurally_connected_component->size());
             for (size_t subset_idxs = 1; subset_idxs < std::pow(2, weakly_structurally_connected_component->size()); subset_idxs++)
             {
                 Vec_shared_ptr<int> cycles_subset = this->subset_idxs_to_vec(weakly_structurally_connected_component, subset_idxs);
 
-                printf("subset: ");
-                for (int n : *cycles_subset)
-                {
-                    printf("%d, ", n);
-                }
-                printf("\n");
-
                 if (!this->is_connected_set(cycles_subset, structural_connectivity_relation.relation))
                 {
-                    // printf("continuing...\n");
                     continue;
                 }
                 if (!this->has_submanifold(cycles_subset, trace_manifold_graph, structural_connectivity_relation.relation))
                 {
-                    printf("no submanifold for subset number %d\n", subset_idxs);
                     return SoundnessCheckResult::dontKnow;
                 }
             }
