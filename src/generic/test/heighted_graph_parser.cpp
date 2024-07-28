@@ -6,6 +6,17 @@ using json = nlohmann::json;
 
 void parse_from_json(json &graph, Heighted_graph &hg)
 {
+    //====================== parse buds
+    if(graph.contains("Bud")) {
+        std::cout << "Parsing Buds: ";
+        int num_buds = 0;
+        for (auto &bud : graph["Bud"]) {
+            hg.add_node(bud, true);
+            num_buds++;
+        }
+        std::cout << "Done! , Bud size: " << num_buds << std::endl;
+    }
+
     //====================== parse nodes
     std::cout << "Parsing Nodes: ";
     for (auto &element : graph["Node"])

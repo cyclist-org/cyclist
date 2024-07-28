@@ -34,6 +34,7 @@ Heighted_graph::Heighted_graph(int max_nodes) {
 
     this->max_nodes = max_nodes;
     this->num_edges_ = 0;
+    this->is_node_a_bud = Vec<bool>(max_nodes);
 
 #ifdef LOG_STATS
     ccl_initial_size = 0;
@@ -91,6 +92,7 @@ Heighted_graph* Heighted_graph::clone(Heighted_graph* hg)
     Heighted_graph* cloned = new Heighted_graph(hg->max_nodes);
 
     cloned->node_idxs = hg->node_idxs;
+    cloned->is_node_a_bud = hg->is_node_a_bud;
 
     cloned->height_idxs = std::vector<std::map<int,int>*>();
     for (size_t i = 0; i < cloned->height_idxs.size(); i++)
@@ -541,69 +543,69 @@ bool Heighted_graph::explore_height(int edge_idx, Vec<int>& heights_stack, const
     return false;
 }
 
-void Heighted_graph::explore_structural_connectivity_from(
+
+class NotInCycleNormalForm : public std::exception {};
+class FoundBackedgeNotFromBud : public std::runtime_error {
+    public:
+        FoundBackedgeNotFromBud() : std::runtime_error("found backedge not from bud") {}
+};
+
+void Heighted_graph::explore_basic_cycles_from(
     int node,
-    Vec_shared_ptr<Int_pair> relation,
     Vec<int>& curr_path,
     bool* is_fresh,
-    bool* is_node_on_cycle,
-    int& curr_cycle_idx,
     Vec_shared_ptr<int> companions,
-    Vec_shared_ptr<Vec_shared_ptr<int>> cycles,
-    bool& is_cyclic_normal_form
+    Vec_shared_ptr<Vec_shared_ptr<int>> cycles
 ) {
     if(is_fresh[node] == false){
         return;
     }
     is_fresh[node] = false;
+    curr_path.push_back(node);
+
     for (int neighbour=0; neighbour<this->num_nodes(); neighbour++) {
-        if(this->h_change[node][neighbour] == NULL) {
+        if (this->h_change[node][neighbour] == NULL) {
             continue;
         }
-        Vec<int>::iterator neighbour_on_path = std::find(curr_path.begin(), curr_path.end(), neighbour);
-        if(neighbour_on_path != curr_path.end()) {
-            // node is a bud and neighbour is its companion
-            if(is_node_on_cycle[neighbour]) {
-                for(int other_cycle_idx=0; other_cycle_idx<cycles->size(); other_cycle_idx++) {
-                    auto& other_cycle = cycles->at(other_cycle_idx);
-                    if (std::find(other_cycle->begin(),other_cycle->end(), neighbour) != other_cycle->end()) {
-                        // the companion is on another basic cycle and thus they are structurally adjacent
-                        relation->push_back(Int_pair(curr_cycle_idx, other_cycle_idx));
-                    }
-                }
-            }
-            Vec_shared_ptr<int> curr_cycle = std::make_shared<Vec<int>>(neighbour_on_path, curr_path.end());
-            cycles->push_back(curr_cycle);
+        const auto neighbour_on_curr_path = std::find(curr_path.begin(), curr_path.end(), neighbour);
+        bool neighbour_forms_backedge = neighbour_on_curr_path != curr_path.end();
+        if (this->is_node_a_bud[node] && neighbour_forms_backedge) {
             companions->push_back(neighbour);
-            for(const auto& node_on_cycle : *curr_cycle) {
-                // check if companions of other cycles are on this cycle
-                if(is_node_on_cycle[node_on_cycle]) {
-                    for(int companion_cycle_idx=0; companion_cycle_idx<companions->size(); companion_cycle_idx++) {
-                        int companion = companions->at(companion_cycle_idx);
-                        if(companion == node_on_cycle) {
-                            // cycle contains a companion of another cycle
-                            relation->push_back(Int_pair(companion_cycle_idx, curr_cycle_idx));
-                        }
-                    }
-                }
-                else {
-                    is_node_on_cycle[node_on_cycle] = true;
-                }
-            }
-            curr_cycle_idx++;
+            const auto node_on_curr_path = std::find(neighbour_on_curr_path, curr_path.end(), node);
+
+            cycles->push_back(std::make_shared<Vec<int>>(neighbour_on_curr_path, std::next(node_on_curr_path,1)));
+        } else if (neighbour_forms_backedge) {
+            throw FoundBackedgeNotFromBud();
+        } else if (this->is_node_a_bud[node]) {
+            throw NotInCycleNormalForm();
         } else {
-            // check if neighbour is a companion which is not a predecessor of node
-            if (!is_fresh[neighbour] && is_node_on_cycle[neighbour]) {
-                // neighbour is a part of another already explored cycle but not on this path
-                // so it is a companion but not a predecessor of node, which means that the graph
-                // is not in cyclic normal form.
-                is_cyclic_normal_form = false;
-            }
-            curr_path.push_back(neighbour);
-            this->explore_structural_connectivity_from(neighbour, relation, curr_path, is_fresh, is_node_on_cycle, curr_cycle_idx, companions, cycles, is_cyclic_normal_form);
+            this->explore_basic_cycles_from(
+                neighbour, curr_path, is_fresh, companions, cycles
+            );
             curr_path.pop_back();
         }
     }
+}
+
+class GraphHasNoRoot : public std::runtime_error {
+    public:
+        GraphHasNoRoot() : std::runtime_error("heighted graph has no root") {}
+};
+int Heighted_graph::find_root_node() {
+    int num_nodes = this->num_nodes();
+    for (int dest=0; dest<num_nodes; dest++) {
+        bool has_in_edges = false;
+        for (int src=0; src<num_nodes; src++) {
+            if(this->h_change[src][dest] != NULL && !this->is_node_a_bud[src]) {
+                has_in_edges = true;
+                break;
+            }
+        }
+        if(!has_in_edges) {
+            return dest;
+        }
+    }
+    throw GraphHasNoRoot();
 }
 
 Heighted_graph::StructuralConnectivityRelation Heighted_graph::get_structural_connectivity_relation() {
@@ -611,27 +613,47 @@ Heighted_graph::StructuralConnectivityRelation Heighted_graph::get_structural_co
     bool is_fresh[num_nodes];
     memset(is_fresh, true, num_nodes);
     Vec_shared_ptr<Int_pair> relation = std::make_shared<Vec<Int_pair>>();
-    bool is_node_on_cycle[num_nodes];
-    int curr_cycle_idx = 0;
     Vec<int> curr_path;
     Vec_shared_ptr<int> companions = std::make_shared<Vec<int>>();
     Vec_shared_ptr<Vec_shared_ptr<int>> basic_cycles = std::make_shared<Vec<Vec_shared_ptr<int>>>();
-    bool is_cyclic_normal_form = true;
-
-    for (int node=0; node<num_nodes; node++) {
-        if (is_fresh[node]) {
-            curr_path.push_back(node);
-            this->explore_structural_connectivity_from(node, relation, curr_path, is_fresh, is_node_on_cycle, curr_cycle_idx, companions, basic_cycles, is_cyclic_normal_form);
-        }
-    }
 
     StructuralConnectivityRelation result;
     result.companions = companions;
     result.cycles = basic_cycles;
     result.relation = relation;
-    result.is_cyclic_normal_form = is_cyclic_normal_form;
+
+    int root_node_idx = this->find_root_node();
+    try {
+        this->explore_basic_cycles_from(root_node_idx, curr_path, is_fresh, companions, basic_cycles);
+    } catch (NotInCycleNormalForm& err) {
+        result.is_cyclic_normal_form = false;
+        return result;
+    }
+
+    int amount_of_cycles = basic_cycles->size();
+    for (int cycle_idx=0; cycle_idx<amount_of_cycles; cycle_idx++) {
+        relation->push_back(Int_pair(cycle_idx, cycle_idx));
+        int cycle_companion = companions->at(cycle_idx);
+        for (int other_cycle_idx=0; other_cycle_idx<amount_of_cycles; other_cycle_idx++) {
+            if (cycle_idx == other_cycle_idx) {
+                continue;
+            }
+            Vec_shared_ptr<int> other_cycle = basic_cycles->at(other_cycle_idx);
+            if (std::find(other_cycle->begin(), other_cycle->end(), cycle_companion) != other_cycle->end()) {
+                relation->push_back(Int_pair(cycle_idx, other_cycle_idx));
+            }
+        }
+    }
+
+    result.is_cyclic_normal_form = true;
     return result;
 }
+
+
+class NoEdgeBetweenAdjacentNodesOnBasicCycle : public std::runtime_error {
+    public:
+        NoEdgeBetweenAdjacentNodesOnBasicCycle() : std::runtime_error("no edge between two adjacent nodes on a basic cycle") {}
+};
 
 void Heighted_graph::explore_traces_from(
     int height,
@@ -642,19 +664,20 @@ void Heighted_graph::explore_traces_from(
     Vec_shared_ptr<Vec_shared_ptr<int>> traces,
     Set_shared_ptr<Int_pair> progressing_traces
 ) {
-
     int curr_node_idx_in_cycle = curr_heights_path.size() - 1;
     int curr_node = cycle->at(curr_node_idx_in_cycle);
-    int neighbour_node_idx_in_cycle = curr_node_idx_in_cycle + 1;
+    int neighbour_node_idx_in_cycle = curr_heights_path.size()==cycle->size() ? 0 : curr_node_idx_in_cycle + 1;
     int neighbour_node = cycle->at(neighbour_node_idx_in_cycle);
     Sloped_relation* rel = this->h_change[curr_node][neighbour_node];
     if (rel == NULL) {
-        throw "no edge between adjacent nodes on cycle";
+        throw NoEdgeBetweenAdjacentNodesOnBasicCycle();
     }
     const int* slopes_from_height = rel->get_repr_matrix()[height];
     
     if (curr_heights_path.size() == cycle->size()) {
-        if (slopes_from_height[curr_heights_path.at(0)] != slope::Undef) {
+        int slp = slopes_from_height[curr_heights_path.at(0)];
+        does_curr_path_have_down_slope = does_curr_path_have_down_slope || slp ==slope::Downward;
+        if (slp != slope::Undef) {
             // we closed a trace for the cycle
             traces->push_back(std::make_shared<Vec<int>>(curr_heights_path));
             if (does_curr_path_have_down_slope) {
@@ -667,6 +690,7 @@ void Heighted_graph::explore_traces_from(
     for (int neighbour_height=0; neighbour_height<rel->get_num_dst_heights(); neighbour_height++) {
         int slp = slopes_from_height[neighbour_height];
         if (slp != slope::Undef) {
+
             curr_heights_path.push_back(neighbour_height);
             this->explore_traces_from(
                 neighbour_height,
@@ -693,9 +717,20 @@ Vec_shared_ptr<Vec_shared_ptr<int>> Heighted_graph::get_traces_of_cycle(Vec_shar
     for (int height=0; height<this->HeightsOf[first_node_of_cycle]->size(); height++) {
         curr_path.push_back(height);
         this->explore_traces_from(height, cycle, cycle_idx, curr_path, false, traces, progressing_traces);
+        curr_path.clear();
     }
     return traces;
 }
+
+
+class CompanionNotFoundInItsBasicCycle : public std::runtime_error {
+    public:
+        CompanionNotFoundInItsBasicCycle() : std::runtime_error("companion not found in its basic cycle") {}
+};
+class CompanionNotFoundStructurallyAdjacentCycle : public std::runtime_error {
+    public:
+        CompanionNotFoundStructurallyAdjacentCycle() : std::runtime_error("C1 <_p C2 but companion of C1 not found on C2") {}
+};
 
 Heighted_graph::TraceManifoldGraph Heighted_graph::get_trace_manifold_graph(
     StructuralConnectivityRelation structural_connectivity_relation
@@ -722,16 +757,16 @@ Heighted_graph::TraceManifoldGraph Heighted_graph::get_trace_manifold_graph(
         if (traces_per_cycle->at(dest_cycle_idx) == nullptr) {
             (*traces_per_cycle)[dest_cycle_idx] = this->get_traces_of_cycle(dest_cycle, dest_cycle_idx, progressing_traces);
         }
-        
+
         auto src_cycle_companion_iter_in_src_cycle = std::find(src_cycle->begin(), src_cycle->end(), src_companion_node_idx);
         if (src_cycle_companion_iter_in_src_cycle == src_cycle->end()) {
-            throw "companion not found in its cycle";
+            throw CompanionNotFoundInItsBasicCycle();
         }
         int src_cycle_companion_idx_in_src_cycle = src_cycle_companion_iter_in_src_cycle - src_cycle->begin(); 
         
         auto src_cycle_companion_iter_in_dest_cycle = std::find(dest_cycle->begin(), dest_cycle->end(), src_companion_node_idx);
         if (src_cycle_companion_iter_in_dest_cycle == dest_cycle->end()) {
-            throw "C1 <_p C2 but companion of C1 not found on C2";
+            throw CompanionNotFoundStructurallyAdjacentCycle();
         }
         int src_cycle_companion_idx_in_dest_cycle = src_cycle_companion_iter_in_dest_cycle - dest_cycle->begin(); 
         
@@ -905,12 +940,7 @@ Vec<Int_pair> Heighted_graph::get_extended_nodes() {
 
 void Heighted_graph::remove_down_edges_not_in_any_SCC() {
 
-    auto start = std::chrono::system_clock::now();
     Vec<Int_pair> extended_nodes = this->get_extended_nodes();
-    auto end = std::chrono::system_clock::now();
-    printf("get_extended_nodes took %ld us\n", (end-start).count());
-
-    start = std::chrono::system_clock::now();
 
     int num_of_extended_nodes = extended_nodes.size();
     Map<Int_pair, int> extended_nodes_idxs;
@@ -936,12 +966,6 @@ void Heighted_graph::remove_down_edges_not_in_any_SCC() {
     bool found = false;
     int next_idx = 0;
 
-
-    end = std::chrono::system_clock::now();
-    printf("preparing to go over all SCCs took %ld us\n", (end-start).count());
-
-    start = std::chrono::system_clock::now();
-
     for (int n = 0; n < num_of_extended_nodes; n++) {
         if (idxs[n] == -1) {
             find_scc_and_remove_down_edges_not_in_it(n, s, on_stack, idxs, low_links, next_idx, extended_nodes, extended_nodes_idxs);
@@ -951,9 +975,6 @@ void Heighted_graph::remove_down_edges_not_in_any_SCC() {
     free(on_stack);
     free(idxs);
     free(low_links);
-
-    end = std::chrono::system_clock::now();
-    printf("going over all SCCs took %ld us\n", (end-start).count());
 }
 
 bool Heighted_graph::is_flat_cycle_reachable_from(int node, Vec<int>* curr_path, bool* fresh_nodes) {
@@ -1120,13 +1141,14 @@ std::string Heighted_graph::to_string() {
 //=============================================================
 // Methods for constructing the height graph
 //=============================================================
-void Heighted_graph::add_node(int n) {
+void Heighted_graph::add_node(int n, bool is_bud=false) {
     if (node_idxs.find(n) == node_idxs.end()) {
         int next_idx = node_idxs.size();
         assert(next_idx < max_nodes);
         node_idxs[n] = next_idx;
         height_idxs.push_back(new Map<int, int>());
         HeightsOf.push_back(new Int_SET());
+        is_node_a_bud[next_idx] = is_bud;
     }
 }
 

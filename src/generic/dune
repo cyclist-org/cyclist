@@ -18,6 +18,7 @@
     criterion.sla criterion.vla 
     criterion.flat_cycles criterion.flat_cycles.generalized
     criterion.descending_unicycles
+    criterion.trace_manifold
     criterion.sprenger_dam criterion.no_flat_extended_cycles
     criterion.soundness)
   (flags :standard -xc++ -std=c++17 (:include c_flags.sexp))

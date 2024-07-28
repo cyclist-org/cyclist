@@ -46,6 +46,7 @@ private:
     int                         max_nodes;
     int                         num_edges_;
     Map<int, int>               node_idxs;
+    Vec<bool>                   is_node_a_bud;
     std::vector<Map<int, int>*> height_idxs;
     std::vector<Int_SET*>       HeightsOf;
     Sloped_relation***          h_change;
@@ -130,16 +131,13 @@ private:
 
     bool explore_height(int edge_idx, Vec<int>& heights_stack, const Vec<Int_pair>& cycle, bool visited_down_slope);
 
-    void explore_structural_connectivity_from(
+    int find_root_node();
+    void explore_basic_cycles_from(
         int node,
-        Vec_shared_ptr<Int_pair> relation,
         Vec<int>& curr_path,
         bool* is_fresh,
-        bool* is_node_on_cycle,
-        int& curr_cycle_idx,
         Vec_shared_ptr<int> companions,
-        Vec_shared_ptr<Vec_shared_ptr<int>> cycles,
-        bool& is_cyclic_normal_form
+        Vec_shared_ptr<Vec_shared_ptr<int>> cycles
     );
 
     void remove_hchange(int source_idx, int source_h_idx, int sink_idx, int sink_h_idx, slope s);
@@ -169,7 +167,7 @@ public:
     static Heighted_graph* clone(Heighted_graph* hg);
 
     // Methods for constructing the height graph
-    void add_node(int n);
+    void add_node(int n, bool is_bud);
     void add_height(int n, int h);
     void add_edge(int source, int sink);
     void add_hchange(int source, int source_h, int sink, int sink_h, slope s);

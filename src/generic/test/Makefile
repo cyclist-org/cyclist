@@ -25,6 +25,12 @@ all: soundness tests
 soundness: main.o sloped_relation.o heighted_graph.o graph.o criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o 
 	g++ -g -o soundness main.o sloped_relation.o heighted_graph.o graph.o criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o `pkg-config --libs libspot libbddx`
 
+get_graphs_stats: get_graphs_stats.o sloped_relation.o heighted_graph.o graph.o heighted_graph_parser.o criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o
+	g++ -g -o get_graphs_stats get_graphs_stats.o sloped_relation.o heighted_graph.o graph.o criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o `pkg-config --libs libspot libbddx`
+
+get_graphs_stats.o: get_graphs_stats.cpp ../heighted_graph.hpp ./heighted_graph_parser.cpp ../criterion.descending_unicycles.c ../criterion.trace_manifold.c
+	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/opt/lib -g -c get_graphs_stats.cpp -o get_graphs_stats.o
+
 run_on_graphs: run_on_graphs.o sloped_relation.o heighted_graph.o graph.o heighted_graph_parser.o criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o
 	g++ -g -o run_on_graphs run_on_graphs.o sloped_relation.o heighted_graph.o graph.o criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o `pkg-config --libs libspot libbddx`
 
@@ -49,6 +55,8 @@ sledgehammer.o: ../sledgehammer.hpp ../sledgehammer.c ../criterion.soundness.hpp
 	../directed_graph.hpp ../directed_graph.c \
 	../graph.hpp ../graph.c \
 	../criterion.flat_cycles.c ../criterion.flat_cycles.generalized.c \
+	../criterion.descending_unicycles.c \
+	../criterion.trace_manifold.c \
 	../criterion.sprenger_dam.c ../criterion.no_flat_extended_cycles.c \
 	../heighted_graph.hpp ../sloped_relation.hpp ../types.c 
 	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/usr/lib -L/opt/lib -g -c ../sledgehammer.c -o sledgehammer.o
@@ -99,12 +107,19 @@ graph.o: ../graph.c ../graph.hpp ../sloped_relation.hpp ../types.c
 clean: 
 	rm -f ./*.o soundness
 
+run-get-graphs-stats: get_graphs_stats
+	# ./get_graphs_stats '/Users/matanshaked/M.Sc research/Thesis/cyclist_graphs/cyclist_output_graphs/sl'
+	# ./get_graphs_stats ../../../../cyclist_graphs/unminimized/sl
+	# ./get_graphs_stats ./loops_tests
+	./get_graphs_stats ./delete_me_graphs
+
 run-on-graphs-sh-single: run_on_graphs
 	./run_on_graphs delete_me_graphs H0fms
 	
 run-on-graphs-sh-new: run_on_graphs
-	# ./run_on_graphs ../../../graphs/unminimized/sl H0fms
-	./run_on_graphs graphs H0fms
+	./run_on_graphs ../../../../cyclist_graphs/unminimized/sl H0fms
+	# ./run_on_graphs ../../../../cyclist_graphs/unminimized/sl
+	# ./run_on_graphs graphs H0fms
 run-on-graphs-or-new: run_on_graphs
 	# ./run_on_graphs ../../../graphs/unminimized/sl H0fms
 	./run_on_graphs graphs O0fms

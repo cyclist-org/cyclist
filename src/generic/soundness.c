@@ -26,11 +26,12 @@ extern "C" void destroy_hgraph() {
   CAMLreturn0;
 }
 
-extern "C" void add_node(value n_) {
-  CAMLparam1(n_);
+extern "C" void add_node(value n_, value is_bud_) {
+  CAMLparam2(n_, is_bud_);
   assert(hg);
   int n = Int_val(n_);
-  hg->add_node(n);
+  int is_bud = Bool_val(is_bud_);
+  hg->add_node(n, is_bud);
   CAMLreturn0;
 }
 

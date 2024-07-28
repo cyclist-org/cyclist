@@ -169,6 +169,8 @@ bool DirectedGraph::is_overlapping_cycle_reachable_from(int node, std::stack<int
             is_on_stack[curr_on_scc] = false;
         }
     }
+
+    return false;
 }
 
 bool DirectedGraph::contains_overlapping_cycles()

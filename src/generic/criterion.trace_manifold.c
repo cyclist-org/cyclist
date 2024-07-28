@@ -49,7 +49,6 @@ private:
         int first_node_in_set = cycles_subset->at(0);
         Vec<Int_pair> visited_trace_nodes;
         Vec<bool> is_cycle_visited(trace_manifold_graph.trace_node_per_cycle->size());
-        // Vec<bool> is_cycle_visited(cycles_subset->size());
         Vec<Int_pair> curr_path;
 
         for (auto &trace_node : *(trace_manifold_graph.trace_node_per_cycle->at(first_node_in_set)))
@@ -72,10 +71,6 @@ private:
                     return true;
                 }
             }
-            // if (this->can_extend_path_to_submanifold_from(trace_node, cycles_subset, trace_manifold_graph, structural_connectivity_relation, is_cycle_visited, visited_trace_nodes))
-            // {
-            //     return true;
-            // };
             curr_path.clear();
         }
         return false;
