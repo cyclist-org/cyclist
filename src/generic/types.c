@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <list>
 #include <vector>
+#include <memory>
 
 #define NIL                 -1
 #define Map                 std::map
@@ -33,10 +34,10 @@ enum slope {
 };
 
 /* Enumeration for comparing sloped relations */
-enum comparison { 
+enum comparison {
   lt,     // Less
   eq,     // Equal
-  gt,     // Greater 
+  gt,     // Greater
   noncomp // Incomparable
 };
 
