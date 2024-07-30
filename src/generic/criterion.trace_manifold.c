@@ -2,6 +2,7 @@
 #include "criterion.soundness.hpp"
 #include "heighted_graph.hpp"
 #include "bitset"
+#include <cmath>
 
 class TraceManifoldCriterion : public SoundnessCriterion
 {
@@ -276,7 +277,7 @@ public:
         // {
         //     printf("(%d,%d)->(%d,%d)\n", src.first, src.second, dest.first, dest.second);
         // }
-        
+
         // printf("trace manifold graph traces:\n");
         // for (const auto &traces_of_cycle : *trace_manifold_graph.trace_node_per_cycle) {
         // for (const auto &[node, height] : *traces_of_cycle) {
