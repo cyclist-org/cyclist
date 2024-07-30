@@ -735,6 +735,21 @@ bool Sloped_relation::has_downward_slope() {
     return this->has_down_slope;
 }
 
+bool Sloped_relation::is_partial_function() {
+    for(int i=0; i<this->num_src_heights; i++) {
+        int number_of_neighbours = 0;
+        for(int j=0; j<this->num_src_heights; j++) {
+            if (this->repr_matrix[i][j]!=slope::Undef) {
+                number_of_neighbours++;
+            }
+        }
+        if(number_of_neighbours>1) {
+            return false;
+        }
+    }
+    return true;
+}
+
 //==================================================================
 // MISC
 
