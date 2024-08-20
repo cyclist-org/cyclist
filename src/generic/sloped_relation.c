@@ -319,7 +319,19 @@ void Sloped_relation::remove(int h1, int h2, slope s) {
         free(this->has_down_scc);
     }
 
-
+    // Update this->has_down_slope
+    this->has_down_slope = false;
+    for (int h1=0; h1<num_src_heights; h1++){
+        if(this->has_down_slope == true){
+            break;
+        }
+        for (int h2=0; h2<num_dst_heights; h2++){
+            if(repr_matrix[h1][h2] == slope::Downward){
+                this->has_down_slope = true;
+                break;
+            }
+        }
+    }
 }
 
 int Sloped_relation::size(void) const{
@@ -738,7 +750,7 @@ bool Sloped_relation::has_downward_slope() {
 bool Sloped_relation::is_partial_function() {
     for(int i=0; i<this->num_src_heights; i++) {
         int number_of_neighbours = 0;
-        for(int j=0; j<this->num_src_heights; j++) {
+        for(int j=0; j<this->num_dst_heights; j++) {
             if (this->repr_matrix[i][j]!=slope::Undef) {
                 number_of_neighbours++;
             }

@@ -758,6 +758,10 @@ Heighted_graph::TraceManifoldGraph Heighted_graph::get_trace_manifold_graph(
             (*traces_per_cycle)[dest_cycle_idx] = this->get_traces_of_cycle(dest_cycle, dest_cycle_idx, progressing_traces);
         }
 
+        if (src_cycle_idx == dest_cycle_idx) {
+            continue;
+        }
+
         auto src_cycle_companion_iter_in_src_cycle = std::find(src_cycle->begin(), src_cycle->end(), src_companion_node_idx);
         if (src_cycle_companion_iter_in_src_cycle == src_cycle->end()) {
             throw CompanionNotFoundInItsBasicCycle();
