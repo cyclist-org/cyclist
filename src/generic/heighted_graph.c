@@ -318,7 +318,7 @@ void Heighted_graph::find_backedge_dests_and_SCCs_reachable_from(
 ) {
     idxs[node] = next_idx++;
     low_links[node] = idxs[node];
-        
+
     on_stack[node] = true;
     s.push(node);
 
@@ -334,13 +334,13 @@ void Heighted_graph::find_backedge_dests_and_SCCs_reachable_from(
             // Recurse on it
             find_backedge_dests_and_SCCs_reachable_from(neighbour, s, on_stack, idxs, low_links, next_idx, backedge_dests, SCCs);
 
-            low_links[node] = 
+            low_links[node] =
                 low_links[node] < low_links[neighbour] ? low_links[node] : low_links[neighbour];
         }
         // Otherwise, if successor is in the stack then it is in the current
         // strongly-connected component
         else if (on_stack[neighbour]) {
-            low_links[node] = 
+            low_links[node] =
                 low_links[node] < idxs[neighbour] ? low_links[node] : idxs[neighbour];
             backedge_dests.push_back(neighbour);
         }
@@ -370,14 +370,14 @@ bool Heighted_graph::calculate_SCCs_and_check_if_has_overlapping_cycles(Vec<Vec<
     int low_links[num_nodes];
     std::stack<int> s;
     Vec<int> backedge_dests;
-    
+
     for (int i = 0 ; i < num_nodes; i++) {
         on_stack[i] = false;
         idxs[i] = -1;
         low_links[i] = -1;
     }
 
-    int next_idx = 0;    
+    int next_idx = 0;
     for (int n = 0; n < num_nodes; n++) {
         if (idxs[n] == -1) {
             find_backedge_dests_and_SCCs_reachable_from(n, s, on_stack, idxs, low_links, next_idx, backedge_dests, SCCs);
@@ -409,7 +409,7 @@ bool Heighted_graph::is_down_extended_SCC_reachable_in_node_SCC_from(
 ) {
     idxs[extended_node] = next_idx++;
     low_links[extended_node] = idxs[extended_node];
-        
+
     on_stack.insert(extended_node);
     s.push(extended_node);
 
@@ -439,7 +439,7 @@ bool Heighted_graph::is_down_extended_SCC_reachable_in_node_SCC_from(
                 else if (idxs[extended_node] >= low_links[extended_neighbour] && slp == slope::Downward) {
                     return true;
                 };
-                low_links[extended_node] = 
+                low_links[extended_node] =
                     low_links[extended_node] < low_links[extended_neighbour] ? low_links[extended_node] : low_links[extended_neighbour];
             }
             // Otherwise, if successor is in the stack then it is in the current
@@ -448,7 +448,7 @@ bool Heighted_graph::is_down_extended_SCC_reachable_in_node_SCC_from(
                 if (slp == slope::Downward) {
                     return true;
                 }
-                low_links[extended_node] = 
+                low_links[extended_node] =
                     low_links[extended_node] < idxs[extended_neighbour] ? low_links[extended_node] : idxs[extended_neighbour];
             }
             // Otherwise successor is in an already processed strongly-connected
@@ -480,7 +480,7 @@ bool Heighted_graph::does_node_SCC_contain_a_down_extended_SCC(Vec<int>* node_SC
     int representative_node = node_SCC->at(0);
     Int_SET* node_heights = this->HeightsOf[representative_node];
 
-    int next_idx = 0;    
+    int next_idx = 0;
     for (int h : *node_heights) {
         Int_pair extended_node(representative_node,h);
         // if representative,h have not been visited yet
@@ -522,7 +522,7 @@ bool Heighted_graph::explore_height(int edge_idx, Vec<int>& heights_stack, const
             return false;
         }
     }
-    
+
     Sloped_relation *rel = this->h_change[edge.first][edge.second];
     int node_height = heights_stack.back();
     auto neighbour_heights_and_slopes = rel->get_height_neighbours(node_height);
@@ -539,7 +539,7 @@ bool Heighted_graph::explore_height(int edge_idx, Vec<int>& heights_stack, const
     }
     if (heights_stack.size()>0) {
         heights_stack.pop_back();
-    } 
+    }
     return false;
 }
 
@@ -673,7 +673,7 @@ void Heighted_graph::explore_traces_from(
         throw NoEdgeBetweenAdjacentNodesOnBasicCycle();
     }
     const int* slopes_from_height = rel->get_repr_matrix()[height];
-    
+
     if (curr_heights_path.size() == cycle->size()) {
         int slp = slopes_from_height[curr_heights_path.at(0)];
         does_curr_path_have_down_slope = does_curr_path_have_down_slope || slp ==slope::Downward;
@@ -738,7 +738,7 @@ Heighted_graph::TraceManifoldGraph Heighted_graph::get_trace_manifold_graph(
     auto cycles = structural_connectivity_relation.cycles;
     auto companions = structural_connectivity_relation.companions;
     auto relation = structural_connectivity_relation.relation;
-    Vec_shared_ptr<Vec_shared_ptr<Vec_shared_ptr<int>>> traces_per_cycle = 
+    Vec_shared_ptr<Vec_shared_ptr<Vec_shared_ptr<int>>> traces_per_cycle =
         std::make_shared<Vec<Vec_shared_ptr<Vec_shared_ptr<int>>>>(cycles->size());
 
     Vec_shared_ptr<Pair<Int_pair, Int_pair>> trace_manifold_graph_edges = std::make_shared<Vec<Pair<Int_pair, Int_pair>>>();
@@ -762,14 +762,14 @@ Heighted_graph::TraceManifoldGraph Heighted_graph::get_trace_manifold_graph(
         if (src_cycle_companion_iter_in_src_cycle == src_cycle->end()) {
             throw CompanionNotFoundInItsBasicCycle();
         }
-        int src_cycle_companion_idx_in_src_cycle = src_cycle_companion_iter_in_src_cycle - src_cycle->begin(); 
-        
+        int src_cycle_companion_idx_in_src_cycle = src_cycle_companion_iter_in_src_cycle - src_cycle->begin();
+
         auto src_cycle_companion_iter_in_dest_cycle = std::find(dest_cycle->begin(), dest_cycle->end(), src_companion_node_idx);
         if (src_cycle_companion_iter_in_dest_cycle == dest_cycle->end()) {
             throw CompanionNotFoundStructurallyAdjacentCycle();
         }
-        int src_cycle_companion_idx_in_dest_cycle = src_cycle_companion_iter_in_dest_cycle - dest_cycle->begin(); 
-        
+        int src_cycle_companion_idx_in_dest_cycle = src_cycle_companion_iter_in_dest_cycle - dest_cycle->begin();
+
         auto src_cycle_traces = traces_per_cycle->at(src_cycle_idx);
         auto dest_cycle_traces = traces_per_cycle->at(dest_cycle_idx);
 
@@ -989,7 +989,7 @@ bool Heighted_graph::is_flat_cycle_reachable_from(int node, Vec<int>* curr_path,
         if (rel == NULL || rel->has_downward_slope()) {
             continue;
         }
-        
+
         if (find(curr_path->begin(), curr_path->end(), neighbour) != curr_path->end())
         {
             fresh_nodes[node] = false;
@@ -2527,7 +2527,7 @@ bool Heighted_graph::vla_automata_check() {
     /******************************
      * Set up the automata alphabet
      ******************************/
- 
+
     Vec<bdd> idx_encoding(num_nodes, bddtrue);
     init_alphabet(num_nodes, aut_ipath, aut_trace, idx_encoding);
 
