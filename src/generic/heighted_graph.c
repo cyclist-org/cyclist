@@ -2270,12 +2270,12 @@ bool Heighted_graph::fwk_check(int opts, bool* should_halt) {
                         // object for holding the results of composition
                         if (insert_result.second) {
                             PQ->initialize();
+                            tmp_relation =
+                                new Sloped_relation (
+                                        this->trace_width,
+                                        this->trace_width
+                                    );
                         }
-                        tmp_relation =
-                            new Sloped_relation (
-                                    this->trace_width,
-                                    this->trace_width
-                                );
                     }
 
                     bool right_done = false;
