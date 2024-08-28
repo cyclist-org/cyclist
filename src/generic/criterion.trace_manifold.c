@@ -17,6 +17,13 @@ private:
         Vec<bool> &is_cycle_visited,
         Vec<Int_pair> &visited_trace_nodes)
     {
+        bool all_subset_is_visited = true;
+        for (int cycle_idx : *cycles_subset) {
+            all_subset_is_visited = all_subset_is_visited && is_cycle_visited[cycle_idx];
+        }
+        if(all_subset_is_visited) {
+            return;
+        }
         int cycle_idx = trace_node.first;
         is_cycle_visited[cycle_idx] = true;
         visited_trace_nodes.push_back(trace_node);
@@ -99,6 +106,9 @@ private:
         {
             for (const auto &cycle2 : *cycles_subset)
             {
+                if (cycle1 == cycle2) {
+                    continue;
+                }
                 if (this->are_structurly_adjacent(cycle1, cycle2, structural_connectivity_relation) &&
                     !this->are_graph_adjacent(cycle1, cycle2, trace_manifold_graph_edges))
                 {
@@ -271,6 +281,7 @@ public:
         // {
         //     printf("progressing: %d,%d\n", pt.first, pt.second);
         // }
+        // printf("tmg edges %d\n", trace_manifold_graph.edges->size());
 
         // printf("trace manifold graph edges:\n");
         // for (const auto &[src, dest] : *trace_manifold_graph.edges)

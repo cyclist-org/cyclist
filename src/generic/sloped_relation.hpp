@@ -88,6 +88,7 @@ public:
     bool has_self_loop(void);
     bool has_downward_SCC(void);
     bool has_downward_slope();
+    bool is_partial_function();
 
     friend bool operator== ( const Sloped_relation& R, const Sloped_relation& L );
 
