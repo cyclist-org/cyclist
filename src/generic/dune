@@ -3,7 +3,7 @@
  (public_name cyclist.generic)
  (libraries lib)
  (modules
-   (:standard 
+   (:standard
       \ checkproof))
  (modules_without_implementation sequent)
  (foreign_stubs
@@ -11,11 +11,11 @@
   (names
     proof proof_aut trace legacy_soundness
     types sloped_relation heighted_graph soundness
-    sledgehammer 
+    sledgehammer
     criterion.process_based
     directed_graph graph
     criterion.fwk criterion.order_reduced
-    criterion.sla criterion.vla 
+    criterion.sla criterion.vla
     criterion.flat_cycles criterion.flat_cycles.generalized
     criterion.descending_unicycles
     criterion.trace_manifold
