@@ -106,11 +106,18 @@ int main(int argc, char **argv)
     if (argc > 1)
     {
         std::string path = argv[1];
+        bool only_minimised = true;
 
         std::vector<fs::directory_entry> entries;
         for (const auto &entry : fs::directory_iterator(path))
         {
-            entries.push_back(entry);
+            if(only_minimised){
+                if(entry.path().string().find("minimised")!= std::string::npos) {
+                    entries.push_back(entry);
+                }
+            } else {
+                entries.push_back(entry);
+            }
         }
 
         // Sort the entries by path

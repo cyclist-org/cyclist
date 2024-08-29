@@ -419,11 +419,11 @@ def plot_mean_with_interquartile_range_by(frame, group_by_col, values_col, plot_
     # ax.fill_between(stats.index, mins, maxs, alpha=0.1)
 
 
-# filespaths_fo = [f"./src/generic/test/run_stats.fo"]
-filespaths_fo = [f"./src/generic/test/run_stats.fo.{i}" for i in range(1,6)]
+filespaths_fo = [f"./src/generic/test/run_stats.minimised.fo"]
+# filespaths_fo = [f"./src/generic/test/run_stats.fo.{i}" for i in range(1,6)]
 data_fo = parse_files_multiruns(filespaths_fo)
-# filespaths_sl = [f"./src/generic/test/run_stats.sl"]
-filespaths_sl = [f"./src/generic/test/run_stats.sl.{i}" for i in range(1,6)]
+filespaths_sl = [f"./src/generic/test/run_stats.minimised.sl"]
+# filespaths_sl = [f"./src/generic/test/run_stats.sl.{i}" for i in range(1,6)]
 data_sl = parse_files_multiruns(filespaths_sl)
 
 data = [
@@ -544,6 +544,7 @@ def plot_methods_comparison(frame):
     plt.ylabel("microseconds")
     plt.show()
 
+frame.to_csv("./checkproof_benchmarks/stats.minimized.csv")
 
 plot_methods_comparison(frame)
 exit()
