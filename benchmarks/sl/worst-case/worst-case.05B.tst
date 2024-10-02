@@ -1,0 +1,1 @@
+Q6(nil,x2,x3,x4,x5,x6) |- list(x2) * list(x3) * list(x4) * list(x5) * list(x6)
