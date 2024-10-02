@@ -57,13 +57,25 @@ module type S = sig
       *)
 
   val all_nodes : select_f
-  (** Ready-made selection functions doing the obvious. *)
+  (** Ready-made selection function doing the obvious. *)
 
   val closed_nodes : select_f
+  (** Ready-made selection function doing the obvious. *)
 
   val ancestor_nodes : select_f
+  (** Ready-made selection function doing the obvious. *)
 
   val syntactically_equal_nodes : select_f
+  (** Ready-made selection function doing the obvious. *)
+
+  val default_select_f : select_f ref
+  (** A reference to a default selection function (one of the above). *)
+
+  val set_default_select_f : int -> unit
+  (** Specify the selection function to store as the default *)
+
+  val default_select_f_descr : ?line_prefix:string -> unit -> string
+  (** Returns a description of the inputs for the [set_default_select_f] function. *)
 
   val fail : t
   (** The rule that always fails. *)
