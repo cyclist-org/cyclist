@@ -1,56 +1,47 @@
-#include "types.c"
-#include "criterion.soundness.hpp"
-#include "heighted_graph.hpp"
+#include "criterion.descending_unicycles.hpp"
 
-class DescendingUnicyclesCriterion : public SoundnessCriterion
+DescendingUnicyclesCriterion::DescendingUnicyclesCriterion(Heighted_graph *hg)
 {
-private:
-    Heighted_graph *hg;
-    Vec<Vec<int> *> SCCs;
+    this->hg = hg;
+}
 
-public:
-    DescendingUnicyclesCriterion(Heighted_graph *hg)
+DescendingUnicyclesCriterion::~DescendingUnicyclesCriterion()
+{
+    // delete this->hg;
+    for (const auto &SCC : this->SCCs)
     {
-        this->hg = hg;
+        delete SCC;
     }
-    ~DescendingUnicyclesCriterion()
+}
+
+SoundnessCheckResult DescendingUnicyclesCriterion::check_soundness()
+{
+    bool has_overlapping_cycles = this->hg->calculate_SCCs_and_check_if_has_overlapping_cycles(this->SCCs);
+    if (has_overlapping_cycles)
     {
-        // delete this->hg;
-        for (const auto &SCC : this->SCCs)
-        {
-            delete SCC;
-        }
+        return SoundnessCheckResult::dontKnow;
     }
 
-    SoundnessCheckResult check_soundness()
+    // for (const auto &SCC : this->SCCs) {
+    //     for (const auto &n : *SCC) {
+    //         printf("%d,", n);
+    //     }
+    //     printf("\n");
+    // }
+
+
+    for (const auto &SCC : this->SCCs)
     {
-        bool has_overlapping_cycles = this->hg->calculate_SCCs_and_check_if_has_overlapping_cycles(this->SCCs);
-        if (has_overlapping_cycles)
+        if (SCC->size() == 1)
         {
-            return SoundnessCheckResult::dontKnow;
-        }
-
-        // for (const auto &SCC : this->SCCs) {
-        //     for (const auto &n : *SCC) {
-        //         printf("%d,", n);
-        //     }
-        //     printf("\n");
-        // }
-
-
-        for (const auto &SCC : this->SCCs)
-        {
-            if (SCC->size() == 1)
-            {
-                if (!this->hg->has_self_edge(SCC->at(0))){
-                    continue;
-                }
-            }
-            if (!this->hg->does_node_SCC_contain_a_down_extended_SCC(SCC))
-            {
-                return SoundnessCheckResult::unsound;
+            if (!this->hg->has_self_edge(SCC->at(0))){
+                continue;
             }
         }
-        return SoundnessCheckResult::sound;
+        if (!this->hg->does_node_SCC_contain_a_down_extended_SCC(SCC))
+        {
+            return SoundnessCheckResult::unsound;
+        }
     }
-};
+    return SoundnessCheckResult::sound;
+}

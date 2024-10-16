@@ -10,28 +10,9 @@
 #include <memory>
 #include <iostream>
 #include <sstream>
-#include <cstdint> 
+#include <cstdint>
 #include <map>
-
-//======================================================
-#include <spot/tl/defaultenv.hh>
-
-#include <spot/twa/bdddict.hh>
-#include <spot/twa/twa.hh>
-#include <spot/twa/twagraph.hh>
-#include <spot/twa/twaproduct.hh>
-
-#include <spot/twaalgos/contains.hh>
-#include <spot/twaalgos/copy.hh>
-#include <spot/twaalgos/determinize.hh>
-#include <spot/twaalgos/dot.hh>
-#include <spot/twaalgos/dualize.hh>
-#include <spot/twaalgos/hoa.hh>
-#include <spot/twaalgos/stutter.hh>
-#include <spot/twaalgos/totgba.hh>
-#include <spot/twaalgos/remfin.hh>
-
-#include <spot/twaalgos/gtec/gtec.hh>
+#include <stack>
 
 #include "sloped_relation.hpp"
 #include "types.c"
@@ -177,7 +158,7 @@ public:
     void remove_down_edges_not_in_any_SCC();
 
     bool has_flat_cycle();
-    
+
     bool calculate_SCCs_and_check_if_has_overlapping_cycles(Vec<Vec<int>*> &SCCs);
     bool does_node_SCC_contain_a_down_extended_SCC(Vec<int>* node_SCC);
 

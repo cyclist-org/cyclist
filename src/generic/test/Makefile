@@ -22,56 +22,68 @@ endef
 
 all: soundness tests
 
-soundness: main.o sloped_relation.o heighted_graph.o graph.o criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o 
-	g++ -g -o soundness main.o sloped_relation.o heighted_graph.o graph.o criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o `pkg-config --libs libspot libbddx`
+soundness: main.o sloped_relation.o heighted_graph.o graph.o criterion.soundness.o criterion.process_based.o criterion.flat_cycles.o criterion.descending_unicycles.o criterion.trace_manifold.o directed_graph.o sledgehammer.o
+	g++ -g main.o sloped_relation.o heighted_graph.o graph.o criterion.soundness.o criterion.process_based.o criterion.flat_cycles.o criterion.descending_unicycles.o criterion.trace_manifold.o directed_graph.o sledgehammer.o `pkg-config --libs libspot libbddx` -pthread -o soundness
 
 get_graphs_stats: get_graphs_stats.o sloped_relation.o heighted_graph.o graph.o heighted_graph_parser.o criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o
 	g++ -g -o get_graphs_stats get_graphs_stats.o sloped_relation.o heighted_graph.o graph.o criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o `pkg-config --libs libspot libbddx`
 
 get_graphs_stats.o: get_graphs_stats.cpp ../heighted_graph.hpp ./heighted_graph_parser.cpp ../criterion.descending_unicycles.c ../criterion.trace_manifold.c
-	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/opt/lib -g -c get_graphs_stats.cpp -o get_graphs_stats.o
+	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -g -c get_graphs_stats.cpp -o get_graphs_stats.o
 
 run_on_graphs: run_on_graphs.o sloped_relation.o heighted_graph.o graph.o heighted_graph_parser.o criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o
 	g++ -g -o run_on_graphs run_on_graphs.o sloped_relation.o heighted_graph.o graph.o criterion.soundness.o criterion.process_based.o directed_graph.o sledgehammer.o `pkg-config --libs libspot libbddx`
 
 run_on_graphs.o: run_on_graphs.cpp ../heighted_graph.hpp ./heighted_graph_parser.cpp
-	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/opt/lib -g -c run_on_graphs.cpp -o run_on_graphs.o
+	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -g -c run_on_graphs.cpp -o run_on_graphs.o
 
-main.o: main.cpp ../heighted_graph.hpp ../sledgehammer.hpp ./heighted_graph_parser.cpp
-	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/opt/lib -g -c main.cpp -o main.o
+main.o: main.cpp \
+	../heighted_graph.hpp ./heighted_graph_parser.cpp \
+	../criterion.flat_cycles.hpp ../criterion.descending_unicycles.hpp ../criterion.trace_manifold.hpp \
+	../sledgehammer.hpp
+	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -g -c main.cpp -o main.o
 
 heighted_graph_parser.o: heighted_graph_parser.cpp ../heighted_graph.hpp ../sledgehammer.hpp
-	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/opt/lib -g -c heighted_graph_parser.cpp -o heighted_graph_parser.o
+	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -g -c heighted_graph_parser.cpp -o heighted_graph_parser.o
 
 heighted_graph.o: ../heighted_graph.hpp ../heighted_graph.c ../sloped_relation.hpp ../types.c
-	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/usr/lib -L/opt/lib -g -c ../heighted_graph.c -o heighted_graph.o
+	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -g -c ../heighted_graph.c -o heighted_graph.o
 
 sloped_relation.o: ../sloped_relation.c ../sloped_relation.hpp ../types.c
-	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../sloped_relation.c -o sloped_relation.o
+	g++ ${CFLAGS} -I ../ -g -c ../sloped_relation.c -o sloped_relation.o
+
+criterion.flat_cycles.o: ../criterion.soundness.c ../heighted_graph.hpp ../criterion.flat_cycles.hpp ../criterion.flat_cycles.c
+	g++ ${CFLAGS} -I ../ -c ../criterion.flat_cycles.c -o criterion.flat_cycles.o
+
+criterion.descending_unicycles.o: ../types.c ../criterion.soundness.c ../heighted_graph.hpp ../criterion.descending_unicycles.hpp ../criterion.descending_unicycles.c
+	g++ ${CFLAGS} -I ../ -c ../criterion.descending_unicycles.c -o criterion.descending_unicycles.o
+
+criterion.trace_manifold.o: ../criterion.soundness.c ../heighted_graph.hpp ../criterion.trace_manifold.hpp ../criterion.trace_manifold.c
+	g++ ${CFLAGS} -I ../ -c ../criterion.trace_manifold.c -o criterion.trace_manifold.o
 
 sledgehammer.o: ../sledgehammer.hpp ../sledgehammer.c ../criterion.soundness.hpp ../criterion.soundness.c \
 	../criterion.process_based.hpp ../criterion.process_based.c \
 	../criterion.order_reduced.c ../criterion.fwk.c ../criterion.sla.c ../criterion.vla.c \
 	../directed_graph.hpp ../directed_graph.c \
 	../graph.hpp ../graph.c \
-	../criterion.flat_cycles.c ../criterion.flat_cycles.generalized.c \
-	../criterion.descending_unicycles.c \
-	../criterion.trace_manifold.c \
+	../criterion.flat_cycles.hpp ../criterion.flat_cycles.c ../criterion.flat_cycles.generalized.c \
+	../criterion.descending_unicycles.hpp ../criterion.descending_unicycles.c \
+	../criterion.trace_manifold.hpp ../criterion.trace_manifold.c \
 	../criterion.sprenger_dam.c ../criterion.no_flat_extended_cycles.c \
-	../heighted_graph.hpp ../sloped_relation.hpp ../types.c 
-	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/usr/lib -L/opt/lib -g -c ../sledgehammer.c -o sledgehammer.o
+	../heighted_graph.hpp ../sloped_relation.hpp ../types.c
+	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -g -c ../sledgehammer.c -o sledgehammer.o
 
-criterion.soundness.o: ../criterion.soundness.c ../criterion.soundness.hpp 
-	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../criterion.soundness.c -o criterion.soundness.o
+criterion.soundness.o: ../criterion.soundness.c ../criterion.soundness.hpp
+	g++ ${CFLAGS} -I ../ -g -c ../criterion.soundness.c -o criterion.soundness.o
 
 criterion.process_based.o: ../criterion.process_based.c ../criterion.process_based.hpp ../types.c ../criterion.soundness.hpp ../heighted_graph.hpp
-	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -L/opt/lib -g -c ../criterion.process_based.c -o criterion.process_based.o
+	g++ ${CFLAGS} `pkg-config --cflags libspot libbddx` -I ../ -g -c ../criterion.process_based.c -o criterion.process_based.o
 
 directed_graph.o: ../directed_graph.c ../directed_graph.hpp ../types.c
-	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../directed_graph.c -o directed_graph.o
+	g++ ${CFLAGS} -I ../ -g -c ../directed_graph.c -o directed_graph.o
 
 graph.o: ../graph.c ../graph.hpp ../sloped_relation.hpp ../types.c
-	g++ ${CFLAGS} -I ../ -L/opt/lib -g -c ../graph.c -o graph.o
+	g++ ${CFLAGS} -I ../ -g -c ../graph.c -o graph.o
 
 .PHONY: \
     clean \
@@ -104,7 +116,7 @@ graph.o: ../graph.c ../graph.hpp ../sloped_relation.hpp ../types.c
     tests-ortl \
     tests-fwk
 
-clean: 
+clean:
 	rm -f ./*.o soundness
 
 run-get-graphs-stats: get_graphs_stats
@@ -115,7 +127,7 @@ run-get-graphs-stats: get_graphs_stats
 
 run-on-graphs-sh-single: run_on_graphs
 	./run_on_graphs delete_me_graphs H0fms
-	
+
 run-on-graphs-sh-new: run_on_graphs
 	./run_on_graphs ../../../../cyclist_graphs/unminimized/sl H0fms
 	# ./run_on_graphs ../../../../cyclist_graphs/unminimized/sl

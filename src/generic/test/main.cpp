@@ -2,6 +2,10 @@
 #include "json.hpp"
 #include "../types.c"
 #include "../heighted_graph.hpp"
+#include "../criterion.soundness.hpp"
+#include "../criterion.flat_cycles.hpp"
+#include "../criterion.descending_unicycles.hpp"
+#include "../criterion.trace_manifold.hpp"
 #include "../sledgehammer.hpp"
 #include "heighted_graph_parser.cpp"
 
@@ -15,16 +19,28 @@ int usage(char* arg0) {
         << " <spec-string>"
         << std::endl
         << "<spec-string> ::= O [<order-id>] ([i]|([m][s])) [f][p]"
-        << "(Order-reduced)"
+        << "([O]rder-reduced)"
+        << std::endl
+        << "                | H [<order-id>] ([i]|([m][s])) [f][p]"
+        << "(Sledge[H]ammer)"
         << std::endl
         << "                | F ([i]|([m][s])) [f][p]"
-        << "(Floyd-Warshall-Kleene)"
+        << "([F]loyd-Warshall-Kleene)"
         << std::endl
         << "                | V"
-        << "(Vertex-language Automaton encoding)"
+        << "([V]ertex-language Automaton encoding)"
         << std::endl
         << "                | S"
-        << "(Slope-language Automaton encoding)"
+        << "([S]lope-language Automaton encoding)"
+        << std::endl
+        << "                | M"
+        << "(Trace [Manifold])"
+        << std::endl
+        << "                | L"
+        << "(F[L]at Cycles)"
+        << std::endl
+        << "                | D"
+        << "([D]escending Unicycles)"
         << std::endl;
     return -1;
 }
@@ -44,14 +60,16 @@ int main(int argc, char** argv) {
         Heighted_graph hg = Heighted_graph(graph["Node"].size());
         parse_from_json(graph, hg);
 
-        bool result;
+        SoundnessCheckResult result;
 
         int opts = 0;
 
         auto start = std::chrono::system_clock::now();
 
         if (argc < 3) {
-            result = hg.order_reduced_check(Heighted_graph::GIVEN_ORDER, opts);
+            (hg.order_reduced_check(Heighted_graph::GIVEN_ORDER, opts)) ?
+                  result = SoundnessCheckResult::sound
+                : result = SoundnessCheckResult::unsound;
         }
         else if (*argv[2] == '\0' || *argv[2] == 'O' || *argv[2] == 'H') {
             Heighted_graph::NODE_ORDER order;
@@ -75,28 +93,53 @@ int main(int argc, char** argv) {
             }
             opts = Heighted_graph::parse_flags(spec);
 
+            bool res;
             if(*argv[2] == 'O'){
-                result = hg.order_reduced_check(order, opts);
+                res = hg.order_reduced_check(order, opts);
             } else if (*argv[2] == 'H'){
                 Sledgehammer sledgehammer(&hg, order, opts);
-                result = sledgehammer.check_soundness();
+                res = sledgehammer.check_soundness();
             } else {
                 return usage(argv[0]);
             }
+            (res) ?
+                  result = SoundnessCheckResult::sound
+                : result = SoundnessCheckResult::unsound;
             // hg.print_statistics();
         } else {
             switch (*argv[2]) {
                 case 'F': {
                     opts = Heighted_graph::parse_flags(argv[2]++);
-                    result = hg.fwk_check(opts);
+                    (hg.fwk_check(opts)) ?
+                          result = SoundnessCheckResult::sound
+                        : result = SoundnessCheckResult::unsound;
                     break;
                 }
                 case 'V': {
-                    result = hg.vla_automata_check();
+                    hg.vla_automata_check() ?
+                          result = SoundnessCheckResult::sound
+                        : result = SoundnessCheckResult::unsound;
                     break;
                 }
                 case 'S': {
-                    result = hg.sla_automata_check();
+                    hg.sla_automata_check() ?
+                          result = SoundnessCheckResult::sound
+                        : result = SoundnessCheckResult::unsound;
+                    break;
+                }
+                case 'M': {
+                    TraceManifoldCriterion check(&hg);
+                    result = check.check_soundness();
+                    break;
+                }
+                case 'D': {
+                    DescendingUnicyclesCriterion check(&hg);
+                    result = check.check_soundness();
+                    break;
+                }
+                case 'L': {
+                    FlatCyclesCriterion check(&hg);
+                    result = check.check_soundness();
                     break;
                 }
                 default: {
@@ -106,16 +149,24 @@ int main(int argc, char** argv) {
         }
 
         // Output result
-        if (result) {
-            std::cout << "SOUND" << std::endl;
-        } else {
-            std::cout << "UNSOUND" << std::endl;
+        switch (result) {
+            case SoundnessCheckResult::sound:
+                std::cout << "SOUND" << std::endl;
+                break;
+            case SoundnessCheckResult::unsound:
+                std::cout << "UNSOUND" << std::endl;
+                break;
+            case SoundnessCheckResult::dontKnow:
+                std::cout << "UNKNOWN" << std::endl;
+                break;
+            default:
+                break;
         }
 
         auto end = std::chrono::system_clock::now();
         std::cout << std::chrono::duration_cast<std::chrono::microseconds>((end-start)).count() << "us" << std::endl;
 
-        return !result;
+        return result;
     }
 
     return usage(argv[0]);
