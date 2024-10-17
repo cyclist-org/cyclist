@@ -56,7 +56,7 @@ SLA code found in c94abc9.
 
 # Graphs 24 and 25
 
-Had crafted examples to demonstrate the difference in the sizes of the full
+Hand-crafted examples to demonstrate the difference in the sizes of the full
 and order-reduced composition closures. Both satisfy ID.
 
 Graph 25 demonstrates a bug in the implementation of Tarjan's SCC algorithm in
