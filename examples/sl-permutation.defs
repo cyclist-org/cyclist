@@ -1,0 +1,74 @@
+list {
+	x=nil => list(x) |
+	x->y' * list(y') => list(x)
+};
+
+P2 {
+  P2(y, x) => P2(x, y)
+};
+
+Q2 {
+  x = nil * y = nil => Q2(x, y) |
+  x -> x' * Q2(x', y) => Q2(x, y) |
+  Q2(y, x) => Q2(x, y)
+};
+
+P3 {
+  P3(y, z, x) => P3(x, y, z) |
+  P3(z, x, y) => P3(x, y, z)
+};
+
+Q3 {
+  x = nil * y = nil * z = nil => Q3(x, y, z) |
+  x -> x' * Q3(x', y, z) => Q3(x, y, z) |
+  Q3(y, z, x) => Q3(x, y, z) |
+  Q3(z, x, y) => Q3(x, y, z)
+};
+
+P4 {
+  P4(z, w, x, y) => P4(w, x, y, z) |
+  P4(y, z, w, x) => P4(w, x, y, z) |
+  P4(x, y, z, w) => P4(w, x, y, z)
+};
+
+Q4 {
+  w = nil * x = nil * y = nil * z = nil => Q4(w, x, y, z) |
+  w -> w' * Q4(w', x, y, z) => Q4(w, x, y, z) |
+  Q4(z, w, x, y) => Q4(w, x, y, z) |
+  Q4(y, z, w, x) => Q4(w, x, y, z) |
+  Q4(x, y, z, w) => Q4(w, x, y, z)
+};
+
+P5 {
+  P5(x5, x1, x2, x3, x4) => P5(x1, x2, x3, x4, x5) |
+  P5(x4, x5, x1, x2, x3) => P5(x1, x2, x3, x4, x5) |
+  P5(x3, x4, x5, x1, x2) => P5(x1, x2, x3, x4, x5) |
+  P5(x2, x3, x4, x5, x1) => P5(x1, x2, x3, x4, x5)
+};
+
+Q5 {
+  x1 = nil * x2 = nil * x3 = nil * x4 = nil * x5 = nil => Q5(x1, x2, x3, x4, x5) |
+  x1 -> x1' * Q5(x1', x2, x3, x4, x5) => Q5(x1, x2, x3, x4, x5) |
+  Q5(x5, x1, x2, x3, x4) => Q5(x1, x2, x3, x4, x5) |
+  Q5(x4, x5, x1, x2, x3) => Q5(x1, x2, x3, x4, x5) |
+  Q5(x3, x4, x5, x1, x2) => Q5(x1, x2, x3, x4, x5) |
+  Q5(x2, x3, x4, x5, x1) => Q5(x1, x2, x3, x4, x5)
+};
+
+P6 {
+  P6(x6, x1, x2, x3, x4, x5) => P6(x1, x2, x3, x4, x5, x6) |
+  P6(x5, x6, x1, x2, x3, x4) => P6(x1, x2, x3, x4, x5, x6) |
+  P6(x4, x5, x6, x1, x2, x3) => P6(x1, x2, x3, x4, x5, x6) |
+  P6(x3, x4, x5, x6, x1, x2) => P6(x1, x2, x3, x4, x5, x6) |
+  P6(x2, x3, x4, x5, x6, x1) => P6(x1, x2, x3, x4, x5, x6)
+};
+
+Q6 {
+  x1 = nil * x2 = nil * x3 = nil * x4 = nil * x5 = nil * x6 = nil => Q6(x1, x2, x3, x4, x5, x6) |
+  x1 -> x1' * Q6(x1', x2, x3, x4, x5, x6) => Q6(x1, x2, x3, x4, x5, x6) |
+  Q6(x6, x1, x2, x3, x4, x5) => Q6(x1, x2, x3, x4, x5, x6) |
+  Q6(x5, x6, x1, x2, x3, x4) => Q6(x1, x2, x3, x4, x5, x6) |
+  Q6(x4, x5, x6, x1, x2, x3) => Q6(x1, x2, x3, x4, x5, x6) |
+  Q6(x3, x4, x5, x6, x1, x2) => Q6(x1, x2, x3, x4, x5, x6) |
+  Q6(x2, x3, x4, x5, x6, x1) => Q6(x1, x2, x3, x4, x5, x6)
+}

@@ -21,8 +21,8 @@ let () = F.maxbound := 0
 let () =
   F.usage :=
     !F.usage
-    ^ " [-D <file>] [-emp] [-Lem <int>] [-IC] [-IT] [-IP] [-SLCOMP file] [-S \
-       <string>]"
+    ^ " [-D <file>] [-emp] [-Bl <int>] [-Lem <int>] [-IC] [-IT] [-IP] \
+        [-SLCOMP file] [-S <string>]"
 
 let () =
   F.speclist :=
@@ -38,6 +38,11 @@ let () =
           , "parse the empty string as the formula [emp] rather than [False], "
             ^ "default is "
             ^ string_of_bool !parse_null_as_emp )
+        ; ("-Bl"
+          , Arg.Int Rules.set_default_select_f
+          , ": specify which proof nodes are considered for backlinks"
+            ^ "\n"
+            ^ Rules.default_select_f_descr ())
         ; ( "-Lem"
           , Arg.Int Rules.set_lemma_level
           , ": specify the permissiveness of the lemma application strategy"

@@ -1,9 +1,9 @@
 CMD := "src/seplog/prove.exe"
 export CMD
 
-TARGETS:=$(filter-out Makefile,$(wildcard *))
-.PHONY: all $(TARGETS)
-all: $(TARGETS)
+AVG_CASE:=base songbird atva-2014
+.PHONY: all $(AVG_CASE) worstcase
+all: $(AVG_CASE)
 
-$(TARGETS): %:
+$(AVG_CASE): %:
 		$(MAKE) -C $@

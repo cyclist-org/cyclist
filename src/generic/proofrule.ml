@@ -58,13 +58,22 @@ module type S = sig
       *)
 
   val all_nodes : select_f
-  (** Ready-made selection functions doing the obvious. *)
+  (** Ready-made selection function doing the obvious. *)
 
   val closed_nodes : select_f
 
   val ancestor_nodes : select_f
 
   val syntactically_equal_nodes : select_f
+
+  val default_select_f : select_f ref
+  (** A reference to a default selection function (one of the above). *)
+
+  val set_default_select_f : int -> unit
+  (** Specify the selection function to store as the default *)
+
+  val default_select_f_descr : ?line_prefix:string -> unit -> string
+  (** Returns a description of the inputs for the [set_default_select_f] function. *)
 
   val fail : t
   (** The rule that always fails. *)
@@ -178,6 +187,28 @@ module Make (Seq : Sequent.S) = struct
         (Proof.to_list prf)
     in
     Blist.map fst nodes
+
+  let default_select_f = ref all_nodes
+
+  let set_default_select_f id =
+    default_select_f :=
+      match id with
+      | 0 ->
+        all_nodes
+      | 1 ->
+        closed_nodes
+      | 2 ->
+        ancestor_nodes
+      | 3 ->
+        syntactically_equal_nodes
+      | _ ->
+        !default_select_f
+
+  let default_select_f_descr ?(line_prefix = "\t") () =
+    line_prefix ^ "0 -- all proof nodes (DEFAULT)\n" ^
+    line_prefix ^ "1 -- all closed proof nodes\n" ^
+    line_prefix ^ "2 -- all ancestor proof nodes\n" ^
+    line_prefix ^ "3 -- all syntactically equal proof nodes"
 
   let fail _ _ = L.empty
 

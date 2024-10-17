@@ -13,6 +13,27 @@
 #include <thread>
 #include <utility>
 
+//======================================================
+#include <spot/tl/defaultenv.hh>
+
+#include <spot/twa/bdddict.hh>
+#include <spot/twa/twa.hh>
+#include <spot/twa/twagraph.hh>
+#include <spot/twa/twaproduct.hh>
+
+#include <spot/twaalgos/contains.hh>
+#include <spot/twaalgos/copy.hh>
+#include <spot/twaalgos/determinize.hh>
+#include <spot/twaalgos/dot.hh>
+#include <spot/twaalgos/dualize.hh>
+#include <spot/twaalgos/hoa.hh>
+#include <spot/twaalgos/stutter.hh>
+#include <spot/twaalgos/totgba.hh>
+#include <spot/twaalgos/remfin.hh>
+
+#include <spot/twaalgos/gtec/gtec.hh>
+
+
 //=============================================================
 // Flag init
 //=============================================================

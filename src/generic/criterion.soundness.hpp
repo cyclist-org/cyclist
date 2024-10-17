@@ -3,9 +3,9 @@
 
 enum SoundnessCheckResult
 {
-    dontKnow,
-    sound,
-    unsound,
+    dontKnow = -1,
+    sound = 0,
+    unsound = 1,
 };
 
 class SoundnessCriterion

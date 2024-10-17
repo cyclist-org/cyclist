@@ -6,12 +6,12 @@
 #include "criterion.sla.c"
 #include "criterion.fwk.c"
 #include "criterion.order_reduced.c"
-#include "criterion.flat_cycles.c"
+#include "criterion.flat_cycles.hpp"
 #include "criterion.flat_cycles.generalized.c"
 #include "criterion.sprenger_dam.c"
 #include "criterion.no_flat_extended_cycles.c"
-#include "criterion.descending_unicycles.c"
-#include "criterion.trace_manifold.c"
+#include "criterion.descending_unicycles.hpp"
+#include "criterion.trace_manifold.hpp"
 #include <future>
 #include <unistd.h>
 #include <exception>
