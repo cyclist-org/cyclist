@@ -109,9 +109,11 @@ clean:
 
 run-get-graphs-stats: get_graphs_stats
 	# ./get_graphs_stats '/Users/matanshaked/M.Sc research/Thesis/cyclist_graphs/cyclist_output_graphs/sl'
+	./get_graphs_stats '/Users/matanshaked/M.Sc research/Thesis/cyclist_graphs/cyclist_output_graphs/fo/minimized'
+
 	# ./get_graphs_stats ../../../../cyclist_graphs/unminimized/sl
 	# ./get_graphs_stats ./loops_tests
-	./get_graphs_stats ./delete_me_graphs
+	# ./get_graphs_stats ./delete_me_graphs
 
 run-on-graphs-sh-single: run_on_graphs
 	./run_on_graphs delete_me_graphs H0fms
