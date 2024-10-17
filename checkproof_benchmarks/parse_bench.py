@@ -9,7 +9,7 @@ import pandas as pd
 def get_minimization_times(minimization_contents):
     return list(map(float,re.findall(r"Minimization took: (\d+\.\d+) ms", minimization_contents)))
 def get_modelcheck_times(contents):
-    return list(map(float,re.findall(r"Absolute time spent model checking: (\d+\.\d+) ms", contents)))
+    return list(map(lambda x: 3000.0 if x=="TIMEOUT" else float(x),re.findall(r"Absolute time spent model checking: (\d+\.\d+|TIMEOUT) ms", contents)))
 def get_soundness(contents):
     return list(map(lambda x: x=="YES",re.findall(r"(YES|NO)", contents)))
 def parse(contents):
@@ -138,13 +138,23 @@ def get_method_runtimes(runs_filepaths_prefixes, amount_of_runs, method_descript
     })
 
 
-def compare_SH_with_and_without_TM(frame):
-    plot_mean_with_interquartile_range_by(frame, "edges", "VLA")
-    # plot_mean_with_interquartile_range_by(frame, "edges", "SLA")
-    plot_mean_with_interquartile_range_by(frame, "edges", "FWK")
-    plot_mean_with_interquartile_range_by(frame, "edges", "OR")
+def compare_SH_with_and_without_TM():
+    CY_times = get_method_runtimes("./logs/trace-manifold/results.SH", 3, "CY")
+    CY_with_TM_times = get_method_runtimes("./logs/trace-manifold/results.SH.tm", 3, "CY_TM")
+    stats_frame = get_graphs_stats("./stats.csv")
+    frame = pd.concat([stats_frame, CY_times, CY_with_TM_times], axis=1)
+    frame = frame[frame["CY"]>0]
+
+    print(sum(frame["CY"]))
+    print(sum(frame["CY_TM"]))
+    print(sum(frame["CY_TM"])/sum(frame["CY"]))
+    
+    palette = sns.color_palette(["#233D4D","#FCCA46"])
+    plot_runtimes_and_overheads(frame,["CY","CY_TM"],palette)
+
+
     plot_mean_with_interquartile_range_by(frame, "edges", "CY")
-    # plot_mean_with_interquartile_range_by(frame, "edges", "CY with TM")
+    plot_mean_with_interquartile_range_by(frame, "edges", "CY_TM")
     # plot_mean_with_interquartile_range_by(frame, "amount of backedges", "CY with TM")
     # plot_mean_with_interquartile_range_by(frame, "amount of backedges", "VLA")
     # plot_mean_with_interquartile_range_by(frame, "amount of backedges", "SLA", show_legend=False)
@@ -153,21 +163,22 @@ def compare_SH_with_and_without_TM(frame):
     # plot_mean_with_interquartile_range_by(frame, "amount of backedges", "CY")
     plt.show()
     
-    frame = frame[(frame["FC answers"]!="don't know")|(frame["DU answers"]!="don't know")|(frame["TM answers"]!="don't know")]
-    print(sum(frame["OR"]))
-    print(sum(frame["CY"]))
-    print(sum(frame["CY with TM"]))
-    print(len(frame.index))
+    # frame = frame[(frame["FC answers"]!="don't know")|(frame["DU answers"]!="don't know")|(frame["TM answers"]!="don't know")]
+    # print(sum(frame["OR"]))
+    # print(sum(frame["CY"]))
+    # print(sum(frame["CY with TM"]))
+    # print(len(frame.index))
     # plot_mean_with_interquartile_range_by(frame, "edges", "OR")
     # plot_mean_with_interquartile_range_by(frame, "edges", "CY")
     # plot_mean_with_interquartile_range_by(frame, "edges", "CY with TM")
     # plt.show()
 
 def plot_runtimes_and_overheads(frame, methods, palette):
-    interesting_cols = ["edges","nodes","buds"]
+    frame = frame.rename(columns={"edges":"Edges", "nodes":"Nodes", "buds":"Buds"})
+    interesting_cols = ["Edges","Nodes","Buds"]
     runtimes_frame = frame[methods+interesting_cols]
-    runtimes_frame = pd.melt(runtimes_frame, var_name="method", value_name="duration (ms)", id_vars=["edges","nodes","buds"])
-    runtimes_frame = runtimes_frame[runtimes_frame["duration (ms)"]>0]
+    runtimes_frame = pd.melt(runtimes_frame, var_name="Method", value_name="Runtime (microseconds)", id_vars=["Edges","Nodes","Buds"])
+    runtimes_frame = runtimes_frame[runtimes_frame["Runtime (microseconds)"]>0]
     overhead_frame = frame.copy()[methods+interesting_cols].drop(columns=["CY"])
     overhead_perc_frame = frame.copy()[methods+interesting_cols].drop(columns=["CY"])
     for m in methods:
@@ -176,29 +187,33 @@ def plot_runtimes_and_overheads(frame, methods, palette):
         overhead_frame[m] = frame[m] - frame["CY"]
         overhead_perc_frame[m] = 100*overhead_frame[m]/frame["CY"]
 
-    overhead_frame = pd.melt(overhead_frame, var_name="method", value_name="overhead (ms)", id_vars=["edges","nodes","buds"])
-    overhead_perc_frame = pd.melt(overhead_perc_frame, var_name="method", value_name="overhead %", id_vars=["edges","nodes","buds"])
-    sns.lineplot(data=runtimes_frame, x="edges", y="duration (ms)", hue="method", style="method", palette=palette, errorbar=("pi",50))
+    overhead_frame = pd.melt(overhead_frame, var_name="Method", value_name="Overhead (microseconds)", id_vars=["Edges","Nodes","Buds"])
+    overhead_perc_frame = pd.melt(overhead_perc_frame, var_name="Method", value_name="Overhead %", id_vars=["Edges","Nodes","Buds"])
+    sns.lineplot(data=runtimes_frame, x="Edges", y="Runtime (microseconds)", hue="Method", style="Method", palette=palette, errorbar=("pi",50))
+    plt.legend(loc="lower right",ncol=2)
     plt.yscale("log")
     plt.show()
 
-    sns.lineplot(data=overhead_frame, x="edges", y="overhead (ms)", hue="method", style="method", palette=palette, errorbar=("pi",50))
+    sns.lineplot(data=overhead_frame, x="Edges", y="Overhead (microseconds)", hue="Method", style="Method", palette=palette, errorbar=("pi",50))
+    plt.legend(loc="lower right",ncol=2)
     plt.yscale("log")
     plt.show()
 
-    gfg = sns.lineplot(data=overhead_perc_frame, x="edges", y="overhead %", hue="method", style="method", palette=palette, errorbar=("pi",50))
+    gfg = sns.lineplot(data=overhead_perc_frame, x="Edges", y="Overhead %", hue="Method", style="Method", palette=palette, errorbar=("pi",50))
+    plt.legend(loc="upper right",ncol=2)
     plt.yscale("log")
     plt.show()
 
 def get_non_minimized_frame():
     VLA_times = get_method_runtimes("./logs/non-minimized/results.deleteme.VLA", 3, "VLA")
+    SLA_times = get_method_runtimes("./logs/non-minimized/results.SLA", 1, "SLA")
     FWK_times = get_method_runtimes("./logs/non-minimized/results.FWK", 3, "FWK")
     OR_times = get_method_runtimes("./logs/non-minimized/results.deleteme.OR", 5, "OR")
     SH_times = get_method_runtimes("./logs/non-minimized/results.deleteme.SH", 5, "CY")
 
     stats_frame = get_graphs_stats("./stats.csv")
 
-    frame = pd.concat([stats_frame, VLA_times,FWK_times, OR_times, SH_times], axis=1)
+    frame = pd.concat([stats_frame, VLA_times, SLA_times, FWK_times, OR_times, SH_times], axis=1)
     frame = frame[frame["VLA"]>0]
     return frame
 
@@ -216,13 +231,13 @@ def get_minimized_frame():
 
 def plot_CY_performance():
     frame_non_minimized = get_non_minimized_frame()
-    methods_non_minimized = ["VLA","FWK", "OR","CY"]
-    palette_non_minimized = sns.color_palette(["#233D4D","#FCCA46","#A1C181","#619B8A"])
+    methods_non_minimized = ["VLA", "SLA", "FWK", "OR","CY"]
+    palette_non_minimized = sns.color_palette(["#233D4D","#19C444","#FCCA46","#6924b3","#8c1858"])
     plot_runtimes_and_overheads(frame_non_minimized, methods_non_minimized, palette_non_minimized)
 
     # frame_minimized = get_minimized_frame()
     # methods_minimized = ["VLA","SLA","FWK","OR","CY"]
-    # palette_minimized = sns.color_palette(["#233D4D","#19C444", "#FCCA46", "#A1C181","#619B8A"])
+    # palette_minimized = sns.color_palette(["#233D4D","#19C444", "#FCCA46", "#6924b3","#8c1858"])
     # plot_runtimes_and_overheads(frame_minimized, methods_minimized, palette_minimized)
 
 
@@ -233,5 +248,7 @@ def plot_CY_performance():
 # print(sum(frame["CY"]))
 # print(sum(frame["CY with TM"]))
 
-# compare_SH_with_and_without_TM(frame)
+# compare_SH_with_and_without_TM()
+plt.rc('font', size=16)
+plt.rcParams.update({'figure.autolayout': True})
 plot_CY_performance()

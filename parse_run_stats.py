@@ -2,8 +2,10 @@ import re
 import numpy as np
 from itertools import groupby
 from matplotlib import pyplot as plt
+import matplotlib as mplib
 import seaborn as sns
 import pandas as pd
+from matplotlib.lines import Line2D
 
 figures_dirpath= "/Users/matanshaked/M.Sc research/Thesis/results/figures"
 
@@ -296,7 +298,56 @@ def get_graphs_with_different_answers(data_before, data_after):
     print(f"before yes, after don't know: {before_yes_after_dont_know}")
     print(f"before don't know, after yes: {before_dont_know_after_yes}")
 
+def create_FC_figures(frame):
+    frame=frame.copy().rename(columns={"edges":"Edges", "nodes":"Nodes"})
+    ax = sns.lineplot(data=frame, x="Nodes", y="FC durations", errorbar=None)
+    sns.lineplot(data=frame, x="Edges", y="FC durations", errorbar=None,linestyle="dotted", color=sns.color_palette()[0])
+
+    handles, labels = ax.get_legend_handles_labels()
+
+    legend_labels = ['By Nodes',  'By Edges']
+    handles = [
+        Line2D([0], [0], color=sns.color_palette()[0], lw=2, linestyle='-'),
+        Line2D([0], [0], color=sns.color_palette()[0], lw=2, linestyle=':')
+    ]
+
+    # Create a single combined legend
+    plt.legend(handles=handles, labels=legend_labels, loc='upper left')
+    plt.ylabel("Microseconds")
+    plt.xlabel("Nodes/Edges")
+    plt.show()
+
 def create_DU_figures(frame):
+    frame=frame.copy().rename(columns={"nodes":"Nodes", "edges":"Edges", "width":"Width","amount of backedges":"Backedges"})
+    frame_only_unicycles_graphs = frame[frame["has overlapping cycles"]=="no"]
+    frame_only_not_unicycles_graphs = frame[frame["has overlapping cycles"]=="yes"]
+    
+    color_palette = sns.color_palette()
+
+    ax = sns.lineplot(data=frame, x="Nodes", y="DU durations", errorbar=None)
+    sns.lineplot(data=frame, x="Edges", y="DU durations", errorbar=None, linestyle="dotted", color=color_palette[0])
+    handles, labels = ax.get_legend_handles_labels()
+
+    legend_labels = ['By Nodes',  'By Edges']
+    handles = [
+        Line2D([0], [0], color=sns.color_palette()[0], lw=2, linestyle='-'),
+        Line2D([0], [0], color=sns.color_palette()[0], lw=2, linestyle=':')
+    ]
+
+    # Create a single combined legend
+    plt.legend(handles=handles, labels=legend_labels, loc='upper left')
+    plt.ylabel("Microseconds")
+    plt.xlabel("Nodes/Edges")
+    plt.show()
+    
+    sns.lineplot(data=frame, x="Width", y="DU durations", errorbar=None)
+    plt.ylabel("Microseconds")
+    plt.show()
+    sns.lineplot(data=frame, x="Backedges", y="DU durations", errorbar=None)
+    plt.ylabel("Microseconds")
+    plt.show()
+
+def create_DU_figures2(frame):
     frame_only_unicycles_graphs = frame[frame["has overlapping cycles"]=="no"]
     frame_only_not_unicycles_graphs = frame[frame["has overlapping cycles"]=="yes"]
     
@@ -371,15 +422,24 @@ def create_TM_figures(frame):
     plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "buds", "TM durations")
     plt.ylabel("microseconds")
     plt.show()
-    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "size of structural connectivity relation", "TM durations")
+    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "edges", "TM durations")
     plt.ylabel("microseconds")
     plt.show()
-    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "amount of trace manifold graph nodes", "TM durations")
+    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "nodes", "TM durations")
     plt.ylabel("microseconds")
     plt.show()
-    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "amount of trace manifold graph edges", "TM durations")
+    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "width", "TM durations")
     plt.ylabel("microseconds")
     plt.show()
+    # plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "size of structural connectivity relation", "TM durations")
+    # plt.ylabel("microseconds")
+    # plt.show()
+    # plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "amount of trace manifold graph nodes", "TM durations")
+    # plt.ylabel("microseconds")
+    # plt.show()
+    # plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "amount of trace manifold graph edges", "TM durations")
+    # plt.ylabel("microseconds")
+    # plt.show()
     
     plot_mean_with_interquartile_range_by(not_cycle_normal_form_frame, "nodes", "TM durations")
     plt.ylabel("microseconds")
@@ -404,11 +464,14 @@ def plot_mean_with_interquartile_range_by(frame, group_by_col, values_col, plot_
 
     if linestyle is not None:
         ax = sns.lineplot(x=stats.index, y=means, label=values_col, linestyle=linestyle)
+        # ax = sns.lineplot(x=stats.index, y=maxs, label=values_col, linestyle=linestyle)
     else:
         ax = sns.lineplot(x=stats.index, y=means, label=values_col)
+        # ax = sns.lineplot(x=stats.index, y=maxs, label=values_col)
     # ax = sns.lineplot(x=stats.index, y=sums, label=values_col)
     if plot_interquirtile_range:
         ax.fill_between(stats.index, quartiles1, quartiles3, alpha=0.3)
+        # ax.fill_between(stats.index, mins, maxs, alpha=0.1)
 
 
     if show_legend:
@@ -419,11 +482,11 @@ def plot_mean_with_interquartile_range_by(frame, group_by_col, values_col, plot_
     # ax.fill_between(stats.index, mins, maxs, alpha=0.1)
 
 
-filespaths_fo = [f"./src/generic/test/run_stats.minimised.fo"]
-# filespaths_fo = [f"./src/generic/test/run_stats.fo.{i}" for i in range(1,6)]
+# filespaths_fo = [f"./src/generic/test/run_stats.minimised.fo"]
+filespaths_fo = [f"./src/generic/test/run_stats.fo.{i}" for i in range(1,6)]
 data_fo = parse_files_multiruns(filespaths_fo)
-filespaths_sl = [f"./src/generic/test/run_stats.minimised.sl"]
-# filespaths_sl = [f"./src/generic/test/run_stats.sl.{i}" for i in range(1,6)]
+# filespaths_sl = [f"./src/generic/test/run_stats.minimised.sl"]
+filespaths_sl = [f"./src/generic/test/run_stats.sl.{i}" for i in range(1,6)]
 data_sl = parse_files_multiruns(filespaths_sl)
 
 data = [
@@ -464,8 +527,6 @@ frame = pd.DataFrame({
     "OR durations": OR_durations,
     "OR answers": OR_answers
 })
-fo_frame = frame[frame["test suite"]=="fo"]
-sl_frame = frame[frame["test suite"]=="sl"]
 
 
 def plot_DU_and_amount_of_backedges_by_edges(frame):
@@ -489,32 +550,89 @@ def print_database_stats(frame):
     print(f"max edges: {frame["edges"].max()}")
     print(f"max width: {frame["width"].max()}")
     print(f"max buds: {frame["buds"].max()}")
+    print(f"amount in CNF {sum(frame["is in cycle normal form"]=="yes")}")
+    print(f"amount in CNF and sound {sum((frame["is in cycle normal form"]=="yes") & (frame["OR answers"]=="yes"))}")
 
 def plot_database_stats(frame):
+    # amount_sound = len(frame[frame["OR answers"]=="yes"])
+    # amount_unsound = len(frame[frame["OR answers"]=="no"])
+    # plt.pie([amount_sound, amount_unsound], labels=["satisfies infinite descent", "does not satisfy infinite descent"])
+    # plt.show()
+
+########################
+
     # sns.boxplot(data=frame, x="edges", y="amount of backedges", hue="test suite", orient="y", whis=(0,100))
-    sns.violinplot(data=frame, x="edges", y="amount of backedges", hue="test suite", split=True, inner="quart", orient="y")
-    savefig_to("database/backedges_by_edges_per_test_suite.violin.png")
+    # sns.violinplot(data=frame, x="edges", y="amount of backedges", hue="test suite", split=True, inner="quart", orient="y")
+    # savefig_to("database/backedges_by_edges_per_test_suite.violin.png")
     # sns.boxplot(data=frame, x="edges", y="buds", hue="test suite", orient="y", whis=(0,100))
-    sns.violinplot(data=frame, x="edges", y="buds", hue="test suite", split=True, inner="quart", orient="y")
-    savefig_to("database/buds_by_edges_per_test_suite.violin.png")
+    # sns.violinplot(data=frame, x="edges", y="buds", hue="test suite", split=True, inner="quart", orient="y")
+    # savefig_to("database/buds_by_edges_per_test_suite.violin.png")
 
-    sns.lineplot(data=frame, x="edges", y="buds", hue="test suite")
-    savefig_to("database/buds_by_edges_per_test_suite.lineplot.png")
-    
-    sns.lineplot(data=frame, x="edges", y="width", hue="test suite")
-    savefig_to("database/width_by_edges_per_test_suite.lineplot.png")
-    
-    sns.lineplot(data=frame, x="edges", y="nodes", hue="test suite")
-    savefig_to("database/nodes_by_edges_per_test_suite.lineplot.png")
+#########################
 
-    sns.kdeplot(frame, x="nodes", hue="test suite", bw_adjust=2)
-    savefig_to("database/nodes_per_test_suite.kde.png")
-    sns.kdeplot(frame, x="edges", hue="test suite", bw_adjust=2)
-    savefig_to("database/edges_per_test_suite.kde.png")
-    sns.kdeplot(frame, x="width", hue="test suite", bw_adjust=2)
+    
+    # sns.lineplot(data=frame, x="edges", y="buds", hue="test suite")
+    # savefig_to("database/buds_by_edges_per_test_suite.lineplot.png")
+    
+    # sns.lineplot(data=frame, x="edges", y="width", hue="test suite")
+    # savefig_to("database/width_by_edges_per_test_suite.lineplot.png")
+    
+    # sns.lineplot(data=frame, x="edges", y="nodes", hue="test suite")
+    # savefig_to("database/nodes_by_edges_per_test_suite.lineplot.png")
+    
+    new_frame=frame.copy().rename(columns={"nodes":"Nodes", "edges":"Edges","width":"Width", "buds":"Buds", "test suite":"Test suite"})
+    new_frame=pd.melt(new_frame, var_name="Metric", value_name="Amount", id_vars=["Edges","Test suite"], value_vars=["Nodes", "Width", "Buds"])
+    # sns.lineplot(data=new_frame, x="edges", y="Amount", hue="Metric", style="test suite", style_order=["sl","fo"], palette="icefire")
+    sns.lineplot(data=new_frame[new_frame["Test suite"]=="sl"], x="Edges", y="Amount", hue="Metric", palette="icefire")
+    savefig_to("database/metrics.sl.relations.lineplot.png")
+    sns.lineplot(data=new_frame[new_frame["Test suite"]=="fo"], x="Edges", y="Amount", hue="Metric", palette="icefire")
+    savefig_to("database/metrics.fo.relations.lineplot.png")
+
+    frame_copy = frame.copy()
+    frame_copy=frame_copy.rename(columns={"nodes":"Nodes", "edges":"Edges","width":"Width", "buds":"Buds", "test suite":"Test suite"})
+    frame_copy.loc[frame_copy["Test suite"]=="sl", "Test suite"]="SL"
+    frame_copy.loc[frame_copy["Test suite"]=="fo", "Test suite"]="FO"
+    
+    ax = sns.kdeplot(frame_copy, x="Nodes", hue="Test suite", bw_adjust=2)
+    sns.kdeplot(frame_copy, x="Edges", hue="Test suite", bw_adjust=2, linestyle=':')
+    plt.xlabel("Nodes/Edges")
+    
+    handles, labels = ax.get_legend_handles_labels()
+
+    legend_labels = ['FO Nodes',  'SL Nodes','FO Edges', 'SL Edges']
+    handles = [
+        Line2D([0], [0], color=sns.color_palette()[0], lw=2, linestyle='-'),  # FO Nodes
+        Line2D([0], [0], color=sns.color_palette()[1], lw=2, linestyle='-'),  # SL Nodes
+        Line2D([0], [0], color=sns.color_palette()[0], lw=2, linestyle=':'),  # FO Edges
+        Line2D([0], [0], color=sns.color_palette()[1], lw=2, linestyle=':')   # SL Edges
+    ]
+
+    # Create a single combined legend
+    plt.legend(handles=handles, labels=legend_labels, loc='upper right')
+    savefig_to("database/nodes_edges_per_test_suite.kde.png")
+
+    ax = sns.kdeplot(frame_copy, x="Width", hue="Test suite", bw_adjust=2)
+    max_width = frame_copy["Width"].max()
+    ax.set_xlim(0, max_width)
+    ax.set_xticks(range(0,max_width, 4))
     savefig_to("database/width_per_test_suite.kde.png")
-    sns.kdeplot(frame, x="buds", hue="test suite", bw_adjust=2)
+    
+    ax = sns.kdeplot(frame_copy, x="Buds", hue="Test suite", bw_adjust=2)
+    max_buds = frame_copy["Buds"].max()
+    ax.set_xlim(0, max_buds)
+    ax.set_xticks(range(0,max_buds, 4))
     savefig_to("database/buds_per_test_suite.kde.png")
+
+    # sns.kdeplot(frame_copy, x="Nodes", hue="Test suite", bw_adjust=2)
+    # savefig_to("database/nodes_per_test_suite.kde.png")
+    # sns.kdeplot(frame_copy, x="Edges", hue="Test suite", bw_adjust=2)
+    # savefig_to("database/edges_per_test_suite.kde.png")
+    # sns.kdeplot(frame_copy, x="Width", hue="Test suite", bw_adjust=2)
+    # savefig_to("database/width_per_test_suite.kde.png")
+    # sns.kdeplot(frame_copy, x="Buds", hue="Test suite", bw_adjust=2)
+    # savefig_to("database/buds_per_test_suite.kde.png")
+
+
 
 def plot_coverages(frame):
     FC_true = len(frame[frame["FC answers"]!="don't know"])
@@ -523,14 +641,30 @@ def plot_coverages(frame):
     sum_of_amounts = FC_true+not_FC_true_DU_true+not_FC_nor_DU_true
     print(f"amount of graphs {len(frame)}")
     print(f"sum of three amounts {sum_of_amounts}")
-    plt.pie([FC_true, not_FC_true_DU_true, not_FC_nor_DU_true], labels=["FC returned", "DU returned", "OR returned"], autopct='%.0f%%', colors=sns.color_palette("colorblind"), hatch=["..","--","||"])
+    plt.pie([FC_true, not_FC_true_DU_true, not_FC_nor_DU_true], labels=["FC", "DU", "OR"], autopct='%.0f%%', textprops={'fontsize': 16})
     plt.show()
 
 def plot_methods_comparison(frame):
-    plot_mean_with_interquartile_range_by(frame,"edges", "FC durations")
-    plot_mean_with_interquartile_range_by(frame,"edges", "DU durations",linestyle="--")
-    plot_mean_with_interquartile_range_by(frame,"edges", "OR durations",linestyle=":")
-    plt.ylabel("microseconds")
+
+    overhead_frame_only_TM_yes = frame.copy()
+    overhead_frame_only_TM_yes = overhead_frame_only_TM_yes[overhead_frame_only_TM_yes["TM answers"]=="yes"]
+    overhead_frame_only_TM_yes["OR overhead over TM"] = (overhead_frame_only_TM_yes["OR durations"]-overhead_frame_only_TM_yes["TM durations"])
+    overhead_frame_only_TM_yes["OR overhead over TM %"] = 100*(overhead_frame_only_TM_yes["OR durations"]-overhead_frame_only_TM_yes["TM durations"])/overhead_frame_only_TM_yes["TM durations"]
+    print(f"min overhead {overhead_frame_only_TM_yes["OR overhead over TM %"].min()}")
+    print(f"max overhead {overhead_frame_only_TM_yes["OR overhead over TM %"].max()}")
+    plot_mean_with_interquartile_range_by(overhead_frame_only_TM_yes,"edges", "OR overhead over TM %")
+    plt.show()
+
+    frame["FC"]=frame["FC durations"]
+    frame["DU"]=frame["DU durations"]
+    frame["TM"]=frame["TM durations"]
+    frame["OR"]=frame["OR durations"]
+    plot_mean_with_interquartile_range_by(frame,"edges", "FC")
+    plot_mean_with_interquartile_range_by(frame,"edges", "DU",linestyle="--")
+    # plot_mean_with_interquartile_range_by(frame,"edges", "TM",linestyle="-.")
+    plot_mean_with_interquartile_range_by(frame,"edges", "OR",linestyle=":")
+    plt.ylabel("Microseconds")
+    plt.xlabel("Edges")
     plt.show()
     # plot_mean_with_interquartile_range_by(frame,"edges", "FC durations")
     # plot_mean_with_interquartile_range_by(frame,"edges", "DU durations")
@@ -538,18 +672,84 @@ def plot_methods_comparison(frame):
     # plt.ylabel("microseconds")
     # plt.yscale("log")
     # plt.show()
-    plot_mean_with_interquartile_range_by(frame,"amount of backedges", "FC durations")
-    plot_mean_with_interquartile_range_by(frame,"amount of backedges", "DU durations")
-    plot_mean_with_interquartile_range_by(frame,"amount of backedges", "OR durations")
-    plt.ylabel("microseconds")
-    plt.show()
 
+    # plot_mean_with_interquartile_range_by(frame,"amount of backedges", "FC durations")
+    # plot_mean_with_interquartile_range_by(frame,"amount of backedges", "DU durations")
+    # plot_mean_with_interquartile_range_by(frame,"amount of backedges", "OR durations")
+    # plt.ylabel("microseconds")
+    # plt.show()
+
+def print_TM_coverage_after_DU(frame):
+    amount_TM_not_DU = len(frame[(frame["DU answers"]=="don't know")&(frame["TM answers"]=="yes")])
+    print(f"amount TM not DU: {amount_TM_not_DU}")
+    print(f"percent TM not DU among all graphs {100*amount_TM_not_DU/len(frame)}")
+    amount_not_FC_nor_DU = len(frame[(frame["DU answers"]=="don't know")&(frame["FC answers"]=="don't know")])
+    print(f"percent TM not DU among non covered graphs {100*amount_TM_not_DU/amount_not_FC_nor_DU}")
+
+
+plt.rc('font', size=16)
+plt.rcParams.update({'figure.autolayout': True})
+
+print_database_stats(frame)
+exit()
+
+# frame.to_csv("./checkproof_benchmarks/stats.minimized.csv")
+plot_methods_comparison(frame)
+exit()
+
+# create_FC_figures(frame)
+# exit()
+
+# create_DU_figures(frame)
+# exit()
+
+# print_database_stats(frame)
+# exit()
+
+# plot_database_stats(frame)
+# exit()
+
+# plot_coverages(frame)
+# exit()
+plot_methods_comparison(frame)
+exit()
+
+print_TM_coverage_after_DU(frame)
+exit()
+
+create_TM_figures(frame)
+exit()
+
+
+amount_sound_DU_dont_know_TM_yes = len(frame[(frame["DU answers"]=="don't know") & (frame["TM answers"]!="don't know")])
+amount_sound_only_TM_knows = len(frame[(frame["FC answers"]=="don't know") & (frame["DU answers"]=="don't know") & (frame["TM answers"]!="don't know")])
+print(amount_sound_DU_dont_know_TM_yes)
+print(amount_sound_only_TM_knows)
+plot_mean_with_interquartile_range_by(frame[frame["is in cycle normal form"]=="yes"], "edges", "TM durations")
+plot_mean_with_interquartile_range_by(frame[frame["is in cycle normal form"]=="yes"], "edges", "DU durations")
+plt.ylabel("microseconds")
+plt.show()
+exit()
+
+amount_sound = len(frame[frame["OR answers"]=="yes"])
+amount_unsound = len(frame[frame["OR answers"]=="no"])
+amount_sound_sl = len(frame[(frame["OR answers"]=="yes") & (frame["test suite"]=="sl")])
+amount_unsound_sl = len(frame[(frame["OR answers"]=="no") & (frame["test suite"]=="sl")])
+amount_sound_fo = len(frame[(frame["OR answers"]=="yes") & (frame["test suite"]=="fo")])
+amount_unsound_fo = len(frame[(frame["OR answers"]=="no") & (frame["test suite"]=="fo")])
+plt.pie(
+    [amount_sound_sl, amount_sound_fo, amount_unsound_sl, amount_unsound_fo],
+    labels=["satisfies infinite descent SL","satisfies infinite descent FOL", "does not satisfy infinite descent SL", "does not satisfy infinite descent FOL"],
+    colors=["#ff7f0e","#1f77b4","#df9f0e","#3f97b4"],
+    hatch=["/","/",".","."]
+)
+plt.show()
+exit()
 frame.to_csv("./checkproof_benchmarks/stats.minimized.csv")
 
 plot_methods_comparison(frame)
 exit()
-create_TM_figures(frame)
-exit()
+
 
 plot_methods_comparison(frame)
 exit()
