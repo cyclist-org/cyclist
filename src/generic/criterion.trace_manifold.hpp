@@ -26,8 +26,9 @@ private:
         size_t subset_idx
     );
 
-    bool every_two_structurly_adjacent_cycles_have_an_edge(
+    bool every_two_structurly_adjacent_cycles_have_an_edge_between_visited_traces(
         const Vec_shared_ptr<int> cycles_subset,
+        const Vec<Int_pair> &visited_trace_nodes,
         Vec_shared_ptr<Int_pair> structural_connectivity_relation,
         Vec_shared_ptr<Pair<Int_pair, Int_pair>> trace_manifold_graph_edges
     );
@@ -37,10 +38,17 @@ private:
         int cycle2,
         Vec_shared_ptr<Int_pair> structural_connectivity_relation
     );
+    
 
     bool are_graph_adjacent(
         int cycle1,
         int cycle2,
+        Vec_shared_ptr<Pair<Int_pair, Int_pair>> trace_manifold_graph_edges
+    );
+    bool are_visited_traces_graph_adjacent(
+        int cycle1,
+        int cycle2,
+        const Vec<Int_pair> &visited_trace_nodes,
         Vec_shared_ptr<Pair<Int_pair, Int_pair>> trace_manifold_graph_edges
     );
 

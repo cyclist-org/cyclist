@@ -5,7 +5,6 @@
 #include <cmath>
 #include <cstring> // for memset!
 
-
 void TraceManifoldCriterion::can_extend_path_to_submanifold_from(
     Int_pair trace_node,
     const Vec_shared_ptr<int> cycles_subset,
@@ -15,10 +14,12 @@ void TraceManifoldCriterion::can_extend_path_to_submanifold_from(
     Vec<Int_pair> &visited_trace_nodes)
 {
     bool all_subset_is_visited = true;
-    for (int cycle_idx : *cycles_subset) {
+    for (int cycle_idx : *cycles_subset)
+    {
         all_subset_is_visited = all_subset_is_visited && is_cycle_visited[cycle_idx];
     }
-    if(all_subset_is_visited) {
+    if (all_subset_is_visited)
+    {
         return;
     }
     int cycle_idx = trace_node.first;
@@ -69,7 +70,7 @@ bool TraceManifoldCriterion::has_submanifold(
         }
         if (are_all_cycles_in_subset_visited)
         {
-            if (this->every_two_structurly_adjacent_cycles_have_an_edge(cycles_subset, structural_connectivity_relation, trace_manifold_graph.edges) &&
+            if (this->every_two_structurly_adjacent_cycles_have_an_edge_between_visited_traces(cycles_subset, visited_trace_nodes, structural_connectivity_relation, trace_manifold_graph.edges) &&
                 this->exists_progressing_trace_node(visited_trace_nodes, cycles_subset, trace_manifold_graph.progressing_trace_nodes))
             {
                 return true;
@@ -97,8 +98,9 @@ Vec_shared_ptr<int> TraceManifoldCriterion::subset_idxs_to_vec(
     return result;
 }
 
-bool TraceManifoldCriterion::every_two_structurly_adjacent_cycles_have_an_edge(
+bool TraceManifoldCriterion::every_two_structurly_adjacent_cycles_have_an_edge_between_visited_traces(
     const Vec_shared_ptr<int> cycles_subset,
+    const Vec<Int_pair> &visited_trace_nodes,
     Vec_shared_ptr<Int_pair> structural_connectivity_relation,
     Vec_shared_ptr<Pair<Int_pair, Int_pair>> trace_manifold_graph_edges)
 {
@@ -106,11 +108,12 @@ bool TraceManifoldCriterion::every_two_structurly_adjacent_cycles_have_an_edge(
     {
         for (const auto &cycle2 : *cycles_subset)
         {
-            if (cycle1 == cycle2) {
+            if (cycle1 == cycle2)
+            {
                 continue;
             }
             if (this->are_structurly_adjacent(cycle1, cycle2, structural_connectivity_relation) &&
-                !this->are_graph_adjacent(cycle1, cycle2, trace_manifold_graph_edges))
+                !this->are_visited_traces_graph_adjacent(cycle1, cycle2, visited_trace_nodes, trace_manifold_graph_edges))
             {
                 return false;
             }
@@ -125,9 +128,9 @@ bool TraceManifoldCriterion::are_structurly_adjacent(
     Vec_shared_ptr<Int_pair> structural_connectivity_relation)
 {
     return std::find(
-                structural_connectivity_relation->begin(),
-                structural_connectivity_relation->end(),
-                Int_pair(cycle1, cycle2)) != structural_connectivity_relation->end();
+               structural_connectivity_relation->begin(),
+               structural_connectivity_relation->end(),
+               Int_pair(cycle1, cycle2)) != structural_connectivity_relation->end();
 }
 
 bool TraceManifoldCriterion::are_graph_adjacent(
@@ -138,6 +141,46 @@ bool TraceManifoldCriterion::are_graph_adjacent(
     for (const auto &[src, dest] : *trace_manifold_graph_edges)
     {
         if (src.first == cycle1 && dest.first == cycle2)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+class CycleInSubsetNotVisited : public std::runtime_error
+{
+public:
+    CycleInSubsetNotVisited() : std::runtime_error("cycle in subset was not visited while searching for submanifold") {}
+};
+bool TraceManifoldCriterion::are_visited_traces_graph_adjacent(
+    int cycle1,
+    int cycle2,
+    const Vec<Int_pair> &visited_trace_nodes,
+    Vec_shared_ptr<Pair<Int_pair, Int_pair>> trace_manifold_graph_edges)
+{
+    Int_pair cycle1_trace_node, cycle2_trace_node;
+    bool found1 = false, found2 = false;
+    for (const auto visited_trace_node : visited_trace_nodes)
+    {
+        if (visited_trace_node.first == cycle1)
+        {
+            cycle1_trace_node = visited_trace_node;
+            found1 = true;
+        }
+        if (visited_trace_node.first == cycle2)
+        {
+            cycle2_trace_node = visited_trace_node;
+            found2 = true;
+        }
+    }
+    if (!found1 || !found2)
+    {
+        throw CycleInSubsetNotVisited();
+    }
+    for (const auto &[src, dest] : *trace_manifold_graph_edges)
+    {
+        if ((src == cycle1_trace_node) && (dest == cycle2_trace_node))
         {
             return true;
         }
