@@ -13,15 +13,16 @@ void TraceManifoldCriterion::can_extend_path_to_submanifold_from(
     Vec<bool> &is_cycle_visited,
     Vec<Int_pair> &visited_trace_nodes)
 {
-    bool all_subset_is_visited = true;
-    for (int cycle_idx : *cycles_subset)
-    {
-        all_subset_is_visited = all_subset_is_visited && is_cycle_visited[cycle_idx];
-    }
-    if (all_subset_is_visited)
-    {
-        return;
-    }
+    // bool all_subset_is_visited = true;
+    // for (int cycle_idx : *cycles_subset)
+    // {
+    //     all_subset_is_visited = all_subset_is_visited && is_cycle_visited[cycle_idx];
+    // }
+    // if (all_subset_is_visited)
+    // {
+    //     return;
+    // }
+
     int cycle_idx = trace_node.first;
     is_cycle_visited[cycle_idx] = true;
     visited_trace_nodes.push_back(trace_node);
@@ -34,12 +35,6 @@ void TraceManifoldCriterion::can_extend_path_to_submanifold_from(
             if (std::find(visited_trace_nodes.begin(), visited_trace_nodes.end(), neighbour) == visited_trace_nodes.end())
             {
                 this->can_extend_path_to_submanifold_from(neighbour, cycles_subset, trace_manifold_graph, structural_connectivity_relation, is_cycle_visited, visited_trace_nodes);
-                // curr_path.push_back(neighbour);
-                // bool can_extend_path_to_submanifold = this->can_extend_path_to_submanifold_from(neighbour, cycles_subset, trace_manifold_graph, structural_connectivity_relation, is_cycle_visited, visited_trace_nodes);
-                // if (can_extend_path_to_submanifold)
-                // {
-                //     return true;
-                // }
             }
         }
     }
@@ -159,32 +154,31 @@ bool TraceManifoldCriterion::are_visited_traces_graph_adjacent(
     const Vec<Int_pair> &visited_trace_nodes,
     Vec_shared_ptr<Pair<Int_pair, Int_pair>> trace_manifold_graph_edges)
 {
-    Int_pair cycle1_trace_node, cycle2_trace_node;
-    bool found1 = false, found2 = false;
+    Vec<Int_pair> cycle1_trace_nodes, cycle2_trace_nodes;
     for (const auto visited_trace_node : visited_trace_nodes)
     {
         if (visited_trace_node.first == cycle1)
         {
-            cycle1_trace_node = visited_trace_node;
-            found1 = true;
+            cycle1_trace_nodes.push_back( visited_trace_node);
         }
         if (visited_trace_node.first == cycle2)
         {
-            cycle2_trace_node = visited_trace_node;
-            found2 = true;
+            cycle2_trace_nodes.push_back( visited_trace_node);
         }
     }
-    if (!found1 || !found2)
-    {
-        throw CycleInSubsetNotVisited();
-    }
+    
+    for (const auto &[_,cycle1_trace_node] : cycle1_trace_nodes) {
+    for (const auto &[_,cycle2_trace_node] : cycle2_trace_nodes) {
     for (const auto &[src, dest] : *trace_manifold_graph_edges)
     {
-        if ((src == cycle1_trace_node) && (dest == cycle2_trace_node))
+        if ((src.second == cycle1_trace_node) && (dest.second == cycle2_trace_node))
         {
             return true;
         }
     }
+    }
+    }
+
     return false;
 }
 
