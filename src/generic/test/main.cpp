@@ -6,7 +6,7 @@
 #include "../criterion.flat_cycles.hpp"
 #include "../criterion.descending_unicycles.hpp"
 #include "../criterion.trace_manifold.hpp"
-#include "../sledgehammer.hpp"
+#include "../cyclone.hpp"
 #include "heighted_graph_parser.cpp"
 
 using json = nlohmann::json;
@@ -21,8 +21,8 @@ int usage(char* arg0) {
         << "<spec-string> ::= O [<order-id>] ([i]|([m][s])) [f][p]"
         << "([O]rder-reduced)"
         << std::endl
-        << "                | H [<order-id>] ([i]|([m][s])) [f][p]"
-        << "(Sledge[H]ammer)"
+        << "                | C [<order-id>] ([i]|([m][s])) [f][p]"
+        << "([C]yclone)"
         << std::endl
         << "                | F ([i]|([m][s])) [f][p]"
         << "([F]loyd-Warshall-Kleene)"
@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
                   result = SoundnessCheckResult::sound
                 : result = SoundnessCheckResult::unsound;
         }
-        else if (*argv[2] == '\0' || *argv[2] == 'O' || *argv[2] == 'H') {
+        else if (*argv[2] == '\0' || *argv[2] == 'O' || *argv[2] == 'C') {
             Heighted_graph::NODE_ORDER order;
             const char* spec = (*argv[2] == '\0') ? argv[2] : argv[2]+1;
 
@@ -96,9 +96,9 @@ int main(int argc, char** argv) {
             bool res;
             if(*argv[2] == 'O'){
                 res = hg.order_reduced_check(order, opts);
-            } else if (*argv[2] == 'H'){
-                Sledgehammer sledgehammer(&hg, order, opts);
-                res = sledgehammer.check_soundness();
+            } else if (*argv[2] == 'C'){
+                Cyclone cyclone(&hg, order, opts);
+                res = cyclone.check_soundness();
             } else {
                 return usage(argv[0]);
             }

@@ -1,16 +1,15 @@
 #include "../types.c"
 #include "../heighted_graph.hpp"
 #include "../directed_graph.hpp"
-#include "../sledgehammer.hpp"
+#include "../cyclone.hpp"
 #include <iostream>
 #include <filesystem>
 #include <regex>
 #include <string>
 #include "heighted_graph_parser.cpp"
 #include "json.hpp"
-#include "../criterion.descending_unicycles.c"
-#include "../criterion.trace_manifold.c"
-#include "../criterion.flat_cycles.generalized.c"
+#include "../criterion.descending_unicycles.hpp"
+#include "../criterion.trace_manifold.hpp"
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
@@ -61,16 +60,7 @@ void measure_flat_cycles_runtime(Heighted_graph &hg)
     std::string answer = result ? "no" : "don't know";
     std::cout << "flat cycles answer: " << answer << " took " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
 }
-void measure_generalized_flat_cycles_runtime(Heighted_graph &hg)
-{
-    auto start = std::chrono::system_clock::now();
-    GeneralizedFlatCyclesCriterion criterion(&hg);
-    SoundnessCheckResult result = criterion.check_soundness();
-    auto end = std::chrono::system_clock::now();
-    std::string answer = result == SoundnessCheckResult::sound ? "yes" : result == SoundnessCheckResult::unsound ? "no"
-                                                                                                                 : "don't know";
-    std::cout << "flat cycles generalized answer: " << answer << " took " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
-}
+
 void measure_descending_unicycles_runtime(Heighted_graph &hg)
 {
     DescendingUnicyclesCriterion criterion(&hg);
@@ -106,7 +96,7 @@ int main(int argc, char **argv)
     if (argc > 1)
     {
         std::string path = argv[1];
-        bool only_minimised = true;
+        bool only_minimised = false; //TODO: make this a flag
 
         std::vector<fs::directory_entry> entries;
         for (const auto &entry : fs::directory_iterator(path))

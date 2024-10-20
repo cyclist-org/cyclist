@@ -11,7 +11,7 @@
   (names
     proof proof_aut trace legacy_soundness
     types sloped_relation heighted_graph soundness
-    sledgehammer
+    cyclone
     criterion.process_based
     directed_graph graph
     criterion.fwk criterion.order_reduced
@@ -29,7 +29,8 @@
  (name checkproof)
  (public_name checkproof)
  (modules checkproof)
- (libraries generic))
+ (libraries generic)
+ (ocamlopt_flags :standard -cc clang++))
 
  (rule
   (targets c_flags.sexp c_library_flags.sexp)

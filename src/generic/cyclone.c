@@ -1,6 +1,6 @@
 #include "types.c"
 #include "heighted_graph.hpp"
-#include "sledgehammer.hpp"
+#include "cyclone.hpp"
 #include "criterion.soundness.hpp"
 #include "criterion.vla.c"
 #include "criterion.sla.c"
@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include <exception>
 
-Sledgehammer::Sledgehammer(Heighted_graph *hg, Heighted_graph::NODE_ORDER order, int opts) : hg(hg), order(order), opts(opts)
+Cyclone::Cyclone(Heighted_graph *hg, Heighted_graph::NODE_ORDER order, int opts) : hg(hg), order(order), opts(opts)
 {
     // this->soundness_criteria.push_back(std::make_shared<VlaCriterion>(hg));
     // this->soundness_criteria.push_back(std::make_shared<SlaCriterion>(hg));
@@ -24,11 +24,11 @@ Sledgehammer::Sledgehammer(Heighted_graph *hg, Heighted_graph::NODE_ORDER order,
     // this->soundness_criteria.push_back(std::make_shared<FlatCyclesCriterion>(hg));
 }
 
-Sledgehammer::~Sledgehammer()
+Cyclone::~Cyclone()
 {
 }
 
-bool Sledgehammer::check_soundness()
+bool Cyclone::check_soundness()
 {
     // flat cycles: complete unsound
     // auto flat_cycles_start = std::chrono::system_clock::now();
@@ -78,7 +78,7 @@ bool Sledgehammer::check_soundness()
     // return result;
 }
 
-void Sledgehammer::start_all_criteria()
+void Cyclone::start_all_criteria()
 {
     for (size_t i = 0; i < this->soundness_criteria.size(); i++)
     {
@@ -90,7 +90,7 @@ void Sledgehammer::start_all_criteria()
     };
 }
 
-bool Sledgehammer::wait_for_any_future()
+bool Cyclone::wait_for_any_future()
 {
     bool any_ready = false;
 
@@ -122,7 +122,7 @@ bool Sledgehammer::wait_for_any_future()
     throw std::runtime_error("no criterion returned an answer");
 }
 
-void Sledgehammer::halt_all_criteria()
+void Cyclone::halt_all_criteria()
 {
     for (size_t i = 0; i < this->soundness_criteria.size(); i++)
     {

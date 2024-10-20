@@ -8,7 +8,7 @@
 // const size_t CRITERIA_AMOUNT = 3;
 const int FUTURE_WAIT_TIME_MS = 3;
 
-class Sledgehammer
+class Cyclone
 {
 private:
     Heighted_graph *hg;
@@ -23,8 +23,8 @@ private:
 
 
 public:
-    Sledgehammer(Heighted_graph *hg, Heighted_graph::NODE_ORDER order, int opts);
-    ~Sledgehammer();
+    Cyclone(Heighted_graph *hg, Heighted_graph::NODE_ORDER order, int opts);
+    ~Cyclone();
 
     bool check_soundness();
 };

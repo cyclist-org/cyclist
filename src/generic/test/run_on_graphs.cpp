@@ -1,6 +1,6 @@
 #include "../types.c"
 #include "../heighted_graph.hpp"
-#include "../sledgehammer.hpp"
+#include "../cyclone.hpp"
 #include <iostream>
 #include <filesystem>
 #include <regex>
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
                 {
                     result = hg.order_reduced_check(Heighted_graph::GIVEN_ORDER, opts);
                 }
-                else if (*argv[2] == '\0' || *argv[2] == 'O' || *argv[2] == 'H')
+                else if (*argv[2] == '\0' || *argv[2] == 'O' || *argv[2] == 'C')
                 {
                     Heighted_graph::NODE_ORDER order;
                     const char *spec = (*argv[2] == '\0') ? argv[2] : argv[2] + 1;
@@ -101,10 +101,10 @@ int main(int argc, char **argv)
                     {
                         result = hg.order_reduced_check(order, opts);
                     }
-                    else if (*argv[2] == 'H')
+                    else if (*argv[2] == 'C')
                     {
-                        Sledgehammer sledgehammer(&hg, order, opts);
-                        result = sledgehammer.check_soundness();
+                        Cyclone cyclone(&hg, order, opts);
+                        result = cyclone.check_soundness();
                     }
                     else
                     {

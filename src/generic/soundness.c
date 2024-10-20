@@ -2,7 +2,7 @@
 #include <memory>
 
 #include "heighted_graph.hpp"
-#include "sledgehammer.hpp"
+#include "cyclone.hpp"
 
 extern "C" {
 #include <memory.h>
@@ -136,7 +136,7 @@ extern "C" value vla_automata_check() {
   CAMLreturn(v_res);
 }
 
-extern "C" value sledgehammer_check(value node_order_, value opts_) {
+extern "C" value cyclone_check(value node_order_, value opts_) {
   CAMLparam2(node_order_, opts_);
   CAMLlocal1(v_res);
 
@@ -149,9 +149,9 @@ extern "C" value sledgehammer_check(value node_order_, value opts_) {
   Heighted_graph::NODE_ORDER ord =
     static_cast<Heighted_graph::NODE_ORDER>(node_order);
 
-  Sledgehammer sledgehammer(hg.get(), ord, opts);
+  Cyclone cyclone(hg.get(), ord, opts);
 
-  bool retval = (sledgehammer.check_soundness());
+  bool retval = (cyclone.check_soundness());
 
   v_res = Val_bool(retval);
   CAMLreturn(v_res);

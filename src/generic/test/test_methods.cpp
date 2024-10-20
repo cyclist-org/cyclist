@@ -1,7 +1,7 @@
 #include "../types.c"
 #include "../heighted_graph.hpp"
 #include "../directed_graph.hpp"
-#include "../sledgehammer.hpp"
+#include "../cyclone.hpp"
 #include <iostream>
 #include <filesystem>
 #include <regex>
@@ -42,6 +42,8 @@ int main(int argc, char **argv)
         std::sort(entries.begin(), entries.end(), [](const fs::directory_entry &a, const fs::directory_entry &b)
                   { return a.path().string() < b.path().string(); });
 
+        int amount_of_false_positives = 0;
+        int amount_of_true_positives = 0;
         for (const auto &entry : entries)
         {
             std::string path = entry.path();
@@ -67,9 +69,17 @@ int main(int argc, char **argv)
                 auto result = tm.check_soundness();
                 if ((result == SoundnessCheckResult::sound) && (is_sound == false))
                 {
+                    amount_of_false_positives++;
                     printf("TM false positive: %s\n", path.c_str());
+                }
+                if ((result == SoundnessCheckResult::sound) && (is_sound == true))
+                {
+                    amount_of_true_positives++;
                 }
             }
         }
+
+        printf("amount of TM false positives: %d\n", amount_of_false_positives);
+        printf("amount of TM true positives: %d\n", amount_of_true_positives);
     }
 }
