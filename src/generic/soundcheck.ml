@@ -1312,7 +1312,7 @@ let arg_opts =
     ("-SLA", Arg.Unit use_sla, ": use Spot (slope language automata construction) to verify pre-proof validity") ;
     ("-OR", Arg.Unit use_ortl, ": use external C++ order-reduced relational check to verify pre-proof validity") ;
     ("-FWK", Arg.Unit use_fwk, ": use external C++ Floyd-Warshall-Kleene relational check to verify pre-proof validity") ;
-    ("-SH", Arg.Unit use_sledgehammer, ": use sledgehammer (combines complete and incomplete methods) to verify pre-proof validity") ;
+    ("-CY", Arg.Unit use_sledgehammer, ": use Cyclone (combines complete and incomplete methods) to verify pre-proof validity") ;
     ("-ord", Arg.Int set_node_order,
         "<int>: specify which node order to use in the order-reduced relational check.\n" ^
         "\t0 - Natural Ordering\n" ^

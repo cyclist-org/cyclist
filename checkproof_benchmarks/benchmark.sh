@@ -75,13 +75,13 @@ run_SLA_in_parallel() {
 
 # find ../cyclist_graphs/cyclist_output_graphs/sl -maxdepth 1 -name "*.json" | sort | xargs -I {} echo -f {} | xargs dune exec src/generic/checkproof.exe -- -FWK -min -scc -ff --unminimized-proofs -s -R json  > "./checkproof_benchmarks/logs/non-minimized/results.deleteme.FWK.sl.2" 
 
-# run_method "SH" "-min -scc -ff --unminimized-proofs" 5 "$out_dir/minimized" true
+# run_method "CY" "-min -scc -ff --unminimized-proofs" 5 "$out_dir/minimized" true
 # run_method "OR" "-min -scc -ff --unminimized-proofs" 5 "$out_dir/minimized" true
 # run_method "FWK" "-min -scc -ff --unminimized-proofs" 5 "$out_dir/minimized" true
 # run_method "VLA" "-min -scc -ff --unminimized-proofs" 5 "$out_dir/minimized" true
 # run_method "SLA" "-min -scc -ff --unminimized-proofs" 5 "$out_dir/minimized" true
 
-# run_method "SH" "-min -scc -ff --unminimized-proofs" 5 "$out_dir/non-minimized" false
+# run_method "CY" "-min -scc -ff --unminimized-proofs" 5 "$out_dir/non-minimized" false
 # run_method "OR" "-min -scc -ff --unminimized-proofs" 5 "$out_dir/non-minimized" false
 # run_method "FWK" "-min -scc -ff --unminimized-proofs" 3 "$out_dir/non-minimized" false
 # run_method "VLA" "-min -scc -ff --unminimized-proofs" 3 "$out_dir/non-minimized" false
