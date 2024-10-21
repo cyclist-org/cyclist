@@ -4,21 +4,21 @@
 
 using json = nlohmann::json;
 
-void parse_from_json(json &graph, Heighted_graph &hg)
+void parse_from_json(json &graph, Heighted_graph &hg, bool should_print=false)
 {
     //====================== parse buds
     if(graph.contains("Bud")) {
-        std::cout << "Parsing Buds: ";
+        should_print && std::cout << "Parsing Buds: ";
         int num_buds = 0;
         for (auto &bud : graph["Bud"]) {
             hg.add_node(bud, true);
             num_buds++;
         }
-        std::cout << "Done! , Bud size: " << num_buds << std::endl;
+        should_print && std::cout << "Done! , Bud size: " << num_buds << std::endl;
     }
 
     //====================== parse nodes
-    std::cout << "Parsing Nodes: ";
+    should_print && std::cout << "Parsing Nodes: ";
     for (auto &element : graph["Node"])
     {
         int id = element[0];
@@ -27,10 +27,10 @@ void parse_from_json(json &graph, Heighted_graph &hg)
             hg.add_height(id, h);
         }
     }
-    std::cout << "Done! , Node size: " << hg.num_nodes() << std::endl;
+    should_print && std::cout << "Done! , Node size: " << hg.num_nodes() << std::endl;
 
     //====================== parse edges
-    std::cout << "Parsing Edges: ";
+    should_print && std::cout << "Parsing Edges: ";
     for (auto &element : graph["Edge"])
     {
         int source = element[0][0];
@@ -44,5 +44,5 @@ void parse_from_json(json &graph, Heighted_graph &hg)
             hg.add_hchange(source, source_h, sink, sink_h, s);
         }
     }
-    std::cout << "Done! , Edge size: " << hg.num_edges() << std::endl;
+    should_print && std::cout << "Done! , Edge size: " << hg.num_edges() << std::endl;
 }

@@ -14,222 +14,298 @@
 using json = nlohmann::json;
 namespace fs = std::filesystem;
 
-bool has_non_oneshot_cycle(Heighted_graph &hg, DirectedGraph &dg)
+template <typename... Args>
+std::string string_format(const std::string &format, Args... args)
 {
-    // Graph graph(hg.get_edges(), hg.get_HeightsOf(), hg.get_h_change(), hg.get_max_nodes());
-    // graph.get_ECycles();
-    // auto elementary_cycles = graph.ECycles;
-    auto elementary_cycles = dg.get_elementary_cycles();
-    printf("Amount of elementary cycles: %zu\n", elementary_cycles->size());
-
-    for (const auto &cycle : *elementary_cycles)
+    int size_s = std::snprintf(nullptr, 0, format.c_str(), args...) + 1; // Extra space for '\0'
+    if (size_s <= 0)
     {
-        if (!hg.is_cycle_oneshot(*cycle))
-        {
-            return true;
-        }
+        throw std::runtime_error("Error during formatting.");
     }
-    return false;
+    auto size = static_cast<size_t>(size_s);
+    std::unique_ptr<char[]> buf(new char[size]);
+    std::snprintf(buf.get(), size, format.c_str(), args...);
+    return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
 }
 
-bool are_all_relations_partial_functions(Heighted_graph &hg)
+inline std::string bool_to_string(bool b)
 {
-    auto h_change = hg.get_h_change();
-    for (int i = 0; i < hg.num_nodes(); i++)
+    return b ? "yes" : "no";
+}
+
+class OutputRow
+{
+public:
+    std::string test_suite;
+    std::string graph_name;
+    int width;
+    int buds;
+    int edges;
+    int nodes;
+    int amount_of_backedges;
+    int amounts_of_trace_manifold_graph_edges;
+    int amounts_of_trace_manifold_graph_nodes;
+    int size_of_structural_connectivity_relation;
+    int amounts_of_positions_in_all_cycles;
+    int amount_of_SCCs;
+    bool has_overlapping_cycles;
+    bool is_in_cycle_normal_form;
+    int FC_duration_us;
+    std::string FC_answer;
+    int DU_duration_us;
+    std::string DU_answer;
+    int TM_duration_us;
+    std::string TM_answer;
+    int OR_duration_us;
+    std::string OR_answer;
+
+    static std::string get_header_csv()
     {
-        for (int j = 0; j < hg.num_nodes(); j++)
-        {
-            auto rel = h_change[i][j];
-            if (rel != NULL)
-            {
-                if (!rel->is_partial_function())
-                {
-                    return false;
-                }
-            }
-        }
+        return "test suite,graph name,width,buds,edges,nodes,amount of backedges,amount of trace manifold graph edges,amount of trace manifold graph nodes,size of structural connectivity relation,amount of positions in all cycles,amount of SCCs,has overlapping cycles,is in cycle normal form,FC duration microseconds,FC answer,DU duration microseconds,DU answer,TM duration microseconds,TM answer,OR duration microseconds,OR answer\n";
     }
-    return true;
+
+    std::string to_csv_string()
+    {
+        return string_format(
+            "%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%d,%s,%d,%s,%d,%s,%d,%s\n",
+            this->test_suite.c_str(), this->graph_name.c_str(), this->width, this->buds, this->edges, this->nodes, this->amount_of_backedges, this->amounts_of_trace_manifold_graph_edges, this->amounts_of_trace_manifold_graph_nodes, this->size_of_structural_connectivity_relation, this->amounts_of_positions_in_all_cycles, this->amount_of_SCCs, bool_to_string(this->has_overlapping_cycles).c_str(), bool_to_string(this->is_in_cycle_normal_form).c_str(), this->FC_duration_us, this->FC_answer.c_str(), this->DU_duration_us, this->DU_answer.c_str(), this->TM_duration_us, this->TM_answer.c_str(), this->OR_duration_us, this->OR_answer.c_str());
+    }
+};
+
+Pair<int, std::string> measure_flat_cycles_runtime(Heighted_graph &hg, int runs_repetitions)
+{
+    assert(runs_repetitions > 0);
+    std::string answer;
+    int duration_us = 0;
+    for (int i = 0; i < runs_repetitions; i++)
+    {
+        auto start = std::chrono::system_clock::now();
+        bool result = hg.has_flat_cycle();
+        auto end = std::chrono::system_clock::now();
+        answer = result ? "no" : "don't know";
+        duration_us += std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    }
+    // std::cout << "flat cycles answer: " << answer << " took " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
+    return Pair(duration_us/runs_repetitions, answer);
 }
 
-void measure_flat_cycles_runtime(Heighted_graph &hg)
+Pair<int, std::string> measure_descending_unicycles_runtime(Heighted_graph &hg, int runs_repetitions)
 {
-    auto start = std::chrono::system_clock::now();
-    bool result = hg.has_flat_cycle();
-    auto end = std::chrono::system_clock::now();
-    std::string answer = result ? "no" : "don't know";
-    std::cout << "flat cycles answer: " << answer << " took " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
+    assert(runs_repetitions > 0);
+    std::string answer;
+    int duration_us = 0;
+    for (int i = 0; i < runs_repetitions; i++)
+    {
+        DescendingUnicyclesCriterion criterion(&hg);
+        auto start = std::chrono::system_clock::now();
+        SoundnessCheckResult result = criterion.check_soundness();
+        auto end = std::chrono::system_clock::now();
+        answer = result == SoundnessCheckResult::sound ? "yes" : result == SoundnessCheckResult::unsound ? "no"
+                                                                                                         : "don't know";
+        duration_us += std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    }
+    // std::cout << "descending unicycles answer: " << answer << " took " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
+    return Pair(duration_us/runs_repetitions, answer);
 }
-
-void measure_descending_unicycles_runtime(Heighted_graph &hg)
+Pair<int, std::string> measure_trace_manifold_runtime(Heighted_graph &hg, int runs_repetitions)
 {
-    DescendingUnicyclesCriterion criterion(&hg);
-    auto start = std::chrono::system_clock::now();
-    SoundnessCheckResult result = criterion.check_soundness();
-    auto end = std::chrono::system_clock::now();
-    std::string answer = result == SoundnessCheckResult::sound ? "yes" : result == SoundnessCheckResult::unsound ? "no"
-                                                                                                                 : "don't know";
-    std::cout << "descending unicycles answer: " << answer << " took " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
+    assert(runs_repetitions > 0);
+    std::string answer;
+    int duration_us = 0;
+    for (int i = 0; i < runs_repetitions; i++)
+    {
+        TraceManifoldCriterion criterion(&hg);
+        auto start = std::chrono::system_clock::now();
+        SoundnessCheckResult result = criterion.check_soundness();
+        answer = result == SoundnessCheckResult::sound ? "yes" : result == SoundnessCheckResult::unsound ? "no"
+                                                                                                                     : "don't know";
+        auto end = std::chrono::system_clock::now();
+        duration_us += std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    }
+    // std::cout << "trace manifold answer: " << answer << " took " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
+    return Pair(duration_us/runs_repetitions, answer);
 }
-void measure_trace_manifold_runtime(Heighted_graph &hg)
+Pair<int, std::string> measure_order_reduced_runtime(Heighted_graph &hg, int runs_repetitions)
 {
-    TraceManifoldCriterion criterion(&hg);
-    auto start = std::chrono::system_clock::now();
-    SoundnessCheckResult result = criterion.check_soundness();
-    std::string answer = result == SoundnessCheckResult::sound ? "yes" : result == SoundnessCheckResult::unsound ? "no"
-                                                                                                                 : "don't know";
-    auto end = std::chrono::system_clock::now();
-    std::cout << "trace manifold answer: " << answer << " took " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
-}
-void measure_order_reduced_runtime(Heighted_graph &hg)
-{
+    assert(runs_repetitions > 0);
+    std::string answer;
+    int duration_us = 0;
+    for (int i = 0; i < runs_repetitions; i++)
+    {
     int flags = Heighted_graph::FAIL_FAST | Heighted_graph::USE_MINIMALITY | Heighted_graph::USE_SCC_CHECK;
     auto start = std::chrono::system_clock::now();
     bool result = hg.order_reduced_check(Heighted_graph::NODE_ORDER::GIVEN_ORDER, flags);
     auto end = std::chrono::system_clock::now();
-    std::string answer = result ? "yes" : "no";
-    std::cout << "order reduced answer: " << answer << " took " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
+    answer = result ? "yes" : "no";
+    duration_us += std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    }
+    // std::cout << "order reduced answer: " << answer << " took " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
+    return Pair(duration_us/runs_repetitions, answer);
 }
 
 int main(int argc, char **argv)
 {
+    bool only_minimised = false; // TODO: make this a flag
     if (argc > 1)
     {
-        std::string path = argv[1];
-        bool only_minimised = false; //TODO: make this a flag
+        int runs_repetitions = argc > 2 ? std::max(atoi(argv[2]), 1) : 1;
+        // std::string path = argv[1];
+        std::filesystem::path path = argv[1];
+        Vec<std::filesystem::path> test_suites = {"fo", "sl"};
 
-        std::vector<fs::directory_entry> entries;
-        for (const auto &entry : fs::directory_iterator(path))
+        std::cout << OutputRow::get_header_csv();
+
+        for (const auto test_suite : test_suites)
         {
-            if(only_minimised){
-                if(entry.path().string().find("minimised")!= std::string::npos) {
+            std::filesystem::path test_suite_path = path / test_suite;
+
+            std::vector<fs::directory_entry> entries;
+            for (const auto &entry : fs::directory_iterator(test_suite_path))
+            {
+                if (only_minimised)
+                {
+                    if (entry.path().string().find("minimised") != std::string::npos)
+                    {
+                        entries.push_back(entry);
+                    }
+                }
+                else
+                {
                     entries.push_back(entry);
                 }
-            } else {
-                entries.push_back(entry);
             }
-        }
 
-        // Sort the entries by path
-        std::sort(entries.begin(), entries.end(), [](const fs::directory_entry &a, const fs::directory_entry &b)
-                  { return a.path().string() < b.path().string(); });
+            // Sort the entries by path
+            std::sort(entries.begin(), entries.end(), [](const fs::directory_entry &a, const fs::directory_entry &b)
+                      { return a.path().string() < b.path().string(); });
 
-        for (const auto &entry : entries)
-        {
-            std::string path = entry.path();
-            if (!entry.is_directory() && (path.find(".json") != std::string::npos)
-                // && (path.find("minimised") != std::string::npos)
-            )
+            for (const auto &entry : entries)
             {
-                // bool is_sound = path.find("unsound") == std::string::npos;
-                std::cout << path << "\n";
-
-                // Get JSON data
-                std::ifstream graph_data(path.c_str());
-                json graph;
-                graph_data >> graph;
-
-                // Create heighted graph object
-                Heighted_graph hg = Heighted_graph(graph["Node"].size());
-                parse_from_json(graph, hg);
-
-                DirectedGraph dg = DirectedGraph(hg.get_edges_adjacency_list(), hg.num_nodes());
-                size_t num_of_heights = 0;
-                size_t max_amount_of_heights = 0;
-                for (size_t node_idx = 0; node_idx < hg.num_nodes(); node_idx++)
+                std::string path = entry.path();
+                if (!entry.is_directory() && (path.find(".json") != std::string::npos))
                 {
-                    size_t node_amount_of_heights = hg.get_HeightsOf()->at(node_idx)->size();
-                    num_of_heights += node_amount_of_heights;
-                    max_amount_of_heights = std::max(max_amount_of_heights, node_amount_of_heights);
-                }
-                std::vector<std::vector<int> *> SCCs;
+                    // std::cout << path << "\n";
 
-                printf("Graph file name: %s\n", entry.path().filename().c_str());
+                    // Get JSON data
+                    std::ifstream graph_data(path.c_str());
+                    json graph;
+                    graph_data >> graph;
 
-                int flags = Heighted_graph::FAIL_FAST | Heighted_graph::USE_MINIMALITY | Heighted_graph::USE_SCC_CHECK;
+                    // Create heighted graph object
+                    Heighted_graph hg = Heighted_graph(graph["Node"].size());
+                    parse_from_json(graph, hg, false);
 
-                // is_sound = hg.order_reduced_check(Heighted_graph::NODE_ORDER::GIVEN_ORDER, flags);
-                // printf("Is sound? %s\n", result == SoundnessCheckResult::sound ? "yes" : result == SoundnessCheckResult::unsound ? "no": "don't know");
-                // printf("Is sound? %s\n", is_sound ? "yes" : "no");
-                // printf("Has flat cycle? %s\n", hg.has_flat_cycle() ? "yes" : "no");
-
-                // printf("Amount of nodes: %d\n", hg.num_nodes());
-                printf("Amount of edges: %d\n", hg.num_edges());
-                printf("Amount of backedges: %d\n", dg.count_backedges());
-                // printf("Are there overlapping cycles: %s\n", hg.calculate_SCCs_and_check_if_has_overlapping_cycles(SCCs) ? "yes" : "no");
-                auto structural_connectivity_relation = hg.get_structural_connectivity_relation();
-                printf("Is in cycle normal form? %s\n", structural_connectivity_relation.is_cyclic_normal_form ? "yes" : "no");
-
-                auto trace_manifold_graph = hg.get_trace_manifold_graph(structural_connectivity_relation);
-                int amount_of_nodes_in_trace_manifold_graph = 0;
-                for (auto traces_of_cycle : *trace_manifold_graph.trace_node_per_cycle)
-                {
-                    amount_of_nodes_in_trace_manifold_graph += traces_of_cycle->size();
-                }
-                printf("Amount of nodes in trace manifold graph: %d\n", amount_of_nodes_in_trace_manifold_graph);
-                printf("Amount of edges in trace manifold graph: %d\n", trace_manifold_graph.edges->size());
-
-                int amount_of_positions_in_all_cycles = 0;
-                const auto &heights_of = hg.get_HeightsOf();
-                bool has_overlapping_cycles = hg.calculate_SCCs_and_check_if_has_overlapping_cycles(SCCs);
-
-                int amount_of_SCCs = 0;
-                for (auto &SCC : SCCs)
-                {
-                    if (SCC->size() == 1)
+                    DirectedGraph dg = DirectedGraph(hg.get_edges_adjacency_list(), hg.num_nodes());
+                    size_t num_of_heights = 0;
+                    size_t max_amount_of_heights = 0;
+                    for (size_t node_idx = 0; node_idx < hg.num_nodes(); node_idx++)
                     {
-                        if (hg.has_self_edge(SCC->at(0)))
+                        size_t node_amount_of_heights = hg.get_HeightsOf()->at(node_idx)->size();
+                        num_of_heights += node_amount_of_heights;
+                        max_amount_of_heights = std::max(max_amount_of_heights, node_amount_of_heights);
+                    }
+                    std::vector<std::vector<int> *> SCCs;
+
+                    // printf("Graph file name: %s\n", entry.path().filename().c_str());
+
+                    int flags = Heighted_graph::FAIL_FAST | Heighted_graph::USE_MINIMALITY | Heighted_graph::USE_SCC_CHECK;
+
+                    // printf("Amount of nodes: %d\n", hg.num_nodes());
+                    // printf("Amount of edges: %d\n", hg.num_edges());
+                    // printf("Amount of backedges: %d\n", dg.count_backedges());
+                    int nodes = hg.num_nodes();
+                    int edges = hg.num_edges();
+                    int buds = 0;
+                    for (auto &bud : graph["Bud"])
+                    {
+                        buds++;
+                    }
+                    int amount_of_backedges = dg.count_backedges();
+
+                    auto structural_connectivity_relation = hg.get_structural_connectivity_relation();
+                    // printf("Is in cycle normal form? %s\n", structural_connectivity_relation.is_cyclic_normal_form ? "yes" : "no");
+                    bool is_in_cycle_normal_form = structural_connectivity_relation.is_cyclic_normal_form;
+
+                    auto trace_manifold_graph = hg.get_trace_manifold_graph(structural_connectivity_relation);
+                    int amount_of_nodes_in_trace_manifold_graph = 0;
+                    for (auto traces_of_cycle : *trace_manifold_graph.trace_node_per_cycle)
+                    {
+                        amount_of_nodes_in_trace_manifold_graph += traces_of_cycle->size();
+                    }
+                    // printf("Amount of nodes in trace manifold graph: %d\n", amount_of_nodes_in_trace_manifold_graph);
+                    // printf("Amount of edges in trace manifold graph: %d\n", trace_manifold_graph.edges->size());
+                    int amount_of_edges_in_trace_manifold_graph = trace_manifold_graph.edges->size();
+
+                    int amount_of_positions_in_all_cycles = 0;
+                    const auto &heights_of = hg.get_HeightsOf();
+                    bool has_overlapping_cycles = hg.calculate_SCCs_and_check_if_has_overlapping_cycles(SCCs);
+
+                    int amount_of_SCCs = 0;
+                    for (auto &SCC : SCCs)
+                    {
+                        if (SCC->size() == 1)
+                        {
+                            if (hg.has_self_edge(SCC->at(0)))
+                            {
+                                amount_of_SCCs++;
+                            }
+                        }
+                        else
                         {
                             amount_of_SCCs++;
                         }
+                        for (auto &node : *SCC)
+                        {
+                            amount_of_positions_in_all_cycles += heights_of->at(node)->size();
+                        }
                     }
-                    else
-                    {
-                        amount_of_SCCs++;
-                    }
-                    for (auto &node : *SCC)
-                    {
-                        amount_of_positions_in_all_cycles += heights_of->at(node)->size();
-                    }
+                    // printf("Amount of positions in all cycles: %d\n", amount_of_positions_in_all_cycles);
+                    // printf("Amount of SCCs: %d\n", amount_of_SCCs);
+
+                    // printf("Has overlapping cycles? %s\n", dg.contains_overlapping_cycles() ? "yes" : "no");
+                    // printf("Proof width: %zu\n", max_amount_of_heights);
+
+                    Heighted_graph::StructuralConnectivityRelation relation = hg.get_structural_connectivity_relation();
+                    // printf("size of structural connectivity relation: %d\n", relation.relation->size());
+                    int size_of_structural_connectivity_relation = relation.relation->size();
+                    // printf("\n");
+
+                    // printf("Is cyclic normal form? %s\n", relation.is_cyclic_normal_form ? "yes" : "no");
+
+                    auto [FC_duration, FC_answer] = measure_flat_cycles_runtime(hg, runs_repetitions);
+                    auto [DU_duration, DU_answer] = measure_descending_unicycles_runtime(hg, runs_repetitions);
+                    auto [TM_duration, TM_answer] = measure_trace_manifold_runtime(hg, runs_repetitions);
+                    auto [OR_duration, OR_answer] = measure_order_reduced_runtime(hg, runs_repetitions);
+
+                    // printf("\n");
+                    // fflush(stdout);
+
+                    OutputRow row;
+                    row.test_suite = test_suite;
+                    row.graph_name = entry.path().filename();
+                    row.width = max_amount_of_heights;
+                    row.buds = buds;
+                    row.edges = edges;
+                    row.nodes = nodes;
+                    row.amount_of_backedges = amount_of_backedges;
+                    row.amounts_of_trace_manifold_graph_edges = amount_of_edges_in_trace_manifold_graph;
+                    row.amounts_of_trace_manifold_graph_nodes = amount_of_nodes_in_trace_manifold_graph;
+                    row.size_of_structural_connectivity_relation = size_of_structural_connectivity_relation;
+                    row.amounts_of_positions_in_all_cycles = amount_of_positions_in_all_cycles;
+                    row.amount_of_SCCs = amount_of_SCCs;
+                    row.has_overlapping_cycles = has_overlapping_cycles;
+                    row.is_in_cycle_normal_form = is_in_cycle_normal_form;
+                    row.FC_duration_us = FC_duration;
+                    row.FC_answer = FC_answer;
+                    row.DU_duration_us = DU_duration;
+                    row.DU_answer = DU_answer;
+                    row.TM_duration_us = TM_duration;
+                    row.TM_answer = TM_answer;
+                    row.OR_duration_us = OR_duration;
+                    row.OR_answer = OR_answer;
+
+                    std::cout << row.to_csv_string();
                 }
-                printf("Amount of positions in all cycles: %d\n", amount_of_positions_in_all_cycles);
-                printf("Amount of SCCs: %d\n", amount_of_SCCs);
-
-                printf("Has overlapping cycles? %s\n", dg.contains_overlapping_cycles() ? "yes" : "no");
-                // printf("Has non-oneshot cycle? %s\n", has_non_oneshot_cycle(hg, dg) ? "yes" : "no");
-                // printf("Amount of positions: %zu\n", num_of_heights);
-                printf("Proof width: %zu\n", max_amount_of_heights);
-
-                printf("are all relations partial functions? %s\n", are_all_relations_partial_functions(hg) ? "yes" : "no");
-
-                Heighted_graph::StructuralConnectivityRelation relation = hg.get_structural_connectivity_relation();
-                printf("size of structural connectivity relation: %d\n", relation.relation->size());
-                // printf("\n");
-
-                // printf("Is cyclic normal form? %s\n", relation.is_cyclic_normal_form ? "yes" : "no");
-
-                // for (const auto &[companion, cycle_idx] : *(relation.companions))
-                // {
-                //     printf("companion: %d, cycle index: %d\n", companion, cycle_idx);
-                //     printf("cycle nodes: ");
-                //     for(const auto& cycle_node: *(relation.cycles->at(cycle_idx))) {
-                //         printf("%d ", cycle_node);
-                //     }
-                //     printf("\n");
-                // }
-                // printf("\n");
-                // for(const auto& edge : *(relation.relation)) {
-                //     printf("%d<%d\n", edge.first, edge.second);
-                // }
-
-                measure_flat_cycles_runtime(hg);
-                // measure_generalized_flat_cycles_runtime(hg);
-                measure_descending_unicycles_runtime(hg);
-                measure_trace_manifold_runtime(hg);
-                measure_order_reduced_runtime(hg);
-
-                printf("\n");
-                fflush(stdout);
             }
         }
     }

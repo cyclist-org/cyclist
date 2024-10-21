@@ -119,15 +119,16 @@ graph.o: ../graph.c ../graph.hpp ../sloped_relation.hpp ../types.c
     tests-sla \
     tests-vla \
     tests-ortl \
-    tests-fwk
+    tests-fwk 
 
 clean:
 	rm -f ./*.o soundness
 
 run-get-graphs-stats: get_graphs_stats
+	@./get_graphs_stats '/Users/matanshaked/M.Sc research/Thesis/cyclist_graphs/cyclist_output_graphs' 3
 	# ./get_graphs_stats '/Users/matanshaked/M.Sc research/Thesis/cyclist_graphs/cyclist_output_graphs/sl'
+	# ./get_graphs_stats '/Users/matanshaked/M.Sc research/Thesis/cyclist_graphs/cyclist_output_graphs/fo'
 	# ./get_graphs_stats '/Users/matanshaked/M.Sc research/Thesis/cyclist_graphs/cyclist_output_graphs/fo/minimized'
-	./get_graphs_stats '/Users/matanshaked/M.Sc research/Thesis/cyclist_graphs/cyclist_output_graphs/fo'
 
 	# ./get_graphs_stats ../../../../cyclist_graphs/unminimized/sl
 	# ./get_graphs_stats ./loops_tests
