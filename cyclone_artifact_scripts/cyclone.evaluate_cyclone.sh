@@ -1,0 +1,43 @@
+timeout_seconds=3
+
+run_method() {
+    method="$1"
+    flags="$2"
+    out_directory="$3"
+
+    echo "running $method $i..."
+        find ~/artifact/database/fo -maxdepth 1 -name "*.json" | sort | xargs cat | timeout $timeout_seconds dune exec ~/artifact/cyclist/src/generic/checkproof.exe -- -$method $flags -s -R json  > "$out_directory/$method.output.fo" 
+        find ~/artifact/database/sl -maxdepth 1 -name "*.json" | sort | xargs cat | timeout $timeout_seconds dune exec ~/artifact/cyclist/src/generic/checkproof.exe -- -$method $flags -s -R json  > "$out_directory/$method.output.sl" 
+    echo done $method $i
+}
+
+
+out_dir="$HOME/artifact"
+methods=("CY" "OR" "FWK" "VLA" "SLA")
+cd ~/artifact/cyclist
+dune clean
+dune build
+cd ~/artifact/scripts
+# for method in "${methods[@]}" ; do
+#     run_method "$method" "-min -scc -ff --unminimized-proofs" "$out_dir"
+# done
+
+
+stats_file_path="$HOME/artifact/stats.csv" # TODO: change
+
+tail -n+2 $stats_file_path | cut -d ',' -f5 > ~/artifact/evaluation.body
+
+for method in "${methods[@]}" ; do
+    cat $out_dir/$method.output.fo | pcregrep -o "(?<=MODCHECK: Absolute time spent model checking: )[^\s]+" > "$method.modelcheck.fo.csv"
+    cat $out_dir/$method.output.sl | pcregrep -o "(?<=MODCHECK: Absolute time spent model checking: )[^\s]+" > "$method.modelcheck.sl.csv"
+    cat $method.modelcheck.fo.csv $method.modelcheck.sl.csv > $method.modelcheck.database.csv
+    rm "$method.modelcheck.fo.csv" "$method.modelcheck.sl.csv"
+
+    paste -d ',' ~/artifact/evaluation.body "$method.modelcheck.database.csv" > ~/artifact/evaluation.body.tmp
+    rm "$method.modelcheck.database.csv"
+    mv ~/artifact/evaluation.body.tmp ~/artifact/evaluation.body
+done
+
+echo "edges,CY,OR,FWK,VLA,SLA" > evaluation.header
+cat evaluation.header ~/artifact/evaluation.body > ~/artifact/evaluation.csv
+rm evaluation.header

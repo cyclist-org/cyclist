@@ -243,7 +243,7 @@ def print_statistics(test_suite, graph_name, width, buds, edges, nodes, amount_o
     print()
     print()
 
-    print(f"Amount of DU true answers {DU_true_answers_amount}")
+    print(f"Amount of DU true answer {DU_true_answers_amount}")
     print(f"Coverage of DU among all graphs {DU_true_answers_of_all_graphs}")
     print(f"Amount of unicycles graphs {amount_of_unicycles_graphs}")
     print(f"Ratio of unicycles graphs {rate_of_unicycles_graphs}")
@@ -300,8 +300,8 @@ def get_graphs_with_different_answers(data_before, data_after):
 
 def create_FC_figures(frame):
     frame=frame.copy().rename(columns={"edges":"Edges", "nodes":"Nodes"})
-    ax = sns.lineplot(data=frame, x="Nodes", y="FC durations", errorbar=None)
-    sns.lineplot(data=frame, x="Edges", y="FC durations", errorbar=None,linestyle="dotted", color=sns.color_palette()[0])
+    ax = sns.lineplot(data=frame, x="Nodes", y="FC duration microseconds", errorbar=None)
+    sns.lineplot(data=frame, x="Edges", y="FC duration microseconds", errorbar=None,linestyle="dotted", color=sns.color_palette()[0])
 
     handles, labels = ax.get_legend_handles_labels()
 
@@ -324,8 +324,8 @@ def create_DU_figures(frame):
     
     color_palette = sns.color_palette()
 
-    ax = sns.lineplot(data=frame, x="Nodes", y="DU durations", errorbar=None)
-    sns.lineplot(data=frame, x="Edges", y="DU durations", errorbar=None, linestyle="dotted", color=color_palette[0])
+    ax = sns.lineplot(data=frame, x="Nodes", y="DU duration microseconds", errorbar=None)
+    sns.lineplot(data=frame, x="Edges", y="DU duration microseconds", errorbar=None, linestyle="dotted", color=color_palette[0])
     handles, labels = ax.get_legend_handles_labels()
 
     legend_labels = ['By Nodes',  'By Edges']
@@ -340,10 +340,10 @@ def create_DU_figures(frame):
     plt.xlabel("Nodes/Edges")
     plt.show()
     
-    sns.lineplot(data=frame, x="Width", y="DU durations", errorbar=None)
+    sns.lineplot(data=frame, x="Width", y="DU duration microseconds", errorbar=None)
     plt.ylabel("Microseconds")
     plt.show()
-    sns.lineplot(data=frame, x="Backedges", y="DU durations", errorbar=None)
+    sns.lineplot(data=frame, x="Backedges", y="DU duration microseconds", errorbar=None)
     plt.ylabel("Microseconds")
     plt.show()
 
@@ -351,65 +351,65 @@ def create_DU_figures2(frame):
     frame_only_unicycles_graphs = frame[frame["has overlapping cycles"]=="no"]
     frame_only_not_unicycles_graphs = frame[frame["has overlapping cycles"]=="yes"]
     
-    plot_mean_with_interquartile_range_by(frame, "nodes", "DU durations")
+    plot_mean_with_interquartile_range_by(frame, "nodes", "DU duration microseconds")
     plt.title("DU runtime by nodes")
     plt.savefig("/Users/matanshaked/M.Sc research/Thesis/results/figures/DU/DU runtime by nodes.png", dpi=300)
     plt.clf()
     plt.cla()
-    plot_mean_with_interquartile_range_by(frame_only_unicycles_graphs, "nodes", "DU durations")
+    plot_mean_with_interquartile_range_by(frame_only_unicycles_graphs, "nodes", "DU duration microseconds")
     plt.title("DU runtime by nodes only unicycles graphs")
     plt.savefig("/Users/matanshaked/M.Sc research/Thesis/results/figures/DU/DU runtime by nodes only unicycles graphs.png", dpi=300)
     plt.clf()
     plt.cla()
-    plot_mean_with_interquartile_range_by(frame_only_not_unicycles_graphs, "nodes", "DU durations")
+    plot_mean_with_interquartile_range_by(frame_only_not_unicycles_graphs, "nodes", "DU duration microseconds")
     plt.title("DU runtime by nodes only non-unicycles graphs")
     plt.savefig("/Users/matanshaked/M.Sc research/Thesis/results/figures/DU/DU runtime by nodes only non-unicycles graphs.png", dpi=300)
     plt.clf()
     plt.cla()
 
-    plot_mean_with_interquartile_range_by(frame, "edges", "DU durations")
+    plot_mean_with_interquartile_range_by(frame, "edges", "DU duration microseconds")
     plt.title("DU runtime by edges")
     plt.savefig("/Users/matanshaked/M.Sc research/Thesis/results/figures/DU/DU runtime by edges.png", dpi=300)
     plt.clf()
     plt.cla()
-    plot_mean_with_interquartile_range_by(frame_only_unicycles_graphs, "edges", "DU durations")
+    plot_mean_with_interquartile_range_by(frame_only_unicycles_graphs, "edges", "DU duration microseconds")
     plt.title("DU runtime by edges only unicycles graphs")
     plt.savefig("/Users/matanshaked/M.Sc research/Thesis/results/figures/DU/DU runtime by edges only unicycles graphs.png", dpi=300)
     plt.clf()
     plt.cla()
-    plot_mean_with_interquartile_range_by(frame_only_not_unicycles_graphs, "edges", "DU durations")
+    plot_mean_with_interquartile_range_by(frame_only_not_unicycles_graphs, "edges", "DU duration microseconds")
     plt.title("DU runtime by edges only non-unicycles graphs")
     plt.savefig("/Users/matanshaked/M.Sc research/Thesis/results/figures/DU/DU runtime by edges only non-unicycles graphs.png", dpi=300)
     plt.clf()
     plt.cla()
 
-    plot_mean_with_interquartile_range_by(frame, "width", "DU durations")
+    plot_mean_with_interquartile_range_by(frame, "width", "DU duration microseconds")
     plt.title("DU runtime by width")
     plt.savefig("/Users/matanshaked/M.Sc research/Thesis/results/figures/DU/DU runtime by width.png", dpi=300)
     plt.clf()
     plt.cla()
-    plot_mean_with_interquartile_range_by(frame_only_unicycles_graphs, "width", "DU durations")
+    plot_mean_with_interquartile_range_by(frame_only_unicycles_graphs, "width", "DU duration microseconds")
     plt.title("DU runtime by width only unicycles graphs")
     plt.savefig("/Users/matanshaked/M.Sc research/Thesis/results/figures/DU/DU runtime by width only unicycles graphs.png", dpi=300)
     plt.clf()
     plt.cla()
-    plot_mean_with_interquartile_range_by(frame_only_not_unicycles_graphs, "width", "DU durations")
+    plot_mean_with_interquartile_range_by(frame_only_not_unicycles_graphs, "width", "DU duration microseconds")
     plt.title("DU runtime by width only non-unicycles graphs")
     plt.savefig("/Users/matanshaked/M.Sc research/Thesis/results/figures/DU/DU runtime by width only non-unicycles graphs.png", dpi=300)
     plt.clf()
     plt.cla()
 
-    plot_mean_with_interquartile_range_by(frame, "amount of positions in all cycles", "DU durations")
+    plot_mean_with_interquartile_range_by(frame, "amount of positions in all cycles", "DU duration microseconds")
     plt.title("DU runtime by amount of positions in all cycles")
     plt.savefig("/Users/matanshaked/M.Sc research/Thesis/results/figures/DU/DU runtime by amount of positions in all cycles.png", dpi=300)
     plt.clf()
     plt.cla()
-    plot_mean_with_interquartile_range_by(frame_only_unicycles_graphs, "amount of positions in all cycles", "DU durations")
+    plot_mean_with_interquartile_range_by(frame_only_unicycles_graphs, "amount of positions in all cycles", "DU duration microseconds")
     plt.title("DU runtime by amount of positions in all cycles only unicycles graphs")
     plt.savefig("/Users/matanshaked/M.Sc research/Thesis/results/figures/DU/DU runtime by amount of positions in all cycles only unicycles graphs.png", dpi=300)
     plt.clf()
     plt.cla()
-    plot_mean_with_interquartile_range_by(frame_only_not_unicycles_graphs, "amount of positions in all cycles", "DU durations")
+    plot_mean_with_interquartile_range_by(frame_only_not_unicycles_graphs, "amount of positions in all cycles", "DU duration microseconds")
     plt.title("DU runtime by amount of positions in all cycles only non-unicycles graphs")
     plt.savefig("/Users/matanshaked/M.Sc research/Thesis/results/figures/DU/DU runtime by amount of positions in all cycles only non-unicycles graphs.png", dpi=300)
     plt.clf()
@@ -419,35 +419,35 @@ def create_TM_figures(frame):
     cycle_normal_form_frame = frame[frame["is in cycle normal form"] == "yes"]
     not_cycle_normal_form_frame = frame[frame["is in cycle normal form"] == "no"]
 
-    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "buds", "TM durations")
+    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "buds", "TM duration microseconds")
     plt.ylabel("microseconds")
     plt.show()
-    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "edges", "TM durations")
+    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "edges", "TM duration microseconds")
     plt.ylabel("microseconds")
     plt.show()
-    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "nodes", "TM durations")
+    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "nodes", "TM duration microseconds")
     plt.ylabel("microseconds")
     plt.show()
-    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "width", "TM durations")
+    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "width", "TM duration microseconds")
     plt.ylabel("microseconds")
     plt.show()
-    # plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "size of structural connectivity relation", "TM durations")
+    # plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "size of structural connectivity relation", "TM duration microseconds")
     # plt.ylabel("microseconds")
     # plt.show()
-    # plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "amount of trace manifold graph nodes", "TM durations")
+    # plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "amount of trace manifold graph nodes", "TM duration microseconds")
     # plt.ylabel("microseconds")
     # plt.show()
-    # plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "amount of trace manifold graph edges", "TM durations")
+    # plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "amount of trace manifold graph edges", "TM duration microseconds")
     # plt.ylabel("microseconds")
     # plt.show()
     
-    plot_mean_with_interquartile_range_by(not_cycle_normal_form_frame, "nodes", "TM durations")
+    plot_mean_with_interquartile_range_by(not_cycle_normal_form_frame, "nodes", "TM duration microseconds")
     plt.ylabel("microseconds")
     plt.show()
-    plot_mean_with_interquartile_range_by(not_cycle_normal_form_frame, "edges", "TM durations")
+    plot_mean_with_interquartile_range_by(not_cycle_normal_form_frame, "edges", "TM duration microseconds")
     plt.ylabel("microseconds")
     plt.show()
-    plot_mean_with_interquartile_range_by(not_cycle_normal_form_frame, "buds", "TM durations")
+    plot_mean_with_interquartile_range_by(not_cycle_normal_form_frame, "buds", "TM duration microseconds")
     plt.ylabel("microseconds")
     plt.show()
 
@@ -481,60 +481,53 @@ def plot_mean_with_interquartile_range_by(frame, group_by_col, values_col, plot_
     # ax.set_ylabel("amount of backedges")
     # ax.fill_between(stats.index, mins, maxs, alpha=0.1)
 
+def get_dataframe_from_files():
+    # filespaths_fo = [f"./src/generic/test/run_stats.minimised.fo"]
+    filespaths_fo = [f"./src/generic/test/run_stats.fo.{i}" for i in range(1,6)]
+    data_fo = parse_files_multiruns(filespaths_fo)
+    # filespaths_sl = [f"./src/generic/test/run_stats.minimised.sl"]
+    filespaths_sl = [f"./src/generic/test/run_stats.sl.{i}" for i in range(1,6)]
+    data_sl = parse_files_multiruns(filespaths_sl)
 
-# filespaths_fo = [f"./src/generic/test/run_stats.minimised.fo"]
-filespaths_fo = [f"./src/generic/test/run_stats.fo.{i}" for i in range(1,6)]
-data_fo = parse_files_multiruns(filespaths_fo)
-# filespaths_sl = [f"./src/generic/test/run_stats.minimised.sl"]
-filespaths_sl = [f"./src/generic/test/run_stats.sl.{i}" for i in range(1,6)]
-data_sl = parse_files_multiruns(filespaths_sl)
-
-data = [
-    np.concatenate((data_fo[i], data_sl[i]))
-    for i in range(len(data_fo))
-]
-data = [["fo" for i in range(len(data_fo[0]))]+["sl" for i in range(len(data_sl[0]))]] + data
-# filespaths_before = [f"./src/generic/test/deleteme.trace_manifold_before_refactor"]
-# data_before = parse_files_multiruns(filespaths_before)
-# data_before = ["sl"] + [x for x in data_before]
-# filespaths_after = [f"./src/generic/test/deleteme.trace_manifold_after_refactor"]
-# data_after = parse_files_multiruns(filespaths_after)
-# data = ["sl"] + [x for x in data_after]
-# get_graphs_with_different_answers(data_before, data)
-
-test_suite, graph_name, width, buds, edges, nodes, amount_of_backedges, amounts_of_trace_manifold_graph_edges, amounts_of_trace_manifold_graph_nodes, size_of_structural_connectivity_relation, amounts_of_positions_in_all_cycles, amount_of_SCCs, has_overlapping_cycles, is_in_cycle_normal_form, FC_durations, FC_answers, DU_durations, DU_answers, TM_durations, TM_answers, OR_durations, OR_answers = data
-frame = pd.DataFrame({
-    "test suite": test_suite,
-    "graph name": graph_name,
-    "width": width,
-    "buds": buds,
-    "edges": edges,
-    "nodes": nodes,
-    "amount of backedges": amount_of_backedges,
-    "amount of trace manifold graph edges": amounts_of_trace_manifold_graph_edges,
-    "amount of trace manifold graph nodes": amounts_of_trace_manifold_graph_nodes,
-    "size of structural connectivity relation": size_of_structural_connectivity_relation,
-    "amount of positions in all cycles": amounts_of_positions_in_all_cycles,
-    "amount of SCCs": amount_of_SCCs,
-    "has overlapping cycles": has_overlapping_cycles,
-    "is in cycle normal form": is_in_cycle_normal_form,
-    "FC durations": FC_durations,
-    "FC answers": FC_answers,
-    "DU durations": DU_durations,
-    "DU answers": DU_answers,
-    "TM durations": TM_durations,
-    "TM answers": TM_answers,
-    "OR durations": OR_durations,
-    "OR answers": OR_answers
-})
+    data = [
+        np.concatenate((data_fo[i], data_sl[i]))
+        for i in range(len(data_fo))
+    ]
+    data = [["fo" for i in range(len(data_fo[0]))]+["sl" for i in range(len(data_sl[0]))]] + data
+    test_suite, graph_name, width, buds, edges, nodes, amount_of_backedges, amounts_of_trace_manifold_graph_edges, amounts_of_trace_manifold_graph_nodes, size_of_structural_connectivity_relation, amounts_of_positions_in_all_cycles, amount_of_SCCs, has_overlapping_cycles, is_in_cycle_normal_form, FC_durations, FC_answers, DU_durations, DU_answers, TM_durations, TM_answers, OR_durations, OR_answers = data
+    frame = pd.DataFrame({
+        "test suite": test_suite,
+        "graph name": graph_name,
+        "width": width,
+        "buds": buds,
+        "edges": edges,
+        "nodes": nodes,
+        "amount of backedges": amount_of_backedges,
+        "amount of trace manifold graph edges": amounts_of_trace_manifold_graph_edges,
+        "amount of trace manifold graph nodes": amounts_of_trace_manifold_graph_nodes,
+        "size of structural connectivity relation": size_of_structural_connectivity_relation,
+        "amount of positions in all cycles": amounts_of_positions_in_all_cycles,
+        "amount of SCCs": amount_of_SCCs,
+        "has overlapping cycles": has_overlapping_cycles,
+        "is in cycle normal form": is_in_cycle_normal_form,
+        "FC duration microseconds": FC_durations,
+        "FC answer": FC_answers,
+        "DU duration microseconds": DU_durations,
+        "DU answer": DU_answers,
+        "TM duration microseconds": TM_durations,
+        "TM answer": TM_answers,
+        "OR duration microseconds": OR_durations,
+        "OR answer": OR_answers
+    })
+    return frame
 
 
 def plot_DU_and_amount_of_backedges_by_edges(frame):
     backedges_means = frame.groupby("edges")["amount of backedges"].mean()
     backedges_stats = frame.groupby("edges")["amount of backedges"].describe()
-    DU_durations_means = frame.groupby("edges")["DU durations"].mean()
-    DU_durations_stats = frame.groupby("edges")["DU durations"].describe()
-    ax = sns.lineplot(x=DU_durations_stats.index, y=DU_durations_means, color="r", label="DU durations", legend=False)
+    DU_durations_means = frame.groupby("edges")["DU duration microseconds"].mean()
+    DU_durations_stats = frame.groupby("edges")["DU duration microseconds"].describe()
+    ax = sns.lineplot(x=DU_durations_stats.index, y=DU_durations_means, color="r", label="DU duration microseconds", legend=False)
     ax2 = plt.twinx()
     sns.lineplot(x=backedges_stats.index, y=backedges_means, color="b", label="amount of backedges", ax=ax2, legend=False)
     ax.figure.legend()
@@ -551,11 +544,11 @@ def print_database_stats(frame):
     print(f"max width: {frame["width"].max()}")
     print(f"max buds: {frame["buds"].max()}")
     print(f"amount in CNF {sum(frame["is in cycle normal form"]=="yes")}")
-    print(f"amount in CNF and sound {sum((frame["is in cycle normal form"]=="yes") & (frame["OR answers"]=="yes"))}")
+    print(f"amount in CNF and sound {sum((frame["is in cycle normal form"]=="yes") & (frame["OR answer"]=="yes"))}")
 
 def plot_database_stats(frame):
-    # amount_sound = len(frame[frame["OR answers"]=="yes"])
-    # amount_unsound = len(frame[frame["OR answers"]=="no"])
+    # amount_sound = len(frame[frame["OR answer"]=="yes"])
+    # amount_unsound = len(frame[frame["OR answer"]=="no"])
     # plt.pie([amount_sound, amount_unsound], labels=["satisfies infinite descent", "does not satisfy infinite descent"])
     # plt.show()
 
@@ -635,9 +628,9 @@ def plot_database_stats(frame):
 
 
 def plot_coverages(frame):
-    FC_true = len(frame[frame["FC answers"]!="don't know"])
-    not_FC_true_DU_true = len(frame[(frame["FC answers"]=="don't know")&(frame["DU answers"]!="don't know")])
-    not_FC_nor_DU_true = len(frame[(frame["FC answers"]=="don't know")&(frame["DU answers"]=="don't know")])
+    FC_true = len(frame[frame["FC answer"]!="don't know"])
+    not_FC_true_DU_true = len(frame[(frame["FC answer"]=="don't know")&(frame["DU answer"]!="don't know")])
+    not_FC_nor_DU_true = len(frame[(frame["FC answer"]=="don't know")&(frame["DU answer"]=="don't know")])
     sum_of_amounts = FC_true+not_FC_true_DU_true+not_FC_nor_DU_true
     print(f"amount of graphs {len(frame)}")
     print(f"sum of three amounts {sum_of_amounts}")
@@ -647,18 +640,18 @@ def plot_coverages(frame):
 def plot_methods_comparison(frame):
 
     overhead_frame_only_TM_yes = frame.copy()
-    overhead_frame_only_TM_yes = overhead_frame_only_TM_yes[overhead_frame_only_TM_yes["TM answers"]=="yes"]
-    overhead_frame_only_TM_yes["OR overhead over TM"] = (overhead_frame_only_TM_yes["OR durations"]-overhead_frame_only_TM_yes["TM durations"])
-    overhead_frame_only_TM_yes["OR overhead over TM %"] = 100*(overhead_frame_only_TM_yes["OR durations"]-overhead_frame_only_TM_yes["TM durations"])/overhead_frame_only_TM_yes["TM durations"]
+    overhead_frame_only_TM_yes = overhead_frame_only_TM_yes[overhead_frame_only_TM_yes["TM answer"]=="yes"]
+    overhead_frame_only_TM_yes["OR overhead over TM"] = (overhead_frame_only_TM_yes["OR duration microseconds"]-overhead_frame_only_TM_yes["TM duration microseconds"])
+    overhead_frame_only_TM_yes["OR overhead over TM %"] = 100*(overhead_frame_only_TM_yes["OR duration microseconds"]-overhead_frame_only_TM_yes["TM duration microseconds"])/overhead_frame_only_TM_yes["TM duration microseconds"]
     print(f"min overhead {overhead_frame_only_TM_yes["OR overhead over TM %"].min()}")
     print(f"max overhead {overhead_frame_only_TM_yes["OR overhead over TM %"].max()}")
     plot_mean_with_interquartile_range_by(overhead_frame_only_TM_yes,"edges", "OR overhead over TM %")
     plt.show()
 
-    frame["FC"]=frame["FC durations"]
-    frame["DU"]=frame["DU durations"]
-    frame["TM"]=frame["TM durations"]
-    frame["OR"]=frame["OR durations"]
+    frame["FC"]=frame["FC duration microseconds"]
+    frame["DU"]=frame["DU duration microseconds"]
+    frame["TM"]=frame["TM duration microseconds"]
+    frame["OR"]=frame["OR duration microseconds"]
     plot_mean_with_interquartile_range_by(frame,"edges", "FC")
     plot_mean_with_interquartile_range_by(frame,"edges", "DU",linestyle="--")
     # plot_mean_with_interquartile_range_by(frame,"edges", "TM",linestyle="-.")
@@ -666,32 +659,41 @@ def plot_methods_comparison(frame):
     plt.ylabel("Microseconds")
     plt.xlabel("Edges")
     plt.show()
-    # plot_mean_with_interquartile_range_by(frame,"edges", "FC durations")
-    # plot_mean_with_interquartile_range_by(frame,"edges", "DU durations")
-    # plot_mean_with_interquartile_range_by(frame,"edges", "OR durations")
+    # plot_mean_with_interquartile_range_by(frame,"edges", "FC duration microseconds")
+    # plot_mean_with_interquartile_range_by(frame,"edges", "DU duration microseconds")
+    # plot_mean_with_interquartile_range_by(frame,"edges", "OR duration microseconds")
     # plt.ylabel("microseconds")
     # plt.yscale("log")
     # plt.show()
 
-    # plot_mean_with_interquartile_range_by(frame,"amount of backedges", "FC durations")
-    # plot_mean_with_interquartile_range_by(frame,"amount of backedges", "DU durations")
-    # plot_mean_with_interquartile_range_by(frame,"amount of backedges", "OR durations")
+    # plot_mean_with_interquartile_range_by(frame,"amount of backedges", "FC duration microseconds")
+    # plot_mean_with_interquartile_range_by(frame,"amount of backedges", "DU duration microseconds")
+    # plot_mean_with_interquartile_range_by(frame,"amount of backedges", "OR duration microseconds")
     # plt.ylabel("microseconds")
     # plt.show()
 
 def print_TM_coverage_after_DU(frame):
-    amount_TM_not_DU = len(frame[(frame["DU answers"]=="don't know")&(frame["TM answers"]=="yes")])
+    amount_TM_not_DU = len(frame[(frame["DU answer"]=="don't know")&(frame["TM answer"]=="yes")])
     print(f"amount TM not DU: {amount_TM_not_DU}")
     print(f"percent TM not DU among all graphs {100*amount_TM_not_DU/len(frame)}")
-    amount_not_FC_nor_DU = len(frame[(frame["DU answers"]=="don't know")&(frame["FC answers"]=="don't know")])
+    amount_not_FC_nor_DU = len(frame[(frame["DU answer"]=="don't know")&(frame["FC answer"]=="don't know")])
     print(f"percent TM not DU among non covered graphs {100*amount_TM_not_DU/amount_not_FC_nor_DU}")
+
+def get_dataframe_from_csv(filepath):
+    # dtype={"width": np.double,"buds": np.double,"edges": np.double,"nodes": np.double,"amount of backedges": np.double,"amount of trace manifold graph edges": np.double,"amount of trace manifold graph nodes": np.double,"size of structural connectivity relation": np.double,"amount of positions in all cycles": np.double,"amount of SCCs": np.double,"FC duration microseconds": np.double,"DU duration microseconds": np.double,"TM duration microseconds": np.double,"OR duration microseconds": np.double}
+    frame = pd.read_csv(stats_filepath)
+    return frame
+
+# frame = get_dataframe_from_files()
+stats_filepath = "./src/generic/test/stats.deleteme.csv"
+frame = get_dataframe_from_csv(stats_filepath)
 
 
 plt.rc('font', size=16)
 plt.rcParams.update({'figure.autolayout': True})
 
-print_database_stats(frame)
-exit()
+# print_database_stats(frame)
+# exit()
 
 # frame.to_csv("./checkproof_benchmarks/stats.minimized.csv")
 plot_methods_comparison(frame)
@@ -721,22 +723,22 @@ create_TM_figures(frame)
 exit()
 
 
-amount_sound_DU_dont_know_TM_yes = len(frame[(frame["DU answers"]=="don't know") & (frame["TM answers"]!="don't know")])
-amount_sound_only_TM_knows = len(frame[(frame["FC answers"]=="don't know") & (frame["DU answers"]=="don't know") & (frame["TM answers"]!="don't know")])
+amount_sound_DU_dont_know_TM_yes = len(frame[(frame["DU answer"]=="don't know") & (frame["TM answer"]!="don't know")])
+amount_sound_only_TM_knows = len(frame[(frame["FC answer"]=="don't know") & (frame["DU answer"]=="don't know") & (frame["TM answer"]!="don't know")])
 print(amount_sound_DU_dont_know_TM_yes)
 print(amount_sound_only_TM_knows)
-plot_mean_with_interquartile_range_by(frame[frame["is in cycle normal form"]=="yes"], "edges", "TM durations")
-plot_mean_with_interquartile_range_by(frame[frame["is in cycle normal form"]=="yes"], "edges", "DU durations")
+plot_mean_with_interquartile_range_by(frame[frame["is in cycle normal form"]=="yes"], "edges", "TM duration microseconds")
+plot_mean_with_interquartile_range_by(frame[frame["is in cycle normal form"]=="yes"], "edges", "DU duration microseconds")
 plt.ylabel("microseconds")
 plt.show()
 exit()
 
-amount_sound = len(frame[frame["OR answers"]=="yes"])
-amount_unsound = len(frame[frame["OR answers"]=="no"])
-amount_sound_sl = len(frame[(frame["OR answers"]=="yes") & (frame["test suite"]=="sl")])
-amount_unsound_sl = len(frame[(frame["OR answers"]=="no") & (frame["test suite"]=="sl")])
-amount_sound_fo = len(frame[(frame["OR answers"]=="yes") & (frame["test suite"]=="fo")])
-amount_unsound_fo = len(frame[(frame["OR answers"]=="no") & (frame["test suite"]=="fo")])
+amount_sound = len(frame[frame["OR answer"]=="yes"])
+amount_unsound = len(frame[frame["OR answer"]=="no"])
+amount_sound_sl = len(frame[(frame["OR answer"]=="yes") & (frame["test suite"]=="sl")])
+amount_unsound_sl = len(frame[(frame["OR answer"]=="no") & (frame["test suite"]=="sl")])
+amount_sound_fo = len(frame[(frame["OR answer"]=="yes") & (frame["test suite"]=="fo")])
+amount_unsound_fo = len(frame[(frame["OR answer"]=="no") & (frame["test suite"]=="fo")])
 plt.pie(
     [amount_sound_sl, amount_sound_fo, amount_unsound_sl, amount_unsound_fo],
     labels=["satisfies infinite descent SL","satisfies infinite descent FOL", "does not satisfy infinite descent SL", "does not satisfy infinite descent FOL"],
@@ -759,17 +761,17 @@ print_database_stats(frame)
 print_statistics(test_suite, graph_name, width, buds, edges, nodes, amount_of_backedges, amounts_of_trace_manifold_graph_edges, amounts_of_trace_manifold_graph_nodes, has_overlapping_cycles, is_in_cycle_normal_form, FC_durations, FC_answers, DU_durations, DU_answers, TM_durations, TM_answers, OR_durations, OR_answers)
 exit()
 
-plot_mean_with_interquartile_range_by(frame, "amount of backedges", "FC durations")
-# plot_mean_with_interquartile_range_by(frame, "amount of backedges", "DU durations")
-plot_mean_with_interquartile_range_by(frame, "amount of backedges", "TM durations")
-# plot_mean_with_interquartile_range_by(frame, "amount of backedges", "OR durations")
+plot_mean_with_interquartile_range_by(frame, "amount of backedges", "FC duration microseconds")
+# plot_mean_with_interquartile_range_by(frame, "amount of backedges", "DU duration microseconds")
+plot_mean_with_interquartile_range_by(frame, "amount of backedges", "TM duration microseconds")
+# plot_mean_with_interquartile_range_by(frame, "amount of backedges", "OR duration microseconds")
 plt.show()
 exit()
 plot_mean_with_interquartile_range_by(frame, "edges", "amount of backedges")
 plt.show()
-# plot_mean_with_interquartile_range_by(frame[(frame["has overlapping cycles"]=="no")], "edges", "DU durations")
+# plot_mean_with_interquartile_range_by(frame[(frame["has overlapping cycles"]=="no")], "edges", "DU duration microseconds")
 # plt.show()
-plot_mean_with_interquartile_range_by(frame, "edges", "DU durations")
+plot_mean_with_interquartile_range_by(frame, "edges", "DU duration microseconds")
 plt.show()
 exit()
 # frame.to_csv("./checkproof_benchmarks/stats.csv")
@@ -795,45 +797,45 @@ cycle_normal_form_and_has_overlapping_cycles_frame = cycle_normal_form_frame[cyc
 frame_only_unicycles_graphs = frame[frame["has overlapping cycles"]=="no"]
 frame_only_not_unicycles_graphs = frame[frame["has overlapping cycles"]=="yes"]
 
-frame["sum of all methods"] = frame["FC durations"] + frame["DU durations"] + frame["TM durations"]
+frame["sum of all methods"] = frame["FC duration microseconds"] + frame["DU duration microseconds"] + frame["TM duration microseconds"]
 
 plot_mean_with_interquartile_range_by(frame, "edges", "sum of all methods")
-plot_mean_with_interquartile_range_by(frame, "edges", "OR durations")
+plot_mean_with_interquartile_range_by(frame, "edges", "OR duration microseconds")
 plt.show()
 
 
 
-# plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "width", "DU durations")
+# plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "width", "DU duration microseconds")
 # plt.show()
 
-# plot_mean_with_interquartile_range_by(cycle_normal_form_frame,"amount of positions in all cycles", "DU durations")
-# plot_mean_with_interquartile_range_by(cycle_normal_form_frame,"amount of positions in all cycles", "TM durations")
+# plot_mean_with_interquartile_range_by(cycle_normal_form_frame,"amount of positions in all cycles", "DU duration microseconds")
+# plot_mean_with_interquartile_range_by(cycle_normal_form_frame,"amount of positions in all cycles", "TM duration microseconds")
 # plt.show()
-# plot_mean_with_interquartile_range_by(cycle_normal_form_and_no_overlapping_cycles_frame,"amount of positions in all cycles", "DU durations")
-# plot_mean_with_interquartile_range_by(cycle_normal_form_and_no_overlapping_cycles_frame,"amount of positions in all cycles", "TM durations")
+# plot_mean_with_interquartile_range_by(cycle_normal_form_and_no_overlapping_cycles_frame,"amount of positions in all cycles", "DU duration microseconds")
+# plot_mean_with_interquartile_range_by(cycle_normal_form_and_no_overlapping_cycles_frame,"amount of positions in all cycles", "TM duration microseconds")
 # plt.show()
-# plot_mean_with_interquartile_range_by(cycle_normal_form_and_has_overlapping_cycles_frame,"amount of positions in all cycles", "DU durations")
-# plot_mean_with_interquartile_range_by(cycle_normal_form_and_has_overlapping_cycles_frame,"amount of positions in all cycles", "TM durations")
-# plot_mean_with_interquartile_range_by(cycle_normal_form_and_has_overlapping_cycles_frame,"amount of positions in all cycles", "OR durations")
-# plt.show()
-
-# cycle_normal_form_frame = frame[frame["is in cycle normal form"] == "yes"]
-# plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "amount of trace manifold graph edges", "FC durations")
-# plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "amount of trace manifold graph edges", "DU durations")
-# plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "edges", "TM durations")
-# plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "edges", "OR durations")
+# plot_mean_with_interquartile_range_by(cycle_normal_form_and_has_overlapping_cycles_frame,"amount of positions in all cycles", "DU duration microseconds")
+# plot_mean_with_interquartile_range_by(cycle_normal_form_and_has_overlapping_cycles_frame,"amount of positions in all cycles", "TM duration microseconds")
+# plot_mean_with_interquartile_range_by(cycle_normal_form_and_has_overlapping_cycles_frame,"amount of positions in all cycles", "OR duration microseconds")
 # plt.show()
 
 # cycle_normal_form_frame = frame[frame["is in cycle normal form"] == "yes"]
-# plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "edges", "FC durations")
-# plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "edges", "DU durations")
-# plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "edges", "TM durations")
+# plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "amount of trace manifold graph edges", "FC duration microseconds")
+# plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "amount of trace manifold graph edges", "DU duration microseconds")
+# plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "edges", "TM duration microseconds")
+# plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "edges", "OR duration microseconds")
+# plt.show()
+
+# cycle_normal_form_frame = frame[frame["is in cycle normal form"] == "yes"]
+# plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "edges", "FC duration microseconds")
+# plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "edges", "DU duration microseconds")
+# plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "edges", "TM duration microseconds")
 # plt.show()
 
 # not_cycle_normal_form_frame = frame[frame["is in cycle normal form"] == "no"]
-# plot_mean_with_interquartile_range_by(not_cycle_normal_form_frame, "edges", "FC durations")
-# plot_mean_with_interquartile_range_by(not_cycle_normal_form_frame, "edges", "DU durations")
-# plot_mean_with_interquartile_range_by(not_cycle_normal_form_frame, "edges", "TM durations")
+# plot_mean_with_interquartile_range_by(not_cycle_normal_form_frame, "edges", "FC duration microseconds")
+# plot_mean_with_interquartile_range_by(not_cycle_normal_form_frame, "edges", "DU duration microseconds")
+# plot_mean_with_interquartile_range_by(not_cycle_normal_form_frame, "edges", "TM duration microseconds")
 # plt.show()
 
 
