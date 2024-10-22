@@ -1,11 +1,17 @@
-## Files Structure
-The files in this artifact are split into the following directory tree:
+## Using the Docker Image
+Assuming you have Docker installed and defaultly configured on your machine, run the following command to pull the artifact Docker image and to start a container with the image:
+```bash
+docker pull matanshaked/cyclone_artifact
+docker run -it matanshaked/cyclone_artifact
+```
+
+### Files Structure
+The files in the docker image are split into the following directory tree:
 ```
 /
     home
         cyclist
         scripts
-        paper_data
 ```
 
 ### *Cyclone* Implementation
@@ -21,6 +27,8 @@ This script generates a database of sloped graphs.
 This script creates the directory `/home/database` which contains two directories, one for each logic: `fo` and `sl`.
 Each of these directory contains `.json` files, one for each sloped graph that was generated.
 
+This script can take several minutes.
+
 > Note that because Cyclist timesout while searching a proof for some of the sequents in the test suite, the amount of graphs in the database can differ slightly from the amount that we present in the paper.
 
 
@@ -29,6 +37,8 @@ This script generates a `/home/stats.csv` CSV file containing the following stat
 The sloped graph filename, the metrics described in section 3 in the paper, the runtime and the answer of each incomplete methods and other information described in the CSV header.
 
 This script should be run after the [`generate_database.sh`](#generate_databasesh) script, as it uses the generated sloped graphs.
+
+This script can take several minutes.
 
 
 #### `evaluate_cyclone.sh`
@@ -41,5 +51,5 @@ It is possible to add `-method <method name>` flags, with `<method name>` being 
 Note that by default all methods run and if any `-method` flag is passed, only the flagged methods run.
 
 
-### The Data Used in our Paper
-The `/home/paper_data` directory contains a `database` directory containing the sloped graphs database from our paper, the `stats.csv` file that we used in our paper (as described in the [generate stats section](#generate_statssh)) and the `evaluation.csv` file that we used in our paper (as described in the [evaluate cyclone section](#evaluate_cyclonesh)).
+## The Data Used in our Paper
+The `paper_data` directory contains a `database` directory containing the sloped graphs database from our paper, the `stats.csv` file that we used in our paper (as described in the [generate stats section](#generate_statssh)) and the `evaluation.csv` file that we used in our paper (as described in the [evaluate cyclone section](#evaluate_cyclonesh)).

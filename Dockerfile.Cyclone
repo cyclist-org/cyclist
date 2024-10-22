@@ -63,7 +63,9 @@ COPY ./cyclone_artifact_scripts/cyclone.evaluate_cyclone.sh /home/scripts/cyclon
 COPY ./cyclone_artifact_scripts/cyclone.generate_database.sh /home/scripts/cyclone.generate_database.sh
 COPY ./cyclone_artifact_scripts/cyclone.graphs_stats.sh /home/scripts/cyclone.graphs_stats.sh
 
+USER root
 RUN chmod a+rw /home
 RUN chmod -R a+rw /home/scripts
+USER opam
 
 WORKDIR /home

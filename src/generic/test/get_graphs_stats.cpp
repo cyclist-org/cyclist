@@ -186,6 +186,9 @@ int main(int argc, char **argv)
                 {
                     // std::cout << path << "\n";
 
+                    if (std::filesystem::file_size(path)==0){
+                        continue;
+                    }
                     // Get JSON data
                     std::ifstream graph_data(path.c_str());
                     json graph;
