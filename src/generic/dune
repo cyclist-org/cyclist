@@ -29,8 +29,7 @@
  (name checkproof)
  (public_name checkproof)
  (modules checkproof)
- (libraries generic)
- (ocamlopt_flags :standard))
+ (libraries generic))
 
  (rule
   (targets c_flags.sexp c_library_flags.sexp)

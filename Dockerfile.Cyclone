@@ -4,7 +4,7 @@ FROM ocaml/opam:debian-ocaml-4.14
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-ENV TERM linux
+ENV TERM=linux
 
 USER root
 
@@ -22,13 +22,12 @@ RUN apt-get --allow-releaseinfo-change update && apt-get install -y --no-install
 # Install Spot
 
 RUN \
-  mkdir /usr/local/src/spot && cd /usr/local/src/spot && \
-  wget https://www.lrde.epita.fr/dload/spot/spot-2.10.4.tar.gz && \
-  tar -xzf spot-2.10.4.tar.gz && cd spot-2.10.4 && \
-  ./configure --prefix=/opt/spot/accset-32 --disable-python && \
-  make && make install && make clean && \
-  ./configure --prefix=/opt/spot/accset-32768 --enable-max-accsets=32768 --disable-python && \
-  make && make install && make clean
+  wget -q -O - https://www.lrde.epita.fr/repo/debian.gpg | apt-key add - && \
+  echo 'deb http://www.lrde.epita.fr/repo/debian/ stable/' >> /etc/apt/sources.list && \
+  apt-get update && \
+  apt-get install -y libbddx0=2.11.6.0-1 libbddx-dev=2.11.6.0-1 \
+                     libspotgen0=2.11.6.0-1 libspotltsmin0=2.11.6.0-1 \
+                     libspot0=2.11.6.0-1 spot=2.11.6.0-1 libspot-dev=2.11.6.0-1
 
 # Copy Cyclist source code from current directory
 
@@ -37,35 +36,32 @@ COPY . /home/cyclist
 # Uncomment to copy database as well
 # COPY ./cyclist_graphs/cyclist_output_graphs /home/sloped_graphs
 
-RUN chmod -R a+rw /home/cyclist
+COPY ./cyclone_artifact_scripts/cyclone.readme.md /home/README.md
+COPY ./cyclone_artifact_scripts/cyclone.evaluate_cyclone.sh /home/scripts/evaluate_cyclone.sh
+COPY ./cyclone_artifact_scripts/cyclone.generate_database.sh /home/scripts/generate_database.sh
+COPY ./cyclone_artifact_scripts/cyclone.graphs_stats.sh /home/scripts/graphs_stats.sh
+
+RUN \
+  chmod -R a+rw /home/cyclist && \
+  chmod -R a+rw /home/scripts && \
+  chmod a+rw /home
 
 USER opam
 
 # Use remote OPAM repository
 
 RUN \
-eval `opam config env` && \
-opam repository set-url default https://opam.ocaml.org/ && \
-opam update
+  eval `opam config env` && \
+  opam repository set-url default https://opam.ocaml.org/ && \
+  opam update
 
 # Compile Cyclist
 
 RUN \
-cd /home/cyclist && \
-eval `opam config env` && \
-opam update && \
-opam install -y --deps-only ./cyclist.opam && \
-rm -f dune-workspace && mv dune-workspace.POPL2024 dune-workspace && \
-dune build
-
-COPY ./cyclone_artifact_scripts/cyclone.readme.md /home/README.md
-COPY ./cyclone_artifact_scripts/cyclone.evaluate_cyclone.sh /home/scripts/cyclone.evaluate_cyclone.sh
-COPY ./cyclone_artifact_scripts/cyclone.generate_database.sh /home/scripts/cyclone.generate_database.sh
-COPY ./cyclone_artifact_scripts/cyclone.graphs_stats.sh /home/scripts/cyclone.graphs_stats.sh
-
-USER root
-RUN chmod a+rw /home
-RUN chmod -R a+rw /home/scripts
-USER opam
+  cd /home/cyclist && \
+  eval `opam config env` && \
+  opam update && \
+  opam install -y --deps-only ./cyclist.opam && \
+  dune build
 
 WORKDIR /home

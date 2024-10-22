@@ -1,6 +1,7 @@
 #include "directed_graph.hpp"
 #include "types.c"
 
+#include <cstdio>
 #include <stack>
 #include <unordered_set>
 #include <algorithm>
