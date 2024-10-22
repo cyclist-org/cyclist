@@ -32,12 +32,12 @@ RUN \
 
 # Copy Cyclist source code from current directory
 
-COPY . /home/artifact/cyclist
+COPY . /home/cyclist
 
 # Uncomment to copy database as well
 # COPY ./cyclist_graphs/cyclist_output_graphs /home/sloped_graphs
 
-RUN chmod -R a+rw /home/artifact/cyclist
+RUN chmod -R a+rw /home/cyclist
 
 USER opam
 
@@ -51,16 +51,16 @@ RUN \
 # Compile Cyclist
 
 RUN \
-  cd /home/artifact/cyclist && \
+  cd /home/cyclist && \
   eval `opam config env` && \
   opam update && \
   opam install -y --deps-only ./cyclist.opam && \
   rm -f dune-workspace && mv dune-workspace.POPL2024 dune-workspace && \
   dune build
 
-COPY ./cyclone_artifact_scripts/cyclone.readme.md /home/artifact/scripts/README.md
-COPY ./cyclone_artifact_scripts/cyclone.evaluate_cyclone.sh /home/artifact/scripts/cyclone.evaluate_cyclone.sh
-COPY ./cyclone_artifact_scripts/cyclone.generate_database.sh /home/artifact/scripts/cyclone.generate_database.sh
-COPY ./cyclone_artifact_scripts/cyclone.graphs_stats.sh /home/artifact/scripts/cyclone.graphs_stats.sh
+COPY ./cyclone_artifact_scripts/cyclone.readme.md /home/scripts/README.md
+COPY ./cyclone_artifact_scripts/cyclone.evaluate_cyclone.sh /home/scripts/cyclone.evaluate_cyclone.sh
+COPY ./cyclone_artifact_scripts/cyclone.generate_database.sh /home/scripts/cyclone.generate_database.sh
+COPY ./cyclone_artifact_scripts/cyclone.graphs_stats.sh /home/scripts/cyclone.graphs_stats.sh
 
 WORKDIR /home
