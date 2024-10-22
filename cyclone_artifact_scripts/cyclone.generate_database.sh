@@ -1,17 +1,17 @@
-mkdir ~/artifact/database
-mkdir ~/artifact/database/fo
-mkdir ~/artifact/database/sl
+mkdir /home/database
+mkdir /home/database/fo
+mkdir /home/database/sl
 
-cd ~/artifact/cyclist
+cd /home/cyclist
 
 echo "generating FO sloped graphs..."
-TST_OPTS="-OR -min -scc -ff --dump-graphs --unminimized-proofs -R json --graph-dir=~/artifact/database/fo -d" \
+TST_OPTS="-OR -min -scc -ff --dump-graphs --unminimized-proofs -R json --graph-dir=/home/database/fo -d" \
     make fo-tests \
     | pcregrep -o "(?<=Proof summary: ).*" \
-    > ~/artifact/database/fo/summary.csv
+    > /home/database/fo/summary.csv
 
 echo "generating SL sloped graphs..."
-TST_OPTS="-OR -min -scc -ff --dump-graphs --unminimized-proofs -R json --graph-dir=~/artifact/database/sl -d" \
+TST_OPTS="-OR -min -scc -ff --dump-graphs --unminimized-proofs -R json --graph-dir=/home/database/sl -d" \
     make sl-tests \
     | pcregrep -o "(?<=Proof summary: ).*" \
-    > ~/artifact/database/sl/summary.csv
+    > /home/database/sl/summary.csv

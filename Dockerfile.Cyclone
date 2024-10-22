@@ -32,7 +32,7 @@ RUN \
 
 # Copy Cyclist source code from current directory
 
-COPY ./cyclist /home/artifact/cyclist
+COPY . /home/artifact/cyclist
 
 # Uncomment to copy database as well
 # COPY ./cyclist_graphs/cyclist_output_graphs /home/sloped_graphs

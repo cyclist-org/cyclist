@@ -1,3 +1,2 @@
-mkdir ~/artifact
-cd ~/cyclist/src/generic/test
-make -s run-get-graphs-stats > ~/artifact/stats.csv
+cd /home/cyclist/src/generic/test
+make -s run-get-graphs-stats > /home/stats.csv
