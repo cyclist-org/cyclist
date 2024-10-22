@@ -58,7 +58,7 @@ RUN \
   rm -f dune-workspace && mv dune-workspace.POPL2024 dune-workspace && \
   dune build
 
-COPY ./cyclone_artifact_scripts/cyclone.readme.md /home/scripts/README.md
+COPY ./cyclone_artifact_scripts/cyclone.readme.md /home/README.md
 COPY ./cyclone_artifact_scripts/cyclone.evaluate_cyclone.sh /home/scripts/cyclone.evaluate_cyclone.sh
 COPY ./cyclone_artifact_scripts/cyclone.generate_database.sh /home/scripts/cyclone.generate_database.sh
 COPY ./cyclone_artifact_scripts/cyclone.graphs_stats.sh /home/scripts/cyclone.graphs_stats.sh
