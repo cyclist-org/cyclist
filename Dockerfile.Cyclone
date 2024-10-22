@@ -38,6 +38,8 @@ COPY . /home/cyclist
 # COPY ./cyclist_graphs/cyclist_output_graphs /home/sloped_graphs
 
 RUN chmod -R a+rw /home/cyclist
+RUN chmod a+rw /home
+RUN chmod -R a+rw /home/scripts
 
 USER opam
 

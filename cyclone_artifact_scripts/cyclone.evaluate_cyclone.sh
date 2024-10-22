@@ -28,8 +28,8 @@ stats_file_path="$HOME/artifact/stats.csv" # TODO: change
 tail -n+2 $stats_file_path | cut -d ',' -f5 > /home/evaluation.body
 
 for method in "${methods[@]}" ; do
-    cat $out_dir/$method.output.fo | pcregrep -o "(?<=MODCHECK: Absolute time spent model checking: )[^\s]+" > "$method.modelcheck.fo.csv"
-    cat $out_dir/$method.output.sl | pcregrep -o "(?<=MODCHECK: Absolute time spent model checking: )[^\s]+" > "$method.modelcheck.sl.csv"
+    cat $out_dir/$method.output.fo | grep -o "(?<=MODCHECK: Absolute time spent model checking: )[^\s]+" > "$method.modelcheck.fo.csv"
+    cat $out_dir/$method.output.sl | grep -o "(?<=MODCHECK: Absolute time spent model checking: )[^\s]+" > "$method.modelcheck.sl.csv"
     cat $method.modelcheck.fo.csv $method.modelcheck.sl.csv > $method.modelcheck.database.csv
     rm "$method.modelcheck.fo.csv" "$method.modelcheck.sl.csv"
 
