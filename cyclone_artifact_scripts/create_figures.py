@@ -21,7 +21,7 @@ def print_statistics(test_suite, graph_name, width, buds, edges, nodes, amount_o
     satisfies_OR_amount = sum(1 for answer in OR_answers if answer=="yes")
     satisfies_OR_amount_in_fo = sum(1 for answer,suite in zip(OR_answers,test_suite) if answer=="yes" and suite=="fo")
     satisfies_OR_amount_in_sl = sum(1 for answer,suite in zip(OR_answers,test_suite) if answer=="yes" and suite=="sl")
-    
+
     not_satisfies_OR_amount = sum(1 for answer in OR_answers if answer=="no")
     not_satisfies_OR_amount_in_fo = sum(1 for answer,suite in zip(OR_answers,test_suite) if answer=="no" and suite=="fo")
     not_satisfies_OR_amount_in_sl = sum(1 for answer,suite in zip(OR_answers,test_suite) if answer=="no" and suite=="sl")
@@ -42,7 +42,7 @@ def print_statistics(test_suite, graph_name, width, buds, edges, nodes, amount_o
     DU_yes_amount = sum(1 for answer in DU_answers if answer=="yes")
     # DU_yes_and_sound = sum(1 for DU_answer,OR_answer in zip(DU_answers,OR_answers) if DU_answer=="yes" and OR_answer=="yes")
     DU_yes_of_sound = 100 * DU_yes_amount / satisfies_OR_amount
-    
+
     DU_yes_amount_in_fo = sum(1 for answer,suite in zip(DU_answers,test_suite) if answer=="yes" and suite=="fo")
     # DU_yes_and_sound_in_fo = sum(1 for DU_answer,OR_answer,suite in zip(DU_answers,OR_answers,test_suite) if DU_answer=="yes" and OR_answer=="yes" and suite=="fo")
     DU_yes_of_sound_in_fo = 100 * DU_yes_amount_in_fo / satisfies_OR_amount_in_fo
@@ -50,7 +50,7 @@ def print_statistics(test_suite, graph_name, width, buds, edges, nodes, amount_o
     DU_yes_amount_in_sl = sum(1 for answer,suite in zip(DU_answers,test_suite) if answer=="yes" and suite=="sl")
     # DU_yes_and_sound_in_sl = sum(1 for DU_answer,OR_answer,suite in zip(DU_answers,OR_answers,test_suite) if DU_answer=="yes" and OR_answer=="yes" and suite=="sl")
     DU_yes_of_sound_in_sl = 100 * DU_yes_amount_in_sl / satisfies_OR_amount_in_sl
-    
+
     DU_no_amount = sum(1 for answer in DU_answers if answer=="no")
     # DU_no_and_unsound = sum(1 for DU_answer,OR_answer in zip(DU_answers,OR_answers) if DU_answer=="no" and OR_answer=="no")
     DU_no_of_unsound = 100 * DU_no_amount / not_satisfies_OR_amount
@@ -78,7 +78,7 @@ def print_statistics(test_suite, graph_name, width, buds, edges, nodes, amount_o
     satisfies_TM_amount = sum(1 for answer in TM_answers if answer=="yes")
     satisfies_TM_amount_of_sound = 100 * satisfies_TM_amount / satisfies_OR_amount
     satisfies_TM_amount_of_all_graphs = 100 * satisfies_TM_amount / amount_of_graphs
-    
+
 
     print(f"Amount of graphs {amount_of_graphs}")
     print(f"Amount of sound graphs {satisfies_OR_amount}")
@@ -87,13 +87,13 @@ def print_statistics(test_suite, graph_name, width, buds, edges, nodes, amount_o
     print(f"Amount of graphs in the fo suite {amount_of_graphs_in_fo}")
     print(f"Amount of sound graphs in the fo suite {satisfies_OR_amount_in_fo}")
     print(f"Amount of unsound graphs in the fo suite {not_satisfies_OR_amount_in_fo}")
-    
+
     print(f"Amount of graphs in the sl suite {amount_of_graphs_in_sl}")
     print(f"Amount of sound graphs in the sl suite {satisfies_OR_amount_in_sl}")
     print(f"Amount of unsound graphs in the sl suite {not_satisfies_OR_amount_in_sl}")
-    
+
     print()
-    
+
     print(f"Amount of graphs that satisfies FC {satisfies_FC_amount}")
     print(f"Coverage of FC among all graphs {satisfies_FC_amount_of_all_graphs}")
     print(f"Coverage of FC among unsound graphs {satisfies_FC_of_unsound}")
@@ -105,7 +105,7 @@ def print_statistics(test_suite, graph_name, width, buds, edges, nodes, amount_o
     print(f"Amount of FC in sl {satisfies_FC_amount_in_sl}")
     print(f"Coverage of FC among all graphs in sl {satisfies_FC_of_all_in_sl}")
     print(f"Coverage of FC among unsound graphs in sl {satisfies_FC_of_unsound_in_sl}")
-    
+
     print()
     print()
 
@@ -165,7 +165,7 @@ def create_DU_figures(frame):
     frame=frame.copy().rename(columns={"nodes":"Nodes", "edges":"Edges", "width":"Width","amount of backedges":"Backedges"})
     frame_only_unicycles_graphs = frame[frame["has overlapping cycles"]=="no"]
     frame_only_not_unicycles_graphs = frame[frame["has overlapping cycles"]=="yes"]
-    
+
     color_palette = sns.color_palette()
 
     ax = sns.lineplot(data=frame, x="Nodes", y="DU duration microseconds", errorbar=None)
@@ -183,7 +183,7 @@ def create_DU_figures(frame):
     plt.ylabel("Microseconds")
     plt.xlabel("Nodes/Edges")
     savefig_to("figure7a.png")
-    
+
     sns.lineplot(data=frame, x="Width", y="DU duration microseconds", errorbar=None)
     plt.ylabel("Microseconds")
     savefig_to("figure7b.png")
@@ -214,7 +214,7 @@ def plot_mean_with_interquartile_range_by(frame, group_by_col, values_col, plot_
         ax.legend()
     ax.set_ylabel(values_col)
 
-def savefig_to(path_inside_figures_dir): 
+def savefig_to(path_inside_figures_dir):
     plt.savefig(f"{figures_dirpath}/{path_inside_figures_dir}")
     plt.cla()
     plt.clf()
@@ -235,11 +235,11 @@ def plot_database_stats(frame):
     frame_copy=frame_copy.rename(columns={"nodes":"Nodes", "edges":"Edges","width":"Width", "buds":"Buds", "test suite":"Test suite"})
     frame_copy.loc[frame_copy["Test suite"]=="sl", "Test suite"]="SL"
     frame_copy.loc[frame_copy["Test suite"]=="fo", "Test suite"]="FO"
-    
+
     ax = sns.kdeplot(frame_copy, x="Nodes", hue="Test suite", bw_adjust=2)
     sns.kdeplot(frame_copy, x="Edges", hue="Test suite", bw_adjust=2, linestyle=':')
     plt.xlabel("Nodes/Edges")
-    
+
     handles, labels = ax.get_legend_handles_labels()
 
     legend_labels = ['FO Nodes',  'SL Nodes','FO Edges', 'SL Edges']
@@ -261,7 +261,7 @@ def plot_database_stats(frame):
     ax.set_xticks(range(0,max_width, 4))
     # savefig_to("database/width_per_test_suite.kde.png")
     savefig_to("figure3b.png")
-    
+
     ax = sns.kdeplot(frame_copy, x="Buds", hue="Test suite", bw_adjust=2)
     max_buds = frame_copy["Buds"].max()
     ax.set_xlim(0, max_buds)
@@ -314,12 +314,12 @@ def plot_complete_methods_comparison(frame, methods, palette):
     plt.yscale("log")
     savefig_to("figure9a.png")
 
-    sns.lineplot(data=overhead_frame, x="Edges", y="Overhead (microseconds)", hue="Method", style="Method", palette=palette, errorbar=("pi",50))
+    sns.lineplot(data=overhead_frame, x="Edges", y="Overhead (microseconds)", hue="Method", style="Method", palette=palette[0:-1], errorbar=("pi",50))
     plt.legend(loc="lower right",ncol=2)
     plt.yscale("log")
     savefig_to("figure9b.png")
 
-    gfg = sns.lineplot(data=overhead_perc_frame, x="Edges", y="Overhead %", hue="Method", style="Method", palette=palette, errorbar=("pi",50))
+    gfg = sns.lineplot(data=overhead_perc_frame, x="Edges", y="Overhead %", hue="Method", style="Method", palette=palette[0:-1], errorbar=("pi",50))
     plt.legend(loc="upper right",ncol=2)
     plt.yscale("log")
     savefig_to("figure9c.png")
@@ -343,9 +343,10 @@ plot_coverages(frame)
 plot_methods_comparison(frame)
 
 evaluation_frame = get_dataframe_from_csv("/home/evaluation.csv")
-evaluation_frame["sla"]
+
 # methods = ["VLA", "SLA", "FWK", "OR", "CY"]
-# palette = sns.color_palette(["#233D4D","#19C444","#FCCA46","#6924b3","#8c1858"])
+# palette = sns.color_palette(["#233D4D","#19C444","#FCCA46","#6924B3","#8C1858"])
 methods = ["VLA", "FWK", "OR", "CY"]
-palette = sns.color_palette(["#233D4D","#FCCA46","#6924b3","#8c1858"])
+palette = sns.color_palette(["#233D4D","#FCCA46","#6924B3","#8C1858"])
+
 plot_complete_methods_comparison(evaluation_frame, methods, palette)
