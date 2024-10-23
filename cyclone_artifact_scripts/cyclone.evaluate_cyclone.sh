@@ -64,7 +64,7 @@ done
 methods_string=$(printf "%s," "${methods[@]}")
 methods_string=${methods_string%,}  # Remove the trailing comma
 
-echo "edges,$methods_string" > evaluation.header
+echo "graph name,edges,$methods_string" > evaluation.header
 cat evaluation.header /home/evaluation.body > /home/evaluation.csv
 rm evaluation.header
 awk -F',' '$NF != 0.000000' /home/evaluation.csv > /home/evaluation.csv.temp
