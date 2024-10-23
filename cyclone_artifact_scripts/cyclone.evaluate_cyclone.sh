@@ -23,7 +23,7 @@ while [[ "$#" -gt 0 ]]; do
     case "$1" in
         --method)
             if [[ $methods_overridden == false ]]; then
-                methods=()  # Clear the default methods if this is the first --method flag
+                methods=("CY")  # Clear the default methods if this is the first --method flag
                 methods_overridden=true
             fi
             methods+=("$2")  # Add the method value to the array
@@ -64,7 +64,7 @@ done
 methods_string=$(printf "%s," "${methods[@]}")
 methods_string=${methods_string%,}  # Remove the trailing comma
 
-echo "sloped graph,edges,$methods_string" > evaluation.header
+echo "graph name,edges,$methods_string" > evaluation.header
 cat evaluation.header /home/evaluation.body > /home/evaluation.csv
 rm evaluation.header /home/evaluation.body
 awk -F',' '$NF != 0.000000' /home/evaluation.csv > /home/evaluation.csv.temp

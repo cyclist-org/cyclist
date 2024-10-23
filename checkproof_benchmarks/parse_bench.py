@@ -231,7 +231,7 @@ def get_minimized_frame():
 
 def plot_CY_performance():
     frame_non_minimized = get_non_minimized_frame()
-    methods_non_minimized = ["VLA", "SLA", "FWK", "OR","CY"]
+    methods_non_minimized = ["VLA", "SLA", "FWK", "OR", "CY"]
     palette_non_minimized = sns.color_palette(["#233D4D","#19C444","#FCCA46","#6924b3","#8c1858"])
     plot_runtimes_and_overheads(frame_non_minimized, methods_non_minimized, palette_non_minimized)
 
@@ -249,6 +249,10 @@ def plot_CY_performance():
 # print(sum(frame["CY with TM"]))
 
 # compare_SH_with_and_without_TM()
-plt.rc('font', size=16)
-plt.rcParams.update({'figure.autolayout': True})
-plot_CY_performance()
+# plt.rc('font', size=16)
+# plt.rcParams.update({'figure.autolayout': True})
+# plot_CY_performance()
+
+frame = get_non_minimized_frame()
+frame = frame[["graph name","edges","CY","OR","FWK","VLA","SLA"]]
+frame.to_csv("evaluation.csv", index=False)
