@@ -12,8 +12,34 @@ run_method() {
 }
 
 
-# methods=("CY" "OR" "FWK" "VLA" "SLA")
-methods=("CY" "OR" "FWK" "VLA")
+# Default methods list
+methods=("CY" "OR" "FWK" "VLA" "SLA")
+
+# Flag to detect if any --method flags are passed
+methods_overridden=false
+
+# Loop through all arguments
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+        --method)
+            if [[ $methods_overridden == false ]]; then
+                methods=()  # Clear the default methods if this is the first --method flag
+                methods_overridden=true
+            fi
+            methods+=("$2")  # Add the method value to the array
+            shift 2           # Move past the method argument and its value
+            ;;
+        *)
+            echo "Unknown option: $1"
+            shift
+            ;;
+    esac
+done
+
+# Print out all methods collected
+echo "Methods selected: ${methods[@]}"
+
+
 cd /home/cyclist
 for method in "${methods[@]}" ; do
     run_method "$method" "-min -scc -ff --unminimized-proofs" "/home"
@@ -35,7 +61,10 @@ for method in "${methods[@]}" ; do
     mv /home/evaluation.body.tmp /home/evaluation.body
 done
 
-echo "edges,CY,OR,FWK,VLA,SLA" > evaluation.header
+methods_string=$(printf "%s," "${methods[@]}")
+methods_string=${methods_string%,}  # Remove the trailing comma
+
+echo "edges,$methods_string" > evaluation.header
 cat evaluation.header /home/evaluation.body > /home/evaluation.csv
 rm evaluation.header
 awk -F',' '$NF != 0.000000' /home/evaluation.csv > /home/evaluation.csv.temp
