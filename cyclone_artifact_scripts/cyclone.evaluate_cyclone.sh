@@ -6,14 +6,14 @@ run_method() {
     out_directory="$3"
 
     echo "running $method..."
-    find /home/database/fo -maxdepth 1 -name "*.json" | sort | xargs cat | dune exec src/generic/checkproof.exe -- -$method $flags -s -R json  > "$out_directory/$method.output.fo" 
-    find /home/database/sl -maxdepth 1 -name "*.json" | sort | xargs cat | dune exec src/generic/checkproof.exe -- -$method $flags -s -R json  > "$out_directory/$method.output.sl" 
+    find /home/database/fo -maxdepth 1 -name "*.json" | sort | xargs cat | dune exec src/generic/checkproof.exe -- -$method $flags -s -R json  > "$out_directory/$method.output.fo"
+    find /home/database/sl -maxdepth 1 -name "*.json" | sort | xargs cat | dune exec src/generic/checkproof.exe -- -$method $flags -s -R json  > "$out_directory/$method.output.sl"
     echo done $method
 }
 
 
 # Default methods list
-methods=("CY" "OR" "FWK" "VLA" "SLA")
+methods=("CY" "OR" "FWK" "VLA")
 
 # Flag to detect if any --method flags are passed
 methods_overridden=false
@@ -66,6 +66,6 @@ methods_string=${methods_string%,}  # Remove the trailing comma
 
 echo "graph name,edges,$methods_string" > evaluation.header
 cat evaluation.header /home/evaluation.body > /home/evaluation.csv
-rm evaluation.header
+rm evaluation.header /home/evaluation.body
 awk -F',' '$NF != 0.000000' /home/evaluation.csv > /home/evaluation.csv.temp
 mv /home/evaluation.csv.temp /home/evaluation.csv
