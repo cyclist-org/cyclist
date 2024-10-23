@@ -23,7 +23,7 @@ while [[ "$#" -gt 0 ]]; do
     case "$1" in
         --method)
             if [[ $methods_overridden == false ]]; then
-                methods=()  # Clear the default methods if this is the first --method flag
+                methods=("CY")  # Clear the default methods if this is the first --method flag
                 methods_overridden=true
             fi
             methods+=("$2")  # Add the method value to the array

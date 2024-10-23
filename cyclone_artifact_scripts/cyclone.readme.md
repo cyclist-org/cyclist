@@ -33,7 +33,7 @@ The current file is `README.md`.
 
 The `LICENSE.md` contains the 3-clause-BSD license under which the Cyclist theorem prover framework is distributed.
 
-The `paper_data` directory contains the databsae of sloped graphs and `.csv` files comprising the analysis and experimental evaluation reported in our paper.
+The `paper_data` directory contains the database of sloped graphs and `.csv` files comprising the analysis and experimental evaluation reported in our paper.
 See the [Data used in our Paper](#the-data-used-in-our-paper) section below for more details.
 
 The `cyclist` directory contains the source code for the Cyclist theorem prover framework, into which we have incorporated the implementation of our tool, Cyclone.
@@ -143,7 +143,7 @@ It can be run with the following command.
     /home/scripts/evaluate_cyclone.sh
 ```
 
-This script may take around 25 mminutes to run.
+This script may take around 25 minutes to run.
 
 The following information is given for each sloped graph in the database.
 
@@ -153,8 +153,11 @@ The following information is given for each sloped graph in the database.
 
 By default, it does not include the SLA method, as this can take several hours.
 
-It is possible to add `-method <method name>` flags, with `<method name>` being one of the following: `VLA`, `SLA`, `FWK`, `OR`, indicating which methods to run in the evaluation.
-Note that by default all methods run and if any `-method` flag is passed, only the flagged methods run.
+It is possible to add `--method <method name>` flags, with `<method name>` being one of the following: `VLA`, `SLA`, `FWK`, `OR`, indicating which methods to run in the evaluation.
+If you wish to run all of the methods, run the following command:
+```bash
+    /home/scripts/evaluate_cyclone.sh --method "OR" --method "FWK" --method "VLA" --method "SLA"
+```
 
 #### `create_figures.py`
 
