@@ -236,3 +236,5 @@ docker container cp <container-id-or-name>:/home/figures/figure3a.png .
 
 This will copy the `figure3a.png` file to the current directory in which you ran the command.
 Note that you have to copy each file individually; you cannot use glob patterns in the filename.
+
+## Instructions for Further Review and Use of the Artifact
