@@ -29,6 +29,11 @@ RUN \
                      libspotgen0=2.11.6.0-1 libspotltsmin0=2.11.6.0-1 \
                      libspot0=2.11.6.0-1 spot=2.11.6.0-1 libspot-dev=2.11.6.0-1
 
+# Install python packages for creating figures
+
+RUN sudo apt-get update && sudo apt-get install python3-numpy python3-pandas python3-matplotlib python3-seaborn -y
+
+
 # Copy Cyclist source code from current directory
 
 COPY . /home/cyclist
@@ -40,6 +45,8 @@ COPY ./cyclone_artifact_scripts/cyclone.readme.md /home/README.md
 COPY ./cyclone_artifact_scripts/cyclone.evaluate_cyclone.sh /home/scripts/evaluate_cyclone.sh
 COPY ./cyclone_artifact_scripts/cyclone.generate_database.sh /home/scripts/generate_database.sh
 COPY ./cyclone_artifact_scripts/cyclone.graphs_stats.sh /home/scripts/graphs_stats.sh
+COPY ./cyclone_artifact_scripts/create_figures.py /home/scripts/create_figures.py
+RUN mkdir /home/figures
 
 RUN \
   chmod -R a+rw /home/cyclist && \
