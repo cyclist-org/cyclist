@@ -95,7 +95,7 @@ The files in the docker image are split into the following directory tree:
         ├── generate_database.sh
         ├── graph_stats.sh
         ├── evaluate_cyclone.sh
-        ├── create_figures.sh
+        ├── create_figures.py
 ```
 
 The `scripts` directory contains scripts for generating all of the data that we used in our paper and our results.

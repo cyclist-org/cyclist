@@ -277,8 +277,6 @@ def plot_coverages(frame):
     not_FC_true_DU_true = len(frame[(frame["FC answer"]=="don't know")&(frame["DU answer"]!="don't know")])
     not_FC_nor_DU_true = len(frame[(frame["FC answer"]=="don't know")&(frame["DU answer"]=="don't know")])
     sum_of_amounts = FC_true+not_FC_true_DU_true+not_FC_nor_DU_true
-    print(f"amount of graphs {len(frame)}")
-    print(f"sum of three amounts {sum_of_amounts}")
     plt.pie([FC_true, not_FC_true_DU_true, not_FC_nor_DU_true], labels=["FC", "DU", "OR"], autopct='%.0f%%', textprops={'fontsize': 16})
     savefig_to("figure8a.png")
 
@@ -314,12 +312,12 @@ def plot_complete_methods_comparison(frame, methods, palette):
     plt.yscale("log")
     savefig_to("figure9a.png")
 
-    sns.lineplot(data=overhead_frame, x="Edges", y="Overhead (microseconds)", hue="Method", style="Method", palette=palette[0:-1], errorbar=("pi",50))
+    sns.lineplot(data=overhead_frame, x="Edges", y="Overhead (microseconds)", hue="Method", style="Method", palette=palette[1:], errorbar=("pi",50))
     plt.legend(loc="lower right",ncol=2)
     plt.yscale("log")
     savefig_to("figure9b.png")
 
-    gfg = sns.lineplot(data=overhead_perc_frame, x="Edges", y="Overhead %", hue="Method", style="Method", palette=palette[0:-1], errorbar=("pi",50))
+    gfg = sns.lineplot(data=overhead_perc_frame, x="Edges", y="Overhead %", hue="Method", style="Method", palette=palette[1:], errorbar=("pi",50))
     plt.legend(loc="upper right",ncol=2)
     plt.yscale("log")
     savefig_to("figure9c.png")
@@ -343,10 +341,12 @@ plot_coverages(frame)
 plot_methods_comparison(frame)
 
 evaluation_frame = get_dataframe_from_csv("/home/evaluation.csv")
-
+methods=[m for m in list(evaluation_frame.columns) if (m!="graph name" and m!="edges")]
+colors={"VLA":"#233D4D","SLA":"#19C444","FWK":"#FCCA46","OR":"#6924B3","CY":"#8C1858"}
+palette = sns.color_palette([colors[m] for m in methods])
 # methods = ["VLA", "SLA", "FWK", "OR", "CY"]
 # palette = sns.color_palette(["#233D4D","#19C444","#FCCA46","#6924B3","#8C1858"])
-methods = ["VLA", "FWK", "OR", "CY"]
-palette = sns.color_palette(["#233D4D","#FCCA46","#6924B3","#8C1858"])
+# methods = ["VLA", "FWK", "OR", "CY"]
+# palette = sns.color_palette(["#233D4D","#FCCA46","#6924B3","#8C1858"])
 
 plot_complete_methods_comparison(evaluation_frame, methods, palette)
