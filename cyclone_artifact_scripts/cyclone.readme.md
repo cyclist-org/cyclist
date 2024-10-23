@@ -211,7 +211,8 @@ First, determine the name or ID of the contains (see [section above](#determinin
 The run the following command, where `<container-id-or-name>` is replaced by the name or ID of your container.
 
 ```bash
-docker container cp /home/figures/*.png .
+docker container cp /home/figures/figure3a.png .
 ```
 
-This will copy all of the PNG files to the current directory in which you ran the command.
+This will copy the `figure3a.png` file to the current directory in which you ran the command.
+Note that you have to copy each file individually; you cannot use glob patterns in the filename.
