@@ -231,10 +231,9 @@ First, determine the name or ID of the contains (see [section above](#determinin
 Then run the following command, where `<container-id-or-name>` is replaced by the name or ID of your container.
 
 ```bash
-docker container cp <container-id-or-name>:/home/figures/figure3a.png .
+docker container cp <container-id-or-name>:/home/figures .
 ```
 
-This will copy the `figure3a.png` file to the current directory in which you ran the command.
-Note that you have to copy each file individually; you cannot use glob patterns in the filename.
+This will copy the entire `figures` directory, containing all the PNG files, to the current directory in which you ran the command.
 
 ## Instructions for Further Review and Use of the Artifact
