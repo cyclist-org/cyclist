@@ -191,14 +191,6 @@ The following information is given for each sloped graph in the database.
 * The runtimes of each complete method presented in the paper,
 * The number of edges.
 
-By default, it does not include the SLA method, as this can take several hours.
-
-It is possible to add `--method <method name>` flags, with `<method name>` being one of the following: `VLA`, `SLA`, `FWK`, `OR`, indicating which methods to run in the evaluation.
-If you wish to run all of the methods, run the following command:
-
-```bash
-/home/scripts/evaluate_cyclone.sh --method "OR" --method "FWK" --method "VLA" --method "SLA"
-```
 
 #### `create_figures.py`
 
@@ -250,6 +242,55 @@ docker container cp <container-id-or-name>:/home/figures .
 This will copy the entire `figures` directory, containing all the PNG files, to the current directory in which you ran the command.
 
 ## Instructions for Further Review and Use of the Artifact
+
+### The `stats.csv` File
+
+The `stats.csv` file contains a row for every sloped graph in the database.
+The information for each sloped graph is separated into the following columns:
+* **test suite:** containing the string `fo` if the graph came from the first order logic test suite or `sl` if it came from the separation logic test suite.
+* **graph name:** containing the graph file name with the format of the file being `<test name>.graph-<index>` with `<index>` being the number of the sloped graph that Cyclist produced while trying to prove the sequent in `<test name>`.
+* **width:** containing the width of the sloped graph.
+* **buds:** containing the number of buds in the sloped graph.
+* **edges:** containing the number of edges in the sloped graph.
+* **nodes:** containing the number of nodes in the sloped graph.
+* **amount of backedges:** containing the number of backedges in the sloped graph.
+* **amount of trace manifold graph edges:** containing the number of edges in the trace manifold graph of the sloped graph.
+* **amount of trace manifold graph nodes:** containing the number of nodes in the trace manifold graph of the sloped graph.
+* **size of structural connectivity relation:** containing the number of related pairs of buds in the structural connectivity relation of the sloped graph.
+* **amount of positions in all cycles:** containing the number of positions of all nodes which are part of any cycle in the sloped graph.
+* **amount of SCCs:** containing the number of strongly connected components in the sloped graph.
+* **has overlapping cycles:** containing `yes` if the sloped graph has overlapping cycles and `no` otherwise.
+* **is in cycle normal form:** containing `yes` if the sloped graph is in cycle normal form and `no` otherwise.
+* **FC duration microseconds:** containing the number of microseconds that the Flat Cycles algorithm took to run on the sloped graph
+* **FC answer:** containing `no` if the Flat Cycles algorithm returned that the sloped graph does not satisfy Infinite Descent and `don't know` otherwise.
+* **DU duration microseconds:** containing the number of microseconds that the Descending Unicycles algorithm took to run on the sloped graph
+* **DU answer:** containing `no` if the Descending Unicycles algorithm returned that the sloped graph does not satisfy Infinite Descent, `yes` if it does and `don't know` otherwise.
+* **TM duration microseconds:** containing the number of microseconds that the Trace Manifold algorithm took to run on the sloped graph
+* **TM answer:** containing `yes` if the Trace Manifold algorithm returned that the sloped graph satisfies Infinite Descent and `don't know` otherwise.
+* **OR duration microseconds:** containing the number of microseconds that the Order Reduced Transitive Closure algorithm took to run on the sloped graph.
+* **OR answer:** containing `yes` if the Order Reduced Transitive Closure algorithm returned that the sloped graph does satisfies Infinite Descent and `no` otherwise.
+
+### The `evaluation.csv` File
+
+The `evaluation.csv` file contains the runtime in milliseconds that every complete method took for every sloped graph in the database.
+As in the [`stats.csv`](#the-statscsv-file), the file contains columns for the name of the sloped graph and the number of its edges.
+The columns `CY`, `OR`, `FWK`, `VLA`, `SLA` contain the runtime in milliseconds that Cyclone, the Order Reduced, the Floyd Warshall Klenee, the Vertex Language Automata and the Sloped Language Automata methods took in milliseconds, respectively.
+Note that if you ran the `evaluate_cyclone.sh` script you will not have a column for SLA, as the script does not run the methods by default.
+To get the column for the SLA method see the [customising `evaluate_cyclone.sh` section](#customising-evaluate_cyclonesh)
+
+### Customising `evaluate_cyclone.sh`
+
+By default, the `evaluate_cyclone.sh` script does not include the SLA method.
+
+It is possible to add `--method <method name>` flags, with `<method name>` being one of the following: `VLA`, `SLA`, `FWK`, `OR`, indicating which methods to run in the evaluation in addition to Cyclone.
+If you wish to run all of the methods, run the following command:
+
+```bash
+/home/scripts/evaluate_cyclone.sh --method "OR" --method "FWK" --method "VLA" --method "SLA"
+```
+
+Note that with the SLA method the script can take several hours.
+
 
 ### Validating Individual Sloped Graphs
 
