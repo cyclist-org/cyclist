@@ -79,7 +79,7 @@ docker load -i cyclone-artifact.tar.gz
 ```
 
 This will load the Docker image onto your system.
-You can then spin up a container (i.e. a running instance) based on the image, and attach it to your current terminal, by running the following command.
+You can then spin up a new container (i.e. a running instance) based on the image, and attach it to your current terminal, by running the following command.
 
 ```bash
 docker run -ti cyclone-artifact:latest
@@ -101,7 +101,6 @@ The files in the docker image are split into the following directory tree:
 The `scripts` directory contains scripts for generating all of the data that we used in our paper and our results.
 
 You can detach from and suspend the container by sending the EXIT signal (using the key combination CTL+D).
-This
 
 #### Determining the Name/ID of the Docker Container
 
@@ -212,21 +211,30 @@ python3 /home/scripts/create_figures.py
 
 This script may take around 11 seconds to run.
 
-It generates the following files, in the `/home/figures` directory:
+It generates the following files, in the `/home/figures` directory, corresponding to the respectively numbered figures in the submitted paper:
 
-* `figure3a.png`, `figure3b.png`, and `figure3c.png`:
-* `figure5.png`:
-* `figure7a.png`, `figure7b.png`, and `figure7c.png`:
-* `figure8a.png`, and `figure8b.png`:
-* `figure9a.png`, `figure9b.png`, and `figure9c.png`:
+* `figure3a.png`
+* `figure3b.png`
+* `figure3c.png`
+* `figure5.png`
+* `figure7a.png`
+* `figure7b.png`
+* `figure7c.png`
+* `figure8a.png`
+* `figure8b.png`
+* `figure9a.png`
+* `figure9b.png`
+* `figure9c.png`
 
 To view these graphs, you can copy them from the Docker container to your local system.
 First, determine the name or ID of the contains (see [section above](#determining-the-nameid-of-the-docker-container) section above).
-The run the following command, where `<container-id-or-name>` is replaced by the name or ID of your container.
+Then run the following command, where `<container-id-or-name>` is replaced by the name or ID of your container.
 
 ```bash
-docker container cp /home/figures/figure3a.png .
+docker container cp <container-id-or-name>:/home/figures/figure3a.png .
 ```
 
 This will copy the `figure3a.png` file to the current directory in which you ran the command.
 Note that you have to copy each file individually; you cannot use glob patterns in the filename.
+
+## Instructions for Further Review and Use of the Artifact
