@@ -1,0 +1,71 @@
+# This file should be used to build from the parent folder of Cyclist, where the sloped graphs files directory is located
+
+FROM ocaml/opam:debian-ocaml-4.14
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+ENV TERM=linux
+
+USER root
+
+RUN apt-get --allow-releaseinfo-change update && apt-get install -y --no-install-recommends apt-utils
+RUN apt-get --allow-releaseinfo-change update && apt-get install -y --no-install-recommends \
+  autoconf \
+  m4 \
+  pkg-config \
+  software-properties-common \
+  file \
+  rlwrap \
+  wget \
+  # Python packages for creating figures
+  python3-numpy python3-pandas python3-matplotlib python3-seaborn \
+&& sudo rm -rf /var/lib/apt/lists/*
+
+# Install Spot
+
+RUN \
+  mkdir /usr/local/src/spot && cd /usr/local/src/spot && \
+  wget https://www.lrde.epita.fr/dload/spot/spot-2.11.6.tar.gz && \
+  tar -xzf spot-2.11.6.tar.gz && cd spot-2.11.6 && \
+  ./configure --disable-python && \
+  make && make install && make clean
+  
+# Copy Cyclist source code from current directory
+
+COPY . /home/cyclist
+
+# Copy the Cyclone scripts outside the cyclist directory
+
+COPY ./cyclone_artifact_scripts/cyclone.readme.md /home/README.md
+COPY ./cyclone_artifact_scripts/cyclone.evaluate_cyclone.sh /home/scripts/evaluate_cyclone.sh
+COPY ./cyclone_artifact_scripts/cyclone.generate_database.sh /home/scripts/generate_database.sh
+COPY ./cyclone_artifact_scripts/cyclone.graphs_stats.sh /home/scripts/graphs_stats.sh
+COPY ./cyclone_artifact_scripts/create_figures.py /home/scripts/create_figures.py
+
+RUN mkdir /home/figures
+
+RUN \
+  chmod -R a+rw /home/cyclist && \
+  chmod -R a+rw /home/scripts && \
+  chmod -R a+rw /home/figures && \
+  chmod a+rw /home
+
+USER opam
+
+# Use remote OPAM repository
+
+RUN \
+  eval `opam config env` && \
+  opam repository set-url default https://opam.ocaml.org/ && \
+  opam update
+
+# Compile Cyclist
+
+RUN \
+  cd /home/cyclist && \
+  eval `opam config env` && \
+  opam update && \
+  opam install -y --deps-only ./cyclist.opam && \
+  dune build
+
+WORKDIR /home
