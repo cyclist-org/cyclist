@@ -225,6 +225,19 @@ It generates the following files, in the `/home/figures` directory, correspondin
 * `figure9a.png`
 * `figure9b.png`
 * `figure9c.png`
+* `figure12a.png`
+* `figure12b.png`
+* `figure12c.png`
+* `figure12d.png`
+* `figure13a.png`
+* `figure13b.png`
+* `figure13c.png`
+* `figure14a.png`
+* `figure14b.png`
+* `figure14c.png`
+* `OR_overhead_percentage_over_TM.png`
+* `TM_vs_OR.png`
+
 
 To view these graphs, you can copy them from the Docker container to your local system.
 First, determine the name or ID of the contains (see [section above](#determining-the-nameid-of-the-docker-container) section above).
