@@ -142,6 +142,61 @@ def print_statistics(test_suite, graph_name, width, buds, edges, nodes, amount_o
     print(f"Coverage of TM among cycle normal form and sound {100*satisfies_TM_amount/amount_in_CNF_and_sound}")
     print(f"Coverage of TM among all graphs {satisfies_TM_amount_of_all_graphs}")
 
+def create_TM_figures(frame):
+    overhead_frame_only_TM_yes = frame.copy()
+    overhead_frame_only_TM_yes = overhead_frame_only_TM_yes[overhead_frame_only_TM_yes["TM answer"]=="yes"]
+    overhead_frame_only_TM_yes["OR overhead over TM"] = (overhead_frame_only_TM_yes["OR duration microseconds"]-overhead_frame_only_TM_yes["TM duration microseconds"])
+    overhead_frame_only_TM_yes["OR overhead over TM %"] = 100*(overhead_frame_only_TM_yes["OR duration microseconds"]-overhead_frame_only_TM_yes["TM duration microseconds"])/overhead_frame_only_TM_yes["TM duration microseconds"]
+    print(f"min overhead {overhead_frame_only_TM_yes['OR overhead over TM %'].min()}")
+    print(f"max overhead {overhead_frame_only_TM_yes['OR overhead over TM %'].max()}")
+    plot_mean_with_interquartile_range_by(overhead_frame_only_TM_yes,"edges", "OR overhead over TM %")
+    savefig_to("OR_overhead_percentage_over_TM.png")
+
+    frame["TM"]=frame["TM duration microseconds"]
+    frame["OR"]=frame["OR duration microseconds"]
+    plot_mean_with_interquartile_range_by(frame,"edges", "TM")
+    plot_mean_with_interquartile_range_by(frame,"edges", "OR",linestyle=":")
+    plt.ylabel("Microseconds")
+    plt.xlabel("Edges")
+    savefig_to("TM_vs_OR.png")
+
+    cycle_normal_form_frame = frame[frame["is in cycle normal form"] == "yes"]
+    not_cycle_normal_form_frame = frame[frame["is in cycle normal form"] == "no"]
+
+    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "buds", "TM duration microseconds")
+    plt.ylabel("microseconds")
+    savefig_to("figure12a.png")
+    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "edges", "TM duration microseconds")
+    plt.ylabel("microseconds")
+    savefig_to("figure12b.png")
+    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "nodes", "TM duration microseconds")
+    plt.ylabel("microseconds")
+    savefig_to("figure12c.png")
+    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "width", "TM duration microseconds")
+    plt.ylabel("microseconds")
+    savefig_to("figure12d.png")
+    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "size of structural connectivity relation", "TM duration microseconds")
+    plt.ylabel("microseconds")
+    savefig_to("figure13a.png")
+    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "amount of trace manifold graph nodes", "TM duration microseconds")
+    plt.ylabel("microseconds")
+    savefig_to("figure13b.png")
+    plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "amount of trace manifold graph edges", "TM duration microseconds")
+    plt.ylabel("microseconds")
+    savefig_to("figure13c.png")
+    
+    plot_mean_with_interquartile_range_by(not_cycle_normal_form_frame, "nodes", "TM duration microseconds")
+    plt.ylabel("microseconds")
+    savefig_to("figure14a.png")
+    plot_mean_with_interquartile_range_by(not_cycle_normal_form_frame, "edges", "TM duration microseconds")
+    plt.ylabel("microseconds")
+    savefig_to("figure14b.png")
+    plot_mean_with_interquartile_range_by(not_cycle_normal_form_frame, "buds", "TM duration microseconds")
+    plt.ylabel("microseconds")
+    savefig_to("figure14c.png")
+
+
+
 def create_FC_figures(frame):
     frame=frame.copy().rename(columns={"edges":"Edges", "nodes":"Nodes"})
     ax = sns.lineplot(data=frame, x="Nodes", y="FC duration microseconds", errorbar=None)
