@@ -393,12 +393,16 @@ The slope along the backlink from node `1` to node `0`, connects position `1` to
 You can build Cyclist and Cyclone manually if you have OCaml/OPAM, `pkg-config`, and the Spot model checking library installed on your system.
 
 Installation instructions for OCaml/OPAM can be found [here](https://ocaml.org/install).
+Currently, we have tested Cyclist/Cyclone with OCaml version 4.14.
+We are not sure if Cyclist/Cyclone will compile with later 5.x versions of OCaml, due to possible incompatibilities with the latest version of OCaml's standard library.
 
 The `pkg-config` package usually comes on Linux distributions as standard, but we mention it here as it is an explicit dependency of Cyclist.
 More information about `pkg-config` can be found [here](https://www.freedesktop.org/wiki/Software/pkg-config/).
 
 Installation instructions for the Spot model-checking library can be found [here](https://spot.lre.epita.fr/install.html).
 Cyclist requires Spot to be installed in such a way that it is visible to `pkg-config`.
+The version of Spot that has been used in our experimental evaluation is 2.11.6.
+However, later versions of Spot should also work.
 
 Once the above dependencies are installed, Please clone the Cyclist source code from its Github page: [https://github.com/cyclist-org/cyclist](https://github.com/cyclist-org/cyclist).
 
