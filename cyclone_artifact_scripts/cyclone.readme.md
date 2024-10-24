@@ -237,3 +237,172 @@ docker container cp <container-id-or-name>:/home/figures .
 This will copy the entire `figures` directory, containing all the PNG files, to the current directory in which you ran the command.
 
 ## Instructions for Further Review and Use of the Artifact
+
+### Validating Individual Sloped Graphs
+
+You can use Cyclist to check if (one or more) indivdual sloped graphs satisfy infinite descent, using the standalone `checkproof` utility that is part of Cyclist.
+This utility allows you to specify the files containing the sloped graphs to check, and to choose the (complete) method to use for the check.
+
+From the root of the Cyclist source directory, run the following command.
+
+```bash
+dune exec src/generic/checkproof.exe -- <method> -R json -f <graph-file>
+```
+
+Where `<graph-file>` is the path of the file containing the JSON representation of the graph that you want to check, and `<method>` specifies which method to use to check for Infinite Descent.
+See the [section below](#the-json-format-for-sloped-graphs) for more details on the JSON representation format used by Cyclist/Cyclone.
+The `<methdod>` command line arguments can be one of the following:
+
+* `-VLA`:
+    Use the VLA automata-theoretic method.
+* `-SLA`:
+    Use the SLA automata-theoretic method.
+* `-FWK`:
+    Use the Floyd-Warshall-Kleene Ramsey-theoretic method.
+* `-OR -min -scc -ff`:
+    Use the order-reduced Ramsey-theoretic method.
+    The additional flags `-min`, `-scc`, `-ff` should be used for best performance here, but the method will work without them.
+* `-CY`:
+    Use Cyclone.
+
+Cyclist will output either `OK` or `NOT OK`, indicating whether the graph satisfies Infinite Descent or not.
+
+You can actually specify more than one file, using multiple `-f` command line arguments, and Cyclist will check them all in order, outputting the results on successive lines of the standard output.
+
+#### Using the Incomplete Methods to Check Individual Sloped Graphs
+
+The cyclist source code also contains a standalone C++ program that can be used to invoke the incomplete methods for checking Infinite Descent on individual files containing the JSON representation of sloped graphs.
+
+This program can be found in the `src/generic/test` subdirectory of the Cyclist source code.
+
+If you navigate to this directory, you can compile the program using the following command.
+
+```bash
+make soundness
+```
+
+This will compile an executable called `soundness` that can be run from the command line using the following command.
+
+```bash
+./soundness <graph-file> <method>
+```
+
+Where `<graph-file>` is the name of the file containing the JSON representation of the sloped graph to be checked, and `<method>` specified which method to use to check for Infinite Descent.
+The program is hard-coded to look for files in the `data` subdirectory with the extension `.json`, so you should give just the base name of the file, which must be present in the `data` subdirectory.
+
+The `<method>` command line argument can be one of the following.
+
+* `L`:
+    Use the flat cycles method.
+* `D`:
+    Use the descending unicycles method
+* `M`:
+    Use the trace manifold method.
+
+So, for example if you run the following command
+
+```bash
+./soundness graph_1 D
+```
+
+The program will check the graph described in the `data/graph_1.json` file using the Descending Unicycles method.
+
+The program will outout `SOUND` if the graph satisfies Infinite Descent, `UNSOUND` if the graph does **not** satisfy Infinite Desscent, or `UNKNOWN` if the incomplete method could not determine whether or not Infinite Descent was satisfied.
+
+This program can also invoke the complete methods to check for Infinite Descent, by using the following for the `<method>` command line argument.
+
+* `V`:
+    The VLA automata-theoretic method.
+* `S`:
+    The SLA automata-theoretic method.
+* `F`:
+    The Floyd-Warshall-Kleene Ramsey-theoretic method.
+* `Omsf`:
+    The order-reduced Ramsey-theoretic method (the `msf` corresponds to the `-min`, `-scc`, and `-ff` flags that were mentioned above; again, `msf` should be included for best performance but omitting it will still work).
+* `C`:
+    Use Cyclone.
+
+### The JSON Format for Sloped Graphs
+
+Our implementation of Cyclone and modification of Cyclist uses a JSON representation for sloped graphs.
+
+We now give the details of this representation, so that you can modify the existing example or create new examples.
+
+In the JSON representation, sloped graphs are JSON objects containing the following four fields: `"Node"`, `"Height"`, `"Bud"`, and `"Edge"`. The value of each of these fields should be an array.
+
+We now describe each of these fields in detail.
+
+* `"Node"`:
+    The value of this field is an array containing integers, which are the IDs for the nodes, or vertices, of the sloped graph.
+* `"Height"`:
+    The value of this field is an array containing integers, which denote the positions associated with nodes of the sloped graphs. Positions were referred to as "heights" in historical (pre-publication) formulations of the sloped graph formalism. Thus, for legacy reasons, these are still called "heights" in the implementation.
+* `"Bud"`:
+    The value of this field is an array of integers, identifying the IDs of the nodes in the sloped graph that are buds.
+    A sloped graph is permitted to have an empty array of buds.
+* `"Edge"`:
+    The value of this field is an array whose elements are arrays, each of which describes one edge in the sloped graph.
+    The arrays describing an edge have exactly two elements, both of which are again arrays:
+    1. The first array represents the edge itself: it has exactly two elements, which are integers, being the ID of the source node and the ID of the destination/target node of the edge, respectively.
+    2. The second array represents the sloped relation along the edge. It has arrays as its elements, themselves each containing exactly three integer elements:
+        1. the ID of a position in source node of the edge,
+        2. the ID of a position in the target node of the edge, and then
+        3. either the integer `0` or the integer `1` denoting a flat slope and a downward slope, respectively, connecting these positions.
+
+The `src/generic/test/data` subdirectory of the Cyclist source code contains a number of sloped graphs in this JSON format that were hand-crafted to test out the implementations of the various methods for deciding Infinite Descent.
+
+For example, the file `graph_3.json` contains the following sloped graph representation.
+
+```json
+{
+    "Node" : [
+        [0, [0]],
+        [1, [1]]
+    ],
+    "Bud" : [1],
+    "Edge" : [
+        [[0,1],[[0,1,1]]],
+        [[1,0],[[1,0,0]]]
+    ],
+    "Height" : [1,0]
+}
+```
+
+This represents a sloped graph containing two nodes, with IDs `0` and `1`, respectively.
+The positions in the graph have IDs `0` and `1`, with the position `0` belonging to the node `0`, and the position `1` belonging to the node `1`.
+The sloped graph has two edges: one from node `0` to node `1`, and the other in the opposite direction from node `1` to node `0`.
+The graph thus has a cyle.
+Node `1` is identified as a bud node.
+The slope along the edge from node `0` to node `1`, connects position `0` to position `1` with a downward slope.
+The slope along the backlink from node `1` to node `0`, connects position `1` to position `0` with a flat slope.
+
+### Building Cyclist/Cyclone Manually
+
+You can build Cyclist and Cyclone manually if you have OCaml/OPAM, `pkg-config`, and the Spot model checking library installed on your system.
+
+Installation instructions for OCaml/OPAM can be found [here](https://ocaml.org/install).
+
+The `pkg-config` package usually comes on Linux distributions as standard, but we mention it here as it is an explicit dependency of Cyclist.
+More information about `pkg-config` can be found [here](https://www.freedesktop.org/wiki/Software/pkg-config/).
+
+Installation instructions for the Spot model-checking library can be found [here](https://spot.lre.epita.fr/install.html).
+Cyclist requires Spot to be installed in such a way that it is visible to `pkg-config`.
+
+Once the above dependencies are installed, Please clone the Cyclist source code from its Github page: [https://github.com/cyclist-org/cyclist](https://github.com/cyclist-org/cyclist).
+
+You should then check out the `TACAS2025-Submission` tag.
+
+```bash
+git checkout TACAS2025-Submission
+```
+
+You can then make sure that all of the necessary OCaml packages for building Cyclist are installed by running the following command.
+
+```bash
+opam install -y --deps-only ./cyclist.opam
+```
+
+Once the dependencies have successfully installed, you can build Cyclist/Cyclone using dune by executing the following command.
+
+```bash
+dune build
+```
