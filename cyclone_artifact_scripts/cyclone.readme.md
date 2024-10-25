@@ -17,7 +17,18 @@ The artifact submission contains the following.
 ```text
 ├── README.md
 ├── TACAS25_paper_7026.pdf
-├── cyclist/
+├── cyclist.zip
+├── paper_data.zip
+```
+
+The current file is `README.md`.
+
+The file `TACAS25_paper_7026.pdf` is the paper submitted to TACAS 2025.
+
+The `cyclist.zip` archive contains the following.
+
+```text
+├── cyclist.zip
     ├── LICENSE.md
     ├── cyclone_artifact_scripts/
         ├── cyclone.evaluate_cyclone.sh
@@ -25,25 +36,27 @@ The artifact submission contains the following.
         ├── cyclone.graph_stats.sh
         ├── create_figures.sh
     ...
-├── paper_data/
-    ├── stats.csv
-    ├── evaluation.csv
-    ├── database/
 ```
 
-The current file is `README.md`.
-
-The file `TACAS25_paper_7026.pdf` is the paper submitted to TACAS 2025.
-
 The `LICENSE.md` contains the 3-clause-BSD license under which the Cyclist theorem prover framework is distributed.
-
-The `paper_data` directory contains the database of sloped graphs and CSV files comprising the analysis and experimental evaluation reported in our paper.
-See the [Data used in our Paper](#the-data-used-in-our-paper) section below for more details.
 
 The `cyclist` directory contains the source code for the Cyclist theorem prover framework, into which we have incorporated the implementation of our tool, Cyclone.
 See the [*Cyclone* Implementation](#cyclone-implementation) section below for more details.
 The `cyclone_artifact_scripts` subdirectory contains scripts for recreating the experimental data and analysis.
 Instructions for running these scripts are given in the [Early Light Review](#early-light-review) section below.
+
+The `paper_data.zip` archive contains the following.
+
+```text
+├── paper_data.zip
+    ├── paper_data/
+        ├── stats.csv
+        ├── evaluation.csv
+        ├── database/
+```
+
+The `dataase` directory contains the database of sloped graphs and CSV files comprising the analysis and experimental evaluation reported in our paper.
+See the [Data used in our Paper](#the-data-used-in-our-paper) section below for more details.
 
 ## Zenodo Deposit
 
