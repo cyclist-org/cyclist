@@ -28,8 +28,9 @@ RUN \
   wget https://www.lrde.epita.fr/dload/spot/spot-2.11.6.tar.gz && \
   tar -xzf spot-2.11.6.tar.gz && cd spot-2.11.6 && \
   ./configure --prefix=/usr --disable-python && \
-  make && make install && make clean
-  
+  make && make install && make clean && \
+  rm -fR /usr/local/src/spot
+
 # Copy Cyclist source code from current directory
 
 COPY . /home/cyclist
