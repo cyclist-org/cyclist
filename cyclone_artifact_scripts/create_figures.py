@@ -147,8 +147,8 @@ def create_TM_figures(frame):
     overhead_frame_only_TM_yes = overhead_frame_only_TM_yes[overhead_frame_only_TM_yes["TM answer"]=="yes"]
     overhead_frame_only_TM_yes["OR overhead over TM"] = (overhead_frame_only_TM_yes["OR duration microseconds"]-overhead_frame_only_TM_yes["TM duration microseconds"])
     overhead_frame_only_TM_yes["OR overhead over TM %"] = 100*(overhead_frame_only_TM_yes["OR duration microseconds"]-overhead_frame_only_TM_yes["TM duration microseconds"])/overhead_frame_only_TM_yes["TM duration microseconds"]
-    print(f"min overhead {overhead_frame_only_TM_yes['OR overhead over TM %'].min()}")
-    print(f"max overhead {overhead_frame_only_TM_yes['OR overhead over TM %'].max()}")
+    # print(f"min overhead {overhead_frame_only_TM_yes['OR overhead over TM %'].min()}")
+    # print(f"max overhead {overhead_frame_only_TM_yes['OR overhead over TM %'].max()}")
     plot_mean_with_interquartile_range_by(overhead_frame_only_TM_yes,"edges", "OR overhead over TM %")
     savefig_to("OR_overhead_percentage_over_TM.png")
 
@@ -184,7 +184,7 @@ def create_TM_figures(frame):
     plot_mean_with_interquartile_range_by(cycle_normal_form_frame, "amount of trace manifold graph edges", "TM duration microseconds")
     plt.ylabel("microseconds")
     savefig_to("figure13c.png")
-    
+
     plot_mean_with_interquartile_range_by(not_cycle_normal_form_frame, "nodes", "TM duration microseconds")
     plt.ylabel("microseconds")
     savefig_to("figure14a.png")
@@ -392,6 +392,7 @@ plt.rcParams.update({'figure.autolayout': True})
 plot_database_stats(frame)
 create_FC_figures(frame)
 create_DU_figures(frame)
+create_TM_figures(frame)
 plot_coverages(frame)
 plot_methods_comparison(frame)
 
