@@ -89,7 +89,7 @@ private:
         Int_pair extended_node,
         std::stack<Int_pair> &s,
         std::stack<slope> &slopes_stack,
-        Int_pair_SET on_stack,
+        Int_pair_SET &on_stack,
         std::map<Int_pair, int> &idxs,
         std::map<Int_pair, int> &low_links,
         int &next_idx
