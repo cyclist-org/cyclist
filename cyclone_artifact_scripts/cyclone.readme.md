@@ -1,8 +1,6 @@
-# Artifact for the TACAS Submission 'Cyclone: A Heterogeneous Tool for Checking Infinite Descent'
+# Artifact for the TACAS 2025 Paper 'Cyclone: A Heterogeneous Tool for Checking Infinite Descent'
 
-This `README.md` file describes the artifact for submission #3251 to TACAS25 Tool Artefacts.
-
-The artifact is associated with paper submission #7026 to TACAS25.
+This `README.md` file describes the accompanying artifact for the TACAS 2025 Tool Paper 'Cyclone: A Heterogeneous Tool for Checking Infinite Descent'.
 
 ## Introduction
 
@@ -12,40 +10,28 @@ The artifact is an augmented version of the Cyclist automated theorem prover, co
 
 ### Artifact Contents
 
-The artifact submission contains the following.
+The artifact contains the following.
 
 ```text
 ├── README.md
-├── TACAS25_paper_7026.pdf
+├── cyclone_manuscript.pdf
 ├── cyclist.zip
 ├── paper_data.zip
+├── cyclone_artifact-amd.tar.gz
+├── cyclone_artifact-arm.tar.gz
 ```
 
 The current file is `README.md`.
 
-The file `TACAS25_paper_7026.pdf` is the paper submitted to TACAS 2025.
+The file `cyclone_manuscript.pdf` is the author manuscript of the paper published in the TACAS 2025 proceedings.
 
-The `cyclist.zip` archive contains the following.
+The files `cyclone_artifact-amd.tar.gz` and `cyclone_artifact-arm.tar.gz` are compressed Docker images, allowing the artifact to be run 'out of the box'.
+These two Docker images have identical contents, and are built to support the x86_64/amd64 and arm64 architectures, respectively.
 
-```text
-├── cyclist.zip
-    ├── LICENSE.md
-    ├── cyclone_artifact_scripts/
-        ├── cyclone.evaluate_cyclone.sh
-        ├── cyclone.generate_database.sh
-        ├── cyclone.graphs_stats.sh
-        ├── create_figures.sh
-    ...
-```
-
-The `LICENSE.md` contains the 3-clause-BSD license under which the Cyclist theorem prover framework is distributed.
-
-The `cyclist` directory contains the source code for the Cyclist theorem prover framework, into which we have incorporated the implementation of our tool, Cyclone.
+The `cyclist.zip` archive contains the source code for the Cyclist theorem prover framework, into which we have incorporated the implementation of our tool, Cyclone.
 See the [*Cyclone* Implementation](#cyclone-implementation) section below for more details.
-The `cyclone_artifact_scripts` subdirectory contains scripts for recreating the experimental data and analysis.
-Instructions for running these scripts are given in the [Early Light Review](#early-light-review) section below.
 
-The `paper_data.zip` archive contains the following.
+The `paper_data.zip` archive contains the experimental data on which we report in the paper, and comprises the following.
 
 ```text
 ├── paper_data.zip
@@ -55,27 +41,24 @@ The `paper_data.zip` archive contains the following.
         ├── database/
 ```
 
-The `dataase` directory contains the database of sloped graphs and CSV files comprising the analysis and experimental evaluation reported in our paper.
+The `database` directory contains our database of sloped graphs, and the `stats.csv` and `evaluation.csv` files contain the data on which the analysis and experimental evaluation reported in our paper are based.
 See the [Data used in our Paper](#the-data-used-in-our-paper) section below for more details.
+
+Instructions for reproducing our experimental evaluation are given in the [Reproduing our Results](#reproducing-our-results) section below.
 
 ## Zenodo Deposit
 
-The artifact has been deposited on [Zenodo](https://zenodo.org/records/13990264), under the following DOI: [10.5281/zenodo.13990264](https://doi.org/10.5281/zenodo.13990264)
-
-The zenodo deposit also contains two compressed Docker images, allowing the artifact to be run 'out of the box'.
-
-* `cyclone_artifact-amd.tar.gz`
-* `cyclone_artifact-arm.tar.gz`
-
-These two Docker images have identical contents, and are built to support the x86_64/amd64 and arm64 architectures, respectively.
+This artifact has been deposited on [Zenodo](https://zenodo.org/records/13990264), under the following DOI: [10.5281/zenodo.13990264](https://doi.org/10.5281/zenodo.13990264)
 
 ## *Cyclone* Implementation
 
-The `cyclist` directory contains the source code for Cyclist together with the integration of our implementation of *Cyclone*.
+The `cyclist.zip` archive contains the source code for Cyclist together with the integration of our implementation of *Cyclone*.
 
-The code of our implementation can be found in the `cyclist/src/generic` subdirectory, with the most relevant files being `cyclone.c`, `criterion.flat_cycles.c`, `criterion.descending_unicycles.c` and `criterion.trace_manifold.c`.
+The archive includes the `LICENSE.md` file, which contains the 3-clause-BSD license under which the Cyclist theorem prover framework is distributed.
 
-This code mirrors the contents of the `TACAS2025-Submission` tag of the [Cyclist github repository](https://github.com/cyclist-org/cyclist/releases/tag/TACAS2025-Submission).
+The code of our implementation can be found in the `src/generic` subdirectory, with the most relevant files being `cyclone.c`, `criterion.flat_cycles.c`, `criterion.descending_unicycles.c` and `criterion.trace_manifold.c`.
+
+This code mirrors the contents of the `TACAS2025` tag of the [Cyclist github repository](https://github.com/cyclist-org/cyclist/releases/tag/TACAS2025).
 
 ## The Data used in our Paper
 
@@ -391,7 +374,7 @@ The `<methdod>` command line arguments can be one of the following:
 * `-CY`:
     Use Cyclone.
 
-Cyclist will output either `OK` or `NOT OK`, indicating whether the graph satisfies Infinite Descent or not.
+Cyclist will output either `YES` or `NO`, indicating whether the graph satisfies Infinite Descent or not.
 
 You can actually specify more than one file, using multiple `-f` command line arguments, and Cyclist will check them all in order, outputting the results on successive lines of the standard output.
 
@@ -524,9 +507,24 @@ To use Cyclone, specify `-CY` as the method. The other options are:
 * `-FWK`: the Floyd-Warshall-Kleene Ramsey-theoretic method.
 * `-OR`: the order-reduced Ramsey-theoretic method. For this method, you should also pass the flags `-min`, `-scc`, and `-ff` for best performance (although the OR backend check will still work without them).
 
-You can obtain sequents from the benchmark test files in the `benchmarks/fo` subdirectory of the Cyclist source code.
+You can obtain sequents to pass to the prover as the value of the `-S` flag from the benchmark test files in the `benchmarks/fo` subdirectory of the Cyclist source code.
+For example, the file `01-odd-even.tst` in the `benchmarks/fo` subdirectory contains the sequent `O(x) |- N(x)`, a statement expressing that if `x` is a member of the `O` predicate then it is also a member of the `N` predicate.
 
 The `-D <file>` command line argument specifies where Cyclist should look for the definitions of inductive predicates that are used in the sequent to the proved.
+The file `examples/fo.defs` contains predicate definitions appropriate to the first order logic prover.
+In particular it contains definitions for the `O` and `N` predicates mentioned above, which express the properties of being an odd (natural) number and a natural number, respectively.
+
+So, for example, running the following command will invoke the first order logic prover to search for a proof of the sequent `O(x) |- N(x)` using Cyclone as a backend for checking infinite descent.
+
+```bash
+dune exec src/firstorder/prove.exe -- -D examples/fo.defs -CY -S "O(x) |- N(x)"
+```
+
+For testing out the various benchmark test cases, rather than copying out each sequent long-hand, it can be more convenient to simply `cat` the contents of the appropriate `.tst.` file as part of the invocation of the prover, e.g.
+
+```bash
+dune exec src/firstorder/prove.exe -- -D examples/fo.defs -CY -S "`cat benchmarks/fo/01-odd-even.tst`"
+```
 
 If you also pass the `-p` command line option to Cyclist, then it will output the proof that it finds.
 
@@ -575,10 +573,10 @@ However, later versions of Spot should also work.
 
 Once the above dependencies are installed, Please clone the Cyclist source code from its Github page: [https://github.com/cyclist-org/cyclist](https://github.com/cyclist-org/cyclist).
 
-You should then check out the `TACAS2025-Submission` tag.
+You should then check out the `TACAS2025` tag.
 
 ```bash
-git checkout TACAS2025-Submission
+git checkout TACAS2025
 ```
 
 You can then make sure that all of the necessary OCaml packages for building Cyclist are installed by running the following command.
