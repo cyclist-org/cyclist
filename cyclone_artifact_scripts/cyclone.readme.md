@@ -48,7 +48,7 @@ Instructions for reproducing our experimental evaluation are given in the [Repro
 
 ## Zenodo Deposit
 
-This artifact has been deposited on [Zenodo](https://zenodo.org/records/13990264), under the following DOI: [10.5281/zenodo.13990264](https://doi.org/10.5281/zenodo.13990264)
+This artifact has been deposited on [Zenodo](https://zenodo.org/records/14743891), under the following DOI: [10.5281/zenodo.14743891](https://doi.org/10.5281/zenodo.14743891)
 
 ## *Cyclone* Implementation
 
