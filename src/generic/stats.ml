@@ -32,13 +32,13 @@ module TimeStats (E : sig end) = struct
     cpu_time := 0.0
 end
 
-module MC = TimeStats ()
+module MC = TimeStats (struct end)
 
-module CC = TimeStats ()
+module CC = TimeStats (struct end)
 
-module Gen = TimeStats ()
+module Gen = TimeStats (struct end)
 
-module Invalidity = TimeStats ()
+module Invalidity = TimeStats (struct end)
 
 module CacheStats (E : sig end) = struct
   let queries = ref 0
@@ -64,7 +64,7 @@ module CacheStats (E : sig end) = struct
     cpu_time := 0.0
 end
 
-module MCCache = CacheStats ()
+module MCCache = CacheStats (struct end)
 
 let gen_print () =
   if !do_statistics then (

@@ -118,7 +118,7 @@ let prove_seq ((pre, cmd, post) as seq) =
 
 let prove_scc ps = Blist.iter prove_seq (Blist.bind Proc.get_seqs ps)
 
-module Timer = Stats.TimeStats ()
+module Timer = Stats.TimeStats (struct end)
 
 let () =
   let spec_list = !F.speclist () in
