@@ -83,8 +83,16 @@ module type S = sig
   (** Output functions. *)
 
   val pp : Format.formatter -> t -> unit
+  (** Pretty-print the proof. *)
 
   val to_string : t -> string
+  (** Return a string representation of the proof *)
+
+  val pp_dot : Format.formatter -> t -> unit
+  (** Format a representation of the proof in the DOT graph format. *)
+
+  val to_dot_string : t -> string
+  (** Return a string containing a DOT representation of the proof. *)
 end
 
 module Make (Seq : Sequent.S) :

@@ -29,6 +29,8 @@ module type S = sig
   val to_list : t -> (int * node_t) list
   val pp : Format.formatter -> t -> unit
   val to_string : t -> string
+  val pp_dot : Format.formatter -> t -> unit
+  val to_dot_string : t -> string
 end
 
 module Make (Seq : Sequent.S) = struct
@@ -74,6 +76,61 @@ module Make (Seq : Sequent.S) = struct
     Format.fprintf fmt "@[%a@]@." pp_aux 0
 
   let to_string prf = mk_to_string pp prf
+
+  let pp_dot fmt prf =
+    let pp_node_id fmt idx =
+      Format.fprintf fmt "node_%i" idx in
+    let pp_node (idx, node) =
+      let () = Format.pp_print_cut fmt () in
+      if (Node.is_open node) then
+        Format.fprintf fmt
+          "%a [shape=box style=diagonals label=\"@[<h>%a@]\"]"
+          pp_node_id idx
+          Seq.pp (Node.get_seq node)
+      else if (Node.is_backlink node) then
+        Format.fprintf fmt
+          "%a [shape=box label=\"@[<h>%a@]\"]"
+          pp_node_id idx
+          Seq.pp (Node.get_seq node)
+      else
+        let (seq, rl) = Node.dest node in
+        Format.fprintf fmt
+          "%a [shape=none label=<\
+          <TABLE BORDER=\"0\">\
+          <TR><TD> </TD><TD ROWSPAN=\"2\" VALIGN=\"MIDDLE\">(%s)</TD></TR>\
+          <HR/>\
+          <TR><TD>@[<h>%a@]</TD></TR>\
+          </TABLE>>]"
+          pp_node_id idx
+          rl
+          Seq.pp seq in
+    let pp_edges (idx, node) =
+      let pp_edge dst (vtps, prog) =
+        Format.fprintf fmt "@,%a -> %a [label=\"(non-prog: %a, prog: %a)\"]"
+          pp_node_id idx
+          pp_node_id dst
+          Tagpairs.pp (Tagpairs.diff vtps prog)
+          Tagpairs.pp prog in
+      if (Node.is_backlink node) then
+        let (_, _, dst, tps) = Node.dest_backlink node in
+        pp_edge dst (tps, Tagpairs.empty)
+      else if (Node.is_inf node) then
+        let (_, _, succs, tpss) = Node.dest_inf node in
+        List.iter2 pp_edge succs tpss in
+    Format.pp_open_vbox fmt 0 ;
+    Format.pp_open_vbox fmt 2 ;
+    Format.pp_print_string fmt "digraph {" ;
+    Format.pp_print_cut fmt () ;
+    Format.pp_print_string fmt "graph [rankdir=\"BT\"]" ;
+    P.iter (fun idx (_, n) -> pp_node (idx, n)) prf ;
+    P.iter (fun idx (_, n) -> pp_edges (idx, n)) prf ;
+    Format.pp_close_box fmt () ;
+    Format.pp_print_cut fmt () ;
+    Format.pp_print_string fmt "}" ;
+    Format.pp_close_box fmt () ;
+    Format.pp_print_cut fmt ()
+
+  let to_dot_string = mk_to_string pp_dot
 
   let is_closed prf = P.for_all (fun _ (_, n) -> not (Node.is_open n)) prf
 

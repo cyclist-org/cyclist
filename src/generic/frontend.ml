@@ -7,6 +7,8 @@ module Make (Prover : Prover.S) = struct
 
   let show_proof = ref false
 
+  let use_dot = ref false
+
   let latex_path = ref ""
 
   let open_file_for_append = ref false
@@ -34,6 +36,7 @@ module Make (Prover : Prover.S) = struct
                 maxbound := n )
           , ": set both depths to <int>." )
         ; ("-p", Arg.Set show_proof, ": show proof")
+        ; ("--dot", Arg.Set use_dot, ": use DOT format for proofs")
         ; ("-d", Arg.Set do_debug, ": print debug messages")
         ; ("--id", Arg.Set_string run_identifier, ": identifier for the execution, used in debug output" )
         ; ("-s", Arg.Set Stats.do_statistics, ": print statistics")
@@ -81,7 +84,9 @@ module Make (Prover : Prover.S) = struct
         NOT_FOUND )
       else
         let proof = Option.get res in
-        if !show_proof then Prover.Proof.pp Format.std_formatter proof
+        if !show_proof then
+          let pp = if !use_dot then Prover.Proof.pp_dot else Prover.Proof.pp in
+          pp Format.std_formatter proof
         else if output then print_endline ("Proved: " ^ Seq.to_string seq) ;
         if !Stats.do_statistics then Prover.print_proof_stats proof ;
         SUCCESS proof

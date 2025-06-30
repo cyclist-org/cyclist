@@ -12,6 +12,7 @@ module Make :
         end
       type result_t = TIMEOUT | NOT_FOUND | SUCCESS of Prover.Proof.t
       val show_proof : bool ref
+      val use_dot : bool ref
       val latex_path : string ref
       val open_file_for_append : bool ref
       val timeout : int ref
