@@ -7,7 +7,7 @@ module type S = sig
   (** Proof type. Invariants are:
       - Graph (all indices point to existing nodes).
       - Non-empty.
-      - Rooted at 0.
+      - Tree rooted at 0.
       - Connected.
       - Leaves are open nodes, axioms or backlinks. *)
   type t
@@ -63,6 +63,7 @@ module type S = sig
   val num_backlinks : t -> int
 
   (* val mem : int -> t -> bool *)
+
   val fresh_idx : t -> int
 
   val fresh_idxs : 'a list -> t -> int list
