@@ -126,8 +126,7 @@ let handle_reply reply =
   match reply with
   | Success res -> res
   | Failed (msg, _) ->
-      prerr_endline msg ;
-      assert false
+    invalid_arg msg
 
 let runtest name tst =
   let bt = Printexc.backtrace_status () in
