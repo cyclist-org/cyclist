@@ -18,7 +18,7 @@ module type S = sig
 
   type select_f = int -> proof_t -> int list
 
-  type t = int -> proof_t -> (int list * proof_t) Blist.t
+  type t = int -> proof_t -> (int list * proof_t) L.t
 
   val mk_axiom : axiom_f -> t
 
@@ -119,29 +119,29 @@ module Make (Seq : Sequent.S) = struct
     else L.filter check apps
 
   let all_nodes srcidx prf =
-    Blist.filter
+    L.filter
       (fun idx -> not (Int.equal idx srcidx))
-      (Blist.map fst (Proof.to_list prf))
+      (L.map fst (Proof.to_list prf))
 
   let closed_nodes srcidx prf =
     let nodes =
-      Blist.filter
+      L.filter
         (fun (idx, n) -> (not (Node.is_open n)) && not (Int.equal idx srcidx))
         (Proof.to_list prf)
     in
-    Blist.map fst nodes
+    L.map fst nodes
 
-  let ancestor_nodes srcidx prf = Blist.map fst (Proof.get_ancestry srcidx prf)
+  let ancestor_nodes srcidx prf = L.map fst (Proof.get_ancestry srcidx prf)
 
   let syntactically_equal_nodes srcidx prf =
     let seq = Proof.get_seq srcidx prf in
     let nodes =
-      Blist.filter
+      L.filter
         (fun (idx, n) ->
           Seq.equal seq (Node.get_seq n) && not (Int.equal idx srcidx) )
         (Proof.to_list prf)
     in
-    Blist.map fst nodes
+    L.map fst nodes
 
   let default_select_f = ref all_nodes
 
@@ -170,7 +170,7 @@ module Make (Seq : Sequent.S) = struct
   (* This has been generalised below to take a list of rules                   *)
   (*                                                                           *)
   (* let apply_to_subgoals r (subgoals, prf) =                                 *)
-  (*   Blist.fold_left                                                         *)
+  (*   L.fold_left                                                             *)
   (*     (* close one subgoal each time by actually appling the rule *)        *)
   (*     (fun apps idx ->                                                      *)
   (*       L.bind                                                              *)
@@ -185,7 +185,7 @@ module Make (Seq : Sequent.S) = struct
 
   let apply_to_subgoals_pairwise rules (subgoals, prf) =
     try
-      Blist.fold_left2
+      L.fold_left2
         (* close one subgoal each time by actually appling the corresponding rule *)
           (fun apps r idx ->
           L.bind
@@ -203,8 +203,8 @@ module Make (Seq : Sequent.S) = struct
     L.bind
       (fun ((subgoals, _) as res) ->
         apply_to_subgoals_pairwise
-          (Blist.repeat r' (Blist.length subgoals))
-          res )
+          (L.repeat r' (L.length subgoals))
+          res)
       (r idx prf)
 
   let compose_pairwise r rs idx prf =

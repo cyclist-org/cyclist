@@ -133,7 +133,7 @@ module Make (Seq : Sequent.S) = struct
         in
         let premises', prf' = add_inf idx' descr premises' prf' in
         let node_map =
-          Blist.fold_right2 Int.Map.add premises premises' node_map
+          Blist.fold_right2 P.add premises premises' node_map
         in
         Blist.fold_left2 _add (prf', (node_map, bls)) premises premises'
       else invalid_arg "Unrecognised node type!"
@@ -142,26 +142,26 @@ module Make (Seq : Sequent.S) = struct
     assert (
       Seq.equal (Node.get_seq (find 0 prf)) (Node.get_seq (find idx prf')) ) ;
     let prf', (node_map, bls) =
-      _add (prf', (Int.Map.singleton 0 idx, [])) 0 idx
+      _add (prf', (P.singleton 0 idx, [])) 0 idx
     in
     let fix_bl prf' (idx, idx') =
       let _, descr, target, vtts = Node.dest_backlink (find idx prf) in
-      add_backlink idx' descr (Int.Map.find target node_map) vtts prf'
+      add_backlink idx' descr (P.find target node_map) vtts prf'
     in
     Blist.fold_left fix_bl prf' bls
 
   let extract_subproof idx prf =
     let rec _extract (prf', node_map) idx idx' =
-      if Int.Map.mem idx node_map then
+      if P.mem idx node_map then
         let prf' =
           add_backlink idx' "Backl"
-            (Int.Map.find idx node_map)
+            (P.find idx node_map)
             (Tagpairs.mk (Seq.tags (get_seq idx prf)))
             prf'
         in
         (prf', node_map)
       else
-        let node_map = Int.Map.add idx idx' node_map in
+        let node_map = P.add idx idx' node_map in
         let n = find idx prf in
         if Node.is_open n then (prf', node_map)
         else if Node.is_axiom n then
@@ -169,8 +169,8 @@ module Make (Seq : Sequent.S) = struct
           (add_axiom idx' descr prf', node_map)
         else if Node.is_backlink n then
           let _, descr, target, vtts = Node.dest_backlink n in
-          if Int.Map.mem target node_map then
-            ( add_backlink idx' descr (Int.Map.find target node_map) vtts prf'
+          if P.mem target node_map then
+            ( add_backlink idx' descr (P.find target node_map) vtts prf'
             , node_map )
           else _extract (prf', node_map) target idx'
         else if Node.is_inf n then
@@ -184,7 +184,7 @@ module Make (Seq : Sequent.S) = struct
           Blist.fold_left2 _extract (prf', node_map) premises premises'
         else invalid_arg "Unrecognised node type!"
     in
-    fst (_extract (mk (get_seq idx prf), Int.Map.empty) idx 0)
+    fst (_extract (mk (get_seq idx prf), P.empty) idx 0)
 
   let get_ancestry idx prf =
     let rec aux acc idx (par_idx, n) =
