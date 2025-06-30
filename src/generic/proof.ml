@@ -35,6 +35,7 @@ module Make (Seq : Sequent.S) = struct
   module Node = Proofnode.Make (Seq)
   module P = Int.Map
 
+  (* TODO: Why on earth is the node id being duplicated in the value type? *)
   type t = (int * Node.t) P.t
 
   type seq_t = Seq.t
