@@ -50,6 +50,8 @@ module type S = sig
 
   val compose_pairwise : t -> t list -> t
 
+  val repeat : t -> t
+
   val choice : t list -> t
 
   val first : t list -> t
@@ -168,6 +170,8 @@ module Make (Seq : Sequent.S) = struct
 
   let fail _ _ = L.empty
 
+  let identity idx prf = L.singleton ([idx], prf)
+
   (* This has been generalised below to take a list of rules                   *)
   (*                                                                           *)
   (* let apply_to_subgoals r (subgoals, prf) =                                 *)
@@ -185,20 +189,27 @@ module Make (Seq : Sequent.S) = struct
   (*     subgoals                                                              *)
 
   let apply_to_subgoals_pairwise rules (subgoals, prf) =
-    try
-      L.fold_left2
-        (* close one subgoal each time by actually appling the corresponding rule *)
-          (fun apps r idx ->
-          L.bind
-            (fun (opened, oldprf) ->
-              (* add new subgoals to the list of opened ones *)
-              L.map
-                (fun (newsubgoals, newprf) -> (opened @ newsubgoals, newprf))
-                (r idx oldprf) )
-            apps )
-        (L.singleton ([], prf))
-        rules subgoals
-    with Invalid_argument _ -> L.empty
+    (* First make sure we have one rule for each subgoal,
+       truncating or padding with identity as necessary *)
+    let rules =
+      let num_rules = L.length rules in
+      let num_subgoals = L.length subgoals in
+      if (num_rules < num_subgoals) then
+        L.append rules (L.repeat identity (num_subgoals - num_rules))
+      else
+        L.take num_subgoals rules in
+    (* close one subgoal each time by actually applying corresponding rule *)
+    L.fold_left2
+      (fun apps r idx ->
+        L.bind
+          (fun (opened, oldprf) ->
+            (* add new subgoals to the list of opened ones *)
+            L.map
+              (fun (newsubgoals, newprf) -> (opened @ newsubgoals, newprf))
+              (r idx oldprf) )
+          apps)
+      (L.singleton ([], prf))
+      rules subgoals
 
   let compose r r' idx prf =
     L.bind
@@ -220,8 +231,6 @@ module Make (Seq : Sequent.S) = struct
         let apps = r idx prf in
         if not (L.is_empty apps) then apps else first rs idx prf
 
-  let identity idx prf = L.singleton ([idx], prf)
-
   let attempt r idx prf =
     let apps = r idx prf in
     if not (L.is_empty apps) then apps else identity idx prf
@@ -229,6 +238,20 @@ module Make (Seq : Sequent.S) = struct
   let rec sequence = function
     | [] -> identity
     | r :: rs -> compose r (sequence rs)
+
+  let repeat r =
+    let rec repeat idx prf =
+      let apps = r idx prf in
+      if (L.is_empty apps) then
+        identity idx prf
+      else
+        L.bind
+          (fun ((subgoals, _) as res) ->
+            apply_to_subgoals_pairwise
+              (L.repeat repeat (L.length subgoals))
+              res)
+          apps in
+    repeat
 
   let conditional cond r idx prf =
     if cond (Proof.get_seq idx prf) then r idx prf else []
