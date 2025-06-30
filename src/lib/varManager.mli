@@ -14,16 +14,15 @@ module type I = sig
   (** [is_unnamed v] returns [true] if and only if [v] is anonymous *)
 
   val mk : string -> var
-  (** [mk_var n exist] returns a variable with name [n]; if [exist] is [true] then 
-        the returned variable will be existential, otherwise it will be free. If the 
-        VarManager already knows about a variable named [n], then this will be returned,
-        otherwise it will generate a fresh variable. *)
+  (** [mk n] returns a variable with name [n].
+      The type of the variable (i.e. free/bound/anonymous) is determined by the
+      classifcation function given at the creation of the variable manager. *)
 
   val is_exist_var : var Fun.predicate
   (** [is_exist_var v] returns [true] if and only if [v] is an existential variable. *)
 
   val is_free_var : var Fun.predicate
-  (** [is_exist_var v] returns [true] if and only if [v] is a free variable. *)
+  (** [is_free_var v] returns [true] if and only if [v] is a free variable. *)
 
   val fresh_evar : var_container -> var
   (** [fresh_evar s] returns an existential variable that is fresh for the set of variables [s]. *)
@@ -32,10 +31,10 @@ module type I = sig
   (** [fresh_evars s n] returns [n] distinct existential variables that are all fresh for the set of variables [s]. *)
 
   val fresh_fvar : var_container -> var
-  (** [fresh_uvar s] returns a free variable that is fresh for the set of variables [s]. *)
+  (** [fresh_fvar s] returns a free variable that is fresh for the set of variables [s]. *)
 
   val fresh_fvars : var_container -> int -> var list
-  (** [fresh_uvars s n] returns [n] distinct free variables that are all fresh for the set of variables [s]. *)
+  (** [fresh_fvars s n] returns [n] distinct free variables that are all fresh for the set of variables [s]. *)
 end
 
 module type SubstSig = sig
@@ -58,9 +57,9 @@ module type SubstSig = sig
   (** Make a substitution from a list of bindings *)
 
   val avoid : var_container -> var_container -> t
-  (** [avoid vars subvars] 
-        returns a substitution that takes all variables in [subvars] to  
-        variables fresh in [vars U subvars], respecting existential   
+  (** [avoid vars subvars]
+        returns a substitution that takes all variables in [subvars] to
+        variables fresh in [vars U subvars], respecting existential
         quantification / free variables. *)
 
   val pp : Format.formatter -> t -> unit
@@ -74,8 +73,8 @@ module type SubstSig = sig
 
   val partition : t -> t * t
   (** [partition theta] will partition [theta] into ([theta_1], [theta_2])
-        such that [theta_1] contains all and only the mappings in [theta] from 
-        a free variable to either an anonymous variable or another free variable; 
+        such that [theta_1] contains all and only the mappings in [theta] from
+        a free variable to either an anonymous variable or another free variable;
         that is [theta_1] is the part of [theta] which is a proper
         (proof-theoretic) substitution. *)
 
@@ -143,7 +142,7 @@ type varname_class = FREE | BOUND | ANONYMOUS
 
 val mk : int -> string -> (string -> varname_class) -> (module S)
 (** [mk seed anon_str classify] creates a new variable manager module where:
-      [seed] specifies a cyclic permutation of the alphabet, which is used 
+      [seed] specifies a cyclic permutation of the alphabet, which is used
         internally to create new variable names;
       [anon_str] specifies how to represent "anonymous" variables as a string;
       [classify varname] returns a value of type [varname_class] classifying [varname]. *)
