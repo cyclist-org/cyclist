@@ -644,7 +644,7 @@ struct
       Var.Set.fold
         (fun x (bndgs, zs) ->
           let y =
-            Var.Set.find_opt
+            Var.Set.find_suchthat_opt
               (fun z -> Uf.equates eqs (Var.to_term x) (Var.to_term z))
               mapped_vars
           in

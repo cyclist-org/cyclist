@@ -232,7 +232,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
           let cvalued (y, xs) =
             (not (Term.Set.mem y existvars)) && Blist.exists in_existvars xs
           in
-          let pto = Ptos.find_opt cvalued symheap.Heap.ptos in
+          let pto = Ptos.find_suchthat_opt cvalued symheap.Heap.ptos in
           if Option.is_none pto then []
           else
             let ((y, xs) as pto) = Option.get pto in

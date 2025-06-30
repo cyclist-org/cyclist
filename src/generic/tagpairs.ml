@@ -23,7 +23,7 @@ let dest_singleton tps =
   Option.mk_lazily (cardinal tps == 1) (fun _ -> choose tps)
 
 let apply_to_tag tps t =
-  try snd (find (fun (t', _) -> Tags.Elt.equal t t') tps) with Not_found -> t
+  Option.dest t snd (find_suchthat_opt (fun (t', _) -> Tags.Elt.equal t t') tps)
 
 let strip tps = filter (fun (t, t') -> not (Tags.Elt.equal t t')) tps
 

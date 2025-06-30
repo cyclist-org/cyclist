@@ -124,7 +124,7 @@ let symex_assign_rule =
   mk_symex rl
 
 let find_pto_on f e =
-  Ptos.find (fun (l, _) -> Heap.equates f e l) f.SH.ptos
+  Ptos.find_suchthat (fun (l, _) -> Heap.equates f e l) f.SH.ptos
 
 let symex_load_rule =
   let rl seq =

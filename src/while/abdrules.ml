@@ -99,7 +99,7 @@ let inline defs =
       let first_unfold f =
         try
           let pred =
-            Tpreds.find
+            Tpreds.find_suchthat
               (fun (_, (h'', _)) -> Predsym.equal h h'')
               f.Heap.inds
           in
@@ -834,6 +834,6 @@ let rules =
         (* Proof_tacs.then_tac                                           *)
         (*   abd_segment                                                 *)
         (* 	(Proof_tacs.or_tac [ifwhile_tac; gen_ifwhile_tac]); *)
-        
+
         (* cut_backlink_tac                                               *)
          ] ]

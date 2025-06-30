@@ -283,7 +283,7 @@ let pto_intro_rule =
     try
       let (cs, l), (cs', r) = Seq.dest seq in
       let ((rx, rys) as p) =
-        Ptos.find
+        Ptos.find_suchthat
           (fun (w, _) -> Option.is_some (Heap.find_lval w l))
           r.SH.ptos
       in

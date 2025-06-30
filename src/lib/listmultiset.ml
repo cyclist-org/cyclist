@@ -106,11 +106,33 @@ module Make (T : Utilsigs.BasicType) = struct
 
   let weave = Blist.weave
 
+  let find_suchthat = find
+
+  let find_suchthat_opt = find_opt
+
+  let rec find_opt x =
+    function
+    | [] ->
+      None
+    | x'::xs ->
+      match T.compare x x' with
+      | 0 ->
+        Some x'
+      | _ ->
+        find_opt x xs
+
+  let find x xs =
+    match (find_opt x xs) with
+    | None ->
+      raise Not_found
+    | Some x ->
+      x
+
   let rec find_map f = function
     | [] -> None
     | x :: xs -> ( match f x with None -> find_map f xs | r -> r )
 
-  let find_opt f xs = find_map (fun x -> if f x then Some x else None) xs
+  let count p s = fold (fun x n -> if (p x) then n + 1 else n) s 0
 
   let rec subsets xs =
     if is_empty xs then [empty]
