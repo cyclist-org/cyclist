@@ -138,6 +138,7 @@ module Make (Seq : Sequent.S) = struct
     let nodes =
       L.filter
         (fun (idx, n) ->
+          (* TODO: Surely this should be equal_upto_tags? *)
           Seq.equal seq (Node.get_seq n) && not (Int.equal idx srcidx) )
         (Proof.to_list prf)
     in
