@@ -1389,6 +1389,8 @@ let check_proof ?(init=0) ?(minimize) prf =
     if (Int.Map.is_empty prf') then
       true
     else
+      (* TODO: We should extract the strongly connected components of the proof
+               and test/cache these individually *)
       let () =
         if not (valid prf' init) then (
           pp Format.std_formatter prf' ;
