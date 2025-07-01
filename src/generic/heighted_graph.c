@@ -39,12 +39,12 @@
 //=============================================================
 // N.B. These MUST match the corresponding constants in the OCaml code
 //      Look in soundcheck.ml
-const int Heighted_graph::FAIL_FAST        = 0b0000000001;
-const int Heighted_graph::USE_SCC_CHECK    = 0b0000000010;
-const int Heighted_graph::USE_IDEMPOTENCE  = 0b0000000100;
-const int Heighted_graph::USE_MINIMALITY   = 0b0000001000;
+const int Heighted_graph::FAIL_FAST              = 0b0000000001;
+const int Heighted_graph::USE_TRANSITIVE_LOOPING = 0b0000000010;
+const int Heighted_graph::USE_IDEMPOTENCE        = 0b0000000100;
+const int Heighted_graph::USE_MINIMALITY         = 0b0000001000;
 
-const int Heighted_graph::PRINT_CCL        = 0b0000010000;
+const int Heighted_graph::PRINT_CCL              = 0b0000010000;
 
 //=============================================================
 // Constructors / Destructor
@@ -1064,7 +1064,7 @@ int Heighted_graph::parse_flags(const std::string flags_s) {
     for (char c : flags_s) {
         switch (c) {
             case 'f': flags |= FAIL_FAST; break;
-            case 's': flags |= USE_SCC_CHECK; break;
+            case 's': flags |= USE_TRANSITIVE_LOOPING; break;
             case 'i': flags |= USE_IDEMPOTENCE; break;
             case 'm': flags |= USE_MINIMALITY; break;
             case 'p': flags |= PRINT_CCL; break;
@@ -1135,7 +1135,7 @@ void Heighted_graph::print_statistics(void) {
 
 void Heighted_graph::print_flags(int flags) {
     if ((flags & FAIL_FAST) != 0) std::cout << "FAIL_FAST" << std::endl;
-    if ((flags & USE_SCC_CHECK) != 0) std::cout << "USE_SCC_CHECK" << std::endl;
+    if ((flags & USE_TRANSITIVE_LOOPING) != 0) std::cout << "USE_TRANSITIVE_LOOPING" << std::endl;
     if ((flags & USE_IDEMPOTENCE) != 0) std::cout << "USE_IDEMPOTENCE" << std::endl;
     if ((flags & USE_MINIMALITY) != 0) std::cout << "USE_MINIMALITY" << std::endl;
 }
@@ -1339,14 +1339,14 @@ bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts, bool* shoul
     this->flags = opts;
 
     // if ((opts & FAIL_FAST) != 0) std::cout << "Fail Fast\n";
-    // if ((opts & USE_SCC_CHECK) != 0) std::cout << "Use SCC Check\n";
+    // if ((opts & USE_TRANSITIVE_LOOPING) != 0) std::cout << "Use Transitive Looping\n";
     // if ((opts & USE_IDEMPOTENCE) != 0) std::cout << "Use Idempotence\n";
     // if ((opts & USE_MINIMALITY) != 0) std::cout << "Use Minimality\n";
 
     // We cannot combine the idempotence and minimality optimisations.
     assert(((opts & USE_IDEMPOTENCE) == 0) || ((opts & USE_MINIMALITY) == 0));
     // It doesn't make sense to combine the idempotence and the SCC-based loop check
-    assert(((opts & USE_IDEMPOTENCE) == 0) || ((opts & USE_SCC_CHECK) == 0));
+    assert(((opts & USE_IDEMPOTENCE) == 0) || ((opts & USE_TRANSITIVE_LOOPING) == 0));
 
     /* N.B. Initially, we though that it is useless to combine the fast-fail and
             minimality optimisations, since the point of the minimality
@@ -1903,7 +1903,7 @@ bool Heighted_graph::check_self_loop(Sloped_relation& R, int opts) {
 
     bool result = false;
 
-    if ((opts & USE_SCC_CHECK) != 0) {
+    if ((opts & USE_TRANSITIVE_LOOPING) != 0) {
         result = R.has_downward_SCC();
     } else {
         // Compute R composed with R if using the idempotent method
@@ -1993,7 +1993,7 @@ bool Heighted_graph::fwk_check(int opts, bool* should_halt) {
     // We cannot combine the idempotence and minimality optimisations.
     assert(((opts & USE_IDEMPOTENCE) == 0) || ((opts & USE_MINIMALITY) == 0));
     // It doesn't make sense to combine the idempotence and the SCC-based loop check
-    assert(((opts & USE_IDEMPOTENCE) == 0) || ((opts & USE_SCC_CHECK) == 0));
+    assert(((opts & USE_IDEMPOTENCE) == 0) || ((opts & USE_TRANSITIVE_LOOPING) == 0));
 
     // Local copy of number of actual nodes in the graph, to avoid some derefences
     int num_nodes = this->num_nodes();

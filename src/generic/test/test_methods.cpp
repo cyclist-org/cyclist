@@ -62,7 +62,7 @@ int main(int argc, char **argv)
                 Heighted_graph hg = Heighted_graph(graph["Node"].size());
                 parse_from_json(graph, hg);
 
-                int flags = Heighted_graph::FAIL_FAST | Heighted_graph::USE_MINIMALITY | Heighted_graph::USE_SCC_CHECK;
+                int flags = Heighted_graph::FAIL_FAST | Heighted_graph::USE_MINIMALITY | Heighted_graph::USE_TRANSITIVE_LOOPING;
 
                 bool is_sound = hg.order_reduced_check(Heighted_graph::NODE_ORDER::GIVEN_ORDER, flags);
                 TraceManifoldCriterion tm(&hg);

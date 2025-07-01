@@ -2,7 +2,7 @@ open Lib
 open Parsers
 
 open MParser
-open   MParser_RE
+open MParser_RE
 
 type soundness_method =
   | RELATIONAL_OCAML
@@ -13,12 +13,14 @@ type soundness_method =
   | SLA
   | CYCLONE
 
-let soundness_method = ref RELATIONAL_OCAML
+let soundness_method = ref ORTL_CPP
 let use_legacy () =
   soundness_method := SPOT_LEGACY
-let use_ortl () =
+let use_ocaml () =
+  soundness_method := RELATIONAL_OCAML
+let use_fwk_order_reduced () =
   soundness_method := ORTL_CPP
-let use_fwk () =
+let use_fwk_full () =
   soundness_method := FWK_CPP
 let use_vla () =
   soundness_method := VLA
@@ -26,6 +28,22 @@ let use_sla () =
   soundness_method := SLA
 let use_cyclone () =
   soundness_method := CYCLONE
+let inf_desc_opts =
+  let options = [
+    ("ocaml", RELATIONAL_OCAML) ;
+    ("legacy", SPOT_LEGACY) ;
+    ("fwk-full", FWK_CPP) ;
+    ("fwk-or", ORTL_CPP) ;
+    ("vla", VLA) ;
+    ("sla", SLA) ;
+    ("cyclone", CYCLONE) ;
+  ] in
+  let select opt =
+    let opt = List.assoc opt options in
+    soundness_method := opt
+  in
+  Arg.Symbol (List.map fst options, select)
+
 
 let node_order = ref 0
 let set_node_order order =
@@ -656,16 +674,17 @@ type repr_t =
 
 let repr = ref NODE_LIST
 
-let set_repr =
-  function
-  | "node" ->
-    repr := NODE_LIST
-  | "edge" ->
-    repr := EDGE_LIST
-  | "json" ->
-    repr := JSON
-  | _ ->
-    invalid_arg "Soundcheck.set_repr"
+let repr_opts =
+  let options = [
+    ("node", NODE_LIST) ;
+    ("edge", EDGE_LIST) ;
+    ("json", JSON) ;
+  ] in
+  let select opt =
+    let opt = List.assoc opt options in
+    repr := opt
+  in
+  Arg.Symbol (List.map fst options, select)
 
 let pp fmt prf =
   match !repr with
@@ -1178,8 +1197,6 @@ module RelationalCheck = struct
     external vla_automata_check : unit -> bool = "vla_automata_check"
     external cyclone_check: int -> int -> bool = "cyclone_check"
 
-    (* external sd_check : unit -> bool = "sd_check" *)
-    (* external xsd_check : unit -> bool = "xsd_check" *)
     external print_stats : unit -> unit = "print_statistics"
 
     (* Flags for applying different optimisations in the C++ code
@@ -1187,38 +1204,47 @@ module RelationalCheck = struct
        Check heighted_graph.c
     *)
     let flag_fail_fast = 0b0001
-    let flag_use_scc_check = 0b0010
-    let flag_use_idempotence = 0b0100
     let flag_use_minimality = 0b1000
+    (* Invariant: flag_transitive_loop_check XOR flag_idempotent_loop_check *)
+    let flag_transitive_loop_check = 0b0010
+    let flag_idempotent_loop_check = 0b0100
 
-    let opts = ref 0
+    let opts =
+      ref
+        (flag_fail_fast lor flag_transitive_loop_check lor flag_use_minimality)
     let do_stats = ref false
 
-    let fail_fast () =
-      opts := !opts lor flag_fail_fast
-    let use_scc_check () =
-      if not (Int.equal (!opts land flag_use_idempotence) 0) then
-        prerr_endline
-          "Cannot use both idempotence and SCC-based loop check - ignoring SCC-based loop check!"
+    let fail_fast b =
+      if b then
+        opts := !opts lor flag_fail_fast
       else
-        opts := !opts lor flag_use_scc_check
-    let use_idempotence () =
-      let use_min = not (Int.equal (!opts land flag_use_minimality) 0) in
-      let use_scc = not (Int.equal (!opts land flag_use_scc_check) 0) in
-      if use_min then
-          prerr_endline
-            "Cannot use both idempotence and minimality - ignoring idempotence!" ;
-      if use_scc then
-        prerr_endline
-          "Cannot use both idempotence and SCC-based loop check - ignoring idempotence!" ;
-      if (not use_min) && (not use_scc) then
-        opts := !opts lor flag_use_idempotence
-    let use_minimality () =
-      if not (Int.equal (!opts land flag_use_idempotence) 0) then
-        prerr_endline
-          "Cannot use both minimality and idempotence - ignoring minimality!"
+        opts := !opts land (lnot flag_fail_fast)
+    let use_minimality b =
+      if (not b) then
+        opts := !opts land (lnot flag_use_minimality)
+      else if (Int.equal (!opts land flag_idempotent_loop_check) 0) then
+        invalid_arg
+          "Cannot use minimality optimisation with idempotent loop check!"
       else
         opts := !opts lor flag_use_minimality
+    let use_transitive_loop_check () =
+      (* If idempotent looping flag is active,
+         replace it with transitive looping and set minimality flag *)
+      if (Int.equal (!opts land flag_idempotent_loop_check) 0) then
+        begin
+          opts := !opts land (lnot flag_idempotent_loop_check) ;
+          opts := !opts lor flag_transitive_loop_check lor flag_use_minimality
+        end
+      (* Otherwise, no need to do anything as transitive looping flag must
+         already have been set; we leave other flags as they are. *)
+    let use_idempotent_loop_check () =
+      begin
+        (* Unset transitive loop check and minimality flags *)
+        let to_unset = flag_transitive_loop_check lor flag_use_minimality in
+        opts := !opts land (lnot to_unset) ;
+        (* Set the idempotent loop check flag *)
+        opts := !opts lor flag_idempotent_loop_check
+      end
 
     let check_proof p =
       let process_succ n (n', tps, prog) =
@@ -1242,7 +1268,6 @@ module RelationalCheck = struct
       Int.Map.iter add_node_ p ;
       Int.Map.iter add_heights p ;
       Int.Map.iter add_edges p ;
-      (* debug (fun () -> "Built height graph") ; *)
       let retval =
         match !soundness_method with
         | ORTL_CPP ->
@@ -1258,8 +1283,6 @@ module RelationalCheck = struct
         | _ ->
           failwith "Unexpected soundness check method!" in
       if retval then Stats.MC.accept () else Stats.MC.reject () ;
-      (* debug (fun () -> "Composition Closure:\n") ; *)
-      (* if !do_debug then print_ccl() ; *)
       if !do_stats then print_stats ();
       destroy_hgraph () ;
       debug (fun () ->
@@ -1271,10 +1294,10 @@ module RelationalCheck = struct
 end
 
 include (RelationalCheck.Ext : sig
-  val fail_fast : unit -> unit
-  val use_scc_check : unit -> unit
-  val use_idempotence : unit -> unit
-  val use_minimality : unit -> unit
+  val fail_fast : bool -> unit
+  val use_minimality : bool -> unit
+  val use_transitive_loop_check : unit -> unit
+  val use_idempotent_loop_check : unit -> unit
   val do_stats : bool ref
 end)
 
@@ -1306,28 +1329,38 @@ let minimize_proofs = ref true
 
 let arg_opts =
   [
-    ("-legacy", Arg.Unit use_legacy, ": use legacy Spot (VLA) encoding to verify pre-proof validity") ;
-    ("-VLA", Arg.Unit use_vla, ": use Spot (vertex language automata construction) to verify pre-proof validity") ;
-    ("-SLA", Arg.Unit use_sla, ": use Spot (slope language automata construction) to verify pre-proof validity") ;
-    ("-OR", Arg.Unit use_ortl, ": use external C++ order-reduced relational check to verify pre-proof validity") ;
-    ("-FWK", Arg.Unit use_fwk, ": use external C++ Floyd-Warshall-Kleene relational check to verify pre-proof validity") ;
-    ("-CY", Arg.Unit use_cyclone, ": use Cyclone (combines complete and incomplete methods) to verify pre-proof validity") ;
+    ("--inf-desc", inf_desc_opts,
+      ": specify the method to be used for the Infinite Descent validity check \
+      (default is order reduced Floyd-Warshall-Kleene)") ;
     ("-ord", Arg.Int set_node_order,
-        "<int>: specify which node order to use in the order-reduced relational check.\n" ^
-        "\t0 - Natural Ordering\n" ^
-        "\t1 - Out-degree, In-degree (lexicographically) ascending\n" ^
-        "\t2 - Out-degree, In-degree (lexicographically) descending") ;
-    ("-ff", Arg.Unit fail_fast, ": use fast fail in relation-based validty check") ;
-    ("-scc", Arg.Unit use_scc_check, ": use SCC check in relation-based validity checks") ;
-    ("-idem", Arg.Unit use_idempotence, ": use idempotency optimisation in relation-based validity checks") ;
-    ("-min", Arg.Unit use_minimality, ": use minimality optimisation in relation-based validity checks") ;
-    ("--unminimized-proofs", Arg.Clear minimize_proofs, ": keep proofs unminimized") ;
-    ("-rel-stats", Arg.Set do_stats, ": print out profiling stats for the relation-based validity check") ;
-    ("-print-paut", Arg.Set LegacyCheck.print_paut, ": print the proof automaton in HOA format" ) ;
-    ("-print-taut", Arg.Set LegacyCheck.print_taut, ": print the trace automaton in HOA format" ) ;
-    ("--dump-graphs", Arg.Set dump_graphs, ": dump abstract proof graphs to file") ;
-    ("--graph-dir", Arg.Set_string graph_dump_dir, ": directory for storing abstract proof graphs (default: current directory)") ;
-    ("-R", Arg.Symbol (["node";"edge";"json"], set_repr), ": the concrete representation to use for abstract proof graphs (node list [default], edge list, or JSON)") ;
+      "<int>: specify which node order to use in the order-reduced relational \
+      check.\n\
+      \t0 - Natural Ordering\n\
+      \t1 - Out-degree, In-degree (lexicographically) ascending\n\
+      \t2 - Out-degree, In-degree (lexicographically) descending") ;
+    ("--no-fast-fail", Arg.Unit (fun () -> fail_fast false),
+      ": do not use fast fail in relation-based infinite desc checks") ;
+    ("--no-minimality", Arg.Unit (fun () -> use_minimality false),
+      ": do not use minimality optimisation in relation-based infinite descent \
+      checks") ;
+    ("--idempotent-loop-check", Arg.Unit use_idempotent_loop_check,
+      ": use idempotent loop check instead of transitive loop check in \
+      relation-based infinite descent checks") ;
+    ("--unminimized-proofs", Arg.Clear minimize_proofs,
+      ": keep proofs unminimized") ;
+    ("--rel-stats", Arg.Set do_stats,
+      ": print out profiling stats for the relation-based validity check") ;
+    ("--print-paut", Arg.Set LegacyCheck.print_paut,
+      ": print the proof automaton in HOA format" ) ;
+    ("--print-taut", Arg.Set LegacyCheck.print_taut,
+      ": print the trace automaton in HOA format" ) ;
+    ("--dump-graphs", Arg.Set dump_graphs,
+      ": dump abstract proof graphs to file") ;
+    ("--graph-dir", Arg.Set_string graph_dump_dir,
+      ": directory for storing abstract proof graphs (default: current directory)") ;
+    ("-R", repr_opts,
+      ": the concrete representation to use for abstract proof graphs \
+      (node list [default], edge list, or JSON)") ;
   ]
 
 module CheckCache = Hashtbl

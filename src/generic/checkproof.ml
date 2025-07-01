@@ -23,7 +23,9 @@ let speclist =
   ]
 
 let usage =
-  "usage: " ^ Sys.argv.(0) ^ " [-d] [-s] [-R (node|edge|json)] [ --allow-comments | (-f <file>)* ] [ -VLA | -SLA | -legacy | -OR | -FWK [-ff][-scc][-idem][-min][-rel-stats] ]"
+  "usage: " ^ Sys.argv.(0) ^ " [-d] [-s] [-R ( node | edge | json )] \
+  [--inf-desc ( vla | sla | fwk-full | fwk-or | cyclone )] \
+  [--allow-comments | (-f <file>)*]"
 
 let () =
   Arg.parse speclist (fun _ -> ()) usage

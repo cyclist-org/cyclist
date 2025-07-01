@@ -132,7 +132,7 @@ Pair<int, std::string> measure_order_reduced_runtime(Heighted_graph &hg, int run
     int duration_us = 0;
     for (int i = 0; i < runs_repetitions; i++)
     {
-    int flags = Heighted_graph::FAIL_FAST | Heighted_graph::USE_MINIMALITY | Heighted_graph::USE_SCC_CHECK;
+    int flags = Heighted_graph::FAIL_FAST | Heighted_graph::USE_MINIMALITY | Heighted_graph::USE_TRANSITIVE_LOOPING;
     auto start = std::chrono::system_clock::now();
     bool result = hg.order_reduced_check(Heighted_graph::NODE_ORDER::GIVEN_ORDER, flags);
     auto end = std::chrono::system_clock::now();
@@ -211,7 +211,7 @@ int main(int argc, char **argv)
 
                     // printf("Graph file name: %s\n", entry.path().filename().c_str());
 
-                    int flags = Heighted_graph::FAIL_FAST | Heighted_graph::USE_MINIMALITY | Heighted_graph::USE_SCC_CHECK;
+                    int flags = Heighted_graph::FAIL_FAST | Heighted_graph::USE_MINIMALITY | Heighted_graph::USE_TRANSITIVE_LOOPING;
 
                     // printf("Amount of nodes: %d\n", hg.num_nodes());
                     // printf("Amount of edges: %d\n", hg.num_edges());

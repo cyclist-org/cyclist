@@ -127,7 +127,7 @@ public:
 
     // Option flags
     static const int FAIL_FAST;
-    static const int USE_SCC_CHECK;
+    static const int USE_TRANSITIVE_LOOPING;
     static const int USE_IDEMPOTENCE;
     static const int USE_MINIMALITY;
 

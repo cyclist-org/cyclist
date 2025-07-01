@@ -8,7 +8,10 @@ let speclist =
   ; ("-s", Arg.Set Stats.do_statistics, ": print statistics") ]
 
 let usage =
-  "usage: " ^ Sys.argv.(0) ^ " [-d] [-s] [-spot|-rel-ext|-SD|-XSD [-ff][-scc][-idem][-min][-rel-stats]] <param_1> ... <param_n>"
+  "usage: " ^
+    Sys.argv.(0) ^
+    " [-d] [-s] [--inf-desc ( vla | sla | fwk-full | fwk-or | cyclone )] \
+    <param_1> ... <param_n>"
 
 let params = ref []
 

@@ -36,34 +36,51 @@ val build_proof :
          # a list of the progressing tag transitions
  *)
 
-val use_legacy : unit -> unit
-(** Flag to indicate that the legacy encoding using Spot model checker should be
-    used to verify the trace condition for proofs. *)
 val use_vla : unit -> unit
-(** Flag to indicate whether the Spot model checker should be used to verify the
-    trace condition for proofs, using the vertex-language encoding. *)
+(** Use the Spot model checker to verify the infinite descent trace condition
+    for proofs, with the vertex-language encoding. *)
 val use_sla : unit -> unit
-(** Flag to indicate whether the Spot model checker should be used to verify the
-    trace condition for proofs, using the slope-language encoding. *)
+(** Use the Spot model checker to verify the infinite descent trace condition
+    for proofs, with the slope-language encoding. *)
+val use_fwk_order_reduced : unit -> unit
+(** Use the C++ order reduced Floyd-Warshall-Kleene method to verify the
+    infinite descent trace condition for proofs. This is the default method. *)
+val use_fwk_full : unit -> unit
+(** Use the C++ standard Floyd-Warshall-Kleene method to verify the infinite
+    descent trace condition for proofs. *)
+val use_ocaml : unit -> unit
+(** Use the OCaml implementation of the infinite descent check to verify the
+    trace condition for proofs. *)
+val use_legacy : unit -> unit
+(** Use the Spot model checker to verify the infinite descent trace condition
+    for proofs, with the legacy vertex-language encoding. *)
 
-val use_ortl : unit -> unit
-(** Flag to indicate whether trace condition check should be done by the
-    order-reduced relational method using external C++ code. *)
 val set_node_order : int -> unit
-(** Specify which node order to use in the order-reduced relational method. *)
+(** Specify which node order to use in the order-reduced relational method:
+      0 - Natural Ordering
+      1 - Out-degree, In-degree (lexicographically) ascending
+      2 - Out-degree, In-degree (lexicographically) descending
+*)
 
-val use_fwk : unit -> unit
-(** Flag to indicate whether trace condition check should be done by the
-    Floyd-Warshall-Kleene relational method using external C++ code. *)
-
-val fail_fast : unit -> unit
-(** Set fail_fast flag for C++ relation-based trace condition check *)
-val use_scc_check : unit -> unit
-(** Set use_scc_check flag for C++ relation-based trace condition check *)
-val use_idempotence : unit -> unit
-(** Set use_idempotence flag for C++ relation-based trace condition check *)
-val use_minimality : unit -> unit
-(** Set use_minimality flag for C++ relation-based trace condition check *)
+val fail_fast : bool -> unit
+(** Specify whether the Floyd-Warshall-Kleene infinite descent checks should
+    eagerly check for failure or not.
+    Default is [true]. *)
+val use_minimality : bool -> unit
+(** Specify whether the Floyd-Warshall-Kleene infinite descent checks should
+    use the subsumption-based minimality optimisation or not.
+    This optimisation is enabled by default.
+    Note that this optimisation is not compatible with using the idempotent
+    looping check, so if this is the selected loop check method then calling
+    [use_minimality true] will raise an [Invalid_argument] exception. *)
+val use_transitive_loop_check : unit -> unit
+(** Specify whether the Floyd-Warshall-Kleene infinite descent checks should
+    use the transitive looping check. This is the default. *)
+val use_idempotent_loop_check : unit -> unit
+(** Specify whether the Floyd-Warshall-Kleene infinite descent checks should
+    use the idempotent looping check. This is not compatible with the
+    subsumption-based minimality optimisation, and so calling this function
+    will disable this optimisation. *)
 
 val arg_opts : (string * Arg.spec * string) list
 (* Specification of command-line options applying to soundness check *)

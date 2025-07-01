@@ -8,11 +8,6 @@ module Frontend = Frontend.Make(Prover)
 let () =
   Tags.alphabet := Lib.VarManager.arabic_digits
 
-let () = Soundcheck.use_ortl ()
-let () = Soundcheck.use_scc_check ()
-let () = Soundcheck.use_minimality ()
-let () = Soundcheck.fail_fast ()
-
 let prove = Frontend.idfs !Rules.axioms !Rules.rules
 
 let run_test seq =
