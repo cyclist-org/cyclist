@@ -1190,7 +1190,6 @@ module RelationalCheck = struct
     let flag_use_scc_check = 0b0010
     let flag_use_idempotence = 0b0100
     let flag_use_minimality = 0b1000
-    let flag_compute_full_ccl = 0b10000
 
     let opts = ref 0
     let do_stats = ref false
