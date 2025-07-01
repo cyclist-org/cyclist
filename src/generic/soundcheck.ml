@@ -1351,9 +1351,11 @@ let arg_opts =
     ("--rel-stats", Arg.Set do_stats,
       ": print out profiling stats for the relation-based validity check") ;
     ("--print-paut", Arg.Set LegacyCheck.print_paut,
-      ": print the proof automaton in HOA format" ) ;
+      ": print the proof automaton in HOA format \
+      (only when using the legacy infinite descent check)" ) ;
     ("--print-taut", Arg.Set LegacyCheck.print_taut,
-      ": print the trace automaton in HOA format" ) ;
+      ": print the trace automaton in HOA format \
+      (only when using the legacy infinite descent check)" ) ;
     ("--dump-graphs", Arg.Set dump_graphs,
       ": dump abstract proof graphs to file") ;
     ("--graph-dir", Arg.Set_string graph_dump_dir,
