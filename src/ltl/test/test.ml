@@ -87,7 +87,14 @@ run_test
   (Seq.singleton
     (ev p || alw not_p))
 
-(* ;;
+;;
+
+(* Theorem *)
+run_test
+  (Seq.singleton
+    (ev (alw p) || ev (alw not_p) || alw ((ev p) && alw (ev not_p))))
+
+    (* ;;
 
 run_test
   (Seq.singleton
