@@ -9,8 +9,3 @@
  (public_name ltl_prove)
  (libraries lib generic ltl)
  (modules prove))
-
-(test
- (name test)
- (libraries ltl generic)
- (modules test))
