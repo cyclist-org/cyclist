@@ -15,8 +15,9 @@ fi
 
 pwd
 
-opts=("-VLA" "-legacy" "-SLA" "-FWK -scc -ff" "-FWK -min -scc -ff" "-OR -scc -ff -ord 0" "-OR -scc -ff -ord 1" "-OR -scc -ff -ord 2" "-OR -min -scc -ff -ord 0" "-OR -min -scc -ff -ord 1" "-OR -min -scc -ff -ord 2")
-opts=("-OR")
+opts=("--inf-desc vla" "--inf-desc legacy" "--inf-desc sla" "--inf-desc fwk-full --no-minimality" "--inf-desc fwk-full" "--inf-desc fwk-or --no-minimality --ord 0" "--inf-desc fwk-or --no-minimality --ord 1" "--inf-desc fwk-or --no-minimality --ord 2" "--inf-desc fwk-or --ord 0" "--inf-desc fwk-or --ord 1" "--inf-desc fwk-or --ord 2")
+opts=("--inf-desc fwk-or")
+
 
 for i in ${!opts[@]}; do
   opt=${opts[i]}

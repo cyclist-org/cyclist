@@ -1332,7 +1332,7 @@ let arg_opts =
     ("--inf-desc", inf_desc_opts,
       ": specify the method to be used for the Infinite Descent validity check \
       (default is order reduced Floyd-Warshall-Kleene)") ;
-    ("-ord", Arg.Int set_node_order,
+    ("--ord", Arg.Int set_node_order,
       "<int>: specify which node order to use in the order-reduced relational \
       check.\n\
       \t0 - Natural Ordering\n\
