@@ -7,7 +7,7 @@ module type S = sig
   (** Proof type. Invariants are:
       - Graph (all indices point to existing nodes).
       - Non-empty.
-      - Rooted at 0.
+      - Tree rooted at 0.
       - Connected.
       - Leaves are open nodes, axioms or backlinks. *)
   type t
@@ -63,6 +63,7 @@ module type S = sig
   val num_backlinks : t -> int
 
   (* val mem : int -> t -> bool *)
+
   val fresh_idx : t -> int
 
   val fresh_idxs : 'a list -> t -> int list
@@ -82,8 +83,16 @@ module type S = sig
   (** Output functions. *)
 
   val pp : Format.formatter -> t -> unit
+  (** Pretty-print the proof. *)
 
   val to_string : t -> string
+  (** Return a string representation of the proof *)
+
+  val pp_dot : Format.formatter -> t -> unit
+  (** Format a representation of the proof in the DOT graph format. *)
+
+  val to_dot_string : t -> string
+  (** Return a string containing a DOT representation of the proof. *)
 end
 
 module Make (Seq : Sequent.S) :

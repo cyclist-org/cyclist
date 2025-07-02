@@ -12,7 +12,9 @@ public:
 	const Vertex vertex;
 	const Tag tag;
 
-	TraceState(const Vertex & v, const Tag & t) : vertex(v), tag(t) {}
+	TraceState(const Vertex & v, const Tag & t) : vertex(v), tag(t) {
+		assert(t != NO_TAG || v == NO_VERTEX);
+	}
 
 	bool initial() const { return (vertex==NO_VERTEX) && (tag==NO_TAG); }
 

@@ -74,7 +74,7 @@ let subsumed_upto_tags ?(total = true) eqs inds inds' =
       let uinds = Pred.MSet.remove uind uinds in
       let uind = Pred.norm eqs uind in
       match
-        Pred.MSet.find_opt
+        Pred.MSet.find_suchthat_opt
           (fun uind' -> Pred.equal uind (Pred.norm eqs uind'))
           uinds'
       with
@@ -91,7 +91,7 @@ let rec subsumed ?(total = true) eqs inds inds' =
     let inds = remove ind inds in
     let ind = Tpred.norm eqs ind in
     match
-      find_opt (fun ind' -> Tpred.equal ind (Tpred.norm eqs ind')) inds'
+      find_suchthat_opt (fun ind' -> Tpred.equal ind (Tpred.norm eqs ind')) inds'
     with
     | None -> false
     | Some ind' -> subsumed ~total eqs inds (remove ind' inds')

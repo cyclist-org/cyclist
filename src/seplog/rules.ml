@@ -9,16 +9,22 @@ module Proof = Proof.Make (Seq)
 module Rule = Proofrule.Make (Seq)
 module Seqtactics = Seqtactics.Make (Seq)
 
+include (Rule : sig
+  val set_default_select_f : int -> unit
+  val default_select_f_descr : ?line_prefix:string -> unit -> string
+end)
+
 type t_lemma_level = NO_LEMMAS | ONLY_WITH_PREDICATES | NON_EMPTY | ANY
 
 let lemma_equal lemma lemma' =
   match (lemma, lemma') with
   | NO_LEMMAS, NO_LEMMAS
-   |ONLY_WITH_PREDICATES, ONLY_WITH_PREDICATES
-   |NON_EMPTY, NON_EMPTY
-   |ANY, ANY ->
-      true
-  | _, _ -> false
+  | ONLY_WITH_PREDICATES, ONLY_WITH_PREDICATES
+  | NON_EMPTY, NON_EMPTY
+  | ANY, ANY ->
+    true
+  | _, _ ->
+    false
 
 let lemma_level = ref ONLY_WITH_PREDICATES
 
@@ -33,8 +39,7 @@ let set_lemma_level level =
 
 let lemma_option_descr_str ?(line_prefix = "\t") () =
   let default_str level =
-    if lemma_equal !lemma_level level then " (default)" else ""
-  in
+    if lemma_equal !lemma_level level then " (default)" else "" in
   line_prefix ^ "0 -- do not attempt to apply any lemmas"
   ^ default_str NO_LEMMAS ^ "\n" ^ line_prefix
   ^ "1 -- only apply lemmas containing predicate instances"
@@ -278,7 +283,7 @@ let pto_intro_rule =
     try
       let (cs, l), (cs', r) = Seq.dest seq in
       let ((rx, rys) as p) =
-        Ptos.find
+        Ptos.find_suchthat
           (fun (w, _) -> Option.is_some (Heap.find_lval w l))
           r.SH.ptos
       in
@@ -976,7 +981,7 @@ let cmp_taggedrule r r' =
 let dobackl idx prf =
   let ((src_lhs, src_rhs) as src_seq) = Proof.get_seq idx prf in
   let matches = matches src_seq in
-  let targets = Rule.all_nodes idx prf in
+  let targets = !Rule.default_select_f idx prf in
   let apps =
     Blist.bind
       (fun idx' -> Blist.map (Pair.mk idx') (matches (Proof.get_seq idx' prf)))

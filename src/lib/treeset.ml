@@ -18,31 +18,21 @@ module Make (T : Utilsigs.BasicType) :
 
   let union_of_list l = Blist.fold_left (fun s i -> union s i) empty l
 
-  exception Found of elt
+  let find_suchthat_opt f s =
+    Seq.find f (to_seq s)
 
-  let find f s =
-    try
-      iter (fun x -> if f x then raise (Found x)) s ;
+  let find_suchthat f s =
+    match (find_suchthat_opt f s) with
+    | Some x ->
+      x
+    | None ->
       raise Not_found
-    with Found x -> x
-
-  exception FoundMap
 
   let find_map f s =
-    let elem = ref None in
-    try
-      iter
-        (fun e ->
-          match f e with
-          | None -> ()
-          | Some _ as r ->
-              elem := r ;
-              raise FoundMap )
-        s ;
-      None
-    with FoundMap -> !elem
+    Option.flatten
+      (Option.map f (find_suchthat_opt (fun x -> Option.is_some (f x)) s))
 
-  let find_opt f s = find_map (fun e -> if f e then Some e else None) s
+  let count p s = fold (fun x n -> if (p x) then n + 1 else n) s 0
 
   let to_list = elements
 
@@ -62,7 +52,11 @@ module Make (T : Utilsigs.BasicType) :
       xxs @ Blist.map (add x) xxs
 
   let del_first p s =
-    match find_opt p s with None -> s | Some x -> remove x s
+    match find_suchthat_opt p s with
+    | None ->
+      s
+    | Some x ->
+      remove x s
 
   let disjoint xs ys =
     let xs = to_list xs in

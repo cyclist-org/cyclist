@@ -41,7 +41,7 @@ let rec subsumed ?(total = true) eqs ptos ptos' =
     let ptos = remove pto ptos in
     let pto = Pto.norm eqs pto in
     match
-      find_opt (fun pto' -> Pto.equal pto (Pto.norm eqs pto')) ptos'
+      find_suchthat_opt (fun pto' -> Pto.equal pto (Pto.norm eqs pto')) ptos'
     with
     | None -> false
     | Some pto' -> subsumed ~total eqs ptos (remove pto' ptos')

@@ -127,7 +127,7 @@ module Make (Seq : Sequent.S) = struct
     | InfNode {seq; succs; tagpairs2} ->
         Soundcheck.mk_abs_node (Seq.tags seq) succs tagpairs2
     | BackNode {seq; succ; tagpairs} ->
-        Soundcheck.mk_abs_node (Seq.tags seq) [succ]
+        Soundcheck.mk_abs_node ~bud:true (Seq.tags seq) [succ]
           [(tagpairs, Tagpairs.empty)]
 
   let pp fmt = function

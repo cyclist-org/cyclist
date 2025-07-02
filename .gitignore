@@ -1,3 +1,5 @@
+# LaTeX files #
+###############
 *.aux
 examples/*.pdf
 *.backup
@@ -11,6 +13,7 @@ examples/mutant_CAV06
 examples/mutant_CAV06/*
 tests/mutant
 tests/mutant/*
+
 # Eclipse Files #
 #################
 .paths
@@ -18,7 +21,11 @@ tests/mutant/*
 .projectSettings
 .settings/
 
-# Ocaml Executables #
+# VSCode Files #
+################
+.vscode/
+
+# OCaml Executables #
 #####################
 *.native
 *.byte
@@ -33,3 +40,7 @@ _build/
 # Local temporal files on Gadi's working copy
 *[#]*
 *~
+
+# Heighted graphs files
+graphs/*
+src/generic/test/graphs

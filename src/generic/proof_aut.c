@@ -29,7 +29,9 @@ ProofAutomaton::ProofAutomaton(size_t max_vertices_log2) :
 	spot::twa(spot::make_bdd_dict()), Proof(max_vertices_log2) {
 	set_buchi();
 	this->dict_ = Proof::get_dict();
-	register_aps_from_dict();
+	for (auto binding : this->dict_->var_map) {
+		this->register_ap(binding.first.ap_name());
+	}
 }
 //------------------------------------------------------------------
 spot::twa_succ_iterator* ProofAutomaton::succ_iter(const spot::state* local_state) const {

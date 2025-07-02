@@ -1,0 +1,11 @@
+(library
+ (name ltl)
+ (public_name cyclist.ltl)
+ (libraries lib generic mparser)
+ (modules form seq rules))
+
+(executable
+ (name prove)
+ (public_name ltl_prove)
+ (libraries lib generic ltl)
+ (modules prove))

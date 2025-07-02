@@ -2,16 +2,21 @@
 
 (name cyclist)
 
-(authors 
+(authors
   "Nikos Gorogiannis <nikos.gorogiannis+www@gmail.com>"
   "Reuben Rowe <reuben.rowe@rhul.ac.uk>"
-  "Gadi Tellez Espinosa")
+  "Gadi Tellez Espinosa"
+  "Adham Jabarin"
+  "Matan Shaked")
 
-(maintainers 
+(maintainers
   "Nikos Gorogiannis <nikos.gorogiannis+www@gmail.com>"
   "Reuben Rowe <reuben.rowe@rhul.ac.uk>")
 
-(source (github ngorogiannis/cyclist))
+(license BSD-3-Clause)
+
+(source (github cyclist-org/cyclist))
+
 (homepage http://www.cyclist-prover.org/)
 
 (package

@@ -40,15 +40,27 @@ let rec but_last = function [_] | [] -> [] | x :: xs -> x :: but_last xs
 
 let range n xs = mapi (fun m _ -> m + n) xs
 
-let rec remove_nth n = function
-  | [] -> invalid_arg "Blist.remove_nth"
-  | y :: ys -> ( match n with 0 -> ys | _ -> y :: remove_nth (n - 1) ys )
+let remove_nth n l =
+  let rec remove_nth n l acc =
+    match l with
+    | [] -> invalid_arg "Blist.remove_nth"
+    | y :: ys -> 
+      begin match n with
+      | 0 -> rev_append acc ys
+      | _ -> remove_nth (n - 1) ys (y::acc)
+      end in
+  remove_nth n l []
 
-let replace_nth z n xs =
-  if Stdlib.( < ) n 0 then invalid_arg "Blist.replace_nth"
-  else
-    let f m y = if Stdlib.( = ) n m then z else y in
-    mapi f xs
+let replace_nth z n l =
+  let rec replace_nth n l acc =
+    match l with
+    | [] -> invalid_arg "Blist.replace_nth"
+    | x::xs ->
+      begin match n with
+      | 0 -> rev_append acc (z::xs)
+      | _ -> replace_nth (n-1) xs (x::acc)
+      end in
+  replace_nth n l []
 
 let rec take n l =
   match (l, n) with

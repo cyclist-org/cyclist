@@ -3,15 +3,27 @@
  (public_name cyclist.generic)
  (libraries lib)
  (modules
-   (:standard 
+   (:standard
       \ checkproof))
  (modules_without_implementation sequent)
  (foreign_stubs
   (language c)
-  (names proof proof_aut trace soundness)
+  (names
+    proof proof_aut trace legacy_soundness
+    types sloped_relation heighted_graph soundness
+    cyclone
+    criterion.process_based
+    directed_graph graph
+    criterion.fwk criterion.order_reduced
+    criterion.sla criterion.vla
+    criterion.flat_cycles criterion.flat_cycles.generalized
+    criterion.descending_unicycles
+    criterion.trace_manifold
+    criterion.sprenger_dam criterion.no_flat_extended_cycles
+    criterion.soundness)
   (flags :standard -xc++ -std=c++17 (:include c_flags.sexp))
   (include_dirs %{ocaml_where}/caml))
- (c_library_flags (:include c_library_flags.sexp) -lstdc++))
+ (c_library_flags (:include c_library_flags.sexp) -lpthread -lstdc++))
 
 (executable
  (name checkproof)

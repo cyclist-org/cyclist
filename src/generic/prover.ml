@@ -19,9 +19,7 @@ end
 
 module Make (Seq : Sequent.S) = struct
   module Proof = Proof.Make (Seq)
-  module Node = Proofnode.Make (Seq)
   module Rule = Proofrule.Make (Seq)
-  module Seqtactics = Seqtactics.Make (Seq)
 
   type proof_t = Proof.t
 
@@ -79,7 +77,7 @@ module Make (Seq : Sequent.S) = struct
   (*     goals : (int * int) list;                                                                 *)
   (*   }                                                                                           *)
   (* let mk_app p d g = { prf=p; depth=d; goals=g }                                                *)
-  
+
   (* type proof_state =                                                                            *)
   (*   {                                                                                           *)
   (*     seq_no : int ;                                                                            *)
@@ -87,15 +85,15 @@ module Make (Seq : Sequent.S) = struct
   (*     idx : int;                                                                                *)
   (*     apps : app_state L.t                                                                      *)
   (*   }                                                                                           *)
-  
+
   (* let state_seq_no = ref 0                                                                      *)
-  
+
   (* let mk_state par idx apps =                                                                   *)
   (*   {                                                                                           *)
   (*     seq_no = (incr state_seq_no; !state_seq_no);                                              *)
   (*     par=par; idx=idx; apps=apps                                                               *)
   (*   }                                                                                           *)
-  
+
   (* let pop_parents sn stack =                                                                    *)
   (*   let rec loop aux s = function                                                               *)
   (*     | [] -> Blist.rev aux                                                                     *)
@@ -105,7 +103,9 @@ module Make (Seq : Sequent.S) = struct
   (*         else                                                                                  *)
   (*           loop (p::aux) s ps in                                                               *)
   (*   loop [] sn stack                                                                            *)
-  
+
+  (* module Node = Proofnode.Make (Seq) *)
+
   (* let expand_proof_state par_seq_no app rule =                                                  *)
   (*   let () = assert (not (Proof.is_closed app.prf) && app.goals<>[]) in                         *)
   (*   (* idx is the goal being closed and goal_depth is its depth *)                              *)
@@ -126,7 +126,7 @@ module Make (Seq : Sequent.S) = struct
   (*     par_seq_no                                                                                *)
   (*     idx                                                                                       *)
   (*     newapps                                                                                   *)
-  
+
   (* let bfs maxbound ax rl seq =                                                                  *)
   (*   let rule =  Rule.first [ ax ; Rule.compose rl (Rule.attempt ax) ] in                        *)
   (*   let rec aux bound frontier stack =                                                          *)

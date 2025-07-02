@@ -27,12 +27,12 @@ module type OrderedContainer = sig
   (** Convert to a list of unique, sorted elements. *)
 
   val map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b) -> t -> 'a
-  (** [map_to add empty f set] converts every element of [set] using [f], 
+  (** [map_to add empty f set] converts every element of [set] using [f],
         and then folds over the new collection of elements using as starting
         value [empty] and folding operation [add]. *)
 
   val opt_map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b option) -> t -> 'a
-  (** [opt_map_to add empty f set] converts every element of [set] using [f], 
+  (** [opt_map_to add empty f set] converts every element of [set] using [f],
         and then folds over the elements of the new collection which are Some
         using as starting value [empty] and folding operation [add]. That is,
         it is equivalent to calling [map_to (Option.dest Fun.id add) empty f set]. *)
@@ -48,35 +48,37 @@ module type OrderedContainer = sig
     -> t
     -> 'a
     -> 'b
-  (** Weave combinator - used in the SL Model Checker. 
+  (** Weave combinator - used in the SL Model Checker.
         [weave split tie join xs acc]
-        is a generalised form of a fold - it takes as arguments three    
-        operations ([split], [tie], and [join]), a container [xs] to weave (i.e. fold) over, 
-        and an accumulator [acc]. Whereas a fold combines the previously accumulated     
-        value with the next value in the set to produce the new accumulated       
-        value, a weave uses its [split] argument to combine the next element in    
-        the set with the previously accumulated value to produce a *list* of new  
-        accumulated values - not just a single new value. Each new value in this   
-        list is then used as the accumulator for a distinct recursive call to the  
-        weave function - compared with a single recursive call for a fold. Thus,   
-        at this point, the weave produces a list of final values, which are then   
-        combined using the [join] function argument. Furthermore, in constrast to  
-        fold, the weave combinator treats the final element in the list in a       
+        is a generalised form of a fold - it takes as arguments three
+        operations ([split], [tie], and [join]), a container [xs] to weave (i.e. fold) over,
+        and an accumulator [acc]. Whereas a fold combines the previously accumulated
+        value with the next value in the set to produce the new accumulated
+        value, a weave uses its [split] argument to combine the next element in
+        the set with the previously accumulated value to produce a *list* of new
+        accumulated values - not just a single new value. Each new value in this
+        list is then used as the accumulator for a distinct recursive call to the
+        weave function - compared with a single recursive call for a fold. Thus,
+        at this point, the weave produces a list of final values, which are then
+        combined using the [join] function argument. Furthermore, in constrast to
+        fold, the weave combinator treats the final element in the list in a
         special way, producing only a single value using the [tie] function. *)
 
-  val find : (elt -> bool) -> t -> elt
-  (** [find p set] returns the first element of [set]
-        that satisfies the predicate [p].
-        Raise [Not_found] if there is no value that satisfies [p] in [set]. *)
+  val find_suchthat : (elt -> bool) -> t -> elt
+  (** [find_suchthat p set] returns the first element of [set] that satisfies
+      the predicate [p], or raises [Not_found] if there is no such value. *)
 
-  val find_opt : (elt -> bool) -> t -> elt option
-  (** [find_opt pred set] returns [Some x] for the first [x] in [set] such 
-        that [pred x = true], or [None]. *)
+  val find_suchthat_opt : (elt -> bool) -> t -> elt option
+  (** [find_suchthat_opt pred set] returns [Some x] for the first [x] in [set]
+      such that [pred x = true], or [None] if there is no such value. *)
 
   val find_map : (elt -> 'a option) -> t -> 'a option
-  (** Optimisation for finding and converting at the same time. [find_map f set]
-        will return [f x] for the first [x] in [set] such that [f x] is not [None], 
-        or [None] otherwise. *)
+  (** Optimisation for finding and converting at the same time.
+      [find_map f set] will return [f x] for the first [x] in [set] such that
+      [f x] is not [None], or [None] otherwise. *)
+
+  val count : (elt -> bool) -> t -> int
+  (** Counts the number of elements that satisfy the given predicate. *)
 
   val union_of_list : t list -> t
   (** Union a list of sets. *)
@@ -133,7 +135,7 @@ module type OrderedMap = sig
 
   val find_map : (key -> 'a -> bool) -> 'a t -> (key * 'a) option
   (** Optimisation for finding and converting at the same time. [find_map f map]
-        will return [f k v] for the first [k],[v] in [map] such that [f k v] is not [None], 
+        will return [f k v] for the first [k],[v] in [map] such that [f k v] is not [None],
         or [None] otherwise. *)
 
   val fixpoint : ('a -> 'a -> bool) -> ('a t -> 'a t) -> 'a t -> 'a t

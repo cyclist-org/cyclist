@@ -1,0 +1,1 @@
+Q4(nil,x2,x3,x4) |- list(x2) * list(x3) * list(x4)

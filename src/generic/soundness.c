@@ -1,133 +1,177 @@
 #include <cassert>
-#include <map>
-#include <spot/twaalgos/contains.hh>
-#include <spot/twaalgos/determinize.hh>
-#include <spot/twaalgos/dualize.hh>
-#include <spot/twaalgos/totgba.hh>
-#include <spot/twaalgos/copy.hh>
-#include <spot/twaalgos/stutter.hh>
-#include <spot/twa/twaproduct.hh>
-#include <spot/twaalgos/gtec/gtec.hh>
-#include <spot/twaalgos/dot.hh>
-#include <spot/twaalgos/remfin.hh>
-#include <iostream>
+#include <memory>
 
+#include "heighted_graph.hpp"
+#include "cyclone.hpp"
 
 extern "C" {
 #include <memory.h>
 #include <mlvalues.h>
 }
 
-#include "proof_aut.hpp"
-#include "trace.hpp"
+static std::shared_ptr<Heighted_graph> hg = 0;
 
-static std::shared_ptr<ProofAutomaton> proof = 0;
-static std::map< int, Vertex > bdd_map;
-
-extern "C" void create_aut(value max_log2_states) {
-	CAMLparam1(max_log2_states);
-//	std::cerr << "create_aut " << Int_val(max_log2_states) << '\n';
-	assert(proof==0);
-	proof = std::make_shared<ProofAutomaton>(Int_val(max_log2_states));
-	CAMLreturn0;
+extern "C" void create_hgraph(value max_nodes_) {
+  CAMLparam1(max_nodes_);
+  assert(hg == 0);
+  int max_nodes = Int_val(max_nodes_);
+  hg = std::make_shared<Heighted_graph>(max_nodes);
+  CAMLreturn0;
 }
 
-extern "C" void destroy_aut() {
-	CAMLparam0();
-//	std::cerr << "destroy_aut\n";
-	assert(proof);
-	proof = 0;
-	bdd_map.clear();
-	CAMLreturn0;
+extern "C" void destroy_hgraph() {
+  CAMLparam0();
+  assert(hg);
+  hg = 0;
+  CAMLreturn0;
 }
 
-//extern "C" value create_tag() {
-//	CAMLparam0();
-//	CAMLlocal1(v_res);
-//	assert(proof);
-//	v_res = Val_int(proof->create_tag());
-//	CAMLreturn(v_res);
-//}
-
-extern "C" void create_vertex(value v_) {
-	CAMLparam1(v_);
-	assert(proof);
-	Vertex v = proof->create_vertex();
-	int id = Int_val(v_); //v.id();
-	assert( bdd_map.find(id) == bdd_map.end() );
-	bdd_map[id] = v;
-//	std:: cerr << "create_vertex " << id << '\n';
-	CAMLreturn0;
+extern "C" void add_node(value n_, value is_bud_) {
+  CAMLparam2(n_, is_bud_);
+  assert(hg);
+  int n = Int_val(n_);
+  int is_bud = Bool_val(is_bud_);
+  hg->add_node(n, is_bud);
+  CAMLreturn0;
 }
 
-extern "C" void tag_vertex(value v_, value t_) {
-	CAMLparam2(v_, t_);
-	int v = Int_val(v_);
-	Tag t = Int_val(t_);
-	assert(proof);
-	assert( bdd_map.find(v) != bdd_map.end() );
-	proof->tag_vertex(bdd_map[v], t);
-	CAMLreturn0;
+extern "C" void add_height(value n_, value h_) {
+  CAMLparam2(n_, h_);
+  assert(hg);
+  int n = Int_val(n_);
+  int h = Int_val(h_);
+  hg->add_height(n, h);
+  CAMLreturn0;
 }
 
-extern "C" void set_successor(value v1_, value v2_) {
-	CAMLparam2(v1_, v2_);
-	int v1 = Int_val(v1_);
-	int v2 = Int_val(v2_);
-	assert(proof);
-	assert( bdd_map.find(v1) != bdd_map.end() );
-	assert( bdd_map.find(v2) != bdd_map.end() );
-	proof->set_successor(bdd_map[v1], bdd_map[v2]);
-	CAMLreturn0;
+extern "C" void add_edge(value n1_, value n2_) {
+  CAMLparam2(n1_, n2_);
+  assert(hg);
+  int n1 = Int_val(n1_);
+  int n2 = Int_val(n2_);
+  hg->add_edge(n1, n2);
+  CAMLreturn0;
 }
 
-extern "C" void set_trace_pair(value v1_, value v2_, value t1_, value t2_) {
-	CAMLparam4(v1_, v2_, t1_, t2_);
-	int v1 = Int_val(v1_);
-	int v2 = Int_val(v2_);
-	Tag t1 = Int_val(t1_);
-	Tag t2 = Int_val(t2_);
-	assert(proof);
-	assert( bdd_map.find(v1) != bdd_map.end() );
-	assert( bdd_map.find(v2) != bdd_map.end() );
-	proof->set_trace_pair(bdd_map[v1], bdd_map[v2], t1, t2);
-	CAMLreturn0;
+extern "C" void add_stay(value src_, value src_h_, value snk_, value snk_h_) {
+  CAMLparam4(src_, src_h_, snk_, snk_h_);
+  assert(hg);
+  int src = Int_val(src_);
+  int src_h = Int_val(src_h_);
+  int snk = Int_val(snk_);
+  int snk_h = Int_val(snk_h_);
+  hg->add_stay(src, src_h, snk, snk_h);
+  CAMLreturn0;
 }
 
-extern "C" void set_progress_pair(value v1_, value v2_, value t1_, value t2_) {
-	CAMLparam4(v1_, v2_, t1_, t2_);
-	int v1 = Int_val(v1_);
-	int v2 = Int_val(v2_);
-	Tag t1 = Int_val(t1_);
-	Tag t2 = Int_val(t2_);
-	assert(proof);
-	assert( bdd_map.find(v1) != bdd_map.end() );
-	assert( bdd_map.find(v2) != bdd_map.end() );
-	proof->set_progress_pair(bdd_map[v1], bdd_map[v2], t1, t2);
-	CAMLreturn0;
+extern "C" void add_decr(value src_, value src_h_, value snk_, value snk_h_) {
+  CAMLparam4(src_, src_h_, snk_, snk_h_);
+  assert(hg);
+  int src = Int_val(src_);
+  int src_h = Int_val(src_h_);
+  int snk = Int_val(snk_);
+  int snk_h = Int_val(snk_h_);
+  hg->add_decrease(src, src_h, snk, snk_h);
+  CAMLreturn0;
 }
 
-extern "C" value check_soundness() {
-	CAMLparam0();
-	CAMLlocal1(v_res);
-
-	spot::const_twa_ptr ta = std::make_shared<TraceAutomaton>(*proof);
-	spot::twa_graph_ptr graph = make_twa_graph(ta, spot::twa::prop_set::all());
-	spot::twa_graph_ptr prf = make_twa_graph(proof, spot::twa::prop_set::all());
-	bool retval = spot::contains(graph, prf);
-	
-	//std:: cout << "retval " << retval << '\n';
-
-	v_res = Val_bool(retval);
-	CAMLreturn(v_res);
+extern "C" void print_statistics() {
+  CAMLparam0();
+  assert(hg);
+  hg->print_statistics();
+  CAMLreturn0;
 }
 
-extern "C" void set_initial_vertex(value v_) {
-	CAMLparam1(v_);
-	int v = Int_val(v_);
-//	std::cerr << "set_initial_vertex " << v << '\n';
-	assert(proof);
-	assert( bdd_map.find(v) != bdd_map.end() );
-	proof->set_initial_vertex( bdd_map[v] );
-	CAMLreturn0;
+extern "C" value order_reduced_check(value node_order_, value opts_) {
+  CAMLparam2(node_order_, opts_);
+  CAMLlocal1(v_res);
+
+  int node_order = Int_val(node_order_);
+  int opts = Int_val(opts_);
+
+  assert(hg);
+  assert(Heighted_graph::is_valid_node_order(node_order));
+
+  Heighted_graph::NODE_ORDER ord =
+    static_cast<Heighted_graph::NODE_ORDER>(node_order);
+
+  bool should_halt = false;
+  bool retval = (hg->order_reduced_check(ord, opts, &should_halt));
+
+  v_res = Val_bool(retval);
+  CAMLreturn(v_res);
 }
+
+extern "C" value fwk_check(value opts_) {
+  CAMLparam1(opts_);
+  CAMLlocal1(v_res);
+
+  assert(hg);
+  int opts = Int_val(opts_);
+
+  bool should_halt = false;
+  bool retval = (hg->fwk_check(opts, &should_halt));
+
+  v_res = Val_bool(retval);
+  CAMLreturn(v_res);
+}
+
+extern "C" value sla_automata_check() {
+  CAMLparam0();
+  CAMLlocal1(v_res);
+
+  assert(hg);
+  bool retval = (hg->sla_automata_check());
+  v_res = Val_bool(retval);
+  CAMLreturn(v_res);
+}
+
+extern "C" value vla_automata_check() {
+  CAMLparam0();
+  CAMLlocal1(v_res);
+
+  assert(hg);
+  bool retval = (hg->vla_automata_check());
+  v_res = Val_bool(retval);
+  CAMLreturn(v_res);
+}
+
+extern "C" value cyclone_check(value node_order_, value opts_) {
+  CAMLparam2(node_order_, opts_);
+  CAMLlocal1(v_res);
+
+  int node_order = Int_val(node_order_);
+  int opts = Int_val(opts_);
+
+  assert(hg);
+  assert(Heighted_graph::is_valid_node_order(node_order));
+
+  Heighted_graph::NODE_ORDER ord =
+    static_cast<Heighted_graph::NODE_ORDER>(node_order);
+
+  Cyclone cyclone(hg.get(), ord, opts);
+
+  bool retval = (cyclone.check_soundness());
+
+  v_res = Val_bool(retval);
+  CAMLreturn(v_res);
+}
+
+
+// extern "C" value sd_check() {
+//   CAMLparam0();
+//   CAMLlocal1(v_res);
+//   assert(hg);
+//   bool retval = true;
+//   v_res = Val_bool(retval);
+//   CAMLreturn(v_res);
+// }
+
+// extern "C" value xsd_check() {
+//   CAMLparam0();
+//   CAMLlocal1(v_res);
+//   assert(hg);
+//   bool retval = true;
+//   v_res = Val_bool(retval);
+//   CAMLreturn(v_res);
+// }

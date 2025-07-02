@@ -132,7 +132,7 @@ let invalidity_witness defs seq =
       (fun sigma -> a_partition bp sigma)
       (partitions trms (strengthen trms pi))
   in
-  let result = Basepair.Set.find_opt a_move lbps in
+  let result = Basepair.Set.find_suchthat_opt a_move lbps in
   if Option.is_none result then Stats.Invalidity.reject ()
   else Stats.Invalidity.accept () ;
   result

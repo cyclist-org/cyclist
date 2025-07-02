@@ -130,7 +130,7 @@ let disequates h x y =
       (equates h x w && equates h y z) || (equates h x z && equates h y w) )
     h.deqs
 
-let find_lval x h = Ptos.find_opt (fun (y, _) -> equates h x y) h.ptos
+let find_lval x h = Ptos.find_suchthat_opt (fun (y, _) -> equates h x y) h.ptos
 
 let inconsistent h =
   Deqs.exists (Fun.uncurry Term.equal) h.deqs

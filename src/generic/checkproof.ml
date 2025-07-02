@@ -7,127 +7,100 @@ open   Parsers
 open Generic
 open   Soundcheck
 
-module Node =
-  (val (VarManager.mk 0 "" (fun _ -> VarManager.FREE)) : VarManager.S)
+let batch_mode = ref false
+let allow_comments = ref false
 
-(*
-  We parse lines of the form
+let input_files = ref []
 
-    <node-id> -> <node-id> : { <tag-pair-list> }, { <tag-pair-list> }
+let speclist =
+  Soundcheck.arg_opts
+    @
+  [
+    ("-d", Arg.Set do_debug, ": print debug messages") ;
+    ("-s", Arg.Set Stats.do_statistics, ": print statistics") ;
+    ("--allow-comments", Arg.Set allow_comments, ": allow line comments in input") ;
+    ("-f", Arg.String (fun f -> input_files := f :: !input_files), ": take input from file") ;
+  ]
 
-  where <tag-pair-list> is a comma-separated list of elements of the form
-
-    (<tag-id>, <tag-id>)
-
-  Lines beginning with the same node id are merged.
-
-  A value of Soundcheck.t is returned.
-*)
-
-let id_exp =
-  make_regexp "[_0-9a-zA-Z'\\.\\-]+"
-
-let parse_nodeid s =
-  (regexp id_exp << spaces <?> "Identifier" |>> Node.mk) s
-
-let parse_tagid s =
-  (regexp id_exp << spaces |>> Tags.mk) s
-
-let parse_tps s =
-  ((sep_by
-    (Tokens.parens
-      (parse_tagid >>= (fun src_tag ->
-       Tokens.comma >>
-       parse_tagid |>> (fun dest_tag ->
-       (src_tag, dest_tag)))))
-    Tokens.comma) |>> Tagpairs.of_list
-  ) s
-
-let parse_line s =
-  (
-    parse_nodeid >>= (fun src ->
-    (string "->") >> spaces >>
-    parse_nodeid >>= (fun dest ->
-    Tokens.colon >>
-    Tokens.braces parse_tps >>= (fun prog ->
-    Tokens.comma >>
-    Tokens.braces parse_tps |>> (fun nonprog ->
-    (src, dest, prog, nonprog)))))
-  ) s
-
-let mk_prf lines =
-  let open Int.Map in
-  let add_entry nodemap (src, dest, prog, nonprog) =
-    let src = Node.Var.to_int src in
-    let dest = Node.Var.to_int dest in
-    let all = Tagpairs.union nonprog prog in
-    let src_tags = Tagpairs.projectl all in
-    let dest_tags = Tagpairs.projectr all in
-    let () =
-      assert (
-        match (find_opt src nodemap) with
-        | None ->
-          true
-        | Some (_, premises, _) ->
-          not (List.mem dest premises)
-      ) in
-    let nodemap =
-      update
-        src
-        (function
-          | None ->
-            Some (src_tags, [dest], [(all, prog)])
-          | Some (tags, premises, tps) ->
-            Some
-              (Tags.union src_tags tags, dest::premises, (all, prog)::tps))
-        nodemap in
-    let nodemap =
-      update
-        dest
-        (function
-          | None ->
-            Some (dest_tags, [], [])
-          | Some (tags, premises, tps) ->
-            Some (Tags.union dest_tags tags, premises, tps))
-        nodemap in
-    nodemap in
-  let prf =
-    map
-      (fun (tags, premises, tps) -> Soundcheck.mk_abs_node tags premises tps)
-      (List.fold_left add_entry empty lines) in
-  let init = 
-    match lines with
-    | [] ->
-      0
-    | (src, _, _, _)::_ ->
-      Node.Var.to_int src in
-  (prf, init)
-
-let parse_proof s =
-  (many parse_line |>> mk_prf) s
+let usage =
+  "usage: " ^ Sys.argv.(0) ^ " [-d] [-s] [-R ( node | edge | json )] \
+  [--inf-desc ( vla | sla | fwk-full | fwk-or | cyclone )] \
+  [--allow-comments | (-f <file>)*]"
 
 let () =
-  let () = gc_setup () in
-  let () = Format.set_margin (Sys.command "exit $(tput cols)") in
+  Arg.parse speclist (fun _ -> ()) usage
+
+let do_check prf =
+  begin
+    Stats.reset ();
+    if (check_proof prf) then begin
+      print_endline "YES";
+      Stats.gen_print ();
+    end
+    else begin
+      print_endline "NO";
+      Stats.gen_print ();
+    end
+  end
+
+let process_files parser =
+  let process_file f =
+    let f_in = open_in f in
+    let prfs =
+      handle_reply (parse_channel parser f_in ()) in
+    let () = close_in f_in in
+    List.iter do_check prfs in
+  List.iter process_file (List.rev !input_files)
+
+let process_stdin parser =
   let buf = Buffer.create 2014 in
-  while true do
-    let ready = 
-      try
+  let next_char =
+    match !allow_comments with
+    | true ->
+      let comment = ref false in
+      (fun () ->
+        let c = input_char stdin in
+        let () =
+          if not !comment && Char.equal c '#'
+            then comment := true
+          else if Char.equal c '\n'
+            then comment := false in
+        let () =
+          if not !comment then Buffer.add_char buf c in
+        not !comment && Char.equal c ';')
+    | false ->
+      (fun () ->
         let c = input_char stdin in
         let () = Buffer.add_char buf c in
-        Char.equal c ';'
+        Char.equal c ';')
+    in
+  while true do
+    let ready =
+      try
+        next_char ()
       with End_of_file -> true in
     if ready then
       let input = Buffer.contents buf in
       let () = Buffer.clear buf in
       match (parse_string (spaces >> eof) input ()) with
       | Success _ ->
+        (* if input consists of nothing but spaces *)
         exit 0
       | Failed _ ->
-        let (prf, init) =
-          handle_reply
-            (parse_string (spaces >> parse_proof << Tokens.semi) input ()) in
-        if (check_proof ~init prf)
-          then print_endline "YES"
-          else print_endline "NO"
-  done
+        let prfs =
+          handle_reply (parse_string parser input ()) in
+        List.iter do_check prfs
+    done
+
+let () =
+  let () = gc_setup () in
+  let () = Format.set_margin (Sys.command "exit $(tput cols)") in
+  let parser =
+    sep_end_by
+      (spaces >> parse << spaces)
+      ((skip Tokens.semi << spaces) <|> spaces) in
+  match !input_files with
+  | [] ->
+    process_stdin parser
+  | _ ->
+    process_files parser

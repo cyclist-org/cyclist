@@ -9,9 +9,12 @@ authors: [
   "Nikos Gorogiannis <nikos.gorogiannis+www@gmail.com>"
   "Reuben Rowe <reuben.rowe@rhul.ac.uk>"
   "Gadi Tellez Espinosa"
+  "Adham Jabarin"
+  "Matan Shaked"
 ]
+license: "BSD-3-Clause"
 homepage: "http://www.cyclist-prover.org/"
-bug-reports: "https://github.com/ngorogiannis/cyclist/issues"
+bug-reports: "https://github.com/cyclist-org/cyclist/issues"
 depends: [
   "dune" {>= "2.2"}
   "ocaml" {>= "4.08.0"}
@@ -36,4 +39,4 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-dev-repo: "git+https://github.com/ngorogiannis/cyclist.git"
+dev-repo: "git+https://github.com/cyclist-org/cyclist.git"
