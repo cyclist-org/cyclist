@@ -21,30 +21,25 @@ module Make (Prover : Prover.S) = struct
 
   let speclist =
     ref (fun () ->
-        [ ( "-m"
-          , Arg.Set_int minbound
-          , ": set starting depth for IDFS to <int>, default is "
-            ^ string_of_int !minbound )
-        ; ( "-M"
-          , Arg.Set_int maxbound
-          , ": set maximum depth for IDFS to <int>, 0 disables it, default is "
-            ^ string_of_int !maxbound )
-        ; ( "-L"
-          , Arg.Int
-              (fun n ->
-                minbound := n ;
-                maxbound := n )
-          , ": set both depths to <int>." )
+        [ ( "-m", Arg.Set_int minbound,
+              ": set starting depth for IDFS to <int>, default is "
+                ^ string_of_int !minbound )
+        ; ( "-M", Arg.Set_int maxbound,
+              ": set maximum depth for IDFS to <int>, 0 disables it,
+              default is " ^ string_of_int !maxbound )
+        ; ( "-L",
+              Arg.Int (fun n -> minbound := n ; maxbound := n ),
+              ": set both depths to <int>." )
         ; ("-p", Arg.Set show_proof, ": show proof")
         ; ("--dot", Arg.Set use_dot, ": use DOT format for proofs")
         ; ("-d", Arg.Set do_debug, ": print debug messages")
-        ; ("--id", Arg.Set_string run_identifier, ": identifier for the execution, used in debug output" )
+        ; ("--id", Arg.Set_string run_identifier,
+            ": identifier for the execution, used in debug output" )
         ; ("-s", Arg.Set Stats.do_statistics, ": print statistics")
         ; ("-l", Arg.Set_string latex_path, ": write proofs to <file>")
-        ; ( "-t"
-          , Arg.Set_int timeout
-          , ": set timeout in seconds to <int>, 0 disables it, default is "
-            ^ string_of_int !timeout )
+        ; ( "-t", Arg.Set_int timeout,
+              ": set timeout in seconds to <int>, 0 disables it, default is "
+                ^ string_of_int !timeout )
         ]
         @ Soundcheck.arg_opts )
 
