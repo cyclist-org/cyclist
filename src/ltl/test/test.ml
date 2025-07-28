@@ -17,7 +17,7 @@ let run_test seq =
   | None ->
     Format.printf "(Not proved)@."
   | Some prf ->
-    Format.printf "(Proved)@.%a" Prover.Proof.pp prf
+    Format.printf "(Proved)@.%a" Proof.pp prf
   end
 
 (* Define some atoms, for convenience *)
