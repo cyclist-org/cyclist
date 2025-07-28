@@ -42,6 +42,9 @@ val both : bool * bool -> bool
 val either : bool * bool -> bool
 (** Alias for [disj] *)
 
+val pp : (Format.formatter -> 'a -> unit) -> (Format.formatter -> 'b -> unit)
+  -> Format.formatter -> ('a * 'b) -> unit
+
 (** Create functions for equality, comparison, hashing and printing for a
     pair of types. *)
 module Make (T : Utilsigs.BasicType) (S : Utilsigs.BasicType) :

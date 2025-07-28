@@ -28,6 +28,9 @@ let both = conj
 
 let either = disj
 
+let pp pp_fst pp_snd fmt (fst, snd) =
+  Format.fprintf fmt "@[(%a,@ %a)@]" pp_fst fst pp_snd snd
+
 module Make (T : Utilsigs.BasicType) (S : Utilsigs.BasicType) :
   Utilsigs.BasicType with type t = T.t * S.t = struct
   type t = T.t * S.t
@@ -43,7 +46,7 @@ module Make (T : Utilsigs.BasicType) (S : Utilsigs.BasicType) :
 
   let hash (i : t) = genhash (T.hash (fst i)) (S.hash (snd i))
 
-  let pp fmt (i, j) = Format.fprintf fmt "@[(%a,@ %a)@]" T.pp i S.pp j
+  let pp = pp T.pp S.pp
 
   let to_string = mk_to_string pp
 end
