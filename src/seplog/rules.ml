@@ -5,8 +5,8 @@ module SH = Heap
 
 exception Not_symheap = Form.Not_symheap
 
-module Proof = Proof.Make (Seq)
-module Rule = Proofrule.Make (Seq)
+module Proof = Proof.Make (Seq) (Strng)
+module Rule = Proofrule.Make (Seq) (Strng)
 module Seqtactics = Seqtactics.Make (Seq)
 
 include (Rule : sig
@@ -908,7 +908,7 @@ let mk_backlink_rule_seq (trm_subst, tag_subst) ((src_lhs, src_rhs) as src_seq)
       else Rule.mk_infrule (subst_rule (trm_subst, tag_subst) targ_seq) )
     ; Rule.mk_backrule true
         (fun _ _ -> [targ_idx])
-        (fun s s' -> [(Seq.tag_pairs s', "Backl")]) ]
+        (fun s s' -> [Seq.tag_pairs s']) ]
 
 let mk_lemma_rule_seq (trm_subst, tag_subst) (src_lhs, src_rhs)
     (targ_idx, ((lhs, rhs) as targ_seq)) =

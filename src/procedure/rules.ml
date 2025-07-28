@@ -6,12 +6,14 @@ open Program
 
 exception Not_symheap = Form.Not_symheap
 
-module Rule = Proofrule.Make (Seq)
+module Rule = Proofrule.Make (Seq) (Strng)
 module Seqtactics = Seqtactics.Make (Seq)
-module Proof = Proof.Make (Seq)
-module Slprover = Prover.Make (Seplog.Seq)
+module Proof = Proof.Make (Seq) (Strng)
+module ProofNode = Proofnode.Make (Seq) (Strng)
+
+module Slprover = Prover.Make (Seplog.Seq) (Strng)
+module Slproof = Generic.Proof.Make (Seplog.Seq) (Strng)
 module EntlSeqHash = Hashtbl.Make (Seplog.Seq)
-module ProofNode = Proofnode.Make (Seq)
 
 let check_invalid = ref (Invalid.check Defs.empty)
 
@@ -24,7 +26,7 @@ let show_frame_debug = ref false
 let entl_depth = ref 4
 
 (* Wrapper for the entailment prover *)
-let entailment_table : (int * Slprover.Proof.t option) EntlSeqHash.t =
+let entailment_table : (int * Slproof.t option) EntlSeqHash.t =
   EntlSeqHash.create 11
 
 let entails f f' =
@@ -533,11 +535,14 @@ let mk_symex_proc_unfold procs prf_cache =
   Rule.mk_infrule rl
 
 let is_proc_unfold_node n =
-  let _, descr = ProofNode.dest n in
-  Int.( >= ) (String.length descr) (String.length proc_unfold_str)
-  && Strng.equal
-       (Str.first_chars descr (String.length proc_unfold_str))
-       proc_unfold_str
+  match ProofNode.dest n with
+  | _, Some descr ->
+    Int.( >= ) (String.length descr) (String.length proc_unfold_str)
+    && Strng.equal
+        (Str.first_chars descr (String.length proc_unfold_str))
+        proc_unfold_str
+  | _, _ ->
+    false
 
 let assert_rule =
   let rl ((pre, cmd, post) as seq) =
@@ -1165,7 +1170,7 @@ let dobackl ?(choose_all = false) idx prf =
            let tps =
              if !termination then Seq.tag_pairs targ_seq else Seq.tagpairs_one
            in
-           [(tps, "Backl")] ))
+           [tps] ))
   in
   if choose_all then Rule.first (Blist.map mk_backlink transformations) idx prf
   else Rule.choice (Blist.map mk_backlink transformations) idx prf

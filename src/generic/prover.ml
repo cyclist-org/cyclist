@@ -3,29 +3,23 @@ open Lib
 module L = Blist
 
 module type S = sig
+
+  type seq_t
   type rule_t
-
-  module Seq : Sequent.S
-
-  module Proof : Proof.S
+  type proof_t
 
   val last_search_depth : int ref
 
-  val idfs : int -> int -> rule_t -> rule_t -> Seq.t -> Proof.t option
+  val idfs : int -> int -> rule_t -> rule_t -> seq_t -> proof_t option
 
   (* val bfs : int -> rule_t -> rule_t -> Seq.t -> Proof.t option   *)
-  val print_proof_stats : Proof.t -> unit
+  val print_proof_stats : proof_t -> unit
 end
 
-module Make (Seq : Sequent.S) = struct
-  module Proof = Proof.Make (Seq)
-  module Rule = Proofrule.Make (Seq)
+module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
 
-  type proof_t = Proof.t
-
-  type rule_t = Rule.t
-
-  module Seq = Seq
+  module Proof = Proof.Make(Seq)(Infrule)
+  module Rule = Proofrule.Make(Seq)(Infrule)
 
   (* due to divergence between tree depth and search depth *)
   (* remember last successful search depth *)

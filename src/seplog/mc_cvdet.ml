@@ -54,7 +54,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
     let to_string r = mk_to_string pp r
   end
 
-  module Rule = Proofrule.Make (Reduction)
+  module Rule = Proofrule.Make (Reduction) (Strng)
 
   let set_metavar rem h =
     assert (Option.is_none !rem) ;
@@ -331,7 +331,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
 end
 
 module IntSigModelChecker = Make (Mc_core.IntSig)
-module Prover = Prover.Make (IntSigModelChecker.Reduction)
+module Prover = Prover.Make (IntSigModelChecker.Reduction) (Strng)
 
 let check_model intuitionistic defs (sh, (stk, h)) =
   let defs = Defs.relevant_defs defs (Ord_constraints.empty, [sh]) in

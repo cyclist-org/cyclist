@@ -8,9 +8,9 @@ module SH = Heap
 
 exception Not_symheap = Form.Not_symheap
 
-module Rule = Proofrule.Make (Program.Seq)
+module Rule = Proofrule.Make (Program.Seq) (Strng)
 module Seqtactics = Seqtactics.Make (Program.Seq)
-module Proof = Proof.Make (Program.Seq)
+module Proof = Proof.Make (Program.Seq) (Strng)
 
 let tagpairs s = if !termination then Seq.tag_pairs s else Seq.tagpairs_one
 
@@ -338,9 +338,8 @@ let dobackl idx prf =
       ; Rule.mk_backrule false
           (fun _ _ -> [targ_idx])
           (fun s s' ->
-            [ ( ( if !termination then Tagpairs.reflect tagpairs
-                else Seq.tagpairs_one )
-              , "Backl" ) ] ) ]
+            [ ( if !termination then Tagpairs.reflect tagpairs
+                else Seq.tagpairs_one ) ] ) ]
   in
   Rule.first (Blist.map f apps) idx prf
 
@@ -417,7 +416,7 @@ let generalise_while_rule =
   in
   Rule.mk_infrule rl
 
-module Slprover = Prover.Make (Seplog.Seq)
+module Slprover = Prover.Make (Seplog.Seq) (Strng)
 
 let backlink_cut defs =
   let rl s1 s2 =
@@ -443,7 +442,7 @@ let backlink_cut defs =
         in
         (* let () = Lib.do_debug := olddebug in *)
         (* let () = debug (fun () -> "CUTLINK3: result: " ^ (string_of_bool result)) in *)
-        if result then [(Seq.tagpairs_one, "Cut/Backl")] else []
+        if result then [Seq.tagpairs_one] else []
   in
   Rule.mk_backrule true Rule.all_nodes rl
 

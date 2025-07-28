@@ -9,22 +9,25 @@ module type S = sig
   (** Sequent type used for building proof nodes. *)
   type seq_t
 
+  (** Data associated with the proof node / inference *)
+  type infrule_t
+
   (** Constructors. *)
 
   val mk_open : seq_t -> t
   (** [mk_open seq] creates an open Proof.t node labelled by [seq]. *)
 
-  val mk_axiom : seq_t -> string -> t
+  val mk_axiom : seq_t -> infrule_t -> t
   (** [mk_axiom seq descr] creates an axiom node labelled by
       sequent [seq] and description [descr].*)
 
-  val mk_backlink : seq_t -> string -> int -> Tagpairs.t -> t
+  val mk_backlink : seq_t -> int -> Tagpairs.t -> t
   (** [mk_backlink seq descr target vtts] creates a back-link node labelled by
       sequent [seq], description [descr], target index [target] and set of
       valid tag transitions (as pairs) [vtts].*)
 
   val mk_inf :
-    seq_t -> string -> int list -> (Tagpairs.t * Tagpairs.t) list -> t
+    seq_t -> infrule_t -> int list -> (Tagpairs.t * Tagpairs.t) list -> t
   (** [mk_inf seq descr subgoals back] creates an inference node labelled by
       sequent [seq], description [descr], a list of triples consisting of
       subgoal index, valid tag transitions and progressing tag transitions
@@ -32,14 +35,17 @@ module type S = sig
 
   (** Destructors. *)
 
-  val dest : t -> seq_t * string
+  val dest : t -> seq_t * infrule_t option
   (** [dest n] returns (sequent, description). This works with all Proof.t nodes. *)
 
-  val dest_backlink : t -> seq_t * string * int * Tagpairs.t
+  val dest_backlink : t -> seq_t * int * Tagpairs.t
   (** [dest_backlink n] destroys a back-link node [n], otherwise raises [Invalid_arg].*)
 
+  val dest_axiom : t -> seq_t * infrule_t
+  (** [dest_backlink n] destroys an axiom node [n], otherwise raises [Invalid_arg].*)
+
   val dest_inf :
-    t -> seq_t * string * int list * (Tagpairs.t * Tagpairs.t) list
+    t -> seq_t * infrule_t * int list * (Tagpairs.t * Tagpairs.t) list
   (** [dest_inf n] destroys an inference node [n], otherwise raises [Invalid_arg].*)
 
   (** Functions for checking the sort of a node. *)
@@ -67,4 +73,8 @@ module type S = sig
   (** Pretty printing *)
 end
 
-module Make (Seq : Sequent.S) : S with type seq_t = Seq.t
+module Make
+  (Seq : Sequent.S)
+  (Infrule : sig type t val pp : Format.formatter -> t -> unit end)
+    : S with type seq_t := Seq.t
+         and type infrule_t := Infrule.t

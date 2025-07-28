@@ -1,9 +1,45 @@
 open Lib
 
-module Make (Prover : Prover.S) = struct
-  module Seq = Prover.Seq
+module type S = sig
 
-  type result_t = TIMEOUT | NOT_FOUND | SUCCESS of Prover.Proof.t
+  type seq_t
+
+  type infrule_t
+
+  type proofrule_t
+
+  type node_t
+
+  module Proof : Proof.S with type seq_t := seq_t
+                          and type infrule_t := infrule_t
+                          and type node_t := node_t
+
+  type result_t = TIMEOUT | NOT_FOUND | SUCCESS of Proof.t
+
+  val show_proof : bool ref
+  val use_dot : bool ref
+  val timeout : int ref
+  val minbound : int ref
+  val maxbound : int ref
+  val speclist : (unit -> (string * Arg.spec * string) list) ref
+  val usage : string ref
+  val die : string -> (string * Arg.spec * string) list -> string -> 'a
+  val exit : result_t -> 'a
+  val gather_stats : (unit -> 'a) -> 'a option
+  val idfs : proofrule_t -> proofrule_t -> seq_t -> Proof.t option
+  val process_result : bool -> seq_t -> Proof.t option option -> result_t
+
+  val prove_seq : proofrule_t -> proofrule_t -> seq_t -> result_t
+
+end
+
+module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
+
+  module Proof = Proof.Make(Seq)(Infrule)
+
+  module Prover = Prover.Make(Seq)(Infrule)
+
+  type result_t = TIMEOUT | NOT_FOUND | SUCCESS of Proof.t
 
   let show_proof = ref false
 
@@ -82,7 +118,7 @@ module Make (Prover : Prover.S) = struct
       else
         let proof = Option.get res in
         if !show_proof then
-          let pp = if !use_dot then Prover.Proof.pp_dot else Prover.Proof.pp in
+          let pp = if !use_dot then Proof.pp_dot else Proof.pp in
           pp Format.std_formatter proof
         else if output then print_endline ("Proved: " ^ Seq.to_string seq) ;
         if !Stats.do_statistics then Prover.print_proof_stats proof ;

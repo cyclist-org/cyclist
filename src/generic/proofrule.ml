@@ -4,94 +4,66 @@ open Lib
 module L = Blist
 
 module type S = sig
+
   type seq_t
-
+  type infrule_t
   type proof_t
-
-  type axiom_f = seq_t -> string option
-
-  type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * string
-
+  type axiom_f = seq_t -> infrule_t option
+  type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * infrule_t
   type infrule_f = seq_t -> infrule_app list
-
-  type backrule_f = seq_t -> seq_t -> (Tagpairs.t * string) list
-
+  type backrule_f = seq_t -> seq_t -> Tagpairs.t list
   type select_f = int -> proof_t -> int list
-
   type t = int -> proof_t -> (int list * proof_t) L.t
 
   val mk_axiom : axiom_f -> t
-
   val mk_infrule : infrule_f -> t
-
   val mk_backrule : bool -> select_f -> backrule_f -> t
-
   val all_nodes : select_f
-
   val closed_nodes : select_f
-
   val ancestor_nodes : select_f
   val default_select_f : select_f ref
-
   val set_default_select_f : int -> unit
-
   val default_select_f_descr : ?line_prefix:string -> unit -> string
-
   val fail : t
-
   val identity : t
-
   val attempt : t -> t
-
   val non_empty : t -> t
-
   val compose : t -> t -> t
-
   val compose_pairwise : t -> t list -> t
-
   val repeat : t -> t
-
   val repeat_one : t -> t
-
   val choice : t list -> t
-
   val first : t list -> t
-
   val sequence : t list -> t
-
   val conditional : (seq_t -> bool) -> t -> t
-
   val combine_axioms : t -> t -> t
 end
 
-module Make (Seq : Sequent.S) = struct
-  module Proof = Proof.Make (Seq)
-  module Node = Proofnode.Make (Seq)
+module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
 
-  type seq_t = Seq.t
+  module Proof = Proof.Make (Seq) (Infrule)
+  module Node = Proofnode.Make (Seq) (Infrule)
 
-  type proof_t = Proof.t
+  type axiom_f = Seq.t -> Infrule.t option
 
-  type axiom_f = seq_t -> string option
+  type infrule_app = (Seq.t * Tagpairs.t * Tagpairs.t) list * Infrule.t
 
-  type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * string
-
-  type infrule_f = seq_t -> infrule_app list
+  type infrule_f = Seq.t -> infrule_app list
 
   type t = int -> Proof.t -> (int list * Proof.t) L.t
 
-  type backrule_f = seq_t -> seq_t -> (Tagpairs.t * string) list
+  type backrule_f = Seq.t -> Seq.t -> Tagpairs.t list
 
   type select_f = int -> Proof.t -> int list
 
   (* Apply the sequent in the open node identified by idx in prf to the
 	   characterising function ax_f.
-		   If we get back Some descr then the sequent is the conclusion of the axiom
-			   characterised by ax_f (the name of the axiom is given by descr), so return
-			   a singleton list containing the original proof prf updated by closing the
-			   open node using the axiom descr, which does not add any new open nodes,
-			   since axioms do not have any premises.
-		   Otherwise return an empty list of results
+     If we get back Some descr then the sequent is the conclusion of the axiom
+     characterised by ax_f (the name of the axiom is given by descr), so return
+     a singleton list containing the original proof prf updated by closing the
+     open node using the axiom descr, which does not add any new open nodes,
+     since axioms do not have any premises.
+     Otherwise return an empty list of results
 	*)
   let mk_axiom ax_f idx prf =
     match ax_f (Proof.get_seq idx prf) with
@@ -101,7 +73,7 @@ module Make (Seq : Sequent.S) = struct
   let mk_infrule r_f idx prf =
     let seq = Proof.get_seq idx prf in
     let mk (l, d) =
-      debug (fun () -> "Found " ^ d ^ " app.") ;
+      debug (fun () -> Format.asprintf "Found %a app." Infrule.pp d) ;
       Proof.add_inf idx d l prf
     in
     L.map mk (L.of_list (r_f seq))
@@ -109,9 +81,8 @@ module Make (Seq : Sequent.S) = struct
   let mk_backrule greedy sel_f br_f srcidx prf =
     let srcseq = Proof.get_seq srcidx prf in
     let trgidxs = L.of_list (sel_f srcidx prf) in
-    let mk trgidx (vtts, d) =
-      ([], Proof.add_backlink srcidx d trgidx vtts prf)
-    in
+    let mk trgidx vtts =
+      ([], Proof.add_backlink srcidx trgidx vtts prf) in
     let check (_, p) = Proof.check p in
     let apply trgidx =
       let trgseq = Proof.get_seq trgidx prf in

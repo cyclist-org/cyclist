@@ -2,7 +2,10 @@
 open Lib
 
 module type S = sig
+
   type seq_t
+
+  type infrule_t
 
   type proof_t
 
@@ -12,7 +15,7 @@ module type S = sig
 
   type select_f = int -> proof_t -> int list
 
-  type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * string
+  type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * infrule_t
 
   type abdinfrule_f = seq_t -> defs_t -> defs_t list
 
@@ -41,9 +44,9 @@ module type S = sig
   val first : t list -> t
 end
 
-module Make (Seq : Sequent.S) (Defs : sig type t end) :
-  S
-  with type seq_t = Seq.t
-  with type proof_t = Proof.Make(Seq).t
-  with type rule_t = Proofrule.Make(Seq).t
-  with type defs_t = Defs.t
+module Make (Seq : Sequent.S) (Infrule : Infrule.S) (Defs : sig type t end) :
+  S with type seq_t := Seq.t
+     and type infrule_t := Infrule.t
+     and type proof_t := Proof.Make(Seq)(Infrule).t
+     and type rule_t := Proofrule.Make(Seq)(Infrule).t
+     and type defs_t := Defs.t

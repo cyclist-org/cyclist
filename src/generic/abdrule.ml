@@ -1,7 +1,10 @@
 open Lib
 
 module type S = sig
+
   type seq_t
+
+  type infrule_t
 
   type proof_t
 
@@ -11,7 +14,7 @@ module type S = sig
 
   type select_f = int -> proof_t -> int list
 
-  type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * string
+  type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * infrule_t
 
   type abdinfrule_f = seq_t -> defs_t -> defs_t list
 
@@ -40,29 +43,23 @@ module type S = sig
   val first : t list -> t
 end
 
-module Make (Seq : Sequent.S) (Defs : sig type t end) = struct
-  module Proof = Proof.Make (Seq)
-  module Rule = Proofrule.Make (Seq)
+module Make (Seq : Sequent.S) (Infrule : Infrule.S) (Defs : sig type t end) =
+struct
 
-  type seq_t = Seq.t
+  module Proof = Proof.Make (Seq)(Infrule)
+  module Rule = Proofrule.Make (Seq)(Infrule)
 
-  type proof_t = Proof.t
+  type select_f = int -> Proof.t -> int list
 
-  type defs_t = Defs.t
+  type infrule_app = (Seq.t * Tagpairs.t * Tagpairs.t) list * Infrule.t
 
-  type rule_t = Rule.t
+  type abdinfrule_f = Seq.t -> Defs.t -> Defs.t list
 
-  type select_f = int -> proof_t -> int list
+  type abdbackrule_f = Seq.t -> Seq.t -> Defs.t -> Defs.t list
 
-  type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * string
+  type abdgenrule_f = Seq.t -> Defs.t -> (infrule_app * Defs.t) list
 
-  type abdinfrule_f = seq_t -> defs_t -> defs_t list
-
-  type abdbackrule_f = seq_t -> seq_t -> defs_t -> defs_t list
-
-  type abdgenrule_f = seq_t -> defs_t -> (infrule_app * defs_t) list
-
-  type t = int -> proof_t -> defs_t -> ((int list * proof_t) * defs_t) list
+  type t = int -> Proof.t -> Defs.t -> ((int list * Proof.t) * Defs.t) list
 
   let mk_abdinfrule r idx prf defs =
     let seq = Proof.get_seq idx prf in

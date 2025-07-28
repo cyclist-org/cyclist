@@ -8,10 +8,10 @@ let defs_path = ref "examples/sl.defs"
 let prog_path = ref ""
 
 module GraphComponents = Graph.Components.Make (Proc.Graph)
-module Prover = Prover.Make (Seq)
-module F = Frontend.Make (Prover)
-module Proof = Prover.Proof
-module Node = Proofnode.Make (Seq)
+module Prover = Prover.Make (Seq) (Strng)
+module F = Frontend.Make (Seq) (Strng)
+module Proof = Proof.Make (Seq) (Strng)
+module Node = Proofnode.Make (Seq) (Strng)
 
 let prove_all = ref false
 

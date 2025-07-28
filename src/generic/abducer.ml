@@ -3,44 +3,44 @@ open Lib
 module L = Blist
 
 module type S = sig
-  type abdrule_t
+
+  type seq_t
+
+  type infrule_t
 
   type proof_t
 
+  type rule_t
+
   type defs_t
 
-  module Seq : Sequent.S
-
-  module Proof : Proof.S
+  module Abdrule : Abdrule.S with type seq_t := seq_t
+                              and type infrule_t := infrule_t
+                              and type proof_t := proof_t
+                              and type rule_t := rule_t
+                              and type defs_t := defs_t
 
   val bfs :
        int
-    -> abdrule_t
-    -> Seq.t
+    -> Abdrule.t
+    -> seq_t
     -> defs_t
     -> (defs_t -> bool)
     -> (proof_t * defs_t) option
 
-  val print_proof_stats : Proof.t -> unit
+  val print_proof_stats : proof_t -> unit
+
 end
 
-module Make (Seq : Sequent.S) (Defs : sig type t end) = struct
-  module Abdrule = Abdrule.Make (Seq) (Defs)
-  module Proof = Proof.Make (Seq)
-  module Node = Proofnode.Make (Seq)
-  module Prover = Prover.Make (Seq)
+module Make (Seq : Sequent.S) (Infrule : Infrule.S) (Defs : sig type t end) =
+struct
+
+  module Abdrule = Abdrule.Make (Seq) (Infrule) (Defs)
+  module Proof = Proof.Make (Seq) (Infrule)
+  module Node = Proofnode.Make (Seq) (Infrule)
+  module Prover = Prover.Make (Seq) (Infrule)
 
   let print_proof_stats = Prover.print_proof_stats
-
-  module Seq = Seq
-
-  type seq_t = Seq.t
-
-  type defs_t = Defs.t
-
-  type abdrule_t = Abdrule.t
-
-  type proof_t = Proof.t
 
   type app_state =
     {prf: Proof.t; depth: int; goals: (int * int) list; defs: Defs.t}

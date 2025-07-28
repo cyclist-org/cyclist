@@ -2,8 +2,9 @@ open Generic
 open Ltl
 open   Form
 
-module Prover = Prover.Make(Seq)
-module Frontend = Frontend.Make(Prover)
+module Proof = Proof.Make(Seq)(Lib.Strng)
+module Prover = Prover.Make(Seq)(Lib.Strng)
+module Frontend = Frontend.Make(Seq)(Lib.Strng)
 
 let () =
   Tags.alphabet := Lib.VarManager.arabic_digits

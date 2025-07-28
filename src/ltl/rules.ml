@@ -1,9 +1,8 @@
 open Generic
 open Lib
 
-module Proof = Proof.Make(Seq)
-module Rule = Proofrule.Make(Seq)
-(* module Seqtactics = Seqtactics.Make(Seq) *)
+module Proof = Proof.Make(Seq)(Strng)
+module Rule = Proofrule.Make(Seq)(Strng)
 
 (* let () = Rule.set_default_select_f 2 *)
 
@@ -144,7 +143,7 @@ let backlink =
               tps)
           bud
           Tagpairs.empty in
-      [ (tps, "Backlink") ]
+      [ tps ]
   in
   Rule.mk_backrule false select mk_backlink
 

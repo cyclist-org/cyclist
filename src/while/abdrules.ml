@@ -5,9 +5,9 @@ open Program
 
 exception Not_symheap = Seplog.Form.Not_symheap
 
-module Rule = Proofrule.Make (Program.Seq)
+module Rule = Proofrule.Make (Program.Seq) (Strng)
 module Seqtactics = Seqtactics.Make (Program.Seq)
-module Abdrule = Abdrule.Make (Program.Seq) (Seplog.Defs)
+module Abdrule = Abdrule.Make (Program.Seq) (Strng) (Seplog.Defs)
 
 (* let latex_defs d =                 *)
 (*   let t = !split_heaps in          *)

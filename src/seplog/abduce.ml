@@ -1,10 +1,10 @@
 open Lib
 open Generic
 
-module Proof = Proof.Make (Seq)
-module Rule = Proofrule.Make (Seq)
+module Proof = Proof.Make (Seq) (Strng)
+module Rule = Proofrule.Make (Seq) (Strng)
 module Seqtactics = Seqtactics.Make (Seq)
-module Prover = Prover.Make (Seq)
+module Prover = Prover.Make (Seq) (Strng)
 
 exception Not_symheap = Form.Not_symheap
 

@@ -25,7 +25,8 @@ let gen_defs = ref false
 let maxbound = ref 20
 
 module Seq = Program.Seq
-module Abducer = Abducer.Make (Program.Seq) (Defs)
+module Proof = Proof.Make (Seq) (Strng)
+module Abducer = Abducer.Make (Program.Seq) (Strng) (Defs)
 
 let defs_count = ref 0
 
@@ -63,7 +64,7 @@ let prove_prog seq =
     else
       let proof, defs = Option.get res in
       if !Stats.do_statistics then Abducer.print_proof_stats proof ;
-      if !show_proof then print_endline (Abducer.Proof.to_string proof)
+      if !show_proof then print_endline (Proof.to_string proof)
       else print_endline ("Proved: " ^ Program.Seq.to_string seq) ;
       if !show_defs || !simpl_defs then
         print_endline

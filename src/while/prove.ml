@@ -10,8 +10,8 @@ let defs_path = ref "examples/sl.defs"
 
 let prog_path = ref ""
 
-module Prover = Prover.Make (Seq)
-module F = Frontend.Make (Prover)
+module Prover = Prover.Make (Seq)(Strng)
+module F = Frontend.Make (Seq)(Strng)
 
 (* let () =                                                      *)
 (*   let (p, c) = program_of_channel (open_in Sys.argv.(1)) in   *)

@@ -14,6 +14,8 @@ module type S = sig
 
   type seq_t
 
+  type infrule_t
+
   type node_t
 
   val mk : seq_t -> t
@@ -31,13 +33,13 @@ module type S = sig
       an exception will be thrown.`
       *)
 
-  val add_axiom : int -> string -> t -> t
+  val add_axiom : int -> infrule_t -> t -> t
 
-  val add_backlink : int -> string -> int -> Tagpairs.t -> t -> t
+  val add_backlink : int -> int -> Tagpairs.t -> t -> t
 
   val add_inf :
        int
-    -> string
+    -> infrule_t
     -> (seq_t * Tagpairs.t * Tagpairs.t) list
     -> t
     -> int list * t
@@ -98,5 +100,7 @@ module type S = sig
   (** Return a string containing a DOT representation of the proof. *)
 end
 
-module Make (Seq : Sequent.S) :
-  S with type seq_t = Seq.t with type node_t = Proofnode.Make(Seq).t
+module Make (Seq : Sequent.S) (Infrule : Infrule.S)
+    : S with type seq_t := Seq.t
+         and type infrule_t := Infrule.t
+         and type node_t := Proofnode.Make(Seq)(Infrule).t

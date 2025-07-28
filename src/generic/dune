@@ -5,7 +5,7 @@
  (modules
    (:standard
       \ checkproof))
- (modules_without_implementation sequent)
+ (modules_without_implementation sequent infrule)
  (foreign_stubs
   (language c)
   (names

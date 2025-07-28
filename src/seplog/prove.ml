@@ -13,8 +13,8 @@ let invalidity_check = ref false
 
 let slcomp = ref ""
 
-module Prover = Prover.Make (Seq)
-module F = Frontend.Make (Prover)
+module Prover = Prover.Make (Seq) (Strng)
+module F = Frontend.Make (Seq) (Strng)
 
 let () = F.maxbound := 0
 

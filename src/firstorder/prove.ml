@@ -9,17 +9,17 @@ let defs_path = ref "examples/fo.defs"
 let () =
   Tags.alphabet := VarManager.arabic_digits
 
-module Prover = Prover.Make(Seq)
-module F = Frontend.Make(Prover)
+module Prover = Prover.Make(Seq)(Strng)
+module F = Frontend.Make(Seq)(Strng)
 
 let () = F.usage := !F.usage ^ " [-D <file>] [-S <string>]"
 
-let () = 
+let () =
   let old_spec_thunk = !F.speclist in
-  F.speclist := 
+  F.speclist :=
     fun () ->
       old_spec_thunk () @ [
-        ("-D", Arg.Set_string defs_path, 
+        ("-D", Arg.Set_string defs_path,
           ": read inductive definitions from <file>, default is " ^ !defs_path);
         ("-S", Arg.Set_string cl_sequent, ": prove the FO sequent provided in <string>")
       ]

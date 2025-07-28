@@ -5,13 +5,15 @@ module type S = sig
 
   type seq_t
 
+  type infrule_t
+
   type node_t
 
   val mk : seq_t -> t
 
-  val add_axiom : int -> string -> t -> t
-  val add_backlink : int -> string -> int -> Tagpairs.t -> t -> t
-  val add_inf : int -> string -> (seq_t * Tagpairs.t * Tagpairs.t) list -> t
+  val add_axiom : int -> infrule_t -> t -> t
+  val add_backlink : int -> int -> Tagpairs.t -> t -> t
+  val add_inf : int -> infrule_t -> (seq_t * Tagpairs.t * Tagpairs.t) list -> t
     -> int list * t
   val add_subprf : t -> int -> t -> t
   val extract_subproof : int -> t -> t
@@ -34,11 +36,15 @@ module type S = sig
   val to_dot_string : t -> string
 end
 
-module Make (Seq : Sequent.S) = struct
-  module Node = Proofnode.Make (Seq)
+module Make
+  (Seq : Sequent.S)
+  (Infrule : sig type t val pp : Format.formatter -> t -> unit end) =
+struct
+  module Node = Proofnode.Make (Seq) (Infrule)
   module P = Int.Map
 
-  (* TODO: Why on earth is the node id being duplicated in the value type? *)
+  (* Node IDs map to a pair consisting of the associated proof [Node.t] value
+     and the parent node ID. *)
   type t = (int * Node.t) P.t
 
   type seq_t = Seq.t
@@ -105,12 +111,12 @@ module Make (Seq : Sequent.S) = struct
         Format.fprintf fmt
           "%a [shape=none label=<\
           <TABLE BORDER=\"0\">\
-          <TR><TD> </TD><TD ROWSPAN=\"2\" VALIGN=\"MIDDLE\">(%s)</TD></TR>\
+          <TR><TD> </TD><TD ROWSPAN=\"2\" VALIGN=\"MIDDLE\">%a</TD></TR>\
           <HR/>\
           <TR><TD>@[<h>%a@]</TD></TR>\
           </TABLE>>]"
           pp_node_id idx
-          rl
+          Infrule.pp (Option.get rl)
           Seq.pp seq in
     let pp_edges (idx, node) =
       let pp_edge dst (vtps, prog) =
@@ -120,7 +126,7 @@ module Make (Seq : Sequent.S) = struct
           Tagpairs.pp (Tagpairs.diff vtps prog)
           Tagpairs.pp prog in
       if (Node.is_backlink node) then
-        let (_, _, dst, tps) = Node.dest_backlink node in
+        let (_, dst, tps) = Node.dest_backlink node in
         pp_edge dst (tps, Tagpairs.empty)
       else if (Node.is_inf node) then
         let (_, _, succs, tpss) = Node.dest_inf node in
@@ -153,15 +159,16 @@ module Make (Seq : Sequent.S) = struct
 
   let ensure_add idx n prf =
     let n' = find idx prf in
-    assert (Node.is_open n' && Seq.equal (Node.get_seq n) (Node.get_seq n'))
+    assert (Node.is_open n') ;
+    assert (Seq.equal (Node.get_seq n) (Node.get_seq n'))
 
   let add_axiom idx descr prf =
     let n = Node.mk_axiom (get_seq idx prf) descr in
     ensure_add idx n prf ; replace idx n prf
 
-  let add_backlink idx descr target vtts prf =
+  let add_backlink idx target vtts prf =
     let seq = get_seq idx prf in
-    let n = Node.mk_backlink seq descr target vtts in
+    let n = Node.mk_backlink seq target vtts in
     ensure_add idx n prf ;
     assert (Seq.equal_upto_tags seq (get_seq target prf)) ;
     replace idx n prf
@@ -186,7 +193,7 @@ module Make (Seq : Sequent.S) = struct
       let n = find idx prf in
       if Node.is_open n then (prf', (node_map, bls))
       else if Node.is_axiom n then
-        let _, descr = Node.dest n in
+        let _, descr = Node.dest_axiom n in
         (add_axiom idx' descr prf', (node_map, bls))
       else if Node.is_backlink n then (prf', (node_map, (idx, idx') :: bls))
       else if Node.is_inf n then
@@ -210,8 +217,8 @@ module Make (Seq : Sequent.S) = struct
       _add (prf', (P.singleton 0 idx, [])) 0 idx
     in
     let fix_bl prf' (idx, idx') =
-      let _, descr, target, vtts = Node.dest_backlink (find idx prf) in
-      add_backlink idx' descr (P.find target node_map) vtts prf'
+      let _, target, vtts = Node.dest_backlink (find idx prf) in
+      add_backlink idx' (P.find target node_map) vtts prf'
     in
     Blist.fold_left fix_bl prf' bls
 
@@ -219,7 +226,7 @@ module Make (Seq : Sequent.S) = struct
     let rec _extract (prf', node_map) idx idx' =
       if P.mem idx node_map then
         let prf' =
-          add_backlink idx' "Backl"
+          add_backlink idx'
             (P.find idx node_map)
             (Tagpairs.mk (Seq.tags (get_seq idx prf)))
             prf'
@@ -230,12 +237,12 @@ module Make (Seq : Sequent.S) = struct
         let n = find idx prf in
         if Node.is_open n then (prf', node_map)
         else if Node.is_axiom n then
-          let _, descr = Node.dest n in
+          let _, descr = Node.dest_axiom n in
           (add_axiom idx' descr prf', node_map)
         else if Node.is_backlink n then
-          let _, descr, target, vtts = Node.dest_backlink n in
+          let _, target, vtts = Node.dest_backlink n in
           if P.mem target node_map then
-            ( add_backlink idx' descr (P.find target node_map) vtts prf'
+            ( add_backlink idx' (P.find target node_map) vtts prf'
             , node_map )
           else _extract (prf', node_map) target idx'
         else if Node.is_inf n then

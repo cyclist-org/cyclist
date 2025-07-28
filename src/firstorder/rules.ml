@@ -1,8 +1,8 @@
 open Lib
 open Generic
 
-module Proof = Proof.Make(Seq)
-module Rule = Proofrule.Make(Seq)
+module Proof = Proof.Make(Seq)(Strng)
+module Rule = Proofrule.Make(Seq)(Strng)
 module Seqtactics = Seqtactics.Make(Seq)
 
 let product_subsumed_upto_tags p1 p2 =
@@ -335,7 +335,7 @@ let matches_fun s1 s2 =
       if Seq.subsumed_wrt_tags new_acc s1 s2' then new_acc else acc
     ) tags Tags.empty in
   let () = assert (not (Tags.is_empty tags')) in
-  [ ((Tagpairs.mk tags', "Backl"), theta) ]
+  [ (Tagpairs.mk tags', theta) ]
 
 
 (*    seq'     *)
