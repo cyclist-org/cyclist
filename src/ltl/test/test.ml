@@ -20,8 +20,8 @@ let run_test seq =
   end
 
 (* Define some atoms, for convenience *)
-let p = mk_atom "p"
-let not_p = mk_negatom "p"
+let p = atom "p"
+let not_p = negatom "p"
 
 ;;
 

@@ -92,32 +92,32 @@ let rec parse st =
 
 (* Constructors *)
 
-let mk_atom a =
+let atom a =
   Atom a
-let mk_negatom a =
+let negatom a =
   NegAtom a
-let mk_disj (f, g) =
+let disj (f, g) =
   Disj (f, g)
-let mk_conj (f, g) =
+let conj (f, g) =
   Conj (f, g)
-let mk_next f =
+let next f =
   Next f
-let mk_eventually f =
+let eventually f =
   Eventually f
-let mk_always f =
+let always f =
   Always f
 
 module Operators =
 struct
-  let at = mk_atom
-  let nxt = mk_next
-  let ev = mk_eventually
-  let alw = mk_always
-  let ( || ) f f' = mk_disj (f, f')
-  let ( && ) f f' = mk_conj (f, f')
-  let _X = mk_next
-  let _F = mk_eventually
-  let _G = mk_always
+  let at = atom
+  let nxt = next
+  let ev = eventually
+  let alw = always
+  let ( || ) f f' = disj (f, f')
+  let ( && ) f f' = conj (f, f')
+  let _X = next
+  let _F = eventually
+  let _G = always
 end
 
 (* Destructors *)

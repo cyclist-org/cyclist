@@ -4,13 +4,13 @@ val parse : (t, 'a) MParser.t
 
 (** Constructors *)
 
-val mk_atom : string -> t
-val mk_negatom : string -> t
-val mk_disj : t * t -> t
-val mk_conj : t * t -> t
-val mk_next : t -> t
-val mk_eventually : t -> t
-val mk_always : t -> t
+val atom : string -> t
+val negatom : string -> t
+val disj : t * t -> t
+val conj : t * t -> t
+val next : t -> t
+val eventually : t -> t
+val always : t -> t
 
 module Operators :
 sig

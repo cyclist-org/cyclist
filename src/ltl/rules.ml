@@ -42,7 +42,7 @@ let eventually =
     | Some f ->
       let gamma = Seq.remove f seq in
       let f' = Option.get (Form. dest_eventually f) in
-      let seq' = Seq.add_all [f'; Form.mk_next f] gamma in
+      let seq' = Seq.add_all [f'; Form.next f] gamma in
       let valid_tps = Tagpairs.mk (Seq.tags gamma) in
       let prog_tps = Tagpairs.empty in
       [
@@ -81,7 +81,7 @@ let always =
       let tag = Option.get (Seq.get_tag f seq) in
       let gamma = Seq.remove f seq in
       let f' = Option.get (Form. dest_always f) in
-      let f'' = Form.mk_next f in
+      let f'' = Form.next f in
       let left_premise = Seq.add f' gamma in
       let right_premise = Seq.add f'' gamma in
       let tag' = Option.get (Seq.get_tag f'' right_premise) in
@@ -111,7 +111,7 @@ let next =
       let tps =
         Seq.fold_with_tags
           (fun (t', f') tps ->
-            let f = Form.mk_next f' in
+            let f = Form.next f' in
             if not ((Form.is_traceable f) && (Form.is_traceable f')) then
               tps
             else
