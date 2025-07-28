@@ -20,7 +20,7 @@ module type S = sig
 
   type abdgenrule_f = seq_t -> defs_t -> (infrule_app * defs_t) list
 
-  type t = int -> proof_t -> defs_t -> ((int list * proof_t) * defs_t) Blist.t
+  type t = int -> proof_t -> defs_t -> ((int list * proof_t) * defs_t) list
 
   val mk_abdinfrule : abdinfrule_f -> t
 
