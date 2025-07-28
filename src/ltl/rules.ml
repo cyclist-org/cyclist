@@ -151,6 +151,10 @@ let backlink =
 (* Weakening - guided by potential backlinks *)
 
 let weaken idx prf =
+  let target_seqs =
+    List.map
+      (fun idx -> Proof.get_seq idx prf)
+      (!Rule.default_select_f idx prf) in
   let rl seq =
     let weaken_wrt seq' =
       if (Seq.subset seq' seq) && not (Seq.equal_upto_tags seq' seq) then
@@ -161,15 +165,12 @@ let weaken idx prf =
              we guaranteed to be using this? *)
           Seq.diff seq (Seq.diff seq seq') in
         (* We can just use the tags in the premise here, since the formulas it
-           contains are guaranteed to values from [seq]. *)
+           contains are guaranteed to be values from [seq]. *)
         let valid_tps = Tagpairs.mk (Seq.tags premise) in
         Some ([(premise, valid_tps, Tagpairs.empty)], "Weaken")
       else
         None
       in
-    let target_nodes = !Rule.default_select_f idx prf in
-    let target_seqs =
-      List.map (fun idx -> Proof.get_seq idx prf) target_nodes in
     List.filter_map weaken_wrt target_seqs
   in
   Rule.mk_infrule rl idx prf
@@ -248,9 +249,10 @@ let rules =
       Rule.sequence [ weaken ; backlink ] ;
       (* Rule.choice [ cut ; invertible_phase ] ; *)
       invertible_phase ;
-      Rule.choice [
+      next ;
+      (* Rule.choice [
         next ;
         Rule.sequence [ next ; cut ] ;
-      ] ;
+      ] ; *)
     ])
 
