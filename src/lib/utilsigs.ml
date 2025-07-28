@@ -1,7 +1,15 @@
 (** Signatures for containers and essential types. *)
 
+module type OrderedType = sig
+  type t
+  (** Abstract ordered type *)
+
+  val compare : t -> t -> int
+  (** A total ordering over values of type [t] *)
+end
+
 module type BasicType = sig
-  include Set.OrderedType
+  include OrderedType
 
   val equal : t -> t -> bool
   (** Standard equality predicate. *)
