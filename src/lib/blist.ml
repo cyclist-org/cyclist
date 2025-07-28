@@ -44,7 +44,7 @@ let remove_nth n l =
   let rec remove_nth n l acc =
     match l with
     | [] -> invalid_arg "Blist.remove_nth"
-    | y :: ys -> 
+    | y :: ys ->
       begin match n with
       | 0 -> rev_append acc ys
       | _ -> remove_nth (n - 1) ys (y::acc)
@@ -122,6 +122,9 @@ let rec zip3 xs ys zs =
 let cartesian_product xs ys =
   foldl (fun acc x -> foldl (fun acc' y -> (x, y) :: acc') acc ys) [] xs
 
+let cartesian_map f xs ys =
+  foldl (fun acc x -> foldl (fun acc' y -> f x y :: acc') acc ys) [] xs
+
 let cartesian_hemi_square xs =
   let rec chs acc = function
     | [] -> acc
@@ -179,6 +182,21 @@ let map_to oadd oempty f xs = foldl (fun ys z -> oadd (f z) ys) oempty xs
 
 let opt_map_to oadd oempty f xs =
   map_to (function None -> Fun.id | Some x -> oadd x) oempty f xs
+
+let all_splits ?(allow_empty=true) =
+  let rec all_splits rev_prefix acc =
+    function
+    | [] ->
+      let acc = rev acc in
+      if allow_empty then
+        ([], rev rev_prefix) :: acc
+      else acc
+    | [x] when not allow_empty ->
+      all_splits (x::rev_prefix) acc []
+    | x :: xs ->
+      let rev_prefix = x::rev_prefix in
+      all_splits rev_prefix ((rev rev_prefix, xs)::acc) xs in
+  all_splits [] []
 
 (* tail rec versions, generally slower *)
 

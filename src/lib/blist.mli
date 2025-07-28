@@ -90,7 +90,7 @@ val remove_nth : int -> 'a t -> 'a t
 val replace_nth : 'a -> int -> 'a t -> 'a t
 
 val repeat : 'a -> int -> 'a t
-(** [repeat e n] constructs a list of length [n] where all elements are physically 
+(** [repeat e n] constructs a list of length [n] where all elements are physically
 equal to [e]. *)
 
 val range : int -> 'a t -> int t
@@ -132,6 +132,8 @@ will return [f x] for the first [x] in [l] such that [f x] is not [None], or [No
 
 val cartesian_product : 'a t -> 'b t -> ('a * 'b) t
 
+val cartesian_map : ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
+
 val cartesian_hemi_square : 'a t -> ('a * 'a) t
 (** Return a list of all pairs out of elements of a list, but without including
 symmetric pairs.  Useful for symmetric relations. *)
@@ -144,3 +146,15 @@ val combs : int -> 'a t -> 'a t t
 
 val pairs : 'a t -> ('a * 'a) t
 (** Return a list of pairs of consecutive elements. *)
+
+val all_splits : ?allow_empty:bool -> 'a t -> ('a t * 'a t) t
+(** [all_partitions ~allow_empty xs] returns a list of all possible ways of splitting
+    [xs] into two lists; i.e. the result contains all pairs
+    [(take i xs, drop i xs)] for 0 < [i] < [length xs].
+    If [allow_empty] is [true], or omitted, then the result contains all such pairs
+    for 0 <= [i] <= [length xs].
+    This is functionally equivalent to
+      [if allow_empty
+         then init ((length xs) + 1) (fun i -> (take i xs, drop i xs))
+         else init ((length xs) - 1) (fun i -> (take (i+1) xs, drop (i+1) xs))]
+    but is more efficient. Tail-recursive. *)
