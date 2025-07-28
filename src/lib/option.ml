@@ -1,4 +1,6 @@
 (** Functions for manipulating optional values. *)
+include Stdlib.Option
+
 let is_none = function None -> true | Some _ -> false
 
 let is_some = function Some _ -> true | None -> false
