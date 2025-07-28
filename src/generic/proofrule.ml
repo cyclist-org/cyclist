@@ -43,11 +43,15 @@ module type S = sig
 
   val attempt : t -> t
 
+  val non_empty : t -> t
+
   val compose : t -> t -> t
 
   val compose_pairwise : t -> t list -> t
 
   val repeat : t -> t
+
+  val repeat_one : t -> t
 
   val choice : t list -> t
 
@@ -155,6 +159,13 @@ module Make (Seq : Sequent.S) = struct
 
   let identity idx prf = L.singleton ([idx], prf)
 
+  let non_empty r idx prf =
+    match r idx prf with
+    | [([idx'], _)] when idx' = idx ->
+      []
+    | result ->
+      result
+
   (* This has been generalised below to take a list of rules                   *)
   (*                                                                           *)
   (* let apply_to_subgoals r (subgoals, prf) =                                 *)
@@ -235,6 +246,9 @@ module Make (Seq : Sequent.S) = struct
               res)
           apps in
     repeat
+
+  let repeat_one r =
+    compose r (repeat r)
 
   let conditional cond r idx prf =
     if cond (Proof.get_seq idx prf) then r idx prf else []
