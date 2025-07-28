@@ -16,6 +16,7 @@ module type S = sig
   val add_subprf : t -> int -> t -> t
   val extract_subproof : int -> t -> t
   val find : int -> t -> node_t
+  val find_parent : int -> t -> (int * node_t) option
   val get_seq : int -> t -> seq_t
   val size : t -> int
   val num_backlinks : t -> int
@@ -47,6 +48,13 @@ module Make (Seq : Sequent.S) = struct
   let get idx prf = P.find idx prf
 
   let find idx prf = snd (get idx prf)
+
+  let find_parent idx prf =
+    let (parent_idx, _) = get idx prf in
+    if (Int.equal idx parent_idx) then
+      None
+    else
+      Some (parent_idx, find parent_idx prf)
 
   let get_seq idx prf = Node.get_seq (find idx prf)
 
@@ -244,12 +252,14 @@ module Make (Seq : Sequent.S) = struct
     fst (_extract (mk (get_seq idx prf), P.empty) idx 0)
 
   let get_ancestry idx prf =
-    let rec aux acc idx (par_idx, n) =
-      let parent = get par_idx prf in
-      let acc = (idx, n) :: acc in
-      if Int.equal par_idx idx then acc else aux acc par_idx parent
+    let rec aux acc =
+      function
+      | None ->
+        acc
+      | Some (idx, node) ->
+        aux ((idx, node)::acc) (find_parent idx prf)
     in
-    aux [] idx (get idx prf)
+    aux [] (find_parent idx prf)
 
   let rec is_closed_at prf idx =
     let n = find idx prf in

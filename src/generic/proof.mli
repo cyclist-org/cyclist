@@ -56,6 +56,8 @@ module type S = sig
 
   val find : int -> t -> node_t
 
+  val find_parent : int -> t -> (int * node_t) option
+
   val get_seq : int -> t -> seq_t
 
   val size : t -> int
@@ -69,6 +71,7 @@ module type S = sig
   val fresh_idxs : 'a list -> t -> int list
 
   val get_ancestry : int -> t -> (int * node_t) list
+  (** Returns a list of all ancestor nodes, in the order oldest to youngest. *)
 
   val is_closed_at : t -> int -> bool
 
