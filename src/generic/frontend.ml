@@ -11,8 +11,6 @@ module Make (Prover : Prover.S) = struct
 
   let latex_path = ref ""
 
-  let open_file_for_append = ref false
-
   let timeout = ref 30
 
   let minbound = ref 1

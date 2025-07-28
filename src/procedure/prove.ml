@@ -71,9 +71,6 @@ let () =
 (* disable max search depth *)
 let () = F.maxbound := 0
 
-(* Append all proofs to the same file *)
-let () = F.open_file_for_append := true
-
 let proc_proofs : Proof.t option Proc.SigMap.t ref = ref Proc.SigMap.empty
 
 let entry_points = ref []
