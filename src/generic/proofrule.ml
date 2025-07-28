@@ -31,9 +31,6 @@ module type S = sig
   val closed_nodes : select_f
 
   val ancestor_nodes : select_f
-
-  val syntactically_equal_nodes : select_f
-
   val default_select_f : select_f ref
 
   val set_default_select_f : int -> unit
@@ -135,17 +132,6 @@ module Make (Seq : Sequent.S) = struct
 
   let ancestor_nodes srcidx prf = L.map fst (Proof.get_ancestry srcidx prf)
 
-  let syntactically_equal_nodes srcidx prf =
-    let seq = Proof.get_seq srcidx prf in
-    let nodes =
-      L.filter
-        (fun (idx, n) ->
-          (* TODO: Surely this should be equal_upto_tags? *)
-          Seq.equal seq (Node.get_seq n) && not (Int.equal idx srcidx) )
-        (Proof.to_list prf)
-    in
-    L.map fst nodes
-
   let default_select_f = ref all_nodes
 
   let set_default_select_f id =
@@ -157,16 +143,13 @@ module Make (Seq : Sequent.S) = struct
         closed_nodes
       | 2 ->
         ancestor_nodes
-      | 3 ->
-        syntactically_equal_nodes
       | _ ->
         !default_select_f
 
   let default_select_f_descr ?(line_prefix = "\t") () =
     line_prefix ^ "0 -- all proof nodes (DEFAULT)\n" ^
     line_prefix ^ "1 -- all closed proof nodes\n" ^
-    line_prefix ^ "2 -- all ancestor proof nodes\n" ^
-    line_prefix ^ "3 -- all syntactically equal proof nodes"
+    line_prefix ^ "2 -- all ancestor proof nodes\n"
 
   let fail _ _ = L.empty
 

@@ -65,9 +65,6 @@ module type S = sig
   val ancestor_nodes : select_f
   (** Ready-made selection function doing the obvious. *)
 
-  val syntactically_equal_nodes : select_f
-  (** Ready-made selection function doing the obvious. *)
-
   val default_select_f : select_f ref
   (** A reference to a default selection function (one of the above). *)
 

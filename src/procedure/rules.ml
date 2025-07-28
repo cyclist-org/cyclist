@@ -1139,15 +1139,9 @@ let mk_symex_proc_call procs idx prf =
   in
   rl idx prf
 
-let dobackl ?(get_targets = Rule.all_nodes) ?(choose_all = false) idx prf =
+let dobackl ?(choose_all = false) idx prf =
   let src_seq = Proof.get_seq idx prf in
-  let targets = get_targets idx prf in
-  let ident, rest =
-    Blist.partition
-      (fun idx -> Seq.equal src_seq (Proof.get_seq idx prf))
-      targets
-  in
-  let targets = ident @ rest in
+  let targets = !Rule.default_select_f idx prf in
   let () =
     debug (fun _ -> "Beginning calculation of potential backlink targets")
   in
@@ -1248,7 +1242,7 @@ let setup (defs, procs, prf_cache) =
         Rule.conditional
           (fun (_, cmd, _) ->
             Cmd.is_proc_call cmd && Cmd.is_empty (Cmd.get_cont cmd) )
-          (dobackl ~get_targets:Rule.syntactically_equal_nodes)
+          (dobackl)
       ; use_proc_prf prf_cache
       ; symex_proc_unfold
       ; symex_proc_call
