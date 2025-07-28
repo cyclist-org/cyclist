@@ -72,7 +72,7 @@ let compose t1 t2 =
      - a flag indicating whether the node is a bud
      - a set of tags
      - a list of successor node IDs along with, for each successor,
-        a list of the tag pairs and strictly progressing tag pairs
+       a list of the tag pairs and strictly progressing tag pairs
 *)
 type abstract_node = bool * Int.Set.t * (int * IntPair.Set.t * IntPair.Set.t) list
 
@@ -238,19 +238,25 @@ let valid prf init =
           else if (not (IntPair.Set.subset tp tv)) then
             let () =
               prerr_endline
-                (Printf.sprintf "Prog pairs for goal %i of node %i not contained in all pairs" i n_idx) in
+                (Printf.sprintf
+                  "Prog pairs for goal %i of node %i not contained in all pairs"
+                  i n_idx) in
             false
           (* The left-hand components of all tagpairs are in the tagset of n *)
           else if (not (Int.Set.subset (projectl tv) (get_tags n))) then
             let () =
               prerr_endline
-                (Printf.sprintf "Source tags of tagpairs for goal %i of node %i not contained in tags of node" i n_idx) in
+                (Printf.sprintf
+                  "Source tags of tagpairs for goal %i of node %i not \
+                   contained in tags of node" i n_idx) in
             false
           (* The right-hand components of all tagpairs are in the tagset of i *)
           else if (not (Int.Set.subset (projectr tv) (get_tags (Int.Map.find i prf)))) then
             let () =
               prerr_endline
-                (Printf.sprintf "Target tags of tagpairs for goal %i of node %i not contained in tags of target" i n_idx) in
+                (Printf.sprintf
+                  "Target tags of tagpairs for goal %i of node %i not \
+                   contained in tags of target" i n_idx) in
             false
           else
             true)
