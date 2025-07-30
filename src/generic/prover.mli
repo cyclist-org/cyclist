@@ -6,12 +6,6 @@ module type S = sig
   type rule_t
   type proof_t
 
-  (* module Seq : Sequent.S
-
-  module Proof : Proof.S with type seq_t := Seq.t
-                          and type infdata_t := infdata_t
-                          and type *)
-
   val last_search_depth : int ref
 
   val idfs : int -> int -> rule_t -> rule_t -> seq_t -> proof_t option
