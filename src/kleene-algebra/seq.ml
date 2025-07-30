@@ -82,7 +82,7 @@ let parse st =
     return (of_lists (es, fs))))
   ) st
 
-let of_string = mk_of_string parse
+let of_string = mk_of_string (parse << eof)
 
 let with_consequent fs (es, _) = (es, fs)
 

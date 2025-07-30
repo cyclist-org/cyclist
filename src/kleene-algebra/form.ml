@@ -136,7 +136,7 @@ let parse_letter st = (
     if (letter_valid c) then return c else fail "Invalid letter")
   ) st
 
-let rec parse st = (
+let rec parse_aux st = (
     ((Tokens.symbol "0" >>
         ((attempt (Symbols.(parse_symb symb_star) >>$ (Star Zero)))
           <|>
@@ -153,20 +153,21 @@ let rec parse st = (
           <|>
         (return (Letter c)))) <?> "Letter")
       <|>
-    ((Tokens.parens (
-      attempt (sep_by1 parse (Tokens.symbol "+") >>= (function
-          | _::_::_ as es -> return (either es)
-          | _ -> fail "Require at least two disjuncts"))
-        <|>
-      (many1 parse |>> concatenate)
-    )) >>= (fun f ->
+    (Tokens.parens parse >>= (fun f ->
       (attempt Symbols.(parse_symb symb_star) >>$ (Star f))
         <|>
       (return f))))
     << spaces
   ) st
+and parse st = (
+    attempt (sep_by1 parse_aux (Tokens.symbol "+") >>= (function
+        | _::_::_ as es -> return (either es)
+        | _ -> fail "Require at least two disjuncts"))
+      <|>
+    (many1 parse_aux |>> concatenate)
+  ) st
 
-let of_string = mk_of_string parse
+let of_string = mk_of_string (parse << eof)
 
 module Operators =
 struct

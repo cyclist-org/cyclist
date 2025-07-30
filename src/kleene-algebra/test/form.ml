@@ -68,3 +68,13 @@ let%test _ =
   let parsed = of_string "(a*)*" in
   let expected = star (star (letter 'a')) in
   parsed = expected
+
+let%test _ =
+  let parsed = of_string "(a*a)" in
+  let expected = concat (star (letter 'a')) (letter 'a') in
+  parsed = expected
+
+let%test _ =
+  let parsed = of_string "a*a" in
+  let expected = concat (star (letter 'a')) (letter 'a') in
+  parsed = expected
