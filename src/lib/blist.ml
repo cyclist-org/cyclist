@@ -172,7 +172,24 @@ let rec _combs k len l =
     in
     starting_with_h @ _combs k (pred len) t
 
-let combs k l = _combs k (length l) l
+let combs k l = rev (_combs k (length l) l)
+
+let all_combs ?(include_empty=false) l =
+  let rec all_combs acc =
+    function
+    | 0 ->
+      (* let acc = rev acc in *)
+      if include_empty then []::acc else acc
+    | n ->
+      let combs = combs n l in
+      all_combs ((rev combs) @ acc) (pred n)
+    in
+  match l with
+  | [] | [_] ->
+    if include_empty then [[]] else []
+  | _ ->
+    all_combs [] (pred (length l))
+
 
 let rec pairs = function
   | [] | [_] -> []
@@ -183,15 +200,15 @@ let map_to oadd oempty f xs = foldl (fun ys z -> oadd (f z) ys) oempty xs
 let opt_map_to oadd oempty f xs =
   map_to (function None -> Fun.id | Some x -> oadd x) oempty f xs
 
-let all_splits ?(allow_empty=true) =
+let all_splits ?(include_empty=true) =
   let rec all_splits rev_prefix acc =
     function
     | [] ->
       let acc = rev acc in
-      if allow_empty then
+      if include_empty then
         ([], rev rev_prefix) :: acc
       else acc
-    | [x] when not allow_empty ->
+    | [x] when not include_empty ->
       all_splits (x::rev_prefix) acc []
     | x :: xs ->
       let rev_prefix = x::rev_prefix in

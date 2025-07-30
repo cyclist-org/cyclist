@@ -140,16 +140,22 @@ val cartesian_hemi_square : 'a t -> ('a * 'a) t
 (** Return a list of all pairs out of elements of a list, but without including
 symmetric pairs.  Useful for symmetric relations. *)
 
+val pairs : 'a t -> ('a * 'a) t
+(** Return a list of pairs of consecutive elements. *)
+
 val choose : 'a t t -> 'a t t
 (** [choose [[1;2;3]; [4;5]]] returns [[[1;4];[1;5];[2;4];[2;5];[3;4];[3;5]]]. *)
 
 val combs : int -> 'a t -> 'a t t
 (** [combs n l] returns all combinations of [n] elements from [l]. *)
 
-val pairs : 'a t -> ('a * 'a) t
-(** Return a list of pairs of consecutive elements. *)
+val all_combs : ?include_empty:bool -> 'a t -> 'a t t
+(** [all ~include_empty combs l] returns all ways of choosing [n] elements from
+    [l] for all [n] < [length l]. When [include_empty] is [true], this also
+    includes the empty list (i.e. the case when [n] is zero).
+    The default value for [include_empty] is [false]. *)
 
-val all_splits : ?allow_empty:bool -> 'a t -> ('a t * 'a t) t
+val all_splits : ?include_empty:bool -> 'a t -> ('a t * 'a t) t
 (** [all_partitions ~allow_empty xs] returns a list of all possible ways of splitting
     [xs] into two lists; i.e. the result contains all pairs
     [(take i xs, drop i xs)] for 0 < [i] < [length xs].

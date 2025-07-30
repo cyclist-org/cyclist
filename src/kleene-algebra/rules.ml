@@ -271,7 +271,7 @@ let concat_right_combs_singleton =
       let consequent_splits =
         List.map
           (Pair.map Form.concatenate)
-          (Blist.all_splits ~allow_empty:false (Form.factorise f)) in
+          (Blist.all_splits ~include_empty:false (Form.factorise f)) in
       Blist.cartesian_map
         (fun ((gamma, gtps), (delta, dtps)) (f1, f2) ->
           [ (Seq.with_consequent [f1] gamma, gtps, Tagpairs.empty);
@@ -385,6 +385,21 @@ let wk_non_matching =
       [] in
   Rule.mk_infrule rl
 
+(* Produce all non-empty combinations of weakenings *)
+let wk_combs =
+  let rl seq =
+    match Seq.consequent seq with
+    | [] | [_] ->
+      []
+    | consequent ->
+      let tps = Tagpairs.mk (Seq.tags seq) in
+      List.map
+        (fun consequent ->
+          ([(Seq.with_consequent consequent seq), tps, Tagpairs.empty], Infrule.weaken))
+        (Blist.all_combs consequent)
+  in
+  Rule.mk_infrule rl
+
 (* Cut *)
 
 let cut_wrt seqs =
@@ -392,7 +407,9 @@ let cut_wrt seqs =
     let cut_antecedent = Seq.antecedent cut_seq in
     let len_cut_antecedent = List.length cut_antecedent in
     match Blist.sublist_last_index (cut_antecedent) (Seq.antecedent seq) with
-    | Some idx when len_cut_antecedent > 0 ->
+    | Some idx when len_cut_antecedent > 0
+                 && (idx > 0 || len_cut_antecedent < pred (Seq.right_start seq))
+        ->
       let cut_consequent = Seq.consequent cut_seq in
       let major_seq =
         Seq.with_consequent
@@ -544,6 +561,16 @@ let search_step =
         ] ;
     ])
 
+let wk_non_invertible =
+  Rule.conditional
+    (fun seq ->
+      match (Seq.antecedent seq) with
+      | e::_ when Form.is_letter e -> true
+      | _ -> false)
+    (Rule.compose
+      (Rule.attempt wk_non_matching)
+      (wk_combs))
+
 (* The proof-search strategy *)
 
 let axioms =
@@ -558,5 +585,10 @@ let rules =
   ref
     (Rule.first [
       backlink ;
-      Rule.choice [ search_step; cut_backlink; concat_right_combs_singleton; ] ;
+      Rule.choice [
+          wk_non_invertible ;
+          search_step;
+          cut_backlink;
+          concat_right_combs_singleton;
+        ] ;
     ])

@@ -29,87 +29,157 @@ let b = Form.letter 'b'
 
 let _ =
   run_test
-    (Seq.of_lists ([], []))
+    (Seq.of_lists (
+        [],
+        []
+      ))
 
 let _ =
   run_test
-    (Seq.of_lists ([a], [a]))
+    (Seq.of_lists (
+        [a],
+        [a]
+      ))
 
 let _ =
   run_test
-    (Seq.of_lists ([a], [b]))
-
-let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists ([a], [star a]))
-
-let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists ([star a], [star b]))
-
-let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists ([star a], [star a; star a]))
+    (Seq.of_lists (
+        [a],
+        [b]
+      ))
 
 let _ =
   let open Form in
   run_test
-    (Seq.of_lists ([star a], [(star a) <.> (star a)]))
+    (Seq.of_lists (
+        [a],
+        [star a]
+      ))
 
 let _ =
   let open Form in
   run_test
-    (Seq.of_lists ([(star a) <.> (star a)], [star a]))
+    (Seq.of_lists (
+        [star a],
+        [star b]
+      ))
 
 let _ =
   let open Form in
   run_test
-    (Seq.of_lists ([star a], [star (star a)]))
+    (Seq.of_lists (
+        [star a],
+        [star a; star a]
+      ))
 
 let _ =
   let open Form in
   run_test
-    (Seq.of_lists ([star (star a)], [star a]))
+    (Seq.of_lists (
+        [star a],
+        [(star a) <.> (star a)]
+      ))
 
 let _ =
   let open Form in
   run_test
-    (Seq.of_lists ([star a; star (star a)], [star a]))
+    (Seq.of_lists (
+        [(star a) <.> (star a)],
+        [star a]
+      ))
 
 let _ =
   let open Form in
   run_test
-    (Seq.of_lists ([star a], [star (a <+> b)]))
+    (Seq.of_lists (
+        [star a],
+        [star (star a)]
+      ))
 
 let _ =
   let open Form in
   run_test
-    (Seq.of_lists ([star b], [star (a <+> b)]))
+    (Seq.of_lists (
+        [star (star a)],
+        [star a]
+      ))
 
 let _ =
   let open Form in
   run_test
-    (Seq.of_lists ([star (a <+> b)], [star a]))
+    (Seq.of_lists (
+        [star a; star (star a)],
+        [star a]
+      ))
 
 let _ =
   let open Form in
   run_test
-    (Seq.of_lists ([star (a <+> b)], [star a; star b]))
+    (Seq.of_lists (
+        [star a],
+        [star (a <+> b)]
+      ))
 
 let _ =
   let open Form in
   run_test
-    (Seq.of_lists ([star a], [star (a <.> a); a <.> star (a <.> a)]))
+    (Seq.of_lists (
+        [star b],
+        [star (a <+> b)]
+      ))
 
 let _ =
   let open Form in
   run_test
-    (Seq.of_lists ([concat a (star a)], [concat (star a) a]))
+    (Seq.of_lists (
+        [star (a <+> b)],
+        [star a]
+      ))
 
 let _ =
   let open Form in
   run_test
-    (Seq.of_lists ([star (a <+> b)], [(star a) <.> (star (b <.> (star a)))]))
+    (Seq.of_lists (
+        [star (a <+> b)],
+        [star a; star b]
+      ))
+
+let _ =
+  let open Form in
+  run_test
+    (Seq.of_lists (
+        [star a],
+        [star (a <.> a); a <.> star (a <.> a)]
+      ))
+
+let _ =
+  let open Form in
+  run_test
+    (Seq.of_lists (
+        [concat a (star a)],
+        [concat (star a) a]
+      ))
+
+let _ =
+  let open Form in
+  run_test
+    (Seq.of_lists (
+        [star (a <+> b)],
+        [(star a) <.> (star (b <.> (star a)))]
+      ))
+
+let _ =
+  let open Form in
+  run_test
+    (Seq.of_lists (
+        [star a],
+        [star (a <.> a); (star (a <.> a)) <.> a]
+      ))
+
+let _ =
+  let open Form in
+  run_test
+    (Seq.of_lists (
+        [star a],
+        [one; (star (a <.> a)) <.> a; a <.> (star (a <.> a)) <.> a]
+      ))

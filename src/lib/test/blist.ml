@@ -5,7 +5,7 @@ open Lib.Blist
 let pp_print_list pp fmt =
   Format.fprintf fmt "[%a]"
     (Format.pp_print_list
-        ~pp_sep:(fun fmt () -> Format.pp_print_string fmt ", ")
+        ~pp_sep:(fun fmt () -> Format.pp_print_string fmt "; ")
         pp)
 
 let print_pair pp_fst pp_snd fmt (fst, snd) =
@@ -18,6 +18,9 @@ let print_int_list_pair_list =
     (print_pair
       (pp_print_list Format.pp_print_int)
       (pp_print_list Format.pp_print_int))
+
+let print_int_list_list =
+  pp_print_list (pp_print_list Format.pp_print_int)
 
 let output pp res =
   print_endline
@@ -39,18 +42,57 @@ let%test _ =
     [([], [0; 1; 2]); ([0], [1; 2]); ([0; 1], [2]); ([0; 1; 2], [])]
 
 let%test _ =
-  (all_splits ~allow_empty:false []) = []
+  (all_splits ~include_empty:false []) = []
 
 let%test _ =
-  (all_splits ~allow_empty:false [ 0 ]) = []
+  (all_splits ~include_empty:false [ 0 ]) = []
 
 let%test _ =
-   (all_splits ~allow_empty:false [ 0; 1; ]) = [([0], [1])]
+   (all_splits ~include_empty:false [ 0; 1; ]) = [([0], [1])]
 
 let%test _ =
-  (all_splits ~allow_empty:false [ 0; 1; 2; ]) = [([0], [1; 2]); ([0; 1], [2])]
+  (all_splits ~include_empty:false [ 0; 1; 2; ]) = [([0], [1; 2]); ([0; 1], [2])]
 
 let%test _ =
-  (all_splits ~allow_empty:false [ 0; 1; 2; 3; ]) =
+  (all_splits ~include_empty:false [ 0; 1; 2; 3; ]) =
     [([0], [1; 2; 3]); ([0; 1], [2; 3]); ([0; 1; 2], [3])]
 
+(* Test all_combs *)
+
+let%test _ =
+  (all_combs []) = []
+
+let%test _ =
+  (all_combs ~include_empty:true []) = [[]]
+
+let%test _ =
+  (all_combs [1]) = []
+
+let%test _ =
+  (all_combs ~include_empty:true [1]) = [[]]
+
+let%test _ =
+  (all_combs [1; 2]) = [[1]; [2]]
+
+let%test _ =
+  (all_combs ~include_empty:true [1; 2]) = [[]; [1]; [2]]
+
+let%test _ =
+  (all_combs [1; 2; 3]) = [[1]; [2]; [3]; [1; 2]; [1; 3]; [2; 3]]
+
+let%test _ =
+  (all_combs ~include_empty:true [1; 2; 3]) =
+    [[]; [1]; [2]; [3]; [1; 2]; [1; 3]; [2; 3]]
+
+let%test _ =
+  (all_combs [1; 2; 3; 4]) =
+    [[1]; [2]; [3]; [4];
+     [1; 2]; [1; 3]; [1; 4]; [2; 3]; [2; 4]; [3; 4];
+     [1; 2; 3]; [1; 2; 4]; [1; 3; 4]; [2; 3; 4]]
+
+let%test _ =
+  (all_combs ~include_empty:true [1; 2; 3; 4]) =
+    [[];
+     [1]; [2]; [3]; [4];
+     [1; 2]; [1; 3]; [1; 4]; [2; 3]; [2; 4]; [3; 4];
+     [1; 2; 3]; [1; 2; 4]; [1; 3; 4]; [2; 3; 4]]
