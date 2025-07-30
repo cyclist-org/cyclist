@@ -260,16 +260,10 @@ let concat_right_first_letter =
 (* Start simple: when there is just one consequent formula *)
 let concat_right_combs_singleton =
   let rl seq =
-    let () = debug (fun _ -> "Trying " ^ __FUNCTION__) in
     match (Seq.consequent seq) with
     | [ f ] ->
       let antecedent_splits =
         (Seq.all_left_splits (Seq.with_consequent [] seq)) in
-      let () =
-        debug (fun _ ->
-          Format.asprintf "antecedent splits: %a"
-            (Format.pp_print_list (Pair.pp Seq.pp Seq.pp))
-            antecedent_splits) in
       let antecedent_splits =
         List.map
           (Pair.map (fun seq -> (seq, Tagpairs.mk (Seq.tags seq))))
@@ -278,11 +272,6 @@ let concat_right_combs_singleton =
         List.map
           (Pair.map Form.concatenate)
           (Blist.all_splits ~allow_empty:false (Form.factorise f)) in
-      let () =
-        debug (fun _ ->
-          Format.asprintf "consequent splits: %a"
-            (Format.pp_print_list (Pair.pp Form.pp Form.pp))
-            consequent_splits) in
       Blist.cartesian_map
         (fun ((gamma, gtps), (delta, dtps)) (f1, f2) ->
           [ (Seq.with_consequent [f1] gamma, gtps, Tagpairs.empty);
