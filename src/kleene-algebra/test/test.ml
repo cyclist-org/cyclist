@@ -148,14 +148,6 @@ let _ =
   let open Form in
   run_test
     (Seq.of_lists (
-        [star a],
-        [star (a <.> a); a <.> star (a <.> a)]
-      ))
-
-let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
         [concat a (star a)],
         [concat (star a) a]
       ))
@@ -166,6 +158,14 @@ let _ =
     (Seq.of_lists (
         [star (a <+> b)],
         [(star a) <.> (star (b <.> (star a)))]
+      ))
+
+let _ =
+  let open Form in
+  run_test
+    (Seq.of_lists (
+        [star a],
+        [star (a <.> a); a <.> star (a <.> a)]
       ))
 
 let _ =
