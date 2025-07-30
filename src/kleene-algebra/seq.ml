@@ -22,6 +22,8 @@ struct
       Form.pp fmt f
     else
       Format.fprintf fmt "{%a: %a}" Tags.Elt.pp t Form.pp f
+  let pp_no_tags fmt (_, f) =
+    Form.pp fmt f
   let to_string = mk_to_string pp
 
 end
@@ -36,12 +38,15 @@ end
  *)
 type t = Formula.t list * Form.t list
 
-let pp fmt (es, fs) =
+let pp_aux print_tags fmt (es, fs) =
+  let pp_formula = if print_tags then Formula.pp else Formula.pp_no_tags in
   Format.fprintf fmt "%a ⊢ %a"
-    (Blist.pp (fun fmt () -> Format.fprintf fmt ", ") Formula.pp)
+    (Blist.pp (fun fmt () -> Format.fprintf fmt ", ") pp_formula)
     es
     (Blist.pp (fun fmt () -> Format.fprintf fmt ", ") Form.pp)
     fs
+let pp = pp_aux true
+let pp_no_tags = pp_aux false
 
 let to_string = mk_to_string pp
 

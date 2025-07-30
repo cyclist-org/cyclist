@@ -2,6 +2,8 @@ open Generic
 
 include Sequent.S
 
+val pp_no_tags : Format.formatter -> t -> unit
+
 val of_string : string -> t
 
 val antecedent : t -> Form.t list

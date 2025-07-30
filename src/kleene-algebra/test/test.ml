@@ -12,7 +12,7 @@ let () =
 let prove = Frontend.idfs !Rules.axioms !Rules.rules
 
 let run_test seq =
-  let () = Format.printf "Running test: %a " Seq.pp seq in
+  let () = Format.printf "Running test: %a " Seq.pp_no_tags seq in
   begin match (prove seq) with
   | None ->
     Format.printf "(Not proved)@."
