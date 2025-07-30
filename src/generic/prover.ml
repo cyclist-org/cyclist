@@ -49,11 +49,15 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
                   (Some prf') subgoals' )
               (r idx prf)
       in
+      let () =
+        debug (fun _ ->
+          Format.asprintf "Beginning proof search up to depth %i" bound) in
+      let () = last_search_depth := bound in
       match dfs bound 0 (Proof.mk seq) with
-      | None -> idfs (bound + 1) maxbound ax r seq
+      | None ->
+        idfs (bound + 1) maxbound ax r seq
       | res ->
-          last_search_depth := bound ;
-          res
+        res
 
   let print_proof_stats proof =
     let size = Proof.size proof in

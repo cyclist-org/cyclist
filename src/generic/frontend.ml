@@ -114,6 +114,9 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
       let res = Option.get res in
       if Option.is_none res then (
         if output then print_endline ("NOT proved: " ^ Seq.to_string seq) ;
+        if !Stats.do_statistics then
+          print_endline
+            (Format.asprintf "Search depth was %i" !Prover.last_search_depth);
         NOT_FOUND )
       else
         let proof = Option.get res in
