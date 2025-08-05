@@ -108,7 +108,7 @@ let _ =
   let open Form in
   run_test
     (Seq.of_lists (
-        [star a; star (star a)],
+        [star a <.> star (star a)],
         [star a]
       ))
 
