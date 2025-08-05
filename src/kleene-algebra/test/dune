@@ -1,5 +1,5 @@
 (library
- (name kleeneAlg_tests)
+ (name kleeneAlgTest)
  (libraries lib kleeneAlg)
  (inline_tests)
  (preprocess (pps ppx_inline_test ppx_expect))
