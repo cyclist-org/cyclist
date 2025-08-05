@@ -1,0 +1,10 @@
+(library
+ (name kleeneAlgGen)
+ (public_name cyclist.ka.gen)
+ (libraries kleeneAlg generic feat fix)
+ (modules :standard \ generate))
+
+(executable
+ (name generate)
+ (libraries lib kleeneAlg kleeneAlgGen feat ocamlregextkit cmdliner)
+ (modules generate))
