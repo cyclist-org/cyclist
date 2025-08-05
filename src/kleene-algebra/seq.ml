@@ -40,11 +40,10 @@ type t = Formula.t list * Form.t list
 
 let pp_aux print_tags fmt (es, fs) =
   let pp_formula = if print_tags then Formula.pp else Formula.pp_no_tags in
-  Format.fprintf fmt "%a ⊢ %a"
-    (Blist.pp (fun fmt () -> Format.fprintf fmt ", ") pp_formula)
-    es
-    (Blist.pp (fun fmt () -> Format.fprintf fmt ", ") Form.pp)
-    fs
+  Format.fprintf fmt "%a %a %a"
+    (Blist.pp (fun fmt () -> Format.fprintf fmt ", ") pp_formula) es
+    Symbols.pp_symb Symbols.symb_turnstile_unicode
+    (Blist.pp (fun fmt () -> Format.fprintf fmt ", ") Form.pp) fs
 let pp = pp_aux true
 let pp_no_tags = pp_aux false
 
@@ -82,7 +81,8 @@ let of_lists (es, fs) =
 let parse st =
   (
     sep_by Form.parse Tokens.comma >>= (fun es ->
-    parse_symb symb_turnstile >>
+    ((attempt (parse_symb symb_turnstile_unicode)
+        <|> parse_symb symb_turnstile) <?> "turnstile") >>
     sep_by Form.parse Tokens.comma >>= (fun fs ->
     return (of_lists (es, fs))))
   ) st

@@ -224,3 +224,17 @@ let%expect_test _ =
   let result = drop_right 1 (of_lists ([], [Form.one])) in
   print_endline (to_string result) ;
   [%expect{|  ⊢ |}]
+
+(* of_string *)
+
+let%test _ =
+  let parsed = of_string "a |- a" in
+  let open Form in
+  let expected = of_lists ([letter 'a'], [letter 'a']) in
+  Seq.equal parsed expected
+
+let%test _ =
+  let parsed = of_string "a ⊢ a" in
+  let open Form in
+  let expected = of_lists ([letter 'a'], [letter 'a']) in
+  Seq.equal parsed expected

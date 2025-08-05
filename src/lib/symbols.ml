@@ -52,6 +52,8 @@ let symb_comma = {str= ","; sep= ", "}
 
 let symb_turnstile = make_symb "|-"
 
+let symb_turnstile_unicode = make_symb "⊢"
+
 let symb_turnstile_underscore = make_symb "|-_"
 
 let symb_ind_implies = make_symb "=>"
@@ -143,3 +145,6 @@ let keyw_od = mk_keyw "od"
 let keyw_assert = mk_keyw "assert"
 
 let parse_symb s st = (spaces >> Tokens.skip_symbol s.str >> spaces) st
+
+let pp_symb fmt symb =
+  Format.pp_print_string fmt symb.str
