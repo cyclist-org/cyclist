@@ -101,10 +101,7 @@ let zero = Zero
 let one = One
 
 let letter c =
-  if (letter_valid c) then
-    Letter c
-  else
-    invalid_arg __FUNCTION__
+  Letter c
 
 let choice e f =
   Choice (e, f)
