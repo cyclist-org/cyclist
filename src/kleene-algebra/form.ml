@@ -2,10 +2,14 @@ open Lib
 open MParser
 open MParser_RE
 
+type letter = Char.t
+
+let letter_to_string = Format.asprintf "%c"
+
 type t =
 | Zero
 | One
-| Letter of Char.t
+| Letter of letter
 | Choice of t * t
 | Concat of t * t
 | Star of t

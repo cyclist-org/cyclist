@@ -1,13 +1,18 @@
 include Lib.BasicType
 
+type letter = Char.t
+(** the type of letters *)
+
 val parse : (t, 'a) MParser.t
 val of_string : string -> t
+
+val letter_to_string : letter -> string
 
 (** Constructors *)
 
 val zero : t
 val one : t
-val letter : char -> t
+val letter : letter -> t
 val choice : t -> t -> t
 val concat : t -> t -> t
 val star : t -> t
@@ -23,7 +28,7 @@ module Operators :
 
 (* Destructors *)
 
-val dest_letter : t -> char option
+val dest_letter : t -> letter option
 val dest_choice : t -> (t * t) option
 val dest_concat : t -> (t * t) option
 val dest_star : t -> t option
@@ -40,7 +45,7 @@ val is_star : t -> bool
 val is_atom : t -> bool
 
 val contains_empty : t -> bool
-val can_start_with : char -> t -> bool
+val can_start_with : letter -> t -> bool
 
 (* Operations *)
 
