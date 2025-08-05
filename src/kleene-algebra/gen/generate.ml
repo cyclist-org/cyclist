@@ -77,7 +77,8 @@ let gen_entailments
   let (min_size, max_size) = get_range min_size max_size in
   let enum = Enumerate.expressions1 ~include_zero ~include_one alphabet in
   let formulas =
-    Enum.sample num_per_size enum min_size max_size (Stdlib.Seq.empty) in
+    Stdlib.Seq.memoize
+      (Enum.sample num_per_size enum min_size max_size (Stdlib.Seq.empty)) in
   let with_dfas =
     Stdlib.Seq.map
       (fun f -> let dfa = to_dfa alphabet f in (f, dfa, Dfa.complement dfa))
