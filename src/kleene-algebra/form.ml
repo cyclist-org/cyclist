@@ -130,7 +130,7 @@ let rec concatenate =
 
 let parse_letter st = (
     spaces >> any_char >>= (fun c ->
-    if (letter_valid c) then return c else fail "Invalid letter")
+    if (letter_valid c) then return (Letter c) else fail "Invalid letter")
   ) st
 
 let rec parse_aux st = (
@@ -146,9 +146,9 @@ let rec parse_aux st = (
       <|>
     (attempt
         (parse_letter >>= (fun c ->
-        (attempt (Symbols.(parse_symb symb_star) >>$ Star (Letter c)))
+        (attempt (Symbols.(parse_symb symb_star) >>$ Star c))
           <|>
-        (return (Letter c)))) <?> "Letter")
+        (return c))) <?> "Letter")
       <|>
     (Tokens.parens parse >>= (fun f ->
       (attempt Symbols.(parse_symb symb_star) >>$ (Star f))
