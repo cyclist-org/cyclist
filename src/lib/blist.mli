@@ -30,6 +30,11 @@ val equal : ('a -> 'b -> bool) -> 'a t -> 'b t -> bool
 (** [equal eq l l'] computes pointwise equality between [l] and [l'] assuming
 [eq] computes equality between elements.*)
 
+val prefixes : ?eq:('a -> 'a -> bool) -> 'a t -> 'a t -> bool
+(** [prefixes ~eq xs ys] returns [true] if and only if the first [length xs]
+    elements of [xs] and [ys] are pairwise "equal", according to [eq].
+    When the optional argument [eq] is omitted, then [Stdlib.( = )] is used. *)
+
 val of_list : 'a list -> 'a t
 (** Construct a [t] list out of a primitive list. Just the identity in this module. *)
 
@@ -107,6 +112,21 @@ val find_index : ('a -> bool) -> 'a t -> int
 
 val find_indexes : ('a -> bool) -> 'a t -> int t
 (** [find_indexes pred l] returns the list of positions of all [x] in [l] such that [pred x = true]. *)
+
+val sublist_index : ?eq:('a -> 'a -> bool) -> 'a t -> 'a t -> int option
+(** [sublist ~eq xs ys] returns [Some i] when [i] is the smallest index such
+    that [xs] is a prefix of [drop i ys], where elements [x] and [y] are
+    considered equal when [eq x y] returns [true].
+    This will always be in the range 0 <= [i] < [length ys].
+    Raises [None] when no such index exists. *)
+
+val sublist_last_index : ?eq:('a -> 'a -> bool) -> 'a t -> 'a t -> int option
+(** [sublist ~eq xs ys] returns [Some i] when [i] is the largest index such
+    that [xs] is a prefix of [drop i ys], where elements [x] and [y] are
+    considered equal when [eq x y] returns [true].
+    This will always be in the range 0 <= [i] <= [length ys],
+    and [i] == [length ys] only when [xs] is the empty list.
+    Raises [None] when no such index exists. *)
 
 (** {6 List manipulation and conversion} *)
 

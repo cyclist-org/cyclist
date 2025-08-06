@@ -215,6 +215,34 @@ let all_splits ?(include_empty=true) =
       all_splits rev_prefix ((rev rev_prefix, xs)::acc) xs in
   all_splits [] []
 
+let prefixes ?(eq=( = )) =
+  let rec prefixes xs ys =
+  match xs, ys with
+  | [], _ ->
+    true
+  | x::xs, y::ys when eq x y ->
+    prefixes xs ys
+  | _,_ ->
+    false in
+  prefixes
+
+let sublist_index ?(eq=( = )) sub ys =
+  let sub_len = length sub in
+  let ys_len = length ys in
+  let rec aux i ys =
+    if (i < sub_len) then
+      None
+    else if (prefixes ~eq sub ys) then
+      Some (ys_len - i)
+    else
+      aux (i-1) (tl ys) in
+  aux ys_len ys
+
+let sublist_last_index ?(eq=( = )) sub ys =
+  Stdlib.Option.map
+    (fun i -> (length ys) - (length sub) - i)
+    (sublist_index ~eq (rev sub) (rev ys))
+
 (* tail rec versions, generally slower *)
 
 (* let map f xs = rev (rev_map f xs)                                    *)

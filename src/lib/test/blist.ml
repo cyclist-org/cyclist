@@ -26,6 +26,106 @@ let output pp res =
   print_endline
     (Format.asprintf "%a" pp res)
 
+(* Test sublist_index *)
+
+let%test _ =
+  (sublist_index [] []) = Some 0
+
+let%test _ =
+  (sublist_index [] [ 0 ]) = Some 0
+
+let%test _ =
+  (sublist_index [] [ 0; 1; 2; 3 ]) = Some 0
+
+let%test _ =
+  (sublist_index [ 0; 1; 2; 3 ] [ 0; 1; 2; 3 ]) = Some 0
+
+let%test _ =
+  (sublist_index [ 1; 2; 3 ] [ 0; 1; 2; 3 ]) = Some 1
+
+let%test _ =
+  (sublist_index [ 2; 3 ] [ 0; 1; 2; 3 ]) = Some 2
+
+let%test _ =
+  (sublist_index [ 3 ] [ 0; 1; 2; 3 ]) = Some 3
+
+let%test _ =
+  (sublist_index [ 0 ] [ 0; 1; 2; 3 ]) = Some 0
+
+let%test _ =
+  (sublist_index [ 1 ] [ 0; 1; 2; 3 ]) = Some 1
+
+let%test _ =
+  (sublist_index [ 2 ] [ 0; 1; 2; 3 ]) = Some 2
+
+let%test _ =
+  (sublist_index [ 0 ] [ 0; 1; 1; 0 ]) = Some 0
+
+let%test _ =
+  (sublist_index [ 1 ] [ 0; 1; 1; 0 ]) = Some 1
+
+let%test _ =
+  (sublist_index [ 1 ] [ 0; 1; 1; 1; 0 ]) = Some 1
+
+let%test _ =
+  (sublist_index [ 1; 1 ] [ 0; 1; 1; 0 ]) = Some 1
+
+let%test _ =
+  (sublist_index [ 1; 1 ] [ 0; 1; 1; 1; 0 ]) = Some 1
+
+let%test _ =
+  (sublist_index [ 1; 1 ] [ 0; 1; 1; 1; 1; 0 ]) = Some 1
+
+(* Test sublist_last_index *)
+
+let%test _ =
+  (sublist_last_index [] []) = Some 0
+
+let%test _ =
+  (sublist_last_index [] [ 0 ]) = Some 1
+
+let%test _ =
+  (sublist_last_index [] [ 0; 1; 2; 3 ]) = Some 4
+
+let%test _ =
+  (sublist_last_index [ 0; 1; 2; 3 ] [ 0; 1; 2; 3 ]) = Some 0
+
+let%test _ =
+  (sublist_last_index [ 1; 2; 3 ] [ 0; 1; 2; 3 ]) = Some 1
+
+let%test _ =
+  (sublist_last_index [ 2; 3 ] [ 0; 1; 2; 3 ]) = Some 2
+
+let%test _ =
+  (sublist_last_index [ 3 ] [ 0; 1; 2; 3 ]) = Some 3
+
+let%test _ =
+  (sublist_last_index [ 0 ] [ 0; 1; 2; 3 ]) = Some 0
+
+let%test _ =
+  (sublist_last_index [ 1 ] [ 0; 1; 2; 3 ]) = Some 1
+
+let%test _ =
+  (sublist_last_index [ 2 ] [ 0; 1; 2; 3 ]) = Some 2
+
+let%test _ =
+  (sublist_last_index [ 0 ] [ 0; 1; 1; 0 ]) = Some 3
+
+let%test _ =
+  (sublist_last_index [ 1 ] [ 0; 1; 1; 0 ]) = Some 2
+
+let%test _ =
+  (sublist_last_index [ 1 ] [ 0; 1; 1; 1; 0 ]) = Some 3
+
+let%test _ =
+  (sublist_last_index [ 1; 1 ] [ 0; 1; 1; 0 ]) = Some 1
+
+let%test _ =
+  (sublist_last_index [ 1; 1 ] [ 0; 1; 1; 1; 0 ]) = Some 2
+
+let%test _ =
+  (sublist_last_index [ 1; 1 ] [ 0; 1; 1; 1; 1; 0 ]) = Some 3
+
 (* Test all_splits *)
 
 let%test _ =
