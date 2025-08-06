@@ -18,7 +18,7 @@ module type S = sig
   val use_dot : bool ref
   val timeout : int ref
   val minbound : int ref
-  val maxbound : int ref
+  val maxbound : int option ref
   val speclist : (unit -> (string * Arg.spec * string) list) ref
   val usage : string ref
   val die : string -> (string * Arg.spec * string) list -> string -> 'a

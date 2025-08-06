@@ -20,7 +20,7 @@ module type S = sig
   val use_dot : bool ref
   val timeout : int ref
   val minbound : int ref
-  val maxbound : int ref
+  val maxbound : int option ref
   val speclist : (unit -> (string * Arg.spec * string) list) ref
   val usage : string ref
   val die : string -> (string * Arg.spec * string) list -> string -> 'a
@@ -51,18 +51,17 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
 
   let minbound = ref 1
 
-  let maxbound = ref 11
+  let maxbound = ref None
 
   let speclist =
     ref (fun () ->
         [ ( "-m", Arg.Set_int minbound,
               ": set starting depth for IDFS to <int>, default is "
                 ^ string_of_int !minbound )
-        ; ( "-M", Arg.Set_int maxbound,
-              ": set maximum depth for IDFS to <int>, 0 disables it,
-              default is " ^ string_of_int !maxbound )
+        ; ( "-M", Arg.Int (fun i -> maxbound := Some i),
+              ": set maximum depth for IDFS to <int>, default is unbounded" )
         ; ( "-L",
-              Arg.Int (fun n -> minbound := n ; maxbound := n ),
+              Arg.Int (fun n -> minbound := n ; maxbound := Some n ),
               ": set both depths to <int>." )
         ; ("-p", Arg.Set show_proof, ": show proof")
         ; ("--dot", Arg.Set use_dot, ": use DOT format for proofs")
@@ -128,7 +127,12 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
         SUCCESS proof
 
   let idfs ax r seq =
-    let maxbound = if Int.( < ) !maxbound 1 then max_int else !maxbound in
+    let maxbound =
+      match !maxbound with
+      | None ->
+        max_int
+      | Some i ->
+        if Int.( < ) i !minbound then !minbound else i in
     Prover.idfs !minbound maxbound ax r seq
 
   let prove_seq ax r seq =
