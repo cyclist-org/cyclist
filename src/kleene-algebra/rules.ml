@@ -459,11 +459,10 @@ let cut_backlink idx prf =
         let seq = Proof.get_seq idx prf in
         let seq' = Proof.get_seq idx' prf in
         let result =
-          (List.length (Seq.consequent seq)) - (List.length (Seq.consequent seq')) in
-        if Int.equal result 0 then
-          (Seq.right_start seq) - (Seq.right_start seq')
-        else
-          result)
+          List.compare_lengths (Seq.consequent seq) (Seq.consequent seq') in
+        if Int.equal result 0
+          then (Seq.right_start seq) - (Seq.right_start seq')
+          else result)
       (targets) in
   let target_seqs =
     (* Filter sequents not containing an antecedent star formula, as
