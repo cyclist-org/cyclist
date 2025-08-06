@@ -21,165 +21,84 @@ let run_test seq =
     Format.printf "(Proved)@."
   end
 
-(* Some atomic formulas *)
-let a = Form.letter 'a'
-let b = Form.letter 'b'
-
 (* The tests *)
 
 let _ =
-  run_test
-    (Seq.of_lists (
-        [],
-        []
-      ))
+  let seq = " ⊢ " in
+  run_test (Seq.of_string seq)
 
 let _ =
-  run_test
-    (Seq.of_lists (
-        [a],
-        [a]
-      ))
+  let seq = "a ⊢ a" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  run_test
-    (Seq.of_lists (
-        [a],
-        [b]
-      ))
+  let seq = "a ⊢ b" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
-        [a],
-        [star a]
-      ))
+  let seq = "a ⊢ a*" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
-        [star a],
-        [star b]
-      ))
+  let seq = "a* ⊢ b*" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
-        [star a],
-        [star a; star a]
-      ))
+  let seq = "a* ⊢ a*, a*" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
-        [star a],
-        [(star a) <.> (star a)]
-      ))
+  let seq = "a* ⊢ a*a*" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
-        [(star a) <.> (star a)],
-        [star a]
-      ))
+  let seq = "a*a* ⊢ a*" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
-        [star a],
-        [star (star a)]
-      ))
+  let seq = "a* ⊢ (a*)*" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
-        [star (star a)],
-        [star a]
-      ))
+  let seq = "(a*)* ⊢ a*" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
-        [star a <.> star (star a)],
-        [star a]
-      ))
+  let seq = "a*(a*)* ⊢ a*" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
-        [star a],
-        [star (a <+> b)]
-      ))
+  let seq = "a* ⊢ (a+b)*" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
-        [star b],
-        [star (a <+> b)]
-      ))
+  let seq = "b* ⊢ (a+b)*" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
-        [star (a <+> b)],
-        [star a]
-      ))
+  let seq = "(a+b)* ⊢ a*" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
-        [star (a <+> b)],
-        [star a; star b]
-      ))
+  let seq = "(a+b)* ⊢ a*, b*" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
-        [concat a (star a)],
-        [concat (star a) a]
-      ))
+  let seq = "aa* ⊢ a*a" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
-        [star (a <+> b)],
-        [(star a) <.> (star (b <.> (star a)))]
-      ))
+  let seq = "(a+b)* ⊢ a*(ba*)*" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
-        [star a],
-        [star (a <.> a); a <.> star (a <.> a)]
-      ))
+  let seq = "a* ⊢ (aa)*, a(aa)*" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
-        [star a],
-        [star (a <.> a); (star (a <.> a)) <.> a]
-      ))
+  let seq = "a* ⊢ (aa)*, (aa)*a" in
+  run_test (Seq.of_string seq)
 
 let _ =
-  let open Form in
-  run_test
-    (Seq.of_lists (
-        [star a],
-        [one; (star (a <.> a)) <.> a; a <.> (star (a <.> a)) <.> a]
-      ))
+  let seq = "a* ⊢ 1, (aa)*a, a(aa)*a" in
+  run_test (Seq.of_string seq)
