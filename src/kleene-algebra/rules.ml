@@ -329,7 +329,7 @@ let wk_all =
     | [] ->
       []
     | _ ->
-      let premise = Seq.drop_right 0 seq in
+      let premise = Seq.with_consequent [] seq in
       [
         [ (premise, Tagpairs.mk (Seq.tags premise), Tagpairs.empty) ],
             Infrule.weaken
