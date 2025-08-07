@@ -27,49 +27,48 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
   let last_search_depth = ref 0
 
   let rec idfs bound maxbound ax r seq =
-    if Int.( > ) bound maxbound then None
-    else
-      let rec dfs bound idx prf =
-        if Int.( <= ) bound 0 then
-          None
+    let rec dfs bound idx prf =
+      if Int.( <= ) bound 0 then
+        None
+      else
+        let () =
+          debug (fun () ->
+            Format.asprintf "Trying to close node: %i@.%a@."
+              idx
+              Proof.pp prf) in
+        let res =
+          Option.map snd
+            (L.find_opt (fun (ss', _) -> Blist.is_empty ss') (ax idx prf))
+        in
+        if Option.is_some res then
+          Some res
         else
-          let () =
-            debug (fun () ->
-              Format.asprintf "Trying to close node: %i@.%a@."
-                idx
-                Proof.pp prf) in
-          let res =
-            Option.map snd
-              (L.find_opt (fun (ss', _) -> Blist.is_empty ss') (ax idx prf))
-          in
-          if Option.is_some res then
-            Some res
-          else
-            match (r idx prf) with
-            | [] ->
-              Some None
-            | apps ->
-              let res =
-                L.find_map_or
-                  (fun (subgoals', prf') ->
-                    Blist.fold_left
-                      (fun prf idx' ->
-                        match prf with
-                        | Some (Some prf) ->
-                          dfs (bound - 1) idx' prf
-                        | _ ->
-                          prf)
-                      (Some (Some prf'))
-                      (subgoals'))
-                  (function | Some (Some _) -> true | _ -> false)
-                  (apps) in
-              match res with
-              | Left prf ->
-                prf
-              | Right attempts ->
-                if List.exists Option.is_none attempts
-                  then None
-                  else Some None in
+          match (r idx prf) with
+          | [] ->
+            Some None
+          | apps ->
+            let res =
+              L.find_map_or
+                (fun (subgoals', prf') ->
+                  Blist.fold_left
+                    (fun prf idx' ->
+                      match prf with
+                      | Some (Some prf) ->
+                        dfs (bound - 1) idx' prf
+                      | _ ->
+                        prf)
+                    (Some (Some prf'))
+                    (subgoals'))
+                (function | Some (Some _) -> true | _ -> false)
+                (apps) in
+            match res with
+            | Left prf ->
+              prf
+            | Right attempts ->
+              if List.exists Option.is_none attempts then None else Some None in
+    if Int.( > ) bound maxbound then
+      None
+    else
       let () =
         debug (fun _ ->
           Format.asprintf "Beginning proof search up to depth %i" bound) in
