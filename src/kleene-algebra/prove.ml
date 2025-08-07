@@ -6,7 +6,7 @@ open KleeneAlg
 let sequent = ref ""
 
 let () =
-  Tags.alphabet := VarManager.arabic_digits
+  Tags.alphabet := Lib.VarManager.greek_alphabet
 
 module Prover = Prover.Make(Seq)(Rules.Infrule)
 module F = Frontend.Make(Seq)(Rules.Infrule)

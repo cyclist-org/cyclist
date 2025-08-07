@@ -5,9 +5,6 @@ open KleeneAlg.Form.Operators
 module Proof = Proof.Make(Seq)(Rules.Infrule)
 module Frontend = Frontend.Make(Seq)(Rules.Infrule)
 
-let () =
-  Tags.alphabet := Lib.VarManager.greek_alphabet
-
 let () = Frontend.timeout := 10
 
 let prove = Frontend.prove_seq !Rules.axioms !Rules.rules
