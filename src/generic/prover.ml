@@ -29,26 +29,46 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
     if Int.( > ) bound maxbound then None
     else
       let rec dfs bound idx prf =
-        if Int.( < ) bound 0 then None
+        if Int.( < ) bound 0 then
+          None
         else
           let () =
             debug (fun () ->
-                "Trying to close node: " ^ string_of_int idx ^ "\n"
-                ^ Proof.to_string prf ^ "\n" )
-          in
+              Format.asprintf "Trying to close node: %i@.%a@."
+                idx
+                Proof.pp prf) in
           let res =
             Option.map snd
               (L.find_opt (fun (ss', _) -> Blist.is_empty ss') (ax idx prf))
           in
-          if Option.is_some res then res
+          if Option.is_some res then
+            Some res
           else
-            L.find_map
-              (fun (subgoals', prf') ->
-                Blist.fold_left
-                  (fun optprf idx' -> Option.bind (dfs (bound - 1) idx') optprf)
-                  (Some prf') subgoals' )
-              (r idx prf)
-      in
+            match (r idx prf) with
+            | [] ->
+              Some None
+            | apps ->
+              let res =
+                L.find_map_or
+                  (fun (subgoals', prf') ->
+                    Blist.fold_left
+                      (fun prf idx' ->
+                        match prf with
+                        | Some (Some prf) ->
+                          dfs (bound - 1) idx' prf
+                        | _ ->
+                          prf)
+                      (Some (Some prf'))
+                      (subgoals'))
+                  (function | Some (Some _) -> true | _ -> false)
+                  (apps) in
+              match res with
+              | Left prf ->
+                prf
+              | Right attempts ->
+                if List.exists Option.is_none attempts
+                  then None
+                  else Some None in
       let () =
         debug (fun _ ->
           Format.asprintf "Beginning proof search up to depth %i" bound) in
@@ -56,7 +76,7 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
       match dfs bound 0 (Proof.mk seq) with
       | None ->
         idfs (bound + 1) maxbound ax r seq
-      | res ->
+      | Some res ->
         res
 
   let print_proof_stats proof =

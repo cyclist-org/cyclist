@@ -200,6 +200,16 @@ let map_to oadd oempty f xs = foldl (fun ys z -> oadd (f z) ys) oempty xs
 let opt_map_to oadd oempty f xs =
   map_to (function None -> Fun.id | Some x -> oadd x) oempty f xs
 
+let find_map_or f p xs =
+  let rec find_map_or acc =
+    function
+    | [] ->
+      Either.Right (rev acc)
+    | x::xs ->
+      let result = f x in
+      if (p result) then Either.Left result else find_map_or (result::acc) xs in
+  find_map_or [] xs
+
 let all_splits ?(include_empty=true) =
   let rec all_splits rev_prefix acc =
     function

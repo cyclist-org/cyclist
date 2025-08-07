@@ -62,6 +62,13 @@ val map_to : ('a -> 'b -> 'b) -> 'b -> ('c -> 'a) -> 'c t -> 'b
 val opt_map_to : ('a -> 'b -> 'b) -> 'b -> ('c -> 'a option) -> 'c t -> 'b
 (** [opt_map_to oadd oempty f xs] is equivalent to [map_to (Option.dest Fun.id oadd) oempty f x] *)
 
+val find_map_or : ('a -> 'b) -> ('b -> bool) -> 'a list -> ('b, 'b list) Either.t
+(** [find_map_or map_f pred xs] returns [Left (map_f x)] where [x] is the first
+    element of [xs] such that [pred (map_f x)] returns [true] or else returns
+    [Right ys], where [ys] is equivalent to the result of [map map_f xs], when
+    no such [x] exists. In case a result of the form [Left (map_f x)] is
+    returned, [map_f] is only applied to the elements up to an including [x]. *)
+
 val weave :
   ('a -> 'b -> 'b t) -> ('a -> 'b -> 'c) -> ('c t -> 'c) -> 'a t -> 'b -> 'c
 (** Weave combinator - used in the SL Model Checker.
