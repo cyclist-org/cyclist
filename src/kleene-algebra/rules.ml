@@ -303,22 +303,22 @@ let wk_for_axiom =
       [] in
   Rule.mk_infrule rl
 
-(* Weaken away all consequent formulas exception a single occurrence of
-   [Form.one]. This can leave an empty consequent when there are no such
-   occurrences. This is designed to be pre-composed with the [one_right]
-   axiom. *)
+(* Weaken away all consequent formulas except a single occurrence of [Form.one].
+   This rule fails if there are no occurrences of [Form.one] in the consequent,
+   or if the consequent is already the singleton list containint [Form.one].
+   This is designed to be pre-composed with the [one_right] axiom. *)
 let wk_leave_one =
   let rl seq =
     match (Seq.consequent seq) with
-    | [f] when Form.is_one f ->
-      []
-    | _ ->
+    | _::_ when Seq.exists_right Form.is_one seq ->
       let premise = Seq.filter_right Form.is_one seq in
       let premise = Seq.take_right 1 premise in
       [
         [ (premise, Tagpairs.mk (Seq.tags premise), Tagpairs.empty) ],
             Infrule.weaken
-      ] in
+      ]
+    | _  ->
+      [] in
   Rule.mk_infrule rl
 
 (* Weaken away all consequent formulas. This is designed to be pre-composed with
