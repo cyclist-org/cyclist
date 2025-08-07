@@ -30,7 +30,7 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
     if Int.( > ) bound maxbound then None
     else
       let rec dfs bound idx prf =
-        if Int.( < ) bound 0 then
+        if Int.( <= ) bound 0 then
           None
         else
           let () =
