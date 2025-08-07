@@ -19,9 +19,9 @@ let run_test seq =
   | `NOT_FOUND ->
     Format.printf "(Not proved)@.Search depth was %i@." depth
   | `SUCCESS prf ->
-    Format.printf "(Proved)@.%a" Frontend.Prover.pp_proof_stats prf ;
+    Format.printf "(Proved)@." ;
+    Frontend.Prover.pp_proof_stats Format.std_formatter prf ;
     Format.printf "Search depth was %i@." depth
-    (* Format.printf "(Proved)@." *)
   | `TIMEOUT ->
     Format.printf "(Timed out)@.Last search depth was %i@." depth
 
