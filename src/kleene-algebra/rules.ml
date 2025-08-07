@@ -554,7 +554,7 @@ let search_step =
       Rule.first [
           (* No-op if we can close using an axiom in the next step *)
           Rule.conditional
-            (fun s -> Seq.is_axiomatic ~nonatomic:(not !atomic_axioms) s)
+            (Seq.is_axiomatic ~nonatomic:(not !atomic_axioms))
             (Rule.identity) ;
           Rule.attempt backlink ;
         ] ;
