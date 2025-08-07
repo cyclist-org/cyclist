@@ -139,7 +139,7 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
     | `TIMEOUT ->
       Format.fprintf fmt "NOT proved: %a [TIMEOUT]@." Seq.pp seq
     | `NOT_FOUND ->
-      Format.fprintf fmt "NOT proved: %a." Seq.pp seq ;
+      Format.fprintf fmt "NOT proved: %a@." Seq.pp seq ;
       if !Stats.do_statistics then
         Format.fprintf fmt "Search depth was %i@." depth
     | `SUCCESS proof ->
