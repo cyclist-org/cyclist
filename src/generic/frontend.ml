@@ -14,7 +14,12 @@ module type S = sig
                           and type infrule_t := infrule_t
                           and type node_t := node_t
 
-  type result_t = TIMEOUT | NOT_FOUND | SUCCESS of Proof.t
+  module Prover : Prover.S with type seq_t := seq_t
+                          and type rule_t := proofrule_t
+                          and type proof_t := Proof.t
+
+  type result_t =
+    seq_t * [ `TIMEOUT | `NOT_FOUND | `SUCCESS of Proof.t ] * Stats.t * int
 
   val show_proof : bool ref
   val use_dot : bool ref
@@ -25,11 +30,10 @@ module type S = sig
   val usage : string ref
   val die : string -> (string * Arg.spec * string) list -> string -> 'a
   val exit : result_t -> 'a
-  val gather_stats : (unit -> 'a) -> 'a option
-  val idfs : proofrule_t -> proofrule_t -> seq_t -> Proof.t option
-  val process_result : bool -> seq_t -> Proof.t option option -> result_t
 
   val prove_seq : proofrule_t -> proofrule_t -> seq_t -> result_t
+  val pp_result : Format.formatter -> result_t -> unit
+  val print_result : result_t -> unit
 
 end
 
@@ -39,7 +43,8 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
 
   module Prover = Prover.Make(Seq)(Infrule)
 
-  type result_t = TIMEOUT | NOT_FOUND | SUCCESS of Proof.t
+  type result_t =
+    Seq.t * [ `TIMEOUT | `NOT_FOUND | `SUCCESS of Proof.t ] * Stats.t * int
 
   let show_proof = ref false
 
@@ -88,10 +93,14 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
     print_endline (Arg.usage_string spec_list usage) ;
     exit 1
 
-  let exit = function
-    | TIMEOUT -> exit 2
-    | NOT_FOUND -> exit 1
-    | SUCCESS _ -> exit 0
+  let exit (_, res, _, _) =
+    match res with
+    | `TIMEOUT ->
+      exit 2
+    | `NOT_FOUND ->
+      exit 1
+    | `SUCCESS _ ->
+      exit 0
 
   let gather_stats call =
     Stats.reset () ;
@@ -101,30 +110,7 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
       else Some (call ())
     in
     Stats.Gen.end_call () ;
-    if !Stats.do_statistics then Stats.gen_print () ;
     res
-
-  let process_result output seq res =
-    if Option.is_none res then (
-      if output then
-        print_endline ("NOT proved: " ^ Seq.to_string seq ^ " [TIMEOUT]") ;
-      TIMEOUT )
-    else
-      let res = Option.get res in
-      if Option.is_none res then (
-        if output then print_endline ("NOT proved: " ^ Seq.to_string seq) ;
-        if !Stats.do_statistics then
-          print_endline
-            (Format.asprintf "Search depth was %i" !Prover.last_search_depth);
-        NOT_FOUND )
-      else
-        let proof = Option.get res in
-        if !show_proof then
-          let pp = if !use_dot then Proof.pp_dot else Proof.pp in
-          pp Format.std_formatter proof
-        else if output then print_endline ("Proved: " ^ Seq.to_string seq) ;
-        if !Stats.do_statistics then Prover.print_proof_stats proof ;
-        SUCCESS proof
 
   let idfs ax r seq =
     let maxbound =
@@ -137,6 +123,37 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
 
   let prove_seq ax r seq =
     Format.set_margin (Sys.command "exit $(tput cols)") ;
-    let res = gather_stats (fun () -> idfs ax r seq) in
-    process_result true seq res
+    let res =
+      match (gather_stats (fun () -> idfs ax r seq)) with
+      | None ->
+        `TIMEOUT
+      | Some None ->
+        `NOT_FOUND
+      | Some (Some proof) ->
+        `SUCCESS proof in
+    (seq, res, Stats.get_stats (), !Prover.last_search_depth)
+
+  let pp_result fmt (seq, res, stats, depth) =
+    if !Stats.do_statistics then Stats.pp_stats fmt stats ;
+    match res with
+    | `TIMEOUT ->
+      Format.fprintf fmt "NOT proved: %a [TIMEOUT]@." Seq.pp seq
+    | `NOT_FOUND ->
+      Format.fprintf fmt "NOT proved: %a." Seq.pp seq ;
+      if !Stats.do_statistics then
+        Format.fprintf fmt "Search depth was %i@." depth
+    | `SUCCESS proof ->
+      if !show_proof then
+        let pp = if !use_dot then Proof.pp_dot else Proof.pp in
+        pp fmt proof
+      else
+        Format.fprintf fmt "Proved: %a@." Seq.pp seq ;
+      if !Stats.do_statistics then
+        begin
+          Prover.pp_proof_stats fmt proof ;
+          Format.fprintf fmt "Required search depth was %i@." depth ;
+        end
+
+  let print_result res =
+    pp_result Format.std_formatter res
 end

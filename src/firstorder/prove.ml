@@ -30,4 +30,6 @@ let () =
   if String.equal !cl_sequent "" then F.die "-S must be specified." spec_list !F.usage ;
   let seq = Seq.of_string !cl_sequent in
   Rules.setup (Defs.of_channel (open_in !defs_path)) ;
-  F.exit (F.prove_seq !Rules.axioms !Rules.rules seq)
+  let res = F.prove_seq !Rules.axioms !Rules.rules seq in
+  F.print_result res ;
+  F.exit res

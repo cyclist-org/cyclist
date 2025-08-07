@@ -12,6 +12,7 @@ module type S = sig
 
   (* val bfs : int -> rule_t -> rule_t -> Seq.t -> Proof.t option   *)
   val print_proof_stats : proof_t -> unit
+  val pp_proof_stats : Format.formatter -> proof_t -> unit
 end
 
 module Make (Seq : Sequent.S) (Infrule : Infrule.S)

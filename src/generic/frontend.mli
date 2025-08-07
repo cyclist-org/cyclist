@@ -12,7 +12,12 @@ module type S = sig
                           and type infrule_t := infrule_t
                           and type node_t := node_t
 
-  type result_t = TIMEOUT | NOT_FOUND | SUCCESS of Proof.t
+  module Prover : Prover.S with type seq_t := seq_t
+                          and type rule_t := proofrule_t
+                          and type proof_t := Proof.t
+
+  type result_t =
+    seq_t * [ `TIMEOUT | `NOT_FOUND | `SUCCESS of Proof.t ] * Stats.t * int
 
   val show_proof : bool ref
   val use_dot : bool ref
@@ -23,11 +28,17 @@ module type S = sig
   val usage : string ref
   val die : string -> (string * Arg.spec * string) list -> string -> 'a
   val exit : result_t -> 'a
-  val gather_stats : (unit -> 'a) -> 'a option
-  val idfs : proofrule_t -> proofrule_t -> seq_t -> Proof.t option
-  val process_result : bool -> seq_t -> Proof.t option option -> result_t
 
   val prove_seq : proofrule_t -> proofrule_t -> seq_t -> result_t
+  (** [prove_seq axioms rules seq] runs the prover on the given sequent [seq]
+      with the given [axioms] and inference [rules], within a timeout wrapper
+      and gathers stats about the proof search. *)
+
+  val pp_result : Format.formatter -> result_t -> unit
+  (** Pretty-print result *)
+
+  val print_result : result_t -> unit
+  (** Print result to standard output *)
 
 end
 

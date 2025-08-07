@@ -106,10 +106,12 @@ let prove_seq ((pre, cmd, post) as seq) =
   if not (Proc.SigMap.mem signature !proc_proofs) then (
     Lib.debug (fun () -> "Beginning search for proof of: " ^ Seq.to_string seq) ;
     if !F.show_proof || !Stats.do_statistics then print_newline () ;
-    match F.prove_seq !Rules.axioms !Rules.rules seq with
-    | TIMEOUT | NOT_FOUND ->
+    let (_, res, _, _) as result = F.prove_seq !Rules.axioms !Rules.rules seq in
+    let () = F.print_result result in
+    match res with
+    | `TIMEOUT | `NOT_FOUND ->
         proc_proofs := Proc.SigMap.add signature None !proc_proofs
-    | SUCCESS prf ->
+    | `SUCCESS prf ->
         proc_proofs := Proc.SigMap.add signature (Some prf) !proc_proofs ;
         Blist.iter (extract_proof prf) (Proof.to_list prf) )
 

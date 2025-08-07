@@ -14,6 +14,7 @@ module type S = sig
 
   (* val bfs : int -> rule_t -> rule_t -> Seq.t -> Proof.t option   *)
   val print_proof_stats : proof_t -> unit
+  val pp_proof_stats : Format.formatter -> proof_t -> unit
 end
 
 module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
@@ -79,14 +80,16 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
       | Some res ->
         res
 
-  let print_proof_stats proof =
-    let size = Proof.size proof in
-    let links = Proof.num_backlinks proof in
-    print_endline
-      ( "Proof has " ^ string_of_int size ^ " nodes" ^ " and "
-      ^ string_of_int links ^ " back-links." ) ;
-    print_endline
-      ("Required search depth was " ^ string_of_int !last_search_depth)
+  let pp_proof_stats fmt prf =
+    let prf_size = Proof.size prf in
+    Format.fprintf fmt "Proof has %i node%s and %i back-links."
+      (prf_size)
+      (if Int.(prf_size > 1) then "s" else "")
+      (Proof.num_backlinks prf) ;
+    Format.pp_print_newline fmt ()
+
+  let print_proof_stats prf =
+    pp_proof_stats Format.std_formatter prf
 
   (* type app_state =                                                         *)
   (*   {                                                                      *)

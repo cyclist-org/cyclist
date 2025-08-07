@@ -3,23 +3,27 @@ open KleeneAlg
 open KleeneAlg.Form.Operators
 
 module Proof = Proof.Make(Seq)(Rules.Infrule)
-module Prover = Prover.Make(Seq)(Rules.Infrule)
 module Frontend = Frontend.Make(Seq)(Rules.Infrule)
 
 let () =
   Tags.alphabet := Lib.VarManager.greek_alphabet
 
-let prove = Frontend.idfs !Rules.axioms !Rules.rules
+let () = Frontend.timeout := 10
+
+let prove = Frontend.prove_seq !Rules.axioms !Rules.rules
 
 let run_test seq =
-  let () = Format.printf "Running test: %a " Seq.pp_no_tags seq in
-  begin match (prove seq) with
-  | None ->
-    Format.printf "(Not proved)@."
-  | Some prf ->
-    (* Format.printf "(Proved)@.%a" Proof.pp prf *)
-    Format.printf "(Proved)@."
-  end
+  let () = Format.printf "Running test: %a @?" Seq.pp_no_tags seq in
+  let (_, res, _, depth) = prove seq in
+  match res with
+  | `NOT_FOUND ->
+    Format.printf "(Not proved)@.Search depth was %i@." depth
+  | `SUCCESS prf ->
+    Format.printf "(Proved)@.%a" Frontend.Prover.pp_proof_stats prf ;
+    Format.printf "Search depth was %i@." depth
+    (* Format.printf "(Proved)@." *)
+  | `TIMEOUT ->
+    Format.printf "(Timed out)@.Last search depth was %i@." depth
 
 (* The tests *)
 

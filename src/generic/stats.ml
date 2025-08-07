@@ -69,39 +69,80 @@ end
 
 module MCCache = CacheStats (struct end)
 
+type t = {
+  min_cpu : float ;
+  gen_cpu : float ;
+  mc_cpu : float ;
+  mc_calls : int ;
+  mc_rejects : int ;
+  mc_cache_cpu : float ;
+  mc_cache_queries : int ;
+  mc_cache_hits : int ;
+  cc_cpu : float ;
+  cc_calls : int ;
+  cc_rejects : int ;
+  invalidity_cpu : float ;
+  invalidity_calls : int ;
+  invalidity_rejects : int ;
+}
+
+let get_stats () = {
+  min_cpu = !Minimization.cpu_time ;
+  gen_cpu = !Gen.cpu_time ;
+  mc_cpu = !MC.cpu_time ;
+  mc_calls = !MC.calls ;
+  mc_rejects = !MC.rejects ;
+  mc_cache_cpu = !MCCache.cpu_time ;
+  mc_cache_queries = !MCCache.queries ;
+  mc_cache_hits = !MCCache.hits ;
+  cc_cpu = !CC.cpu_time ;
+  cc_calls = !CC.calls ;
+  cc_rejects = !CC.rejects ;
+  invalidity_cpu = !Invalidity.cpu_time ;
+  invalidity_calls = !Invalidity.calls ;
+  invalidity_rejects = !Invalidity.rejects ;
+}
+
+let pp_stats fmt (stats : t) =
+  Format.fprintf fmt "GENERAL: Minimization took: %f ms.@."
+    (1000.0 *. stats.min_cpu) ;
+  Format.fprintf fmt "GENERAL: Elapsed process time: %.0f ms.@."
+    (1000.0 *. stats.gen_cpu) ;
+  Format.fprintf fmt
+    "MODCHECK: Absolute time spent model checking: %f ms.@."
+    (1000.0 *. stats.mc_cpu) ;
+  Format.fprintf fmt
+    "MODCHECK: Percentage of process time spent model checking: %.0f%%.@."
+    ( if Stdlib.( = ) stats.gen_cpu 0. then 0.
+      else 100.0 *. stats.mc_cpu /. stats.gen_cpu ) ;
+  Format.fprintf fmt "MODCHECK: Rejected %d out of %d calls.@."
+    stats.mc_rejects
+    stats.mc_calls ;
+  Format.fprintf fmt "MCCACHE: Hits: %d out of %d queries.@."
+    stats.mc_cache_hits
+    stats.mc_cache_queries ;
+  Format.fprintf fmt "MCCACHE: Time spent caching: %.0f ms.@."
+    (1000.0 *. stats.mc_cache_cpu) ;
+  Format.fprintf fmt "SLSAT: Total time spent: %.0f ms.@."
+    (1000.0 *. stats.cc_cpu) ;
+  Format.fprintf fmt "SLSAT: Percentage of process time spent: %.0f%%.@."
+    ( if Stdlib.( = ) stats.gen_cpu 0. then 0.
+      else 100.0 *. stats.cc_cpu /. stats.gen_cpu ) ;
+  Format.fprintf fmt
+    "SLSAT: %d out of %d predicate definitions were inconsistent.@."
+      stats.cc_rejects
+      stats.cc_calls ;
+  Format.fprintf fmt "INVAL: Total time spent: %.0f ms.@."
+    (1000.0 *. stats.invalidity_cpu) ;
+  Format.fprintf fmt "INVAL: Percentage of process time spent: %.0f%%.@."
+    ( if Stdlib.( = ) stats.gen_cpu 0. then 0.
+      else 100.0 *. stats.invalidity_cpu /. stats.gen_cpu ) ;
+  Format.fprintf fmt "INVAL: Found as invalid %d out of %d calls.@."
+    stats.invalidity_rejects
+    stats.invalidity_calls
+
 let gen_print () =
-  if !do_statistics then (
-    Printf.printf "GENERAL: Minimization took: %f ms\n"
-      (1000.0 *. !Minimization.cpu_time) ;
-    Printf.printf "GENERAL: Elapsed process time: %.0f ms\n"
-      (1000.0 *. !Gen.cpu_time) ;
-    Printf.printf
-      "MODCHECK: Absolute time spent model checking: %f ms\n"
-      (1000.0 *. !MC.cpu_time) ;
-    Printf.printf
-      "MODCHECK: Percentage of process time spent model checking: %.0f%%\n"
-      ( if Stdlib.( = ) !Gen.cpu_time 0. then 0.
-      else 100.0 *. !MC.cpu_time /. !Gen.cpu_time ) ;
-    Printf.printf "MODCHECK: Rejected %d out of %d calls.\n" !MC.rejects
-      !MC.calls ;
-    Printf.printf "MCCACHE: Hits: %d out of %d queries.\n" !MCCache.hits
-      !MCCache.queries ;
-    Printf.printf "MCCACHE: Time spent caching: %.0f ms \n"
-      (1000.0 *. !MCCache.cpu_time) ;
-    Printf.printf "SLSAT: Total time spent: %.0f ms\n" (1000.0 *. !CC.cpu_time) ;
-    Printf.printf "SLSAT: Percentage of process time spent: %.0f%%\n"
-      ( if Stdlib.( = ) !Gen.cpu_time 0. then 0.
-      else 100.0 *. !CC.cpu_time /. !Gen.cpu_time ) ;
-    Printf.printf
-      "SLSAT: %d out of %d predicate definitions were inconsistent.\n"
-      !CC.rejects !CC.calls ;
-    Printf.printf "INVAL: Total time spent: %.0f ms\n"
-      (1000.0 *. !Invalidity.cpu_time) ;
-    Printf.printf "INVAL: Percentage of process time spent: %.0f%%\n"
-      ( if Stdlib.( = ) !Gen.cpu_time 0. then 0.
-      else 100.0 *. !Invalidity.cpu_time /. !Gen.cpu_time ) ;
-    Printf.printf "INVAL: Found as invalid %d out of %d calls.\n"
-      !Invalidity.rejects !Invalidity.calls )
+  if !do_statistics then (pp_stats Format.std_formatter (get_stats()))
 
 let reset () =
   Gen.reset () ;
