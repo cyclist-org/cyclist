@@ -146,6 +146,16 @@ val uniq : ('a -> 'a -> bool) -> 'a t -> 'a t
 val intersperse : 'a -> 'a t -> 'a t
 (** Insert given element between elements of given list. *)
 
+val interleave : 'a t -> 'a t -> 'a t
+(** [interleave xs ys] interleave the elements of [xs] and [ys].
+    E.g. if [xs = [a;b;c]] and [ys = [d;e;f]], then the result is the list
+    [[a;d;b;e;c;f]].
+    If [xs] and [ys] have different lengths, the result is the interleaving of
+    of the truncation of the lists to the shortest length, followed by the
+    remainder of the longer list.
+    E.g. if [xs = [a;b;c]] and [ys = [d;e;f;g;h]], then the result is the list
+    [[a;d;b;e;c;f;g;h]]. *)
+
 val unzip3 : ('a * 'b * 'c) t -> 'a t * 'b t * 'c t
 
 val zip3 : 'a t -> 'b t -> 'c t -> ('a * 'b * 'c) t
@@ -193,3 +203,17 @@ val all_splits : ?include_empty:bool -> 'a t -> ('a t * 'a t) t
          then init ((length xs) + 1) (fun i -> (take i xs, drop i xs))
          else init ((length xs) - 1) (fun i -> (take (i+1) xs, drop (i+1) xs))]
     but is more efficient. Tail-recursive. *)
+
+val longest_common_prefix : ?eq:('a -> 'a -> bool) -> 'a t t -> 'a t
+(** [longest_common_prefix ?eq xss] returns the largest prefix of the first
+    element [xs] of [xss] such that each element of [xs] is "equal" to the
+    element at the corresponding position in each other element of [xss],
+    according to the predicate [eq].
+    When the optional argument [eq] is omitted, then [Stdlib.( = )] is used. *)
+
+val longest_common_suffix : ?eq:('a -> 'a -> bool) -> 'a t t -> 'a t
+(** [longest_common_suffix ?eq xss] returns the largest suffix of the first
+    element [xs] of [xss] such that each element of [xs] is "equal" to the
+    element at the corresponding position (from the end) in each other element
+    of [xss], according to the predicate [eq].
+    When the optional argument [eq] is omitted, then [Stdlib.( = )] is used. *)

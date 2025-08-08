@@ -75,6 +75,12 @@ module type S = sig
   val get_ancestry : int -> t -> (int * node_t) list
   (** Returns a list of all ancestor nodes, in the order oldest to youngest. *)
 
+  val get_ancestry_since : int -> int -> t -> (int * node_t) list
+  (** [get_ancestry_since idx' idx prf] returns a list of all ancestors of node
+      [idx] in [prf], in the order oldest to youngest, starting at node [idx'].
+      If [idx'] is not an ancestor of [idx] in [prf], then all ancestors of node
+      [idx] in [prf] are returned. *)
+
   val is_closed_at : t -> int -> bool
 
   val check : t -> bool

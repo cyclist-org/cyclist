@@ -113,6 +113,11 @@ module type S = sig
       [r] cannot be applied at least once (i.e. if the application of [r] fails
       immediately). *)
 
+  val repeat_with_fail : (int -> proof_t -> bool) -> t -> t
+  (** [repeat_with_fail pred r] keeps applying rule [r] recursively as long as
+      possible, but will fail on any subgoal that satisfies the failure
+      condition [pred]. *)
+
   val choice : t list -> t
   (** Apply a list of rules on current subgoal and return all applications. *)
 

@@ -26,6 +26,7 @@ module type S = sig
   val fresh_idx : t -> int
   val fresh_idxs : 'a list -> t -> int list
   val get_ancestry : int -> t -> (int * node_t) list
+  val get_ancestry_since : int -> int -> t -> (int * node_t) list
   val is_closed_at : t -> int -> bool
   val check : t -> bool
   val is_closed : t -> bool
@@ -258,6 +259,26 @@ struct
     in
     fst (_extract (mk (get_seq idx prf), P.empty) idx 0)
 
+  let get_ancestry_since idx' idx prf =
+    let rec aux acc =
+      function
+      | None ->
+        acc
+      | Some (idx, node) ->
+        let acc' = (idx, node)::acc in
+        if (Int.equal idx idx') then
+          acc'
+        else
+          aux acc' (find_parent idx prf)
+    in
+    if (Int.equal idx idx') then
+      []
+    else
+      aux [] (find_parent idx prf)
+
+  (* Note, we could have implemented get_ancestry as (get_ancestry_since 0).
+     However, reimplementing it allows is to avoid the equality check at each
+     recursive call, so it is slightly more efficient. *)
   let get_ancestry idx prf =
     let rec aux acc =
       function

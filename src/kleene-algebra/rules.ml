@@ -148,6 +148,15 @@ let concat_left_at idx =
       ] in
   Rule.mk_infrule rl
 
+(* Applies the left rule for the left-most antecedent concatenation formula *)
+let concat_left node_idx prf =
+  let seq = Proof.get_seq node_idx prf in
+  match (Seq.find_index_left Form.is_concat seq) with
+  | None ->
+    Rule.fail node_idx prf
+  | Some seq_idx ->
+    concat_left_at seq_idx node_idx prf
+
 (* Requires: [idx] is the index of a formula in the antecedent.
              For efficiency, we don't check that here, since this should only
              be called by the left-most left inference rule tactic. *)
@@ -167,6 +176,15 @@ let choice_left_at idx =
           (Infrule.choice_left idx)
       ] in
   Rule.mk_infrule rl
+
+(* Applies the left rule for the left-most antecdent choice formula *)
+let choice_left node_idx prf =
+  let seq = Proof.get_seq node_idx prf in
+  match (Seq.find_index_left Form.is_choice seq) with
+  | None ->
+    Rule.fail node_idx prf
+  | Some seq_idx ->
+    choice_left_at seq_idx node_idx prf
 
 let choice_right =
   let rl seq =
@@ -207,14 +225,25 @@ let star_left_at idx =
       ] in
   Rule.mk_infrule rl
 
-let star_right =
+(* Applies the left rule for the left-most antecdent star formula *)
+let star_left node_idx prf =
+  let seq = Proof.get_seq node_idx prf in
+  match (Seq.find_index_left Form.is_star seq) with
+  | None ->
+    Rule.fail node_idx prf
+  | Some seq_idx ->
+    star_left_at seq_idx node_idx prf
+
+(* Requires: [idx] is the index of a formula in the consequent.
+             For efficiency, we don't check that here, since this should only
+             be called by other tactics that ensure this is the case. *)
+let star_right_at idx =
   let rl seq =
-    match (Seq.find_index_right Form.is_star seq) with
+    let e_star = Seq.nth seq idx in
+    match (Form.dest_star e_star) with
     | None ->
       []
-    | Some idx ->
-      let e_star = Seq.nth seq idx in
-      let e = Option.get (Form.dest_star e_star) in
+    | Some e ->
       let premise =
         Seq.insert_many
           [Form.one; Form.concat e e_star ]
@@ -223,9 +252,16 @@ let star_right =
       [
         [ (premise, Tagpairs.mk (Seq.tags seq), Tagpairs.empty) ],
             Infrule.star_right
-      ]
-  in
+      ] in
   Rule.mk_infrule rl
+
+let star_right node_idx prf =
+  let seq = Proof.get_seq node_idx prf in
+  match (Seq.find_index_right Form.is_star seq) with
+  | None ->
+    []
+  | Some idx ->
+    star_right_at idx node_idx prf
 
 (* Concatenation Right Rules *)
 
@@ -257,30 +293,104 @@ let concat_right_first_letter =
         [] in
   Rule.mk_infrule rl
 
-(* Start simple: when there is just one consequent formula *)
-let concat_right_combs_singleton =
+let split_right_singleton f =
+  List.map
+    (Pair.map (fun fs -> [Form.concatenate fs]))
+    (Blist.all_splits ~include_empty:false (Form.factorise f))
+
+(* This version splits along all common prefixes and suffixes, not simply the
+   maximal ones. *)
+let split_right_multiple_all fs =
+  let fss = List.map Form.factorise fs in
+  let common_pre = Blist.longest_common_prefix ~eq:Form.equal fss in
+  let front_splits =
+    if (Int.equal (List.length common_pre) 0) then
+      []
+    else
+      List.mapi
+        (fun i _ ->
+          let left = [Form.concatenate (List.take (i+1) common_pre)] in
+          let right =
+            List.map (fun fs -> Form.concatenate (List.drop (i+1) fs)) fss in
+          (left, right))
+        (common_pre) in
+  let common_suf = Blist.longest_common_suffix ~eq:Form.equal fss in
+  if (Int.equal (List.length common_suf) 0) then
+    List.rev front_splits
+  else
+    let rev_fss = List.map List.rev fss in
+    let rev_suf = List.rev common_suf in
+    let back_splits =
+      List.mapi
+        (fun i _ ->
+          let left =
+            List.map
+              (fun fs -> Form.concatenate (List.rev (List.drop (i+1) fs)))
+              (rev_fss) in
+          let right = [Form.concatenate (List.rev (List.take (i+1) rev_suf))] in
+          (left, right))
+        (common_suf) in
+    Blist.interleave (List.rev front_splits) (List.rev back_splits)
+
+(* This version splits along only the longest common prefix and suffix.
+   In the proof search strategy, all splits are tried eventually as this is
+   applied repeatedly by the [right_decomposition] tactic, below. *)
+let split_right_multiple_maximal fs =
+  let fss = List.map Form.factorise fs in
+  let common_pre = Blist.longest_common_prefix ~eq:Form.equal fss in
+  let front_split =
+    let prefix_len = List.length common_pre in
+    Option.mk_lazily
+      (not (Int.equal prefix_len 0))
+      (fun () ->
+        let left = [Form.concatenate common_pre] in
+        let right =
+          List.map (fun fs -> Form.concatenate (List.drop prefix_len fs)) fss in
+        (left, right)) in
+  let common_suf = Blist.longest_common_suffix ~eq:Form.equal fss in
+    let back_split =
+      let suffix_len = List.length common_suf in
+      Option.mk_lazily
+        (not (Int.equal suffix_len 0))
+        (fun () ->
+          let left =
+            List.map
+              (fun fs ->
+                Form.concatenate (List.take ((List.length fs) - suffix_len) fs))
+              (fss) in
+          let right = [Form.concatenate common_suf] in
+          (left, right)) in
+    Option.list_get [front_split; back_split]
+
+let concat_right ?(non_maximal=false) =
   let rl seq =
-    match (Seq.consequent seq) with
-    | [ f ] ->
+    let consequent_splits =
+      match (Seq.consequent seq) with
+      | [] ->
+        []
+      | [ f ] ->
+        split_right_singleton f
+      | fs ->
+        if non_maximal then
+          split_right_multiple_all fs
+        else
+          split_right_multiple_maximal fs in
+    if (List.is_empty consequent_splits) then
+      []
+    else
       let antecedent_splits =
         (Seq.all_left_splits (Seq.with_consequent [] seq)) in
       let antecedent_splits =
         List.map
           (Pair.map (fun seq -> (seq, Tagpairs.mk (Seq.tags seq))))
           (antecedent_splits) in
-      let consequent_splits =
-        List.map
-          (Pair.map Form.concatenate)
-          (Blist.all_splits ~include_empty:false (Form.factorise f)) in
       Blist.cartesian_map
-        (fun ((gamma, gtps), (delta, dtps)) (f1, f2) ->
-          [ (Seq.with_consequent [f1] gamma, gtps, Tagpairs.empty);
-            (Seq.with_consequent [f2] delta, dtps, Tagpairs.empty) ],
+        (fun ((gamma, gtps), (delta, dtps)) (sigma, pi) ->
+          [ (Seq.with_consequent sigma gamma, gtps, Tagpairs.empty);
+            (Seq.with_consequent pi delta, dtps, Tagpairs.empty) ],
               Infrule.concat_right)
         (antecedent_splits)
-        (consequent_splits)
-    | _ ->
-      []  in
+        (consequent_splits) in
   Rule.mk_infrule rl
 
 (* Weakening Tactics *)
@@ -385,6 +495,20 @@ let wk_non_matching =
       [] in
   Rule.mk_infrule rl
 
+(* Weaken the formula at the given position.
+   Requires: the given index to be a valid index in the consequent.
+             For efficiency, we don't check that here, since this should only
+             be called by other tactics that ensure this is the case.*)
+let wk_at idx =
+  let rl seq =
+    let premise = Seq.remove_at idx seq in
+    [
+      [ (premise, Tagpairs.mk (Seq.tags seq), Tagpairs.empty) ],
+          Infrule.weaken
+    ]
+  in
+  Rule.mk_infrule rl
+
 (* Produce all non-empty combinations of weakenings *)
 let wk_combs =
   let rl seq =
@@ -445,12 +569,22 @@ let cut_backlink idx prf =
   (* Potential backlink targets are ancestral nodes that are not the conclusion
      of weakening rules. *)
   let targets =
-    List.filter
-      (fun idx ->
-        match (Node.dest (Proof.find idx prf)) with
-        | (_, None) | (_, Some Infrule.Weaken) -> false
-        | _ -> true)
-      (Rule.ancestor_nodes idx prf) in
+    let from_weakening idx =
+      match (Node.dest (Proof.find idx prf)) with
+      | (_, Some Infrule.Weaken) ->
+        true
+      | _ ->
+        false in
+    (* I thought we should not allow cycles to cross weakening rules, but this
+       is OK for invertible weakening rules, I think. *)
+    (* let oldest_to_youngest = Rule.ancestor_nodes idx prf in
+    let youngest_to_oldest = List.rev (oldest_to_youngest) in
+    match (List.find_index from_weakening youngest_to_oldest) with
+    | None ->
+      oldest_to_youngest
+    | Some i ->
+      List.rev (List.take i youngest_to_oldest) in *)
+    List.filter (Fun.neg from_weakening) (Rule.ancestor_nodes idx prf) in
   (* Sort the potential targets by consequent size, then antecendent size.
      We use a stable sort, so older nodes come first. *)
   let targets =
@@ -475,6 +609,16 @@ let cut_backlink idx prf =
   Rule.compose_pairwise (cut_wrt target_seqs) [backlink] idx prf
 
 (* Other tactics *)
+
+(* Apply the star right rule, immediately followed by a weakening that removes
+   the empty case of the resulting disjunction. *)
+let star_right_non_empty node_idx prf =
+  let seq = Proof.get_seq node_idx prf in
+  match (Seq.find_index_right Form.is_star seq) with
+  | None ->
+    Rule.fail node_idx prf
+  | Some idx ->
+    (Rule.compose (star_right_at idx) (wk_at idx)) node_idx prf
 
 let left_phase root_idx prf =
   (* Function to check whether the formula at position [f_idx] in
@@ -570,7 +714,48 @@ let wk_non_invertible =
       (Rule.attempt wk_non_matching)
       (wk_combs))
 
-(* The proof-search strategy *)
+let left_decomposition =
+  Rule.repeat
+    (Rule.first [
+      (* Go no further if we can apply zero-left rule *)
+      Rule.conditional (Seq.exists_left Form.is_zero) (Rule.fail) ;
+      (* Otherwise, continue *)
+      one_left ;
+      concat_left ;
+      choice_left ;
+    ])
+
+let right_decomposition idx prf =
+  let subgoal_repeats idx' prf' =
+    let seq = Proof.get_seq idx' prf' in
+    let ancestry = Proof.get_ancestry_since idx idx' prf' in
+    let res =
+      List.exists
+        (fun (idx'', node) -> Seq.equal seq (Node.get_seq node))
+        (ancestry) in
+    res
+  in
+  Rule.repeat_with_fail
+    (subgoal_repeats)
+  (* Rule.repeat *)
+    (Rule.conditional
+      (* Go no further if we can apply an axiom *)
+      (fun s -> not (Seq.is_axiomatic ~nonatomic:(not !atomic_axioms) s))
+      (* Otherwise, continue *)
+      (Rule.first [
+          wk_duplicates ;
+          wk_non_matching ;
+          choice_right ;
+          Rule.compose_pairwise
+            concat_right_first_letter
+            [Rule.identity; Rule.attempt backlink];
+          Rule.choice [ star_right ; star_right_non_empty ] ;
+          Rule.compose concat_right (Rule.attempt backlink) ;
+        ]))
+    (idx)
+    (prf)
+
+(* Proof-search strategies *)
 
 let axioms =
   ref
@@ -580,6 +765,7 @@ let axioms =
       Rule.compose (Rule.attempt wk_leave_one) one_right ;
     ])
 
+(* Keep the old search strategy, for reference *)
 let rules =
   ref
     (Rule.first [
@@ -588,6 +774,64 @@ let rules =
           wk_non_invertible ;
           search_step;
           cut_backlink;
-          concat_right_combs_singleton;
+          concat_right ~non_maximal:true;
         ] ;
     ])
+
+let rules =
+  ref
+    (Rule.first [
+      backlink ;
+      Rule.choice [
+        wk_non_invertible ;
+        cut_backlink ;
+        Rule.non_empty (Rule.compose left_decomposition right_decomposition) ;
+        Rule.compose left_decomposition star_left ;
+      ]
+    ])
+
+(* Inline tests *)
+module _ = struct
+  let print_splits fmt zs =
+    Format.pp_print_list ~pp_sep:Format.pp_force_newline
+      (fun fmt (xs, ys) ->
+        Format.fprintf fmt "(%a; %a)"
+          (Format.pp_print_list
+            ~pp_sep:(fun fmt () -> Format.pp_print_string fmt ", ")
+            Form.pp) xs
+          (Format.pp_print_list
+            ~pp_sep:(fun fmt () -> Format.pp_print_string fmt ", ")
+            Form.pp) ys)
+      (fmt)
+      (zs)
+
+  let a = Form.letter 'a'
+  let b = Form.letter 'b'
+  let c = Form.letter 'c'
+  let d = Form.letter 'd'
+  let e = Form.letter 'e'
+  let f = Form.letter 'f'
+
+  let%expect_test _ =
+    let form1 = Form.concatenate [a;b;c;e;f] in
+    let form2 = Form.concatenate [a;b;d;e;f] in
+    let result = split_right_multiple_all [form1;form2] in
+    print_endline (Format.asprintf "%a" print_splits result) ;
+    [%expect{|
+      (ab; cef, def)
+      (abc, abd; ef)
+      (a; bcef, bdef)
+      (abce, abde; f)
+    |}]
+
+  let%expect_test _ =
+    let form1 = Form.concatenate [a;b;c;e;f] in
+    let form2 = Form.concatenate [a;b;d;e;f] in
+    let result = split_right_multiple_maximal [form1;form2] in
+    print_endline (Format.asprintf "%a" print_splits result) ;
+    [%expect{|
+      (ab; cef, def)
+      (abc, abd; ef)
+    |}]
+
+end

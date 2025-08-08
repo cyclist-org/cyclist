@@ -32,6 +32,7 @@ module type S = sig
   val compose_pairwise : t -> t list -> t
   val repeat : t -> t
   val repeat_one : t -> t
+  val repeat_with_fail : (int -> proof_t -> bool) -> t -> t
   val choice : t list -> t
   val first : t list -> t
   val sequence : t list -> t
@@ -204,6 +205,28 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
     | [] -> identity
     | r :: rs -> compose r (sequence rs)
 
+  let repeat_with_fail fails r =
+    let rec repeat idx prf =
+      if (fails idx prf) then
+        []
+      else
+        let apps = r idx prf in
+        if (L.is_empty apps) then
+          identity idx prf
+        else
+          L.bind
+            (fun ((subgoals, _) as res) ->
+              apply_to_subgoals_pairwise
+                (L.repeat repeat (L.length subgoals))
+                res)
+            apps in
+    repeat
+
+  (* Note that we could have implemented repeat as
+       (repeat_with_fail (fun _ _ -> false))
+     but implementing it afresh avoids the application of the constant function
+     and conditional check on each recursive call. So, the duplication of code
+     here is justified in the name of being slightly more efficient. *)
   let repeat r =
     let rec repeat idx prf =
       let apps = r idx prf in

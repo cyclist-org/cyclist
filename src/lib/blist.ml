@@ -107,6 +107,17 @@ let rec prepend_to_all x = function
 
 let intersperse x = function [] -> [] | y :: ys -> y :: prepend_to_all x ys
 
+let interleave xs ys =
+  let rec interleave acc xs ys =
+    match xs, ys with
+    | [], _ ->
+      rev_append acc ys
+    | _, [] ->
+      rev_append acc xs
+    | x::xs, y::ys ->
+      interleave (y::x::acc) xs ys in
+    interleave [] xs ys
+
 let rec unzip3 = function
   | [] -> ([], [], [])
   | (x, y, z) :: ws ->
@@ -209,6 +220,33 @@ let find_map_or f p xs =
       let result = f x in
       if (p result) then Either.Left result else find_map_or (result::acc) xs in
   find_map_or [] xs
+
+(* compute the longest common prefix/suffix of lists *)
+let longest_common_prefix_aux eq reverse_acc =
+  let rec longest_common_prefix acc =
+    function
+    | [] ->
+      []
+    | [xs] ->
+      xs
+    | xss ->
+      let common_head =
+        Stdlib.Option.map
+          (fun xs ->
+            let x = hd xs in
+            for_all (function | [] -> false | y::_ -> eq x y) xss)
+          (find_opt (fun xs -> not (is_empty xs)) xss) in
+      if (Stdlib.Option.value ~default:false common_head) then
+        longest_common_prefix ((hd (hd xss))::acc) (map tl xss)
+      else if reverse_acc then
+        List.rev acc
+      else acc
+    in
+  longest_common_prefix
+let longest_common_prefix ?(eq=( = )) xss =
+  longest_common_prefix_aux eq true [] xss
+let longest_common_suffix ?(eq=( = )) xss =
+  longest_common_prefix_aux eq false [] (map rev xss)
 
 let all_splits ?(include_empty=true) =
   let rec all_splits rev_prefix acc =

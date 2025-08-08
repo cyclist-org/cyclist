@@ -196,3 +196,50 @@ let%test _ =
      [1]; [2]; [3]; [4];
      [1; 2]; [1; 3]; [1; 4]; [2; 3]; [2; 4]; [3; 4];
      [1; 2; 3]; [1; 2; 4]; [1; 3; 4]; [2; 3; 4]]
+
+(* Test interleave *)
+
+let%test _ =
+  let result = interleave [] [] in
+  let expected = [] in
+  result = expected
+
+let%test _ =
+  let result = interleave [0] [] in
+  let expected = [0] in
+  result = expected
+
+let%test _ =
+  let result = interleave [] [0] in
+  let expected = [0] in
+  result = expected
+
+let%test _ =
+  let result = interleave [0] [1] in
+  let expected = [0; 1] in
+  result = expected
+
+let%test _ =
+  let result = interleave [0;2] [1;3] in
+  let expected = [0;1;2;3] in
+  result = expected
+
+let%test _ =
+  let result = interleave [0;2] [1;3;4] in
+  let expected = [0;1;2;3;4] in
+  result = expected
+
+let%test _ =
+  let result = interleave [0;2;4] [1;3] in
+  let expected = [0;1;2;3;4] in
+  result = expected
+
+let%test _ =
+  let result = interleave [0;2] [1;3;4;5] in
+  let expected = [0;1;2;3;4;5] in
+  result = expected
+
+let%test _ =
+  let result = interleave [0;2;4;5] [1;3] in
+  let expected = [0;1;2;3;4;5] in
+  result = expected
