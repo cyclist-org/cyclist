@@ -269,28 +269,32 @@ let star_right node_idx prf =
    and all consequent formulas. *)
 let concat_right_first_letter =
   let rl seq =
-    let consequent = List.map Form.factorise (Seq.consequent seq) in
-    let (first, rest) =
-      List.split (List.map (fun fs -> List.hd fs, List.tl fs) consequent) in
-    if List.exists List.is_empty rest then
+    match (Seq.consequent seq) with
+    | [] ->
       []
-    else
-      match Seq.nth_opt seq 0 with
-      | Some e when Form.is_letter e && List.for_all (Form.equal e) first ->
-        let left_premise = Seq.with_consequent [e] (Seq.take_left 1 seq) in
-        let left_tps = Tagpairs.mk (Seq.tags left_premise) in
-        let right_premise =
-          Seq.with_consequent
-            (List.map Form.concatenate rest)
-            (Seq.drop_left 1 seq) in
-        let right_tps = Tagpairs.mk (Seq.tags right_premise) in
-        [
-          [ (left_premise, left_tps, Tagpairs.empty) ;
-            (right_premise, right_tps, Tagpairs.empty) ; ],
-              Infrule.concat_right
-        ]
-      | _ ->
-        [] in
+    | fs ->
+      let fs' = List.map Form.factorise fs in
+      let (first, rest) =
+        List.split (List.map (fun fs -> List.hd fs, List.tl fs) fs') in
+      if List.exists List.is_empty rest then
+        []
+      else
+        match Seq.nth_opt seq 0 with
+        | Some e when Form.is_letter e && List.for_all (Form.equal e) first ->
+          let left_premise = Seq.with_consequent [e] (Seq.take_left 1 seq) in
+          let left_tps = Tagpairs.mk (Seq.tags left_premise) in
+          let right_premise =
+            Seq.with_consequent
+              (List.map Form.concatenate rest)
+              (Seq.drop_left 1 seq) in
+          let right_tps = Tagpairs.mk (Seq.tags right_premise) in
+          [
+            [ (left_premise, left_tps, Tagpairs.empty) ;
+              (right_premise, right_tps, Tagpairs.empty) ; ],
+                Infrule.concat_right
+          ]
+        | _ ->
+          [] in
   Rule.mk_infrule rl
 
 let split_right_singleton f =
