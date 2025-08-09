@@ -563,6 +563,8 @@ let backlink =
   let rl bud companion =
     if (not (Seq.equal_upto_tags bud companion)) then
       []
+    else if (Tags.is_empty (Seq.tags bud)) then
+      []
     else
       [ Seq.zip_tags bud companion ]
   in
