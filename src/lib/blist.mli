@@ -66,8 +66,9 @@ val find_map_or : ('a -> 'b) -> ('b -> bool) -> 'a list -> ('b, 'b list) Either.
 (** [find_map_or map_f pred xs] returns [Left (map_f x)] where [x] is the first
     element of [xs] such that [pred (map_f x)] returns [true] or else returns
     [Right ys], where [ys] is equivalent to the result of [map map_f xs], when
-    no such [x] exists. In case a result of the form [Left (map_f x)] is
-    returned, [map_f] is only applied to the elements up to an including [x]. *)
+    no such [x] exists.
+    In case a result of the form [Left (map_f x)] is returned, [map_f] is only
+    applied to the elements up to and including [x]. *)
 
 val weave :
   ('a -> 'b -> 'b t) -> ('a -> 'b -> 'c) -> ('c t -> 'c) -> 'a t -> 'b -> 'c
@@ -193,11 +194,11 @@ val all_combs : ?include_empty:bool -> 'a t -> 'a t t
     The default value for [include_empty] is [false]. *)
 
 val all_splits : ?include_empty:bool -> 'a t -> ('a t * 'a t) t
-(** [all_partitions ~allow_empty xs] returns a list of all possible ways of splitting
-    [xs] into two lists; i.e. the result contains all pairs
+(** [all_partitions ~include_empty xs] returns a list of all possible ways of
+    splitting [xs] into two lists; i.e. the result contains all pairs
     [(take i xs, drop i xs)] for 0 < [i] < [length xs].
-    If [allow_empty] is [true], or omitted, then the result contains all such pairs
-    for 0 <= [i] <= [length xs].
+    If [include_empty] is [true], or omitted, then the result contains all such
+    pairs for 0 <= [i] <= [length xs].
     This is functionally equivalent to
       [if allow_empty
          then init ((length xs) + 1) (fun i -> (take i xs, drop i xs))
