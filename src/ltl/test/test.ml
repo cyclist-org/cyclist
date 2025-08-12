@@ -9,16 +9,20 @@ module Frontend = Frontend.Make(Seq)(Lib.Strng)
 let () =
   Tags.alphabet := Lib.VarManager.arabic_digits
 
-let prove = Frontend.idfs !Rules.axioms !Rules.rules
+let prove = Frontend.prove_seq !Rules.axioms !Rules.rules
 
 let run_test seq =
-  let () = Format.printf "Running test: %a " Seq.pp seq in
-  begin match (prove seq) with
-  | None ->
-    Format.printf "(Not proved)@."
-  | Some prf ->
-    Format.printf "(Proved)@.%a" Proof.pp prf
-  end
+  let () = Format.printf "Running test: %a @?" Seq.pp seq in
+  let (_, res, _, depth) = prove seq in
+  match res with
+  | `NOT_FOUND ->
+    Format.printf "(Not proved)@.Search depth was %i@." depth
+  | `SUCCESS prf ->
+    Format.printf "(Proved)@." ;
+    Frontend.Prover.pp_proof_stats Format.std_formatter prf ;
+    Format.printf "Search depth was %i@." depth
+  | `TIMEOUT ->
+    Format.printf "(Timed out)@.Last search depth was %i@." depth
 
 (* Define some atoms, for convenience *)
 let p = mk_atom "p"
