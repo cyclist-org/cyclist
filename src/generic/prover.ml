@@ -27,6 +27,10 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
   let last_search_depth = ref 0
 
   let rec idfs bound maxbound ax r seq =
+    (* DFS returns one of three options:
+         - None: Didn't find a proof yet (i.e. some open subgoals remain);
+         - Some None: Didn't find a proof, and exhausted the search space;
+         - Some (Some prf): We found a proof [prf]. *)
     let rec dfs bound idx prf =
       if Int.( <= ) bound 0 then
         None
@@ -53,19 +57,45 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
                   Blist.fold_left
                     (fun prf idx' ->
                       match prf with
+                      | None ->
+                        (* The search to close some earlier node hit the max
+                           search depth without exhausting the search space,
+                           so we need to continue trying to close the next
+                           open node in case this reveals a dead-end in the
+                           search space. *)
+                        dfs (bound - 1) idx' prf'
+                      | Some None ->
+                        (* The search to close some earlier node exhausted the
+                           search space, so we simply propagate this result. *)
+                        prf
                       | Some (Some prf) ->
-                        dfs (bound - 1) idx' prf
-                      | _ ->
-                        prf)
+                        (* We have found subproofs for all previous nodes in
+                           this proof, so continue with the next open node. *)
+                        dfs (bound - 1) idx' prf)
                     (Some (Some prf'))
                     (subgoals'))
-                (function | Some (Some _) -> true | _ -> false)
+                (function
+                  | Some (Some prf) when Proof.is_closed_at prf idx -> true
+                  | _ -> false)
                 (apps) in
             match res with
             | Left prf ->
+              (* In this case, we are guaranteed by the definition of
+                 find_map_or that prf is of the form (Some (Some prf')) with
+                 prf' closed at idx. *)
               prf
             | Right attempts ->
-              if List.exists Option.is_none attempts then None else Some None in
+              (* Otherwise we need to check whether proof search for each of the
+                 different rule applications exhausted the search space. *)
+              if
+                List.for_all
+                  (function | Some None -> true | _ -> false)
+                  (attempts)
+              (* In which case, we have exhausted the search space overall. *)
+              then Some None
+              (* Otherwise, there was some branch of the search space that can
+                 still to be explored further. *)
+              else None in
     if Int.( > ) bound maxbound then
       None
     else
