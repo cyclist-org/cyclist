@@ -105,7 +105,7 @@ let abd_substs ?(used_tags = Tags.empty)
           [Rule.attempt rhs_disj_to_symheaps; Rule.attempt simplify; axiom]
       ; axiom ]
   in
-  let rules = Rule.combine_axioms axiom !rules in
+  let rules = Rule.first [ axiom; Rule.compose !rules axiom; ] in
   let proof = Prover.idfs 1 !maxdepth Rule.fail rules (f, f') in
   Option.mk (Option.is_some proof) !result
 
@@ -137,7 +137,7 @@ let abd_bi_substs ?(init_state = Unify.Bidirectional.empty_state)
           [Rule.attempt rhs_disj_to_symheaps; Rule.attempt simplify; axiom]
       ; axiom ]
   in
-  let rules = Rule.combine_axioms axiom !rules in
+  let rules = Rule.first [ axiom; Rule.compose !rules axiom; ] in
   let proof = Prover.idfs 1 !maxdepth Rule.fail rules (f, f') in
   Option.map
     (fun _ ->

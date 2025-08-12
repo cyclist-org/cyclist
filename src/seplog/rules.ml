@@ -1062,6 +1062,6 @@ let setup defs =
               (ruf defs)
           ; luf defs ] ] ;
   let axioms = Rule.first [id_axiom; ex_falso_axiom] in
-  rules := Rule.combine_axioms axioms !rules ;
+  rules := Rule.first [ axioms; Rule.compose !rules axioms; ] ;
   if !use_invalidity_heuristic then
     rules := Rule.conditional (fun s -> not (Invalid.check defs s)) !rules

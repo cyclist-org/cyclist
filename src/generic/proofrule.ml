@@ -37,7 +37,6 @@ module type S = sig
   val first : t list -> t
   val sequence : t list -> t
   val conditional : (seq_t -> bool) -> t -> t
-  val combine_axioms : t -> t -> t
 end
 
 module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
@@ -246,5 +245,4 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
   let conditional cond r idx prf =
     if cond (Proof.get_seq idx prf) then r idx prf else []
 
-  let combine_axioms ax rl = first [ax; compose rl (attempt ax)]
 end

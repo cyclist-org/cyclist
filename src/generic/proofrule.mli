@@ -131,7 +131,6 @@ module type S = sig
   (** [conditional p r] applies the rule [r] to a sequent [seq] if [p seq]
       returns [true], and fails otherwise. *)
 
-  val combine_axioms : t -> t -> t
 end
 
 module Make (Seq : Sequent.S) (Infrule : Infrule.S)
