@@ -47,10 +47,10 @@ let get_range min_size max_size =
     (0, max)
   | Some min, None ->
     (min, Stdlib.Int.succ min)
-  | Some min, Some max when min < max ->
+  | Some min, Some max when Int.(<=) min max ->
     (min, max)
   | _ ->
-    invalid_arg "Minimum size must be less than maximum size"
+    invalid_arg "Maximum size cannot be less than minimum size"
 
 let get_alphabet alphabet_size =
   List.init
@@ -63,7 +63,7 @@ let gen_exprs
   let (min_size, max_size) = get_range min_size max_size in
   let enum = Enumerate.expressions1 ~include_zero ~include_one alphabet in
   let formulas =
-    Enum.sample num_per_size enum min_size max_size (Stdlib.Seq.empty) in
+    Enum.sample num_per_size enum min_size (max_size + 1) (Stdlib.Seq.empty) in
   Format.pp_print_seq
     ~pp_sep:Format.pp_force_newline Form.pp
     Format.std_formatter
@@ -77,8 +77,8 @@ let gen_entailments
   let (min_size, max_size) = get_range min_size max_size in
   let enum = Enumerate.expressions1 ~include_zero ~include_one alphabet in
   let formulas =
-    Stdlib.Seq.memoize
-      (Enum.sample num_per_size enum min_size max_size (Stdlib.Seq.empty)) in
+    Enum.sample num_per_size enum min_size (max_size + 1) (Stdlib.Seq.empty) in
+  let formulas = Stdlib.Seq.memoize formulas in
   let with_dfas =
     Stdlib.Seq.map
       (fun f -> let dfa = to_dfa alphabet f in (f, dfa, Dfa.complement dfa))
@@ -143,7 +143,7 @@ let min_size =
 
 let max_size =
   let info =
-    let doc = "The maximum size (exclusive) of expressions to generate" in
+    let doc = "The maximum size (inclusive) of expressions to generate" in
     Arg.info ~doc ["max-size"] in
   let none = "One more than the minimum size" in
   Arg.value (Arg.opt (Arg.some ~none Arg.int) None info)
