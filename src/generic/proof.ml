@@ -2,15 +2,11 @@ open Lib
 
 module type S = sig
   type t
-
   type seq_t
-
   type infrule_t
-
   type node_t
 
   val mk : seq_t -> t
-
   val add_axiom : int -> infrule_t -> t -> t
   val add_backlink : int -> int -> Tagpairs.t -> t -> t
   val add_inf : int -> infrule_t -> (seq_t * Tagpairs.t * Tagpairs.t) list -> t
@@ -20,16 +16,13 @@ module type S = sig
   val find : int -> t -> node_t
   val find_parent : int -> t -> (int * node_t) option
   val get_seq : int -> t -> seq_t
-  val size : t -> int
-  val num_backlinks : t -> int
-  (* val mem : int -> t -> bool *)
-  val fresh_idx : t -> int
-  val fresh_idxs : 'a list -> t -> int list
   val get_ancestry : int -> t -> (int * node_t) list
   val get_ancestry_since : int -> int -> t -> (int * node_t) list
+  val size : t -> int
+  val num_backlinks : t -> int
+  val is_closed : t -> bool
   val is_closed_at : t -> int -> bool
   val check : t -> bool
-  val is_closed : t -> bool
   val to_list : t -> (int * node_t) list
   val pp : Format.formatter -> t -> unit
   val to_string : t -> string
@@ -146,8 +139,6 @@ struct
     Format.pp_print_cut fmt ()
 
   let to_dot_string = mk_to_string pp_dot
-
-  let is_closed prf = P.for_all (fun _ (_, n) -> not (Node.is_open n)) prf
 
   let check p =
     let () = debug (fun _ -> "Checking global soundness") in
@@ -289,10 +280,13 @@ struct
     in
     aux [] (find_parent idx prf)
 
+  let is_closed prf = P.for_all (fun _ (_, n) -> not (Node.is_open n)) prf
+
   let rec is_closed_at prf idx =
     let n = find idx prf in
     if Node.is_axiom n then true
     else if Node.is_open n then false
     else if Node.is_backlink n then true
     else Blist.for_all (is_closed_at prf) (Node.get_succs n)
+
 end

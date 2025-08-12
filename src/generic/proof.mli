@@ -62,16 +62,6 @@ module type S = sig
 
   val get_seq : int -> t -> seq_t
 
-  val size : t -> int
-
-  val num_backlinks : t -> int
-
-  (* val mem : int -> t -> bool *)
-
-  val fresh_idx : t -> int
-
-  val fresh_idxs : 'a list -> t -> int list
-
   val get_ancestry : int -> t -> (int * node_t) list
   (** Returns a list of all ancestor nodes, in the order oldest to youngest. *)
 
@@ -81,13 +71,26 @@ module type S = sig
       If [idx'] is not an ancestor of [idx] in [prf], then all ancestors of node
       [idx] in [prf] are returned. *)
 
-  val is_closed_at : t -> int -> bool
+  (** Proof metrics *)
 
-  val check : t -> bool
-  (** Check soundness. Proof does not need to be closed. *)
+  val size : t -> int
+  (** The number of nodes in the given proof. *)
+
+  val num_backlinks : t -> int
+  (** The number of backlinks in the given proof. *)
+
+  (** Predicates *)
 
   val is_closed : t -> bool
   (** Are all nodes not open? *)
+
+  val is_closed_at : t -> int -> bool
+  (** Are the node at the given index and all its descendents not open? *)
+
+  val check : t -> bool
+  (** Check the global trace condition (proof does not need to be closed). *)
+
+  (** Conversions *)
 
   val to_list : t -> (int * node_t) list
 
