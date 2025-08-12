@@ -233,7 +233,7 @@ let invertible_phase =
     Rule.conditional
       (fun seq -> not (Seq.is_axiomatic seq))
       (Rule.first invertible_rules) in
-  (Rule.repeat_one rules)
+  Rule.non_empty (Rule.repeat rules)
 
 
 (* The proof-search strategy *)

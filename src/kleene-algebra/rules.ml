@@ -677,7 +677,9 @@ let left_phase root_idx prf =
     let nonatomic = not !atomic_axioms in
     Rule.conditional (fun s -> not (Seq.is_axiomatic ~nonatomic s)) rl in
   (* Repeat this as long as possible and finally apply One-left *)
-  Rule.compose (Rule.repeat_one rl_if_not_axiom) (Rule.attempt one_left)
+  Rule.compose
+    (Rule.non_empty (Rule.repeat rl_if_not_axiom))
+    (Rule.attempt one_left)
     root_idx prf
 
 let right_invertible_phase =
@@ -692,8 +694,8 @@ let right_invertible_phase =
           (Rule.attempt backlink) ;
         ]) in
   Rule.first [
-    Rule.repeat_one right_rule ;
-    Rule.repeat_one weakenings ;
+    Rule.non_empty (Rule.repeat right_rule) ;
+    Rule.non_empty (Rule.repeat weakenings) ;
   ]
 
 let search_step =
@@ -732,32 +734,31 @@ let left_decomposition =
     ])
 
 let right_decomposition idx prf =
-  let subgoal_repeats idx' prf' =
+  let is_new_subgoal idx' prf' =
     let seq = Proof.get_seq idx' prf' in
     let ancestry = Proof.get_ancestry_since idx idx' prf' in
     let res =
-      List.exists
-        (fun (idx'', node) -> Seq.equal seq (Node.get_seq node))
+      List.for_all
+        (fun (idx'', node) -> not (Seq.equal seq (Node.get_seq node)))
         (ancestry) in
     res
   in
-  Rule.repeat_with_fail
-    (subgoal_repeats)
-  (* Rule.repeat *)
-    (Rule.conditional
-      (* Go no further if we can apply an axiom *)
-      (fun s -> not (Seq.is_axiomatic ~nonatomic:(not !atomic_axioms) s))
-      (* Otherwise, continue *)
-      (Rule.first [
-          wk_duplicates ;
-          wk_non_matching ;
-          choice_right ;
-          Rule.compose_pairwise
-            concat_right_first_letter
-            [Rule.identity; Rule.attempt backlink];
-          Rule.choice [ star_right ; star_right_non_empty ] ;
-          Rule.compose concat_right (Rule.attempt backlink) ;
-        ]))
+  let is_axiomatic idx prf =
+    let seq = Proof.get_seq idx prf in
+    Seq.is_axiomatic ~nonatomic:(not !atomic_axioms) seq in
+  Rule.repeat'
+    ~while_:is_new_subgoal
+    ~until:is_axiomatic
+    (Rule.first [
+        wk_duplicates ;
+        wk_non_matching ;
+        choice_right ;
+        Rule.compose_pairwise
+          concat_right_first_letter
+          [Rule.identity; Rule.attempt backlink];
+        Rule.choice [ star_right ; star_right_non_empty ] ;
+        Rule.compose concat_right (Rule.attempt backlink) ;
+      ])
     (idx)
     (prf)
 

@@ -30,13 +30,14 @@ module type S = sig
   val non_empty : t -> t
   val compose : t -> t -> t
   val compose_pairwise : t -> t list -> t
-  val repeat : t -> t
-  val repeat_one : t -> t
-  val repeat_with_fail : (int -> proof_t -> bool) -> t -> t
   val choice : t list -> t
   val first : t list -> t
   val sequence : t list -> t
   val conditional : (seq_t -> bool) -> t -> t
+  val repeat' :
+    ?while_:(int -> proof_t -> bool) -> ?until:(int -> proof_t -> bool)
+        -> ?failure_as_termination:bool -> ?eager:bool -> t -> t
+  val repeat : t -> t
 end
 
 module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
@@ -203,14 +204,35 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
     | [] -> identity
     | r :: rs -> compose r (sequence rs)
 
-  let repeat_with_fail fails r =
+  let repeat'
+        ?(while_=(fun _ _ -> true))
+        ?(until=(fun _ _ -> false))
+        ?(failure_as_termination=true)
+        ?(eager=false)
+      r =
     let rec repeat idx prf =
-      if (fails idx prf) then
-        []
+      if (not (while_ idx prf)) then
+        fail idx prf
+      else if (until idx prf) then
+        identity idx prf
       else
         let apps = r idx prf in
         if (L.is_empty apps) then
-          identity idx prf
+          (if failure_as_termination then identity idx prf else fail idx prf)
+        else if eager then
+          let res =
+            L.find_map_or
+              (fun ((subgoals, _) as res) ->
+                apply_to_subgoals_pairwise
+                  (L.repeat repeat (L.length subgoals))
+                  res)
+              (List.exists (fun (subgoals, _) -> L.is_empty subgoals))
+              apps in
+          match res with
+          | Left res ->
+            [ L.find (fun (subgoals, _) -> L.is_empty subgoals) res ]
+          | Right res ->
+            L.flatten res
         else
           L.bind
             (fun ((subgoals, _) as res) ->
@@ -220,11 +242,10 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
             apps in
     repeat
 
-  (* Note that we could have implemented repeat as
-       (repeat_with_fail (fun _ _ -> false))
-     but implementing it afresh avoids the application of the constant function
-     and conditional check on each recursive call. So, the duplication of code
-     here is justified in the name of being slightly more efficient. *)
+  (* Note that (repeat r) is functionally equivalent to (repeat' r), but
+     implementing it afresh avoids the conditional checks on each recursive
+     call. So, the duplication of code here is justified in the name of being
+     slightly more efficient. *)
   let repeat r =
     let rec repeat idx prf =
       let apps = r idx prf in
@@ -238,9 +259,6 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
               res)
           apps in
     repeat
-
-  let repeat_one r =
-    compose r (repeat r)
 
   let conditional cond r idx prf =
     if cond (Proof.get_seq idx prf) then r idx prf else []
