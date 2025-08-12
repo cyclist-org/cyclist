@@ -259,15 +259,15 @@ let is_atom =
   | _ ->
     false
 
-let rec contains_empty =
+let rec matches_empty =
   function
   | One
   | Star _ ->
     true
   | Choice (e, f) ->
-    (contains_empty e) || (contains_empty f)
+    (matches_empty e) || (matches_empty f)
   | Concat (e, f) ->
-    (contains_empty e) && (contains_empty f)
+    (matches_empty e) && (matches_empty f)
   | _ ->
     false
 
@@ -281,7 +281,7 @@ let rec can_start_with c e =
     | Choice (e, f) ->
       (can_start_with c e) || (can_start_with c f)
     | Concat (e, f) ->
-      (can_start_with c e) || (contains_empty e && can_start_with c f)
+      (can_start_with c e) || (matches_empty e && can_start_with c f)
     | Star e ->
       can_start_with c e
     | _ ->
