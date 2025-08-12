@@ -297,3 +297,18 @@ let rec can_start_with c e =
       can_start_with c e
     | _ ->
       false
+
+let get_alphabet f =
+  let rec get_alphabet =
+    function
+    | Zero
+    | One ->
+      []
+    | Letter c ->
+      [c]
+    | Concat (e, f)
+    | Choice (e, f) ->
+      List.append (get_alphabet e) (get_alphabet f)
+    | Star e ->
+      get_alphabet e in
+  List.sort_uniq Char.compare (get_alphabet f)

@@ -2,9 +2,16 @@
  (name kleeneAlgGen)
  (public_name cyclist.ka.gen)
  (libraries kleeneAlg generic feat fix)
- (modules :standard \ generate))
+ (modules :standard \ generate check))
 
 (executable
  (name generate)
+ (public_name cyclist-ka-gen)
  (libraries lib kleeneAlg kleeneAlgGen feat ocamlregextkit cmdliner)
  (modules generate))
+
+(executable
+ (name check)
+ (public_name cyclist-ka-check)
+ (libraries lib kleeneAlg ocamlregextkit cmdliner)
+ (modules check))

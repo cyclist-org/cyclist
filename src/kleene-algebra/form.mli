@@ -56,3 +56,5 @@ val partition : t -> t list
 
 (* Split apart formula into list of top-level factors *)
 val factorise : t -> t list
+
+val get_alphabet : t -> letter list
