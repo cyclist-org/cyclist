@@ -406,9 +406,10 @@ let wk_for_axiom =
   let rl seq =
     match (Seq.antecedent seq, Seq.consequent seq) with
     | ([e], [f]) when Form.equal e f ->
+      (* Fail if the sequent is already an instance of the axiom *)
       []
-    | ([e], _) ->
-      let premise = Seq.filter_right (Form.equal e) seq in
+    | ([e], fs) when List.exists (Form.equal e) fs ->
+      let premise = Seq.with_consequent [e] seq in
       [
         [ (premise, Tagpairs.mk (Seq.tags premise), Tagpairs.empty) ],
             Infrule.weaken
