@@ -315,34 +315,38 @@ let split_right_singleton f =
    maximal ones. *)
 let split_right_multiple_all fs =
   let fss = List.map Form.factorise fs in
-  let common_pre = Blist.longest_common_prefix ~eq:Form.equal fss in
+  let common_pre =
+    let common_pre = Blist.longest_common_prefix ~eq:Form.equal fss in
+    let compare_length = List.compare_lengths common_pre in
+    if (List.exists (Int.equal 0) (List.map compare_length fss))
+      then List.take ((List.length common_pre) - 1) common_pre
+      else common_pre in
   let front_splits =
-    if (Int.equal (List.length common_pre) 0) then
-      []
-    else
-      List.mapi
-        (fun i _ ->
-          let left = [Form.concatenate (List.take (i+1) common_pre)] in
-          let right =
-            List.map (fun fs -> Form.concatenate (List.drop (i+1) fs)) fss in
-          (left, right))
-        (common_pre) in
-  let common_suf = Blist.longest_common_suffix ~eq:Form.equal fss in
-  if (Int.equal (List.length common_suf) 0) then
-    List.rev front_splits
-  else
-    let rev_fss = List.map List.rev fss in
-    let rev_suf = List.rev common_suf in
-    let back_splits =
-      List.mapi
-        (fun i _ ->
-          let left =
-            List.map
-              (fun fs -> Form.concatenate (List.rev (List.drop (i+1) fs)))
-              (rev_fss) in
-          let right = [Form.concatenate (List.rev (List.take (i+1) rev_suf))] in
-          (left, right))
-        (common_suf) in
+    List.mapi
+      (fun i _ ->
+        let left = [Form.concatenate (List.take (i+1) common_pre)] in
+        let right =
+          List.map (fun fs -> Form.concatenate (List.drop (i+1) fs)) fss in
+        (left, right))
+      (common_pre) in
+  let common_suf =
+    let common_suf = Blist.longest_common_suffix ~eq:Form.equal fss in
+    let compare_length = List.compare_lengths common_suf in
+    if (List.exists (Int.equal 0) (List.map compare_length fss))
+      then List.drop 1 common_suf
+      else common_suf in
+  let rev_fss = List.map List.rev fss in
+  let rev_suf = List.rev common_suf in
+  let back_splits =
+    List.mapi
+      (fun i _ ->
+        let left =
+          List.map
+            (fun fs -> Form.concatenate (List.rev (List.drop (i+1) fs)))
+            (rev_fss) in
+        let right = [Form.concatenate (List.rev (List.take (i+1) rev_suf))] in
+        (left, right))
+      (common_suf) in
     Blist.interleave (List.rev front_splits) (List.rev back_splits)
 
 (* This version splits along only the longest common prefix and suffix.
@@ -350,7 +354,12 @@ let split_right_multiple_all fs =
    applied repeatedly by the [right_decomposition] tactic, below. *)
 let split_right_multiple_maximal fs =
   let fss = List.map Form.factorise fs in
-  let common_pre = Blist.longest_common_prefix ~eq:Form.equal fss in
+  let common_pre =
+    let common_pre = Blist.longest_common_prefix ~eq:Form.equal fss in
+    let compare_length = List.compare_lengths common_pre in
+    if (List.exists (Int.equal 0) (List.map compare_length fss))
+      then List.take ((List.length common_pre) - 1) common_pre
+      else common_pre in
   let front_split =
     let prefix_len = List.length common_pre in
     Option.mk_lazily
@@ -360,7 +369,12 @@ let split_right_multiple_maximal fs =
         let right =
           List.map (fun fs -> Form.concatenate (List.drop prefix_len fs)) fss in
         (left, right)) in
-  let common_suf = Blist.longest_common_suffix ~eq:Form.equal fss in
+  let common_suf =
+    let common_suf = Blist.longest_common_suffix ~eq:Form.equal fss in
+    let compare_length = List.compare_lengths common_suf in
+    if (List.exists (Int.equal 0) (List.map compare_length fss))
+      then List.drop 1 common_suf
+      else common_suf in
     let back_split =
       let suffix_len = List.length common_suf in
       Option.mk_lazily
@@ -880,6 +894,44 @@ module _ = struct
     |}]
 
   let%expect_test _ =
+    let form1 = Form.concatenate [a;b;b;a;b;b] in
+    let form2 = Form.concatenate [a;b;b] in
+    let result = split_right_multiple_all [form1;form2] in
+    print_endline (Format.asprintf "%a" print_splits result) ;
+    [%expect{|
+      (ab; babb, b)
+      (abba, a; bb)
+      (a; bbabb, bb)
+      (abbab, ab; b)
+    |}]
+
+  let%expect_test _ =
+    let form1 = Form.concatenate [a;b;a;b] in
+    let form2 = Form.concatenate [a;b] in
+    let result = split_right_multiple_all [form1;form2] in
+    print_endline (Format.asprintf "%a" print_splits result) ;
+    [%expect{|
+      (a; bab, b)
+      (aba, a; b)
+    |}]
+
+  let%expect_test _ =
+    let form1 = Form.concatenate [a;b;c] in
+    let form2 = Form.concatenate [a;b] in
+    let form3 = Form.concatenate [a] in
+    let result = split_right_multiple_all [form1;form2;form3] in
+    print_endline (Format.asprintf "%a" print_splits result) ;
+    [%expect{||}]
+
+  let%expect_test _ =
+    let form1 = Form.concatenate [a;b;c] in
+    let form2 = Form.concatenate [b;c] in
+    let form3 = Form.concatenate [c] in
+    let result = split_right_multiple_all [form1;form2;form3] in
+    print_endline (Format.asprintf "%a" print_splits result) ;
+    [%expect{||}]
+
+  let%expect_test _ =
     let form1 = Form.concatenate [a;b;c;e;f] in
     let form2 = Form.concatenate [a;b;d;e;f] in
     let result = split_right_multiple_maximal [form1;form2] in
@@ -888,5 +940,42 @@ module _ = struct
       (ab; cef, def)
       (abc, abd; ef)
     |}]
+
+  let%expect_test _ =
+    let form1 = Form.concatenate [a;b;b;a;b;b] in
+    let form2 = Form.concatenate [a;b;b] in
+    let result = split_right_multiple_maximal [form1;form2] in
+    print_endline (Format.asprintf "%a" print_splits result) ;
+    [%expect{|
+      (ab; babb, b)
+      (abba, a; bb)
+    |}]
+
+  let%expect_test _ =
+    let form1 = Form.concatenate [a;b;a;b] in
+    let form2 = Form.concatenate [a;b] in
+    let result = split_right_multiple_maximal [form1;form2] in
+    print_endline (Format.asprintf "%a" print_splits result) ;
+    [%expect{|
+      (a; bab, b)
+      (aba, a; b)
+    |}]
+
+  let%expect_test _ =
+    let form1 = Form.concatenate [a;b;c] in
+    let form2 = Form.concatenate [a;b] in
+    let form3 = Form.concatenate [a] in
+    let result = split_right_multiple_maximal [form1;form2;form3] in
+    print_endline (Format.asprintf "%a" print_splits result) ;
+    [%expect{||}]
+
+  let%expect_test _ =
+    let form1 = Form.concatenate [a;b;c] in
+    let form2 = Form.concatenate [b;c] in
+    let form3 = Form.concatenate [c] in
+    let result = split_right_multiple_maximal [form1;form2;form3] in
+    print_endline (Format.asprintf "%a" print_splits result) ;
+    [%expect{||}]
+
 
 end
