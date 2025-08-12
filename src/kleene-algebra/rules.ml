@@ -86,6 +86,15 @@ module Proof = Proof.Make(Seq)(Infrule)
 module Rule = Proofrule.Make(Seq)(Infrule)
 module Node = Proofnode.Make(Seq)(Infrule)
 
+(* Failure conditions *)
+
+let non_null_in_null seq =
+  match (Seq.consequent seq) with
+  | [] ->
+    not (Seq.exists_left Form.contains_zero seq)
+  | _ ->
+    false
+
 (* Axioms *)
 
 let atomic_axioms = ref false
@@ -736,21 +745,19 @@ let left_decomposition =
       choice_left ;
     ])
 
+let is_new_subgoal_since idx idx' prf =
+  let seq = Proof.get_seq idx' prf in
+  let ancestry = Proof.get_ancestry_since idx idx' prf in
+  List.for_all
+    (fun (idx'', node) -> not (Seq.equal seq (Node.get_seq node)))
+    (ancestry)
+
 let right_decomposition idx prf =
-  let is_new_subgoal idx' prf' =
-    let seq = Proof.get_seq idx' prf' in
-    let ancestry = Proof.get_ancestry_since idx idx' prf' in
-    let res =
-      List.for_all
-        (fun (idx'', node) -> not (Seq.equal seq (Node.get_seq node)))
-        (ancestry) in
-    res
-  in
   let is_axiomatic idx prf =
     let seq = Proof.get_seq idx prf in
     Seq.is_axiomatic ~nonatomic:(not !atomic_axioms) seq in
   Rule.repeat'
-    ~while_:is_new_subgoal
+    ~while_:(is_new_subgoal_since idx)
     ~until:is_axiomatic
     (Rule.first [
         wk_duplicates ;
@@ -765,6 +772,25 @@ let right_decomposition idx prf =
     (idx)
     (prf)
 
+let right_completion ax idx prf =
+  Rule.repeat'
+    ~while_:(is_new_subgoal_since idx)
+    ~failure_as_termination:false
+    ~eager:true
+    (Rule.first [
+        ax ;
+        wk_duplicates ;
+        wk_non_matching ;
+        choice_right ;
+        concat_right_first_letter ;
+        Rule.choice [ star_right ; star_right_non_empty ] ;
+        concat_right ;
+        wk_non_invertible ;
+      ])
+    (idx)
+    (prf)
+
+
 (* Proof-search strategies *)
 
 let axioms =
@@ -775,8 +801,24 @@ let axioms =
       Rule.compose (Rule.attempt wk_leave_one) one_right ;
     ])
 
-(* Keep the old search strategy, for reference *)
 let rules =
+  ref
+    (Rule.unless
+      (non_null_in_null)
+      (Rule.first [
+        backlink ;
+        Rule.non_empty left_decomposition ;
+        right_completion !axioms;
+        Rule.choice [
+          wk_non_invertible ;
+          cut_backlink ;
+          star_left ;
+          Rule.non_empty right_decomposition ;
+        ]
+      ]))
+
+(* Old search strategies that we've tried, kept for reference *)
+let rules1 =
   ref
     (Rule.first [
       backlink ;
@@ -788,17 +830,20 @@ let rules =
         ] ;
     ])
 
-let rules =
+let rules2 =
   ref
-    (Rule.first [
-      backlink ;
-      Rule.choice [
-        wk_non_invertible ;
-        cut_backlink ;
-        Rule.non_empty (Rule.compose left_decomposition right_decomposition) ;
-        Rule.compose left_decomposition star_left ;
-      ]
-    ])
+    (Rule.unless
+      (non_null_in_null)
+      (Rule.first [
+        backlink ;
+        Rule.choice [
+          wk_non_invertible ;
+          cut_backlink ;
+          Rule.non_empty (Rule.compose left_decomposition right_decomposition) ;
+          Rule.compose left_decomposition star_left ;
+        ]
+      ]))
+
 
 (* Inline tests *)
 module _ = struct

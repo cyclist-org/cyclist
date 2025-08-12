@@ -259,6 +259,17 @@ let is_atom =
   | _ ->
     false
 
+let rec contains_zero =
+  function
+  | Zero ->
+    true
+  | One | Letter _ ->
+    false
+  | Choice (e, f) | Concat (e, f) ->
+    (contains_zero e) || (contains_zero f)
+  | Star e ->
+    contains_zero e
+
 let rec matches_empty =
   function
   | One

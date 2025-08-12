@@ -34,6 +34,7 @@ module type S = sig
   val first : t list -> t
   val sequence : t list -> t
   val conditional : (seq_t -> bool) -> t -> t
+  val unless : (seq_t -> bool) -> t -> t
   val repeat' :
     ?while_:(int -> proof_t -> bool) -> ?until:(int -> proof_t -> bool)
         -> ?failure_as_termination:bool -> ?eager:bool -> t -> t
@@ -262,5 +263,8 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
 
   let conditional cond r idx prf =
     if cond (Proof.get_seq idx prf) then r idx prf else []
+
+  let unless cond r =
+    conditional (fun s -> not (cond s)) r
 
 end

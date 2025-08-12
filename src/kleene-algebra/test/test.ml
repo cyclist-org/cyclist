@@ -111,3 +111,19 @@ let _ =
 let _ =
   let seq = "b,b,((a+b)(d+b))* ⊢ ((a+b)(d+b))*" in
   run_test (Seq.of_string seq)
+
+let _ =
+  let seq = "b* ⊢ ((a+b)(b+c))*, b((a+b)(b+c))*" in
+  run_test (Seq.of_string seq)
+
+let _ =
+  let seq = "b* ⊢ ((a+b)(b+c))*, ((a+b)(b+c))*b" in
+  run_test (Seq.of_string seq)
+
+let _ =
+  let seq = "b* ⊢ ((a+b)(d+b))*, b((a+b)(d+b))*" in
+  run_test (Seq.of_string seq)
+
+let _ =
+  let seq = "b* ⊢ ((a+b)(d+b))*, ((a+b)(d+b))*b" in
+  run_test (Seq.of_string seq)

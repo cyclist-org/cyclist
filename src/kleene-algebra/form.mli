@@ -44,6 +44,8 @@ val is_star : t -> bool
 
 val is_atom : t -> bool
 
+val contains_zero : t -> bool
+
 val matches_empty : t -> bool
 val can_start_with : letter -> t -> bool
 

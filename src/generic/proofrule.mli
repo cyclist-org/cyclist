@@ -111,8 +111,14 @@ module type S = sig
   (** Apply a sequence of rules iteratively through [compose]. *)
 
   val conditional : (seq_t -> bool) -> t -> t
-  (** [conditional p r] applies the rule [r] to a sequent [seq] if [p seq]
-      returns [true], and fails otherwise. *)
+  (** [conditional p r] applies the rule [r] to a given open node with sequent
+      [seq] if [p seq] returns [true], and fails otherwise. *)
+
+  val unless : (seq_t -> bool) -> t -> t
+  (** [unless p r] applies the rule [r] to a given open node with sequent [seq]
+      unless [p seq] returns [true], in which case it fails.
+      This is equivalent to [conditional (fun s -> not (p s)) r].
+      This inference rule combinator is provided for readability. *)
 
   val repeat' :
     ?while_:(int -> proof_t -> bool) -> ?until:(int -> proof_t -> bool)
