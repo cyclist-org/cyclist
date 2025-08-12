@@ -12,9 +12,8 @@ module type S = sig
 
   type axiom_f = seq_t -> infrule_t option
 
-  type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * infrule_t
-
-  type infrule_f = seq_t -> infrule_app list
+  type infrule_f =
+    seq_t -> ((seq_t * Tagpairs.t * Tagpairs.t) list * infrule_t) list
 
   type backrule_f = seq_t -> seq_t -> Tagpairs.t list
 
@@ -30,9 +29,9 @@ module type S = sig
   type t = int -> proof_t -> (int list * proof_t) list
 
   val mk_axiom : axiom_f -> t
-  (** Axioms are modeled as functions that return [Some string] when the
-      input sequent is an instance of an axiom described by [string], else
-      [None]. *)
+  (** Axioms are modeled as functions that return [Some rule] when the
+      input sequent is an instance of an axiom described by the value [rule],
+      else [None] if the input sequent is not an instance of the axiom. *)
 
   val mk_infrule : infrule_f -> t
   (** Rules are functions that break down a sequent to a choice of applications

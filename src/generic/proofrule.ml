@@ -9,8 +9,8 @@ module type S = sig
   type infrule_t
   type proof_t
   type axiom_f = seq_t -> infrule_t option
-  type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * infrule_t
-  type infrule_f = seq_t -> infrule_app list
+  type infrule_f =
+    seq_t -> ((seq_t * Tagpairs.t * Tagpairs.t) list * infrule_t) list
   type backrule_f = seq_t -> seq_t -> Tagpairs.t list
   type select_f = int -> proof_t -> int list
   type t = int -> proof_t -> (int list * proof_t) L.t
@@ -47,9 +47,8 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
 
   type axiom_f = Seq.t -> Infrule.t option
 
-  type infrule_app = (Seq.t * Tagpairs.t * Tagpairs.t) list * Infrule.t
-
-  type infrule_f = Seq.t -> infrule_app list
+  type infrule_f =
+    Seq.t -> ((Seq.t * Tagpairs.t * Tagpairs.t) list * Infrule.t) list
 
   type t = int -> Proof.t -> (int list * Proof.t) L.t
 
