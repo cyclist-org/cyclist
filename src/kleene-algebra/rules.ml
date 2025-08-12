@@ -478,8 +478,9 @@ let wk_duplicates =
   Rule.mk_infrule rl
 
 (* Weaken away any consequent formulas that cannot start with the first letter
-   of the antecdent. This rule fails if the first antecedent formula is not a
-   letter, or if the antecedent is empty. *)
+   of the antecdent. This rule fails if the antecedent is empty, or if the first
+   antecedent formula is not a letter. Note that this rule can leave an empty
+   consequent in the premise. *)
 let wk_non_matching =
   let rl seq =
     match (Seq.antecedent seq) with
