@@ -525,8 +525,9 @@ let wk_combs =
       let tps = Tagpairs.mk (Seq.tags seq) in
       List.map
         (fun consequent ->
-          ([(Seq.with_consequent consequent seq), tps, Tagpairs.empty], Infrule.weaken))
-        (Blist.all_combs consequent)
+          ( [(Seq.with_consequent consequent seq), tps, Tagpairs.empty],
+              Infrule.weaken))
+        (Blist.all_combs ~include_empty:false consequent)
   in
   Rule.mk_infrule rl
 
