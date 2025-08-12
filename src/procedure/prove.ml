@@ -68,9 +68,6 @@ let () =
           , ": analyse all procedures in <file>, or specify procedures to be \
              analysed (default is " ^ Program.main ^ ")" ) ]
 
-(* disable max search depth *)
-let () = F.maxbound := 0
-
 let proc_proofs : Proof.t option Proc.SigMap.t ref = ref Proc.SigMap.empty
 
 let entry_points = ref []

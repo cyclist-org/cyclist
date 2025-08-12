@@ -16,8 +16,6 @@ let slcomp = ref ""
 module Prover = Prover.Make (Seq) (Strng)
 module F = Frontend.Make (Seq) (Strng)
 
-let () = F.maxbound := 0
-
 let () =
   F.usage :=
     !F.usage
