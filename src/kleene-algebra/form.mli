@@ -8,6 +8,8 @@ val of_string : string -> t
 
 val letter_to_string : letter -> string
 
+val pp_full : Format.formatter -> t -> unit
+
 (** Constructors *)
 
 val zero : t

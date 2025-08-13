@@ -67,34 +67,68 @@ let rec factorise =
   | _ as f ->
     [f]
 
-let pp fmt =
-  let rec pp top fmt =
-    function
-    | Zero ->
-      Format.fprintf fmt "0"
-    | One ->
-      Format.fprintf fmt "1"
-    | Letter a ->
-      Format.fprintf fmt "%c" a
-    | Choice (_, _) as f ->
-      let printer =
-        if top then Format.fprintf fmt "%a"
-               else Format.fprintf fmt "(%a)" in
-      printer
-        (Blist.pp (fun fmt () -> Format.pp_print_string fmt " + ") (pp false))
-        (partition f)
-    | Concat (_, _) as f ->
-      let printer =
-        if top then Format.fprintf fmt "%a"
-               else Format.fprintf fmt "(%a)" in
-      printer
-        (Blist.pp (fun fmt () -> ()) (pp false))
-        (factorise f)
-    | Star (Zero as f)
-    | Star (One as f)
-    | Star f ->
-      Format.fprintf fmt "%a*" (pp false) f in
-  pp true fmt
+let rec pp fmt =
+  function
+  | Zero ->
+    Format.fprintf fmt "0"
+  | One ->
+    Format.fprintf fmt "1"
+  | Letter a ->
+    Format.fprintf fmt "%c" a
+  | Choice (_, _) as f ->
+    Blist.pp (fun fmt () -> Format.pp_print_string fmt " + ") pp fmt
+      (partition f)
+  | Concat (_, _) as f ->
+    Blist.pp (fun fmt () -> ()) pp fmt
+      (factorise f)
+  | Star (Concat (_,_) as f)
+  | Star (Choice (_,_) as f) ->
+    Format.fprintf fmt "(%a)*" pp f
+  | Star f ->
+    Format.fprintf fmt "%a*" pp f
+
+let rec pp_full fmt =
+  function
+  | Zero ->
+    Format.fprintf fmt "0"
+  | One ->
+    Format.fprintf fmt "1"
+  | Letter a ->
+    Format.fprintf fmt "%c" a
+  | Choice (e, f) ->
+    print_binary `Choice fmt e f
+  | Concat (e, f) ->
+    print_binary `Concat fmt e f
+  | Star (Concat (_,_) as f)
+  | Star (Choice (_,_) as f) ->
+    Format.fprintf fmt "(%a)*" pp f
+  | Star f ->
+    Format.fprintf fmt "%a*" pp f
+and print_binary op fmt e f =
+  let print_e =
+    match op, e with
+    | `Choice, Choice (_,_)
+    | `Concat, Concat (_,_) ->
+      fun fmt -> Format.fprintf fmt "(%a)" pp_full
+    | _ ->
+      pp_full in
+  let print_f =
+    match op, f with
+    | `Choice, Choice (_,_)
+    | `Concat, Concat (_,_) ->
+      fun fmt -> Format.fprintf fmt "(%a)" pp_full
+    | _ ->
+      pp_full in
+  let print_op =
+    match op with
+    | `Choice ->
+      fun fmt () -> Format.pp_print_string fmt " + "
+    | `Concat ->
+      fun fmt () -> () in
+  Format.fprintf fmt "%a%a%a"
+    print_e e
+    print_op ()
+    print_f f
 
 let to_string f = mk_to_string pp f
 
@@ -139,29 +173,33 @@ let parse_letter st = (
 
 let rec parse_aux st = (
     ((Tokens.symbol "0" >>
-        ((attempt (Symbols.(parse_symb symb_star) >>$ (Star Zero)))
-          <|>
-         (return Zero)))
+        ((attempt (many Symbols.(parse_symb symb_star) |>>
+          (List.fold_left (fun f _ -> Star f) Zero)))
+            <|>
+          (return Zero)))
       <|>
     (Tokens.symbol "1" >>
-        ((attempt (Symbols.(parse_symb symb_star) >>$ (Star One)))
-          <|>
-         (return One)))
+        ((attempt (many Symbols.(parse_symb symb_star) |>>
+          (List.fold_left (fun f _ -> Star f) One)))
+            <|>
+          (return One)))
       <|>
     (attempt
         (parse_letter >>= (fun c ->
-        (attempt (Symbols.(parse_symb symb_star) >>$ Star c))
-          <|>
-        (return c))) <?> "Letter")
+        ((attempt (many Symbols.(parse_symb symb_star) |>>
+          (List.fold_left (fun f _ -> Star f) c)))
+            <|>
+          (return c)))) <?> "Letter")
       <|>
     (Tokens.parens parse >>= (fun f ->
-      (attempt Symbols.(parse_symb symb_star) >>$ (Star f))
-        <|>
-      (return f))))
+        many Symbols.(parse_symb symb_star) |>>
+          (List.fold_left (fun f _ -> Star f) f))))
     << spaces
   ) st
+and parse_concat st =
+  (many1 parse_aux |>> concatenate) st
 and parse st = (
-    attempt (sep_by1 parse_aux (Tokens.symbol "+") >>= (function
+    attempt (sep_by1 parse_concat (Tokens.symbol "+") >>= (function
         | _::_::_ as es -> return (either es)
         | _ -> fail "Require at least two disjuncts"))
       <|>
