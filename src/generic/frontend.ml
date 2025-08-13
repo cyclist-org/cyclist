@@ -137,7 +137,9 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
     if !Stats.do_statistics then Stats.pp_stats fmt stats ;
     match res with
     | `TIMEOUT ->
-      Format.fprintf fmt "NOT proved: %a [TIMEOUT]@." Seq.pp seq
+      Format.fprintf fmt "NOT proved: %a [TIMEOUT]@." Seq.pp seq ;
+      if !Stats.do_statistics then
+        Format.fprintf fmt "Maximum search depth completed was %i@." (depth - 1)
     | `NOT_FOUND ->
       Format.fprintf fmt "NOT proved: %a@." Seq.pp seq ;
       if !Stats.do_statistics then
