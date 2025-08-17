@@ -128,6 +128,23 @@ let%test _ =
     ((a <+> a) <.> a) <+> (a <.> a) in
   parsed = expected
 
+(* Test pp *)
+
+let%expect_test _ =
+  let parsed = of_string "a(a + a)" in
+  pp Format.std_formatter parsed ;
+  [%expect{| a(a + a) |}]
+
+let%expect_test _ =
+  let parsed = of_string "(a(a + a))a" in
+  pp Format.std_formatter parsed ;
+  [%expect{| a(a + a)a |}]
+
+let%expect_test _ =
+  let parsed = of_string "a((a + a)a)" in
+  pp Format.std_formatter parsed ;
+  [%expect{| a(a + a)a |}]
+
 (* Test pp_full *)
 
 let%expect_test _ =
@@ -149,3 +166,20 @@ let%expect_test _ =
   let parsed = of_string "aaa + b + b((a**a*)b)a" in
   pp_full Format.std_formatter parsed ;
   [%expect{| a(aa) + (b + b(((a**a*)b)a)) |}]
+
+let%expect_test _ =
+  let parsed = of_string "a(a + a)" in
+  pp_full Format.std_formatter parsed ;
+  [%expect{| a(a + a) |}]
+
+(* Test factorise *)
+
+let%test _ =
+  let factorised = factorise (of_string "a(a(bb + (a* + a**)))") in
+  let expected =
+    let open Operators in
+    let a = letter 'a' in
+    let b = letter 'b' in
+    [a; a; either [b <.> b; star a; star (star a)]] in
+  factorised = expected
+

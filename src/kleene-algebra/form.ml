@@ -79,13 +79,19 @@ let rec pp fmt =
     Blist.pp (fun fmt () -> Format.pp_print_string fmt " + ") pp fmt
       (partition f)
   | Concat (_, _) as f ->
-    Blist.pp (fun fmt () -> ()) pp fmt
+    Blist.pp (fun fmt () -> ()) bracket_choice fmt
       (factorise f)
   | Star (Concat (_,_) as f)
   | Star (Choice (_,_) as f) ->
     Format.fprintf fmt "(%a)*" pp f
   | Star f ->
     Format.fprintf fmt "%a*" pp f
+and bracket_choice fmt =
+  function
+  | Choice (_, _) as f ->
+    Format.fprintf fmt "(%a)" pp f
+  | _ as f ->
+    pp fmt f
 
 let rec pp_full fmt =
   function
@@ -108,14 +114,16 @@ and print_binary op fmt e f =
   let print_e =
     match op, e with
     | `Choice, Choice (_,_)
-    | `Concat, Concat (_,_) ->
+    | `Concat, Concat (_,_)
+    | `Concat, Choice (_,_) ->
       fun fmt -> Format.fprintf fmt "(%a)" pp_full
     | _ ->
       pp_full in
   let print_f =
     match op, f with
     | `Choice, Choice (_,_)
-    | `Concat, Concat (_,_) ->
+    | `Concat, Concat (_,_)
+    | `Concat, Choice (_,_) ->
       fun fmt -> Format.fprintf fmt "(%a)" pp_full
     | _ ->
       pp_full in
