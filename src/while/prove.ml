@@ -51,6 +51,10 @@ let () =
   let prog = Cmd.number prog in
   set_program prog ;
   setup (Defs.of_channel (open_in !defs_path)) ;
-  let res = F.prove_seq !Rules.axioms !Rules.rules (seq, prog) in
+  let res =
+    Stats.gather
+      !F.timeout
+      (fun () -> F.prove_seq !Rules.axioms !Rules.rules (seq, prog))
+      (F.process_result (seq, prog)) in
   F.print_result res ;
   F.exit res

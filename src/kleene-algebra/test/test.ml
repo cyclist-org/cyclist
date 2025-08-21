@@ -7,11 +7,13 @@ module Frontend = Frontend.Make(Seq)(Rules.Infrule)
 
 let () = Frontend.timeout := 10
 
-let prove = Frontend.prove_seq !Rules.axioms !Rules.rules
-
 let run_test seq =
   let () = Format.printf "Running test: %a @?" Seq.pp_no_tags seq in
-  let (_, res, _, depth) = prove seq in
+  let (_, res, _, depth) =
+    Stats.gather
+      !Frontend.timeout
+      (fun () -> Frontend.prove_seq !Rules.axioms !Rules.rules seq)
+      (Frontend.process_result seq) in
   match res with
   | `NOT_FOUND ->
     Format.printf "(Not proved)@.Search depth was %i@." depth

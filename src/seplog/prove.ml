@@ -66,6 +66,38 @@ let () =
           , Arg.Set_string cl_sequent
           , ": prove the SL sequent provided in <string>" ) ]
 
+let do_check defs seq =
+  if !invalidity_check && Invalid.check defs seq
+    then None
+    else Some (F.prove_seq !Rules.axioms !Rules.rules seq)
+
+let process_result slcomp_mode seq (res, stats) =
+  match res with
+  | `TIMEOUT ->
+    let result = F.process_result seq (`TIMEOUT, stats) in
+    let () =
+      if slcomp_mode
+        then print_endline "unknown"
+        else F.pp_result Format.std_formatter result in
+    F.exit result
+  | `RESULT None ->
+    if slcomp_mode then
+      print_endline "sat"
+    else
+      begin
+        print_endline ("NOT proved: " ^ Seq.to_string seq ^ " [invalid]" );
+        if !Stats.do_statistics
+          then Stats.pp_stats Format.std_formatter stats ;
+      end ;
+    exit 255
+  | `RESULT (Some res)->
+    let result = F.process_result seq (`RESULT res, stats) in
+    let () =
+      if slcomp_mode
+        then print_endline "unsat"
+        else F.pp_result Format.std_formatter result in
+    F.exit result
+
 let () =
   gc_setup () ;
   let spec_list = !F.speclist () in
@@ -82,21 +114,7 @@ let () =
       , Defs.of_channel (open_in !defs_path) )
   in
   Rules.setup defs ;
-  let res =
-    F.gather_stats (fun () ->
-        if !invalidity_check && Invalid.check defs seq then None
-        else Some (F.idfs !Rules.axioms !Rules.rules seq) )
-  in
-  match res with
-  | Some None ->
-      print_endline
-        ( if slcomp_mode then "sat"
-        else "NOT proved: " ^ Seq.to_string seq ^ " [invalid]" ) ;
-      exit 255
-  | _ ->
-      let res = Option.flatten res in
-      if slcomp_mode then
-        match res with
-        | Some (Some _) -> print_endline "unsat"
-        | _ -> print_endline "unknown"
-      else F.exit (F.process_result (not slcomp_mode) seq res)
+  Stats.gather
+    (!F.timeout)
+    (fun () -> do_check defs seq)
+    (process_result slcomp_mode seq)

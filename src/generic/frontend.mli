@@ -27,12 +27,15 @@ module type S = sig
   val speclist : (unit -> (string * Arg.spec * string) list) ref
   val usage : string ref
   val die : string -> (string * Arg.spec * string) list -> string -> 'a
-  val exit : result_t -> 'a
+  val exit : result_t -> unit
 
-  val prove_seq : proofrule_t -> proofrule_t -> seq_t -> result_t
+  val prove_seq : proofrule_t -> proofrule_t -> seq_t -> Proof.t option
   (** [prove_seq axioms rules seq] runs the prover on the given sequent [seq]
-      with the given [axioms] and inference [rules], within a timeout wrapper
-      and gathers stats about the proof search. *)
+      with the given [axioms] and inference [rules]. *)
+
+  val process_result : seq_t -> Proof.t option Stats.result -> result_t
+  (** Converts a [Stat.result] value wrapping an optional proof object into a
+      [result_t] value. *)
 
   val pp_result : Format.formatter -> result_t -> unit
   (** Pretty-print result *)

@@ -29,9 +29,10 @@ module type S = sig
   val speclist : (unit -> (string * Arg.spec * string) list) ref
   val usage : string ref
   val die : string -> (string * Arg.spec * string) list -> string -> 'a
-  val exit : result_t -> 'a
+  val exit : result_t -> unit
 
-  val prove_seq : proofrule_t -> proofrule_t -> seq_t -> result_t
+  val prove_seq : proofrule_t -> proofrule_t -> seq_t -> Proof.t option
+  val process_result : seq_t -> Proof.t option Stats.result -> result_t
   val pp_result : Format.formatter -> result_t -> unit
   val print_result : result_t -> unit
 
@@ -102,17 +103,7 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
     | `SUCCESS _ ->
       exit 0
 
-  let gather_stats call =
-    Stats.reset () ;
-    Stats.Gen.call () ;
-    let res =
-      if not (Int.equal !timeout 0) then w_timeout call !timeout
-      else Some (call ())
-    in
-    Stats.Gen.end_call () ;
-    res
-
-  let idfs ax r seq =
+  let prove_seq ax r seq =
     let maxbound =
       match !maxbound with
       | None ->
@@ -121,17 +112,16 @@ module Make (Seq : Sequent.S) (Infrule : Infrule.S) = struct
         if Int.( < ) i !minbound then !minbound else i in
     Prover.idfs !minbound maxbound ax r seq
 
-  let prove_seq ax r seq =
-    Format.set_margin (Sys.command "exit $(tput cols)") ;
+  let process_result seq (res, stats) =
     let res =
-      match (gather_stats (fun () -> idfs ax r seq)) with
-      | None ->
+      match res with
+      | `TIMEOUT ->
         `TIMEOUT
-      | Some None ->
+      | `RESULT None ->
         `NOT_FOUND
-      | Some (Some proof) ->
+      | `RESULT (Some proof) ->
         `SUCCESS proof in
-    (seq, res, Stats.get_stats (), !Prover.last_search_depth)
+    (seq, res, stats, !Prover.last_search_depth)
 
   let pp_result fmt (seq, res, stats, depth) =
     if !Stats.do_statistics then Stats.pp_stats fmt stats ;

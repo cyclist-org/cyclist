@@ -103,7 +103,11 @@ let prove_seq ((pre, cmd, post) as seq) =
   if not (Proc.SigMap.mem signature !proc_proofs) then (
     Lib.debug (fun () -> "Beginning search for proof of: " ^ Seq.to_string seq) ;
     if !F.show_proof || !Stats.do_statistics then print_newline () ;
-    let (_, res, _, _) as result = F.prove_seq !Rules.axioms !Rules.rules seq in
+    let (_, res, _, _) as result =
+      Stats.gather
+        !F.timeout
+        (fun () -> F.prove_seq !Rules.axioms !Rules.rules seq)
+        (F.process_result seq) in
     let () = F.print_result result in
     match res with
     | `TIMEOUT | `NOT_FOUND ->
