@@ -1,0 +1,5 @@
+depexts: [
+  ["libspot-dev" "pkg-config"] {os-family = "debian"}
+  ["spot" "pkg-config"] {os = "macos" & os-distribution = "homebrew"}
+  ["spot" "pkgconf"] {os-distribution = "arch"}
+]
