@@ -5,61 +5,34 @@ module L = Blist
 
 module type S = sig
   type seq_t
-
   type proof_t
-
   type axiom_f = seq_t -> string option
-
   type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * string
-
   type infrule_f = seq_t -> infrule_app list
-
   type backrule_f = seq_t -> seq_t -> (Tagpairs.t * string) list
-
   type select_f = int -> proof_t -> int list
-
   type t = int -> proof_t -> (int list * proof_t) L.t
 
   val mk_axiom : axiom_f -> t
-
   val mk_infrule : infrule_f -> t
-
   val mk_backrule : bool -> select_f -> backrule_f -> t
-
   val all_nodes : select_f
-
   val closed_nodes : select_f
-
   val ancestor_nodes : select_f
-
   val syntactically_equal_nodes : select_f
-
   val default_select_f : select_f ref
-
   val set_default_select_f : int -> unit
-
   val default_select_f_descr : ?line_prefix:string -> unit -> string
-
   val fail : t
-
   val identity : t
-
   val attempt : t -> t
-
   val compose : t -> t -> t
-
   val compose_pairwise : t -> t list -> t
-
   val repeat : t -> t
-
   val choice : t list -> t
-
   val first : t list -> t
-
   val sequence : t list -> t
-
   val conditional : (seq_t -> bool) -> t -> t
-
   val combine_axioms : t -> t -> t
 end
 
@@ -68,19 +41,12 @@ module Make (Seq : Sequent.S) = struct
   module Node = Proofnode.Make (Seq)
 
   type seq_t = Seq.t
-
   type proof_t = Proof.t
-
   type axiom_f = seq_t -> string option
-
   type infrule_app = (seq_t * Tagpairs.t * Tagpairs.t) list * string
-
   type infrule_f = seq_t -> infrule_app list
-
   type t = int -> Proof.t -> (int list * Proof.t) L.t
-
   type backrule_f = seq_t -> seq_t -> (Tagpairs.t * string) list
-
   type select_f = int -> Proof.t -> int list
 
   (* Apply the sequent in the open node identified by idx in prf to the
@@ -100,7 +66,7 @@ module Make (Seq : Sequent.S) = struct
   let mk_infrule r_f idx prf =
     let seq = Proof.get_seq idx prf in
     let mk (l, d) =
-      debug (fun () -> "Found " ^ d ^ " app.") ;
+      debug (fun () -> "Found " ^ d ^ " app.");
       Proof.add_inf idx d l prf
     in
     L.map mk (L.of_list (r_f seq))
@@ -141,7 +107,7 @@ module Make (Seq : Sequent.S) = struct
       L.filter
         (fun (idx, n) ->
           (* TODO: Surely this should be equal_upto_tags? *)
-          Seq.equal seq (Node.get_seq n) && not (Int.equal idx srcidx) )
+          Seq.equal seq (Node.get_seq n) && not (Int.equal idx srcidx))
         (Proof.to_list prf)
     in
     L.map fst nodes
@@ -151,26 +117,20 @@ module Make (Seq : Sequent.S) = struct
   let set_default_select_f id =
     default_select_f :=
       match id with
-      | 0 ->
-        all_nodes
-      | 1 ->
-        closed_nodes
-      | 2 ->
-        ancestor_nodes
-      | 3 ->
-        syntactically_equal_nodes
-      | _ ->
-        !default_select_f
+      | 0 -> all_nodes
+      | 1 -> closed_nodes
+      | 2 -> ancestor_nodes
+      | 3 -> syntactically_equal_nodes
+      | _ -> !default_select_f
 
   let default_select_f_descr ?(line_prefix = "\t") () =
-    line_prefix ^ "0 -- all proof nodes (DEFAULT)\n" ^
-    line_prefix ^ "1 -- all closed proof nodes\n" ^
-    line_prefix ^ "2 -- all ancestor proof nodes\n" ^
-    line_prefix ^ "3 -- all syntactically equal proof nodes"
+    line_prefix ^ "0 -- all proof nodes (DEFAULT)\n" ^ line_prefix
+    ^ "1 -- all closed proof nodes\n" ^ line_prefix
+    ^ "2 -- all ancestor proof nodes\n" ^ line_prefix
+    ^ "3 -- all syntactically equal proof nodes"
 
   let fail _ _ = L.empty
-
-  let identity idx prf = L.singleton ([idx], prf)
+  let identity idx prf = L.singleton ([ idx ], prf)
 
   (* This has been generalised below to take a list of rules                   *)
   (*                                                                           *)
@@ -194,10 +154,10 @@ module Make (Seq : Sequent.S) = struct
     let rules =
       let num_rules = L.length rules in
       let num_subgoals = L.length subgoals in
-      if (num_rules < num_subgoals) then
+      if num_rules < num_subgoals then
         L.append rules (L.repeat identity (num_subgoals - num_rules))
-      else
-        L.take num_subgoals rules in
+      else L.take num_subgoals rules
+    in
     (* close one subgoal each time by actually applying corresponding rule *)
     L.fold_left2
       (fun apps r idx ->
@@ -206,7 +166,7 @@ module Make (Seq : Sequent.S) = struct
             (* add new subgoals to the list of opened ones *)
             L.map
               (fun (newsubgoals, newprf) -> (opened @ newsubgoals, newprf))
-              (r idx oldprf) )
+              (r idx oldprf))
           apps)
       (L.singleton ([], prf))
       rules subgoals
@@ -214,9 +174,7 @@ module Make (Seq : Sequent.S) = struct
   let compose r r' idx prf =
     L.bind
       (fun ((subgoals, _) as res) ->
-        apply_to_subgoals_pairwise
-          (L.repeat r' (L.length subgoals))
-          res)
+        apply_to_subgoals_pairwise (L.repeat r' (L.length subgoals)) res)
       (r idx prf)
 
   let compose_pairwise r rs idx prf =
@@ -242,19 +200,17 @@ module Make (Seq : Sequent.S) = struct
   let repeat r =
     let rec repeat idx prf =
       let apps = r idx prf in
-      if (L.is_empty apps) then
-        identity idx prf
+      if L.is_empty apps then identity idx prf
       else
         L.bind
           (fun ((subgoals, _) as res) ->
-            apply_to_subgoals_pairwise
-              (L.repeat repeat (L.length subgoals))
-              res)
-          apps in
+            apply_to_subgoals_pairwise (L.repeat repeat (L.length subgoals)) res)
+          apps
+    in
     repeat
 
   let conditional cond r idx prf =
     if cond (Proof.get_seq idx prf) then r idx prf else []
 
-  let combine_axioms ax rl = first [ax; compose rl (attempt ax)]
+  let combine_axioms ax rl = first [ ax; compose rl (attempt ax) ]
 end

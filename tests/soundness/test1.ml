@@ -1,6 +1,5 @@
 open Lib
 open Generic
-
 include Base
 
 (* let prf =
@@ -47,24 +46,20 @@ include Base
 let prf () =
   let size = List.hd !params in
   let nodes =
-    List.init
-      size
-      (fun n -> 
+    List.init size (fun n ->
         let n = n + 1 in
-        (n, [n], [(0, [(n, 0)], [])])) in
+        (n, [ n ], [ (0, [ (n, 0) ], []) ]))
+  in
   let root =
     let succs =
-      List.init
-        size
-        (fun n -> 
+      List.init size (fun n ->
           let n = n + 1 in
-          (n, [(0, n)], [(0, n)])) in
-    (0, [0], succs) in
+          (n, [ (0, n) ], [ (0, n) ]))
+    in
+    (0, [ 0 ], succs)
+  in
   let prf = root :: nodes in
   Soundcheck.build_proof prf
-
 ;;
 
 runtest ~minimize:false prf
-
-;;

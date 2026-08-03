@@ -1,6 +1,5 @@
 (** An abstract datatype for managing variables. *)
 module type I = sig
-
   type var
   (** The abstract type of variables. *)
 
@@ -14,38 +13,43 @@ module type I = sig
   (** [is_unnamed v] returns [true] if and only if [v] is anonymous *)
 
   val mk : string -> var
-  (** [mk n] returns a variable with name [n].
-      The type of the variable (i.e. free/bound/anonymous) is determined by the
-      classifcation function given at the creation of the variable manager. *)
+  (** [mk n] returns a variable with name [n]. The type of the variable (i.e.
+      free/bound/anonymous) is determined by the classifcation function given at
+      the creation of the variable manager. *)
 
   val is_exist_var : var Fun.predicate
-  (** [is_exist_var v] returns [true] if and only if [v] is an existential variable. *)
+  (** [is_exist_var v] returns [true] if and only if [v] is an existential
+      variable. *)
 
   val is_free_var : var Fun.predicate
   (** [is_free_var v] returns [true] if and only if [v] is a free variable. *)
 
   val fresh_evar : var_container -> var
-  (** [fresh_evar s] returns an existential variable that is fresh for the set of variables [s]. *)
+  (** [fresh_evar s] returns an existential variable that is fresh for the set
+      of variables [s]. *)
 
   val fresh_evars : var_container -> int -> var list
-  (** [fresh_evars s n] returns [n] distinct existential variables that are all fresh for the set of variables [s]. *)
+  (** [fresh_evars s n] returns [n] distinct existential variables that are all
+      fresh for the set of variables [s]. *)
 
   val fresh_fvar : var_container -> var
-  (** [fresh_fvar s] returns a free variable that is fresh for the set of variables [s]. *)
+  (** [fresh_fvar s] returns a free variable that is fresh for the set of
+      variables [s]. *)
 
   val fresh_fvars : var_container -> int -> var list
-  (** [fresh_fvars s n] returns [n] distinct free variables that are all fresh for the set of variables [s]. *)
+  (** [fresh_fvars s n] returns [n] distinct free variables that are all fresh
+      for the set of variables [s]. *)
 end
 
 module type SubstSig = sig
-  (** Abstract type of substitutions *)
   type t
+  (** Abstract type of substitutions *)
 
-  (** Abstract type of variables substituted *)
   type var
+  (** Abstract type of variables substituted *)
 
-  (** abstract type of containers of variables *)
   type var_container
+  (** abstract type of containers of variables *)
 
   val empty : t
   (** The empty substitution, which has no effect when applied. *)
@@ -57,10 +61,9 @@ module type SubstSig = sig
   (** Make a substitution from a list of bindings *)
 
   val avoid : var_container -> var_container -> t
-  (** [avoid vars subvars]
-        returns a substitution that takes all variables in [subvars] to
-        variables fresh in [vars U subvars], respecting existential
-        quantification / free variables. *)
+  (** [avoid vars subvars] returns a substitution that takes all variables in
+      [subvars] to variables fresh in [vars U subvars], respecting existential
+      quantification / free variables. *)
 
   val pp : Format.formatter -> t -> unit
   (** Pretty printer. *)
@@ -72,22 +75,24 @@ module type SubstSig = sig
   (** Apply a substitution to a variable *)
 
   val partition : t -> t * t
-  (** [partition theta] will partition [theta] into ([theta_1], [theta_2])
-        such that [theta_1] contains all and only the mappings in [theta] from
-        a free variable to either an anonymous variable or another free variable;
-        that is [theta_1] is the part of [theta] which is a proper
-        (proof-theoretic) substitution. *)
+  (** [partition theta] will partition [theta] into ([theta_1], [theta_2]) such
+      that [theta_1] contains all and only the mappings in [theta] from a free
+      variable to either an anonymous variable or another free variable; that is
+      [theta_1] is the part of [theta] which is a proper (proof-theoretic)
+      substitution. *)
 
   val strip : t -> t
   (** Removes all identity bindings from the substitution map *)
 
   val mk_free_subst : var_container -> var_container -> t
-  (** [mk_free_subst avoid vs] produces a substitution of pairwise distinct
-        free variables (fresh for all the variables in [avoid]) for the variables in [vs]. *)
+  (** [mk_free_subst avoid vs] produces a substitution of pairwise distinct free
+      variables (fresh for all the variables in [avoid]) for the variables in
+      [vs]. *)
 
   val mk_ex_subst : var_container -> var_container -> t
-  (** [mk_ex_subst avoid vs] produces a substitution of pairwise distinct existentially
-        quantified variables (fresh for all the variables in [avoid]) for the variables in [vs]. *)
+  (** [mk_ex_subst avoid vs] produces a substitution of pairwise distinct
+      existentially quantified variables (fresh for all the variables in
+      [avoid]) for the variables in [vs]. *)
 end
 
 type alphabet = string list
@@ -111,12 +116,12 @@ module type S = sig
 
     include
       Containers.S
-      with type Set.elt = t
-      with type Map.key = t
-      with type Hashmap.key = t
-      with type Hashset.elt = t
-      with type MSet.elt = t
-      with type FList.t = t list
+        with type Set.elt = t
+        with type Map.key = t
+        with type Hashmap.key = t
+        with type Hashset.elt = t
+        with type MSet.elt = t
+        with type FList.t = t list
 
     val to_int : t -> Int.t
     (** Returns an integer representation *)
@@ -124,9 +129,9 @@ module type S = sig
 
   module Subst :
     SubstSig
-    with type t = Var.t Var.Map.t
-    with type var = Var.t
-    with type var_container = Var.Set.t
+      with type t = Var.t Var.Map.t
+      with type var = Var.t
+      with type var_container = Var.Set.t
 
   include I with type var = Var.t and type var_container = Var.Set.t
 
@@ -134,15 +139,16 @@ module type S = sig
   (** The alphabet that is used to generate new variables. *)
 
   val to_ints : Var.Set.t -> Int.Set.t
-  (** Convenience method to return a set of integer representatives of a set of variables.
-        This is equivalent to [Var.Set.map_to Int.Set.add Int.Set.empty Var.to_int] *)
+  (** Convenience method to return a set of integer representatives of a set of
+      variables. This is equivalent to
+      [Var.Set.map_to Int.Set.add Int.Set.empty Var.to_int] *)
 end
 
 type varname_class = FREE | BOUND | ANONYMOUS
 
 val mk : int -> string -> (string -> varname_class) -> (module S)
 (** [mk seed anon_str classify] creates a new variable manager module where:
-      [seed] specifies a cyclic permutation of the alphabet, which is used
-        internally to create new variable names;
-      [anon_str] specifies how to represent "anonymous" variables as a string;
-      [classify varname] returns a value of type [varname_class] classifying [varname]. *)
+    [seed] specifies a cyclic permutation of the alphabet, which is used
+    internally to create new variable names; [anon_str] specifies how to
+    represent "anonymous" variables as a string; [classify varname] returns a
+    value of type [varname_class] classifying [varname]. *)

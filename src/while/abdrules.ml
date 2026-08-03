@@ -1,6 +1,5 @@
 open Lib
 open Generic
-
 open Program
 
 exception Not_symheap = Seplog.Form.Not_symheap
@@ -22,7 +21,10 @@ let dest_sh_seq = Rules.dest_sh_seq
 let last_pred = ref 0
 
 let get_fresh_ident () =
-  Seplog.Predsym.of_string (Printf.sprintf "I%.3d" (incr last_pred ; !last_pred))
+  Seplog.Predsym.of_string
+    (Printf.sprintf "I%.3d"
+       (incr last_pred;
+        !last_pred))
 
 let get_undefined defs h =
   Seplog.(Tpreds.filter (Defs.is_undefined defs) h.Heap.inds)
@@ -40,8 +42,7 @@ let ex_subst_defs defs =
       (* NB order of subst is reversed so that *)
       (* the greater variable replaces the lesser *)
       (* this maintains universal vars *)
-      Heap.subst
-        (Term.Map.of_list ex_eqs)
+      Heap.subst (Term.Map.of_list ex_eqs)
         (Heap.with_eqs h (Uf.of_list non_ex_eqs))
   in
   let ex_subst_case c =
@@ -53,8 +54,7 @@ let ex_subst_defs defs =
     (Blist.map
        (fun def ->
          Preddef.mk
-           ( Blist.map ex_subst_case (Preddef.rules def)
-           , Preddef.predsym def ) )
+           (Blist.map ex_subst_case (Preddef.rules def), Preddef.predsym def))
        (Defs.to_list defs))
 
 let empify defs =
@@ -67,9 +67,7 @@ let empify defs =
   Defs.of_list
     (Blist.map
        (fun def ->
-         Preddef.mk
-           (Blist.map empify_ (Preddef.rules def), Preddef.predsym def)
-         )
+         Preddef.mk (Blist.map empify_ (Preddef.rules def), Preddef.predsym def))
        (Defs.to_list defs))
 
 let inline defs =
@@ -80,7 +78,7 @@ let inline defs =
       Blist.find
         (fun def ->
           let p, h = Preddef.dest def in
-          (match p with [_] -> true | _ -> false)
+          (match p with [ _ ] -> true | _ -> false)
           &&
           let f, _ = Indrule.dest (Blist.hd p) in
           let idents =
@@ -88,7 +86,7 @@ let inline defs =
               (fun (_, (id, _)) -> id)
               f.Heap.inds
           in
-          not (Predsym.Set.mem h idents) )
+          not (Predsym.Set.mem h idents))
         (Blist.but_last defs)
     in
     let p, h = Preddef.dest q in
@@ -118,8 +116,7 @@ let inline defs =
     Defs.of_list
       (Blist.map
          (fun def ->
-           Preddef.mk
-             (Blist.map f (Preddef.rules def), Preddef.predsym def) )
+           Preddef.mk (Blist.map f (Preddef.rules def), Preddef.predsym def))
          defs)
   with Not_found -> Defs.of_list defs
 
@@ -134,9 +131,8 @@ let used_only_recursively (heap, (ident, params)) pos =
            not (Blist.exists (Term.equal var) params')
          else
            Blist.for_all2
-             (fun var' pos' ->
-               Int.( = ) pos pos' || not (Term.equal var var') )
-             params' (Blist.indexes params') )
+             (fun var' pos' -> Int.( = ) pos pos' || not (Term.equal var var'))
+             params' (Blist.indexes params'))
        heap.Heap.inds
 
 (* for all predicates *)
@@ -157,7 +153,7 @@ let find_unused_arg defs =
             (fun case ->
               let ((heap, (_, params)) as p) = Indrule.dest case in
               (not (Term.Set.mem (Blist.nth params pos) (Heap.vars heap)))
-              || used_only_recursively p pos )
+              || used_only_recursively p pos)
             clauses
         then Some (ident, pos)
         else None
@@ -176,11 +172,11 @@ let eliminate (ident, pos) defs =
       Heap.with_inds heap
         (Tpreds.map
            (fun (t, (ident'', params')) ->
-             ( t
-             , ( ident''
-               , if Predsym.equal ident ident'' then
+             ( t,
+               ( ident'',
+                 if Predsym.equal ident ident'' then
                    Blist.remove_nth pos params'
-                 else params' ) ) )
+                 else params' ) ))
            heap.Heap.inds)
     in
     if not (Predsym.equal ident ident') then
@@ -191,7 +187,7 @@ let eliminate (ident, pos) defs =
     (Blist.map
        (fun def ->
          let cl, ident' = Preddef.dest def in
-         Preddef.mk (Blist.map elim_clause cl, ident') )
+         Preddef.mk (Blist.map elim_clause cl, ident'))
        (Defs.to_list defs))
 
 let elim_dead_vars defs =
@@ -205,13 +201,9 @@ let simplify_defs defs =
     (empify defs)
 
 let is_sat defs = Seplog.Basepair.satisfiable (empify defs)
-
 let ex_falso_axiom = Abdrule.lift Rules.ex_falso_axiom
-
 let symex_empty_axiom = Abdrule.lift Rules.symex_empty_axiom
-
 let lhs_disj_to_symheaps = Abdrule.lift Rules.lhs_disj_to_symheaps
-
 let eq_subst_ex = Rules.eq_subst_ex_f
 
 let simpl_deqs seq =
@@ -225,38 +217,31 @@ let simpl_deqs seq =
       let open Seplog in
       Deqs.filter
         (fun (x, y) ->
-          Term.equal x y
-          || (Term.Set.mem x terms && Term.Set.mem y terms) )
+          Term.equal x y || (Term.Set.mem x terms && Term.Set.mem y terms))
         f.Heap.deqs
     in
     let f' = Seplog.Heap.with_deqs f newdeqs in
     if Seplog.Heap.equal f f' then []
     else
-      let s = ((cs, [f']), cmd) in
-      [([(s, Rules.tagpairs s, Tagpairs.empty)], "Simpl Deqs")]
+      let s = ((cs, [ f' ]), cmd) in
+      [ ([ (s, Rules.tagpairs s, Tagpairs.empty) ], "Simpl Deqs") ]
   with Not_symheap -> []
 
 let simplify =
   Abdrule.lift
     (Rule.mk_infrule
        (Seqtactics.relabel "Simplify"
-          (Seqtactics.repeat (Seqtactics.first [eq_subst_ex; simpl_deqs]))))
+          (Seqtactics.repeat (Seqtactics.first [ eq_subst_ex; simpl_deqs ]))))
 
 let wrap r = Abdrule.compose r (Abdrule.attempt simplify)
 
 (* symbolic execution rules *)
 let symex_stop_axiom = Abdrule.lift Rules.symex_stop_axiom
-
 let symex_load_rule = Abdrule.lift Rules.symex_load_rule
-
 let symex_store_rule = Abdrule.lift Rules.symex_store_rule
-
 let symex_free_rule = Abdrule.lift Rules.symex_free_rule
-
 let symex_new_rule = Abdrule.lift Rules.symex_new_rule
-
 let symex_skip_rule = Abdrule.lift Rules.symex_skip_rule
-
 let symex_assign_rule = Abdrule.lift Rules.symex_assign_rule
 
 let symex_nondet_if_rule =
@@ -268,10 +253,11 @@ let symex_nondet_if_rule =
       else
         let cont = Cmd.get_cont cmd in
         Rules.fix_tps
-          [ ( [((cs, [f]), Cmd.mk_seq cmd' cont); ((cs, [f]), cont)]
-            , "If(nondet)" ) ]
-    with
-    | Not_symheap | WrongCmd -> []
+          [
+            ( [ ((cs, [ f ]), Cmd.mk_seq cmd' cont); ((cs, [ f ]), cont) ],
+              "If(nondet)" );
+          ]
+    with Not_symheap | WrongCmd -> []
   in
   Abdrule.lift (Rule.mk_infrule rl)
 
@@ -284,11 +270,14 @@ let symex_nondet_ifelse_rule =
       else
         let cont = Cmd.get_cont cmd in
         Rules.fix_tps
-          [ ( [ ((cs, [f]), Cmd.mk_seq cmd' cont)
-              ; ((cs, [f]), Cmd.mk_seq cmd'' cont) ]
-            , "IfElse(nondet)" ) ]
-    with
-    | Not_symheap | WrongCmd -> []
+          [
+            ( [
+                ((cs, [ f ]), Cmd.mk_seq cmd' cont);
+                ((cs, [ f ]), Cmd.mk_seq cmd'' cont);
+              ],
+              "IfElse(nondet)" );
+          ]
+    with Not_symheap | WrongCmd -> []
   in
   Abdrule.lift (Rule.mk_infrule rl)
 
@@ -301,10 +290,11 @@ let symex_nondet_while_rule =
       else
         let cont = Cmd.get_cont cmd in
         Rules.fix_tps
-          [ ( [((cs, [f]), Cmd.mk_seq cmd' cmd); ((cs, [f]), cont)]
-            , "If(nondet)" ) ]
-    with
-    | Not_symheap | WrongCmd -> []
+          [
+            ( [ ((cs, [ f ]), Cmd.mk_seq cmd' cmd); ((cs, [ f ]), cont) ],
+              "If(nondet)" );
+          ]
+    with Not_symheap | WrongCmd -> []
   in
   Abdrule.lift (Rule.mk_infrule rl)
 
@@ -317,7 +307,7 @@ let symex_det_if_rule =
       else
         let x, y = Cond.dest c in
         let cont = Cmd.get_cont cmd in
-        let mk_ret c = Rules.fix_tps [([((cs, [f]), c)], "If(det)")] in
+        let mk_ret c = Rules.fix_tps [ ([ ((cs, [ f ]), c) ], "If(det)") ] in
         match
           Seplog.(Cond.is_deq c, Heap.equates f x y, Heap.disequates f x y)
         with
@@ -330,8 +320,7 @@ let symex_det_if_rule =
         (* formula allows either fact so fail *)
         (* or otherwise don't know so fail *)
         | _ -> []
-    with
-    | Not_symheap | WrongCmd -> []
+    with Not_symheap | WrongCmd -> []
   in
   Abdrule.lift (Rule.mk_infrule rl)
 
@@ -344,7 +333,7 @@ let symex_det_ifelse_rule =
       else
         let x, y = Cond.dest c in
         let cont = Cmd.get_cont cmd in
-        let mk_ret c = Rules.fix_tps [([((cs, [f]), c)], "If(det)")] in
+        let mk_ret c = Rules.fix_tps [ ([ ((cs, [ f ]), c) ], "If(det)") ] in
         match
           Seplog.(Cond.is_deq c, Heap.equates f x y, Heap.disequates f x y)
         with
@@ -357,8 +346,7 @@ let symex_det_ifelse_rule =
         (* formula allows either fact so fail *)
         (* or don't know so fail *)
         | _ -> []
-    with
-    | Not_symheap | WrongCmd -> []
+    with Not_symheap | WrongCmd -> []
   in
   Abdrule.lift (Rule.mk_infrule rl)
 
@@ -371,9 +359,7 @@ let symex_det_while_rule =
       else
         let x, y = Cond.dest c in
         let cont = Cmd.get_cont cmd in
-        let mk_ret c =
-          Rules.fix_tps [([((cs, [f]), c)], "While(det)")]
-        in
+        let mk_ret c = Rules.fix_tps [ ([ ((cs, [ f ]), c) ], "While(det)") ] in
         match
           Seplog.(Cond.is_deq c, Heap.equates f x y, Heap.disequates f x y)
         with
@@ -386,8 +372,7 @@ let symex_det_while_rule =
         (* formula allows either fact so fail *)
         (* otherwise don't know so fail *)
         | _ -> []
-    with
-    | Not_symheap | WrongCmd -> []
+    with Not_symheap | WrongCmd -> []
   in
   Abdrule.lift (Rule.mk_infrule rl)
 
@@ -399,8 +384,8 @@ let generalise_while_rule =
       let open Seplog in
       if Term.Set.mem t m then (
         let r = fresh_evar !avoid in
-        avoid := Term.Set.add r !avoid ;
-        r )
+        avoid := Term.Set.add r !avoid;
+        r)
       else t
     in
     let gen_pto (x, args) =
@@ -427,13 +412,10 @@ let generalise_while_rule =
              let f' = generalise m' f in
              if Seplog.Heap.equal f f' then None
              else
-               let s' = ((cs, [f']), cmd) in
-               Some
-                 ([(s', Rules.tagpairs s', Tagpairs.empty)], "Gen.While")
-             )
+               let s' = ((cs, [ f' ]), cmd) in
+               Some ([ (s', Rules.tagpairs s', Tagpairs.empty) ], "Gen.While"))
            subs)
-    with
-    | Not_symheap | WrongCmd -> []
+    with Not_symheap | WrongCmd -> []
   in
   Abdrule.lift (Rule.mk_infrule rl)
 
@@ -442,7 +424,7 @@ let generalise_while_rule =
 let abd_deref =
   let rl seq defs =
     let open Seplog in
-    debug (fun () -> "Abd deref") ;
+    debug (fun () -> "Abd deref");
     try
       let (cs, f), cmd = dest_sh_seq seq in
       let x = Cmd.dest_deref cmd in
@@ -451,14 +433,10 @@ let abd_deref =
       else
         let fresh_ident = get_fresh_ident () in
         let f (_, (ident, params)) =
-          let newparams =
-            fresh_fvars Term.Set.empty (Blist.length params)
-          in
+          let newparams = fresh_fvars Term.Set.empty (Blist.length params) in
           let head = (ident, newparams) in
           let pto_params =
-            fresh_evars
-              (Term.Set.of_list newparams)
-              (Field.get_no_fields ())
+            fresh_evars (Term.Set.of_list newparams) (Field.get_no_fields ())
           in
           let newxs =
             Blist.map (Blist.nth newparams)
@@ -472,14 +450,11 @@ let abd_deref =
                   (Heap.mk_ind
                      (Tags.anonymous, (fresh_ident, newparams @ pto_params)))
               in
-              Defs.add
-                (Preddef.mk ([Indrule.mk clause head], ident))
-                defs )
+              Defs.add (Preddef.mk ([ Indrule.mk clause head ], ident)) defs)
             newxs
         in
         Blist.bind f inds
-    with
-    | Not_symheap | WrongCmd -> []
+    with Not_symheap | WrongCmd -> []
   in
   Abdrule.mk_abdinfrule rl
 
@@ -516,7 +491,7 @@ let abd_det_guard =
                 in
                 let head = (ident, newparams) in
                 let matches nil_const z =
-                  if nil_const && Term.is_nil z then [Term.nil]
+                  if nil_const && Term.is_nil z then [ Term.nil ]
                   else
                     Blist.map (Blist.nth newparams)
                       (Blist.find_indexes (Heap.equates f z) params)
@@ -530,9 +505,7 @@ let abd_det_guard =
                 in
                 let g pair =
                   let clause_eq =
-                    Heap.mk
-                      (Uf.of_list [pair])
-                      Deqs.empty Ptos.empty
+                    Heap.mk (Uf.of_list [ pair ]) Deqs.empty Ptos.empty
                       (Tpreds.singleton
                          (Tags.anonymous, (fresh_ident, newparams)))
                   in
@@ -543,9 +516,10 @@ let abd_det_guard =
                   in
                   Defs.add
                     (Preddef.mk
-                       ( [ Indrule.mk clause_eq head
-                         ; Indrule.mk clause_deq head ]
-                       , ident ))
+                       ( [
+                           Indrule.mk clause_eq head; Indrule.mk clause_deq head;
+                         ],
+                         ident ))
                     defs
                 in
                 Blist.map g occurrences
@@ -564,12 +538,8 @@ let abd_back_rule =
       in
       if
         (not (Cmd.equal cmd1 cmd2))
-        || Int.( < )
-             (Deqs.cardinal l1.Heap.deqs)
-             (Deqs.cardinal l2.Heap.deqs)
-        || Int.( < )
-             (Ptos.cardinal l1.Heap.ptos)
-             (Ptos.cardinal l2.Heap.ptos)
+        || Int.( < ) (Deqs.cardinal l1.Heap.deqs) (Deqs.cardinal l2.Heap.deqs)
+        || Int.( < ) (Ptos.cardinal l1.Heap.ptos) (Ptos.cardinal l2.Heap.ptos)
       then []
       else
         (* find multiset of identifiers of ind preds in s1/s2 *)
@@ -582,7 +552,7 @@ let abd_back_rule =
             (fun (_, (ident, _)) ->
               Tpreds.for_all
                 (fun (_, (ident', _)) -> not (Predsym.equal ident ident'))
-                l2.Heap.inds )
+                l2.Heap.inds)
             candidates
         in
         (* for each candidate there must exist one in s2 which *)
@@ -597,22 +567,20 @@ let abd_back_rule =
           Blist.filter
             (fun ((_, (c, _)), (_, (c', _))) ->
               Predsym.MSet.subset inds2
-                (Predsym.MSet.add c' (Predsym.MSet.remove c inds1)) )
+                (Predsym.MSet.add c' (Predsym.MSet.remove c inds1)))
             cp
         in
         if Blist.is_empty cp then []
         else
           let fresh_ident = get_fresh_ident () in
           let f ((_, (c, params)), (_, (c', params'))) =
-            let newparams =
-              fresh_fvars Term.Set.empty (Blist.length params)
-            in
+            let newparams = fresh_fvars Term.Set.empty (Blist.length params) in
             (* does this need generalising like det_guard? *)
             let matches z =
               if Term.is_var z then
                 Blist.map (Blist.nth newparams)
                   (Blist.find_indexes (Heap.equates l1 z) params)
-              else [Term.nil]
+              else [ Term.nil ]
             in
             let combinations = Blist.choose (Blist.map matches params') in
             Blist.map
@@ -620,12 +588,12 @@ let abd_back_rule =
                 let cl =
                   Heap.with_inds Heap.empty
                     (Tpreds.of_list
-                       [ (Tags.anonymous, (c', perm))
-                       ; (Tags.anonymous, (fresh_ident, newparams)) ])
+                       [
+                         (Tags.anonymous, (c', perm));
+                         (Tags.anonymous, (fresh_ident, newparams));
+                       ])
                 in
-                Defs.add
-                  (Preddef.mk ([Indrule.mk cl (c, newparams)], c))
-                  defs )
+                Defs.add (Preddef.mk ([ Indrule.mk cl (c, newparams) ], c)) defs)
               combinations
           in
           Blist.bind f cp
@@ -765,75 +733,88 @@ let matches = Abdrule.lift Rules.dobackl
 
 let unfold =
   Abdrule.mk_abdgenrule (fun seq defs ->
-      Blist.map (fun app -> (app, defs)) (Rules.luf_rl seq defs) )
+      Blist.map (fun app -> (app, defs)) (Rules.luf_rl seq defs))
 
 let unfold_last =
   Abdrule.mk_abdgenrule (fun seq defs ->
       Blist.map
         (fun app -> (app, defs))
         (Rules.luf_rl seq
-           Seplog.(Defs.of_list [Blist.hd (Defs.to_list defs)])) )
+           Seplog.(Defs.of_list [ Blist.hd (Defs.to_list defs) ])))
 
 let deref_tac =
   Abdrule.first
-    [wrap symex_load_rule; wrap symex_store_rule; wrap symex_free_rule]
+    [ wrap symex_load_rule; wrap symex_store_rule; wrap symex_free_rule ]
 
 let det_guard_tac =
   Abdrule.first
-    [ wrap symex_det_if_rule
-    ; wrap symex_det_ifelse_rule
-    ; wrap symex_det_while_rule ]
+    [
+      wrap symex_det_if_rule;
+      wrap symex_det_ifelse_rule;
+      wrap symex_det_while_rule;
+    ]
 
 let abd_symex abd symex =
   Abdrule.compose abd (Abdrule.compose unfold_last symex)
 
 let ifwhile_tac =
-  Abdrule.first [det_guard_tac; abd_symex abd_det_guard det_guard_tac]
+  Abdrule.first [ det_guard_tac; abd_symex abd_det_guard det_guard_tac ]
 
 let gen_ifwhile_tac = Abdrule.compose generalise_while_rule ifwhile_tac
 
 let rec straightline =
   Abdrule.first
-    [ symex_empty_axiom
-    ; ex_falso_axiom
-    ; symex_stop_axiom
-    ; Abdrule.choice
-        [ matches
-        ; abd_symex abd_back_rule matches
-        ; Abdrule.first
-            [ symex_skip_rule
-            ; symex_new_rule
-            ; symex_nondet_if_rule
-            ; symex_nondet_ifelse_rule
-            ; symex_nondet_while_rule
-            ; symex_assign_rule
-            ; deref_tac
-            ; abd_symex abd_deref deref_tac ] ] ]
+    [
+      symex_empty_axiom;
+      ex_falso_axiom;
+      symex_stop_axiom;
+      Abdrule.choice
+        [
+          matches;
+          abd_symex abd_back_rule matches;
+          Abdrule.first
+            [
+              symex_skip_rule;
+              symex_new_rule;
+              symex_nondet_if_rule;
+              symex_nondet_ifelse_rule;
+              symex_nondet_while_rule;
+              symex_assign_rule;
+              deref_tac;
+              abd_symex abd_deref deref_tac;
+            ];
+        ];
+    ]
 
 (* these rules can rarely create a non-symex loop in termination checking *)
 let rules =
   Abdrule.first
-    [ symex_empty_axiom
-    ; ex_falso_axiom
-    ; symex_stop_axiom
-    ; (* lhs_disj_to_symheaps ; *)
+    [
+      symex_empty_axiom;
+      ex_falso_axiom;
+      symex_stop_axiom;
+      (* lhs_disj_to_symheaps ; *)
       (* simplify ; *)
       Abdrule.choice
-        [ matches
-        ; abd_symex abd_back_rule matches
-        ; Abdrule.first
-            [ symex_skip_rule
-            ; symex_new_rule
-            ; symex_nondet_if_rule
-            ; symex_nondet_ifelse_rule
-            ; symex_nondet_while_rule
-            ; symex_assign_rule
-            ; deref_tac
-            ; abd_symex abd_deref deref_tac
-            ; Abdrule.choice [ifwhile_tac; gen_ifwhile_tac; unfold] ]
-        (* Proof_tacs.then_tac                                           *)
-        (*   abd_segment                                                 *)
-        (* 	(Proof_tacs.or_tac [ifwhile_tac; gen_ifwhile_tac]); *)
+        [
+          matches;
+          abd_symex abd_back_rule matches;
+          Abdrule.first
+            [
+              symex_skip_rule;
+              symex_new_rule;
+              symex_nondet_if_rule;
+              symex_nondet_ifelse_rule;
+              symex_nondet_while_rule;
+              symex_assign_rule;
+              deref_tac;
+              abd_symex abd_deref deref_tac;
+              Abdrule.choice [ ifwhile_tac; gen_ifwhile_tac; unfold ];
+            ]
+          (* Proof_tacs.then_tac                                           *)
+          (*   abd_segment                                                 *)
+          (* 	(Proof_tacs.or_tac [ifwhile_tac; gen_ifwhile_tac]); *)
 
-        (* cut_backlink_tac                                               *)
-         ] ]
+          (* cut_backlink_tac                                               *);
+        ];
+    ]

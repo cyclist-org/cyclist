@@ -1,7 +1,6 @@
 open Lib
 open Generic
 open Seplog
-
 open Program
 
 exception Not_symheap = Form.Not_symheap
@@ -14,13 +13,9 @@ module EntlSeqHash = Hashtbl.Make (Seplog.Seq)
 module ProofNode = Proofnode.Make (Seq)
 
 let check_invalid = ref (Invalid.check Defs.empty)
-
 let show_invalidity_debug = ref false
-
 let show_entailment_debug = ref false
-
 let show_frame_debug = ref false
-
 let entl_depth = ref 4
 
 (* Wrapper for the entailment prover *)
@@ -32,17 +27,17 @@ let entails f f' =
     debug (fun _ ->
         "Trying to prove entailment:\n\t"
         ^ Seplog.Seq.to_string (f, f')
-        ^ "\n\t" ^ "with depth " ^ string_of_int !entl_depth )
+        ^ "\n\t" ^ "with depth " ^ string_of_int !entl_depth)
   in
   let prove seq =
     let depth = if Int.( < ) !entl_depth 1 then max_int else !entl_depth in
     let invalid =
       let dbg = !do_debug in
       let res =
-        do_debug := !do_debug && !show_invalidity_debug ;
+        do_debug := !do_debug && !show_invalidity_debug;
         !check_invalid seq
       in
-      do_debug := dbg ;
+      do_debug := dbg;
       res
     in
     if invalid then
@@ -51,14 +46,13 @@ let entails f f' =
     else
       let dbg = !do_debug in
       let prf =
-        do_debug := !do_debug && !show_entailment_debug ;
+        do_debug := !do_debug && !show_entailment_debug;
         Slprover.idfs 1 depth !Rules.axioms !Rules.rules seq
       in
-      do_debug := dbg ;
+      do_debug := dbg;
       let () =
         debug (fun _ ->
-            "Entailment was " ^ Option.dest "not " (fun _ -> "") prf ^ "proved"
-        )
+            "Entailment was " ^ Option.dest "not " (fun _ -> "") prf ^ "proved")
       in
       prf
   in
@@ -69,19 +63,19 @@ let entails f f' =
       debug (fun _ ->
           "Found result in cache: entailment "
           ^ (if Option.is_none prf then "not " else "")
-          ^ "proved up to depth " ^ string_of_int depth )
+          ^ "proved up to depth " ^ string_of_int depth)
     in
     if Option.is_some prf || Int.( <= ) !entl_depth depth then prf
     else
       let prf = prove seq in
-      EntlSeqHash.replace entailment_table seq (!entl_depth, prf) ;
-      prf )
+      EntlSeqHash.replace entailment_table seq (!entl_depth, prf);
+      prf)
   else
     let () =
       debug (fun _ -> "Result not found in cache: attempting to prove")
     in
     let prf = prove seq in
-    EntlSeqHash.replace entailment_table seq (!entl_depth, prf) ;
+    EntlSeqHash.replace entailment_table seq (!entl_depth, prf);
     prf
 
 (* Wrappers for backlink abducers *)
@@ -93,8 +87,7 @@ end
 module AbdTblMap = AbdTblElt.Hashmap
 
 let abd_pre_table :
-    ( int
-    * ((Form.t * Form.t) * Unify.Unidirectional.state list) option )
+    (int * ((Form.t * Form.t) * Unify.Unidirectional.state list) option)
     AbdTblMap.t
     EntlSeqHash.t =
   EntlSeqHash.create 11
@@ -111,7 +104,7 @@ let abd_pre_transforms ((used_tags, prog_vars) as key) f f' =
     in
     Option.map
       (fun (interpolant, substs) ->
-        (interpolant, Unify.Unidirectional.remove_dup_substs substs) )
+        (interpolant, Unify.Unidirectional.remove_dup_substs substs))
       res
   in
   let seq = (f, f') in
@@ -122,24 +115,23 @@ let abd_pre_transforms ((used_tags, prog_vars) as key) f f' =
       if Option.is_some res || Int.( <= ) Abduce.max_depth depth then res
       else
         let res = abd f f' in
-        AbdTblMap.replace map key (Abduce.max_depth, res) ;
-        res )
+        AbdTblMap.replace map key (Abduce.max_depth, res);
+        res)
     else
       let res = abd f f' in
-      AbdTblMap.replace map key (Abduce.max_depth, res) ;
-      res )
+      AbdTblMap.replace map key (Abduce.max_depth, res);
+      res)
   else
     let res = abd f f' in
     let map = AbdTblMap.create 11 in
-    AbdTblMap.replace map key (Abduce.max_depth, res) ;
-    EntlSeqHash.replace abd_pre_table seq map ;
+    AbdTblMap.replace map key (Abduce.max_depth, res);
+    EntlSeqHash.replace abd_pre_table seq map;
     res
 
 let tagpairs = Seq.tag_pairs
 
 (* following is for symex only *)
 let progpairs tps = if !termination then tps else Seq.tagpairs_one
-
 let dest_sh_seq (pre, cmd, post) = (Form.dest pre, cmd, post)
 
 (* axioms *)
@@ -148,7 +140,7 @@ let dest_sh_seq (pre, cmd, post) = (Form.dest pre, cmd, post)
 (* close it of as instance of the Ex Falso axiom *)
 let ex_falso_axiom =
   Rule.mk_axiom (fun (pre, _, _) ->
-      Option.mk (Form.inconsistent pre) "Ex Falso" )
+      Option.mk (Form.inconsistent pre) "Ex Falso")
 
 (* If the precondition entails the post condition and the command is a final  *)
 (* one possibly preceded by assertions then we can apply the Empty axiom.     *)
@@ -180,7 +172,8 @@ let mk_symex_empty_axiom =
 let eq_subst_ex_f ((pre, cmd, post) as s) =
   let pre' = Form.subst_existentials pre in
   if Form.equal pre pre' then []
-  else [([((pre', cmd, post), tagpairs s, Tagpairs.empty)], "Eq. subst. ex")]
+  else
+    [ ([ ((pre', cmd, post), tagpairs s, Tagpairs.empty) ], "Eq. subst. ex") ]
 
 (* Tactic which tries to simplify the sequent by normalising: that is, using the  *)
 (* equalities in the formula as a substitution for the disequality, points-to and *)
@@ -191,7 +184,7 @@ let eq_subst_ex_f ((pre, cmd, post) as s) =
 (*   if Form.equal pre pre' then [] else                         *)
 (*   [ [( (pre', cmd, post), tagpairs s, Tagpairs.empty)], "Norm" ] *)
 
-let simplify_rules = [eq_subst_ex_f]
+let simplify_rules = [ eq_subst_ex_f ]
 
 (* Tactic which performs as many simplifications as possible all in one go *)
 let simplify_seq_rl =
@@ -221,7 +214,7 @@ let lab_ex_intro =
               subst
           else Seq.tagpairs_one
         in
-        [([(Seq.with_pre seq pre', tps, Tagpairs.empty)], "Lab.Ex.Intro")]
+        [ ([ (Seq.with_pre seq pre', tps, Tagpairs.empty) ], "Lab.Ex.Intro") ]
     with Not_symheap -> []
   in
   Rule.mk_infrule rl
@@ -230,14 +223,16 @@ let lab_ex_intro =
 let lhs_disj_to_symheaps =
   let rl (((_, hs) as pre), cmd, post) =
     match hs with
-    | [] | [_] -> []
+    | [] | [ _ ] -> []
     | _ ->
-        [ ( Blist.map
+        [
+          ( Blist.map
               (fun h ->
-                let s' = (Form.with_heaps pre [h], cmd, post) in
-                (s', tagpairs s', Tagpairs.empty) )
-              hs
-          , "L.Or" ) ]
+                let s' = (Form.with_heaps pre [ h ], cmd, post) in
+                (s', tagpairs s', Tagpairs.empty))
+              hs,
+            "L.Or" );
+        ]
   in
   Rule.mk_infrule rl
 
@@ -298,17 +293,15 @@ let luf_rl defs ((pre, cmd, post) as seq) =
               (Tagpairs.filter (fun (_, t) -> Tags.mem t seq_tags) tps)
           in
           Pair.map collect
-            ( Ord_constraints.all_pairs cclosure
-            , Ord_constraints.prog_pairs cclosure )
+            ( Ord_constraints.all_pairs cclosure,
+              Ord_constraints.prog_pairs cclosure )
         in
         let vts = Tagpairs.union vts (Tagpairs.mk (Heap.tags pre')) in
-        ( ((new_cs, [Heap.star pre' f]), cmd, post)
-        , (if !termination then vts else Seq.tagpairs_one)
-        , if !termination then pts else Tagpairs.empty )
+        ( ((new_cs, [ Heap.star pre' f ]), cmd, post),
+          (if !termination then vts else Seq.tagpairs_one),
+          if !termination then pts else Tagpairs.empty )
       in
-      let () =
-        debug (fun () -> "L. Unfolding " ^ Predsym.to_string ident)
-      in
+      let () = debug (fun () -> "L. Unfolding " ^ Predsym.to_string ident) in
       (Blist.map do_case cases, Predsym.to_string ident ^ " L.Unf.")
     in
     Tpreds.map_to_list left_unfold
@@ -327,13 +320,12 @@ let ruf_rl defs ((pre, cmd, post) as seq) =
     let clauses = Defs.unfold (seq_vars, seq_tags) p defs in
     let do_case f =
       let cs' =
-        Ord_constraints.union cs
-          (Ord_constraints.generate tag (Heap.tags f))
+        Ord_constraints.union cs (Ord_constraints.generate tag (Heap.tags f))
       in
       let h' = Heap.star h' f in
-      let seq' = (pre, cmd, (cs', [h'])) in
-      ( [(seq', tagpairs seq', Tagpairs.empty)]
-      , Predsym.to_string ident ^ " R.Unf." )
+      let seq' = (pre, cmd, (cs', [ h' ])) in
+      ( [ (seq', tagpairs seq', Tagpairs.empty) ],
+        Predsym.to_string ident ^ " R.Unf." )
     in
     let () = debug (fun () -> "R. Unfolding " ^ Predsym.to_string ident) in
     Blist.map do_case clauses
@@ -346,7 +338,7 @@ let ruf defs = wrap (ruf_rl defs)
 let fix_tps l =
   Blist.map
     (fun (g, d) ->
-      (Blist.map (fun s -> (s, tagpairs s, progpairs Tagpairs.empty)) g, d) )
+      (Blist.map (fun s -> (s, tagpairs s, progpairs Tagpairs.empty)) g, d))
     l
 
 let mk_symex f =
@@ -357,8 +349,8 @@ let mk_symex f =
       fix_tps
         (Blist.map
            (fun (g, d) ->
-             ( Blist.map (fun h' -> (Form.with_heaps pre [h'], cont, post)) g
-             , d ) )
+             ( Blist.map (fun h' -> (Form.with_heaps pre [ h' ], cont, post)) g,
+               d ))
            (f seq))
   in
   wrap rl
@@ -373,9 +365,8 @@ let symex_assign_rule =
       let theta = Subst.singleton x fv in
       let h' = Heap.subst theta h in
       let e' = Subst.apply theta e in
-      [([Heap.add_eq h' (e', x)], "Assign")]
-    with
-    | WrongCmd | Not_symheap -> []
+      [ ([ Heap.add_eq h' (e', x) ], "Assign") ]
+    with WrongCmd | Not_symheap -> []
   in
   mk_symex rl
 
@@ -393,9 +384,8 @@ let symex_load_rule =
       let theta = Subst.singleton x fv in
       let h' = Heap.subst theta h in
       let t' = Subst.apply theta t in
-      [([Heap.add_eq h' (t', x)], "Load")]
-    with
-    | Not_symheap | WrongCmd | Not_found -> []
+      [ ([ Heap.add_eq h' (t', x) ], "Load") ]
+    with Not_symheap | WrongCmd | Not_found -> []
   in
   mk_symex rl
 
@@ -406,9 +396,8 @@ let symex_store_rule =
       let x, f, e = Cmd.dest_store cmd in
       let ((x', ys) as pto) = find_pto_on h x in
       let pto' = (x', Blist.replace_nth e (Field.get_index f) ys) in
-      [([Heap.add_pto (Heap.del_pto h pto) pto'], "Store")]
-    with
-    | Not_symheap | WrongCmd | Not_found -> []
+      [ ([ Heap.add_pto (Heap.del_pto h pto) pto' ], "Store") ]
+    with Not_symheap | WrongCmd | Not_found -> []
   in
   mk_symex rl
 
@@ -418,9 +407,8 @@ let symex_free_rule =
       let _, h = Form.dest pre in
       let e = Cmd.dest_free cmd in
       let pto = find_pto_on h e in
-      [([Heap.del_pto h pto], "Free")]
-    with
-    | Not_symheap | WrongCmd | Not_found -> []
+      [ ([ Heap.del_pto h pto ], "Free") ]
+    with Not_symheap | WrongCmd | Not_found -> []
   in
   mk_symex rl
 
@@ -433,9 +421,8 @@ let symex_new_rule =
       let fv, fvs = (Blist.hd l, Blist.tl l) in
       let h' = Heap.subst (Subst.singleton x fv) h in
       let new_pto = Heap.mk_pto (x, fvs) in
-      [([Heap.star h' new_pto], "New")]
-    with
-    | Not_symheap | WrongCmd -> []
+      [ ([ Heap.star h' new_pto ], "New") ]
+    with Not_symheap | WrongCmd -> []
   in
   mk_symex rl
 
@@ -444,9 +431,8 @@ let symex_skip_rule =
     try
       let _, h = Form.dest pre in
       let () = Cmd.dest_skip cmd in
-      [([h], "Skip")]
-    with
-    | Not_symheap | WrongCmd -> []
+      [ ([ h ], "Skip") ]
+    with Not_symheap | WrongCmd -> []
   in
   mk_symex rl
 
@@ -458,11 +444,14 @@ let symex_if_rule =
       let cont = Cmd.get_cont cmd in
       let cond_true, cond_false = Cond.fork h c in
       fix_tps
-        [ ( [ (Form.with_heaps pre [cond_true], Cmd.mk_seq cmd' cont, post)
-            ; (Form.with_heaps pre [cond_false], cont, post) ]
-          , "If" ) ]
-    with
-    | Not_symheap | WrongCmd -> []
+        [
+          ( [
+              (Form.with_heaps pre [ cond_true ], Cmd.mk_seq cmd' cont, post);
+              (Form.with_heaps pre [ cond_false ], cont, post);
+            ],
+            "If" );
+        ]
+    with Not_symheap | WrongCmd -> []
   in
   wrap rl
 
@@ -474,12 +463,14 @@ let symex_ifelse_rule =
       let cont = Cmd.get_cont cmd in
       let cond_true, cond_false = Cond.fork h c in
       fix_tps
-        [ ( [ (Form.with_heaps pre [cond_true], Cmd.mk_seq cmd1 cont, post)
-            ; (Form.with_heaps pre [cond_false], Cmd.mk_seq cmd2 cont, post)
-            ]
-          , "IfElse" ) ]
-    with
-    | Not_symheap | WrongCmd -> []
+        [
+          ( [
+              (Form.with_heaps pre [ cond_true ], Cmd.mk_seq cmd1 cont, post);
+              (Form.with_heaps pre [ cond_false ], Cmd.mk_seq cmd2 cont, post);
+            ],
+            "IfElse" );
+        ]
+    with Not_symheap | WrongCmd -> []
   in
   wrap rl
 
@@ -491,11 +482,14 @@ let symex_while_rule =
       let cont = Cmd.get_cont cmd in
       let cond_true, cond_false = Cond.fork h c in
       fix_tps
-        [ ( [ (Form.with_heaps pre [cond_true], Cmd.mk_seq cmd' cmd, post)
-            ; (Form.with_heaps pre [cond_false], cont, post) ]
-          , "While" ) ]
-    with
-    | Not_symheap | WrongCmd -> []
+        [
+          ( [
+              (Form.with_heaps pre [ cond_true ], Cmd.mk_seq cmd' cmd, post);
+              (Form.with_heaps pre [ cond_false ], cont, post);
+            ],
+            "While" );
+        ]
+    with Not_symheap | WrongCmd -> []
   in
   wrap rl
 
@@ -515,20 +509,18 @@ let mk_symex_proc_unfold procs prf_cache =
                 && Blist.exists
                      (fun ((pre', post') as spec) ->
                        (not (Proc.SigMap.mem ((id, params), spec) !prf_cache))
-                       && Form.subsumed pre' pre && Form.equal post post'
-                       )
+                       && Form.subsumed pre' pre && Form.equal post post')
                      specs
                 (* We only unfold procedures for which proofs have not been already *)
                 (* found and we use subsumption here to handle the case that the    *)
                 (* procedure has a disjunctive precondition which has already been  *)
                 (* split and that we now want to unfold                             *)
-              with Invalid_argument _ -> false )
+              with Invalid_argument _ -> false)
             procs
         in
-        fix_tps [([(pre, body, post)], proc_unfold_str ^ p)]
+        fix_tps [ ([ (pre, body, post) ], proc_unfold_str ^ p) ]
       else []
-    with
-    | WrongCmd | Not_found -> []
+    with WrongCmd | Not_found -> []
   in
   Rule.mk_infrule rl
 
@@ -548,25 +540,24 @@ let assert_rule =
       let h = Heap.explode_deqs h in
       let f = Form.complete_tags (Form.tags f) f in
       let default_depth = !entl_depth in
-      entl_depth := 0 ;
-      let entl_result = entails (cs, [h]) f in
-      entl_depth := default_depth ;
+      entl_depth := 0;
+      let entl_result = entails (cs, [ h ]) f in
+      entl_depth := default_depth;
       if Option.is_some entl_result then
         let seq' = (f, cont, post) in
         let allpairs, progressing =
           if !termination then Seq.get_tracepairs seq seq'
           else (Seq.tagpairs_one, Tagpairs.empty)
         in
-        [([(seq', allpairs, progressing)], "LHS.Cons")]
+        [ ([ (seq', allpairs, progressing) ], "LHS.Cons") ]
       else
         let () =
           debug (fun _ ->
               "Unsuccesfully tried to apply the assert rule:" ^ "\n\t"
-              ^ Seplog.Seq.to_string (pre, f) )
+              ^ Seplog.Seq.to_string (pre, f))
         in
         []
-    with
-    | WrongCmd | Not_symheap -> []
+    with WrongCmd | Not_symheap -> []
   in
   Rule.mk_infrule (Seqtactics.relabel "LHS.Cons" (Seqtactics.repeat rl))
 
@@ -578,12 +569,14 @@ let param_subst_rule theta ((_, cmd', _) as seq') ((_, cmd, _) as seq) =
     && Cmd.is_empty (Cmd.get_cont cmd')
     && Seq.equal (Seq.param_subst theta seq') seq
   then
-    [ ([(seq', Seq.tag_pairs seq', Tagpairs.empty)], "Param Subst")
-    (* ^ (Format.asprintf " %a" Term.pp_subst theta) *) ]
+    [
+      ([ (seq', Seq.tag_pairs seq', Tagpairs.empty) ], "Param Subst")
+      (* ^ (Format.asprintf " %a" Term.pp_subst theta) *);
+    ]
   else
     let () =
       debug (fun _ ->
-          "Unsuccessfully tried to apply parameter substitution rule" )
+          "Unsuccessfully tried to apply parameter substitution rule")
     in
     []
 
@@ -594,19 +587,18 @@ let subst_rule (theta, tps) ((pre', _, _) as seq') ((pre, _, _) as seq) =
         let tagpairs =
           Tagpairs.filter
             (fun (t, t') ->
-              Tags.mem t' (Form.tags pre') && Tags.mem t (Form.tags pre)
-              )
+              Tags.mem t' (Form.tags pre') && Tags.mem t (Form.tags pre))
             (Tagpairs.reflect tps)
         in
-        let unmapped =
-          Tags.diff (Form.tags pre) (Tagpairs.projectl tagpairs)
-        in
+        let unmapped = Tags.diff (Form.tags pre) (Tagpairs.projectl tagpairs) in
         let remaining = Tags.inter unmapped (Form.tags pre') in
         Tagpairs.union tagpairs (Tagpairs.mk remaining)
       else Seq.tagpairs_one
     in
-    [ ([(seq', tagpairs (), Tagpairs.empty)], "Subst")
-    (* ^ (Format.asprintf " %a" Term.pp_subst theta) *) ]
+    [
+      ([ (seq', tagpairs (), Tagpairs.empty) ], "Subst")
+      (* ^ (Format.asprintf " %a" Term.pp_subst theta) *);
+    ]
   else
     let () =
       debug (fun _ -> "Unsuccessfully tried to apply substitution rule!")
@@ -627,7 +619,7 @@ let left_or_elim_rule (((_, hs'), cmd', post') as seq')
           (fun tp -> Pair.both (Pair.map Tags.is_free_var tp))
           (Seq.tag_pairs seq)
       in
-      [([(seq', vt, Tagpairs.empty)], "L. Cut (Or Elim.)")]
+      [ ([ (seq', vt, Tagpairs.empty) ], "L. Cut (Or Elim.)") ]
     else
       let () =
         debug (fun _ -> "Unsuccessfully tried to apply left_or_elim rule!")
@@ -637,7 +629,7 @@ let left_or_elim_rule (((_, hs'), cmd', post') as seq')
     let () =
       debug (fun _ ->
           "Unsuccessfully tried to apply left_or_elim rule - precondition not \
-           a symbolic heap!" )
+           a symbolic heap!")
     in
     []
 
@@ -650,7 +642,7 @@ let left_cut_rule ((pre, cmd, post) as seq) ((pre', cmd', post') as seq') =
       if !termination then Seq.get_tracepairs seq' seq
       else (Seq.tagpairs_one, Tagpairs.empty)
     in
-    [([(seq, valid, progressing)], "LHS.Conseq")]
+    [ ([ (seq, valid, progressing) ], "LHS.Conseq") ]
   else
     let () = debug (fun _ -> "Unsuccessfully tried to apply left cut rule!") in
     []
@@ -659,11 +651,9 @@ let right_cut_rule ((pre, cmd, post) as seq) (pre', cmd', post') =
   if
     Cmd.equal cmd cmd' && Form.equal pre pre'
     && Option.is_some (entails post post')
-  then [([(seq, Seq.tag_pairs seq, Tagpairs.empty)], "RHS.Conseq")]
+  then [ ([ (seq, Seq.tag_pairs seq, Tagpairs.empty) ], "RHS.Conseq") ]
   else
-    let () =
-      debug (fun _ -> "Unsuccessfully tried to apply right cut rule!")
-    in
+    let () = debug (fun _ -> "Unsuccessfully tried to apply right cut rule!") in
     []
 
 let ex_intro_rule ((pre, cmd, post) as seq) (pre', cmd', post') =
@@ -671,26 +661,26 @@ let ex_intro_rule ((pre, cmd, post) as seq) (pre', cmd', post') =
     try
       let cs, h = Form.dest pre in
       let cs', h' = Form.dest pre' in
-      let post_utrms =
-        Term.Set.filter Term.is_free_var (Form.vars post)
-      in
+      let post_utrms = Term.Set.filter Term.is_free_var (Form.vars post) in
       let post_utags = Tags.filter Tags.is_free_var (Form.tags post) in
       let update_check ((_, (trm_subst, tag_subst)) as state_update) =
         let result =
           (Fun.list_conj
-             [ Unify.Unidirectional.existential_intro
-             ; Unify.Unidirectional.avoid_replacing_trms ~inverse:true
-                 post_utrms
-             ; Unify.Unidirectional.avoid_replacing_tags ~inverse:true
-                 post_utags ])
+             [
+               Unify.Unidirectional.existential_intro;
+               Unify.Unidirectional.avoid_replacing_trms ~inverse:true
+                 post_utrms;
+               Unify.Unidirectional.avoid_replacing_tags ~inverse:true
+                 post_utags;
+             ])
             state_update
         in
         result
       in
       let subst =
         Unify.Unidirectional.realize
-          (Unify.Unidirectional.unify_tag_constraints ~total:true
-             ~inverse:true ~update_check cs cs'
+          (Unify.Unidirectional.unify_tag_constraints ~total:true ~inverse:true
+             ~update_check cs cs'
              (Heap.classical_unify ~inverse:true ~update_check h h'
                 Unification.trivial_continuation))
       in
@@ -703,26 +693,25 @@ let ex_intro_rule ((pre, cmd, post) as seq) (pre', cmd', post') =
               tag_subst
           else Seq.tagpairs_one
         in
-        [([(seq, tps, Tagpairs.empty)], "Ex.Intro.")]
+        [ ([ (seq, tps, Tagpairs.empty) ], "Ex.Intro.") ]
       else
         let () =
           debug (fun _ ->
-              "Unsuccessfully tried to apply the existential introduction rule!"
-          )
+              "Unsuccessfully tried to apply the existential introduction rule!")
         in
         []
     with Not_symheap ->
       let () =
         debug (fun _ ->
-            "Unsuccessfully tried to apply the existential introduction rule \
-             - something was not a symbolic heap!" )
+            "Unsuccessfully tried to apply the existential introduction rule - \
+             something was not a symbolic heap!")
       in
       []
   else
     let () =
       debug (fun _ ->
           "Unsuccessfully tried to apply the existential introduction rule - \
-           commands not equal!" )
+           commands not equal!")
     in
     []
 
@@ -735,14 +724,18 @@ let seq_rule mid ((pre, cmd, post) as src_seq) =
       if !termination then Seq.get_tracepairs src_seq right_seq
       else (Seq.tagpairs_one, Tagpairs.empty)
     in
-    [ ( [ (left_seq, tagpairs left_seq, Tagpairs.empty)
-        ; (right_seq, allpairs, progressing) ]
-      , "Seq." ) ]
+    [
+      ( [
+          (left_seq, tagpairs left_seq, Tagpairs.empty);
+          (right_seq, allpairs, progressing);
+        ],
+        "Seq." );
+    ]
   with WrongCmd ->
     let () =
       debug (fun _ ->
           "Unsuccessfully tried to apply sequence rule - either command or \
-           continuation was empty!" )
+           continuation was empty!")
     in
     []
 
@@ -751,10 +744,8 @@ let frame_rule frame ((pre, cmd, post) as seq) ((pre', cmd', post') as seq') =
     Cmd.equal cmd cmd'
     && Seq.equal (Seq.frame frame seq) seq'
     && Term.Set.is_empty
-         (Term.Set.inter
-            (Cmd.modifies ~strict:false cmd)
-            (Form.vars frame))
-  then [([(seq, Seq.tag_pairs seq, Tagpairs.empty)], "Frame")]
+         (Term.Set.inter (Cmd.modifies ~strict:false cmd) (Form.vars frame))
+  then [ ([ (seq, Seq.tag_pairs seq, Tagpairs.empty) ], "Frame") ]
   else
     let () = debug (fun _ -> "Unsuccessfully tried to apply frame rule!") in
     []
@@ -773,12 +764,12 @@ let schema_intro_rule (((cs, hs), cmd, post) as seq)
         if !termination then Seq.get_tracepairs seq' seq
         else (Seq.tagpairs_one, Tagpairs.empty)
       in
-      [([(seq, allpairs, progressing)], "Constraint Schema Intro.")]
+      [ ([ (seq, allpairs, progressing) ], "Constraint Schema Intro.") ]
     else
       let () =
         debug (fun _ ->
             "Unsuccessfully tried to apply schema introduction rule - was not \
-             a valid schema!" )
+             a valid schema!")
       in
       []
   else
@@ -791,15 +782,15 @@ let transform_seq ((pre, cmd, post) as seq) ?(match_post = true)
     ((pre', cmd', post') as seq') =
   if Cmd.is_assert cmd' || not (Cmd.equal cmd cmd') then Blist.empty
   else if Form.equal pre pre' && Form.equal post post' then
-    [(seq, Rule.identity)]
+    [ (seq, Rule.identity) ]
   else
     let dbg = !do_debug in
-    do_debug := !do_debug && !show_frame_debug ;
+    do_debug := !do_debug && !show_frame_debug;
     let () =
       debug (fun _ ->
           "Trying to unify left-hand sides of:" ^ "\n\t" ^ "bud: "
           ^ Seq.to_string seq ^ "\n\t" ^ "candidate companion: "
-          ^ Seq.to_string seq' )
+          ^ Seq.to_string seq')
     in
     let u_tag_theta =
       Tagpairs.mk_free_subst
@@ -820,27 +811,24 @@ let transform_seq ((pre, cmd, post) as seq) ?(match_post = true)
           ^ Form.to_string upre ^ "\n\t" ^ "tag subst: "
           ^ Tagpairs.to_string u_tag_theta
           ^ "\n\t" ^ "var subst: "
-          ^ Term.Map.to_string Term.to_string u_trm_theta )
+          ^ Term.Map.to_string Term.to_string u_trm_theta)
     in
     let pre_transforms =
       let used_tags =
         Tags.union_of_list
-          [ Form.tags upre
-          ; Form.tags post
-          ; Form.tags pre'
-          ; Form.tags post' ]
+          [ Form.tags upre; Form.tags post; Form.tags pre'; Form.tags post' ]
       in
       abd_pre_transforms (used_tags, Cmd.vars cmd) upre pre'
     in
     let mk_transform (g, g') (trm_subst, tag_subst) =
       let () =
         debug (fun _ ->
-            "Found interpolant: (" ^ Form.to_string g ^ ", "
-            ^ Form.to_string g' ^ ")" )
+            "Found interpolant: (" ^ Form.to_string g ^ ", " ^ Form.to_string g'
+            ^ ")")
       in
       let () =
         debug (fun _ ->
-            "Term sub: " ^ Term.Map.to_string Term.to_string trm_subst )
+            "Term sub: " ^ Term.Map.to_string Term.to_string trm_subst)
       in
       let () = debug (fun _ -> "Tag sub: " ^ Tagpairs.to_string tag_subst) in
       let ((cs, _) as f) =
@@ -852,8 +840,7 @@ let transform_seq ((pre, cmd, post) as seq) ?(match_post = true)
       let used_tags = Tags.union (Form.tags f) (Form.tags f') in
       let used_trms = Term.Set.union (Form.vars f) (Form.vars f') in
       let () =
-        debug (fun _ ->
-            "Computing frame left over from: " ^ Form.to_string f )
+        debug (fun _ -> "Computing frame left over from: " ^ Form.to_string f)
       in
       let abd_schema = Ord_constraints.diff cs ucs in
       let schema_tags =
@@ -862,7 +849,7 @@ let transform_seq ((pre, cmd, post) as seq) ?(match_post = true)
       in
       let ((cs_for_frame, _) as g) = Form.add_constraints g abd_schema in
       let frame = Form.compute_frame ~avoid:(used_tags, used_trms) f g in
-      assert (Option.is_some frame) ;
+      assert (Option.is_some frame);
       let frame = Form.add_constraints (Option.get frame) cs_for_frame in
       let clashing_prog_vars =
         Term.Set.inter (Cmd.modifies ~strict:false cmd) (Form.vars frame)
@@ -878,7 +865,7 @@ let transform_seq ((pre, cmd, post) as seq) ?(match_post = true)
       let () =
         debug (fun _ ->
             "Companion postcondition after substitution and framing: "
-            ^ Form.to_string framed_post )
+            ^ Form.to_string framed_post)
       in
       let clashing_utags =
         Tags.inter
@@ -888,8 +875,7 @@ let transform_seq ((pre, cmd, post) as seq) ?(match_post = true)
       in
       let clashing_uvars =
         Term.Set.inter
-          (Term.Set.of_list
-             (Blist.map snd (Term.Map.bindings u_trm_theta)))
+          (Term.Set.of_list (Blist.map snd (Term.Map.bindings u_trm_theta)))
           (Form.vars framed_post)
       in
       let post_tag_subst =
@@ -903,8 +889,7 @@ let transform_seq ((pre, cmd, post) as seq) ?(match_post = true)
           clashing_uvars
       in
       let ex_post =
-        Form.subst_tags post_tag_subst
-          (Form.subst post_trm_subst framed_post)
+        Form.subst_tags post_tag_subst (Form.subst post_trm_subst framed_post)
       in
       let schema_subst =
         Tagpairs.mk_ex_subst
@@ -919,7 +904,7 @@ let transform_seq ((pre, cmd, post) as seq) ?(match_post = true)
         let () =
           debug (fun () ->
               "Could not verify constraint schema "
-              ^ Ord_constraints.to_string ex_schema )
+              ^ Ord_constraints.to_string ex_schema)
         in
         None
       else
@@ -940,18 +925,20 @@ let transform_seq ((pre, cmd, post) as seq) ?(match_post = true)
                 (Fun.conj
                    (Unify.Bidirectional.updchk_inj_left
                       (Fun.list_conj
-                         [ Unify.Unidirectional.is_substitution
-                         ; Unify.Unidirectional.avoid_replacing_trms
-                             subst_avoid_trms
-                         ; Unify.Unidirectional.avoid_replacing_tags
-                             subst_avoid_tags ]))
+                         [
+                           Unify.Unidirectional.is_substitution;
+                           Unify.Unidirectional.avoid_replacing_trms
+                             subst_avoid_trms;
+                           Unify.Unidirectional.avoid_replacing_tags
+                             subst_avoid_tags;
+                         ]))
                    (Unify.Bidirectional.updchk_inj_right
                       Unify.Unidirectional.modulo_entl))
               ex_post post
           else
             Some
-              ( (ex_post, post)
-              , [((trm_theta, tag_theta), Unify.Unidirectional.empty_state)]
+              ( (ex_post, post),
+                [ ((trm_theta, tag_theta), Unify.Unidirectional.empty_state) ]
               )
         in
         Option.map
@@ -963,8 +950,7 @@ let transform_seq ((pre, cmd, post) as seq) ?(match_post = true)
             let () =
               debug (fun _ ->
                   "\tterms: "
-                  ^ Term.Map.to_string Term.to_string (fst (fst subst))
-              )
+                  ^ Term.Map.to_string Term.to_string (fst (fst subst)))
             in
             let () =
               debug (fun _ -> "\ttags: " ^ Tagpairs.to_string (snd (fst subst)))
@@ -973,8 +959,7 @@ let transform_seq ((pre, cmd, post) as seq) ?(match_post = true)
             let () =
               debug (fun _ ->
                   "\tterms: "
-                  ^ Term.Map.to_string Term.to_string (fst (snd subst))
-              )
+                  ^ Term.Map.to_string Term.to_string (fst (snd subst)))
             in
             let () =
               debug (fun _ -> "\ttags: " ^ Tagpairs.to_string (snd (snd subst)))
@@ -991,11 +976,11 @@ let transform_seq ((pre, cmd, post) as seq) ?(match_post = true)
             let () =
               debug (fun _ ->
                   "Final term substitution: "
-                  ^ Term.Map.to_string Term.to_string trm_theta )
+                  ^ Term.Map.to_string Term.to_string trm_theta)
             in
             let () =
               debug (fun _ ->
-                  "Final tag substitution: " ^ Tagpairs.to_string tag_theta )
+                  "Final tag substitution: " ^ Tagpairs.to_string tag_theta)
             in
             let subst_seq =
               Seq.subst_tags tag_theta (Seq.subst trm_theta seq')
@@ -1011,55 +996,55 @@ let transform_seq ((pre, cmd, post) as seq) ?(match_post = true)
             let ex_seq = Seq.with_pre partial_univ_seq pre in
             let rule =
               Rule.sequence
-                [ ( if (not match_post) || Seq.equal seq ex_seq then
-                    Rule.identity
-                  else Rule.mk_infrule (right_cut_rule ex_seq) )
-                ; ( if Seq.equal ex_seq schema_seq then Rule.identity
-                  else Rule.mk_infrule (schema_intro_rule schema_seq) )
-                ; ( if Seq.equal schema_seq partial_univ_seq then Rule.identity
-                  else Rule.mk_infrule (ex_intro_rule partial_univ_seq) )
-                ; ( if Seq.equal partial_univ_seq univ_seq then Rule.identity
-                  else Rule.mk_infrule (right_cut_rule univ_seq) )
-                ; ( if Seq.equal univ_seq framed_seq then Rule.identity
-                  else Rule.mk_infrule (left_cut_rule framed_seq) )
-                ; ( if Seq.equal framed_seq interpolated_seq then Rule.identity
-                  else Rule.mk_infrule (frame_rule frame interpolated_seq) )
-                ; ( if Seq.equal interpolated_seq subst_seq then Rule.identity
-                  else Rule.mk_infrule (left_cut_rule subst_seq) )
-                ; ( if Seq.equal subst_seq seq' then Rule.identity
-                  else Rule.mk_infrule (subst_rule (trm_theta, tag_theta) seq')
-                  ) ]
+                [
+                  (if (not match_post) || Seq.equal seq ex_seq then
+                     Rule.identity
+                   else Rule.mk_infrule (right_cut_rule ex_seq));
+                  (if Seq.equal ex_seq schema_seq then Rule.identity
+                   else Rule.mk_infrule (schema_intro_rule schema_seq));
+                  (if Seq.equal schema_seq partial_univ_seq then Rule.identity
+                   else Rule.mk_infrule (ex_intro_rule partial_univ_seq));
+                  (if Seq.equal partial_univ_seq univ_seq then Rule.identity
+                   else Rule.mk_infrule (right_cut_rule univ_seq));
+                  (if Seq.equal univ_seq framed_seq then Rule.identity
+                   else Rule.mk_infrule (left_cut_rule framed_seq));
+                  (if Seq.equal framed_seq interpolated_seq then Rule.identity
+                   else Rule.mk_infrule (frame_rule frame interpolated_seq));
+                  (if Seq.equal interpolated_seq subst_seq then Rule.identity
+                   else Rule.mk_infrule (left_cut_rule subst_seq));
+                  (if Seq.equal subst_seq seq' then Rule.identity
+                   else Rule.mk_infrule (subst_rule (trm_theta, tag_theta) seq'));
+                ]
             in
-            ((if match_post then seq else ex_seq), rule) )
+            ((if match_post then seq else ex_seq), rule))
           post_transforms
     in
     let result =
       Option.dest Blist.empty
         (fun (interpolant, substs) ->
-          Option.list_get (Blist.map (mk_transform interpolant) substs) )
+          Option.list_get (Blist.map (mk_transform interpolant) substs))
         pre_transforms
     in
     let () = debug (fun _ -> "Done") in
-    do_debug := dbg ;
+    do_debug := dbg;
     result
 
 let mk_proc_call_rule_seq
-    ( (((_, target_cmd, _) as target_seq), param_subst)
-    , ((src_pre, src_cmd, src_post) as src_seq)
-    , tags_instantiated ) ((link_pre, link_cmd, link_post), bridge_rule) =
-  assert (Cmd.is_proc_call target_cmd) ;
-  assert (Cmd.is_empty (Cmd.get_cont target_cmd)) ;
+    ( (((_, target_cmd, _) as target_seq), param_subst),
+      ((src_pre, src_cmd, src_post) as src_seq),
+      tags_instantiated ) ((link_pre, link_cmd, link_post), bridge_rule) =
+  assert (Cmd.is_proc_call target_cmd);
+  assert (Cmd.is_empty (Cmd.get_cont target_cmd));
   let proc_id, params = Cmd.dest_proc_call target_cmd in
   let prog_cont = Cmd.get_cont src_cmd in
-  assert (Cmd.is_proc_call src_cmd) ;
+  assert (Cmd.is_proc_call src_cmd);
   assert (
     let p, args = Cmd.dest_proc_call src_cmd in
     String.equal p proc_id
-    && Int.( = ) (Blist.length args) (Blist.length params) ) ;
-  assert (Form.equal src_pre link_pre) ;
-  assert ((not (Cmd.is_empty prog_cont)) || Form.equal src_post link_post) ;
-  assert (
-    Cmd.is_empty prog_cont || Cmd.equal (fst (Cmd.split src_cmd)) link_cmd ) ;
+    && Int.( = ) (Blist.length args) (Blist.length params));
+  assert (Form.equal src_pre link_pre);
+  assert ((not (Cmd.is_empty prog_cont)) || Form.equal src_post link_post);
+  assert (Cmd.is_empty prog_cont || Cmd.equal (fst (Cmd.split src_cmd)) link_cmd);
   let ((inst_pre, _, _) as seq_newparams) =
     Seq.param_subst param_subst target_seq
   in
@@ -1069,7 +1054,7 @@ let mk_proc_call_rule_seq
   in
   let link_rl, cont_rl =
     if Cmd.is_empty prog_cont then (Rule.identity, Blist.empty)
-    else (Rule.mk_infrule (seq_rule link_post), [Rule.identity])
+    else (Rule.mk_infrule (seq_rule link_post), [ Rule.identity ])
   in
   let or_elim_rl =
     if Form.is_symheap inst_pre then Rule.identity
@@ -1081,7 +1066,7 @@ let mk_proc_call_rule_seq
   in
   Rule.compose tag_inst_rl
     (Rule.compose_pairwise link_rl
-       (Rule.sequence [bridge_rule; or_elim_rl; param_rl] :: cont_rl))
+       (Rule.sequence [ bridge_rule; or_elim_rl; param_rl ] :: cont_rl))
 
 let mk_symex_proc_call procs idx prf =
   let rl =
@@ -1093,8 +1078,7 @@ let mk_symex_proc_call procs idx prf =
         Blist.find
           (fun x ->
             String.equal (Proc.get_name x) p
-            && Int.equal (Blist.length (Proc.get_params x)) (Blist.length args)
-            )
+            && Int.equal (Blist.length (Proc.get_params x)) (Blist.length args))
           procs
       in
       let param_unifier =
@@ -1118,12 +1102,12 @@ let mk_symex_proc_call procs idx prf =
         in
         let build_rule_seq =
           mk_proc_call_rule_seq
-            ( (proc_seq, param_sub)
-            , pre_inst_src_seq
-            , not (Tagpairs.is_empty tag_inst_subst) )
+            ( (proc_seq, param_sub),
+              pre_inst_src_seq,
+              not (Tagpairs.is_empty tag_inst_subst) )
         in
         let mk_rules_from_disj h =
-          let proc_sh_pre_seq = Seq.with_pre inst_proc_seq (pre_cs', [h]) in
+          let proc_sh_pre_seq = Seq.with_pre inst_proc_seq (pre_cs', [ h ]) in
           let transforms =
             transform_seq proc_call_seq
               ~match_post:(Cmd.is_empty (Cmd.get_cont cmd))
@@ -1134,8 +1118,7 @@ let mk_symex_proc_call procs idx prf =
         Blist.bind mk_rules_from_disj pre_hs'
       in
       Rule.choice (Blist.bind mk_rules_from_seq (Proc.get_seqs proc))
-    with
-    | Not_symheap | WrongCmd | Not_found -> Rule.fail
+    with Not_symheap | WrongCmd | Not_found -> Rule.fail
   in
   rl idx prf
 
@@ -1156,7 +1139,7 @@ let dobackl ?(get_targets = Rule.all_nodes) ?(choose_all = false) idx prf =
       (fun idx' ->
         Blist.map
           (fun (_, rule) -> (idx', rule))
-          (transform_seq src_seq (Proof.get_seq idx' prf)) )
+          (transform_seq src_seq (Proof.get_seq idx' prf)))
       targets
   in
   let () =
@@ -1166,12 +1149,12 @@ let dobackl ?(get_targets = Rule.all_nodes) ?(choose_all = false) idx prf =
     let targ_seq = Proof.get_seq targ_idx prf in
     Rule.compose rule_sequence
       (Rule.mk_backrule false
-         (fun _ _ -> [targ_idx])
+         (fun _ _ -> [ targ_idx ])
          (fun s s' ->
            let tps =
              if !termination then Seq.tag_pairs targ_seq else Seq.tagpairs_one
            in
-           [(tps, "Backl")] ))
+           [ (tps, "Backl") ]))
   in
   if choose_all then Rule.first (Blist.map mk_backlink transformations) idx prf
   else Rule.choice (Blist.map mk_backlink transformations) idx prf
@@ -1184,9 +1167,8 @@ let use_proc_prf prf_cache idx prf =
     else
       let signature = (proc, (pre, post)) in
       let proc_prf = Option.get (Proc.SigMap.find signature !prf_cache) in
-      [([], Proof.add_subprf proc_prf idx prf)]
-  with
-  | WrongCmd | Not_found | Invalid_argument _ -> Rule.fail idx prf
+      [ ([], Proof.add_subprf proc_prf idx prf) ]
+  with WrongCmd | Not_found | Invalid_argument _ -> Rule.fail idx prf
 
 (* let generalise_while_rule =                                                                                                                                                                                                                 *)
 (*     let rl seq =                                                                                                                                                                                                                            *)
@@ -1222,7 +1204,6 @@ let use_proc_prf prf_cache idx prf =
 (*   Rule.mk_infrule rl                                                                                                                                                                                                                        *)
 
 let axioms = ref Rule.fail
-
 let rules = ref Rule.fail
 
 let setup (defs, procs, prf_cache) =
@@ -1233,36 +1214,40 @@ let setup (defs, procs, prf_cache) =
   let symex_proc_call = mk_symex_proc_call procs in
   rules :=
     Rule.first
-      [ (* Simplification *)
-        lhs_disj_to_symheaps
-      ; simplify
-      ; (* Assertions *)
-        assert_rule
-      ; (* While loops *)
+      [
+        (* Simplification *)
+        lhs_disj_to_symheaps;
+        simplify;
+        (* Assertions *)
+        assert_rule;
+        (* While loops *)
         Rule.choice
-          [ Rule.conditional
+          [
+            Rule.conditional
               (fun (_, cmd, _) -> Cmd.is_while cmd)
-              (fun idx prf -> dobackl idx prf)
-          ; Rule.compose (Rule.attempt lab_ex_intro) symex_while_rule ]
-      ; (* Procedure calls *)
+              (fun idx prf -> dobackl idx prf);
+            Rule.compose (Rule.attempt lab_ex_intro) symex_while_rule;
+          ];
+        (* Procedure calls *)
         Rule.conditional
           (fun (_, cmd, _) ->
-            Cmd.is_proc_call cmd && Cmd.is_empty (Cmd.get_cont cmd) )
-          (dobackl ~get_targets:Rule.syntactically_equal_nodes)
-      ; use_proc_prf prf_cache
-      ; symex_proc_unfold
-      ; symex_proc_call
-      ; (* Atomic symbolic execution *)
-        symex_skip_rule
-      ; symex_assign_rule
-      ; symex_load_rule
-      ; symex_store_rule
-      ; symex_free_rule
-      ; symex_new_rule
-      ; symex_if_rule
-      ; (* Branching constructs *)
-        symex_ifelse_rule
-      ; (* Predicate unfolding *)
-        luf defs ] ;
-  let axioms = Rule.first [ex_falso_axiom; mk_symex_empty_axiom] in
+            Cmd.is_proc_call cmd && Cmd.is_empty (Cmd.get_cont cmd))
+          (dobackl ~get_targets:Rule.syntactically_equal_nodes);
+        use_proc_prf prf_cache;
+        symex_proc_unfold;
+        symex_proc_call;
+        (* Atomic symbolic execution *)
+        symex_skip_rule;
+        symex_assign_rule;
+        symex_load_rule;
+        symex_store_rule;
+        symex_free_rule;
+        symex_new_rule;
+        symex_if_rule;
+        (* Branching constructs *)
+        symex_ifelse_rule;
+        (* Predicate unfolding *)
+        luf defs;
+      ];
+  let axioms = Rule.first [ ex_falso_axiom; mk_symex_empty_axiom ] in
   rules := Rule.combine_axioms axioms !rules

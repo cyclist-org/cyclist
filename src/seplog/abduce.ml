@@ -1,6 +1,5 @@
 open Lib
 open Generic
-
 module Proof = Proof.Make (Seq)
 module Rule = Proofrule.Make (Seq)
 module Seqtactics = Seqtactics.Make (Seq)
@@ -12,30 +11,24 @@ let mk_axiom unify res =
   Rule.mk_axiom (fun ((g, g') as seq) ->
       let substs = unify g g' in
       let not_empty = not (Blist.is_empty substs) in
-      if not_empty then res := (seq, substs) ;
-      Option.mk not_empty "Match" )
+      if not_empty then res := (seq, substs);
+      Option.mk not_empty "Match")
 
 let ruf_rl = Rules.ruf_rl
-
 let bounds_intro_rl = Rules.bounds_intro_rl
-
 let eq_ex_subst_rl = Rules.eq_ex_subst_rule
-
 let rhs_disj_to_symheaps = Rule.mk_infrule Rules.rhs_disj_to_symheaps_rl
 
 let simplify =
   Rule.mk_infrule
     (Seqtactics.relabel "Simplify"
-       (Seqtactics.repeat (Seqtactics.first [bounds_intro_rl; eq_ex_subst_rl])))
+       (Seqtactics.repeat
+          (Seqtactics.first [ bounds_intro_rl; eq_ex_subst_rl ])))
 
 let rules = ref Rule.fail
-
 let set_defs defs = rules := Rule.mk_infrule (ruf_rl defs)
-
 let maxdepth = ref 3
-
 let set_depth d = maxdepth := d
-
 let max_depth = !maxdepth
 
 let abd_substs ?(used_tags = Tags.empty)
@@ -63,7 +56,7 @@ let abd_substs ?(used_tags = Tags.empty)
             debug (fun _ ->
                 "Removing "
                 ^ Ord_constraints.Elt.to_string c
-                ^ " for tag constraint unification" )
+                ^ " for tag constraint unification")
           in
           let exc = Ord_constraints.add c exc in
           let inc = Ord_constraints.remove c inc in
@@ -83,7 +76,7 @@ let abd_substs ?(used_tags = Tags.empty)
               else
                 let univ_subst = Tagpairs.mk_free_subst used_tags remaining in
                 let tag_theta' = Tagpairs.union tag_theta univ_subst in
-                Option.pred verify (trm_theta, tag_theta') )
+                Option.pred verify (trm_theta, tag_theta'))
             state
         in
         let res =
@@ -101,9 +94,11 @@ let abd_substs ?(used_tags = Tags.empty)
   let axiom = mk_axiom unifier result in
   let axiom =
     Rule.first
-      [ Rule.sequence
-          [Rule.attempt rhs_disj_to_symheaps; Rule.attempt simplify; axiom]
-      ; axiom ]
+      [
+        Rule.sequence
+          [ Rule.attempt rhs_disj_to_symheaps; Rule.attempt simplify; axiom ];
+        axiom;
+      ]
   in
   let rules = Rule.combine_axioms axiom !rules in
   let proof = Prover.idfs 1 !maxdepth Rule.fail rules (f, f') in
@@ -133,14 +128,16 @@ let abd_bi_substs ?(init_state = Unify.Bidirectional.empty_state)
   let axiom = mk_axiom unifier result in
   let axiom =
     Rule.first
-      [ Rule.sequence
-          [Rule.attempt rhs_disj_to_symheaps; Rule.attempt simplify; axiom]
-      ; axiom ]
+      [
+        Rule.sequence
+          [ Rule.attempt rhs_disj_to_symheaps; Rule.attempt simplify; axiom ];
+        axiom;
+      ]
   in
   let rules = Rule.combine_axioms axiom !rules in
   let proof = Prover.idfs 1 !maxdepth Rule.fail rules (f, f') in
   Option.map
     (fun _ ->
       let interpolant, substs = !result in
-      (interpolant, Blist.map Pair.swap substs) )
+      (interpolant, Blist.map Pair.swap substs))
     proof

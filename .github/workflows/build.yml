@@ -5,6 +5,32 @@ on:
   pull_request:
 
 jobs:
+  # Same check as the .githooks/pre-commit hook, for pushes that bypassed it
+  # (or clones that never ran `make hooks`).
+  fmt:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.3"
+
+      # ocamlformat output is version-dependent, so pin to the version in
+      # .ocamlformat rather than hardcoding it a third time. Only the formatter
+      # is needed: `dune build @fmt` does not build any of the project's code,
+      # so the (heavier) Spot depext setup below is not required here.
+      - name: Install ocamlformat
+        run: |
+          version=$(sed -n 's/^version *= *//p' .ocamlformat)
+          opam install dune "ocamlformat.$version"
+
+      - name: Check formatting
+        run: opam exec -- make fmt-check
+
   build:
     strategy:
       fail-fast: false

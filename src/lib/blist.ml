@@ -1,18 +1,12 @@
 include List
 
 let foldl = fold_left
-
 let foldr = fold_right
-
 let empty = []
-
 let is_empty = function [] -> true | _ -> false
-
 let of_list l = l
-
 let to_list l = l
-
-let singleton x = [x]
+let singleton x = [ x ]
 
 let rec del_first p = function
   | [] -> []
@@ -22,7 +16,7 @@ let to_string sep conv xs = String.concat sep (map conv xs)
 
 let rec pp pp_sep pp_elem fmt = function
   | [] -> ()
-  | [h] -> Format.fprintf fmt "%a" pp_elem h
+  | [ h ] -> Format.fprintf fmt "%a" pp_elem h
   | h :: t ->
       Format.fprintf fmt "%a%a%a" pp_elem h pp_sep () (pp pp_sep pp_elem) t
 
@@ -35,31 +29,31 @@ let repeat a n =
     aux a [] n
 
 let rev_filter p xs = foldl (fun acc x -> if p x then x :: acc else acc) [] xs
-
-let rec but_last = function [_] | [] -> [] | x :: xs -> x :: but_last xs
-
+let rec but_last = function [ _ ] | [] -> [] | x :: xs -> x :: but_last xs
 let range n xs = mapi (fun m _ -> m + n) xs
 
 let remove_nth n l =
   let rec remove_nth n l acc =
     match l with
     | [] -> invalid_arg "Blist.remove_nth"
-    | y :: ys -> 
-      begin match n with
-      | 0 -> rev_append acc ys
-      | _ -> remove_nth (n - 1) ys (y::acc)
-      end in
+    | y :: ys -> begin
+        match n with
+        | 0 -> rev_append acc ys
+        | _ -> remove_nth (n - 1) ys (y :: acc)
+      end
+  in
   remove_nth n l []
 
 let replace_nth z n l =
   let rec replace_nth n l acc =
     match l with
     | [] -> invalid_arg "Blist.replace_nth"
-    | x::xs ->
-      begin match n with
-      | 0 -> rev_append acc (z::xs)
-      | _ -> replace_nth (n-1) xs (x::acc)
-      end in
+    | x :: xs -> begin
+        match n with
+        | 0 -> rev_append acc (z :: xs)
+        | _ -> replace_nth (n - 1) xs (x :: acc)
+      end
+  in
   replace_nth n l []
 
 let rec take n l =
@@ -79,7 +73,7 @@ let indexes xs = range 0 xs
 (* This exists in OCaml's List module only from version 4.10 *)
 let rec find_map f = function
   | [] -> None
-  | x :: xs -> ( match f x with None -> find_map f xs | y -> y )
+  | x :: xs -> ( match f x with None -> find_map f xs | y -> y)
 
 let find_index p l =
   let rec aux p n = function
@@ -138,7 +132,7 @@ let rec uniq eq = function
 let rec weave split tie join xs acc =
   match xs with
   | [] -> join []
-  | [x] -> tie x acc
+  | [ x ] -> tie x acc
   | hd :: tl -> join (map (weave split tie join tl) (split hd acc))
 
 (* let rec choose = function                    *)
@@ -156,12 +150,12 @@ let choose lol =
   in
   foldl
     (fun ll -> foldl (fun tl e -> foldl (fun t l -> (e :: l) :: t) tl ll) [])
-    [[]] lol
+    [ [] ] lol
 
 let rec _combs k len l =
-  if Stdlib.( = ) k 0 then [[]]
+  if Stdlib.( = ) k 0 then [ [] ]
   else if Stdlib.( < ) len k then []
-  else if Stdlib.( = ) k len then [l]
+  else if Stdlib.( = ) k len then [ l ]
   else
     let h, t = (hd l, tl l) in
     let starting_with_h =
@@ -172,7 +166,7 @@ let rec _combs k len l =
 let combs k l = _combs k (length l) l
 
 let rec pairs = function
-  | [] | [_] -> []
+  | [] | [ _ ] -> []
   | x :: (x' :: _ as xs) -> (x, x') :: pairs xs
 
 let map_to oadd oempty f xs = foldl (fun ys z -> oadd (f z) ys) oempty xs

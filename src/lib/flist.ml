@@ -12,7 +12,7 @@ module Make (T : Utilsigs.BasicType) :
       | [], _ -> -1
       | _, [] -> 1
       | hd :: tl, hd' :: tl' -> (
-        match T.compare hd hd' with 0 -> compare tl tl' | n -> n )
+          match T.compare hd hd' with 0 -> compare tl tl' | n -> n)
 
   let rec equal l l' =
     l == l'
@@ -32,6 +32,5 @@ module Make (T : Utilsigs.BasicType) :
   (* let hash = Hashtbl.hash *)
 
   let pp fmt l = Format.fprintf fmt "@[[%a]@]" (Blist.pp pp_semicolonsp T.pp) l
-
   let to_string = mk_to_string pp
 end

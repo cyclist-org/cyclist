@@ -1,8 +1,6 @@
 open Lib
-open   Symbols
-
+open Symbols
 open Generic
-
 open MParser
 
 module Make (Sig : Mc_core.ValueSig) = struct
@@ -14,16 +12,17 @@ module Make (Sig : Mc_core.ValueSig) = struct
   module ConcreteHeap = GenModelChecker.ConcreteHeap
 
   module Reduction = struct
-    type t =
-      { stack: Stack.t
-      ; heap: ConcreteHeap.t option ref
-      ; symheap: Heap.t
-      ; remainder: ConcreteHeap.t option ref }
+    type t = {
+      stack : Stack.t;
+      heap : ConcreteHeap.t option ref;
+      symheap : Heap.t;
+      remainder : ConcreteHeap.t option ref;
+    }
 
     let dest r = (r.stack, Option.get !(r.heap), r.symheap, r.remainder)
 
     let mk (s, h, sh, rem) =
-      {stack= s; heap= ref (Some h); symheap= sh; remainder= ref rem}
+      { stack = s; heap = ref (Some h); symheap = sh; remainder = ref rem }
 
     let equal r r' =
       Stack.equal r.stack r'.stack
@@ -38,17 +37,17 @@ module Make (Sig : Mc_core.ValueSig) = struct
           match (!(r.remainder), !(r'.remainder)) with
           | None, None -> true
           | Some h, Some h' -> ConcreteHeap.equal h h'
-          | _ -> false )
+          | _ -> false)
 
     let equal_upto_tags = equal
-
     let tags _ = Tags.empty
 
     let pp fmt r =
       Format.fprintf fmt "@[s, h %s %a -> h':%a@]"
         (* Stack.pp r.stack  *)
         (* (Option.pp ConcreteHeap.pp) !(r.heap)  *)
-        symb_turnstile.str Heap.pp r.symheap (Option.pp ConcreteHeap.pp)
+        symb_turnstile.str Heap.pp r.symheap
+        (Option.pp ConcreteHeap.pp)
         !(r.remainder)
 
     let to_string r = mk_to_string pp r
@@ -57,13 +56,16 @@ module Make (Sig : Mc_core.ValueSig) = struct
   module Rule = Proofrule.Make (Reduction)
 
   let set_metavar rem h =
-    assert (Option.is_none !rem) ;
+    assert (Option.is_none !rem);
     rem := Some h
 
   let emp_axiom =
     let f r =
       let _, h, symheap, remainder = Reduction.dest r in
-      Heap.is_empty symheap && (set_metavar remainder h ; true)
+      Heap.is_empty symheap
+      &&
+      (set_metavar remainder h;
+       true)
     in
     Rule.mk_axiom (fun r -> Option.mk (f r) "emp")
 
@@ -74,11 +76,8 @@ module Make (Sig : Mc_core.ValueSig) = struct
       Var.Map.find var stack
 
   let is_location = function Value.Location _ -> true | _ -> false
-
   let get_location = function Value.Location l -> l | _ -> assert false
-
-  let all_vars_free h =
-    not (Term.Set.exists Term.is_exist_var (Heap.vars h))
+  let all_vars_free h = not (Term.Set.exists Term.is_exist_var (Heap.vars h))
 
   let points_to_axiom =
     let f r =
@@ -99,8 +98,8 @@ module Make (Sig : Mc_core.ValueSig) = struct
       let heap_rs = Location.Map.find lloc h in
       Value.FList.equal rs heap_rs
       &&
-      ( set_metavar remainder (Location.Map.remove lloc h) ;
-        true )
+      (set_metavar remainder (Location.Map.remove lloc h);
+       true)
     in
     Rule.mk_axiom (fun r -> Option.mk (f r) "|->")
 
@@ -111,7 +110,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
           let subgoals' =
             Blist.map (fun g -> (g, Tagpairs.empty, Tagpairs.empty)) subgoals
           in
-          (subgoals', descr) )
+          (subgoals', descr))
         (r red)
     in
     Rule.mk_infrule r'
@@ -128,7 +127,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
         if not (Value.equal x y) then []
         else
           let symheap' = Heap.with_eqs symheap (Uf.of_list tl) in
-          [([{red with Reduction.symheap= symheap'}], "=")]
+          [ ([ { red with Reduction.symheap = symheap' } ], "=") ]
     in
     mk_infrule rl
 
@@ -144,7 +143,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
         if Value.equal x y then []
         else
           let symheap' = Heap.del_deq symheap deq in
-          [([{red with Reduction.symheap= symheap'}], "!=")]
+          [ ([ { red with Reduction.symheap = symheap' } ], "!=") ]
     in
     mk_infrule rl
 
@@ -164,9 +163,13 @@ module Make (Sig : Mc_core.ValueSig) = struct
         let symheap' = Heap.mk_pto pto in
         let symheap'' = Heap.del_pto symheap pto in
         let cut_heap = ref None in
-        [ ( [ {red with Reduction.symheap= symheap'; remainder= cut_heap}
-            ; {red with Reduction.symheap= symheap''; heap= cut_heap} ]
-          , "*->" ) ]
+        [
+          ( [
+              { red with Reduction.symheap = symheap'; remainder = cut_heap };
+              { red with Reduction.symheap = symheap''; heap = cut_heap };
+            ],
+            "*->" );
+        ]
     in
     mk_infrule rl
 
@@ -183,9 +186,13 @@ module Make (Sig : Mc_core.ValueSig) = struct
         let symheap' = Heap.mk_ind p in
         let symheap'' = Heap.del_ind symheap p in
         let cut_heap = ref None in
-        [ ( [ {red with Reduction.symheap= symheap'; remainder= cut_heap}
-            ; {red with Reduction.symheap= symheap''; heap= cut_heap} ]
-          , "*P" ) ]
+        [
+          ( [
+              { red with Reduction.symheap = symheap'; remainder = cut_heap };
+              { red with Reduction.symheap = symheap''; heap = cut_heap };
+            ],
+            "*P" );
+        ]
     in
     mk_infrule rl
 
@@ -215,7 +222,10 @@ module Make (Sig : Mc_core.ValueSig) = struct
             let symheap' = Heap.subst theta symheap in
             let yvalue = interpret s y in
             let s' = Var.Map.add (Var.of_term z) yvalue s in
-            [([{red with Reduction.symheap= symheap'; stack= s'}], "exists=")]
+            [
+              ( [ { red with Reduction.symheap = symheap'; stack = s' } ],
+                "exists=" );
+            ]
     in
     mk_infrule rl
 
@@ -250,8 +260,10 @@ module Make (Sig : Mc_core.ValueSig) = struct
                 let symheap' = Heap.subst theta symheap in
                 let xvalue = Blist.nth cell xindex in
                 let s' = Var.Map.add (Var.of_term z) xvalue s in
-                [ ( [{red with Reduction.symheap= symheap'; stack= s'}]
-                  , "exists->" ) ]
+                [
+                  ( [ { red with Reduction.symheap = symheap'; stack = s' } ],
+                    "exists->" );
+                ]
     in
     mk_infrule rl
 
@@ -259,9 +271,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
 
   let select_rule values rules =
     let arity = Indrule.arity (Blist.hd rules) in
-    let allvars =
-      Term.Set.union_of_list (Blist.map Indrule.vars rules)
-    in
+    let allvars = Term.Set.union_of_list (Blist.map Indrule.vars rules) in
     let newformals = Term.fresh_fvars allvars arity in
     let s =
       Var.Map.of_list (Blist.combine (Blist.map Var.of_term newformals) values)
@@ -273,9 +283,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
     in
     let freshrules = Blist.map freshen_rule rules in
     let bodies = Blist.map Indrule.body freshrules in
-    let projbodies =
-      Blist.map (fun b -> Heap.project b newformals) bodies
-    in
+    let projbodies = Blist.map (fun b -> Heap.project b newformals) bodies in
     let satisfied =
       Blist.find_opt
         (fun sh -> Stack.satisfies (sh.Heap.eqs, sh.Heap.deqs) s)
@@ -296,8 +304,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
       else if not (Uf.is_empty symheap.Heap.eqs) then []
       else if not (Deqs.is_empty symheap.Heap.deqs) then []
       else if not (Ptos.is_empty symheap.Heap.ptos) then []
-      else if not (Int.( = ) (Tpreds.cardinal symheap.Heap.inds) 1) then
-        []
+      else if not (Int.( = ) (Tpreds.cardinal symheap.Heap.inds) 1) then []
       else
         let p = Tpreds.choose symheap.Heap.inds in
         let rules = Defs.get_def (Tpred.predsym p) !defs in
@@ -312,32 +319,36 @@ module Make (Sig : Mc_core.ValueSig) = struct
             Var.Map.of_list
               (Blist.combine (Blist.map Var.of_term formals) values)
           in
-          [ ( [{red with Reduction.symheap= Indrule.body rule; stack= s'}]
-            , "unfold " ^ Predsym.to_string (Indrule.predsym rule) ) ]
+          [
+            ( [ { red with Reduction.symheap = Indrule.body rule; stack = s' } ],
+              "unfold " ^ Predsym.to_string (Indrule.predsym rule) );
+          ]
     in
     mk_infrule rl
 
-  let axioms = Rule.first [emp_axiom; points_to_axiom]
+  let axioms = Rule.first [ emp_axiom; points_to_axiom ]
 
   let rules =
     Rule.first
-      [ discharge_eq
-      ; discharge_deq
-      ; discharge_pto
-      ; discharge_ind
-      ; eliminate_eq
-      ; eliminate_pto
-      ; unfold ]
+      [
+        discharge_eq;
+        discharge_deq;
+        discharge_pto;
+        discharge_ind;
+        eliminate_eq;
+        eliminate_pto;
+        unfold;
+      ]
 end
 
 module IntSigModelChecker = Make (Mc_core.IntSig)
 module Prover = Prover.Make (IntSigModelChecker.Reduction)
 
 let check_model intuitionistic defs (sh, (stk, h)) =
-  let defs = Defs.relevant_defs defs (Ord_constraints.empty, [sh]) in
-  assert (Defs.deterministic defs) ;
-  assert (Defs.constructively_valued defs) ;
-  IntSigModelChecker.defs := defs ;
+  let defs = Defs.relevant_defs defs (Ord_constraints.empty, [ sh ]) in
+  assert (Defs.deterministic defs);
+  assert (Defs.constructively_valued defs);
+  IntSigModelChecker.defs := defs;
   let () = debug (fun _ -> Defs.to_string defs) in
   let () = debug (fun _ -> IntSigModelChecker.Stack.to_string stk) in
   let () = debug (fun _ -> IntSigModelChecker.ConcreteHeap.to_string h) in
@@ -347,6 +358,6 @@ let check_model intuitionistic defs (sh, (stk, h)) =
       IntSigModelChecker.rules red
   in
   Option.is_some res
-  && ( intuitionistic
+  && (intuitionistic
      || IntSigModelChecker.Location.Map.is_empty
-          (Option.get !(red.IntSigModelChecker.Reduction.remainder)) )
+          (Option.get !(red.IntSigModelChecker.Reduction.remainder)))

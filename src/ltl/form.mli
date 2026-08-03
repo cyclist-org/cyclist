@@ -12,15 +12,13 @@ val next : t -> t
 val eventually : t -> t
 val always : t -> t
 
-module Operators :
-sig
+module Operators : sig
   val at : string -> t
   val ( || ) : t -> t -> t
   val ( && ) : t -> t -> t
   val nxt : t -> t
   val ev : t -> t
   val alw : t -> t
-
   val _X : t -> t
   val _F : t -> t
   val _G : t -> t
@@ -47,5 +45,4 @@ val is_conj : t -> bool
 val is_next : t -> bool
 val is_eventually : t -> bool
 val is_always : t -> bool
-
 val is_traceable : t -> bool

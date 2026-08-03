@@ -1,13 +1,10 @@
 open Lib
-open   Symbols
-open   Parsers
-
+open Symbols
+open Parsers
 open Generic
 open Seplog
-
 open While
-open   Program
-
+open Program
 open MParser
 
 let termination = ref false
@@ -23,18 +20,15 @@ let main = "main"
 module Proc = struct
   (** The BasicType kernel (N.B. Procs are equal if they have the same name) *)
   module K = struct
-    (** The type of procedures: a tuple of
-              - Procedure name
-              - Formal parameters
-              - A list of pre/post specifications
-              - The body of the procedure
-        *)
     type t = string * Term.t Blist.t * (Form.t * Form.t) list * Cmd.t
+    (** The type of procedures: a tuple of
+        - Procedure name
+        - Formal parameters
+        - A list of pre/post specifications
+        - The body of the procedure *)
 
     let compare (id, _, _, _) (id', _, _, _) = Strng.compare id id'
-
     let equal (id, _, _, _) (id', _, _, _) = Strng.equal id id'
-
     let hash (id, _, _, _) = Strng.hash id
 
     let pp_decl fmt (id, params, _, _) =
@@ -42,8 +36,8 @@ module Proc = struct
 
     let pp_specs fmt (_, _, specs, _) =
       let pp_spec fmt (pre, post) =
-        Format.fprintf fmt "%s: %a@\n%s: %a" keyw_precondition.str Form.pp
-          pre keyw_postcondition.str Form.pp post
+        Format.fprintf fmt "%s: %a@\n%s: %a" keyw_precondition.str Form.pp pre
+          keyw_postcondition.str Form.pp post
       in
       Blist.pp Format.pp_print_newline pp_spec fmt specs
 
@@ -64,16 +58,13 @@ module Proc = struct
   (* module Map = Treemap.Make(K) *)
   module SigMap =
     Treemap.Make
-      (Pair.Make
-         (Pair.Make (Strng) (Term.FList)) (Pair.Make (Form) (Form)))
+      (Pair.Make (Pair.Make (Strng) (Term.FList)) (Pair.Make (Form) (Form)))
+
   module Graph = Graph.Imperative.Digraph.ConcreteBidirectional (K)
 
   let get_name ((id, _, _, _) : t) = id
-
   let get_params ((_, params, _, _) : t) = params
-
   let get_spec_list ((_, _, specs, _) : t) = specs
-
   let get_body ((_, _, _, body) : t) = body
 
   let get_seqs ((id, params, specs, _) : t) =
@@ -91,10 +82,10 @@ module Proc = struct
 
   (* postcondition: POSTCONDITION; COLON; f = formula; SEMICOLON { f } *)
   let parse_postcondition st =
-    ( parse_symb keyw_postcondition
+    (parse_symb keyw_postcondition
     >> parse_symb symb_colon >> Form.parse
     >>= (fun f -> parse_symb symb_semicolon >>$ f)
-    <?> "Postcondition" )
+    <?> "Postcondition")
       st
 
   let ensure_tags (pre, post) =
@@ -115,16 +106,16 @@ module Proc = struct
         (Term.Set.inter (Form.vars post)
            (Term.Set.inter
               (Cmd.modifies ~strict:false body)
-              (Term.Set.of_list params))) ) ;
+              (Term.Set.of_list params))));
     (* - local variables are not mentioned in the pre/post;             *)
     assert (
       Term.Set.is_empty
         (Term.Set.inter (Form.vars pre)
-           (Cmd.locals (Term.Set.of_list params) body)) ) ;
+           (Cmd.locals (Term.Set.of_list params) body)));
     assert (
       Term.Set.is_empty
         (Term.Set.inter (Form.vars post)
-           (Cmd.locals (Term.Set.of_list params) body)) ) ;
+           (Cmd.locals (Term.Set.of_list params) body)));
     ()
 
   let parse_named st =
@@ -132,9 +123,9 @@ module Proc = struct
       let rec parse_params' acc st =
         let tail st =
           let try_parse_next_param check msg st =
-            ( look_ahead
-                (Term.parse >>= fun p -> if check p then zero else return ())
-            <|> fail msg )
+            (look_ahead
+               (Term.parse >>= fun p -> if check p then zero else return ())
+            <|> fail msg)
               st
           in
           ( followed_by Term.parse ""
@@ -151,48 +142,43 @@ module Proc = struct
           >>= fun p -> parse_params' (p :: acc) )
             st
         in
-        ( (if List.length acc == 0 then tail else parse_symb symb_comma >> tail)
-        <|> return (Blist.rev acc) )
+        ((if List.length acc == 0 then tail else parse_symb symb_comma >> tail)
+        <|> return (Blist.rev acc))
           st
       in
       parse_params' [] st
     in
-    ( parse_symb keyw_proc >> parse_ident
-    >>= fun id ->
-    Tokens.parens parse_params
-    >>= fun params ->
-    let spec_parser st =
-      ( parse_precondition
-      >>= fun pre ->
-      parse_postcondition >>= fun post -> return (ensure_tags (pre, post)) )
-        st
-    in
-    many1 spec_parser
-    >>= fun specs ->
-    Tokens.braces
-      (expect_before Cmd.parse (parse_symb symb_rb) "Expecting CmdList")
-    >>= fun body ->
-    let () = Blist.iter (check_spec (params, body)) specs in
-    (* let specs =                                                        *)
-    (*   Blist.bind                                                       *)
-    (*   (fun (pre, post) ->                                              *)
-    (*     Blist.map (Fun.swap Pair.mk post) (Form.all_symheaps pre))  *)
-    (*   specs in                                                         *)
-    return (id, params, specs, body) <?> "Procedure" )
+    ( parse_symb keyw_proc >> parse_ident >>= fun id ->
+      Tokens.parens parse_params >>= fun params ->
+      let spec_parser st =
+        ( parse_precondition >>= fun pre ->
+          parse_postcondition >>= fun post -> return (ensure_tags (pre, post))
+        )
+          st
+      in
+      many1 spec_parser >>= fun specs ->
+      Tokens.braces
+        (expect_before Cmd.parse (parse_symb symb_rb) "Expecting CmdList")
+      >>= fun body ->
+      let () = Blist.iter (check_spec (params, body)) specs in
+      (* let specs =                                                        *)
+      (*   Blist.bind                                                       *)
+      (*   (fun (pre, post) ->                                              *)
+      (*     Blist.map (Fun.swap Pair.mk post) (Form.all_symheaps pre))  *)
+      (*   specs in                                                         *)
+      return (id, params, specs, body) <?> "Procedure" )
       st
 
   let parse_unnamed st =
-    ( parse_precondition
+    (parse_precondition
     >>= (fun pre ->
-          parse_postcondition
-          >>= fun post ->
-          (* let f v = Term.is_exist_var v in *)
-          (* assert(Term.Set.is_empty (Term.Set.inter (Term.Set.filter f (Form.vars pre)) (Term.Set.filter f (Form.vars post)))); *)
-          Cmd.parse
-          >>= fun body ->
-          let pre, post = ensure_tags (pre, post) in
-          return (pre, body, post) )
-    <?> "CmdList" )
+    parse_postcondition >>= fun post ->
+    (* let f v = Term.is_exist_var v in *)
+    (* assert(Term.Set.is_empty (Term.Set.inter (Term.Set.filter f (Form.vars pre)) (Term.Set.filter f (Form.vars post)))); *)
+    Cmd.parse >>= fun body ->
+    let pre, post = ensure_tags (pre, post) in
+    return (pre, body, post))
+    <?> "CmdList")
       st
 end
 
@@ -200,27 +186,17 @@ module Seq = struct
   type t = Form.t * Cmd.t * Form.t
 
   let tagset_one = Tags.singleton Tags.anonymous
-
   let tagpairs_one = Tagpairs.mk tagset_one
-
   let form_tags f = if !termination then Form.tags f else tagset_one
-
   let tags (pre, _, _) = form_tags pre
-
-  let all_tags (pre, _, post) =
-    Tags.union (Form.tags pre) (Form.tags post)
-
+  let all_tags (pre, _, post) = Tags.union (Form.tags pre) (Form.tags post)
   let tag_pairs (pre, _, _) = Tagpairs.mk (form_tags pre)
-
-  let vars (pre, _, post) =
-    Term.Set.union (Form.vars pre) (Form.vars post)
+  let vars (pre, _, post) = Term.Set.union (Form.vars pre) (Form.vars post)
 
   let all_vars (pre, cmd, post) =
-    Term.Set.union_of_list
-      [Form.vars pre; Cmd.vars cmd; Form.vars post]
+    Term.Set.union_of_list [ Form.vars pre; Cmd.vars cmd; Form.vars post ]
 
-  let terms (pre, _, post) =
-    Term.Set.union (Form.terms pre) (Form.terms post)
+  let terms (pre, _, post) = Term.Set.union (Form.terms pre) (Form.terms post)
 
   let subst theta (pre, cmd, post) =
     (Form.subst theta pre, cmd, Form.subst theta post)
@@ -232,19 +208,15 @@ module Seq = struct
     (Form.subst theta pre, Cmd.subst theta cmd, Form.subst theta post)
 
   let with_pre (_, cmd, post) pre = (pre, cmd, post)
-
   let with_post (pre, cmd, _) post = (pre, cmd, post)
-
   let with_cmd (pre, _, post) cmd = (pre, cmd, post)
 
   let to_string (pre, cmd, post) =
-    symb_turnstile.sep ^ symb_lb.str ^ Form.to_string pre ^ symb_rb.str
-    ^ " " ^ Cmd.to_string cmd ^ symb_lb.str ^ Form.to_string post
-    ^ symb_rb.str
+    symb_turnstile.sep ^ symb_lb.str ^ Form.to_string pre ^ symb_rb.str ^ " "
+    ^ Cmd.to_string cmd ^ symb_lb.str ^ Form.to_string post ^ symb_rb.str
 
   let subsumed (pre, cmd, post) (pre', cmd', post') =
-    Cmd.equal cmd cmd' && Form.subsumed pre' pre
-    && Form.subsumed post post'
+    Cmd.equal cmd cmd' && Form.subsumed pre' pre && Form.subsumed post post'
 
   let subsumed_upto_tags (pre, cmd, post) (pre', cmd', post') =
     Cmd.equal cmd cmd'
@@ -272,9 +244,9 @@ module Seq = struct
     Pair.map (Tagpairs.filter (fun (t, _) -> Tags.is_free_var t)) tps
 
   let frame f (pre, cmd, post) =
-    ( Form.star ~augment_deqs:false pre f
-    , cmd
-    , Form.star ~augment_deqs:false post f )
+    ( Form.star ~augment_deqs:false pre f,
+      cmd,
+      Form.star ~augment_deqs:false post f )
 end
 
 let pp_prog fmt (fields, procs) =
@@ -286,41 +258,36 @@ let program_vars = ref Term.Set.empty
 
 (* Store a list as well as a map so the procedures can be printed in the order they were provided *)
 let proc_list = ref []
-
 let proc_map = ref Strng.Map.empty
 
 module Operations = Graph.Oper.I (Proc.Graph)
 
 let dependencies = ref (Proc.Graph.create ())
-
 let reachability = ref (Proc.Graph.create ())
-
 let pp fmt () = pp_prog fmt (Field.get_fields (), !proc_list)
-
 let get_proc p = Strng.Map.find p !proc_map
 
 let set_program (fields, procs) =
-  Field.reset () ;
-  Blist.iter Field.add fields ;
-  proc_list := procs ;
+  Field.reset ();
+  Blist.iter Field.add fields;
+  proc_list := procs;
   program_vars :=
     Blist.foldl
       (fun vars (_, params, _, body) ->
-        Term.Set.union_of_list
-          [vars; Term.Set.of_list params; Cmd.vars body] )
-      Term.Set.empty procs ;
+        Term.Set.union_of_list [ vars; Term.Set.of_list params; Cmd.vars body ])
+      Term.Set.empty procs;
   proc_map :=
     Blist.fold_left
       (fun procs ((id, _, _, _) as p) -> Strng.Map.add id p procs)
-      Strng.Map.empty procs ;
-  Proc.Graph.clear !dependencies ;
+      Strng.Map.empty procs;
+  Proc.Graph.clear !dependencies;
   Blist.iter
     (fun p ->
-      Proc.Graph.add_vertex !dependencies p ;
+      Proc.Graph.add_vertex !dependencies p;
       Strng.Set.iter
         (fun p' -> Proc.Graph.add_edge !dependencies p (get_proc p'))
-        (Proc.get_dependencies p) )
-    procs ;
+        (Proc.get_dependencies p))
+    procs;
   reachability := Operations.transitive_closure ~reflexive:true !dependencies
 
 let get_reachable ps =
@@ -334,9 +301,9 @@ let get_reachable ps =
                (fun p' ->
                  Proc.Graph.mem_edge !reachability
                    (Strng.Map.find p' !proc_map)
-                   p )
+                   p)
                ps)
-        then Proc.Graph.remove_vertex graph p )
+        then Proc.Graph.remove_vertex graph p)
       !proc_map
   in
   graph
@@ -345,11 +312,8 @@ let vars_of_program () = !program_vars
 
 (* remember prog vars when introducing fresh ones *)
 let fresh_fvar s = Term.fresh_fvar (Term.Set.union !program_vars s)
-
 let fresh_fvars s i = Term.fresh_fvars (Term.Set.union !program_vars s) i
-
 let fresh_evar s = Term.fresh_evar (Term.Set.union !program_vars s)
-
 let fresh_evars s i = Term.fresh_evars (Term.Set.union !program_vars s) i
 
 (* again, treat prog vars as special *)
@@ -359,20 +323,19 @@ let freshen_case_by_seq seq case =
 (* fields: FIELDS; COLON; ils = separated_nonempty_list(COMMA, IDENT); SEMICOLON  *)
 (*     { List.iter P.Field.add ils }                                              *)
 let parse_fields st =
-  ( parse_symb keyw_fields >> parse_symb symb_colon
+  (parse_symb keyw_fields >> parse_symb symb_colon
   >> sep_by1 Field.parse (parse_symb symb_comma)
-  <?> "Fields" )
+  <?> "Fields")
     st
 
 (* procedures *)
 let parse_procs st =
-  ( many Proc.parse_named
-  |>> fun procs ->
-  Blist.foldr
-    (fun p ps ->
-      assert (not (Blist.exists (Proc.equal p) ps)) ;
-      p :: ps )
-    procs [] )
+  ( many Proc.parse_named |>> fun procs ->
+    Blist.foldr
+      (fun p ps ->
+        assert (not (Blist.exists (Proc.equal p) ps));
+        p :: ps)
+      procs [] )
     st
 
 (* main: p = precondition; q = postcondition; cmd = command; EOF { (p, cmd, q) } *)
@@ -380,9 +343,9 @@ let parse_main st = (Proc.parse_unnamed << eof <?> "Main procedure") st
 
 (* fields; procs = procedures; { (main, procs) } *)
 let parse st =
-  ( parse_fields << parse_symb symb_semicolon
+  (parse_fields << parse_symb symb_semicolon
   >>= (fun fields -> parse_procs << eof |>> fun procs -> (fields, procs))
-  <?> "Program" )
+  <?> "Program")
     st
 
 let of_channel c = handle_reply (parse_channel parse c ())

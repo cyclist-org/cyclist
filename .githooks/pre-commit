@@ -1,0 +1,57 @@
+#!/bin/sh
+# Reject a commit if any staged OCaml or dune source is not ocamlformat-clean.
+#
+# Enable (once per clone):  make hooks     [ = git config core.hooksPath .githooks ]
+# Fix offending files:      make fmt       [ = dune fmt ]
+# Bypass for one commit:    SKIP_FMT=1 git commit ...
+#
+# The check reads the *staged* content, not the working tree, so it stays
+# correct when only part of a file is staged (git add -p).
+
+[ -n "$SKIP_FMT" ] && exit 0
+
+if ! command -v ocamlformat >/dev/null 2>&1; then
+  echo "pre-commit: ocamlformat not found in PATH, skipping format check." >&2
+  exit 0
+fi
+
+tmp=$(mktemp -d) || exit 1
+trap 'rm -rf "$tmp"' EXIT
+status=0
+
+check() { # $1 = path in index, $2... = formatter command
+  file=$1
+  shift
+  git show ":$file" >"$tmp/staged" || return 0
+  if ! "$@" <"$tmp/staged" >"$tmp/formatted" 2>"$tmp/err"; then
+    echo "pre-commit: $file: formatter failed" >&2
+    sed 's/^/  /' "$tmp/err" >&2
+    status=1
+    return 0
+  fi
+  if ! cmp -s "$tmp/staged" "$tmp/formatted"; then
+    echo "pre-commit: $file is not formatted:" >&2
+    diff -u --label "a/$file" "$tmp/staged" --label "b/$file" "$tmp/formatted" \
+      | sed 's/^/  /' >&2
+    status=1
+  fi
+}
+
+for file in $(git diff --cached --name-only --diff-filter=ACMR); do
+  case $file in
+  *.ml | *.mli) check "$file" ocamlformat --name "$file" - ;;
+  # Only `dune` files: `dune fmt` deliberately leaves dune-project and
+  # dune-workspace alone, so checking them here would be unfixable.
+  dune | */dune) check "$file" dune format-dune-file ;;
+  esac
+done
+
+if [ "$status" -ne 0 ]; then
+  cat >&2 <<'EOF'
+
+Commit aborted. Run `make fmt` (or `dune fmt`), then re-stage the files.
+To commit anyway: SKIP_FMT=1 git commit ...
+EOF
+fi
+
+exit "$status"

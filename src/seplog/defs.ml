@@ -1,26 +1,20 @@
 open Lib
-open   Symbols
-
+open Symbols
 open Generic
-
 open MParser
-
 module SH = Heap
 
 module Defs = struct
   include Flist.Make (Preddef)
 
   let mem ident defs =
-    Blist.exists
-      (fun def -> Predsym.equal ident (Preddef.predsym def))
-      defs
+    Blist.exists (fun def -> Predsym.equal ident (Preddef.predsym def)) defs
 
   let empty = []
-
   let to_list d = d
 
   let add def defs =
-    assert (not (mem (Preddef.predsym def) defs)) ;
+    assert (not (mem (Preddef.predsym def) defs));
     def :: defs
 
   let of_list defs = Blist.foldl (fun d p -> add p d) empty defs
@@ -29,21 +23,15 @@ module Defs = struct
     Blist.to_string (symb_semicolon.sep ^ "\n\n") Preddef.to_string defs
 
   let pp fmt d = Format.fprintf fmt "%s" (to_string d)
-
   let is_defined defs (_, (ident, _)) = mem ident defs
-
   let is_undefined defs pred = not (is_defined defs pred)
 
   let get_def ident defs =
     Preddef.rules
-      (Blist.find
-         (fun def -> Predsym.equal ident (Preddef.predsym def))
-         defs)
+      (Blist.find (fun def -> Predsym.equal ident (Preddef.predsym def)) defs)
 
   let unfold ?(gen_tags = true) (vars, tags) ((_, (ident, _)) as pred) defs =
-    Blist.map
-      (Indrule.unfold ~gen_tags (vars, tags) pred)
-      (get_def ident defs)
+    Blist.map (Indrule.unfold ~gen_tags (vars, tags) pred) (get_def ident defs)
 
   let of_formula defs ((_, hs) as f) =
     let counter = ref 0 in
@@ -55,8 +43,7 @@ module Defs = struct
     in
     let predsym = get_ident () in
     let formals =
-      Term.Set.to_list
-        (Term.Set.filter Term.is_free_var (Form.vars f))
+      Term.Set.to_list (Term.Set.filter Term.is_free_var (Form.vars f))
     in
     let pred = (predsym, formals) in
     let rules = Blist.map (fun h -> Indrule.mk h pred) hs in
@@ -111,53 +98,51 @@ module Defs = struct
           let provided = Tpred.arity p in
           if not (Int.equal expected provided) then
             invalid_arg
-              ( pname ^ " given " ^ Int.to_string provided
-              ^ " arguments when its definition expects "
-              ^ Int.to_string expected ^ "!" )
+              (pname ^ " given " ^ Int.to_string provided
+             ^ " arguments when its definition expects "
+             ^ Int.to_string expected ^ "!")
     in
     Blist.iter
       (fun h ->
         let _, _, _, inds = Heap.dest h in
-        Tpreds.iter check_pred inds )
+        Tpreds.iter check_pred inds)
       hs
 
   let check_consistency defs =
     rule_iter
       (fun rl ->
-        try check_form_wf defs (Ord_constraints.empty, [Indrule.body rl])
+        try check_form_wf defs (Ord_constraints.empty, [ Indrule.body rl ])
         with Invalid_argument s ->
           failwith
-            ( "Error in definition of "
+            ("Error in definition of "
             ^ Predsym.to_string (Indrule.predsym rl)
-            ^ ": " ^ s ) )
+            ^ ": " ^ s))
       defs
 
   let parse st =
-    ( sep_by1 Preddef.parse (parse_symb symb_semicolon)
+    (sep_by1 Preddef.parse (parse_symb symb_semicolon)
     >>= (fun preddefs ->
-          eof
-          >>$
-          let defs =
-            Blist.rev
-              (Blist.fold_left
-                 (fun defs d ->
-                   let () =
-                     debug (fun _ ->
-                         "Parsing definition of: "
-                         ^ Predsym.to_string (Preddef.predsym d) )
-                   in
-                   add d defs )
-                 empty preddefs)
-          in
-          let () = check_consistency defs in
-          defs )
-    <?> "defs" )
+    eof
+    >>$
+    let defs =
+      Blist.rev
+        (Blist.fold_left
+           (fun defs d ->
+             let () =
+               debug (fun _ ->
+                   "Parsing definition of: "
+                   ^ Predsym.to_string (Preddef.predsym d))
+             in
+             add d defs)
+           empty preddefs)
+    in
+    let () = check_consistency defs in
+    defs)
+    <?> "defs")
       st
 
   let of_string s = handle_reply (MParser.parse_string parse s ())
-
   let of_channel c = handle_reply (MParser.parse_channel parse c ())
-
   let memory_consuming defs = Blist.for_all Preddef.memory_consuming defs
 
   let constructively_valued defs =

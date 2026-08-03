@@ -1,16 +1,13 @@
 open Lib
-
 module L = Blist
 
 module type S = sig
   type rule_t
 
   module Seq : Sequent.S
-
   module Proof : Proof.S
 
   val last_search_depth : int ref
-
   val idfs : int -> int -> rule_t -> rule_t -> Seq.t -> Proof.t option
 
   (* val bfs : int -> rule_t -> rule_t -> Seq.t -> Proof.t option   *)
@@ -22,7 +19,6 @@ module Make (Seq : Sequent.S) = struct
   module Rule = Proofrule.Make (Seq)
 
   type proof_t = Proof.t
-
   type rule_t = Rule.t
 
   module Seq = Seq
@@ -40,7 +36,7 @@ module Make (Seq : Sequent.S) = struct
           let () =
             debug (fun () ->
                 "Trying to close node: " ^ string_of_int idx ^ "\n"
-                ^ Proof.to_string prf ^ "\n" )
+                ^ Proof.to_string prf ^ "\n")
           in
           let res =
             Option.map snd
@@ -52,21 +48,21 @@ module Make (Seq : Sequent.S) = struct
               (fun (subgoals', prf') ->
                 Blist.fold_left
                   (fun optprf idx' -> Option.bind (dfs (bound - 1) idx') optprf)
-                  (Some prf') subgoals' )
+                  (Some prf') subgoals')
               (r idx prf)
       in
       match dfs bound 0 (Proof.mk seq) with
       | None -> idfs (bound + 1) maxbound ax r seq
       | res ->
-          last_search_depth := bound ;
+          last_search_depth := bound;
           res
 
   let print_proof_stats proof =
     let size = Proof.size proof in
     let links = Proof.num_backlinks proof in
     print_endline
-      ( "Proof has " ^ string_of_int size ^ " nodes" ^ " and "
-      ^ string_of_int links ^ " back-links." ) ;
+      ("Proof has " ^ string_of_int size ^ " nodes" ^ " and "
+     ^ string_of_int links ^ " back-links.");
     print_endline
       ("Required search depth was " ^ string_of_int !last_search_depth)
 

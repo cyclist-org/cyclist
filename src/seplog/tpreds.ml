@@ -1,26 +1,17 @@
 open Lib
-open   Symbols
-
+open Symbols
 open Generic
-
 open MParser
-
 include Multiset.Make (Tpred)
 
 let subst theta elts = map (Tpred.subst theta) elts
-
-let terms inds =
-  Term.Set.union_of_list (Blist.map Tpred.terms (elements inds))
-
+let terms inds = Term.Set.union_of_list (Blist.map Tpred.terms (elements inds))
 let vars inds = Term.filter_vars (terms inds)
 
 let idents inds =
-  map_to Predsym.MSet.add Predsym.MSet.empty
-    (fun (_, (id, _)) -> id)
-    inds
+  map_to Predsym.MSet.add Predsym.MSet.empty (fun (_, (id, _)) -> id) inds
 
 let to_string_list v = Blist.map Tpred.to_string (elements v)
-
 let to_string v = Blist.to_string symb_star.sep Tpred.to_string (elements v)
 
 let tags inds =
@@ -67,8 +58,7 @@ let biunify ?(total = true) ?(tagpairs = true) ?(update_check = Fun._true) inds
 
 let subsumed_upto_tags ?(total = true) eqs inds inds' =
   let rec aux uinds uinds' =
-    if Pred.MSet.is_empty uinds then
-      (not total) || Pred.MSet.is_empty uinds'
+    if Pred.MSet.is_empty uinds then (not total) || Pred.MSet.is_empty uinds'
     else
       let uind = Pred.MSet.choose uinds in
       let uinds = Pred.MSet.remove uind uinds in
@@ -91,7 +81,9 @@ let rec subsumed ?(total = true) eqs inds inds' =
     let inds = remove ind inds in
     let ind = Tpred.norm eqs ind in
     match
-      find_suchthat_opt (fun ind' -> Tpred.equal ind (Tpred.norm eqs ind')) inds'
+      find_suchthat_opt
+        (fun ind' -> Tpred.equal ind (Tpred.norm eqs ind'))
+        inds'
     with
     | None -> false
     | Some ind' -> subsumed ~total eqs inds (remove ind' inds')

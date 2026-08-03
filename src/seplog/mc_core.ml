@@ -1,17 +1,13 @@
 open Lib
-open   Symbols
-
+open Symbols
 open MParser
-
 open Generic
-
 module List = Blist
 
 module type NaturalType = sig
   include BasicType
 
   val zero : t
-
   val succ : t -> t
 end
 
@@ -19,31 +15,25 @@ module NatType : NaturalType with type t = int = struct
   include Int
 
   let zero = 0
-
   let succ i = i + 1
 end
 
 module Var : sig
   include BasicType
-
   module Set : OrderedContainer with type elt = t
-
   module Map : OrderedMap with type key = t
 
   val of_term : Term.t -> t
-
   val to_term : t -> Term.t
-
   val parse : (t, 'a) MParser.t
 end = struct
   include Term
 
   let of_term t =
-    assert (Term.is_var t) ;
+    assert (Term.is_var t);
     t
 
   let to_term t = t
-
   let parse st = (Term.parse |>> fun t -> of_term t) st
 end
 
@@ -51,20 +41,17 @@ module type ParserSig = sig
   type t
 
   val parse : (t, 'a) MParser.t
-
   val of_string : string -> t
 end
 
 module type S = sig
   module Location : NaturalType
-
   module Scalar : NaturalType
 
   module Value : sig
     include NaturalType
 
     val mk_loc_val : Location.t -> t
-
     val mk_scalar_val : Scalar.t -> t
     (* val nil : t  -- FIXME: unused *)
   end
@@ -74,7 +61,6 @@ module type S = sig
 
     module MakeParser (T : sig
       val parse_scalar : (Value.t, 'a) MParser.t
-
       val parse_location : (Location.t, 'a) MParser.t
     end) : ParserSig with type t = t
 
@@ -92,16 +78,17 @@ module type S = sig
   type model = Stack.t * ConcreteHeap.t
 
   val mk_model_parser :
-    (Stack.t, 'a) MParser.t * (ConcreteHeap.t, 'a) MParser.t -> (model, 'a) MParser.t
+    (Stack.t, 'a) MParser.t * (ConcreteHeap.t, 'a) MParser.t ->
+    (model, 'a) MParser.t
 
-  val model_of_string : (Stack.t * ConcreteHeap.t, unit) MParser.t -> string -> model
+  val model_of_string :
+    (Stack.t * ConcreteHeap.t, unit) MParser.t -> string -> model
 
   val check_model : Defs.t -> Heap.t * model -> bool
 end
 
 module type ValueSig = sig
   module HeapLocation : NaturalType
-
   module ScalarValue : NaturalType
 
   val pp_nil : Format.formatter -> unit
@@ -152,7 +139,6 @@ struct
         | Scalar v -> Sig.ScalarValue.pp fmt v
 
       let to_string v = mk_to_string pp v
-
       let zero = Nil
 
       let succ = function
@@ -165,31 +151,26 @@ struct
     include Containers.Make (T)
 
     let mk_loc_val l = Location l
-
     let mk_scalar_val v = Scalar v
-
     let nil = zero
   end
 
   module ConcreteHeap = struct
     type t = Value.FList.t Location.Map.t
-
     type domain = Location.Set.t
 
     let compare h h' = Location.Map.compare Value.FList.compare h h'
-
     let equal h h' = Location.Map.equal Value.FList.equal h h'
-
     let hash h = Location.Map.hash Value.FList.hash h
 
     let pp fmt h =
-      Format.fprintf fmt "@[[@ " ;
+      Format.fprintf fmt "@[[@ ";
       Location.Map.iter
         (fun k v ->
           Format.fprintf fmt "%a%s(%a),@ " Location.pp k symb_mapsto.sep
             (Blist.pp pp_commasp Value.pp)
-            v )
-        h ;
+            v)
+        h;
       Format.fprintf fmt "]@]"
 
     let to_string h = mk_to_string pp h
@@ -200,7 +181,7 @@ struct
           List.fold_left
             (fun vs' x -> Value.Set.add x vs')
             (Value.Set.add (Value.mk_loc_val l) vs)
-            lvs )
+            lvs)
         h Value.Set.empty
 
     let size h = List.length (Location.Map.bindings h)
@@ -210,7 +191,6 @@ struct
     (* used to get aroung cyclicity of type t = t below *)
     module MakeParser (T : sig
       val parse_scalar : (Value.t, 'a) MParser.t
-
       val parse_location : (Location.t, 'a) MParser.t
     end) =
     struct
@@ -219,11 +199,10 @@ struct
       let parse st =
         (Tokens.squares
            ( Tokens.comma_sep
-               ( T.parse_location
-               >>= fun l ->
-               parse_symb symb_mapsto >> optional parse_ident
-               >> Tokens.parens (Tokens.comma_sep T.parse_scalar)
-               |>> fun vs -> (l, vs) )
+               ( T.parse_location >>= fun l ->
+                 parse_symb symb_mapsto >> optional parse_ident
+                 >> Tokens.parens (Tokens.comma_sep T.parse_scalar)
+                 |>> fun vs -> (l, vs) )
            |>> fun cells -> Location.Map.of_list cells ))
           st
 
@@ -235,17 +214,15 @@ struct
     type t = Value.t Var.Map.t
 
     let compare s s' = Var.Map.compare Value.compare s s'
-
     let equal s s' = Var.Map.equal Value.equal s s'
-
     let hash s = Var.Map.hash Value.hash s
 
     let pp fmt h =
-      Format.fprintf fmt "@[[@ " ;
+      Format.fprintf fmt "@[[@ ";
       Var.Map.iter
         (fun k v ->
-          Format.fprintf fmt "%a%s%a,@ " Var.pp k symb_mapsto.sep Value.pp v )
-        h ;
+          Format.fprintf fmt "%a%s%a,@ " Var.pp k symb_mapsto.sep Value.pp v)
+        h;
       Format.fprintf fmt "]@]"
 
     let to_string s = mk_to_string pp s
@@ -274,7 +251,7 @@ struct
       let () =
         debug (fun _ ->
             "checking stacks consistent:\n\t" ^ to_string s ^ "\n\t"
-            ^ to_string s' )
+            ^ to_string s')
       in
       Var.Map.for_all
         (fun x v ->
@@ -283,10 +260,9 @@ struct
           in
           let () =
             debug (fun _ ->
-                (if b then "" else "do not ") ^ "agree on " ^ Var.to_string x
-            )
+                (if b then "" else "do not ") ^ "agree on " ^ Var.to_string x)
           in
-          b )
+          b)
         s
 
     let merge s s' =
@@ -296,7 +272,7 @@ struct
         | None, v -> v
         | v, None -> v
         | (Some v as ret), Some v' ->
-            assert (Value.equal v v') ;
+            assert (Value.equal v v');
             ret
       in
       Var.Map.merge merge_f s s'
@@ -323,9 +299,9 @@ struct
                 "does "
                 ^ (if b then "" else "not ")
                 ^ "satisfy equality "
-                ^ Tpair.to_string (t, t') )
+                ^ Tpair.to_string (t, t'))
           in
-          b )
+          b)
         eqs
       && Deqs.for_all
            (fun (t, t') ->
@@ -349,9 +325,9 @@ struct
                    "does "
                    ^ (if b then "" else "not ")
                    ^ "satisfy disequality "
-                   ^ Tpair.to_string (t, t') )
+                   ^ Tpair.to_string (t, t'))
              in
-             b )
+             b)
            deqs
 
     (* precondition:  satisfies (eqs, deqs) s            *)
@@ -362,7 +338,7 @@ struct
       let () =
         debug (fun _ ->
             "checking combination of stacks " ^ to_string s ^ " and "
-            ^ to_string s' )
+            ^ to_string s')
       in
       Uf.for_all
         (fun t t' ->
@@ -384,10 +360,9 @@ struct
             debug (fun _ ->
                 "does "
                 ^ (if b then "" else "not ")
-                ^ "satisfy " ^ Term.to_string t ^ " = "
-                ^ Term.to_string t' )
+                ^ "satisfy " ^ Term.to_string t ^ " = " ^ Term.to_string t')
           in
-          b )
+          b)
         eqs
       && Deqs.for_all
            (fun (t, t') ->
@@ -411,10 +386,9 @@ struct
                debug (fun _ ->
                    "does "
                    ^ (if b then "" else "not ")
-                   ^ "satisfy " ^ Term.to_string t ^ " != "
-                   ^ Term.to_string t' )
+                   ^ "satisfy " ^ Term.to_string t ^ " != " ^ Term.to_string t')
              in
-             b )
+             b)
            deqs
 
     type stack = t
@@ -428,9 +402,8 @@ struct
       let parse st =
         (Tokens.squares
            ( Tokens.comma_sep
-               ( Var.parse
-               >>= fun x ->
-               parse_symb symb_mapsto >> T.parse_scalar |>> fun v -> (x, v) )
+               ( Var.parse >>= fun x ->
+                 parse_symb symb_mapsto >> T.parse_scalar |>> fun v -> (x, v) )
            |>> fun ps -> Var.Map.of_list ps ))
           st
 
@@ -440,8 +413,8 @@ struct
 
   let mk_model_parser (parse_stack, parse_heap) st =
     (Tokens.parens
-       ( parse_stack
-       >>= fun s -> parse_symb symb_comma >> parse_heap |>> fun h -> (s, h) ))
+       ( parse_stack >>= fun s ->
+         parse_symb symb_comma >> parse_heap |>> fun h -> (s, h) ))
       st
 
   let model_of_string parse s = handle_reply (MParser.parse_string parse s ())
@@ -452,16 +425,15 @@ struct
     let empty = Location.Set.empty
 
     let inj h h' =
-      assert (Location.Map.for_all (fun k _ -> Location.Map.mem k h) h') ;
+      assert (Location.Map.for_all (fun k _ -> Location.Map.mem k h) h');
       Location.Map.fold (fun l _ ls -> Location.Set.add l ls) h' empty
 
     let proj h x =
-      assert (Location.Set.for_all (fun l -> Location.Map.mem l h) x) ;
+      assert (Location.Set.for_all (fun l -> Location.Map.mem l h) x);
       Location.Map.filter (fun k _ -> Location.Set.mem k x) h
 
     (* TODO: Eta-expand *)
     let disjoint = Location.Set.disjoint
-
     let union = Location.Set.union
   end
 
@@ -469,19 +441,16 @@ struct
     include BasicType
 
     val empty : t
-
     val inj : ConcreteHeap.t -> ConcreteHeap.t -> t
-
     val proj : ConcreteHeap.t -> t -> ConcreteHeap.t
-
     val disjoint : t -> t -> bool
-
     val union : t -> t -> t
   end =
     SetBase
 
   module InterpretantBaseContainers =
-    Containers.Make(Pair.Make(Value.FList)(HeapBase))
+    Containers.Make (Pair.Make (Value.FList) (HeapBase))
+
   module InterpretantBase = InterpretantBaseContainers.Hashset
 
   let baseSetPair_to_string (x, x') =
@@ -497,13 +466,12 @@ struct
 
   let empty_base () = InterpretantBase.create 11
 
-  (** [itp_emp] is the minimal set of model bases of the formula emp,
-          i.e. the singleton set containing the model base consisting of
-          the empty stack and the empty heap base.
-     *)
+  (** [itp_emp] is the minimal set of model bases of the formula emp, i.e. the
+      singleton set containing the model base consisting of the empty stack and
+      the empty heap base. *)
   let itp_emp () =
     let itp_emp = ModelBase.Hashset.create 11 in
-    ModelBase.Hashset.add itp_emp (Stack.empty, HeapBase.empty) ;
+    ModelBase.Hashset.add itp_emp (Stack.empty, HeapBase.empty);
     itp_emp
 
   let init_empty defs =
@@ -531,17 +499,15 @@ struct
     in
     add n max_elt vs
 
-  (**
-      Given a list of terms [ts] which are the formal parameters of
-      some atomic spatial formula (predicate or points-to) F, some pure
-      [constraints] Pi, and a set of interpretants [itpts] of F,
-      [generate_models ts constraints itpts] generates a hashset of
-      model bases which represents the interpretation of (Pi : F)
-    **)
+  (** Given a list of terms [ts] which are the formal parameters of some atomic
+      spatial formula (predicate or points-to) F, some pure [constraints] Pi,
+      and a set of interpretants [itpts] of F,
+      [generate_models ts constraints itpts] generates a hashset of model bases
+      which represents the interpretation of (Pi : F) **)
   let generate_model ts constraints (vs, ls) =
     Option.bind
       (fun stack ->
-        if Stack.satisfies constraints stack then Some (stack, ls) else None )
+        if Stack.satisfies constraints stack then Some (stack, ls) else None)
       (Stack.of_term_bindings (List.combine ts vs))
 
   let generate_models_ls ts constraints itpts =
@@ -560,16 +526,13 @@ struct
         (fun mdl -> ModelBase.Hashset.add models mdl)
         (generate_model ts constraints itpt)
     in
-    InterpretantBase.iter f itpts ;
+    InterpretantBase.iter f itpts;
     models
 
-  (**
-      Given some pure [constraints] Pi and two sets of model bases [ms]
-      and [ms'] representing the interpretation of two formulas (Pi : F)
-      and (Pi : G) respectively, [cross_models constraints ms ms']
-      generates the set of model bases that denotes the intepretation of
-      (Pi : F * G).
-    **)
+  (** Given some pure [constraints] Pi and two sets of model bases [ms] and
+      [ms'] representing the interpretation of two formulas (Pi : F) and (Pi :
+      G) respectively, [cross_models constraints ms ms'] generates the set of
+      model bases that denotes the intepretation of (Pi : F * G). **)
 
   let cross_model constraints (s, ls) (s', ls') =
     if
@@ -628,7 +591,7 @@ struct
         in
         ModelBase.Hashset.iter merge_acc ms'
       in
-      ModelBase.Hashset.iter merge ms ;
+      ModelBase.Hashset.iter merge ms;
       new_mdls
 
   (* Note: some efficiency savings to be made here possibly along the *)
@@ -650,13 +613,13 @@ struct
           in
           match y with
           | None -> (bndgs, zs)
-          | Some y -> ((x, Var.Map.find y s) :: bndgs, Var.Set.remove x zs) )
+          | Some y -> ((x, Var.Map.find y s) :: bndgs, Var.Set.remove x zs))
         xs ([], xs)
     in
     let s' = Var.Map.add_bindings det_extn s in
     let equiv_classes =
       let rec add_to_classes t = function
-        | [] -> [Var.Set.singleton t]
+        | [] -> [ Var.Set.singleton t ]
         | c :: cs ->
             let found =
               Var.Set.exists
@@ -673,9 +636,9 @@ struct
           List.flatten
             (Value.Set.fold
                (fun v acc' -> List.map (fun ls -> v :: ls) acc :: acc')
-               vs []) )
+               vs []))
         (List.length equiv_classes)
-        [[]]
+        [ [] ]
     in
     (* let f _ acc =                                   *)
     (*   Value.Set.map_to_list (fun v -> v::acc) vs in *)
@@ -684,7 +647,7 @@ struct
       let ext =
         List.fold_left2
           (fun bndgs v eq_class ->
-            Var.Set.fold (fun x bndgs -> (x, v) :: bndgs) eq_class bndgs )
+            Var.Set.fold (fun x bndgs -> (x, v) :: bndgs) eq_class bndgs)
           [] valuation equiv_classes
       in
       let s' = Var.Map.add_bindings ext s' in
@@ -700,16 +663,13 @@ struct
   (*   for all mdl in [saturate_univs constraints vs mdls] :        *)
   (*     mdl satisfies [constraints]                                *)
 
-  (**
-      [saturate params constraints vs mdls] generates a new set of model
-      bases from [mdls] by extending the stacks of each model base in
-      [mdls] with mappings to values in [vs] from every universal
-      variable either in params or mentioned in [constraints] that is
-      not already mapped. Each model base in [mdls] gives rise to a new
-      model base for every possible satisfying extension. Thus, every
-      model base in [mdls] may give rise to zero or more models in the
-      returned set.
-    **)
+  (** [saturate params constraints vs mdls] generates a new set of model bases
+      from [mdls] by extending the stacks of each model base in [mdls] with
+      mappings to values in [vs] from every universal variable either in params
+      or mentioned in [constraints] that is not already mapped. Each model base
+      in [mdls] gives rise to a new model base for every possible satisfying
+      extension. Thus, every model base in [mdls] may give rise to zero or more
+      models in the returned set. **)
   let saturate_univs_one params (eqs, deqs) vs (s, ls) =
     let unmapped_univs =
       Var.Set.filter
@@ -721,7 +681,7 @@ struct
                     (Term.Set.to_list (Uf.vars eqs))
                     (Term.Set.to_list (Deqs.vars deqs))))))
     in
-    if Var.Set.is_empty unmapped_univs then [(s, ls)]
+    if Var.Set.is_empty unmapped_univs then [ (s, ls) ]
     else
       let good_stacks = valid_extns (eqs, deqs) vs unmapped_univs s List.map in
       List.fold_left
@@ -732,16 +692,13 @@ struct
     List.fold_left
       (fun acc mdl ->
         let mdls' = saturate_univs_one params (eqs, deqs) vs mdl in
-        List.fold_left (fun acc' mdl' -> mdl' :: acc') acc mdls' )
+        List.fold_left (fun acc' mdl' -> mdl' :: acc') acc mdls')
       [] mdls
 
-  (**
-      [ex_constraint_sat constraints vs s] returns true if and only if
-      the stack [s] can be extended with mappings from existential
-      variables to values in [vs] such that that the extended stack has
-      a mapping for every existential variable mentioned in
-      [constraints] and also satisfies [constraints].
-    **)
+  (** [ex_constraint_sat constraints vs s] returns true if and only if the stack
+      [s] can be extended with mappings from existential variables to values in
+      [vs] such that that the extended stack has a mapping for every existential
+      variable mentioned in [constraints] and also satisfies [constraints]. **)
   let exs_satisfiable (eqs, deqs) vs s =
     let unmapped_exs =
       Var.Set.filter
@@ -755,31 +712,24 @@ struct
     Var.Set.is_empty unmapped_exs
     || Option.is_some (valid_extns (eqs, deqs) vs unmapped_exs s List.find_map)
 
-  (**
-      [mk_ptos_base defs h] creates a hashtable which stores a hashset
-      of model bases for each inductive rule in [defs] that is both
-      consistent and contains some number (> 0) of points-to formula
-      atoms. These models are the valid interpretations of the entire
-      set of points-to atoms in each inductive rule body whose heap is a
-      subheap of [h]. The hastable is keyed on a symbolic heap formula.
-        i.e. We abstract the points-to set for each rule and compute its
-      interpretation only once before starting the fixpoint computation,
-      and make it quickly accessible using a hash table.
+  (** [mk_ptos_base defs h] creates a hashtable which stores a hashset of model
+      bases for each inductive rule in [defs] that is both consistent and
+      contains some number (> 0) of points-to formula atoms. These models are
+      the valid interpretations of the entire set of points-to atoms in each
+      inductive rule body whose heap is a subheap of [h]. The hastable is keyed
+      on a symbolic heap formula. i.e. We abstract the points-to set for each
+      rule and compute its interpretation only once before starting the fixpoint
+      computation, and make it quickly accessible using a hash table.
 
-        Notes:
-         1. [all_ptos_itpts] is a map containing all the interpretant
-            bases of the singleton subheaps of [h] keyed on size of the
-            heap cell being pointed to. This allows easy identification of
-            only those subheaps relevant to any given points-to formula
-            atom.
-         2. We calculate more or less the precise size we will need for
-            the hashtable in [num_buckets]; this is done by counting the
-            number of inductive rule bodies that are both consistent and
-            have a greater than zero number of points-to formula atoms.
-              Note that this is, in practice, a precise bound since it is
-            unlikely that there will be exactly duplicated inductive rule
-            bodies.
-       **)
+      Notes: 1. [all_ptos_itpts] is a map containing all the interpretant bases
+      of the singleton subheaps of [h] keyed on size of the heap cell being
+      pointed to. This allows easy identification of only those subheaps
+      relevant to any given points-to formula atom. 2. We calculate more or less
+      the precise size we will need for the hashtable in [num_buckets]; this is
+      done by counting the number of inductive rule bodies that are both
+      consistent and have a greater than zero number of points-to formula atoms.
+      Note that this is, in practice, a precise bound since it is unlikely that
+      there will be exactly duplicated inductive rule bodies. **)
   let mk_ptos_base defs h =
     let all_ptos_itpts =
       let mk_heap_base h' = HeapBase.inj h h' in
@@ -790,10 +740,10 @@ struct
           else empty_base ()
         in
         let pto =
-          ( Value.mk_loc_val loc :: cell
-          , mk_heap_base (Location.Map.singleton loc cell) )
+          ( Value.mk_loc_val loc :: cell,
+            mk_heap_base (Location.Map.singleton loc cell) )
         in
-        InterpretantBase.add base pto ;
+        InterpretantBase.add base pto;
         Int.Map.add cell_size base ptos
       in
       Location.Map.fold f h Int.Map.empty
@@ -801,7 +751,7 @@ struct
     let () =
       debug (fun _ ->
           "Hashmap of Points-to interpretants: "
-          ^ Int.Map.to_string InterpretantBase.to_string all_ptos_itpts )
+          ^ Int.Map.to_string InterpretantBase.to_string all_ptos_itpts)
     in
     let num_buckets =
       let test_and_incr n rl =
@@ -820,15 +770,12 @@ struct
     let calc_abstractions rl =
       let () =
         debug (fun _ ->
-            "Calculating points-to base of rule: " ^ Indrule.to_string rl )
+            "Calculating points-to base of rule: " ^ Indrule.to_string rl)
       in
       let body, _ = Indrule.dest rl in
       let eqs, deqs, ptos, _ = Heap.dest body in
       let constraints = (eqs, deqs) in
-      if
-        (not (Heap.inconsistent body))
-        && Int.( > ) (Ptos.cardinal ptos) 0
-      then
+      if (not (Heap.inconsistent body)) && Int.( > ) (Ptos.cardinal ptos) 0 then
         let gen_mdls (t, ts) mdls =
           let pto_models =
             let cell_size = List.length ts in
@@ -846,7 +793,7 @@ struct
     base
 
   let saturate_ls valset params constraints mdls =
-    debug (fun _ -> "Starting universal variable saturation") ;
+    debug (fun _ -> "Starting universal variable saturation");
     let mdls =
       saturate_univs_ls
         (Var.Set.of_list (List.map Var.of_term params))
@@ -854,15 +801,13 @@ struct
     in
     debug (fun _ ->
         "Candidate models after universal variable saturation: "
-        ^ ModelBase.FList.to_string mdls ) ;
+        ^ ModelBase.FList.to_string mdls);
     let mdls =
-      Blist.rev_filter
-        (fun (s, _) -> exs_satisfiable constraints valset s)
-        mdls
+      Blist.rev_filter (fun (s, _) -> exs_satisfiable constraints valset s) mdls
     in
     debug (fun _ ->
         "Generated models after filtering for existential saturation: "
-        ^ ModelBase.FList.to_string mdls ) ;
+        ^ ModelBase.FList.to_string mdls);
     mdls
 
   let add_itpts_of_models_ls params itpts mdls =
@@ -872,10 +817,10 @@ struct
           List.map
             (fun x ->
               let x = Var.of_term x in
-              Var.Map.find x s )
+              Var.Map.find x s)
             params
         in
-        InterpretantBase.add itpts (vs, ls) )
+        InterpretantBase.add itpts (vs, ls))
       mdls
 
   (* The function that generates new interpretants for a given rule *)
@@ -894,22 +839,19 @@ struct
          (not (InterpretantBase.is_empty ancestors))
          || not (InterpretantBase.is_empty parents)
     then
-      let () =
-        debug (fun _ -> "Skipping over rule " ^ Indrule.to_string rl)
-      in
+      let () = debug (fun _ -> "Skipping over rule " ^ Indrule.to_string rl) in
       (* stop rule_gen here *)
       ()
     else (
       debug (fun _ ->
-          "Generating new interpretants for rule: " ^ Indrule.to_string rl
-      ) ;
+          "Generating new interpretants for rule: " ^ Indrule.to_string rl);
       let ptos_models =
-        if Ptos.is_empty ptos then [(Stack.empty, HeapBase.empty)]
+        if Ptos.is_empty ptos then [ (Stack.empty, HeapBase.empty) ]
         else SymHeapHash.find ptos_base body
       in
       debug (fun _ ->
           "Found the following interpretation for points-tos: "
-          ^ ModelBase.FList.to_string ptos_models ) ;
+          ^ ModelBase.FList.to_string ptos_models);
       if Tpreds.is_empty inds then
         add_itpts_of_models_ls params prev_itpts
           (saturate_ls valset params constraints ptos_models)
@@ -923,7 +865,7 @@ struct
           in
           let parent_mdls = generate_models_ls p_args constraints parents in
           let prod_from_parents = cross_models_ls constraints ms parent_mdls in
-          let ls = [prod_from_parents] in
+          let ls = [ prod_from_parents ] in
           if gen_ancestors then
             let ancestor_mdls =
               generate_models_ls p_args constraints ancestors
@@ -945,21 +887,21 @@ struct
               let candidates = saturate_ls valset params constraints ms in
               debug (fun _ ->
                   "Generated the following candidate models: "
-                  ^ ModelBase.FList.to_string candidates ) ;
-              add_itpts_of_models_ls params prev_itpts candidates )
+                  ^ ModelBase.FList.to_string candidates);
+              add_itpts_of_models_ls params prev_itpts candidates)
             mdls
         in
         let join _ = () in
         let seed = (ptos_models, false) in
-        Tpreds.weave split tie join inds seed ;
+        Tpreds.weave split tie join inds seed;
         let () =
           debug (fun _ ->
               "Generated the following interpretants: "
-              ^ InterpretantBase.to_string prev_itpts )
+              ^ InterpretantBase.to_string prev_itpts)
         in
         debug (fun _ ->
             "New interpretation after adding new interpretants: "
-            ^ Predsym.Map.to_string InterpretantBase.to_string itp_acc ) )
+            ^ Predsym.Map.to_string InterpretantBase.to_string itp_acc))
 
   let mk_generator (defs, (vs, h)) =
     let valset =
@@ -967,53 +909,49 @@ struct
     in
     let valset =
       let max_vars_of_defs =
-        let update_max m rl =
-          Int.max m (Term.Set.cardinal (Indrule.vars rl))
-        in
+        let update_max m rl = Int.max m (Term.Set.cardinal (Indrule.vars rl)) in
         Defs.rule_fold update_max 0 defs
       in
       add_spares max_vars_of_defs valset
     in
     let valset = Value.Set.add Value.nil valset in
     let ptos_base = mk_ptos_base defs h in
-    debug (fun _ -> Value.Set.to_string valset) ;
+    debug (fun _ -> Value.Set.to_string valset);
     debug (fun _ ->
-        SymHeapHashPrinter.to_string Heap.pp
-          ModelBase.FList.pp ptos_base ) ;
+        SymHeapHashPrinter.to_string Heap.pp ModelBase.FList.pp ptos_base);
     let itp = init_empty defs in
     let new_itp =
       Predsym.Map.of_list
         (List.map
            (fun pd ->
              let _, p = Preddef.dest pd in
-             (p, empty_base ()) )
+             (p, empty_base ()))
            (Defs.to_list defs))
     in
     let rec generator () =
       let () = debug (fun _ -> "Beginning next fixpoint interation") in
       (* Generate the new interpretants for each rule *)
-      Defs.rule_iter (rule_gen ptos_base valset itp new_itp) defs ;
+      Defs.rule_iter (rule_gen ptos_base valset itp new_itp) defs;
       let () =
         debug (fun _ ->
             "New interpretants after iteration: "
-            ^ Predsym.Map.to_string InterpretantBase.to_string new_itp )
+            ^ Predsym.Map.to_string InterpretantBase.to_string new_itp)
       in
       (* Add the new interpretants to the old ones *)
       Predsym.Map.iter
         (fun p zs ->
           let xs, ys = Predsym.Map.find p itp in
           let _ = InterpretantBase.left_union xs ys in
-          InterpretantBase.clear ys ;
+          InterpretantBase.clear ys;
           InterpretantBase.iter
             (fun z ->
-              if not (InterpretantBase.mem xs z) then InterpretantBase.add ys z
-              )
-            zs ;
-          InterpretantBase.clear zs )
-        new_itp ;
+              if not (InterpretantBase.mem xs z) then InterpretantBase.add ys z)
+            zs;
+          InterpretantBase.clear zs)
+        new_itp;
       debug (fun _ ->
           "result of iteration: "
-          ^ Predsym.Map.to_string InterpretantBase.to_string new_itp ) ;
+          ^ Predsym.Map.to_string InterpretantBase.to_string new_itp);
       (* if all "new" sets of interpretants are empty then stop else recurse *)
       if
         Predsym.Map.for_all
@@ -1027,11 +965,11 @@ struct
   let mk (defs, (vs, h)) =
     let generator = mk_generator (defs, (vs, h)) in
     let base = generator () in
-    debug (fun _ -> Predsym.Map.to_string baseSetPair_to_string base) ;
+    debug (fun _ -> Predsym.Map.to_string baseSetPair_to_string base);
     decorate h base
 
   let check_model intuitionistic defs (sh, (stk, h)) =
-    let f = (Ord_constraints.empty, [sh]) in
+    let f = (Ord_constraints.empty, [ sh ]) in
     let defs = Defs.relevant_defs defs f in
     let () = Defs.check_form_wf defs f in
     let defs = Defs.of_formula defs f in
@@ -1040,14 +978,14 @@ struct
     let vals =
       let rl =
         let rls = Preddef.rules new_def in
-        assert (List.length rls == 1) ;
+        assert (List.length rls == 1);
         List.hd rls
       in
       let formals = Indrule.formals rl in
       List.map
         (fun x ->
           let x = Var.of_term x in
-          Var.Map.find x stk )
+          Var.Map.find x stk)
         formals
     in
     let () = debug (fun _ -> Defs.to_string defs) in
@@ -1062,20 +1000,17 @@ struct
         (fun (vals', _) -> Value.FList.equal vals vals')
         (Predsym.Map.find new_predsym interp)
     else
-      InterpretantBase.mem
-        (Predsym.Map.find new_predsym interp)
-        (vals, heapbase)
+      InterpretantBase.mem (Predsym.Map.find new_predsym interp) (vals, heapbase)
 end
 
 module IntSig :
   ValueSig
-  with type HeapLocation.t = NatType.t
-  with type ScalarValue.t = NatType.t = struct
+    with type HeapLocation.t = NatType.t
+    with type ScalarValue.t = NatType.t = struct
   module HeapLocation = struct
     include NatType
 
     let to_string n = Printf.sprintf "0x%x" n
-
     let pp fmt n = Format.fprintf fmt "0x%x" n
   end
 

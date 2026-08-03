@@ -10,7 +10,8 @@ val right : 'a * 'b -> 'b
 (** Pair destructor. *)
 
 val map : ('a -> 'b) -> 'a * 'a -> 'b * 'b
-(** Apply a function to both members individually and put results in a new pair. *)
+(** Apply a function to both members individually and put results in a new pair.
+*)
 
 val map_left : ('a -> 'c) -> 'a * 'b -> 'c * 'b
 (** Apply a function to the left-hand component only *)
@@ -30,8 +31,8 @@ val disj : bool * bool -> bool
 val swap : 'a * 'b -> 'b * 'a
 (** Swap around the members of a pair. *)
 
-val perm : ('a -> 'a -> bool) -> ('a * 'a) -> bool
-(** [perm f (x, y)] returns true iff either [f x y] or [f y x] does.  *)
+val perm : ('a -> 'a -> bool) -> 'a * 'a -> bool
+(** [perm f (x, y)] returns true iff either [f x y] or [f y x] does. *)
 
 val fold : ('a -> 'b -> 'b) -> 'a * 'a -> 'b -> 'b
 (** Fold a function over the members of a pair. *)
@@ -42,7 +43,7 @@ val both : bool * bool -> bool
 val either : bool * bool -> bool
 (** Alias for [disj] *)
 
-(** Create functions for equality, comparison, hashing and printing for a
-    pair of types. *)
+(** Create functions for equality, comparison, hashing and printing for a pair
+    of types. *)
 module Make (T : Utilsigs.BasicType) (S : Utilsigs.BasicType) :
   Utilsigs.BasicType with type t = T.t * S.t

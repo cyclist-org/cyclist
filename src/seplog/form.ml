@@ -1,20 +1,17 @@
 open Lib
-open   Symbols
-
+open Symbols
 open Generic
-
 open MParser
-
 include Pair.Make (Ord_constraints) (Flist.Make (Heap))
 
-let empty = (Ord_constraints.empty, [Heap.empty])
+let empty = (Ord_constraints.empty, [ Heap.empty ])
 
 exception Not_symheap
 
-let is_symheap = function _, [s] -> true | _ -> false
+let is_symheap = function _, [ s ] -> true | _ -> false
 
 let dest : t -> Ord_constraints.t * Heap.t = function
-  | cs, [s] -> (cs, s)
+  | cs, [ s ] -> (cs, s)
   | _ -> raise Not_symheap
 
 let constraints_sep cs =
@@ -28,9 +25,7 @@ let pp fmt (cs, f) =
         (constraints_sep cs).sep symb_false.str
   | _ ->
       Format.fprintf fmt "@[%a%s%a@]" Ord_constraints.pp cs
-        (constraints_sep cs).sep
-        (Blist.pp pp_or Heap.pp)
-        f
+        (constraints_sep cs).sep (Blist.pp pp_or Heap.pp) f
 
 let to_string (cs, hs) =
   let cs_str = Ord_constraints.to_string cs ^ (constraints_sep cs).sep in
@@ -39,7 +34,6 @@ let to_string (cs, hs) =
   | hs -> cs_str ^ Blist.to_string symb_or.sep Heap.to_string hs
 
 let terms (_, d) = Term.Set.union_of_list (Blist.map Heap.terms d)
-
 let vars f = Term.filter_vars (terms f)
 
 let tags (cs, d) =
@@ -62,14 +56,12 @@ let complete_tags avoid (cs, hs) =
              (* involves progressively more duplicated work as the fold progresses *)
              if Heap.has_untagged_preds h then
                let avoid' =
-                 Blist.foldl
-                   (fun ts h -> Tags.union ts (Heap.tags h))
-                   avoid hs'
+                 Blist.foldl (fun ts h -> Tags.union ts (Heap.tags h)) avoid hs'
                in
                Heap.complete_tags avoid' h
              else h
            in
-           h' :: hs' )
+           h' :: hs')
          (Blist.rev hs) [])
   in
   (cs, hs)
@@ -87,15 +79,14 @@ let subsumed ?(total = true) ((cs, _) as l) ((cs', _) as r) =
         "Checking constraint subsumption: "
         ^ Ord_constraints.to_string cs'
         ^ " |- "
-        ^ Ord_constraints.to_string cs )
+        ^ Ord_constraints.to_string cs)
   in
   let cs' = Ord_constraints.close cs' in
   Ord_constraints.subsumes cs' cs
 
 let subsumed_upto_tags ?(total = true) (cs, hs) (cs', hs') =
   Blist.for_all
-    (fun d2 ->
-      Blist.exists (fun d1 -> Heap.subsumed_upto_tags ~total d1 d2) hs )
+    (fun d2 -> Blist.exists (fun d1 -> Heap.subsumed_upto_tags ~total d1 d2) hs)
     hs'
 
 let equal_upto_tags (cs, hs) (cs', hs') =
@@ -105,12 +96,12 @@ let parse ?(null_is_emp = false) ?(allow_tags = true) ?(augment_deqs = true) st
     =
   ( (if allow_tags then option Ord_constraints.parse else return None)
   >>= fun cs ->
-  sep_by (Heap.parse ~allow_tags ~augment_deqs) (parse_symb symb_or)
-  <?> "formula"
-  >>= fun hs ->
-  return
-    ( Option.dest Ord_constraints.empty Fun.id cs
-    , if null_is_emp && Blist.is_empty hs then [Heap.empty] else hs ) )
+    sep_by (Heap.parse ~allow_tags ~augment_deqs) (parse_symb symb_or)
+    <?> "formula"
+    >>= fun hs ->
+    return
+      ( Option.dest Ord_constraints.empty Fun.id cs,
+        if null_is_emp && Blist.is_empty hs then [ Heap.empty ] else hs ) )
     st
 
 let of_string ?(null_is_emp = false) s =
@@ -126,21 +117,16 @@ let star ?(augment_deqs = true) (cs, f) (cs', g) =
   (constraints, hs)
 
 let disj (cs, f) (cs', g) = (Ord_constraints.union cs cs', f @ g)
-
 let subst theta (cs, hs) = (cs, Blist.map (fun h -> Heap.subst theta h) hs)
-
 let subst_existentials (cs, hs) = (cs, Blist.map Heap.subst_existentials hs)
 
 let subst_tags tagpairs (cs, hs) =
-  ( Ord_constraints.subst_tags tagpairs cs
-  , Blist.map (Heap.subst_tags tagpairs) hs )
+  ( Ord_constraints.subst_tags tagpairs cs,
+    Blist.map (Heap.subst_tags tagpairs) hs )
 
 let norm (cs, hs) = (cs, Blist.map Heap.norm hs)
-
 let with_constraints (_, hs) cs = (cs, hs)
-
 let with_heaps (cs, _) hs = (cs, hs)
-
 let add_constraints (cs, hs) cs' = (Ord_constraints.union cs cs', hs)
 
 let get_tracepairs f ((cs, _) as f') =
@@ -150,9 +136,9 @@ let get_tracepairs f ((cs, _) as f') =
     Pair.map
       (fun tps ->
         Tagpairs.map Pair.swap
-          (Tagpairs.filter (fun (_, t) -> Tags.mem t (tags f)) tps) )
-      ( Tagpairs.union id_pairs (Ord_constraints.all_pairs cs)
-      , Ord_constraints.prog_pairs cs )
+          (Tagpairs.filter (fun (_, t) -> Tags.mem t (tags f)) tps))
+      ( Tagpairs.union id_pairs (Ord_constraints.all_pairs cs),
+        Ord_constraints.prog_pairs cs )
   in
   (allpairs, progressing)
 
@@ -170,25 +156,22 @@ let compute_frame ?(freshen_existentials = true)
     else if not (Tpreds.subset inds inds') then None
     else
       let ex_tags = Tags.filter Tags.is_exist_var (Heap.tags h) in
-      let ex_vars =
-        Term.Set.filter Term.is_exist_var (Heap.terms h)
-      in
+      let ex_vars = Term.Set.filter Term.is_exist_var (Heap.terms h) in
       let frame =
-        ( Ord_constraints.diff cs' cs
-        , [ Heap.mk (Uf.diff eqs eqs') (Deqs.diff deqs' deqs)
-              (Ptos.diff ptos' ptos)
-              (Tpreds.diff inds' inds) ] )
+        ( Ord_constraints.diff cs' cs,
+          [
+            Heap.mk (Uf.diff eqs eqs') (Deqs.diff deqs' deqs)
+              (Ptos.diff ptos' ptos) (Tpreds.diff inds' inds);
+          ] )
       in
       let ex_frame_tags = Tags.filter Tags.is_exist_var (tags frame) in
-      let ex_frame_vars =
-        Term.Set.filter Term.is_exist_var (terms frame)
-      in
+      let ex_frame_vars = Term.Set.filter Term.is_exist_var (terms frame) in
       let clashing_tags = Tags.inter ex_tags ex_frame_tags in
       let clashing_vars = Term.Set.inter ex_vars ex_frame_vars in
       if
         (not freshen_existentials)
-        && ( (not (Tags.is_empty clashing_tags))
-           || not (Term.Set.is_empty clashing_vars) )
+        && ((not (Tags.is_empty clashing_tags))
+           || not (Term.Set.is_empty clashing_vars))
       then None
       else
         let tag_subst =

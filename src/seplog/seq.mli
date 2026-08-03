@@ -1,21 +1,18 @@
-(** SL sequent, as a pair of SL formulas. *)
 open Lib
-open Generic
+(** SL sequent, as a pair of SL formulas. *)
 
+open Generic
 include BasicType with type t = Form.t * Form.t
 
 val equal_upto_tags : t -> t -> bool
 (** Like [equal] but ignoring LHS tags as well as RHS ones. *)
 
-val dest :
-  t -> (Ord_constraints.t * Heap.t) * (Ord_constraints.t * Heap.t)
+val dest : t -> (Ord_constraints.t * Heap.t) * (Ord_constraints.t * Heap.t)
 (** If both LHS and RHS are symbolic heaps then return them else raise
     [Form.Not_symheap]. *)
 
 val parse : ?null_is_emp:bool -> (t, 'a) MParser.t
-
 val of_string : ?null_is_emp:bool -> string -> t
-
 val vars : t -> Term.Set.t
 
 val tags : t -> Tags.t
@@ -40,4 +37,5 @@ val subsumed_upto_tags : t -> t -> bool
 (** Like [subsumed] but ignoring all tags. *)
 
 val norm : t -> t
-(** Replace all terms with their UF representatives in the respective formulas.` *)
+(** Replace all terms with their UF representatives in the respective formulas.`
+*)

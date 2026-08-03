@@ -1,10 +1,7 @@
 open Lib
-open   Symbols
-
+open Symbols
 open Generic
-
 open MParser
-
 module SH = Heap
 module AllocatedT = Pair.Make (Term) (Int)
 
@@ -12,9 +9,7 @@ module Allocated = struct
   include Treeset.Make (AllocatedT)
 
   let terms s = map_to Term.Set.add Term.Set.empty fst s
-
   let vars s = Term.filter_vars (terms s)
-
   let endomap_fst f s = map (fun (x, i) -> (f x, i)) s
 end
 
@@ -45,9 +40,7 @@ module BasePair = struct
     let formals = Indrule.formals case in
     let formals_set = Term.Set.of_list formals in
     let g' = Heap.project g formals in
-    let v' =
-      Allocated.filter (fun (x, _) -> Term.Set.mem x formals_set) v
-    in
+    let v' = Allocated.filter (fun (x, _) -> Term.Set.mem x formals_set) v in
     norm (v', g')
 
   let subst theta (v, g) =
@@ -70,8 +63,7 @@ module BasePair = struct
     let deqs =
       Allocated.fold
         (fun (x, _) deqs ->
-          Allocated.fold (fun (y, _) deqs' -> Deqs.add (x, y) deqs') v' deqs
-          )
+          Allocated.fold (fun (y, _) deqs' -> Deqs.add (x, y) deqs') v' deqs)
         v h'.SH.deqs
     in
     let h' = SH.with_deqs h' deqs in
@@ -94,14 +86,12 @@ module BasePair = struct
     let v, h = unfold_all case cbps in
     if Heap.inconsistent h then None
     else
-      let allvars =
-        Blist.rev_append (Term.Set.to_list (Heap.vars h)) args
-      in
+      let allvars = Blist.rev_append (Term.Set.to_list (Heap.vars h)) args in
       let v' =
         Allocated.fold
           (fun (x, i) v'' ->
             let equals = Blist.rev_filter (Heap.equates h x) allvars in
-            Blist.map_to Allocated.add v'' (fun y -> (y, i)) equals )
+            Blist.map_to Allocated.add v'' (fun y -> (y, i)) equals)
           v Allocated.empty
       in
       Some (project (v', h) case)
@@ -111,9 +101,7 @@ module BasePair = struct
     &&
     let v, v' =
       (* use stronger heap to rewrite both variable sets *)
-      Pair.map
-        (Allocated.endomap_fst (fun x -> Uf.find x h'.Heap.eqs))
-        (v, v')
+      Pair.map (Allocated.endomap_fst (fun x -> Uf.find x h'.Heap.eqs)) (v, v')
     in
     Allocated.subset v v'
 end
@@ -135,8 +123,8 @@ let gen_pair case cbps s s' att =
     match gen case cbps with
     | None -> ()
     | Some bp ->
-        Hashset.add s bp ;
-        BaseAndRule.Hashset.add s' (bp, Indrule.formals case) ;
+        Hashset.add s bp;
+        BaseAndRule.Hashset.add s' (bp, Indrule.formals case);
         Attempted.add att cbps
 
 let choose_iter f ys =
@@ -158,8 +146,8 @@ let gen_pairs f case cmap pmap attmap =
   let att = RuleMap.find case attmap in
   choose_iter
     (fun cbps ->
-      f () ;
-      gen_pair case cbps s s' att )
+      f ();
+      gen_pair case cbps s s' att)
     candidates
 
 let first_pred_not_empty defs =
@@ -177,7 +165,7 @@ let gen_all_pairs ?(only_first = false) defs =
       (fun m d ->
         Blist.fold_left
           (fun m' c -> RuleMap.add c (Hashset.create 11) m')
-          m (Preddef.rules d) )
+          m (Preddef.rules d))
       RuleMap.empty defs
   in
   let get_sizemap cmap =
@@ -189,9 +177,7 @@ let gen_all_pairs ?(only_first = false) defs =
     Blist.fold_left
       (fun m d ->
         let first = Blist.hd (Preddef.rules d) in
-        PredMap.add (Indrule.predsym first)
-          (BaseAndRule.Hashset.create 11)
-          m )
+        PredMap.add (Indrule.predsym first) (BaseAndRule.Hashset.create 11) m)
       PredMap.empty defs
   in
   let att =
@@ -199,7 +185,7 @@ let gen_all_pairs ?(only_first = false) defs =
       (fun m d ->
         Blist.fold_left
           (fun m' c -> RuleMap.add c (Attempted.create 11) m')
-          m (Preddef.rules d) )
+          m (Preddef.rules d))
       RuleMap.empty defs
   in
   let progress = ref true in
@@ -214,10 +200,10 @@ let gen_all_pairs ?(only_first = false) defs =
   let () =
     try
       while !progress do
-        debug (fun () -> "\n" ^ RuleMap.to_string Hashset.to_string cmap ^ "\n") ;
-        RuleMap.iter (fun c _ -> gen_pairs f c cmap pmap att) cmap ;
+        debug (fun () -> "\n" ^ RuleMap.to_string Hashset.to_string cmap ^ "\n");
+        RuleMap.iter (fun c _ -> gen_pairs f c cmap pmap att) cmap;
         let newsizemap = get_sizemap cmap in
-        progress := not (RuleMap.equal Int.equal !sizemap newsizemap) ;
+        progress := not (RuleMap.equal Int.equal !sizemap newsizemap);
         sizemap := newsizemap
       done
     with FirstNonEmpty -> ()
@@ -227,19 +213,19 @@ let gen_all_pairs ?(only_first = false) defs =
 (* NB correctness relies on rules being explicit about x->_ implying       *)
 (* x!=nil !!!                                                              *)
 let satisfiable ?(only_first = false) ?(output = false) defs =
-  Stats.CC.call () ;
+  Stats.CC.call ();
   let cmap, pmap = gen_all_pairs ~only_first defs in
-  ( if output then
-    let element_conv (c, s) =
-      Indrule.to_string c ^ " has base " ^ Hashset.to_string s
-    in
-    print_endline (Blist.to_string "\n" element_conv (RuleMap.to_list cmap)) ) ;
+  (if output then
+     let element_conv (c, s) =
+       Indrule.to_string c ^ " has base " ^ Hashset.to_string s
+     in
+     print_endline (Blist.to_string "\n" element_conv (RuleMap.to_list cmap)));
   let retval =
     (only_first && first_pred_not_empty defs pmap)
     || (not only_first)
        && RuleMap.for_all (fun _ s -> not (Hashset.is_empty s)) cmap
   in
-  if retval then Stats.CC.accept () else Stats.CC.reject () ;
+  if retval then Stats.CC.accept () else Stats.CC.reject ();
   retval
 
 let form_sat defs f = satisfiable ~only_first:true (Defs.of_formula defs f)
@@ -253,7 +239,7 @@ let pairs_of_form defs f =
     Blist.iter
       (fun r ->
         let _ = Hashset.left_union s (RuleMap.find r bp_map) in
-        () )
+        ())
       rules
   in
   Hashset.map_to Set.add Set.empty Fun.id s
@@ -263,7 +249,7 @@ let minimise bps =
     Set.fold
       (fun x bps' ->
         if Set.exists (fun y -> BasePair.leq y x) bps' then bps'
-        else Set.add x bps' )
+        else Set.add x bps')
       bps Set.empty
   in
   (* if not (Set.equal res bps) then print_endline "~" ;  *)

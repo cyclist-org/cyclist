@@ -8,7 +8,6 @@ val equal_upto_tags : t -> t -> bool
 val to_string : t -> string
 val pp : Format.formatter -> t -> unit
 val of_string : string -> t
-
 val tags : t -> Tags.t
 val dest : t -> Prod.t * Prod.t
 val terms : t -> Term.Set.t

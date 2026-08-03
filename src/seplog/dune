@@ -1,23 +1,14 @@
-(library 
+(library
  (name seplog)
  (public_name cyclist.seplog)
  (libraries lib generic mparser-re)
  (modules
-   (:standard 
-      \ slinit
-        disprove
-        modelcheck
-        prove
-        satcheck
-        satexpgen)))
+  (:standard \ slinit disprove modelcheck prove satcheck satexpgen)))
 
 (executables
- (names
-   prove disprove modelcheck satcheck satexpgen)
- (public_names
-   sl_prove sl_disprove sl_modelcheck sl_satcheck sl_satexpgen)
- (modules
-   prove disprove modelcheck satcheck satexpgen)
+ (names prove disprove modelcheck satcheck satexpgen)
+ (public_names sl_prove sl_disprove sl_modelcheck sl_satcheck sl_satexpgen)
+ (modules prove disprove modelcheck satcheck satexpgen)
  (libraries lib generic seplog))
 
 (toplevel

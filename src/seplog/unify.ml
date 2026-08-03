@@ -2,26 +2,25 @@ open Lib
 open Generic
 
 module type S = sig
-  (** State maintained by unifiers. *)
   type state
+  (** State maintained by unifiers. *)
 
   val empty_state : state
-  (** The unifier state consisting of the empty substitution and the empty set of
-      tag pairs *)
+  (** The unifier state consisting of the empty substitution and the empty set
+      of tag pairs *)
 
-  (** The type of continuations accepted by SL cps-unifiers *)
   type continuation = (state, state) Unification.continuation
+  (** The type of continuations accepted by SL cps-unifiers *)
 
+  type 'a unifier = (state, state, 'a) Unification.cps_unifier
   (** The type of SL unifiers - these always act on pairs of term substitutions
       and tagpair sets, and only accept continuations that are maps on such
-      pairs.
-  *)
-  type 'a unifier = (state, state, 'a) Unification.cps_unifier
+      pairs. *)
 
   val realize : (state, 'a) Unification.realizer
 
-  (** Predicates that check unifier states for validity *)
   type state_check = state Fun.predicate
+  (** Predicates that check unifier states for validity *)
 
   val mk_assert_check : state_check -> state_check
   (** Takes a state check and wraps it in an assert *)
@@ -33,9 +32,7 @@ module type S = sig
   type update_check = state Unification.state_update Fun.predicate
 
   val unify_tag : ?update_check:update_check -> Tags.Elt.t unifier
-
   val unify_trm : ?update_check:update_check -> Term.t unifier
-
   val unify_trm_list : ?update_check:update_check -> Term.FList.t unifier
 end
 
@@ -57,7 +54,7 @@ struct
 
   let mk_assert_check c state =
     let v = c state in
-    assert v ;
+    assert v;
     v
 
   let mk_verifier check state = Option.mk (check state) state
@@ -88,15 +85,15 @@ module Unidirectional = struct
         Term.equal k v
         || Term.Map.exists
              (fun k' v' -> (not (Term.equal k k')) && Term.equal v v')
-             trm_subst )
+             trm_subst)
       trm_subst
     && Tagpairs.for_all
          (fun (t, t') ->
            Tags.Elt.equal t t'
            || Tagpairs.exists
                 (fun (t'', t''') ->
-                  (not (Tags.Elt.equal t t'')) && Tags.Elt.equal t' t''' )
-                tag_subst )
+                  (not (Tags.Elt.equal t t'')) && Tags.Elt.equal t' t''')
+                tag_subst)
          tag_subst
 
   let modulo_entl (_, (trm_subst, tag_subst)) =
@@ -115,15 +112,12 @@ module Unidirectional = struct
     in
     test_bindings tag_test Tagpairs.add tag_subst_old
       (Tagpairs.to_list tag_subst_new)
-    && test_bindings trm_test
-         (Fun.uncurry Term.Map.add)
-         trm_subst_old
+    && test_bindings trm_test (Fun.uncurry Term.Map.add) trm_subst_old
          (Term.Map.bindings trm_subst_new)
 
   let is_substitution (_, (trm_subst, tag_subst)) =
     Term.Map.for_all
-      (fun x y ->
-        Term.is_free_var x && (Term.is_nil y || Term.is_free_var y) )
+      (fun x y -> Term.is_free_var x && (Term.is_nil y || Term.is_free_var y))
       trm_subst
     && Tagpairs.for_all
          (fun tp -> Pair.both (Pair.map Tags.is_free_var tp))
@@ -136,16 +130,14 @@ module Unidirectional = struct
       || Term.is_exist_var x && Term.is_exist_var y
          && Term.Map.for_all (fun _ z -> not (Term.equal y z)) sub
     in
-    test_bindings test
-      (Fun.uncurry Term.Map.add)
-      theta
+    test_bindings test (Fun.uncurry Term.Map.add) theta
       (Term.Map.bindings theta')
 
   let tag_check ((_, theta), (_, theta')) =
     let injective p =
       Tagpairs.for_all (fun p' ->
           (not (Tags.Elt.equal (fst p) (fst p')))
-          || Tags.Elt.equal (snd p) (snd p') )
+          || Tags.Elt.equal (snd p) (snd p'))
     in
     let surjective p =
       Tagpairs.for_all (fun p' -> not (Tags.Elt.equal (snd p) (snd p')))
@@ -155,10 +147,10 @@ module Unidirectional = struct
       Fun.curry
         (Fun.disj
            (fun (tps, p) ->
-             Pair.conj (Pair.map Tags.is_free_var p) && injective p tps )
+             Pair.conj (Pair.map Tags.is_free_var p) && injective p tps)
            (fun (tps, p) ->
              Pair.conj (Pair.map Tags.is_exist_var p)
-             && injective p tps && surjective p tps ))
+             && injective p tps && surjective p tps))
     in
     test_bindings test Tagpairs.add theta (Tagpairs.to_list theta')
 
@@ -175,13 +167,11 @@ module Unidirectional = struct
   let existentials_only (_, (trm_subst, tag_subst)) =
     Term.Map.for_all
       (fun x y ->
-        Term.equal x y || (Term.is_exist_var x && Term.is_exist_var y)
-        )
+        Term.equal x y || (Term.is_exist_var x && Term.is_exist_var y))
       trm_subst
     && Tagpairs.for_all
          (fun (t, t') ->
-           Tags.Elt.equal t t' || (Tags.is_exist_var t && Tags.is_exist_var t')
-           )
+           Tags.Elt.equal t t' || (Tags.is_exist_var t && Tags.is_exist_var t'))
          tag_subst
 
   let unify_tag ?(update_check = Fun._true) t t' cont init_state =
@@ -217,9 +207,8 @@ module Unidirectional = struct
       let state' = (theta', Tagpairs.empty) in
       update_check (state, state')
     in
-    Unification.transform extract recombine
-      (Term.unify ~update_check)
-      t t' cont init_state
+    Unification.transform extract recombine (Term.unify ~update_check) t t' cont
+      init_state
 
   let unify_trm_list ?(update_check = Fun._true) ts ts' cont init_state =
     let extract s = fst s in
@@ -243,7 +232,7 @@ module Unidirectional = struct
             let trm_subst', _ = Subst.partition trm_subst' in
             let tag_subst', _ = Tagpairs.partition_subst tag_subst' in
             Term.Map.equal Term.equal trm_subst trm_subst'
-            && Tagpairs.equal tag_subst tag_subst' )
+            && Tagpairs.equal tag_subst tag_subst')
           substs
       then substs
       else subst :: substs
@@ -319,6 +308,5 @@ module Bidirectional = struct
       ts ts' cont init_state
 
   let updchk_inj_left chk state_update = chk (Pair.map fst state_update)
-
   let updchk_inj_right chk state_update = chk (Pair.map snd state_update)
 end

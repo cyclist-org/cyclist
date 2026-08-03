@@ -6,8 +6,8 @@ open Lib
 module type S = sig
   type t
 
-  (** Sequent type used for building proof nodes. *)
   type seq_t
+  (** Sequent type used for building proof nodes. *)
 
   (** Constructors. *)
 
@@ -15,13 +15,13 @@ module type S = sig
   (** [mk_open seq] creates an open Proof.t node labelled by [seq]. *)
 
   val mk_axiom : seq_t -> string -> t
-  (** [mk_axiom seq descr] creates an axiom node labelled by
-      sequent [seq] and description [descr].*)
+  (** [mk_axiom seq descr] creates an axiom node labelled by sequent [seq] and
+      description [descr].*)
 
   val mk_backlink : seq_t -> string -> int -> Tagpairs.t -> t
   (** [mk_backlink seq descr target vtts] creates a back-link node labelled by
-      sequent [seq], description [descr], target index [target] and set of
-      valid tag transitions (as pairs) [vtts].*)
+      sequent [seq], description [descr], target index [target] and set of valid
+      tag transitions (as pairs) [vtts].*)
 
   val mk_inf :
     seq_t -> string -> int list -> (Tagpairs.t * Tagpairs.t) list -> t
@@ -33,23 +33,22 @@ module type S = sig
   (** Destructors. *)
 
   val dest : t -> seq_t * string
-  (** [dest n] returns (sequent, description). This works with all Proof.t nodes. *)
+  (** [dest n] returns (sequent, description). This works with all Proof.t
+      nodes. *)
 
   val dest_backlink : t -> seq_t * string * int * Tagpairs.t
-  (** [dest_backlink n] destroys a back-link node [n], otherwise raises [Invalid_arg].*)
+  (** [dest_backlink n] destroys a back-link node [n], otherwise raises
+      [Invalid_arg].*)
 
-  val dest_inf :
-    t -> seq_t * string * int list * (Tagpairs.t * Tagpairs.t) list
-  (** [dest_inf n] destroys an inference node [n], otherwise raises [Invalid_arg].*)
+  val dest_inf : t -> seq_t * string * int list * (Tagpairs.t * Tagpairs.t) list
+  (** [dest_inf n] destroys an inference node [n], otherwise raises
+      [Invalid_arg].*)
 
   (** Functions for checking the sort of a node. *)
 
   val is_open : t -> bool
-
   val is_axiom : t -> bool
-
   val is_backlink : t -> bool
-
   val is_inf : t -> bool
 
   (** Auxiliary functions for getting information from all nodes. *)

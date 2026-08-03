@@ -16,7 +16,8 @@ let _biunify update_check (x, y) (x', y') cont init_state =
 
 let mk_unify unify order p p' cont init_state =
   if order then unify p p' cont init_state
-  else Blist.find_map (fun p' -> unify p p' cont init_state) [p'; Pair.swap p']
+  else
+    Blist.find_map (fun p' -> unify p p' cont init_state) [ p'; Pair.swap p' ]
 
 let unify ?(order = false) ?(update_check = Fun._true) p p' cont init_state =
   mk_unify (_unify update_check) order p p' cont init_state

@@ -1,8 +1,6 @@
 open Lib
-open   Symbols
-
+open Symbols
 open MParser
-
 module Tag = Tags.Elt
 
 module Constraint = struct
@@ -31,19 +29,15 @@ module Constraint = struct
   let pp fmt c = Format.fprintf fmt "@[%s@]" (to_string c)
 
   let parse st =
-    ( Tag.parse
-    >>= fun t ->
-    parse_symb symb_lt
-    >> option (parse_symb symb_eq)
-    >>= fun op ->
-    Tag.parse
-    >>= fun t' -> return (if Option.is_none op then LT (t, t') else LTE (t, t'))
-    )
+    ( Tag.parse >>= fun t ->
+      parse_symb symb_lt >> option (parse_symb symb_eq) >>= fun op ->
+      Tag.parse >>= fun t' ->
+      return (if Option.is_none op then LT (t, t') else LTE (t, t')) )
       st
 
   let tags = function
-    | LT (t, t') -> Tags.of_list [t; t']
-    | LTE (t, t') -> Tags.of_list [t; t']
+    | LT (t, t') -> Tags.of_list [ t; t' ]
+    | LTE (t, t') -> Tags.of_list [ t; t' ]
 
   let subst_tags theta = function
     | LT ts -> LT (Pair.map (Tagpairs.apply_to_tag theta) ts)
@@ -75,26 +69,19 @@ module Elt = Constraint
 include Listset.Make (Constraint)
 
 let to_string cs = if is_empty cs then "" else to_string cs
-
 let pp fmt cs = if is_empty cs then Format.fprintf fmt "" else pp fmt cs
-
 let to_string_list cs = map_to_list Constraint.to_string cs
 
 let parse st =
-  ( attempt (sep_by Constraint.parse (parse_symb symb_comma))
-  <|> return []
+  ( attempt (sep_by Constraint.parse (parse_symb symb_comma)) <|> return []
   >>= fun cs ->
-  let cs = of_list cs in
-  if is_empty cs then return cs else Tokens.colon >> return cs )
+    let cs = of_list cs in
+    if is_empty cs then return cs else Tokens.colon >> return cs )
     st
 
 let of_string s = handle_reply (MParser.parse_string parse s ())
-
-let tags cs =
-  fold (fun c ts -> Tags.union ts (Constraint.tags c)) cs Tags.empty
-
+let tags cs = fold (fun c ts -> Tags.union ts (Constraint.tags c)) cs Tags.empty
 let tag_pairs cs = Tagpairs.mk (tags cs)
-
 let subst_tags theta cs = map (Constraint.subst_tags theta) cs
 
 let generate ?(avoid = Tags.empty) ?(augment = true) t ts =
@@ -143,12 +130,12 @@ let remove_schema cs used =
         Fun.swap for_all cs' (function
           | Constraint.LT (t', t'') ->
               Tags.Elt.equal t t'' && not (Tags.Elt.equal t t')
-          | Constraint.LTE (_, t') -> Tags.Elt.equal t t' )
+          | Constraint.LTE (_, t') -> Tags.Elt.equal t t')
       then Some "UBound"
       else if
         Fun.swap for_all cs' (function
           | Constraint.LTE (t', _) -> Tags.Elt.equal t t'
-          | _ -> false )
+          | _ -> false)
       then Some "LBound"
       else None
     in
@@ -204,8 +191,8 @@ let subsumes cs cs' =
   in
   for_all (Fun.swap mem cs) cs'
 
-let unify ?(total = false) ?(inverse = false) ?(update_check = Fun._true) cs
-    cs' cont init_state =
+let unify ?(total = false) ?(inverse = false) ?(update_check = Fun._true) cs cs'
+    cont init_state =
   mk_unifier total false
     (Fun.direct inverse (Elt.unify ~update_check))
     cs cs' cont init_state

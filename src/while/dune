@@ -3,12 +3,10 @@
  (public_name cyclist.while)
  (libraries lib generic seplog mparser-re)
  (modules
-   (:standard \ 
-        abduce
-        prove)))
+  (:standard \ abduce prove)))
 
 (executables
-  (names abduce prove)
-  (public_names while_abduce while_prove)
-  (modules abduce prove)
-  (libraries lib generic while))
+ (names abduce prove)
+ (public_names while_abduce while_prove)
+ (modules abduce prove)
+ (libraries lib generic while))

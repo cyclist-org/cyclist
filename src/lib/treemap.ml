@@ -4,7 +4,6 @@ module Make (T : Utilsigs.BasicType) = struct
   include Map.Make (T)
 
   let equal eq m m' = m == m' || equal eq m m'
-
   let compare comp m m' = if m == m' then 0 else compare comp m m'
 
   let hash h m =
@@ -16,9 +15,7 @@ module Make (T : Utilsigs.BasicType) = struct
 
   (* NB this prioritises bindings of the first argument *)
   let union m m' = fold add m m'
-
   let of_list l = Blist.fold_left (fun m (k, v) -> add k v m) empty l
-
   let to_list = bindings
 
   exception Found
@@ -29,9 +26,9 @@ module Make (T : Utilsigs.BasicType) = struct
       iter
         (fun k v ->
           if f k v then (
-            found := Some (k, v) ;
-            raise Found ) )
-        m ;
+            found := Some (k, v);
+            raise Found))
+        m;
       None
     with Found -> !found
 
@@ -46,6 +43,5 @@ module Make (T : Utilsigs.BasicType) = struct
     mk_to_string (pp pp_val) m
 
   let submap eq m m' = for_all (fun k v -> mem k m' && eq v (find k m')) m
-
   let add_bindings bs m = List.fold_left (fun m (k, v) -> add k v m) m bs
 end

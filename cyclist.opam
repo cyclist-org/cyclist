@@ -24,6 +24,7 @@ depends: [
   "hashcons" {>= "1.0.1"}
   "hashset" {>= "1.0.0"}
   "ocamlgraph" {>= "1.8.7"}
+  "ocamlformat" {= "0.28.1" & with-dev-setup}
 ]
 build: [
   ["dune" "subst"] {pinned}

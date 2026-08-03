@@ -1,30 +1,31 @@
 open Lib
-
 module L = Blist
 
 module type S = sig
   type abdrule_t
-
   type proof_t
-
   type defs_t
 
   module Seq : Sequent.S
-
   module Proof : Proof.S
 
   val bfs :
-       int
-    -> abdrule_t
-    -> Seq.t
-    -> defs_t
-    -> (defs_t -> bool)
-    -> (proof_t * defs_t) option
+    int ->
+    abdrule_t ->
+    Seq.t ->
+    defs_t ->
+    (defs_t -> bool) ->
+    (proof_t * defs_t) option
 
   val print_proof_stats : Proof.t -> unit
 end
 
-module Make (Seq : Sequent.S) (Defs : sig type t end) = struct
+module Make
+    (Seq : Sequent.S)
+    (Defs : sig
+      type t
+    end) =
+struct
   module Abdrule = Abdrule.Make (Seq) (Defs)
   module Proof = Proof.Make (Seq)
   module Node = Proofnode.Make (Seq)
@@ -35,24 +36,37 @@ module Make (Seq : Sequent.S) (Defs : sig type t end) = struct
   module Seq = Seq
 
   type seq_t = Seq.t
-
   type defs_t = Defs.t
-
   type abdrule_t = Abdrule.t
-
   type proof_t = Proof.t
 
-  type app_state =
-    {prf: Proof.t; depth: int; goals: (int * int) list; defs: Defs.t}
+  type app_state = {
+    prf : Proof.t;
+    depth : int;
+    goals : (int * int) list;
+    defs : Defs.t;
+  }
 
-  let mk_app p d g defs = {prf= p; depth= d; goals= g; defs}
+  let mk_app p d g defs = { prf = p; depth = d; goals = g; defs }
 
-  type abd_proof_state = {seq_no: int; par: int; idx: int; apps: app_state L.t}
+  type abd_proof_state = {
+    seq_no : int;
+    par : int;
+    idx : int;
+    apps : app_state L.t;
+  }
 
   let state_seq_no = ref 0
 
   let mk_state par idx apps =
-    {seq_no= (incr state_seq_no ; !state_seq_no); par; idx; apps}
+    {
+      seq_no =
+        (incr state_seq_no;
+         !state_seq_no);
+      par;
+      idx;
+      apps;
+    }
 
   let pop_parents sn stack =
     let rec loop aux s = function
@@ -79,7 +93,7 @@ module Make (Seq : Sequent.S) (Defs : sig type t end) = struct
             (Blist.rev_append
                (Blist.rev_map (fun j -> (j, new_goal_depth)) g')
                goals)
-            defs' )
+            defs')
         (rule idx app.prf app.defs)
     in
     mk_state par_seq_no idx newapps
@@ -102,26 +116,24 @@ module Make (Seq : Sequent.S) (Defs : sig type t end) = struct
           let app, apps = Blist.decons proof_state.apps in
           let () = assert (Int.( <= ) app.depth bound) in
           let () =
-            assert (
-              Blist.for_all (fun (_, gd) -> Int.( <= ) gd bound) app.goals )
+            assert (Blist.for_all (fun (_, gd) -> Int.( <= ) gd bound) app.goals)
           in
           (* push remaining applications *)
-          let stack = {proof_state with apps} :: stack in
+          let stack = { proof_state with apps } :: stack in
           if Blist.is_empty app.goals then (
             (* no subgoals left, so it must be a closed proof *)
-            assert (Proof.is_closed app.prf) ;
+            assert (Proof.is_closed app.prf);
             if check app.defs then Some (app.prf, app.depth, app.defs)
             else
               (* NOTE: in case not acceptable we do not pop parents as we may need to backtrack *)
-              aux bound frontier stack )
+              aux bound frontier stack)
           else
             let () = assert (not (Proof.is_closed app.prf)) in
             let () =
               if !do_debug then (
                 print_endline
-                  ( "Expanding node: "
-                  ^ string_of_int (fst (Blist.hd app.goals)) ) ;
-                print_endline (Proof.to_string app.prf) )
+                  ("Expanding node: " ^ string_of_int (fst (Blist.hd app.goals)));
+                print_endline (Proof.to_string app.prf))
             in
             if Blist.exists (fun (_, gd) -> Int.( = ) gd bound) app.goals then
               (* if any of the open goals is at the current depth *)
@@ -148,11 +160,11 @@ module Make (Seq : Sequent.S) (Defs : sig type t end) = struct
     in
     let start = Proof.mk seq in
     let stack =
-      [expand_proof_state 0 (mk_app start 0 [(0, 0)] initial_defs) rule]
+      [ expand_proof_state 0 (mk_app start 0 [ (0, 0) ] initial_defs) rule ]
     in
     Option.map
       (fun (p, d, defs) ->
-        Prover.last_search_depth := d ;
-        (p, defs) )
+        Prover.last_search_depth := d;
+        (p, defs))
       (aux 1 [] stack)
 end

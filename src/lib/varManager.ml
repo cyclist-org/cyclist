@@ -1,74 +1,99 @@
 module type I = sig
   type var
-
   type var_container
 
   val anonymous : var
-
   val is_anonymous : var Fun.predicate
-
   val mk : string -> var
-
   val is_exist_var : var Fun.predicate
-
   val is_free_var : var Fun.predicate
-
   val fresh_evar : var_container -> var
-
   val fresh_evars : var_container -> int -> var list
-
   val fresh_fvar : var_container -> var
-
   val fresh_fvars : var_container -> int -> var list
 end
 
 module type SubstSig = sig
   type t
-
   type var
-
   type var_container
 
   val empty : t
-
   val singleton : var -> var -> t
-
   val of_list : (var * var) list -> t
-
   val avoid : var_container -> var_container -> t
-
   val pp : Format.formatter -> t -> unit
-
   val to_string : t -> string
-
   val apply : t -> var -> var
-
   val partition : t -> t * t
-
   val strip : t -> t
-
   val mk_free_subst : var_container -> var_container -> t
-
   val mk_ex_subst : var_container -> var_container -> t
 end
 
-type alphabet  = string list
+type alphabet = string list
 
-let roman_alphabet = [
-    "a"; "b"; "c"; "d"; "e"; "f"; "g"; "h"; "i"; "j"; "k"; "l"; "m"; "n"; "o";
-    "p"; "q"; "r"; "s"; "t"; "u"; "v"; "w"; "x"; "y"; "z";
+let roman_alphabet =
+  [
+    "a";
+    "b";
+    "c";
+    "d";
+    "e";
+    "f";
+    "g";
+    "h";
+    "i";
+    "j";
+    "k";
+    "l";
+    "m";
+    "n";
+    "o";
+    "p";
+    "q";
+    "r";
+    "s";
+    "t";
+    "u";
+    "v";
+    "w";
+    "x";
+    "y";
+    "z";
   ]
 
-let greek_alphabet = [
-    "α"; "β"; "γ"; "δ"; "ε"; "ζ"; "η"; "θ"; "ι"; "κ"; "λ"; "μ"; "ν"; "ξ"; "ο";
-    "π"; "ρ"; "ς"; "σ"; "τ"; "υ"; "φ";
-    (* "χ";  *) (* Don't use χ because it just looks like x when rendered to the terminal *)
-    "ψ"; "ω";
+let greek_alphabet =
+  [
+    "α";
+    "β";
+    "γ";
+    "δ";
+    "ε";
+    "ζ";
+    "η";
+    "θ";
+    "ι";
+    "κ";
+    "λ";
+    "μ";
+    "ν";
+    "ξ";
+    "ο";
+    "π";
+    "ρ";
+    "ς";
+    "σ";
+    "τ";
+    "υ";
+    "φ";
+    (* "χ";  *)
+    (* Don't use χ because it just looks like x when rendered to the terminal *)
+    "ψ";
+    "ω";
   ]
 
-let arabic_digits = [
-  "0"; "1"; "2"; "3"; "4"; "5"; "6"; "7"; "8"; "9";
-]
+let arabic_digits = [ "0"; "1"; "2"; "3"; "4"; "5"; "6"; "7"; "8"; "9" ]
 
 module type S = sig
   module Var : sig
@@ -76,21 +101,21 @@ module type S = sig
 
     include
       Containers.S
-      with type Set.elt = t
-      with type Map.key = t
-      with type Hashmap.key = t
-      with type Hashset.elt = t
-      with type MSet.elt = t
-      with type FList.t = t list
+        with type Set.elt = t
+        with type Map.key = t
+        with type Hashmap.key = t
+        with type Hashset.elt = t
+        with type MSet.elt = t
+        with type FList.t = t list
 
     val to_int : t -> Int.t
   end
 
   module Subst :
     SubstSig
-    with type t = Var.t Var.Map.t
-    with type var = Var.t
-    with type var_container = Var.Set.t
+      with type t = Var.t Var.Map.t
+      with type var = Var.t
+      with type var_container = Var.Set.t
 
   include I with type var = Var.t and type var_container = Var.Set.t
 
@@ -109,14 +134,14 @@ let class_equal c c' =
 
 let cyclic_permute ls n =
   let rec cyclic_permute ls n acc =
-    if Int.equal n 0
-      then List.append ls ((List.rev) acc)
-      else
-        match ls with
-        | []    -> List.rev acc
-        | l::ls -> cyclic_permute ls (n-1) (l::acc) in
-  let n = n mod (List.length ls) in
-  let n = if Int.( < ) n 0 then n + (List.length ls) else n in
+    if Int.equal n 0 then List.append ls (List.rev acc)
+    else
+      match ls with
+      | [] -> List.rev acc
+      | l :: ls -> cyclic_permute ls (n - 1) (l :: acc)
+  in
+  let n = n mod List.length ls in
+  let n = if Int.( < ) n 0 then n + List.length ls else n in
   cyclic_permute ls n []
 
 (* let cyclic_permute s n =
@@ -127,14 +152,10 @@ let cyclic_permute ls n =
   let snd = String.sub s 0 start in
   String.concat "" [fst; snd] *)
 
-let mk seed anon_str classify_varname = (
-
-  module struct
-
+let mk seed anon_str classify_varname =
+  (module struct
     let termtbl = H.create 997
-
     let _mk s = H.hashcons termtbl s
-
     let anonymous = _mk ""
 
     let mk s =
@@ -152,9 +173,7 @@ let mk seed anon_str classify_varname = (
           if equal s anonymous then anon_str else s.Hashcons.node
 
         let pp fmt s = Strng.pp fmt (to_string s)
-
         let compare s s' = Int.compare s.Hashcons.tag s'.Hashcons.tag
-
         let hash s = s.Hashcons.hkey
       end
 
@@ -165,7 +184,6 @@ let mk seed anon_str classify_varname = (
     end
 
     type var = Var.t
-
     type var_container = Var.Set.t
 
     let is_anonymous v = Var.equal v anonymous
@@ -185,7 +203,8 @@ let mk seed anon_str classify_varname = (
       in
       let letters = cyclic_permute !alphabet seed in
       let mk_seg free lvl =
-        Blist.fold_left (mk_var free lvl) [] (List.rev letters) in
+        Blist.fold_left (mk_var free lvl) [] (List.rev letters)
+      in
       let rec _search s acc vs n =
         match (vs, n) with
         | _, 0 -> Some (Blist.rev acc)
@@ -203,38 +222,28 @@ let mk seed anon_str classify_varname = (
         match _search s [] (if free then !_fvars else !_evars) n with
         | Some vs -> vs
         | None ->
-            _fvars := !_fvars @ mk_seg true !curr_lvl ;
-            _evars := !_evars @ mk_seg false !curr_lvl ;
-            incr curr_lvl ;
+            _fvars := !_fvars @ mk_seg true !curr_lvl;
+            _evars := !_evars @ mk_seg false !curr_lvl;
+            incr curr_lvl;
             search s free n
       in
       search vs fresh n
 
     let fresh_fvars s n = search_vars s true n
-
     let fresh_evars s n = search_vars s false n
-
     let fresh_fvar s = Blist.hd (fresh_fvars s 1)
-
     let fresh_evar s = Blist.hd (fresh_evars s 1)
-
     let to_ints vs = Var.Set.map_to Int.Set.add Int.Set.empty Var.to_int vs
 
     module Subst = struct
       type t = Var.t Var.Map.t
-
       type var = Var.t
-
       type var_container = Var.Set.t
 
       let empty = Var.Map.empty
-
       let singleton x y = Var.Map.add x y empty
-
       let of_list = Var.Map.of_list
-
       let pp = Var.Map.pp Var.pp
-
       let to_string = Var.Map.to_string Var.to_string
 
       let apply theta v =
@@ -261,7 +270,6 @@ let mk seed anon_str classify_varname = (
         Var.Map.of_list (Blist.combine (Var.Set.to_list ts) ts')
 
       let mk_free_subst = mk_subst fresh_fvars
-
       let mk_ex_subst = mk_subst fresh_evars
 
       let partition theta =
@@ -269,5 +277,4 @@ let mk seed anon_str classify_varname = (
           (fun x y -> is_free_var x && (is_anonymous y || is_free_var y))
           theta
     end
-  end
-  : S )
+  end : S)

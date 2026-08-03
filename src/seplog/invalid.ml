@@ -4,7 +4,7 @@ open Generic
 let partition_strengthening = ref false
 
 let partitions trm_list pi =
-  assert (not (Heap.inconsistent pi)) ;
+  assert (not (Heap.inconsistent pi));
   let pairs = Blist.cartesian_hemi_square trm_list in
   let pairs =
     Blist.filter
@@ -15,10 +15,10 @@ let partitions trm_list pi =
     Blist.fold_left
       (fun l pi' ->
         if Heap.equates pi' x y || Heap.disequates pi' x y then pi' :: l
-        else Heap.add_eq pi' q :: Heap.add_deq pi' q :: l )
+        else Heap.add_eq pi' q :: Heap.add_deq pi' q :: l)
       [] sub_partitions
   in
-  Blist.fold_left aux [pi] pairs
+  Blist.fold_left aux [ pi ] pairs
 
 (* paper: GRAY CODES, LOOPLESS ALGORITHM AND PARTITIONS *)
 (* let _partitions n =                                                   *)
@@ -73,14 +73,13 @@ let partitions trm_list pi =
 (*   Enum.map to_heap parts_enum                                        *)
 
 let invalidity_witness defs seq =
-  Stats.Invalidity.call () ;
+  Stats.Invalidity.call ();
   let lbps, rbps = Pair.map (Basepair.pairs_of_form defs) seq in
   let lbps, rbps = Pair.map Basepair.minimise (lbps, rbps) in
   let lbps =
     Basepair.Set.filter
       (fun bp ->
-        Basepair.Set.for_all (fun bp' -> not (Basepair.leq bp' bp)) rbps
-        )
+        Basepair.Set.for_all (fun bp' -> not (Basepair.leq bp' bp)) rbps)
       lbps
   in
   let b_vars =
@@ -104,18 +103,15 @@ let invalidity_witness defs seq =
                  (fun (_, pi') ->
                    Deqs.for_all
                      (fun (w, z) ->
-                       Stdlib.( = ) (Heap.equates pi x w)
-                         (Heap.equates pi x z) )
-                     pi'.Heap.deqs )
-                 rbps )
+                       Stdlib.( = ) (Heap.equates pi x w) (Heap.equates pi x z))
+                     pi'.Heap.deqs)
+                 rbps)
           free_deqs
       in
       Blist.fold_left Heap.add_deq pi free_deqs
   in
   let map_through sigma v =
-    Basepair.Allocated.map
-      (fun (x, i) -> (Uf.find x sigma.Heap.eqs, i))
-      v
+    Basepair.Allocated.map (fun (x, i) -> (Uf.find x sigma.Heap.eqs, i)) v
   in
   let b_move sigma (v, _) (v', pi') =
     Heap.subsumed pi' sigma
@@ -134,11 +130,10 @@ let invalidity_witness defs seq =
   in
   let result = Basepair.Set.find_suchthat_opt a_move lbps in
   if Option.is_none result then Stats.Invalidity.reject ()
-  else Stats.Invalidity.accept () ;
+  else Stats.Invalidity.accept ();
   result
 
 let _invalid defs seq = Option.is_some (invalidity_witness defs seq)
-
 let check = _invalid
 
 (* let check =                         *)

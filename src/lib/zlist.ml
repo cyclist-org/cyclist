@@ -1,21 +1,16 @@
 type 'a znode = Empty | Node of 'a * 'a t
-
 and 'a t = 'a znode Lazy.t
 
 let empty = Lazy.from_val Empty
-
 let is_empty l = match Lazy.force l with Empty -> true | Node _ -> false
 
 let hd l =
   match Lazy.force l with Empty -> invalid_arg "Zlist.hd" | Node (x, _) -> x
 
 let tl l =
-  match Lazy.force l with
-  | Empty -> invalid_arg "Zlist.tl"
-  | Node (_, l') -> l'
+  match Lazy.force l with Empty -> invalid_arg "Zlist.tl" | Node (_, l') -> l'
 
 let cons z zs = Lazy.from_val (Node (z, zs))
-
 let singleton x = Lazy.from_val (Node (x, empty))
 
 let rec of_list l =
@@ -36,9 +31,9 @@ let filter p l =
 
 let rec map (f : 'a -> 'b) (l : 'a t) =
   lazy
-    ( match Lazy.force l with
+    (match Lazy.force l with
     | Empty -> Empty
-    | Node (x, l') -> Node (f x, map f l') )
+    | Node (x, l') -> Node (f x, map f l'))
 
 let rec to_list l =
   match Lazy.force l with Empty -> [] | Node (x, xs) -> x :: to_list xs
@@ -46,7 +41,7 @@ let rec to_list l =
 let rec find_map f l =
   match Lazy.force l with
   | Empty -> None
-  | Node (x, xs) -> ( match f x with None -> find_map f xs | y -> y )
+  | Node (x, xs) -> ( match f x with None -> find_map f xs | y -> y)
 
 let rec from_while f =
   lazy (match f () with None -> Empty | Some x -> Node (x, from_while f))
@@ -59,23 +54,22 @@ let rec from_while f =
 
 let rec flatten (l : 'a t t) : 'a t =
   lazy
-    ( match Lazy.force l with
+    (match Lazy.force l with
     | Empty -> Empty
     | Node (x, xs) -> (
-      match Lazy.force x with
-      | Empty -> Lazy.force (flatten xs)
-      | Node (y, ys) -> Node (y, flatten (Lazy.from_val (Node (ys, xs))))
-      ) )
+        match Lazy.force x with
+        | Empty -> Lazy.force (flatten xs)
+        | Node (y, ys) -> Node (y, flatten (Lazy.from_val (Node (ys, xs))))))
 
 let bind f zs = flatten (map f zs)
 
 let rec choose (l : 'a t t) : 'a t t =
   lazy
-    ( match Lazy.force l with
+    (match Lazy.force l with
     | Empty -> Node (empty, empty)
     | Node (x, xs) ->
         let cs = choose xs in
-        Lazy.force (bind (fun y -> map (cons y) cs) x) )
+        Lazy.force (bind (fun y -> map (cons y) cs) x))
 
 let find_opt p (l : 'a t) = find_map (Option.pred p) l
 
@@ -83,5 +77,4 @@ let rec fold f ys a =
   match Lazy.force ys with Empty -> a | Node (x, xs) -> fold f xs (f a x)
 
 let fold_left f a ys = fold f ys a
-
 let get_opt l = map Option.get (filter Option.is_some l)

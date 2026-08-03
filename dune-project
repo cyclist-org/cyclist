@@ -29,8 +29,8 @@
   (mparser-re (>= 1.3))
   (hashcons (>= 1.0.1))
   (hashset (>= 1.0.0))
-  (ocamlgraph (>= 1.8.7))))
-
-(formatting disabled)
+  (ocamlgraph (>= 1.8.7))
+  ; Must match the version pinned in .ocamlformat.
+  (ocamlformat (and (= 0.28.1) :with-dev-setup))))
 
 (generate_opam_files true)

@@ -1,6 +1,5 @@
 open Lib
 open Generic
-
 include Base
 
 (* let prf =
@@ -26,11 +25,8 @@ include Base
 let prf () =
   let size = List.hd !params in
   let tags = List.init size (fun n -> n) in
-  let tps = List.init size (fun h -> (h, (h+1) mod size)) in
-  Soundcheck.build_proof [(0, tags, [(0, tps, [(size-1,0)])])]
-
+  let tps = List.init size (fun h -> (h, (h + 1) mod size)) in
+  Soundcheck.build_proof [ (0, tags, [ (0, tps, [ (size - 1, 0) ]) ]) ]
 ;;
 
 runtest ~minimize:false prf
-
-;;
