@@ -10,14 +10,18 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-latest
+          # Not ubuntu-latest (24.04): Spot's Debian packages are built for
+          # Debian stable, and libspot-dev pulls in libspotltsmin0, which
+          # needs libltdl7 >= 2.5.4. Noble only has 2.4.7, so apt cannot
+          # satisfy the depext there. 26.04 ships libltdl7 2.5.4.
+          - ubuntu-26.04
           - macos-latest
 
     runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Spot is not packaged by Debian/Ubuntu, so the libspot-dev depext
       # declared in cyclist.opam can only be satisfied from Spot's own
