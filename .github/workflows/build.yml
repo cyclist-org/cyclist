@@ -1,0 +1,44 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Spot is not packaged by Debian/Ubuntu, so the libspot-dev depext
+      # declared in cyclist.opam can only be satisfied from Spot's own
+      # repository (as in the Dockerfile). On macOS, the depext is satisfied
+      # by the homebrew formula, which needs no extra setup here.
+      - name: Add the Spot apt repository
+        if: runner.os == 'Linux'
+        run: |
+          curl -fsSL https://www.lrde.epita.fr/repo/debian.gpg \
+            | sudo tee /usr/share/keyrings/lrde.gpg > /dev/null
+          echo 'deb [signed-by=/usr/share/keyrings/lrde.gpg] http://www.lrde.epita.fr/repo/debian/ stable/' \
+            | sudo tee /etc/apt/sources.list.d/lrde.list
+          sudo apt-get update
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.3"
+
+      - name: Install dependencies
+        run: opam install . --deps-only
+
+      - name: Build
+        run: opam exec -- dune build
