@@ -1,5 +1,4 @@
 open Lib
-open Parsers
 open MParser
 open MParser_RE
 
@@ -19,7 +18,9 @@ let use_fwk_order_reduced () = soundness_method := ORTL_CPP
 let use_fwk_full () = soundness_method := FWK_CPP
 let use_vla () = soundness_method := VLA
 let use_sla () = soundness_method := SLA
-let use_cyclone () = soundness_method := CYCLONE
+
+let[@warning "-unused-value-declaration"] use_cyclone () =
+  soundness_method := CYCLONE
 
 let inf_desc_opts =
   let options =
@@ -126,7 +127,7 @@ let fathers_grandchild prf idx n =
       if Int.equal idx grandchild then invalid_arg "fathers_grandchild1"
       else
         Int.Map.exists
-          (fun idx' par_node ->
+          (fun _idx' par_node ->
             in_children idx par_node && in_children grandchild par_node)
           prf
   | _ -> invalid_arg "fathers_grandchild2"
@@ -146,7 +147,7 @@ let remove_dead_nodes prf' =
       in
       prf := Int.Map.add par_idx newparent !prf
   in
-  let remove_dead_node idx n =
+  let remove_dead_node idx =
     let () = prf := Int.Map.remove idx !prf in
     Int.Map.iter (fun p n -> process_node idx p n) !prf
   in
@@ -155,7 +156,7 @@ let remove_dead_nodes prf' =
     match
       Int.Map.find_map (fun idx n -> (not (Int.equal idx 0)) && is_leaf n) !prf
     with
-    | Some (idx, n) -> remove_dead_node idx n
+    | Some (idx, _n) -> remove_dead_node idx
     | None -> cont := false
   done;
   !prf
@@ -179,7 +180,7 @@ let fuse_single_nodes prf' init =
       prf := Int.Map.add par_idx (bud, par_tags, newsubg) !prf
   in
   let fuse_node idx = function
-    | false, tags, [ (child, tv, tp) ] ->
+    | false, _tags, [ (child, tv, tp) ] ->
         Int.Map.iter (fun p n -> process_node idx child tv tp p n) !prf;
         prf := Int.Map.remove idx !prf
     | _ -> invalid_arg "fuse_node"
@@ -671,7 +672,7 @@ let parse s =
   | EDGE_LIST -> EdgeList.parse s
   | JSON -> JSON.parse s
 
-let representation () =
+let[@warning "-unused-value-declaration"] representation () =
   match !repr with
   | NODE_LIST -> (module NodeList : Representation)
   | EDGE_LIST -> (module EdgeList : Representation)
@@ -840,7 +841,7 @@ module RelationalCheck = struct
         then false
         else
           List.for_all
-            (fun (((h, h') as k), ss) ->
+            (fun (k, ss) ->
               let ss' = IntPair.Hashmap.find_all q k in
               if not (Int.equal (List.length ss) (List.length ss')) then false
               else List.for_all2 Slope.equal ss ss')
@@ -944,8 +945,8 @@ module RelationalCheck = struct
     (* Repeat code for relational composition, so as to inline check for whether
        we have reached the fixed point - slightly more efficient than comparing
        new relation for equality with the old one at each iteration. *)
-    let transitive_closure ((p_fd, p_bk, p_sl) as p) =
-      let rec transitive_closure ((q_fd, q_bk, q_sl) as q) =
+    let transitive_closure ((p_fd, _p_bk, p_sl) as p) =
+      let rec transitive_closure ((_q_fd, q_bk, q_sl) as q) =
         let result = copy q in
         let continue =
           Int.Hashmap.fold
@@ -981,9 +982,6 @@ module RelationalCheck = struct
       in
       transitive_closure p
   end
-
-  (* A height graph is a set of nodes and sloped relation for each edge *)
-  type height_graph = Int.Set.t * SlopedRel.t IntPair.Map.t
 
   let pp_height_graph fmt (nodes, slopes) =
     Format.fprintf fmt "@[Nodes: %a@.Slopes: %a@]" Int.Set.pp nodes

@@ -3,8 +3,6 @@
  *)
 
 open Lib
-open Generic
-open Seplog
 
 let def_separator = " ;\n\n"
 let pzero = "zero"

@@ -1,4 +1,3 @@
-open Lib
 open Generic
 include Base
 

@@ -128,7 +128,7 @@ struct
         | Scalar v, Scalar v' -> Sig.ScalarValue.equal v v'
         | _, _ -> false
 
-      let rec hash = function
+      let hash = function
         | Nil -> 11
         | Location l -> max_int land ((19 * Location.hash l) + 1)
         | Scalar v -> max_int land ((19 * Scalar.hash v) + 2)
@@ -266,7 +266,7 @@ struct
         s
 
     let merge s s' =
-      let merge_f x v v' =
+      let merge_f _x v v' =
         match (v, v') with
         | None, None -> None
         | None, v -> v
@@ -480,7 +480,7 @@ struct
          (fun def -> (Preddef.predsym def, (empty_base (), empty_base ())))
          (Defs.to_list defs))
 
-  let decorate h itp =
+  let decorate _h itp =
     let f (ancestors, parents) =
       InterpretantBase.left_union ancestors parents
     in

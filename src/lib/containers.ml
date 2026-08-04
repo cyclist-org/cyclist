@@ -32,7 +32,7 @@ module Make (T : Utilsigs.BasicType) = struct
   module Hashset = struct
     include Hashset.Make (T)
 
-    let pp fmt s =
+    let[@warning "-unused-value-declaration"] pp fmt s =
       let () = Format.fprintf fmt "@[[" in
       let first = ref true in
       let () =

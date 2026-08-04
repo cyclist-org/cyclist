@@ -1,4 +1,3 @@
-open Lib
 open Generic
 
 type t = Form.t * Form.t

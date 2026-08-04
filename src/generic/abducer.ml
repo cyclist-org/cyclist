@@ -35,7 +35,6 @@ struct
 
   module Seq = Seq
 
-  type seq_t = Seq.t
   type defs_t = Defs.t
   type abdrule_t = Abdrule.t
   type proof_t = Proof.t

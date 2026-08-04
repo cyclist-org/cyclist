@@ -1,7 +1,6 @@
 open Lib
 open Symbols
 open Generic
-open MParser
 
 module Make (Sig : Mc_core.ValueSig) = struct
   module GenModelChecker = Mc_core.Make (Sig)
@@ -117,7 +116,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
 
   let discharge_eq =
     let rl red =
-      let s, h, symheap, remainder = Reduction.dest red in
+      let s, _h, symheap, _remainder = Reduction.dest red in
       if not (all_vars_free symheap) then []
       else if Uf.is_empty symheap.Heap.eqs then []
       else
@@ -133,7 +132,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
 
   let discharge_deq =
     let rl red =
-      let s, h, symheap, remainder = Reduction.dest red in
+      let s, _h, symheap, _remainder = Reduction.dest red in
       if not (all_vars_free symheap) then []
       else if not (Uf.is_empty symheap.Heap.eqs) then []
       else if Deqs.is_empty symheap.Heap.deqs then []
@@ -149,7 +148,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
 
   let discharge_pto =
     let rl red =
-      let s, h, symheap, remainder = Reduction.dest red in
+      let _s, _h, symheap, _remainder = Reduction.dest red in
       if not (all_vars_free symheap) then []
       else if not (Uf.is_empty symheap.Heap.eqs) then []
       else if not (Deqs.is_empty symheap.Heap.deqs) then []
@@ -175,7 +174,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
 
   let discharge_ind =
     let rl red =
-      let s, h, symheap, remainder = Reduction.dest red in
+      let _s, _h, symheap, _remainder = Reduction.dest red in
       if not (all_vars_free symheap) then []
       else if not (Uf.is_empty symheap.Heap.eqs) then []
       else if not (Deqs.is_empty symheap.Heap.deqs) then []
@@ -198,7 +197,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
 
   let eliminate_eq =
     let rl red =
-      let s, h, symheap, remainder = Reduction.dest red in
+      let s, _h, symheap, _remainder = Reduction.dest red in
       if all_vars_free symheap then []
       else
         let allvars = Heap.vars symheap in
@@ -231,7 +230,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
 
   let eliminate_pto =
     let rl red =
-      let s, h, symheap, remainder = Reduction.dest red in
+      let s, h, symheap, _remainder = Reduction.dest red in
       if all_vars_free symheap then []
       else
         let allvars = Heap.vars symheap in
@@ -245,7 +244,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
           let pto = Ptos.find_suchthat_opt cvalued symheap.Heap.ptos in
           if Option.is_none pto then []
           else
-            let ((y, xs) as pto) = Option.get pto in
+            let ((y, xs) as _pto) = Option.get pto in
             let yvalue = interpret s y in
             if not (is_location yvalue) then []
             else
@@ -299,7 +298,7 @@ module Make (Sig : Mc_core.ValueSig) = struct
 
   let unfold =
     let rl red =
-      let s, h, symheap, remainder = Reduction.dest red in
+      let s, _h, symheap, _remainder = Reduction.dest red in
       if not (all_vars_free symheap) then []
       else if not (Uf.is_empty symheap.Heap.eqs) then []
       else if not (Deqs.is_empty symheap.Heap.deqs) then []

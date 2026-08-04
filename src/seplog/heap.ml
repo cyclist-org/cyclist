@@ -3,8 +3,6 @@ open Symbols
 open Generic
 open MParser
 
-let split_heaps = ref true
-
 type abstract1 = Term.Set.t option
 type abstract2 = Tags.t option
 
@@ -357,7 +355,7 @@ let project f xs =
     (not (Term.is_nil x)) && not (Blist.exists (fun y -> Term.equal x y) xs)
   in
   let pair_nin_lst (x, y) = trm_nin_lst x || trm_nin_lst y in
-  let rec proj_eqs h =
+  let proj_eqs h =
     let do_eq x y h' =
       let x_nin_lst = trm_nin_lst x in
       let y_nin_lst = trm_nin_lst y in

@@ -1,7 +1,6 @@
 open Lib
 open Symbols
 open Generic
-open MParser
 module SH = Heap
 module AllocatedT = Pair.Make (Term) (Int)
 

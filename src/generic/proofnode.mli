@@ -1,7 +1,5 @@
 (** A node in a cyclic proof. *)
 
-open Lib
-
 (** Proof node signature. *)
 module type S = sig
   type t

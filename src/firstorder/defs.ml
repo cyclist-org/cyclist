@@ -1,6 +1,5 @@
 open Lib
 open Symbols
-open Generic
 open MParser
 
 (* association lists to lists are used because the order in which predicates

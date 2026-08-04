@@ -1,4 +1,3 @@
-open Lib
 open Generic
 open Seplog
 open While

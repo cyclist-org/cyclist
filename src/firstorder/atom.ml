@@ -10,7 +10,7 @@ type ind_pred_atom = Tags.Elt.t * pred_atom
 module AtomT = struct
   type t = Eq of eq_atom | Deq of eq_atom | IndPred of ind_pred_atom
 
-  let compare ?(match_tags = false) a a' =
+  let compare ?match_tags:_ a a' =
     match (a, a') with
     | Eq (x, y), Eq (x', y') | Deq (x, y), Deq (x', y') -> (
         match Term.compare x x' with 0 -> Term.compare y y' | n -> n)
@@ -122,7 +122,7 @@ let vars a = Term.filter_vars (terms a)
 let tag = function Eq _ | Deq _ -> None | IndPred (i, _) -> Some i
 
 let repl_tags t = function
-  | IndPred (t', (ident, tl)) -> IndPred (t, (ident, tl))
+  | IndPred (_t', (ident, tl)) -> IndPred (t, (ident, tl))
   | any -> any
 
 let strip_tags = function

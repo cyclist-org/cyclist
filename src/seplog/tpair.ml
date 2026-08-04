@@ -1,6 +1,4 @@
 open Lib
-open Symbols
-open MParser
 module TPair = Pair.Make (Term) (Term)
 include TPair
 

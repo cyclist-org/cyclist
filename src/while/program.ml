@@ -319,8 +319,8 @@ module Cmd = struct
     | _ -> raise WrongCmd
 
   let _dest_deref = function
-    | Load (x, e, s) -> e
-    | Store (e1, s, e2) -> e1
+    | Load (_x, e, _s) -> e
+    | Store (e1, _s, _e2) -> e1
     | Free e -> e
     | _ -> raise WrongCmd
 
@@ -393,7 +393,7 @@ module Cmd = struct
           (Term.Set.union (Cond.vars cond) (terms cmd))
           (terms cmd')
     | While (cond, cmd) -> Term.Set.union (Cond.vars cond) (terms cmd)
-    | ProcCall (p, args) -> Term.Set.of_list args
+    | ProcCall (_p, args) -> Term.Set.of_list args
 
   and terms l =
     Blist.fold_left
@@ -593,7 +593,7 @@ module Seq = struct
 
   let tagset_one = Tags.singleton Tags.anonymous
   let tagpairs_one = Tagpairs.mk tagset_one
-  let tags (f, cmd) = if !termination then Form.tags f else tagset_one
+  let tags (f, _cmd) = if !termination then Form.tags f else tagset_one
   let tag_pairs seq = Tagpairs.mk (tags seq)
   let vars (f, _) = Form.vars f
   let terms (f, _) = Form.terms f

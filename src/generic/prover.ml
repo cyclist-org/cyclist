@@ -18,7 +18,6 @@ module Make (Seq : Sequent.S) = struct
   module Proof = Proof.Make (Seq)
   module Rule = Proofrule.Make (Seq)
 
-  type proof_t = Proof.t
   type rule_t = Rule.t
 
   module Seq = Seq

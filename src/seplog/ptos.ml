@@ -9,7 +9,7 @@ let to_string v = Blist.to_string symb_star.sep Pto.to_string (elements v)
 let terms ptos = Term.Set.union_of_list (Blist.map Pto.terms (elements ptos))
 let vars p = Term.filter_vars (terms p)
 
-let parse st =
+let[@warning "-unused-value-declaration"] parse st =
   (Term.parse
   >>= (fun x ->
   parse_symb symb_pointsto >> Tokens.comma_sep1 Term.parse << spaces
@@ -17,11 +17,11 @@ let parse st =
   <?> "pto")
     st
 
-let rec unify ?(total = true) ?(update_check = Fun._true) ptos ptos' cont
-    init_state =
+let unify ?(total = true) ?(update_check = Fun._true) ptos ptos' cont init_state
+    =
   mk_unifier total true (Pto.unify ~update_check) ptos ptos' cont init_state
 
-let rec biunify ?(total = true) ?(update_check = Fun._true) ptos ptos' cont
+let biunify ?(total = true) ?(update_check = Fun._true) ptos ptos' cont
     init_state =
   mk_unifier total true (Pto.biunify ~update_check) ptos ptos' cont init_state
 

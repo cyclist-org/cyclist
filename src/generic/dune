@@ -22,7 +22,6 @@
   (include_dirs %{ocaml_where}/caml))
  (c_library_flags
   (:include c_library_flags.sexp)
-  -lpthread
   -lstdc++))
 
 (executable

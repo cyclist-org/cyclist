@@ -54,9 +54,6 @@ module HashtablePrinter = struct
 
   module Make (H : Hashtbl.S) :
     S with type 'a t := 'a H.t with type key := H.key = struct
-    type 'a t = 'a H.t
-    type key = H.key
-
     let pp pp_key pp_val fmt h =
       let () = Format.fprintf fmt "@[[" in
       let first = ref true in

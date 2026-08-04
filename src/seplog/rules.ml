@@ -312,7 +312,7 @@ let pto_intro_rule =
           (fun (w, _) -> Option.is_some (Heap.find_lval w l))
           r.SH.ptos
       in
-      let ((lx, lys) as p') = Option.get (Heap.find_lval rx l) in
+      let ((_lx, lys) as p') = Option.get (Heap.find_lval rx l) in
       (* avoid scope jumping *)
       if Blist.exists Term.is_exist_var lys then []
       else
@@ -929,7 +929,7 @@ let mk_backlink_rule_seq (trm_subst, tag_subst) ((src_lhs, src_rhs) as src_seq)
        else Rule.mk_infrule (subst_rule (trm_subst, tag_subst) targ_seq));
       Rule.mk_backrule true
         (fun _ _ -> [ targ_idx ])
-        (fun s s' -> [ (Seq.tag_pairs s', "Backl") ]);
+        (fun _s s' -> [ (Seq.tag_pairs s', "Backl") ]);
     ]
 
 let mk_lemma_rule_seq (trm_subst, tag_subst) (src_lhs, src_rhs)
@@ -941,7 +941,7 @@ let mk_lemma_rule_seq (trm_subst, tag_subst) (src_lhs, src_rhs)
   let subst_rhs = Form.subst trm_theta (Form.subst_tags tag_theta rhs) in
   let subst_seq = (subst_lhs, subst_rhs) in
   (* let () = debug (fun _ -> "substituted seq is " ^ (Seq.to_string subst_seq)) in *)
-  let subst_cs, subst_h = Form.dest subst_lhs in
+  let _subst_cs, subst_h = Form.dest subst_lhs in
   (* Calculate the frame *)
   let frame =
     Ptos.fold (Fun.swap Heap.del_pto) subst_h.SH.ptos
@@ -995,7 +995,7 @@ let cmp_taggedrule r r' =
 (* that achieve it explicit so that actual backlinking can be done on     *)
 (* Seq.equal sequents *)
 let dobackl idx prf =
-  let ((src_lhs, src_rhs) as src_seq) = Proof.get_seq idx prf in
+  let ((src_lhs, _src_rhs) as src_seq) = Proof.get_seq idx prf in
   let matches = matches src_seq in
   let targets = !Rule.default_select_f idx prf in
   let apps =

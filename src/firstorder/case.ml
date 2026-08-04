@@ -1,6 +1,5 @@
 open Lib
 open Symbols
-open Generic
 open MParser
 
 type t = Prod.t * Term.t list

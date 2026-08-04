@@ -197,7 +197,7 @@ let cut idx prf =
 
 let use_cut = ref false
 
-let cut =
+let[@warning "-unused-value-declaration"] cut =
   Rule.conditional (fun _ -> !use_cut) (Rule.compose_pairwise cut [ backlink ])
 
 let use_cut b = use_cut := b

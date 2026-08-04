@@ -1,5 +1,4 @@
 open Lib
-open Generic
 include BasicType
 
 include

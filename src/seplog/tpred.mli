@@ -14,7 +14,7 @@ val subst_tag : Tagpairs.t -> t -> t
     pairs provided. *)
 
 val predsym : t -> Predsym.t
-val tag : t -> Tags.Elt.t
+val [@warning "-unused-value-declaration"] tag : t -> Tags.Elt.t
 val arity : t -> int
 val args : t -> Term.t list
 val tag : t -> Tags.Elt.t

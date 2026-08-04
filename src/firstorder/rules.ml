@@ -277,7 +277,7 @@ let gen_right_rules (ident, def) =
   let ruf_pred_in_prod uni case rp p =
     (if uni then uni_ruf_pred_in_prod else std_ruf_pred_in_prod) case rp p
   in
-  let ruf_product uni case seq rp =
+  let ruf_product uni case _seq rp =
     let rinds = Prod.filter Atom.is_ipred rp in
     let preds = Prod.filter (matches_ident ident) rinds in
     let res =
@@ -286,15 +286,15 @@ let gen_right_rules (ident, def) =
     in
     res
   in
-  let ruf_prod_in_formula uni case ((l, r) as seq) rp =
+  let ruf_prod_in_formula uni case ((_l, r) as seq) rp =
     let r' = Form.remove rp r in
     Blist.map (fun newp -> Form.add newp r') (ruf_product uni case seq rp)
   in
-  let ruf_formula uni case ((l, r) as seq) =
+  let ruf_formula uni case ((_l, r) as seq) =
     Blist.bind (ruf_prod_in_formula uni case seq) (Form.elements r)
   in
   let right_rule case =
-    begin fun ((l, r) as seq) ->
+    begin fun ((l, _r) as seq) ->
       let case = Case.freshen (Seq.vars seq) case in
       let tag_pairs = Seq.tag_pairs seq in
       Blist.map

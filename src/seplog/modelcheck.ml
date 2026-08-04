@@ -71,7 +71,7 @@ let () =
   let sh = Heap.of_string ~allow_tags:false !str_symheap in
   (* TODO: Need to check that all predicate instances in sh match the arity in defs *)
   let defs = Defs.of_channel (open_in !defs_path) in
-  let ((s, h) as model) = MCGen.model_of_string model_parser !str_model in
+  let ((_s, h) as model) = MCGen.model_of_string model_parser !str_model in
   let () =
     print_endline ("Heap size: " ^ Int.to_string (MCGen.ConcreteHeap.size h))
   in

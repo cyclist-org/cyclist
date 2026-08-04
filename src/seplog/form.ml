@@ -8,7 +8,7 @@ let empty = (Ord_constraints.empty, [ Heap.empty ])
 
 exception Not_symheap
 
-let is_symheap = function _, [ s ] -> true | _ -> false
+let is_symheap = function _, [ _s ] -> true | _ -> false
 
 let dest : t -> Ord_constraints.t * Heap.t = function
   | cs, [ s ] -> (cs, s)
@@ -84,12 +84,12 @@ let subsumed ?(total = true) ((cs, _) as l) ((cs', _) as r) =
   let cs' = Ord_constraints.close cs' in
   Ord_constraints.subsumes cs' cs
 
-let subsumed_upto_tags ?(total = true) (cs, hs) (cs', hs') =
+let subsumed_upto_tags ?(total = true) (_cs, hs) (_cs', hs') =
   Blist.for_all
     (fun d2 -> Blist.exists (fun d1 -> Heap.subsumed_upto_tags ~total d1 d2) hs)
     hs'
 
-let equal_upto_tags (cs, hs) (cs', hs') =
+let equal_upto_tags (_cs, hs) (_cs', hs') =
   Blist.for_all2 Heap.equal_upto_tags hs hs'
 
 let parse ?(null_is_emp = false) ?(allow_tags = true) ?(augment_deqs = true) st

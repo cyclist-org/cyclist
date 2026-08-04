@@ -426,7 +426,7 @@ let abd_deref =
     let open Seplog in
     debug (fun () -> "Abd deref");
     try
-      let (cs, f), cmd = dest_sh_seq seq in
+      let (_cs, f), cmd = dest_sh_seq seq in
       let x = Cmd.dest_deref cmd in
       let inds = Tpreds.to_list (get_undefined defs f) in
       if Blist.is_empty inds then []
@@ -461,7 +461,7 @@ let abd_deref =
 let abd_det_guard =
   let rl seq defs =
     try
-      let (cs, f), cmd = dest_sh_seq seq in
+      let (_cs, f), cmd = dest_sh_seq seq in
       if not (Cmd.is_if cmd || Cmd.is_ifelse cmd || Cmd.is_while cmd) then []
       else
         let c =
@@ -533,7 +533,7 @@ let abd_back_rule =
   let open Seplog in
   let rl s1 s2 defs =
     try
-      let ((cs1, l1), cmd1), ((cs2, l2), cmd2) =
+      let ((_cs1, l1), cmd1), ((_cs2, l2), cmd2) =
         Pair.map dest_sh_seq (s1, s2)
       in
       if
@@ -762,7 +762,7 @@ let ifwhile_tac =
 
 let gen_ifwhile_tac = Abdrule.compose generalise_while_rule ifwhile_tac
 
-let rec straightline =
+let straightline =
   Abdrule.first
     [
       symex_empty_axiom;

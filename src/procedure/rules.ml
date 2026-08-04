@@ -663,7 +663,7 @@ let ex_intro_rule ((pre, cmd, post) as seq) (pre', cmd', post') =
       let cs', h' = Form.dest pre' in
       let post_utrms = Term.Set.filter Term.is_free_var (Form.vars post) in
       let post_utags = Tags.filter Tags.is_free_var (Form.tags post) in
-      let update_check ((_, (trm_subst, tag_subst)) as state_update) =
+      let update_check ((_, (_trm_subst, _tag_subst)) as state_update) =
         let result =
           (Fun.list_conj
              [
@@ -739,7 +739,8 @@ let seq_rule mid ((pre, cmd, post) as src_seq) =
     in
     []
 
-let frame_rule frame ((pre, cmd, post) as seq) ((pre', cmd', post') as seq') =
+let frame_rule frame ((_pre, cmd, _post) as seq) ((_pre', cmd', _post') as seq')
+    =
   if
     Cmd.equal cmd cmd'
     && Seq.equal (Seq.frame frame seq) seq'
@@ -834,8 +835,8 @@ let transform_seq ((pre, cmd, post) as seq) ?(match_post = true)
       let ((cs, _) as f) =
         Form.subst trm_subst (Form.subst_tags tag_subst g')
       in
-      let trm_theta, trm_subst = Subst.partition trm_subst in
-      let tag_theta, tag_subst = Tagpairs.partition_subst tag_subst in
+      let trm_theta, _trm_subst = Subst.partition trm_subst in
+      let tag_theta, _tag_subst = Tagpairs.partition_subst tag_subst in
       let f' = Form.subst trm_theta (Form.subst_tags tag_theta post') in
       let used_tags = Tags.union (Form.tags f) (Form.tags f') in
       let used_trms = Term.Set.union (Form.vars f) (Form.vars f') in
@@ -1070,7 +1071,7 @@ let mk_proc_call_rule_seq
 
 let mk_symex_proc_call procs idx prf =
   let rl =
-    let ((pre, cmd, post) as src_seq) = Proof.get_seq idx prf in
+    let ((pre, cmd, _post) as src_seq) = Proof.get_seq idx prf in
     try
       let _ = Form.dest pre in
       let p, args = Cmd.dest_proc_call cmd in
@@ -1150,7 +1151,7 @@ let dobackl ?(get_targets = Rule.all_nodes) ?(choose_all = false) idx prf =
     Rule.compose rule_sequence
       (Rule.mk_backrule false
          (fun _ _ -> [ targ_idx ])
-         (fun s s' ->
+         (fun _s _s' ->
            let tps =
              if !termination then Seq.tag_pairs targ_seq else Seq.tagpairs_one
            in

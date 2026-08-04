@@ -57,7 +57,7 @@ let parse st =
   <?> "case")
     st
 
-let unfold ?(gen_tags = true) (vars, tags) (tag, (ident, args)) case =
+let unfold ?(gen_tags = true) (vars, tags) (_tag, (ident, args)) case =
   let f, (ident', formals) = dest (freshen vars case) in
   assert (Predsym.equal ident ident');
   assert (Blist.length args == Blist.length formals);

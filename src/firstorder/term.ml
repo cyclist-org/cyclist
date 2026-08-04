@@ -1,6 +1,5 @@
 open Lib
 open Symbols
-open Generic
 open MParser
 
 let anon_var_name = "_"
@@ -60,7 +59,6 @@ let mk_univ_var name = mk_var (mk name)
 let mk_exist_var name = mk_var (mk name)
 let mk_fun ident args = Fun (ident, args)
 let dest_var = function Var v -> v | _ -> invalid_arg "Term.dest_var"
-let dest_const = function Const c -> c | _ -> invalid_arg "Term.dest_const"
 
 let dest_fun = function
   | Fun (f, args) -> (f, args)
@@ -81,9 +79,8 @@ let rec terms = function
 and terms_of_list tl = Set.union_of_list (Blist.map terms tl)
 
 let vars trm = filter_vars (terms trm)
-let vars_of_list tl = Set.union_of_list (Blist.map vars tl)
 
-let latex_of_var v =
+let[@warning "-unused-value-declaration"] latex_of_var v =
   (if is_exist_var v then "e" else "a")
   ^ "^{"
   ^ Var.to_string (dest_var v)

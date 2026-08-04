@@ -1,5 +1,4 @@
 open Lib
-open Symbols
 open MParser
 
 let classify_varname s =

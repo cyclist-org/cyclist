@@ -1,6 +1,3 @@
-open Lib
-open Generic
-
 type t
 
 val empty : t

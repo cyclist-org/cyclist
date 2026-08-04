@@ -1,7 +1,5 @@
 (** Tactics for combining sequent-level rules. *)
 
-open Lib
-
 module type S = sig
   type seq_t
   type ruleapp_t = (seq_t * Tagpairs.t * Tagpairs.t) list * string

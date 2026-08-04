@@ -104,7 +104,7 @@ let () =
   Format.set_margin 300;
   Arg.parse speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) usage;
   if String.equal !prog_path "" then die "-P must be specified.";
-  let ((f, cmd) as seq) = Program.of_channel (open_in !prog_path) in
+  let ((_f, cmd) as seq) = Program.of_channel (open_in !prog_path) in
   Program.set_program cmd;
   (* Safety_prover.setup [] ;  *)
   exit (prove_prog seq)

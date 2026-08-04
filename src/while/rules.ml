@@ -334,7 +334,7 @@ let dobackl idx prf =
          else Rule.mk_infrule (subst_rule theta targ_seq'));
         Rule.mk_backrule false
           (fun _ _ -> [ targ_idx ])
-          (fun s s' ->
+          (fun _s _s' ->
             [
               ( (if !termination then Tagpairs.reflect tagpairs
                  else Seq.tagpairs_one),
@@ -352,9 +352,9 @@ let fold def =
       else
         let tags = Seq.tags seq in
         let do_case case =
-          let f, (ident, vs) = Indrule.dest case in
+          let _f, (ident, _vs) = Indrule.dest case in
           let results = Indrule.fold case h in
-          let process (theta, h') =
+          let process (_theta, h') =
             let seq' = ((cs, [ h' ]), cmd) in
             (* let () = print_endline "Fold match:" in         *)
             (* let () = print_endline (Seq.to_string seq) in   *)

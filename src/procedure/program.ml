@@ -4,7 +4,6 @@ open Parsers
 open Generic
 open Seplog
 open While
-open Program
 open MParser
 
 let termination = ref false
@@ -41,7 +40,7 @@ module Proc = struct
       in
       Blist.pp Format.pp_print_newline pp_spec fmt specs
 
-    let pp_head fmt ((id, params, specs, _) as proc) =
+    let pp_head fmt ((_id, _params, specs, _) as proc) =
       if Blist.is_empty specs then pp_decl fmt proc
       else Format.fprintf fmt "%a@\n@[<1>%a@]" pp_decl proc pp_specs proc
 
@@ -74,7 +73,7 @@ module Proc = struct
   let number_cmds ((id, params, specs, body) : t) =
     (id, params, specs, Cmd.number body)
 
-  let get_dependencies ((id, _, _, body) : t) = Cmd.get_dependencies body
+  let get_dependencies ((_id, _, _, body) : t) = Cmd.get_dependencies body
 
   (* precondition: PRECONDITION; COLON; f = formula; SEMICOLON { f } *)
   let parse_precondition st =
@@ -294,7 +293,7 @@ let get_reachable ps =
   let graph = Proc.Graph.copy !dependencies in
   let () =
     Strng.Map.iter
-      (fun id p ->
+      (fun _id p ->
         if
           not
             (Blist.exists

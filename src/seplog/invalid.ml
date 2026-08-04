@@ -119,10 +119,10 @@ let invalidity_witness defs seq =
     let v, v' = Pair.map (map_through sigma) (v, v') in
     Basepair.Allocated.subset v' v
   in
-  let a_partition ((v, pi) as bp) sigma =
+  let a_partition bp sigma =
     not (Basepair.Set.exists (fun bp' -> b_move sigma bp bp') rbps)
   in
-  let a_move ((v, pi) as bp) =
+  let a_move ((_v, pi) as bp) =
     let trms = trm_list bp in
     Blist.exists
       (fun sigma -> a_partition bp sigma)

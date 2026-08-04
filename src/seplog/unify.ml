@@ -44,7 +44,8 @@ end) =
 struct
   type continuation = (Core.state, Core.state) Unification.continuation
 
-  let trivial_continuation state = Some state
+  let[@warning "-unused-value-declaration"] trivial_continuation state =
+    Some state
 
   type 'a unifier = (Core.state, Core.state, 'a) Unification.cps_unifier
 

@@ -18,13 +18,16 @@ val tags : t -> Tags.t
 val terms : t -> Term.Set.t
 val univ : Term.Set.t -> t -> t
 val repl_tags : Tags.Elt.t -> t -> t
-val subsumed_wrt_tags : Tags.t -> t -> t -> bool
+
+val [@warning "-unused-value-declaration"] subsumed_wrt_tags :
+  Tags.t -> t -> t -> bool
+
 val tag_pairs : t -> Tagpairs.t
 val subst : Term.substitution -> t -> t
 
 (* val to_string : t -> string
 val pp : Format.formatter -> t -> unit *)
-val left_subsumption :
+val [@warning "-unused-value-declaration"] left_subsumption :
   (Term.substitution -> Term.substitution option) ->
   Term.substitution ->
   t ->
