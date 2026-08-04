@@ -1,0 +1,7 @@
+precondition: array(m, m') * (m+k) = (m'+1) * array(b, b') * (b'+1) = (b+k);
+i := 0;
+while i < k do
+	temp := m[i];
+	b[i] := temp;
+	i := (i+1)
+od

@@ -1,0 +1,7 @@
+precondition: array(b, n') * (n'+1) = (b+n) * k < n * (z + k) = n;
+i := 0;
+while i < z do
+	temp := b[i];
+	b[(i+k)] := temp;
+	i := (i + 1)
+od

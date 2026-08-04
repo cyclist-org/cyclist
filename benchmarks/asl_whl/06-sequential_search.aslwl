@@ -1,0 +1,11 @@
+-- sequential search --
+
+precondition: array(a, b) * key = x' * (a+n) = (b+1);
+i := 0;
+while i < n do
+	t := a[i];
+	if key = t then
+		stop
+	fi;
+	i := (i+1)
+od
