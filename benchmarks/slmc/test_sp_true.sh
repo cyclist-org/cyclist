@@ -1,6 +1,7 @@
 #!/bin/bash
 
-MC=../../sl_modelcheck.native
+CMD=sl_modelcheck
+MC="dune exec $CMD --"
 
 HEAP=
 

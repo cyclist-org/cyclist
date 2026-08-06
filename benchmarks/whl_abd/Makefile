@@ -1,9 +1,9 @@
 TESTS:= $(sort $(wildcard *.wl))
-CMD := $(ROOT)/_build/src/while/while_abduce.native
+CMD := while_abduce
 
 .PHONY: all $(TESTS)
 all: $(TESTS)
 
 $(TESTS): %.wl:
 	@echo "$@"
-	-@echo -n "\t" ; $(CMD) $(TST_OPTS) -P $@
+	-@echo -n "\t" ; dune exec $(CMD) -- $(TST_OPTS) -P $@

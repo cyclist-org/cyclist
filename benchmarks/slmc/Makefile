@@ -16,7 +16,10 @@ STATS_EXTRACTOR=./extract_times.py
 
 EXAMPLES_BIN_DIR=./programs
 
-MC=../../_build/src/seplog/sl_modelcheck.native
+CMD := sl_modelcheck
+# Note that dune re-validates the build on every `dune exec` (about 40ms once
+# warm), so the timings taken by $(TIME) below include that overhead.
+MC := dune exec $(CMD) --
 
 TIME=time
 

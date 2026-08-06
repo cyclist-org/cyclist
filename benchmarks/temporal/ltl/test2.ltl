@@ -1,6 +1,0 @@
-fields: this;
-precondition: x->x';
-property: G(x->x');
-while x!=nil do
-    x:=x
-od

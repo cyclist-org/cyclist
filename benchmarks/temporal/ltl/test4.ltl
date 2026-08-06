@@ -1,8 +1,0 @@
-fields: this;
-precondition: x=y;
-property: F(G(x=y));
-x:=z;
-x:=y;
-while x=x do
-      skip
-od

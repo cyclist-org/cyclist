@@ -9,6 +9,7 @@ use Math::Random qw(random_uniform_integer);
 Math::Random::random_set_seed_from_phrase(join(':', 'POPL-2014', @ARGV));
 print join(' ', '#', $0, @ARGV), "\n";
 
+my $cmd = "sl_satcheck";
 my $file = "test.defs";
 my $clock = "clock.tmp";
 my $time = "/usr/bin/time --quiet -f %e -o $clock";
@@ -31,7 +32,7 @@ for (1..$samples) {
 
 sub check {
   my $file = shift;
-  my $output = `ulimit -t $timeout; $time ../../slsat_check.native -D $file 2>&1`;
+  my $output = `ulimit -t $timeout; $time dune exec $cmd -- -D $file 2>&1`;
   die $output if $output =~ m/error/i;
   my @clock = `cat $clock`;
   chomp @clock;
