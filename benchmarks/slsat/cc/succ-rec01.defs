@@ -4,7 +4,7 @@ P {
 
 Q {
   zero(y1) => Q(y1) |
-  succ1rec(x1,y1) * Q(x1) => Q(y1)
+  succ1rec(x1',y1) * Q(x1') => Q(y1)
 } ;
 
 succ1rec {

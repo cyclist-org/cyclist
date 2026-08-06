@@ -5,14 +5,13 @@ use warnings;
 use YAML::Tiny;
 use Getopt::Long qw(:config posix_default);
 use Math::Random qw(random_uniform_integer);
+use Time::HiRes ();
 
 Math::Random::random_set_seed_from_phrase(join(':', 'POPL-2014', @ARGV));
 print join(' ', '#', $0, @ARGV), "\n";
 
 my $cmd = "sl_satcheck";
 my $file = "test.defs";
-my $clock = "clock.tmp";
-my $time = "/usr/bin/time --quiet -f %e -o $clock";
 my $samples = 100;
 my $timeout = 60;
 
@@ -30,26 +29,25 @@ for (1..$samples) {
   print join("\t", $seed, check($file)), "\n";
 }
 
+# The checker enforces the timeout itself, so no external time/ulimit wrapper is
+# needed; elapsed time is taken here and includes dune's build revalidation.
 sub check {
   my $file = shift;
-  my $output = `ulimit -t $timeout; $time dune exec $cmd -- -D $file 2>&1`;
-  die $output if $output =~ m/error/i;
-  my @clock = `cat $clock`;
-  chomp @clock;
+  my $start = Time::HiRes::time();
+  my $output = `dune exec $cmd -- -t $timeout -D $file 2>&1`;
+  my $elapsed = sprintf("%.2f", Time::HiRes::time() - $start);
+  die $output if $output =~ m/^Fatal error/m;
   my $result;
-  if (@clock > 1) {
-    $result = shift @clock;
-    $result = 'timeout' if $result =~ m/signal 9$/;
-  } elsif ($output =~ m/NOT proved:.+empty base/) {
+  if ($output =~ m/^UNSAT:/m) {
     $result = 'unsat';
-  } elsif ($output =~ m/NOT proved:.+TIMEOUT/) {
-    $result = 'timeout';
-  } elsif ($output =~ m/Proved:.+non-empty bases/) {
+  } elsif ($output =~ m/^SAT:/m) {
     $result = 'sat';
+  } elsif ($output =~ m/^UNKNOWN:.*TIMEOUT/m) {
+    $result = 'timeout';
   } else {
     die "Unexpected result:\n$output\n";
   }
-  return ($result, $clock[-1]);
+  return ($result, $elapsed);
 }
 
 sub rand_string {

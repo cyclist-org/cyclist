@@ -1,11 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 import re
 import sys
 
-pattern = "Heap size: (\d+)\nGENERAL: Elapsed process time: (\d+) ms\n(?:.*\n){10}Model verified"
+pattern = r"Heap size: (\d+)\nGENERAL: Elapsed process time: (\d+) ms\n(?:.*\n){10}Model verified"
 
 input = sys.stdin.read()
-matches = re.finditer("Heap size: (\d+)\nModel verified\n\nreal\t\d+m\d+\.\d+s\nuser\t(\d+)m(\d+\.\d+)s", input)
+matches = re.finditer(r"Heap size: (\d+)\nModel verified\n\nreal\t\d+m\d+\.\d+s\nuser\t(\d+)m(\d+\.\d+)s", input)
 for m in matches:
     heap_size = m.group(1)
     minutes = float(m.group(2))

@@ -4,7 +4,7 @@ P {
 
 Q {
   zero(y1) * zero(y2) => Q(y1,y2) |
-  succ2circuit(x1,x2,y1,y2) * Q(x1,x2) => Q(y1,y2)
+  succ2circuit(x1',x2',y1,y2) * Q(x1',x2') => Q(y1,y2)
 } ;
 
 succ2circuit {

@@ -25,7 +25,10 @@ TIME=time
 
 SEED=2758437598
 
-.PHONY: models tests stats
+.PHONY: all models tests stats
+
+# Entry point used by ../Makefile; see the README for the individual targets.
+all: all-tests
 
 models:
 	-@BPS=$$(cat $(BP_FILE)); (set -x; $(HARVEST) "$(EXAMPLES_BIN_DIR)/$(EXE)" $$BPS) 
@@ -51,7 +54,8 @@ tests:
 	fi
 	
 stats:
-	-@if stat -t $(TEST_FILE_BASE)*.tst >/dev/null 2>&1 ; then \
+	-@mkdir -p $(STATS_PATH) ; \
+	if stat -t $(TEST_FILE_BASE)*.tst >/dev/null 2>&1 ; then \
 		for tstfile in $(TEST_FILE_BASE)*.tst; do \
 			STAT_FILE="$(STATS_PATH)/$${tstfile%.*}$(STATS_FILE_SUFFIX)-$$(date +%s).csv" ; \
 			echo "Outputting $$STAT_FILE" ; \

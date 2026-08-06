@@ -48,3 +48,4 @@ src/generic/test/graphs
 # Benchmark output #
 ####################
 benchmarks/sl_disproof/results/
+benchmarks/slmc/stats/
