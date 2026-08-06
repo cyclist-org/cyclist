@@ -44,3 +44,7 @@ _build/
 # Heighted graphs files
 graphs/*
 src/generic/test/graphs
+
+# Benchmark output #
+####################
+benchmarks/sl_disproof/results/

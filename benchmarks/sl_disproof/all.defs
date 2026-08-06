@@ -43,6 +43,10 @@ DLL {
   p=tl * hd=n => DLL(hd,p,tl,n) |
   hd->x',p * DLL(x',hd,tl,n) => DLL(hd,p,tl,n)
 } ;
+dll {
+  nil=in => dll(in,p) |
+  p=p_20' * in=self_21' * in->p_20',q_19' * dll(q_19',self_21') => dll(in,p)
+} ;
 dll_e1 {
   in=s' * q=p1' * dll(q1',s') * in->p1',q1' => dll_e1(in,q)
 } ;
@@ -222,4 +226,8 @@ TPP_plus {
 TPP_plus_rev {
   top->nil,nil,b => TPP_plus_rev(top,b) |
   x'->nil,nil,up' * TPP_aux(up',x',top,b) => TPP_plus_rev(top,b)
-} 
+} ;
+tree {
+  nil=r_37' * in->p_35',D1_36',r_37',n_38' => tree(in) |
+  nil!=r_41' * in->p_39',l_40',r_41',D2_42' * tree(l_40') * tree(r_41') => tree(in)
+}
