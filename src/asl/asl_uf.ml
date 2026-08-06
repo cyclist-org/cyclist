@@ -1,5 +1,4 @@
 open Lib
-open Util
 open Symbols
 open MParser
 module F = Fopl
@@ -12,7 +11,13 @@ let hash m = Asl_term.Map.hash Asl_term.hash m
 let bindings m = Asl_term.Map.bindings m
 let empty = Asl_term.Map.empty
 let is_empty = Asl_term.Map.is_empty
-let all_members_of = Asl_term.Map.all_members_of Asl_term.equal
+
+let all_members_of m m' =
+  let mem (k, v) bs =
+    Blist.exists (fun (k', v') -> Asl_term.equal k k' && Asl_term.equal v v') bs
+  in
+  let bs' = Asl_term.Map.to_list m' in
+  Blist.for_all (Fun.swap mem bs') (Asl_term.Map.to_list m)
 
 let to_string_list v =
   Blist.map (Asl_tpair.to_string_sep symb_eq.str) (bindings v)
@@ -74,9 +79,6 @@ let diff eqs eqs' =
   in
   of_list diffs_list
 
-let to_melt v =
-  ltx_star (Blist.map (Asl_tpair.to_melt_sep symb_eq.melt) (bindings v))
-
 let terms m =
   Blist.foldl
     (fun a p -> Pair.fold Asl_term.Set.add p a)
@@ -96,7 +98,7 @@ let to_fopl m =
   fold eq_to_fopl m F.trivially_true
 
 (* Cannot prove all equalities but helps to cut down calls to z3 *)
-let rec simple_equates m x y =
+let simple_equates m x y =
   let x, y = (find x m, find y m) in
   Asl_term.equal x y
 
@@ -120,12 +122,6 @@ let equates m x y =
 
 (* FIXME: rewrite m' |- m with single z3 call? *)
 let subsumed m m' = Asl_term.Map.for_all (fun x y -> equates m' x y) m
-
-(* FIXME: rewrite without equates? *)
-let saturate m =
-  let ts = Asl_term.Set.to_list (terms m) in
-  let pairs = Blist.cartesian_product ts ts in
-  Blist.filter (Fun.uncurry (equates m)) pairs
 
 let unify_partial ?(inverse = false) ?(sub_check = Asl_subst.trivial_check)
     ?(cont = Asl_unifier.trivial_continuation)

@@ -12,7 +12,7 @@ type symheap = private {
   mutable _vars : Asl_term.Set.t option;
 }
 
-include Util.BasicType with type t = symheap
+include Lib.BasicType with type t = symheap
 
 val empty : t
 
@@ -21,7 +21,6 @@ val empty : t
 val free_vars : t -> Asl_term.Set.t
 val vars : t -> Asl_term.Set.t
 val terms : t -> Asl_term.Set.t
-val to_melt : t -> Latex.t
 
 val equates : t -> Asl_term.t -> Asl_term.t -> bool
 (** Does a symbolic heap entail the equality of two terms? *)

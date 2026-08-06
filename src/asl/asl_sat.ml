@@ -1,9 +1,6 @@
-open Lib
-open Util
-open Symbols
 open Printf
 
-let z3_path = ref "./_build/z3/build/z3"
+let z3_path = ref "z3"
 let timeout = ref 2
 let times = ref 0
 
@@ -14,7 +11,7 @@ let check_satisfiability str =
   output_string stdin str;
   close_out stdin;
   let output = input_line stdout in
-  Pervasives.ignore (Unix.close_process (stdout, stdin));
+  Stdlib.ignore (Unix.close_process (stdout, stdin));
   output
 
 let is_sat s =

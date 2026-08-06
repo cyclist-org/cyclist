@@ -1,5 +1,6 @@
 open Lib
-open Util
+open Generic
+open Asl
 open Asl_while_program
 module SH = Asl_heap
 
@@ -10,7 +11,7 @@ module Seqtactics = Seqtactics.Make (Asl_while_program.Seq)
 module Proof = Proof.Make (Asl_while_program.Seq)
 module Node = Proofnode.Make (Asl_while_program.Seq)
 
-let tagpairs s = Seq.tagpairs_one
+let tagpairs _ = Seq.tagpairs_one
 
 (* following is for symex only *)
 
@@ -31,7 +32,7 @@ let eq_subst_ex_f ((l, cmd) as s) =
   let l' = Asl_form.subst_existentials l in
   let l' = Asl_form.simplify_terms l' in
   if Asl_form.equal l l' then []
-  else [ ([ ((l', cmd), tagpairs s, TagPairs.empty) ], "Eq. subst. ex") ]
+  else [ ([ ((l', cmd), tagpairs s, Tagpairs.empty) ], "Eq. subst. ex") ]
 
 let simplify_rules = [ eq_subst_ex_f ]
 
@@ -53,7 +54,7 @@ let lhs_disj_to_symheaps =
         ( Blist.map
             (fun sh ->
               let s' = ([ sh ], cmd) in
-              (s', tagpairs s', TagPairs.empty))
+              (s', tagpairs s', Tagpairs.empty))
             l,
           "L.Or" );
       ]
@@ -94,20 +95,18 @@ let symex_assign_rule =
 
 (* Find array that starts at location v or equivalent according to ∏ *)
 let find_arr_on f v =
-  Asl_arrays.find (fun (t1, t2) -> Asl_heap.equates f t1 v) f.SH.arrays
+  Asl_arrays.find_suchthat (fun (t1, _) -> Asl_heap.equates f t1 v) f.SH.arrays
 
 (* Join contiguous arrays: find possible array next to arr and join them. *)
 let rec join_arrays f arr =
   let contiguous (f, arr) =
     try
-      let next = Asl_term.mk_add (Pervasives.snd arr, Asl_term.mk_const 1) in
+      let next = Asl_term.mk_add (Stdlib.snd arr, Asl_term.mk_const 1) in
       let nextarr = find_arr_on f next in
       let newheap = SH.del_arr (SH.del_arr f arr) nextarr in
       (* retain info about end of arr *)
-      let newheap =
-        SH.add_lt newheap (Pervasives.snd arr, Pervasives.snd nextarr)
-      in
-      let newarr = (Pervasives.fst arr, Pervasives.snd nextarr) in
+      let newheap = SH.add_lt newheap (Stdlib.snd arr, Stdlib.snd nextarr) in
+      let newarr = (Stdlib.fst arr, Stdlib.snd nextarr) in
       Some (SH.add_arr newheap newarr, newarr)
     with Not_found -> None
   in
@@ -153,7 +152,7 @@ let symex_free_rule =
       let a, n = Cmd.dest_free cmd in
       let f = join_arrays f (find_arr_on f a) in
       let arr = find_arr_on f a in
-      let e = Pervasives.snd arr in
+      let e = Stdlib.snd arr in
       let darr = SH.del_arr f arr in
       let sum = Asl_term.mk_add (a, n) in
       (* a+n<=a *)
@@ -179,18 +178,18 @@ let symex_store_rule =
   let rl seq =
     try
       let f, cmd = dest_sh_seq seq in
-      let y, e, x = Cmd.dest_store cmd in
+      let y, e, _ = Cmd.dest_store cmd in
       let arr = find_arr_on f y in
       let sum = Asl_term.mk_add (y, e) in
       let lt = (sum, y) in
-      let lt' = (Pervasives.snd arr, sum) in
+      let lt' = (Stdlib.snd arr, sum) in
       let fopl = add_or_lt f lt lt' in
       if Asl_sat.is_unsat (Asl_heap.satisfiable_z3 ~pure:fopl f) then
         [
           ( [ f ],
             "Store: $\\Pi$ $\\models$ " ^ Asl_term.to_string y ^ " $\\leq$ "
             ^ Asl_term.to_string sum ^ " $<$ "
-            ^ Asl_term.to_string (Pervasives.snd arr) );
+            ^ Asl_term.to_string (Stdlib.snd arr) );
         ]
       else []
     with Not_symheap | WrongCmd | Not_found -> []
@@ -209,14 +208,14 @@ let symex_load_rule =
       let arr = find_arr_on f y in
       let sum = Asl_term.mk_add (y, e) in
       let lt = (sum, y) in
-      let lt' = (Pervasives.snd arr, sum) in
+      let lt' = (Stdlib.snd arr, sum) in
       let fopl = add_or_lt f lt lt' in
       if Asl_sat.is_unsat (Asl_heap.satisfiable_z3 ~pure:fopl f) then
         [
           ( [ f' ],
             "Load: $\\Pi$ $\\models$ " ^ Asl_term.to_string y ^ " $\\leq$ "
             ^ Asl_term.to_string sum ^ " $<$ "
-            ^ Asl_term.to_string (Pervasives.snd arr) );
+            ^ Asl_term.to_string (Stdlib.snd arr) );
         ]
       else []
     with Not_symheap | WrongCmd | Not_found -> []
@@ -310,7 +309,7 @@ let matches ((l, cmd) as seq) ((l', cmd') as seq') =
           ]
       in
       let cont =
-        Asl_unifier.mk_verifier (fun (theta, tagpairs) ->
+        Asl_unifier.mk_verifier (fun (theta, _) ->
             let subst_seq = Seq.subst theta seq' in
             (* let () = debug (fun _ -> "term substitution: " ^ ((Format.asprintf " %a" Asl_subst.pp theta))) in
           let () = debug (fun _ -> "source seq: " ^ (Seq.to_string seq)) in
@@ -329,12 +328,12 @@ let matches ((l, cmd) as seq) ((l', cmd') as seq') =
 (* where seq'[theta] = seq *)
 let subst_rule theta seq' seq =
   if Seq.equal (Seq.subst theta seq') seq then
-    [ ([ (seq', Seq.tag_pairs seq', TagPairs.empty) ], "Subst") ]
+    [ ([ (seq', Seq.tag_pairs seq', Tagpairs.empty) ], "Subst") ]
   else []
 
 let frame seq' seq =
   if Seq.subsumed seq seq' then
-    [ ([ (seq', Seq.tag_pairs seq', TagPairs.empty) ], "Frame") ]
+    [ ([ (seq', Seq.tag_pairs seq', Tagpairs.empty) ], "Frame") ]
   else []
 
 (* if there is a backlink achievable through substitution and classical *)
@@ -351,7 +350,7 @@ let dobackl idx prf =
           (matches src_seq (Proof.get_seq idx' prf)))
       targets
   in
-  let f (targ_idx, (theta, tagpairs)) =
+  let f (targ_idx, (theta, _)) =
     let targ_seq = Proof.get_seq targ_idx prf in
     let subst_seq = Seq.subst theta targ_seq in
     Rule.sequence
@@ -362,7 +361,7 @@ let dobackl idx prf =
          else Rule.mk_infrule (subst_rule theta targ_seq));
         Rule.mk_backrule false
           (fun _ _ -> [ targ_idx ])
-          (fun s s' -> [ (Seq.tagpairs_one, "Backl") ]);
+          (fun _ _ -> [ (Seq.tagpairs_one, "Backl") ]);
       ]
   in
   Rule.first (Blist.map f apps) idx prf
@@ -400,7 +399,7 @@ let generalise_while_rule idx prf =
       (Asl_lts.filter
          (fun p -> Pair.conj (Pair.map (fun z -> not (Asl_term.Set.mem z m)) p))
          h.SH.lts)
-      (Asl_arrays.endomap gen_arr h.SH.arrays)
+      (Asl_arrays.map gen_arr h.SH.arrays)
   in
   let rl seq =
     try
@@ -417,7 +416,7 @@ let generalise_while_rule idx prf =
           (Asl_term.Set.subsets m)
       in
       (* If previous node is a Gen.While then do not apply again *)
-      if label == Pervasives.snd (Node.dest (Proof.find (idx - 1) prf)) then []
+      if label == Stdlib.snd (Node.dest (Proof.find (idx - 1) prf)) then []
       else
         Option.list_get
           (Blist.map
@@ -426,7 +425,7 @@ let generalise_while_rule idx prf =
                if Asl_heap.equal f f' then None
                else
                  let s' = ([ f' ], cmd) in
-                 Some ([ (s', tagpairs s', TagPairs.empty) ], label)
+                 Some ([ (s', tagpairs s', Tagpairs.empty) ], label)
              end
              subs)
     with Not_symheap | WrongCmd -> []

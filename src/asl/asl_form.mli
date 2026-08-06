@@ -3,7 +3,7 @@
     [f] and [g] both use an existential variable [x'] then [[f;g]] would mean
     the bound variable is shared. *)
 
-include Util.BasicType with type t = Asl_heap.t list
+include Lib.BasicType with type t = Asl_heap.t list
 
 val empty : t
 (** The formula [emp]. NB this is not the same as [[]], which is equivalent to
@@ -22,7 +22,6 @@ val equal_upto_tags : t -> t -> bool
 (** Whilst [equal] demands syntactic equality including tags, this version
     ignores tag assignment. *)
 
-val to_melt : t -> Latex.t
 val terms : t -> Asl_term.Set.t
 val vars : t -> Asl_term.Set.t
 

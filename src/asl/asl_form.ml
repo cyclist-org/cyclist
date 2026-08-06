@@ -1,14 +1,13 @@
 open Lib
-open Util
 open Symbols
 open MParser
-include MakeFList (Asl_heap)
+include Flist.Make (Asl_heap)
 
 let empty = [ Asl_heap.empty ]
 
 exception Not_symheap
 
-let is_symheap = function [ s ] -> true | _ -> false
+let is_symheap = function [ _ ] -> true | _ -> false
 let dest = function [ s ] -> s | _ -> raise Not_symheap
 
 let inconsistent f =
@@ -22,13 +21,6 @@ let pp fmt f =
 let to_string = function
   | [] -> symb_false.str
   | d -> Blist.to_string symb_or.sep Asl_heap.to_string d
-
-let to_melt d =
-  ltx_mk_math
-    (if d = [] then symb_false.melt
-     else
-       Latex.concat
-         (Latex.list_insert symb_or.melt (Blist.map Asl_heap.to_melt d)))
 
 let terms d = Asl_term.Set.union_of_list (Blist.map Asl_heap.terms d)
 let vars d = Asl_term.filter_vars (terms d)

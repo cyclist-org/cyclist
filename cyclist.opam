@@ -42,7 +42,7 @@ build: [
 ]
 dev-repo: "git+https://github.com/cyclist-org/cyclist.git"
 depexts: [
-  ["libspot-dev" "pkg-config"] {os-family = "debian"}
-  ["spot" "pkg-config"] {os = "macos" & os-distribution = "homebrew"}
-  ["spot" "pkgconf"] {os-distribution = "arch"}
+  ["libspot-dev" "pkg-config" "z3"] {os-family = "debian"}
+  ["spot" "pkg-config" "z3"] {os = "macos" & os-distribution = "homebrew"}
+  ["spot" "pkgconf" "z3"] {os-distribution = "arch"}
 ]

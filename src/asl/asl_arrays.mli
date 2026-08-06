@@ -1,12 +1,11 @@
 (** Multiset of arrays. *)
 
-include Util.OrderedContainer with type elt = Asl_array.t
+include Lib.OrderedContainer with type elt = Asl_array.t
 
 val subst : Asl_subst.t -> t -> t
 val terms : t -> Asl_term.Set.t
 val vars : t -> Asl_term.Set.t
 val to_string_list : t -> string list
-val to_melt : t -> Latex.t
 
 val subsumed : ?total:bool -> Asl_uf.t -> t -> t -> bool
 (** [subsumed eqs arrs arrs'] is true iff [arrs] can be rewritten using the

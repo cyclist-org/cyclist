@@ -1,5 +1,6 @@
-open Util
 open Lib
+open Generic
+open Asl
 open Symbols
 open MParser
 module SH = Asl_heap
@@ -84,20 +85,9 @@ module Cond = struct
     | Ne (x, y) ->
         Format.fprintf fmt "@[%a%s%a@]" Asl_term.pp x symb_deq.str Asl_term.pp y
     | Le (x, y) ->
-        Format.fprintf fmt "@[%a%s%a@]" Asl_term.pp x symb_le.str Asl_term.pp y
+        Format.fprintf fmt "@[%a%s%a@]" Asl_term.pp x symb_leq.str Asl_term.pp y
     | Lt (x, y) ->
         Format.fprintf fmt "@[%a%s%a@]" Asl_term.pp x symb_lt.str Asl_term.pp y
-
-  let to_melt = function
-    | Non_det -> symb_star.melt
-    | Eq (x, y) ->
-        Latex.concat [ Asl_term.to_melt x; symb_eq.melt; Asl_term.to_melt y ]
-    | Ne (x, y) ->
-        Latex.concat [ Asl_term.to_melt x; symb_deq.melt; Asl_term.to_melt y ]
-    | Lt (x, y) ->
-        Latex.concat [ Asl_term.to_melt x; symb_lt.melt; Asl_term.to_melt y ]
-    | Le (x, y) ->
-        Latex.concat [ Asl_term.to_melt x; symb_le.melt; Asl_term.to_melt y ]
 
   (* FIXME: double check *)
   let fork f c =
@@ -157,7 +147,7 @@ module Cmd = struct
     | If of Cond.t * t
     | IfElse of Cond.t * t * t
     | While of Cond.t * t
-  (* | ProcCall of string * Sl_term.FList.t *)
+  (* | ProcCall of string * Seplog.Term.FList.t *)
 
   and basic_t = { label : int option; cmd : cmd_t }
   and t = basic_t list
@@ -254,7 +244,7 @@ module Cmd = struct
           ( Asl_term.parse >>= fun v ->
             parse_symb symb_assign >> parse_symb keyw_new
             >> parse_symb symb_array
-            >> MParser_PCRE.Tokens.squares Asl_term.parse
+            >> MParser_RE.Tokens.squares Asl_term.parse
             << spaces
             |>> fun n ->
             assert (is_prog_term v);
@@ -263,7 +253,7 @@ module Cmd = struct
     <|> attempt
           ( Asl_term.parse >>= fun v ->
             parse_symb symb_assign >> Asl_term.parse >>= fun v2 ->
-            MParser_PCRE.Tokens.squares Asl_term.parse << spaces |>> fun t ->
+            MParser_RE.Tokens.squares Asl_term.parse << spaces |>> fun t ->
             assert (is_prog_var v);
             assert (is_prog_term t);
             assert (is_prog_var v2);
@@ -271,7 +261,7 @@ module Cmd = struct
     (* v = var; LS; t = term; RS; ASSIGN; v2 = var *)
     <|> attempt
           ( Asl_term.parse >>= fun v ->
-            MParser_PCRE.Tokens.squares Asl_term.parse >>= fun t ->
+            MParser_RE.Tokens.squares Asl_term.parse >>= fun t ->
             parse_symb symb_assign >> Asl_term.parse << spaces |>> fun v2 ->
             assert (is_prog_var v);
             assert (is_prog_term t);
@@ -284,8 +274,8 @@ module Cmd = struct
           assert (is_prog_term t);
           Assign (v, t) )
     (*<|> (parse_ident >>= (fun p ->
-          Tokens.parens (Tokens.comma_sep Sl_term.parse) |>> (fun args ->
-          (Blist.iter (fun arg -> assert(is_prog_var arg || Sl_term.is_nil arg)) args);
+          Tokens.parens (Tokens.comma_sep Seplog.Term.parse) |>> (fun args ->
+          (Blist.iter (fun arg -> assert(is_prog_var arg || Seplog.Term.is_nil arg)) args);
           ProcCall(p, args))))*)
     <?> "Cmd")
       st
@@ -382,7 +372,7 @@ module Cmd = struct
           (Asl_term.Set.union (Cond.vars cond) (terms cmd))
           (terms cmd')
     | While (cond, cmd) -> Asl_term.Set.union (Cond.vars cond) (terms cmd)
-  (* | ProcCall(p, args) -> Sl_term.Set.of_list args *)
+  (* | ProcCall(p, args) -> Seplog.Term.Set.of_list args *)
 
   and terms l =
     Blist.fold_left
@@ -419,7 +409,7 @@ module Cmd = struct
     | Load (x, y, e), Load (x', y', e') | Store (y, e, x), Store (y', e', x') ->
         Asl_term.equal x x' && Asl_term.equal e e' && Asl_term.equal y y'
     (* | (ProcCall(p, args), ProcCall(p', args')) -> 
-        p=p' && Blist.equal Sl_term.equal args args' *)
+        p=p' && Blist.equal Seplog.Term.equal args args' *)
     | While (cond, cmd), While (cond', cmd') | If (cond, cmd), If (cond', cmd')
       ->
         Cond.equal cond cond' && equal cmd cmd'
@@ -449,7 +439,7 @@ module Cmd = struct
           ( Asl_term.subst theta y,
             Asl_term.subst theta e,
             Asl_term.subst theta x )
-    (* | ProcCall(p, args) -> ProcCall (p, (Sl_term.FList.subst theta args)) *)
+    (* | ProcCall(p, args) -> ProcCall (p, (Seplog.Term.FList.subst theta args)) *)
     | If (cond, cmd) -> If (Cond.subst theta cond, subst theta cmd)
     | IfElse (cond, cmd, cmd') ->
         IfElse (Cond.subst theta cond, subst theta cmd, subst theta cmd')
@@ -493,7 +483,7 @@ module Cmd = struct
         Format.fprintf fmt "%a%s%a%s%s%a" Asl_term.pp y symb_ls.str Asl_term.pp
           e symb_rs.str symb_assign.sep Asl_term.pp x
     (*| ProcCall(p, args) -> Format.fprintf fmt "%s(%s)"
-          p (Sl_term.FList.to_string_sep symb_comma.sep args) *)
+          p (Seplog.Term.FList.to_string_sep symb_comma.sep args) *)
     | If (cond, cmd) ->
         if abbr then
           Format.fprintf fmt "%s %a %s %a... %s" keyw_if.str Cond.pp cond
@@ -543,122 +533,6 @@ module Cmd = struct
             symb_semicolon.str (pp ~abbr indent) tl
 
   let to_string cmd = mk_to_string (pp ~abbr:true 0) cmd
-
-  let to_melt_label c =
-    match c.label with
-    | None -> Latex.empty
-    | Some n -> Latex.text (string_of_int n ^ " : ")
-
-  let rec to_melt_cmd c =
-    match c.cmd with
-    | Stop -> keyw_stop.melt
-    | Skip -> keyw_skip.melt
-    | New (t1, t2) ->
-        Latex.concat
-          [
-            Asl_term.to_melt t1;
-            symb_assign.melt;
-            keyw_new.melt;
-            symb_array.melt;
-            symb_ls.melt;
-            Asl_term.to_melt t2;
-            symb_rs.melt;
-          ]
-    | Free (v, n) ->
-        Latex.concat
-          [
-            keyw_free.melt;
-            symb_lp.melt;
-            Asl_term.to_melt v;
-            symb_comma.melt;
-            Asl_term.to_melt n;
-            symb_rp.melt;
-          ]
-    | Assign (x, e) ->
-        Latex.concat
-          [ Asl_term.to_melt x; symb_assign.melt; Asl_term.to_melt e ]
-    | Load (x, y, e) ->
-        Latex.concat
-          [
-            Asl_term.to_melt x;
-            symb_assign.melt;
-            Asl_term.to_melt y;
-            symb_ls.melt;
-            Asl_term.to_melt e;
-            symb_rs.melt;
-          ]
-    | Store (y, e, x) ->
-        Latex.concat
-          [
-            Asl_term.to_melt y;
-            symb_ls.melt;
-            Asl_term.to_melt e;
-            symb_rs.melt;
-            symb_assign.melt;
-            Asl_term.to_melt x;
-          ]
-    (*| ProcCall(p, args) ->
-        let separated_args = 
-          Blist.intersperse symb_comma.melt
-            (Blist.map (fun x -> Sl_term.to_melt x) args) in
-        Latex.concat (ltx_text p :: symb_lp.melt :: separated_args @ [symb_rp.melt])*)
-    | If (cond, cmd) ->
-        Latex.concat
-          [
-            keyw_if.melt;
-            ltx_math_space;
-            Cond.to_melt cond;
-            ltx_math_space;
-            keyw_then.melt;
-            ltx_math_space;
-            to_melt_label (Blist.hd cmd);
-            Latex.ldots;
-            keyw_fi.melt;
-          ]
-    | IfElse (cond, cmd, cmd') ->
-        Latex.concat
-          [
-            keyw_if.melt;
-            ltx_math_space;
-            Cond.to_melt cond;
-            ltx_math_space;
-            keyw_then.melt;
-            ltx_math_space;
-            to_melt_label (Blist.hd cmd);
-            Latex.ldots;
-            keyw_else.melt;
-            ltx_math_space;
-            to_melt_label (Blist.hd cmd');
-            Latex.ldots;
-            keyw_fi.melt;
-          ]
-    | While (cond, cmd) ->
-        Latex.concat
-          [
-            keyw_while.melt;
-            ltx_math_space;
-            Cond.to_melt cond;
-            ltx_math_space;
-            keyw_do.melt;
-            ltx_math_space;
-            to_melt_label (Blist.hd cmd);
-            Latex.ldots;
-            keyw_od.melt;
-          ]
-
-  and to_melt_lcmd c = Latex.concat [ to_melt_label c; to_melt_cmd c ]
-
-  and to_melt = function
-    | [] -> Latex.epsilon
-    | [ c ] -> to_melt_lcmd c
-    | hd :: tl ->
-        Latex.concat
-          [
-            to_melt_lcmd hd;
-            symb_semicolon.melt;
-            to_melt_label (Blist.hd tl);
-            Latex.ldots;
-          ]
 end
 
 let program_pp fmt cmd = Format.fprintf fmt "%a" (Cmd.pp 0) cmd
@@ -667,21 +541,16 @@ let pp_cmd fmt cmd = Cmd.pp ~abbr:true 0 fmt cmd
 module Seq = struct
   type t = Asl_form.t * Cmd.t
 
-  let tagset_one = Tags.singleton 1
-  let tagpairs_one = TagPairs.mk tagset_one
-  let tags (f, cmd) = tagset_one
-  let tag_pairs f = TagPairs.mk (tags f)
+  let tagset_one = Tags.singleton Tags.anonymous
+  let tagpairs_one = Tagpairs.mk tagset_one
+  let tags _ = tagset_one
+  let tag_pairs f = Tagpairs.mk (tags f)
   let vars (l, _) = Asl_form.vars l
   let terms (l, _) = Asl_form.terms l
   let subst theta (l, cmd) = (Asl_form.subst theta l, cmd)
 
   let to_string (f, cmd) =
     Asl_form.to_string f ^ symb_turnstile.sep ^ Cmd.to_string cmd
-
-  let to_melt (f, cmd) =
-    ltx_mk_math
-      (Latex.concat
-         [ Asl_form.to_melt f; symb_turnstile.melt; Cmd.to_melt cmd ])
 
   let pp fmt (f, cmd) =
     Format.fprintf fmt "@[%a%s%a@]" Asl_form.pp f symb_turnstile.sep

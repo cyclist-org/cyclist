@@ -2,12 +2,12 @@
     quantified), constant natural numbers, addition of terms or multiplication
     between a contant and a term. *)
 
-include Util.BasicType
+include Lib.BasicType
 
-module Set : Util.OrderedContainer with type elt = t
+module Set : Lib.OrderedContainer with type elt = t
 (** An ordered set of terms. *)
 
-module Map : Util.OrderedMap with type key = t
+module Map : Lib.OrderedMap with type key = t
 (** An ordered map with terms as keys. *)
 
 type term_t = t
@@ -50,7 +50,7 @@ end
 module Asl_subst : AslSubstSig
 
 module type AslUnifierSig = sig
-  type state = Asl_subst.t * Util.TagPairs.t
+  type state = Asl_subst.t * Generic.Tagpairs.t
   (** State maintained by unifiers. *)
 
   val empty_state : state
@@ -107,13 +107,10 @@ end
 module Asl_unifier : AslUnifierSig
 
 type term =
-  | Var of Sl_term.t
+  | Var of Seplog.Term.t
   | Const of int
   | Add of (term * term)
   | Mult of (int * term)
-
-val to_melt : t -> Latex.t
-(** Convert term to LaTeX. *)
 
 val to_z3 : t -> string
 (** Convert term to z3 formatted string. *)

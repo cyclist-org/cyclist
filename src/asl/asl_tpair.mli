@@ -1,4 +1,4 @@
-include Util.BasicType with type t = Asl_term.t * Asl_term.t
+include Lib.BasicType with type t = Asl_term.t * Asl_term.t
 (** An ordered pair of ASL terms. *)
 
 val unify : ?order:bool -> t Asl_unifier.t
@@ -13,11 +13,10 @@ val order : t -> t
 
 val subst : Asl_subst.t -> t -> t
 val to_string_sep : string -> t -> string
-val to_melt_sep : Latex.t -> t -> Latex.t
 
 (** A list of term pairs. *)
 module FList : sig
-  include Util.BasicType with type t = t list
+  include Lib.BasicType with type t = t list
 
   val unify_partial : ?order:bool -> ?inverse:bool -> t Asl_unifier.t
   (** Unify all pairs of the 1st argument with a part of the 2nd.

@@ -1,23 +1,18 @@
 open Lib
-open Util
 open Symbols
 open MParser
-include MakeListSet (Asl_tpair)
+include Listset.Make (Asl_tpair)
 
-let endomap f s = endomap (fun e -> f e) s
-let subst theta m = endomap (Asl_tpair.subst theta) m
+let subst theta m = map (Asl_tpair.subst theta) m
 let of_list l = Blist.foldl (fun deqs p -> add p deqs) empty l
 
 let to_string_list v =
-  Blist.map (Asl_tpair.to_string_sep symb_le.str) (elements v)
+  Blist.map (Asl_tpair.to_string_sep symb_leq.str) (elements v)
 
 let to_string v =
   Blist.to_string symb_star.sep
-    (Asl_tpair.to_string_sep symb_le.str)
+    (Asl_tpair.to_string_sep symb_leq.str)
     (elements v)
-
-let to_melt v =
-  ltx_star (Blist.map (Asl_tpair.to_melt_sep symb_le.melt) (elements v))
 
 let to_fopl p =
   let leq_to_fopl (a, b) acc = Fopl.And (Fopl.PF (Fopl.Le (a, b)), acc) in
@@ -33,7 +28,7 @@ let vars d = Asl_term.filter_vars (terms d)
 let parse st =
   (Asl_term.parse
   >>= (fun x ->
-  parse_symb symb_le >> Asl_term.parse << spaces |>> fun y -> (x, y))
+  parse_symb symb_leq >> Asl_term.parse << spaces |>> fun y -> (x, y))
   <?> "le")
     st
 
@@ -51,5 +46,4 @@ let subsumed eqs deqs deqs' =
       exists (fun q -> Asl_tpair.equal p' (norm q)) deqs')
     deqs
 
-let norm eqs deqs =
-  endomap (fun p -> Pair.map (fun x -> Asl_uf.find x eqs) p) deqs
+let norm eqs deqs = map (fun p -> Pair.map (fun x -> Asl_uf.find x eqs) p) deqs

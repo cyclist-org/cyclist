@@ -1,0 +1,12 @@
+(library
+ (name asl_while)
+ (public_name cyclist.asl_while)
+ (libraries lib generic seplog asl mparser-re)
+ (modules
+  (:standard \ asl_while_prove)))
+
+(executable
+ (name asl_while_prove)
+ (public_name asl_while_prove)
+ (modules asl_while_prove)
+ (libraries lib generic asl asl_while unix))

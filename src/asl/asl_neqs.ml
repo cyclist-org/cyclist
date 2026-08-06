@@ -1,14 +1,13 @@
 open Lib
-open Util
 open Symbols
 open MParser
-include MakeListSet (Asl_tpair)
+include Listset.Make (Asl_tpair)
 
 let add p deqs = add (Asl_tpair.order p) deqs
 let singleton p = singleton (Asl_tpair.order p)
 let mem p deqs = mem (Asl_tpair.order p) deqs
-let endomap f s = endomap (fun e -> Asl_tpair.order (f e)) s
-let subst theta m = endomap (Asl_tpair.subst theta) m
+let map f s = map (fun e -> Asl_tpair.order (f e)) s
+let subst theta m = map (Asl_tpair.subst theta) m
 let of_list l = Blist.foldl (fun deqs p -> add p deqs) empty l
 
 let to_string_list v =
@@ -18,9 +17,6 @@ let to_string v =
   Blist.to_string symb_star.sep
     (Asl_tpair.to_string_sep symb_deq.str)
     (elements v)
-
-let to_melt v =
-  ltx_star (Blist.map (Asl_tpair.to_melt_sep symb_deq.melt) (elements v))
 
 let to_fopl p =
   let neq_to_fopl (a, b) acc = Fopl.And (Fopl.PF (Fopl.Ne (a, b)), acc) in
@@ -56,6 +52,4 @@ let subsumed eqs deqs deqs' =
     deqs
 
 let norm eqs deqs =
-  endomap
-    (fun p -> Asl_tpair.order (Pair.map (fun x -> Asl_uf.find x eqs) p))
-    deqs
+  map (fun p -> Asl_tpair.order (Pair.map (fun x -> Asl_uf.find x eqs) p)) deqs

@@ -18,6 +18,7 @@ RUN apt-get --allow-releaseinfo-change update && apt-get install -y --no-install
       grep \
       pcregrep \
       datamash \
+      z3 \
   && sudo rm -rf /var/lib/apt/lists/*
 
 # Install Spot

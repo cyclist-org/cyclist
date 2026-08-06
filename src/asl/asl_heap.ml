@@ -1,12 +1,9 @@
 open Lib
-open Util
 open Symbols
 open MParser
 module F = Fopl
 module L = List
 module T = Asl_term
-
-let split_heaps = ref true
 
 type abstract1 = Asl_term.Set.t option
 
@@ -34,7 +31,7 @@ let equal h h' =
 
 let equal_upto_tags h h' = equal h h'
 
-include Fixpoint (struct
+include Fixpoint.Make (struct
   type t = symheap
 
   let equal = equal
@@ -103,37 +100,6 @@ let to_string f =
       @ Asl_arrays.to_string_list f.arrays)
   in
   if res = "" then keyw_emp.str else res
-
-let to_melt f =
-  let sep = if !split_heaps then Latex.text " \\\\ \n" else symb_star.melt in
-  let content =
-    Latex.concat
-      (Latex.list_insert sep
-         (Blist.filter
-            (fun l -> not (Latex.is_empty l))
-            [
-              Asl_uf.to_melt f.eqs;
-              Asl_neqs.to_melt f.neqs;
-              Asl_leqs.to_melt f.leqs;
-              Asl_lts.to_melt f.lts;
-              Asl_arrays.to_melt f.arrays;
-            ]))
-  in
-  let content =
-    if !split_heaps then
-      Latex.concat
-        [
-          ltx_newl;
-          Latex.environment
-            (* ~opt: (Latex.A, Latex.text "b") *)
-            (* ~args:[(Latex.A, Latex.text "l")] *)
-            "gathered"
-            (Latex.M, content) Latex.M;
-          ltx_newl;
-        ]
-    else content
-  in
-  ltx_mk_math content
 
 let pp fmt h =
   let l =
@@ -301,7 +267,7 @@ let norm h =
     _vars = None;
   }
 
-let unify_partial ?(tagpairs = false) ?(sub_check = Asl_subst.trivial_check)
+let unify_partial ?tagpairs:(_ = false) ?(sub_check = Asl_subst.trivial_check)
     ?(cont = Asl_unifier.trivial_continuation)
     ?(init_state = Asl_unifier.empty_state) h h' =
   let f1 theta' =
@@ -319,7 +285,6 @@ let unify_partial ?(tagpairs = false) ?(sub_check = Asl_subst.trivial_check)
   Asl_arrays.unify ~total:false ~sub_check ~cont:f4 ~init_state h.arrays
     h'.arrays
 
-let exist_vars heap = Asl_term.Set.filter Asl_term.is_exist_var (vars heap)
 let free_vars heap = Asl_term.Set.filter Asl_term.is_free_var (vars heap)
 
 (* First part of gamma: AND all the pure parts together *)
@@ -335,7 +300,7 @@ let pure_to_fopl h =
  *)
 let gamma ?(pure = None) h =
   (* This part is in the paper implicitly; all vars are >= 0. *)
-  let rec all_natural vars =
+  let all_natural vars =
     let constraint_on_var s = F.PF (F.Le (Asl_term.mk_const 0, s)) in
     Asl_term.Set.fold
       (fun v acc -> F.And (constraint_on_var v, acc))

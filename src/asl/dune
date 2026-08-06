@@ -1,0 +1,4 @@
+(library
+ (name asl)
+ (public_name cyclist.asl)
+ (libraries lib generic seplog mparser-re unix))

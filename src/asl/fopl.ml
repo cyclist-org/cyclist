@@ -47,7 +47,7 @@ let rename_exist f =
     vars_in_fmla f Asl_term.Set.empty
   in
   let all = all_vars f in
-  let free, exs = Asl_term.Set.partition Asl_term.is_free_var all in
+  let _, exs = Asl_term.Set.partition Asl_term.is_free_var all in
   let fresh = Asl_term.fresh_fvars all (Asl_term.Set.cardinal exs) in
   let theta =
     Asl_term.Map.of_list (Blist.combine (Asl_term.Set.elements exs) fresh)
@@ -68,16 +68,14 @@ let rename_exist f =
       | Not f' -> Not (subst_in_fmla theta f')
       | Forall (vs, f') ->
           Forall
-            ( Asl_term.Set.endomap (Asl_term.subst theta) vs,
-              subst_in_fmla theta f' )
+            (Asl_term.Set.map (Asl_term.subst theta) vs, subst_in_fmla theta f')
       | Exists (vs, f') ->
           Exists
-            ( Asl_term.Set.endomap (Asl_term.subst theta) vs,
-              subst_in_fmla theta f' )
+            (Asl_term.Set.map (Asl_term.subst theta) vs, subst_in_fmla theta f')
     in
     subst_in_fmla theta f
   in
-  (Asl_term.Set.endomap (Asl_term.subst theta) exs, subst theta f)
+  (Asl_term.Set.map (Asl_term.subst theta) exs, subst theta f)
 
 let trivially_true = PF (Eq (Asl_term.mk_const 0, Asl_term.mk_const 0))
 let trivially_false = PF (Eq (Asl_term.mk_const 1, Asl_term.mk_const 0))
@@ -124,7 +122,7 @@ let to_z3 f =
   let rec to_z3 f level =
     let indent = Bytes.to_string (Bytes.make (2 * level) ' ') in
     let level = level + 1 in
-    let rec var_list v acc = sprintf " (%s Int)" (Asl_term.to_z3 v) ^ acc in
+    let var_list v acc = sprintf " (%s Int)" (Asl_term.to_z3 v) ^ acc in
     match f with
     | PF f -> sprintf "%s%s" indent (pf_to_z3 f)
     | Not f -> sprintf "%s(not\n%s\n%s)" indent (to_z3 f level) indent

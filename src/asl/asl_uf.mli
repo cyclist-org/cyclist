@@ -1,9 +1,8 @@
 (** A union-find structure for ASL terms. *)
 
-include Util.BasicType
+include Lib.BasicType
 
 val parse : (Asl_tpair.t, 'a) MParser.parser
-val to_melt : t -> Latex.t
 val to_string_list : t -> string list
 val empty : t
 val is_empty : t -> bool
@@ -42,7 +41,7 @@ val subsumed : t -> t -> bool
 (** [subsumed uf uf'] is true iff uf' |- uf using the normal equality rules. *)
 
 val unify_partial : ?inverse:bool -> t Asl_unifier.t
-(** [unify_partial Option.some (Sl_subst.empty, ()) u u'] computes a
+(** [unify_partial Option.some (Asl_subst.empty, ()) u u'] computes a
     substitution [theta] such that [u'] |- [u[theta]]. If the optional argument
     [~inverse:false] is set to [true] then a substitution is computed such that
     [u'[theta]] |- [u]. *)
