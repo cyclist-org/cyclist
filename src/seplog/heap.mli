@@ -105,8 +105,6 @@ val add_eq : t -> Tpair.t -> t
 val add_deq : t -> Tpair.t -> t
 val add_pto : t -> Pto.t -> t
 val add_ind : t -> Tpred.t -> t
-val proj_sp : t -> t
-val proj_pure : t -> t
 val explode_deqs : t -> t
 val star : ?augment_deqs:bool -> t -> t -> t
 val diff : t -> t -> t
@@ -161,17 +159,6 @@ val classical_biunify :
 
 val norm : t -> t
 (** Replace all terms with their UF representative (the UF in the heap). *)
-
-val all_subheaps : t -> t list
-(** [all_subheaps h] returns a list of all the subheaps of [h]. These are
-    constructed by taking:
-    - all the subsets of the disequalities of [h];
-    - all the subsets of the points-tos of [h];
-    - all the subsets of the predicates of [h];
-    - the equivalence classes of each subset of variables in the equalities of
-      [h] that also respect the equalities of [h] are constructed - this is done
-      by using [Uf.remove] to remove subsets of variables from [h.eqs]; and
-      forming all possible combinations *)
 
 val memory_consuming : t -> bool
 (** [memory_consuming h] returns [true] iff whenever there is an inductive

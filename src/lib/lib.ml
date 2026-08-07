@@ -17,6 +17,5 @@ module Treemap = Treemap
 module Treeset = Treeset
 module Unification = Unification
 module VarManager = VarManager
-module Zlist = Zlist
 include Misc
 include Utilsigs

@@ -4,7 +4,6 @@ open Lib
 open Generic
 open Soundcheck
 
-let batch_mode = ref false
 let allow_comments = ref false
 let input_files = ref []
 

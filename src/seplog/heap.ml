@@ -220,9 +220,6 @@ let mk_ind pred =
     _tags = None;
   }
 
-let proj_sp h = mk Uf.empty Deqs.empty h.ptos h.inds
-let proj_pure h = mk h.eqs h.deqs Ptos.empty Tpreds.empty
-
 let complete_tags avoid h =
   if Tpreds.for_all Tpred.is_tagged h.inds then h
   else
@@ -417,29 +414,6 @@ let classical_biunify ?(tagpairs = true) ?(update_check = Fun._true) h h' cont
         (Deqs.biunify_partial ~update_check h.deqs h'.deqs
            (Uf.biunify_partial ~update_check h.eqs h'.eqs cont))))
     init_state
-
-let all_subheaps h =
-  let all_ptos = Ptos.subsets h.ptos in
-  let all_preds = Tpreds.subsets h.inds in
-  let all_deqs = Deqs.subsets h.deqs in
-  let all_ufs =
-    Blist.map
-      (fun xs -> Blist.foldr Uf.remove xs h.eqs)
-      (Blist.map Term.Set.to_list (Term.Set.subsets (Uf.vars h.eqs)))
-  in
-  Blist.flatten
-    (Blist.map
-       (fun ptos ->
-         Blist.flatten
-           (Blist.map
-              (fun preds ->
-                Blist.flatten
-                  (Blist.map
-                     (fun deqs ->
-                       Blist.map (fun eqs -> mk eqs deqs ptos preds) all_ufs)
-                     all_deqs))
-              all_preds))
-       all_ptos)
 
 let memory_consuming h = Tpreds.is_empty h.inds || not (Ptos.is_empty h.ptos)
 

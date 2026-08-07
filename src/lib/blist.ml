@@ -95,24 +95,6 @@ let rec equal eq xs ys =
   | x :: xs, y :: ys -> eq x y && equal eq xs ys
   | _ -> false
 
-let rec prepend_to_all x = function
-  | [] -> []
-  | y :: ys -> x :: y :: prepend_to_all x ys
-
-let intersperse x = function [] -> [] | y :: ys -> y :: prepend_to_all x ys
-
-let rec unzip3 = function
-  | [] -> ([], [], [])
-  | (x, y, z) :: ws ->
-      let xs, ys, zs = unzip3 ws in
-      (x :: xs, y :: ys, z :: zs)
-
-let rec zip3 xs ys zs =
-  match (xs, ys, zs) with
-  | [], [], [] -> []
-  | b :: bs, c :: cs, d :: ds -> (b, c, d) :: zip3 bs cs ds
-  | _ -> invalid_arg "zip3"
-
 let cartesian_product xs ys =
   foldl (fun acc x -> foldl (fun acc' y -> (x, y) :: acc') acc ys) [] xs
 
@@ -151,19 +133,6 @@ let choose lol =
   foldl
     (fun ll -> foldl (fun tl e -> foldl (fun t l -> (e :: l) :: t) tl ll) [])
     [ [] ] lol
-
-let rec _combs k len l =
-  if Stdlib.( = ) k 0 then [ [] ]
-  else if Stdlib.( < ) len k then []
-  else if Stdlib.( = ) k len then [ l ]
-  else
-    let h, t = (hd l, tl l) in
-    let starting_with_h =
-      map (fun sublist -> h :: sublist) (_combs (pred k) (pred len) t)
-    in
-    starting_with_h @ _combs k (pred len) t
-
-let combs k l = _combs k (length l) l
 
 let rec pairs = function
   | [] | [ _ ] -> []

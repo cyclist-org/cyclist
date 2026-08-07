@@ -337,9 +337,6 @@ let parse_procs st =
       procs [] )
     st
 
-(* main: p = precondition; q = postcondition; cmd = command; EOF { (p, cmd, q) } *)
-let parse_main st = (Proc.parse_unnamed << eof <?> "Main procedure") st
-
 (* fields; procs = procedures; { (main, procs) } *)
 let parse st =
   (parse_fields << parse_symb symb_semicolon

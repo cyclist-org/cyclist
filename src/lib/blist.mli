@@ -9,9 +9,6 @@ val empty : 'a t
 val is_empty : 'a t -> bool
 (** Is the argument the empty list? *)
 
-val singleton : 'a -> 'a t
-(** Constructs a list with exactly one element, the argument provided. *)
-
 val to_string : string -> ('a -> string) -> 'a t -> string
 (** [to_string sep e l] converts the list [l] to a string. [e] is the function
     that turns an element into a string and [sep] is the separator appearring
@@ -26,10 +23,6 @@ val pp :
 (** [pp sep e fmt l] pretty prints the list [l]. [e] is the function that pretty
     prints an element and [sep] is function that pretty prints a separator. *)
 
-val equal : ('a -> 'b -> bool) -> 'a t -> 'b t -> bool
-(** [equal eq l l'] computes pointwise equality between [l] and [l'] assuming
-    [eq] computes equality between elements.*)
-
 val of_list : 'a list -> 'a t
 (** Construct a [t] list out of a primitive list. Just the identity in this
     module. *)
@@ -37,9 +30,6 @@ val of_list : 'a list -> 'a t
 val to_list : 'a t -> 'a list
 (** Construct a primitive list out of a [t] list. Just the identity in this
     module. *)
-
-val cons : 'a -> 'a t -> 'a t
-(** Equivalent to [::]. Will go away in OCaml 4.03. *)
 
 val decons : 'a t -> 'a * 'a t
 (** Destruct a non-empty list. *)
@@ -75,12 +65,6 @@ val weave :
 
 (** {6 Positional helper methods} *)
 
-val take : int -> 'a t -> 'a t
-(** [take n l] returns a list of the first [n] elements of [l]. *)
-
-val drop : int -> 'a t -> 'a t
-(** [drop n l] returns the suffix of [l] after skipping [n] elements. *)
-
 val but_last : 'a t -> 'a t
 (** Return a list containing all elements apart from the last one. *)
 
@@ -115,12 +99,6 @@ val uniq : ('a -> 'a -> bool) -> 'a t -> 'a t
 (** [uniq eq l] returns a list containing no duplicates w.r.t. element equality
     [eq]. *)
 
-val intersperse : 'a -> 'a t -> 'a t
-(** Insert given element between elements of given list. *)
-
-val unzip3 : ('a * 'b * 'c) t -> 'a t * 'b t * 'c t
-val zip3 : 'a t -> 'b t -> 'c t -> ('a * 'b * 'c) t
-
 (** {6 Searching lists} *)
 
 (* This exists in OCaml's List module only from version 4.10 *)
@@ -140,9 +118,6 @@ val cartesian_hemi_square : 'a t -> ('a * 'a) t
 val choose : 'a t t -> 'a t t
 (** [choose [[1;2;3]; [4;5]]] returns [[[1;4];[1;5];[2;4];[2;5];[3;4];[3;5]]].
 *)
-
-val combs : int -> 'a t -> 'a t t
-(** [combs n l] returns all combinations of [n] elements from [l]. *)
 
 val pairs : 'a t -> ('a * 'a) t
 (** Return a list of pairs of consecutive elements. *)

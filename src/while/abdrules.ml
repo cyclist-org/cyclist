@@ -762,30 +762,6 @@ let ifwhile_tac =
 
 let gen_ifwhile_tac = Abdrule.compose generalise_while_rule ifwhile_tac
 
-let straightline =
-  Abdrule.first
-    [
-      symex_empty_axiom;
-      ex_falso_axiom;
-      symex_stop_axiom;
-      Abdrule.choice
-        [
-          matches;
-          abd_symex abd_back_rule matches;
-          Abdrule.first
-            [
-              symex_skip_rule;
-              symex_new_rule;
-              symex_nondet_if_rule;
-              symex_nondet_ifelse_rule;
-              symex_nondet_while_rule;
-              symex_assign_rule;
-              deref_tac;
-              abd_symex abd_deref deref_tac;
-            ];
-        ];
-    ]
-
 (* these rules can rarely create a non-symex loop in termination checking *)
 let rules =
   Abdrule.first

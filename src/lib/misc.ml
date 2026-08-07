@@ -79,23 +79,6 @@ let rec fixpoint eq f x =
 
 let bracket s = "(" ^ s ^ ")"
 let sqbracket s = "[" ^ s ^ "]"
-let latex_bracket = bracket
-let latex_sqbracket = sqbracket
-
-(* FIXME should use buffers *)
-let string_of_file fn =
-  let cn = open_in fn in
-  let a = ref "" in
-  try
-    while true do
-      a := !a ^ input_line cn
-    done;
-    !a
-  with End_of_file ->
-    let () = close_in cn in
-    !a
-
-let string_of_char c = String.make 1 c
 
 let gc_setup () =
   let cntrl = Gc.get () in
