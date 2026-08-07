@@ -3,7 +3,7 @@
  (public_name cyclist.seplog)
  (libraries lib generic mparser-re)
  (modules
-  (:standard \ slinit disprove modelcheck prove satcheck satexpgen)))
+  (:standard \ disprove modelcheck prove satcheck satexpgen)))
 
 (executables
  (names prove disprove modelcheck satcheck satexpgen)
