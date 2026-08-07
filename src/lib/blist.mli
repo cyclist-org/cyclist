@@ -9,6 +9,9 @@ val empty : 'a t
 val is_empty : 'a t -> bool
 (** Is the argument the empty list? *)
 
+val singleton : 'a -> 'a t
+(** Constructs a list with exactly one element, the argument provided. *)
+
 val to_string : string -> ('a -> string) -> 'a t -> string
 (** [to_string sep e l] converts the list [l] to a string. [e] is the function
     that turns an element into a string and [sep] is the separator appearring
