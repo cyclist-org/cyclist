@@ -1,3 +1,5 @@
+(** Combinators for manipulating functions. *)
+
 type 'a predicate = 'a -> bool
 
 val _true : 'a -> bool

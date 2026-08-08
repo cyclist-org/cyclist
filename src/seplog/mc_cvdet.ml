@@ -2,7 +2,6 @@ open Lib
 open Symbols
 open Generic
 
-(** What a concrete-value deterministic model checker exposes. *)
 module type S = sig
   module Location : sig
     include BasicType

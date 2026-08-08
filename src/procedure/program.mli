@@ -9,9 +9,15 @@ exception WrongCmd
 val main : string
 
 module Proc : sig
+  (** The BasicType kernel (N.B. Procs are equal if they have the same name) *)
   module K : sig
     type t =
       string * Seplog.Term.t list * (Seplog.Form.t * Seplog.Form.t) list * Cmd.t
+    (** The type of procedures: a tuple of
+        - Procedure name
+        - Formal parameters
+        - A list of pre/post specifications
+        - The body of the procedure *)
 
     include Lib.BasicType with type t := t
 

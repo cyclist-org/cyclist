@@ -17,14 +17,8 @@ exception WrongCmd = Program.WrongCmd
 let main = "main"
 
 module Proc = struct
-  (** The BasicType kernel (N.B. Procs are equal if they have the same name) *)
   module K = struct
     type t = string * Term.t Blist.t * (Form.t * Form.t) list * Cmd.t
-    (** The type of procedures: a tuple of
-        - Procedure name
-        - Formal parameters
-        - A list of pre/post specifications
-        - The body of the procedure *)
 
     let compare (id, _, _, _) (id', _, _, _) = Strng.compare id id'
     let equal (id, _, _, _) (id', _, _, _) = Strng.equal id id'

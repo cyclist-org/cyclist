@@ -1,6 +1,11 @@
+(** Functions for manipulating optional values. *)
+
 val is_none : 'a option -> bool
 val is_some : 'a option -> bool
+
 val pred : ('a -> bool) -> 'a -> 'a option
+(** [pred p x] returns [Some x] if [p x] else [None]. *)
+
 val mk : bool -> 'a -> 'a option
 val mk_lazily : bool -> (unit -> 'a) -> 'a option
 val get : 'a option -> 'a

@@ -3,31 +3,18 @@ open Generic
 
 module type S = sig
   type state
-  (** State maintained by unifiers. *)
 
   val empty_state : state
-  (** The unifier state consisting of the empty substitution and the empty set
-      of tag pairs *)
 
   type continuation = (state, state) Unification.continuation
-  (** The type of continuations accepted by SL cps-unifiers *)
-
   type 'a unifier = (state, state, 'a) Unification.cps_unifier
-  (** The type of SL unifiers - these always act on pairs of term substitutions
-      and tagpair sets, and only accept continuations that are maps on such
-      pairs. *)
 
   val realize : (state, 'a) Unification.realizer
 
   type state_check = state Fun.predicate
-  (** Predicates that check unifier states for validity *)
 
   val mk_assert_check : state_check -> state_check
-  (** Takes a state check and wraps it in an assert *)
-
   val mk_verifier : state_check -> continuation
-  (** Takes a state check function and converts it into a continuation which
-      returns None if the check fails *)
 
   type update_check = state Unification.state_update Fun.predicate
 

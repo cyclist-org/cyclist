@@ -466,9 +466,6 @@ struct
 
   let empty_base () = InterpretantBase.create 11
 
-  (** [itp_emp] is the minimal set of model bases of the formula emp, i.e. the
-      singleton set containing the model base consisting of the empty stack and
-      the empty heap base. *)
   let itp_emp () =
     let itp_emp = ModelBase.Hashset.create 11 in
     ModelBase.Hashset.add itp_emp (Stack.empty, HeapBase.empty);
@@ -499,11 +496,6 @@ struct
     in
     add n max_elt vs
 
-  (** Given a list of terms [ts] which are the formal parameters of some atomic
-      spatial formula (predicate or points-to) F, some pure [constraints] Pi,
-      and a set of interpretants [itpts] of F,
-      [generate_models ts constraints itpts] generates a hashset of model bases
-      which represents the interpretation of (Pi : F) **)
   let generate_model ts constraints (vs, ls) =
     Option.bind
       (fun stack ->
@@ -528,11 +520,6 @@ struct
     in
     InterpretantBase.iter f itpts;
     models
-
-  (** Given some pure [constraints] Pi and two sets of model bases [ms] and
-      [ms'] representing the interpretation of two formulas (Pi : F) and (Pi :
-      G) respectively, [cross_models constraints ms ms'] generates the set of
-      model bases that denotes the intepretation of (Pi : F * G). **)
 
   let cross_model constraints (s, ls) (s', ls') =
     if
@@ -663,13 +650,6 @@ struct
   (*   for all mdl in [saturate_univs constraints vs mdls] :        *)
   (*     mdl satisfies [constraints]                                *)
 
-  (** [saturate params constraints vs mdls] generates a new set of model bases
-      from [mdls] by extending the stacks of each model base in [mdls] with
-      mappings to values in [vs] from every universal variable either in params
-      or mentioned in [constraints] that is not already mapped. Each model base
-      in [mdls] gives rise to a new model base for every possible satisfying
-      extension. Thus, every model base in [mdls] may give rise to zero or more
-      models in the returned set. **)
   let saturate_univs_one params (eqs, deqs) vs (s, ls) =
     let unmapped_univs =
       Var.Set.filter
@@ -695,10 +675,6 @@ struct
         List.fold_left (fun acc' mdl' -> mdl' :: acc') acc mdls')
       [] mdls
 
-  (** [ex_constraint_sat constraints vs s] returns true if and only if the stack
-      [s] can be extended with mappings from existential variables to values in
-      [vs] such that that the extended stack has a mapping for every existential
-      variable mentioned in [constraints] and also satisfies [constraints]. **)
   let exs_satisfiable (eqs, deqs) vs s =
     let unmapped_exs =
       Var.Set.filter
@@ -712,24 +688,6 @@ struct
     Var.Set.is_empty unmapped_exs
     || Option.is_some (valid_extns (eqs, deqs) vs unmapped_exs s List.find_map)
 
-  (** [mk_ptos_base defs h] creates a hashtable which stores a hashset of model
-      bases for each inductive rule in [defs] that is both consistent and
-      contains some number (> 0) of points-to formula atoms. These models are
-      the valid interpretations of the entire set of points-to atoms in each
-      inductive rule body whose heap is a subheap of [h]. The hastable is keyed
-      on a symbolic heap formula. i.e. We abstract the points-to set for each
-      rule and compute its interpretation only once before starting the fixpoint
-      computation, and make it quickly accessible using a hash table.
-
-      Notes: 1. [all_ptos_itpts] is a map containing all the interpretant bases
-      of the singleton subheaps of [h] keyed on size of the heap cell being
-      pointed to. This allows easy identification of only those subheaps
-      relevant to any given points-to formula atom. 2. We calculate more or less
-      the precise size we will need for the hashtable in [num_buckets]; this is
-      done by counting the number of inductive rule bodies that are both
-      consistent and have a greater than zero number of points-to formula atoms.
-      Note that this is, in practice, a precise bound since it is unlikely that
-      there will be exactly duplicated inductive rule bodies. **)
   let mk_ptos_base defs h =
     let all_ptos_itpts =
       let mk_heap_base h' = HeapBase.inj h h' in
