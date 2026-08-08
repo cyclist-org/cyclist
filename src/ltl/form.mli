@@ -19,9 +19,6 @@ module Operators : sig
   val nxt : t -> t
   val ev : t -> t
   val alw : t -> t
-  val _X : t -> t
-  val _F : t -> t
-  val _G : t -> t
 end
 
 (** Destructors *)

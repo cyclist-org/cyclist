@@ -1,82 +1,18 @@
 exception Not_symheap
 
-module Rule : sig
-  type seq_t = Program.Seq.t
-  type proof_t = Rules.Rule.proof_t
-  type axiom_f = seq_t -> string option
+module Rule :
+  Generic.Proofrule.S
+    with type seq_t = Program.Seq.t
+     and type proof_t = Generic.Proof.Make(Program.Seq).t
 
-  type infrule_app =
-    (seq_t * Generic.Tagpairs.t * Generic.Tagpairs.t) list * string
+module Seqtactics : Generic.Seqtactics.S with type seq_t = Program.Seq.t
 
-  type infrule_f = seq_t -> infrule_app list
-  type backrule_f = seq_t -> seq_t -> (Generic.Tagpairs.t * string) list
-  type select_f = int -> proof_t -> int list
-  type t = int -> proof_t -> (int list * proof_t) list
-
-  val mk_axiom : axiom_f -> t
-  val mk_infrule : infrule_f -> t
-  val mk_backrule : bool -> select_f -> backrule_f -> t
-  val all_nodes : select_f
-  val closed_nodes : select_f
-  val ancestor_nodes : select_f
-  val syntactically_equal_nodes : select_f
-  val default_select_f : select_f ref
-  val set_default_select_f : int -> unit
-  val default_select_f_descr : ?line_prefix:string -> unit -> string
-  val fail : t
-  val identity : t
-  val attempt : t -> t
-  val compose : t -> t -> t
-  val compose_pairwise : t -> t list -> t
-  val repeat : t -> t
-  val choice : t list -> t
-  val first : t list -> t
-  val sequence : t list -> t
-  val conditional : (seq_t -> bool) -> t -> t
-  val combine_axioms : t -> t -> t
-end
-
-module Seqtactics : sig
-  type seq_t = Rule.seq_t
-
-  type ruleapp_t =
-    (seq_t * Generic.Tagpairs.t * Generic.Tagpairs.t) list * string
-
-  type t = seq_t -> ruleapp_t list
-
-  val relabel : string -> t -> t
-  val attempt : t -> t
-  val compose : t -> t -> t
-  val first : t list -> t
-  val repeat : t -> t
-  val choice : t list -> t
-end
-
-module Abdrule : sig
-  type seq_t = Rule.seq_t
-  type proof_t = Rule.proof_t
-  type defs_t = Seplog.Defs.t
-  type rule_t = Generic.Proofrule.Make(Program.Seq).t
-  type select_f = int -> proof_t -> int list
-
-  type infrule_app =
-    (seq_t * Generic.Tagpairs.t * Generic.Tagpairs.t) list * string
-
-  type abdinfrule_f = seq_t -> defs_t -> defs_t list
-  type abdbackrule_f = seq_t -> seq_t -> defs_t -> defs_t list
-  type abdgenrule_f = seq_t -> defs_t -> (infrule_app * defs_t) list
-  type t = int -> proof_t -> defs_t -> ((int list * proof_t) * defs_t) list
-
-  val mk_abdinfrule : abdinfrule_f -> t
-  val mk_abdbackrule : select_f -> abdbackrule_f -> t
-  val mk_abdgenrule : abdgenrule_f -> t
-  val fail : t
-  val lift : rule_t -> t
-  val compose : t -> t -> t
-  val choice : t list -> t
-  val attempt : t -> t
-  val first : t list -> t
-end
+module Abdrule :
+  Generic.Abdrule.S
+    with type seq_t = Program.Seq.t
+     and type proof_t = Generic.Proof.Make(Program.Seq).t
+     and type rule_t = Generic.Proofrule.Make(Program.Seq).t
+     and type defs_t = Seplog.Defs.t
 
 val dest_sh_seq :
   Seplog.Form.t * 'a -> (Generic.Ord_constraints.t * Program.SH.symheap) * 'a

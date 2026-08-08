@@ -1,13 +1,5 @@
-module Make : (Prover : Prover.S) -> sig
-  module Seq : sig
-    type t = Prover.Seq.t
-
-    val equal : t -> t -> bool
-    val equal_upto_tags : t -> t -> bool
-    val tags : t -> Tags.t
-    val to_string : t -> string
-    val pp : Format.formatter -> t -> unit
-  end
+module Make (Prover : Prover.S) : sig
+  module Seq : Sequent.S with type t = Prover.Seq.t
 
   type result_t = TIMEOUT | NOT_FOUND | SUCCESS of Prover.Proof.t
 

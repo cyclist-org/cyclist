@@ -71,4 +71,4 @@ val keyw_while : symbol
 val keyw_do : symbol
 val keyw_od : symbol
 val keyw_assert : symbol
-val parse_symb : symbol -> 'a MParser.state -> (unit, 'a) MParser.reply
+val parse_symb : symbol -> (unit, 'a) MParser.t

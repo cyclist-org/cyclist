@@ -28,20 +28,7 @@ module HashtablePrinter : sig
       string
   end
 
-  module Make : (H : Hashtbl.S) -> sig
-    val pp :
-      (Format.formatter -> H.key -> unit) ->
-      (Format.formatter -> 'a -> unit) ->
-      Format.formatter ->
-      'a H.t ->
-      unit
-
-    val to_string :
-      (Format.formatter -> H.key -> unit) ->
-      (Format.formatter -> 'a -> unit) ->
-      'a H.t ->
-      string
-  end
+  module Make (H : Hashtbl.S) : S with type 'a t := 'a H.t and type key := H.key
 end
 
 val fixpoint : ('a -> 'a -> bool) -> ('a -> 'a) -> 'a -> 'a
@@ -54,7 +41,7 @@ exception Timeout
 val sigalrm_handler : Sys.signal_behavior
 val w_timeout : (unit -> 'a) -> int -> 'a option
 val rexp : MParser_RE.Regexp.t
-val parse_ident : 'a MParser.state -> (string, 'a) MParser.reply
+val parse_ident : (string, 'a) MParser.t
 val handle_reply : 'a MParser.result -> 'a
 val runtest : string -> (unit -> unit) -> unit
 val mk_of_string : ('a, unit) MParser.t -> string -> 'a
