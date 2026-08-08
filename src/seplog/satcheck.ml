@@ -4,7 +4,6 @@ open Seplog
 
 let defs_path = ref "examples/sl.defs"
 let show_proof = ref false
-let latex_path = ref ""
 let timeout = ref 30
 let only_first = ref false
 let slcomp = ref ""
