@@ -1,0 +1,53 @@
+{0 Cyclist}
+
+Cyclist is a framework for building cyclic theorem provers. It provides a
+generic proof search engine together with a soundness checker for cyclic
+proofs, plus a number of instantiations for concrete logics.
+
+{1 Libraries}
+
+{2 Core}
+
+- {!module:Lib} ([cyclist.lib]) — general-purpose data structures and
+  utilities: {!module:Lib.Blist}, {!module:Lib.Treeset}, {!module:Lib.Treemap},
+  {!module:Lib.Multiset}, {!module:Lib.Flist}, {!module:Lib.Pair},
+  {!module:Lib.Unification}, {!module:Lib.VarManager} and the signatures in
+  {!module:Lib.Containers}.
+- {!module:Generic} ([cyclist.generic]) — the prover core: sequents
+  ({!module:Generic.Sequent}), proofs ({!module:Generic.Proofnode},
+  {!module:Generic.Proof}), inference rules and tactics
+  ({!module:Generic.Proofrule}, {!module:Generic.Seqtactics},
+  {!module:Generic.Abdrule}), proof search ({!module:Generic.Prover},
+  {!module:Generic.Abducer}, {!module:Generic.Frontend}), cyclic-proof
+  soundness checking ({!module:Generic.Soundcheck}) and the tag machinery it
+  relies on ({!module:Generic.Tags}, {!module:Generic.Tagpairs},
+  {!module:Generic.Ord_constraints}).
+
+{2 Instantiations}
+
+- {!module:Seplog} ([cyclist.seplog]) — separation logic with inductive
+  predicate definitions: terms and substitutions ({!module:Seplog.Term},
+  {!module:Seplog.Subst}, {!module:Seplog.Unify}), symbolic heaps
+  ({!module:Seplog.Heap}, {!module:Seplog.Pto}, {!module:Seplog.Ptos},
+  {!module:Seplog.Uf}, {!module:Seplog.Deqs}), formulae and sequents
+  ({!module:Seplog.Form}, {!module:Seplog.Seq}), inductive definitions
+  ({!module:Seplog.Indrule}, {!module:Seplog.Preddef},
+  {!module:Seplog.Defs}), and the entailment, satisfiability, model-checking
+  and abduction procedures ({!module:Seplog.Rules},
+  {!module:Seplog.Basepair}, {!module:Seplog.Invalid},
+  {!module:Seplog.Mc_core}, {!module:Seplog.Abduce}).
+- {!module:While} ([cyclist.while]) — termination and safety proofs for a
+  {i while} language over separation logic.
+- {!module:Asl} ([cyclist.asl]) — array separation logic.
+- {!module:Asl_while} ([cyclist.asl_while]) — the {i while} language over
+  array separation logic.
+- {!module:Fol} ([cyclist.fol]) — first-order logic with inductive
+  definitions.
+- {!module:Ltl} ([cyclist.ltl]) — linear temporal logic.
+
+{1 Executables}
+
+The provers are installed as separate binaries: [sl_prove], [sl_disprove],
+[sl_modelcheck], [sl_satcheck], [sl_satexpgen], [while_prove],
+[while_abduce], [asl_while_prove], [procedure_prove], [fo_prove],
+[ltl_prove], and [checkproof] for validating a serialised proof.

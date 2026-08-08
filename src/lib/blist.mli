@@ -1,7 +1,7 @@
 include module type of List
 (** List operations. The [List] standard library module is included here. *)
 
-(** {6 Essential methods} *)
+(** {1 Essential methods} *)
 
 val empty : 'a t
 (** The empty list constant. *)
@@ -37,7 +37,7 @@ val to_list : 'a t -> 'a list
 val decons : 'a t -> 'a * 'a t
 (** Destruct a non-empty list. *)
 
-(** {6 Combinator helper methods} *)
+(** {1 Combinator helper methods} *)
 
 val foldl : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
 val foldr : ('a -> 'b -> 'b) -> 'a t -> 'b -> 'b
@@ -66,7 +66,7 @@ val weave :
     element in the list in a special way, producing only a single value using
     the [tie] function. *)
 
-(** {6 Positional helper methods} *)
+(** {1 Positional helper methods} *)
 
 val but_last : 'a t -> 'a t
 (** Return a list containing all elements apart from the last one. *)
@@ -93,7 +93,7 @@ val find_indexes : ('a -> bool) -> 'a t -> int t
 (** [find_indexes pred l] returns the list of positions of all [x] in [l] such
     that [pred x = true]. *)
 
-(** {6 List manipulation and conversion} *)
+(** {1 List manipulation and conversion} *)
 
 val del_first : ('a -> bool) -> 'a t -> 'a t
 (** Delete first element satisfying a given predicate. *)
@@ -102,7 +102,7 @@ val uniq : ('a -> 'a -> bool) -> 'a t -> 'a t
 (** [uniq eq l] returns a list containing no duplicates w.r.t. element equality
     [eq]. *)
 
-(** {6 Searching lists} *)
+(** {1 Searching lists} *)
 
 (* This exists in OCaml's List module only from version 4.10 *)
 val find_map : ('a -> 'b option) -> 'a t -> 'b option
@@ -110,7 +110,7 @@ val find_map : ('a -> 'b option) -> 'a t -> 'b option
     will return [f x] for the first [x] in [l] such that [f x] is not [None], or
     [None]. *)
 
-(** {6 Combinatorial functions} *)
+(** {1 Combinatorial functions} *)
 
 val cartesian_product : 'a t -> 'b t -> ('a * 'b) t
 

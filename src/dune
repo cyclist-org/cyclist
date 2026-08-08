@@ -1,0 +1,5 @@
+; The package documentation index page, rendered by `dune build @doc`.
+
+(documentation
+ (package cyclist)
+ (mld_files index))

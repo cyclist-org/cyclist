@@ -58,7 +58,7 @@ module type S = sig
   (** Get the successor node indices of this node. *)
 
   val to_abstract_node : t -> Soundcheck.abstract_node
-  (** Convert Proof.t node to abstract node as in {!Soundcheck}. *)
+  (** Convert Proof.t node to abstract node as in {!Generic.Soundcheck}. *)
 
   val pp : Format.formatter -> t -> unit
   (** Pretty printing *)

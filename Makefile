@@ -17,11 +17,15 @@ fmt:
 fmt-check:
 	dune build @fmt
 
+# Build the API documentation into _build/default/_doc/_html.
+doc:
+	dune build @doc
+
 # Install the repo's git hooks (once per clone).
 hooks:
 	git config core.hooksPath .githooks
 
-.PHONY: all clean fmt fmt-check hooks
+.PHONY: all clean fmt fmt-check doc hooks
 
 %-tests:
 	$(MAKE) -C benchmarks $*

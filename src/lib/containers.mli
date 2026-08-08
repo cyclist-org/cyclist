@@ -4,7 +4,13 @@
 module type S = sig
   module Set : Utilsigs.OrderedContainer
   module Map : Utilsigs.OrderedMap
-  module Hashmap : Hashtbl.S
+
+  (* [Hashtbl.S] is wrapped in an inline signature rather than used directly:
+     odoc cannot apply the [Hashmap.key] substitutions below through a bare
+     external signature, and silently drops the whole module from the docs. *)
+  module Hashmap : sig
+    include Hashtbl.S
+  end
 
   module Hashset : sig
     include Hashset.S

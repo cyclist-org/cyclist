@@ -1,7 +1,10 @@
 module type S = sig
   module Set : Utilsigs.OrderedContainer
   module Map : Utilsigs.OrderedMap
-  module Hashmap : Hashtbl.S
+
+  module Hashmap : sig
+    include Hashtbl.S
+  end
 
   module Hashset : sig
     include Hashset.S
