@@ -1,3 +1,8 @@
+; Benchmarks are driven by their own Makefile, not dune. Excluding the
+; directory keeps dune from copying ~240k result files into _build.
+
+(dirs :standard \ benchmarks)
+
 (env
  (dev
   (flags
