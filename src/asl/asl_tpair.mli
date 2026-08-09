@@ -1,5 +1,6 @@
-include Lib.BasicType with type t = Asl_term.t * Asl_term.t
 (** An ordered pair of ASL terms. *)
+
+include Lib.BasicType with type t = Asl_term.t * Asl_term.t
 
 val unify : ?order:bool -> t Asl_unifier.t
 (** Unify two pairs of terms, ignoring the pairs' internal ordering of members.

@@ -1,5 +1,7 @@
 (** Signatures for containers and essential types. *)
 
+(** Most types for use in containers, maps and other stuff must provide the
+    above essential methods. *)
 module type BasicType = sig
   include Set.OrderedType
 
@@ -16,8 +18,8 @@ module type BasicType = sig
   (** Pretty printer. *)
 end
 
-(** Most types for use in containers, maps and other stuff must provide the
-    above essential methods. *)
+(** A (persistent) ordered container, generalising the standard [Set] container.
+*)
 module type OrderedContainer = sig
   include BasicType
   include Set.S with type t := t
@@ -106,8 +108,6 @@ module type OrderedContainer = sig
       ensure that in calculating a unifying subsitution no element of [ys] is
       used more than once. *)
 end
-(** A (persistent) ordered container, generalising the standard [Set] container.
-*)
 
 (** An ordered map, extending the standard [Map] module. *)
 module type OrderedMap = sig

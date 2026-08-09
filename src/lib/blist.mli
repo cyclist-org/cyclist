@@ -1,5 +1,6 @@
-include module type of List
 (** List operations. The [List] standard library module is included here. *)
+
+include module type of List
 
 (** {1 Essential methods} *)
 

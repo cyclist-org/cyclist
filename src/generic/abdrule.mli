@@ -1,5 +1,6 @@
-open Lib
 (** An abduction rule used in an abductive cyclic prover. *)
+
+open Lib
 
 module type S = sig
   type seq_t

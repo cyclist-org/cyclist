@@ -100,7 +100,6 @@ val check_proof : ?init:int -> ?minimize:bool -> t -> bool
 (** Validate, minimise, check soundness of proof/graph and memoise. *)
 
 (** Module type for concrete representations of abstract proofs *)
-
 module type Representation = sig
   val pp : Format.formatter -> t -> unit
   (** Pretty print abstract proof. *)
