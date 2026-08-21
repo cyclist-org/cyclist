@@ -1,7 +1,7 @@
 #include "types.c"
-#include "criterion.soundness.hpp"
-#include "heighted_graph.hpp"
-#include "graph.hpp"
+#include "criterion.soundness.h"
+#include "heighted_graph.h"
+#include "graph.h"
 
 class SprengerDamCriterion : public SoundnessCriterion
 {

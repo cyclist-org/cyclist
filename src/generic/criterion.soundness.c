@@ -1,4 +1,4 @@
-#include "criterion.soundness.hpp"
+#include "criterion.soundness.h"
 
 void SoundnessCriterion::halt()
 {

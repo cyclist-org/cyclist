@@ -1,6 +1,6 @@
 #include "../types.c"
-#include "../heighted_graph.hpp"
-#include "../cyclone.hpp"
+#include "../heighted_graph.h"
+#include "../cyclone.h"
 #include <iostream>
 #include <filesystem>
 #include <regex>

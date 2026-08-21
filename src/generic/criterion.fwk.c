@@ -1,6 +1,6 @@
 #include "types.c"
-#include "criterion.process_based.hpp"
-#include "heighted_graph.hpp"
+#include "criterion.process_based.h"
+#include "heighted_graph.h"
 
 class FwkCriterion : public ProcessBasedCriterion
 {

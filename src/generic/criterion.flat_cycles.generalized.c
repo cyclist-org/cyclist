@@ -1,7 +1,7 @@
 #include "types.c"
-#include "criterion.soundness.hpp"
-#include "heighted_graph.hpp"
-#include "directed_graph.hpp"
+#include "criterion.soundness.h"
+#include "heighted_graph.h"
+#include "directed_graph.h"
 
 /*
     Checks if the heighted graph (without the downward edges that are not in any SCC)

@@ -1,4 +1,4 @@
-#include "criterion.flat_cycles.hpp"
+#include "criterion.flat_cycles.h"
 
 FlatCyclesCriterion::FlatCyclesCriterion(Heighted_graph *hg)
 {

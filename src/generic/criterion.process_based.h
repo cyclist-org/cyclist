@@ -1,7 +1,7 @@
 #pragma once
 
-#include "criterion.soundness.hpp"
-#include "heighted_graph.hpp"
+#include "criterion.soundness.h"
+#include "heighted_graph.h"
 
 class ProcessBasedCriterion : public SoundnessCriterion
 {

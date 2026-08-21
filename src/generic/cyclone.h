@@ -1,7 +1,7 @@
 
 #pragma once
-#include "heighted_graph.hpp"
-#include "criterion.soundness.hpp"
+#include "heighted_graph.h"
+#include "criterion.soundness.h"
 #include <future>
 
 // Make sure this matches the criteria assigned in the ctor

@@ -1,4 +1,4 @@
-#include "proof.hpp"
+#include "proof.h"
 
 #include <sstream>
 #include <cassert>

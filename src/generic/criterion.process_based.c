@@ -1,7 +1,7 @@
 #include "types.c"
-#include "criterion.soundness.hpp"
-#include "heighted_graph.hpp"
-#include "criterion.process_based.hpp"
+#include "criterion.soundness.h"
+#include "heighted_graph.h"
+#include "criterion.process_based.h"
 #include <unistd.h>
 #include <sys/wait.h>
 #include <stdexcept>

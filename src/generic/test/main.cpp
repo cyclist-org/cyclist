@@ -1,12 +1,12 @@
 #include <iostream>
 #include "json.hpp"
 #include "../types.c"
-#include "../heighted_graph.hpp"
-#include "../criterion.soundness.hpp"
-#include "../criterion.flat_cycles.hpp"
-#include "../criterion.descending_unicycles.hpp"
-#include "../criterion.trace_manifold.hpp"
-#include "../cyclone.hpp"
+#include "../heighted_graph.h"
+#include "../criterion.soundness.h"
+#include "../criterion.flat_cycles.h"
+#include "../criterion.descending_unicycles.h"
+#include "../criterion.trace_manifold.h"
+#include "../cyclone.h"
 #include "heighted_graph_parser.cpp"
 
 using json = nlohmann::json;

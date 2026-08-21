@@ -1,8 +1,8 @@
 #include <cassert>
 #include <memory>
 
-#include "heighted_graph.hpp"
-#include "cyclone.hpp"
+#include "heighted_graph.h"
+#include "cyclone.h"
 
 extern "C" {
 #include <memory.h>

@@ -3,7 +3,7 @@
 
 #include <spot/twa/twa.hh>
 
-#include "proof.hpp"
+#include "proof.h"
 
 //==================================================================
 class ProofState: public spot::state {

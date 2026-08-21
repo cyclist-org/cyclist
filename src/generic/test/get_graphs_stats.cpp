@@ -1,15 +1,15 @@
 #include "../types.c"
-#include "../heighted_graph.hpp"
-#include "../directed_graph.hpp"
-#include "../cyclone.hpp"
+#include "../heighted_graph.h"
+#include "../directed_graph.h"
+#include "../cyclone.h"
 #include <iostream>
 #include <filesystem>
 #include <regex>
 #include <string>
 #include "heighted_graph_parser.cpp"
 #include "json.hpp"
-#include "../criterion.descending_unicycles.hpp"
-#include "../criterion.trace_manifold.hpp"
+#include "../criterion.descending_unicycles.h"
+#include "../criterion.trace_manifold.h"
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;

@@ -1,4 +1,4 @@
-#include "criterion.descending_unicycles.hpp"
+#include "criterion.descending_unicycles.h"
 
 DescendingUnicyclesCriterion::DescendingUnicyclesCriterion(Heighted_graph *hg)
 {
