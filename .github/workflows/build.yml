@@ -67,8 +67,16 @@ jobs:
         with:
           ocaml-compiler: "5.3"
 
-      - name: Install dependencies
-        run: opam install . --deps-only
+      # Runs `dune build -p cyclist @install @runtest`, which is a different
+      # target set from the dev build below: the release profile, the install
+      # stanzas and the test suite. It is also the only check that catches
+      # dependencies the dune files fail to declare (C++ headers, say), since
+      # a dev build copies the whole source tree into _build and so finds
+      # undeclared files by accident.
+      - name: Install and test
+        run: opam install . --with-test
 
+      # The default alias additionally covers the targets @install skips,
+      # namely the soundness test executables and the sltop toplevel.
       - name: Build
         run: opam exec -- dune build
