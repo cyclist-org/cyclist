@@ -229,8 +229,8 @@ Vec_shared_ptr<Vec_shared_ptr<int>> TraceManifoldCriterion::calculate_weakly_con
 {
     Vec_shared_ptr<Vec_shared_ptr<int>> wccs = std::make_shared<Vec<Vec_shared_ptr<int>>>();
     int amount_of_cycles = structural_connectivity_relation.cycles->size();
-    bool is_visited[amount_of_cycles];
-    memset(is_visited, false, amount_of_cycles);
+    std::unique_ptr<bool[]> is_visited(new bool[amount_of_cycles]);
+    memset(is_visited.get(), false, amount_of_cycles);
     for (int cycle_idx = 0; cycle_idx < structural_connectivity_relation.cycles->size(); cycle_idx++)
     {
         if (is_visited[cycle_idx])
@@ -238,7 +238,7 @@ Vec_shared_ptr<Vec_shared_ptr<int>> TraceManifoldCriterion::calculate_weakly_con
             continue;
         }
         Vec_shared_ptr<int> wcc = std::make_shared<Vec<int>>();
-        this->find_weakly_connected_component_of(cycle_idx, structural_connectivity_relation.relation, is_visited, wcc);
+        this->find_weakly_connected_component_of(cycle_idx, structural_connectivity_relation.relation, is_visited.get(), wcc);
         wccs->push_back(wcc);
     }
     return wccs;

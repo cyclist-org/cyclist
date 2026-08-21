@@ -50,7 +50,7 @@ DirectedGraph::~DirectedGraph()
 
 bool DirectedGraph::contains_cycle()
 {
-    bool fresh_nodes[this->num_nodes];
+    std::unique_ptr<bool[]> fresh_nodes(new bool[this->num_nodes]);
     for (int i = 0; i < this->num_nodes; i++)
     {
         fresh_nodes[i] = true;
@@ -63,7 +63,7 @@ bool DirectedGraph::contains_cycle()
             continue;
         }
         Vec<int> visited;
-        if (this->is_cycle_reachable_from(node, &visited, fresh_nodes))
+        if (this->is_cycle_reachable_from(node, &visited, fresh_nodes.get()))
         {
             return true;
         }
@@ -101,7 +101,7 @@ int DirectedGraph::count_reachable_backedges(int node, Vec<int> *curr_path, bool
 
 int DirectedGraph::count_backedges()
 {
-    bool fresh_nodes[this->num_nodes];
+    std::unique_ptr<bool[]> fresh_nodes(new bool[this->num_nodes]);
     for (int i = 0; i < this->num_nodes; i++)
     {
         fresh_nodes[i] = true;
@@ -115,7 +115,7 @@ int DirectedGraph::count_backedges()
             continue;
         }
         Vec<int> visited;
-        backedges_count += this->count_reachable_backedges(node, &visited, fresh_nodes);
+        backedges_count += this->count_reachable_backedges(node, &visited, fresh_nodes.get());
     }
     return backedges_count;
 }
@@ -180,9 +180,9 @@ bool DirectedGraph::contains_overlapping_cycles()
     std::stack<int> s;
     std::vector<int> backedge_dests;
 
-    int idxs[this->num_nodes];
-    int low_links[this->num_nodes];
-    bool is_on_stack[this->num_nodes];
+    std::unique_ptr<int[]> idxs(new int[this->num_nodes]);
+    std::unique_ptr<int[]> low_links(new int[this->num_nodes]);
+    std::unique_ptr<bool[]> is_on_stack(new bool[this->num_nodes]);
 
     for (size_t i = 0; i < this->num_nodes; i++)
     {
@@ -195,7 +195,7 @@ bool DirectedGraph::contains_overlapping_cycles()
     {
         if (idxs[node] == -1)
         {
-            if (this->is_overlapping_cycle_reachable_from(node, s, is_on_stack, idxs, low_links, next_index, backedge_dests))
+            if (this->is_overlapping_cycle_reachable_from(node, s, is_on_stack.get(), idxs.get(), low_links.get(), next_index, backedge_dests))
             {
                 return true;
             }

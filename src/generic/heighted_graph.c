@@ -386,9 +386,9 @@ void Heighted_graph::find_backedge_dests_and_SCCs_reachable_from(
 
 bool Heighted_graph::calculate_SCCs_and_check_if_has_overlapping_cycles(Vec<Vec<int>*> &SCCs) {
     int num_nodes = this->num_nodes();
-    bool on_stack[num_nodes];
-    int idxs[num_nodes];
-    int low_links[num_nodes];
+    std::unique_ptr<bool[]> on_stack(new bool[num_nodes]);
+    std::unique_ptr<int[]> idxs(new int[num_nodes]);
+    std::unique_ptr<int[]> low_links(new int[num_nodes]);
     std::stack<int> s;
     Vec<int> backedge_dests;
 
@@ -401,7 +401,7 @@ bool Heighted_graph::calculate_SCCs_and_check_if_has_overlapping_cycles(Vec<Vec<
     int next_idx = 0;
     for (int n = 0; n < num_nodes; n++) {
         if (idxs[n] == -1) {
-            find_backedge_dests_and_SCCs_reachable_from(n, s, on_stack, idxs, low_links, next_idx, backedge_dests, SCCs);
+            find_backedge_dests_and_SCCs_reachable_from(n, s, on_stack.get(), idxs.get(), low_links.get(), next_idx, backedge_dests, SCCs);
         }
     }
 
@@ -631,8 +631,8 @@ int Heighted_graph::find_root_node() {
 
 Heighted_graph::StructuralConnectivityRelation Heighted_graph::get_structural_connectivity_relation() {
     int num_nodes = this->num_nodes();
-    bool is_fresh[num_nodes];
-    memset(is_fresh, true, num_nodes);
+    std::unique_ptr<bool[]> is_fresh(new bool[num_nodes]);
+    memset(is_fresh.get(), true, num_nodes);
     Vec_shared_ptr<Int_pair> relation = std::make_shared<Vec<Int_pair>>();
     Vec<int> curr_path;
     Vec_shared_ptr<int> companions = std::make_shared<Vec<int>>();
@@ -645,7 +645,7 @@ Heighted_graph::StructuralConnectivityRelation Heighted_graph::get_structural_co
 
     int root_node_idx = this->find_root_node();
     try {
-        this->explore_basic_cycles_from(root_node_idx, curr_path, is_fresh, companions, basic_cycles);
+        this->explore_basic_cycles_from(root_node_idx, curr_path, is_fresh.get(), companions, basic_cycles);
     } catch (NotInCycleNormalForm& err) {
         result.is_cyclic_normal_form = false;
         return result;
@@ -1034,7 +1034,7 @@ bool Heighted_graph::is_flat_cycle_reachable_from(int node, Vec<int>* curr_path,
 bool Heighted_graph::has_flat_cycle() {
     int num_nodes = this->num_nodes();
 
-    bool fresh_nodes[num_nodes];
+    std::unique_ptr<bool[]> fresh_nodes(new bool[num_nodes]);
     for (int i = 0; i < num_nodes; i++)
     {
         fresh_nodes[i] = true;
@@ -1047,7 +1047,7 @@ bool Heighted_graph::has_flat_cycle() {
             continue;
         }
         Vec<int> visited;
-        if (this->is_flat_cycle_reachable_from(node, &visited, fresh_nodes))
+        if (this->is_flat_cycle_reachable_from(node, &visited, fresh_nodes.get()))
         {
             return true;
         }
@@ -1427,6 +1427,9 @@ bool Heighted_graph::order_reduced_check(NODE_ORDER order, int opts, bool* shoul
                 break;
             case DEGREE_OUT_IN_DESC:
                 std::sort(node_order->begin(), node_order->end(), deg_out_in_desc);
+                break;
+            case GIVEN_ORDER:
+                // Unreachable: excluded by the enclosing test on [order]
                 break;
         }
 
@@ -2277,7 +2280,7 @@ bool Heighted_graph::fwk_check(int opts, bool* should_halt) {
                 if (identity_first && (i == k || j == k)) {
                     mid++;
                 }
-                for (mid; mid != asteration.end(); mid++) {
+                for (; mid != asteration.end(); mid++) {
                     Sloped_relation* Q = *mid;
                     Sloped_relation* PQ = NULL;
                     if (i == k) {
