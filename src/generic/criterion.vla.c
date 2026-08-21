@@ -1,7 +1,7 @@
 #include "types.c"
-#include "criterion.soundness.hpp"
-#include "criterion.process_based.hpp"
-#include "heighted_graph.hpp"
+#include "criterion.soundness.h"
+#include "criterion.process_based.h"
+#include "heighted_graph.h"
 
 class VlaCriterion : public ProcessBasedCriterion
 {

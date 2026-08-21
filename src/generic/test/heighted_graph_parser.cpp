@@ -1,6 +1,6 @@
 #include "json.hpp"
 #include "../types.c"
-#include "../heighted_graph.hpp"
+#include "../heighted_graph.h"
 
 using json = nlohmann::json;
 

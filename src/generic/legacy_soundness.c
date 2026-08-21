@@ -20,8 +20,8 @@ extern "C" {
 #include <alloc.h>
 }
 
-#include "proof_aut.hpp"
-#include "trace.hpp"
+#include "proof_aut.h"
+#include "trace.h"
 
 static std::shared_ptr<ProofAutomaton> proof = 0;
 static std::map< int, Vertex > bdd_map;

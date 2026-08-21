@@ -1,4 +1,4 @@
-#include "criterion.trace_manifold.hpp"
+#include "criterion.trace_manifold.h"
 #include "bitset"
 #include <vector>
 #include <algorithm>

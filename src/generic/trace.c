@@ -1,4 +1,4 @@
-#include "trace.hpp"
+#include "trace.h"
 
 #include <cassert>
 #include <sstream>

@@ -44,7 +44,7 @@ let node_order = ref 0
 
 let set_node_order order =
   (* Whatever bounds checking is performed here should be consistent with the
-     enumeration values defined in the C++ code: check heighted_graph.hpp *)
+     enumeration values defined in the C++ code: check heighted_graph.h *)
   if order < 0 || order > 2 then prerr_endline "Invalid node order specified!"
   else node_order := order
 

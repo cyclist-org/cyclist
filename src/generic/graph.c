@@ -1,6 +1,6 @@
 
-#include "graph.hpp"
-#include "sloped_relation.hpp"
+#include "graph.h"
+#include "sloped_relation.h"
 #include <iostream>
 #include <ostream>
 #include <cmath>

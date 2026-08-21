@@ -1,4 +1,4 @@
-#include "directed_graph.hpp"
+#include "directed_graph.h"
 #include "types.c"
 
 #include <cstdio>

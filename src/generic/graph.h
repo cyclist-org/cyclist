@@ -11,7 +11,7 @@
 
 #include <algorithm>
 
-#include "sloped_relation.hpp"
+#include "sloped_relation.h"
 #define NIL -1
 
 typedef std::list<int> NodeList;

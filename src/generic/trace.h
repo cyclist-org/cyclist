@@ -4,7 +4,7 @@
 #include <tuple>
 #include <spot/twa/twa.hh>
 
-#include "proof.hpp"
+#include "proof.h"
 
 //==================================================================
 class TraceState: public spot::state {

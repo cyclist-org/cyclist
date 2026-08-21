@@ -1,7 +1,7 @@
 #include "../types.c"
-#include "../heighted_graph.hpp"
-#include "../directed_graph.hpp"
-#include "../cyclone.hpp"
+#include "../heighted_graph.h"
+#include "../directed_graph.h"
+#include "../cyclone.h"
 #include <iostream>
 #include <filesystem>
 #include <regex>
@@ -9,7 +9,7 @@
 #include "heighted_graph_parser.cpp"
 #include "json.hpp"
 #include "../criterion.descending_unicycles.c"
-#include "../criterion.trace_manifold.hpp"
+#include "../criterion.trace_manifold.h"
 #include "../criterion.flat_cycles.generalized.c"
 
 using json = nlohmann::json;

@@ -1,4 +1,4 @@
-#include "proof_aut.hpp"
+#include "proof_aut.h"
 
 #include <sstream>
 

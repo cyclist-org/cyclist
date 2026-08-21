@@ -5,7 +5,7 @@
 #include <set>
 #include <stack>
 
-#include "sloped_relation.hpp"
+#include "sloped_relation.h"
 #include "types.c"
 
 

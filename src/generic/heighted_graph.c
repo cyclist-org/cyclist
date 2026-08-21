@@ -1,5 +1,5 @@
-#include "heighted_graph.hpp"
-#include "sloped_relation.hpp"
+#include "heighted_graph.h"
+#include "sloped_relation.h"
 #include "types.c"
 
 #include <algorithm>
