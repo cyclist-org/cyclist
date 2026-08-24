@@ -7,7 +7,6 @@ module Make (Prover : Prover.S) = struct
 
   let show_proof = ref false
   let use_dot = ref false
-  let latex_path = ref ""
   let open_file_for_append = ref false
   let timeout = ref 30
   let minbound = ref 1
@@ -37,7 +36,6 @@ module Make (Prover : Prover.S) = struct
             Arg.Set_string run_identifier,
             ": identifier for the execution, used in debug output" );
           ("-s", Arg.Set Stats.do_statistics, ": print statistics");
-          ("-l", Arg.Set_string latex_path, ": write proofs to <file>");
           ( "-t",
             Arg.Set_int timeout,
             ": set timeout in seconds to <int>, 0 disables it, default is "
