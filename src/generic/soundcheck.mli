@@ -94,7 +94,14 @@ val use_idempotent_loop_check : unit -> unit
     disable this optimisation. *)
 
 val arg_opts : (string * Arg.spec * string) list
-(* Specification of command-line options applying to soundness check *)
+(** Specification of the soundness check's command-line options, for the
+    [Stdlib.Arg] parser. Only the standalone harnesses under [tests/soundness]
+    still use this; the [cyclist] binary uses {!term}, so a new option must be
+    added to both or to {!term} alone. *)
+
+val term : unit Cmdliner.Term.t
+(** Cmdliner counterpart of {!arg_opts}. Evaluating the term applies the
+    selected options to the soundness checker's configuration. *)
 
 val check_proof : ?init:int -> ?minimize:bool -> t -> bool
 (** Validate, minimise, check soundness of proof/graph and memoise. *)

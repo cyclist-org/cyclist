@@ -1,6 +1,7 @@
 TIMEOUT:=$(or $(TIMEOUT),30)
 TESTS:= $(sort $(wildcard *.tst))
-CMD := "src/ltl/prove.exe"
+CMD := "src/cli/cyclist.exe"
+SUB := ltl prove
 
 .PHONY: all $(TESTS)
 
@@ -14,5 +15,5 @@ $(TESTS): %.tst:
 		TST_CASE="ltl-$${TST_NAME%.tst}.$$TST_COUNT"; \
 		echo "test case: $$TST_CASE"; \
 		TST_COUNT=$$(($$TST_COUNT+1)); \
-		(cd "$(ROOT)" && dune exec $(CMD) -- -t $(TIMEOUT) -S "$$SEQ" --id="$$TST_CASE" $(TST_OPTS) || echo "Not proved"); \
+		(cd "$(ROOT)" && dune exec $(CMD) -- $(SUB) -t $(TIMEOUT) -S "$$SEQ" --id="$$TST_CASE" $(TST_OPTS) || echo "Not proved"); \
 	done < "$@"

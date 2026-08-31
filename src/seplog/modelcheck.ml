@@ -1,7 +1,6 @@
 open Lib
 open Symbols
 open Generic
-open Seplog
 open MParser
 module List = Blist
 module MCGen = Mc_core.Make (Mc_core.IntSig)
@@ -29,60 +28,72 @@ module HeapParser = MCGen.ConcreteHeap.MakeParser (IntSigParser)
 let model_parser st =
   (MCGen.mk_model_parser (StackParser.parse, HeapParser.parse)) st
 
-let defs_path = ref "examples/sl.defs"
-let str_model = ref ""
-let str_symheap = ref ""
-let cvdet = ref false
-let intuitionistic = ref false
+let default_defs_path = "examples/sl.defs"
 
-let usage =
-  "usage: " ^ Sys.argv.(0)
-  ^ " [-D <file>] [-CVDET] [-i] -M <string> -F <string>"
-
-let speclist =
-  [
-    ( "-D",
-      Arg.Set_string defs_path,
-      ": read inductive definitions from <file>, default is " ^ !defs_path );
-    ("-d", Arg.Set do_debug, ": print debug messages");
-    ("-s", Arg.Set Stats.do_statistics, ": print statistics");
-    ("-M", Arg.Set_string str_model, ": <string> model to be checked");
-    ( "-F",
-      Arg.Set_string str_symheap,
-      ": <string> symbolic heap to check against" );
-    ("-CVDET", Arg.Set cvdet, ": apply CV+DET algorithm");
-    ("-i", Arg.Set intuitionistic, ": intuitionistic checking");
-    ( "-h",
-      Arg.Set_int MCGen.max_hashset_size,
-      ": maximum size for internal hashset creation, default is 15,485,863" );
-  ]
-
-let die msg =
-  print_endline msg;
-  print_endline (Arg.usage_string speclist usage);
-  exit 1
-
-let () =
+let run defs_path str_model str_symheap cvdet intuitionistic max_hashset_size ()
+    =
   gc_setup ();
-  Format.set_margin (Sys.command "exit $(tput cols)");
-  Arg.parse speclist (fun _ -> raise (Arg.Bad "Stray argument found.")) usage;
-  if String.equal !str_model "" then die "-M must be specified.";
-  if String.equal !str_symheap "" then die "-F must be specified.";
-  let sh = Heap.of_string ~allow_tags:false !str_symheap in
+  Option.iter (fun n -> MCGen.max_hashset_size := n) max_hashset_size;
+  let sh = Heap.of_string ~allow_tags:false str_symheap in
   (* TODO: Need to check that all predicate instances in sh match the arity in defs *)
-  let defs = Defs.of_channel (open_in !defs_path) in
-  let ((_s, h) as model) = MCGen.model_of_string model_parser !str_model in
+  let defs = Defs.of_channel (open_in defs_path) in
+  let ((_s, h) as model) = MCGen.model_of_string model_parser str_model in
   let () =
     print_endline ("Heap size: " ^ Int.to_string (MCGen.ConcreteHeap.size h))
   in
   Stats.reset ();
   Stats.Gen.call ();
   let call () =
-    if !cvdet then Mc_cvdet.check_model !intuitionistic defs (sh, model)
-    else MCGen.check_model !intuitionistic defs (sh, model)
+    if cvdet then Mc_cvdet.check_model intuitionistic defs (sh, model)
+    else MCGen.check_model intuitionistic defs (sh, model)
   in
   let res = call () in
   Stats.Gen.end_call ();
   if !Stats.do_statistics then Stats.gen_print ();
   if res then print_endline "Model verified"
   else print_endline "Not a satisfying model!"
+
+let cmd =
+  let open Cmdliner in
+  let defs =
+    Arg.(
+      value & opt file default_defs_path
+      & info [ "D"; "defs" ] ~docv:"FILE"
+          ~doc:"Read inductive definitions from $(docv).")
+  in
+  let model =
+    Arg.(
+      required
+      & opt (some string) None
+      & info [ "M"; "model" ] ~docv:"MODEL" ~doc:"The model to be checked.")
+  in
+  let formula =
+    Arg.(
+      required
+      & opt (some string) None
+      & info [ "F"; "formula" ] ~docv:"FORMULA"
+          ~doc:"The symbolic heap to check the model against.")
+  in
+  let cvdet =
+    Arg.(value & flag & info [ "cvdet" ] ~doc:"Apply the CV+DET algorithm.")
+  in
+  let intuitionistic =
+    Arg.(
+      value & flag
+      & info [ "i"; "intuitionistic" ] ~doc:"Use intuitionistic checking.")
+  in
+  let max_hashset_size =
+    Arg.(
+      value
+      & opt (some int) None
+      & info [ "max-hashset-size" ] ~docv:"INT"
+          ~doc:
+            "Maximum size for internal hashset creation, default is 15,485,863.")
+  in
+  Cmd.v
+    (Cmd.info "modelcheck"
+       ~doc:"Check a model against a separation logic symbolic heap."
+       ~exits:Cmd.Exit.defaults)
+    Term.(
+      const run $ defs $ model $ formula $ cvdet $ intuitionistic
+      $ max_hashset_size $ Frontend.debug_term)

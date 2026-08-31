@@ -182,12 +182,29 @@ let pbitvector_def (n : int) : string =
 let overall_bitvector_def n =
   String.concat def_separator
     [ pzero_def; pone_def; pbool_def; pbitvector_def n ]
-;;
 
-let param = Sys.argv.(1) in
-let n = Scanf.sscanf param "%d" (fun x -> x) in
-let output =
-  (*overall_circuit_def n*) overall_rec_def n
-  (* overall_bitvector_def n *)
-in
-print_endline output
+let run n = print_endline ((*overall_circuit_def*) overall_rec_def n)
+(* or overall_bitvector_def n *)
+
+let cmd =
+  let open Cmdliner in
+  let n =
+    Arg.(
+      required
+      & pos 0 (some int) None
+      & info [] ~docv:"N"
+          ~doc:"The size of the family of definitions to generate.")
+  in
+  Cmd.v
+    (Cmd.info "satexpgen"
+       ~doc:"Generate inductive definitions with an exponentially large base."
+       ~man:
+         [
+           `S Manpage.s_description;
+           `P
+             "Generates a family of inductive definitions Phi_n for an \
+              inductive predicate P_n whose base is of size Omega(2^n). Used \
+              to exercise the satisfiability checker.";
+         ]
+       ~exits:Cmd.Exit.defaults)
+    Term.(const run $ n)

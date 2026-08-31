@@ -12,5 +12,5 @@ $(TESTS): %.tst:
 		TST_CASE="cyclist-sl-$${TST_NAME%.tst}.$$TST_COUNT"; \
 		echo "test case: $$TST_CASE"; \
 		TST_COUNT=$$(($$TST_COUNT+1)); \
-		(cd "$(ROOT)" && dune exec $(CMD) -- -t $(TIMEOUT) -S "$$SEQ" --id="$$TST_CASE" $(TST_OPTS) || echo "Not proved (timeout)"); \
+		(cd "$(ROOT)" && dune exec $(CMD) -- $(SUB) -t $(TIMEOUT) -S "$$SEQ" --id="$$TST_CASE" $(TST_OPTS) || echo "Not proved (timeout)"); \
 	done < "$@"

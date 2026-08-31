@@ -27,6 +27,8 @@
   (stdlib-shims :build)
   (dune-configurator :build)
   (mparser-re (>= 1.3))
+  (cmdliner (>= 2.0))
+  dune-build-info
   (hashcons (>= 1.0.1))
   (hashset (>= 1.0.0))
   (ocamlgraph (>= 1.8.7))

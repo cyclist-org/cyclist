@@ -1,5 +1,39 @@
 open Lib
 
+(* Exit codes common to the prover commands. [Cmdliner.Cmd.Exit.defaults] is
+   not reused because it documents 123 (some_error), which no command returns,
+   and omits the 1 and 2 that the provers do return. *)
+let exits =
+  let open Cmdliner.Cmd.Exit in
+  [
+    info ok ~doc:"on a successful proof.";
+    info 1 ~doc:"if no proof was found.";
+    info 2 ~doc:"on timeout.";
+    info cli_error ~doc:"on command line parsing errors.";
+    info internal_error ~doc:"on unexpected internal errors.";
+  ]
+
+(* The output options that every command has, whether or not it drives the
+   iterative-deepening prover. *)
+let debug_term =
+  let open Cmdliner in
+  let d =
+    Arg.(value & flag & info [ "d"; "debug" ] ~doc:"Print debug messages.")
+  in
+  let s = Arg.(value & flag & info [ "s"; "stats" ] ~doc:"Print statistics.") in
+  let id =
+    Arg.(
+      value & opt string !run_identifier
+      & info [ "id" ] ~docv:"ID"
+          ~doc:"Identifier for this execution, used in debug output.")
+  in
+  let apply d s id =
+    if d then do_debug := true;
+    if s then Stats.do_statistics := true;
+    run_identifier := id
+  in
+  Term.(const apply $ d $ s $ id)
+
 module Make (Prover : Prover.S) = struct
   module Seq = Prover.Seq
 
@@ -7,52 +41,71 @@ module Make (Prover : Prover.S) = struct
 
   let show_proof = ref false
   let use_dot = ref false
-  let open_file_for_append = ref false
   let timeout = ref 30
   let minbound = ref 1
   let maxbound = ref 11
 
-  let speclist =
-    ref (fun () ->
-        [
-          ( "-m",
-            Arg.Set_int minbound,
-            ": set starting depth for IDFS to <int>, default is "
-            ^ string_of_int !minbound );
-          ( "-M",
-            Arg.Set_int maxbound,
-            ": set maximum depth for IDFS to <int>, 0 disables it,\n\
-            \              default is " ^ string_of_int !maxbound );
-          ( "-L",
-            Arg.Int
-              (fun n ->
-                minbound := n;
-                maxbound := n),
-            ": set both depths to <int>." );
-          ("-p", Arg.Set show_proof, ": show proof");
-          ("--dot", Arg.Set use_dot, ": use DOT format for proofs");
-          ("-d", Arg.Set do_debug, ": print debug messages");
-          ( "--id",
-            Arg.Set_string run_identifier,
-            ": identifier for the execution, used in debug output" );
-          ("-s", Arg.Set Stats.do_statistics, ": print statistics");
-          ( "-t",
-            Arg.Set_int timeout,
-            ": set timeout in seconds to <int>, 0 disables it, default is "
-            ^ string_of_int !timeout );
-        ]
-        @ Soundcheck.arg_opts)
+  (* The search and output options common to every prover command. The
+     defaults are parameters rather than pre-set mutations of the refs above,
+     so that a command's choice of search bounds is visible in its own
+     `--help` output. *)
+  let term ?(min_depth = !minbound) ?(max_depth = !maxbound)
+      ?(timeout_secs = !timeout) () =
+    let open Cmdliner in
+    let m =
+      Arg.(
+        value & opt int min_depth
+        & info [ "m"; "min-depth" ] ~docv:"INT"
+            ~doc:"Starting depth for iterative-deepening search.")
+    in
+    let mm =
+      Arg.(
+        value & opt int max_depth
+        & info [ "M"; "max-depth" ] ~docv:"INT"
+            ~doc:
+              "Maximum depth for iterative-deepening search. 0 disables the \
+               bound.")
+    in
+    let l =
+      Arg.(
+        value
+        & opt (some int) None
+        & info [ "L"; "depth" ] ~docv:"INT"
+            ~doc:"Set both the starting and the maximum search depth.")
+    in
+    let p =
+      Arg.(value & flag & info [ "p"; "show-proof" ] ~doc:"Show the proof.")
+    in
+    let dot =
+      Arg.(value & flag & info [ "dot" ] ~doc:"Use DOT format for proofs.")
+    in
+    let t =
+      Arg.(
+        value & opt int timeout_secs
+        & info [ "t"; "timeout" ] ~docv:"SECONDS"
+            ~doc:"Timeout in seconds. 0 disables it.")
+    in
+    let apply () m' mm' l' p' dot' t' =
+      minbound := m';
+      maxbound := mm';
+      Option.iter
+        (fun n ->
+          minbound := n;
+          maxbound := n)
+        l';
+      show_proof := p';
+      use_dot := dot';
+      timeout := t'
+    in
+    Term.(const apply $ debug_term $ m $ mm $ l $ p $ dot $ t)
 
-  let usage =
-    ref
-      ("usage: " ^ Sys.argv.(0)
-     ^ " [-p/d/s] [-l <file>] [-t/m/M/L <int>] [--inf-desc ( vla | sla | \
-        fwk-full | fwk-or | cyclone )]")
-
-  let die msg spec_list usage =
-    print_endline msg;
-    print_endline (Arg.usage_string spec_list usage);
-    exit 1
+  (* The common options of every prover command: the search and output
+     settings above, together with the infinite descent check settings. *)
+  let common_term ?min_depth ?max_depth ?timeout_secs () =
+    Cmdliner.Term.(
+      const (fun () () -> ())
+      $ term ?min_depth ?max_depth ?timeout_secs ()
+      $ Soundcheck.term)
 
   let exit = function
     | TIMEOUT -> exit 2
@@ -71,17 +124,15 @@ module Make (Prover : Prover.S) = struct
     res
 
   let process_result output seq res =
-    if Option.is_none res then (
-      if output then
-        print_endline ("NOT proved: " ^ Seq.to_string seq ^ " [TIMEOUT]");
-      TIMEOUT)
-    else
-      let res = Option.get res in
-      if Option.is_none res then (
+    match res with
+    | None ->
+        if output then
+          print_endline ("NOT proved: " ^ Seq.to_string seq ^ " [TIMEOUT]");
+        TIMEOUT
+    | Some None ->
         if output then print_endline ("NOT proved: " ^ Seq.to_string seq);
-        NOT_FOUND)
-      else
-        let proof = Option.get res in
+        NOT_FOUND
+    | Some (Some proof) ->
         if !show_proof then
           let pp = if !use_dot then Prover.Proof.pp_dot else Prover.Proof.pp in
           pp Format.std_formatter proof
@@ -94,7 +145,6 @@ module Make (Prover : Prover.S) = struct
     Prover.idfs !minbound maxbound ax r seq
 
   let prove_seq ax r seq =
-    Format.set_margin (Sys.command "exit $(tput cols)");
     let res = gather_stats (fun () -> idfs ax r seq) in
     process_result true seq res
 end

@@ -1,0 +1,47 @@
+; Cmdliner builds a command's parser only when that command is selected, so a
+; clashing or malformed option is not caught until the command actually runs.
+; Walking --help over every leaf of the tree is what turns that into a build
+; failure rather than a report from a user.
+
+(rule
+ (alias runtest)
+ (action
+  (progn
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} sl --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} sl prove --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} sl disprove --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} sl modelcheck --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} sl satcheck --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} sl satexpgen --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} while --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} while prove --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} while abduce --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} asl-while --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} asl-while prove --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} proc --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} proc prove --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} fo --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} fo prove --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} ltl --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} ltl prove --help=plain))
+   (ignore-stdout
+    (run %{exe:../../src/cli/cyclist.exe} checkproof --help=plain)))))

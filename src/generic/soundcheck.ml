@@ -1304,6 +1304,119 @@ let arg_opts =
        list [default], edge list, or JSON)" );
   ]
 
+(* Cmdliner counterpart of [arg_opts], for the [cyclist] frontend. The options
+   are pure side effects on the configuration above, so the term evaluates to
+   [unit] and is combined into a command with [Term.const f $ ... $ term]. *)
+let term =
+  let open Cmdliner in
+  let docs = "INFINITE DESCENT OPTIONS" in
+  let flag names doc = Arg.(value & flag & info names ~docs ~doc) in
+  let inf_desc =
+    let opts =
+      [
+        ("ocaml", RELATIONAL_OCAML);
+        ("legacy", SPOT_LEGACY);
+        ("fwk-full", FWK_CPP);
+        ("fwk-or", ORTL_CPP);
+        ("vla", VLA);
+        ("sla", SLA);
+        ("cyclone", CYCLONE);
+      ]
+    in
+    Arg.(
+      value
+      & opt (some (enum opts)) None
+      & info [ "inf-desc" ] ~docs ~docv:"METHOD"
+          ~doc:
+            ("The method to use for the Infinite Descent validity check \
+              (default is order reduced Floyd-Warshall-Kleene). $(docv) must \
+              be " ^ doc_alts_enum opts ^ "."))
+  in
+  let ord =
+    Arg.(
+      value
+      & opt (some int) None
+      & info [ "ord" ] ~docs ~docv:"INT"
+          ~doc:
+            "Which node order to use in the order-reduced relational check: 0 \
+             for the natural ordering, 1 for out-degree then in-degree \
+             (lexicographically) ascending, 2 for the same descending.")
+  in
+  let no_fast_fail =
+    flag [ "no-fast-fail" ]
+      "Do not use fast fail in relation-based infinite descent checks."
+  in
+  let no_minimality =
+    flag [ "no-minimality" ]
+      "Do not use the minimality optimisation in relation-based infinite \
+       descent checks."
+  in
+  let idempotent_loop_check =
+    flag
+      [ "idempotent-loop-check" ]
+      "Use the idempotent loop check instead of the transitive loop check in \
+       relation-based infinite descent checks."
+  in
+  let unminimized_proofs =
+    flag [ "unminimized-proofs" ] "Keep proofs unminimized."
+  in
+  let rel_stats =
+    flag [ "rel-stats" ]
+      "Print out profiling stats for the relation-based validity check."
+  in
+  let print_paut =
+    flag [ "print-paut" ]
+      "Print the proof automaton in HOA format (only when using the legacy \
+       infinite descent check)."
+  in
+  let print_taut =
+    flag [ "print-taut" ]
+      "Print the trace automaton in HOA format (only when using the legacy \
+       infinite descent check)."
+  in
+  let dump = flag [ "dump-graphs" ] "Dump abstract proof graphs to file." in
+  let graph_dir =
+    Arg.(
+      value
+      & opt (some string) None
+      & info [ "graph-dir" ] ~docs ~docv:"DIR"
+          ~doc:
+            "Directory for storing abstract proof graphs (default: the current \
+             directory).")
+  in
+  let representation =
+    let opts = [ ("node", NODE_LIST); ("edge", EDGE_LIST); ("json", JSON) ] in
+    Arg.(
+      value
+      & opt (some (enum opts)) None
+      & info [ "R"; "repr" ] ~docs ~docv:"REPR"
+          ~doc:
+            ("The concrete representation to use for abstract proof graphs \
+              (default is the node list). $(docv) must be " ^ doc_alts_enum opts
+           ^ "."))
+  in
+  let apply m order fast_fail_off minimality_off idempotent unminimized stats
+      paut taut dump_g dir repr_opt =
+    Option.iter (fun m -> soundness_method := m) m;
+    Option.iter set_node_order order;
+    if fast_fail_off then fail_fast false;
+    (* [use_minimality false] never raises; ordering it before the idempotent
+       loop check keeps the two flags independent of each other. *)
+    if minimality_off then use_minimality false;
+    if idempotent then use_idempotent_loop_check ();
+    if unminimized then minimize_proofs := false;
+    if stats then do_stats := true;
+    if paut then LegacyCheck.print_paut := true;
+    if taut then LegacyCheck.print_taut := true;
+    if dump_g then dump_graphs := true;
+    Option.iter (fun d -> graph_dump_dir := d) dir;
+    Option.iter (fun r -> repr := r) repr_opt
+  in
+  Term.(
+    const apply $ inf_desc $ ord $ no_fast_fail $ no_minimality
+    $ idempotent_loop_check $ unminimized_proofs $ rel_stats $ print_paut
+    $ print_taut $ dump $ graph_dir $ representation)
+
 module CheckCache = Hashtbl
 
 let ccache = CheckCache.create 1000

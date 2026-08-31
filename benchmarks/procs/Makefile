@@ -1,10 +1,11 @@
 TESTS:=$(sort $(shell find . -name '*.wl2'))
-CMD := procedure_prove
+CMD := cyclist
+SUB := proc prove
 
 .PHONY: all $(TESTS)
 all: $(TESTS)
 
 $(TESTS): %.wl2:
 	@echo $@
-	@dune exec $(CMD) -- $(TST_OPTS) -D $(DEFS) -all -P $@ || true
+	@dune exec $(CMD) -- $(SUB) $(TST_OPTS) -D $(DEFS) --all -P $@ || true
 	@echo

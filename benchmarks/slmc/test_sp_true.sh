@@ -1,7 +1,7 @@
 #!/bin/bash
 
-CMD=sl_modelcheck
-MC="dune exec $CMD --"
+CMD=cyclist
+MC="dune exec $CMD -- sl modelcheck"
 
 HEAP=
 

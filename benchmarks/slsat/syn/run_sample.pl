@@ -10,7 +10,8 @@ use Time::HiRes ();
 Math::Random::random_set_seed_from_phrase(join(':', 'POPL-2014', @ARGV));
 print join(' ', '#', $0, @ARGV), "\n";
 
-my $cmd = "sl_satcheck";
+my $cmd = "cyclist";
+my $sub = "sl satcheck";
 my $file = "test.defs";
 my $samples = 100;
 my $timeout = 60;
@@ -34,7 +35,7 @@ for (1..$samples) {
 sub check {
   my $file = shift;
   my $start = Time::HiRes::time();
-  my $output = `dune exec $cmd -- -t $timeout -D $file 2>&1`;
+  my $output = `dune exec $cmd -- $sub -t $timeout -D $file 2>&1`;
   my $elapsed = sprintf("%.2f", Time::HiRes::time() - $start);
   die $output if $output =~ m/^Fatal error/m;
   my $result;

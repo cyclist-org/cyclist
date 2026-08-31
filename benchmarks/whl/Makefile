@@ -1,9 +1,10 @@
 TESTS:= $(sort $(wildcard *.wl))
-CMD := while_prove
+CMD := cyclist
+SUB := while prove
 
 .PHONY: all $(TESTS)
 all: $(TESTS)
 
 $(TESTS): %.wl:
 	@echo "$@"
-	-@echo -n "\t" ; dune exec $(CMD) -- $(TST_OPTS) -D $(DEFS) -P $@
+	-@echo -n "\t" ; dune exec $(CMD) -- $(SUB) $(TST_OPTS) -D $(DEFS) -P $@

@@ -3,7 +3,7 @@
 # The Makefile overrides these; the fallbacks are for standalone use. Note that
 # only the main dune instance can resolve executables, so PROVER must name the
 # binary directly when several copies of this script run in parallel.
-PROVER=${PROVER:-"dune exec sl_disprove --"}
+PROVER=${PROVER:-"dune exec cyclist -- sl disprove"}
 TIMEOUT=${TIMEOUT:-60}
 DEFS=${DEFS:-all.defs}
 RESULTS=${RESULTS:-results}
@@ -18,7 +18,7 @@ exec > "$LOG"
 exec 2>&1
 
 export OCAMLRUNPARAM=b
-$PROVER -s -t "$TIMEOUT" -IP -D "$DEFS" -S "$QUERY" > "$OUT" 2>&1
+$PROVER -s -t "$TIMEOUT" --partition-strengthening -D "$DEFS" -S "$QUERY" > "$OUT" 2>&1
 
 STATUS=$?
 # 255 is an invalidity witness; 1 (no witness) and 2 (timeout) are both unknown.

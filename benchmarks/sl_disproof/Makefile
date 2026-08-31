@@ -3,14 +3,14 @@ JOBS:=$(or $(JOBS),4)
 SEQS:=$(or $(SEQS),seqs)
 DEFS:=$(or $(DEFS),all.defs)
 RESULTS:=$(or $(RESULTS),results)
-CMD := src/seplog/disprove.exe
+CMD := src/cli/cyclist.exe
 # Normally exported by the top-level Makefile; defaulted so that a bad PROVER
 # path cannot silently turn every query into an "unknown".
 ROOT:=$(or $(ROOT),$(realpath $(CURDIR)/../..))
 
 # Only one dune instance can hold the build lock, so the workers below cannot
 # each go through `dune exec`; build once here and pass the binary down instead.
-PROVER := $(ROOT)/_build/default/$(CMD)
+PROVER := $(ROOT)/_build/default/$(CMD) sl disprove
 
 export PROVER TIMEOUT DEFS RESULTS
 

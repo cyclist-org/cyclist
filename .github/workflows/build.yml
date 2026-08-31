@@ -78,5 +78,7 @@ jobs:
 
       # The default alias additionally covers the targets @install skips,
       # namely the soundness test executables and the sltop toplevel.
+      # `cyclist --help` is not exercised here; see the help smoke test in
+      # tests/cli.
       - name: Build
         run: opam exec -- dune build

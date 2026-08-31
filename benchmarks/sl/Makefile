@@ -1,5 +1,6 @@
-CMD := "src/seplog/prove.exe"
-export CMD
+CMD := "src/cli/cyclist.exe"
+SUB := sl prove
+export CMD SUB
 
 AVG_CASE:=base songbird atva-2014
 .PHONY: all $(AVG_CASE) worstcase

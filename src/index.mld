@@ -44,10 +44,26 @@ proofs, plus a number of instantiations for concrete logics.
 - {!module:Fol} ([cyclist.fol]) — first-order logic with inductive
   definitions.
 - {!module:Ltl} ([cyclist.ltl]) — linear temporal logic.
+- {!module:Procedure} ([cyclist.procedure]) — the {i while} language extended
+  with procedures.
 
-{1 Executables}
+{1 The [cyclist] executable}
 
-The provers are installed as separate binaries: [sl_prove], [sl_disprove],
-[sl_modelcheck], [sl_satcheck], [sl_satexpgen], [while_prove],
-[while_abduce], [asl_while_prove], [procedure_prove], [fo_prove],
-[ltl_prove], and [checkproof] for validating a serialised proof.
+Every prover is a subcommand of the single [cyclist] binary. Run
+[cyclist --help] for the command tree, or [cyclist COMMAND --help] for the
+options of a particular prover.
+
+{v
+cyclist sl prove|disprove|modelcheck|satcheck|satexpgen
+cyclist while prove|abduce
+cyclist asl-while prove
+cyclist proc prove
+cyclist fo prove
+cyclist ltl prove
+cyclist checkproof
+v}
+
+[cyclist checkproof] validates a serialised proof; the others search for one.
+Each command's [cmd] value lives next to the library it drives — see
+{!module:Seplog.Prove}, {!module:Ltl.Prove}, {!module:Generic.Checkproof} and
+their siblings.

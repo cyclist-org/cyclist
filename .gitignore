@@ -33,6 +33,7 @@ tests/mutant/*
 index.html
 _build/
 _opam/
+_opam
 
 # Python-related Files #
 ########################

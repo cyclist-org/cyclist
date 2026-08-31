@@ -1,9 +1,10 @@
 TESTS:= $(sort $(wildcard *.wl))
-CMD := while_abduce
+CMD := cyclist
+SUB := while abduce
 
 .PHONY: all $(TESTS)
 all: $(TESTS)
 
 $(TESTS): %.wl:
 	@echo "$@"
-	-@echo -n "\t" ; dune exec $(CMD) -- $(TST_OPTS) -P $@
+	-@echo -n "\t" ; dune exec $(CMD) -- $(SUB) $(TST_OPTS) -P $@

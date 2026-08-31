@@ -1,4 +1,5 @@
-(executable
- (name prove)
- (public_name procedure_prove)
- (libraries lib generic while ocamlgraph str))
+(library
+ (name procedure)
+ (public_name cyclist.procedure)
+ (libraries lib generic while ocamlgraph str cmdliner)
+ (modules (:standard)))

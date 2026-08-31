@@ -1,5 +1,6 @@
 TESTS:= $(sort $(wildcard *.prf))
-CMD := "src/generic/checkproof.exe"
+CMD := "src/cli/cyclist.exe"
+SUB := checkproof
 
 .PHONY: all $(TESTS)
 
@@ -11,4 +12,4 @@ all: $(TESTS)
 $(TESTS): %.prf:
 	-@TST_CASE="soundness-$*"; \
 	echo "test case: $$TST_CASE"; \
-	(cd "$(ROOT)" && dune exec $(CMD) -- -R edge $(TST_OPTS) -f "$(CURDIR)/$@")
+	(cd "$(ROOT)" && dune exec $(CMD) -- $(SUB) -R edge $(TST_OPTS) -f "$(CURDIR)/$@")

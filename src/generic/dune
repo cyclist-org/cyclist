@@ -1,9 +1,8 @@
 (library
  (name generic)
  (public_name cyclist.generic)
- (libraries lib)
- (modules
-  (:standard \ checkproof))
+ (libraries lib cmdliner)
+ (modules (:standard))
  (modules_without_implementation sequent)
  (foreign_stubs
   (language c)
@@ -23,12 +22,6 @@
  (c_library_flags
   (:include c_library_flags.sexp)
   -lstdc++))
-
-(executable
- (name checkproof)
- (public_name checkproof)
- (modules checkproof)
- (libraries generic))
 
 (rule
  (targets c_flags.sexp c_library_flags.sexp)

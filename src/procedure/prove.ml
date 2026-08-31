@@ -1,79 +1,14 @@
 open Lib
 open Generic
 open Program
-
-let defs_path = ref "examples/sl.defs"
-let prog_path = ref ""
-
 module GraphComponents = Graph.Components.Make (Proc.Graph)
 module Prover = Prover.Make (Seq)
 module F = Frontend.Make (Prover)
 module Proof = Prover.Proof
 module Node = Proofnode.Make (Seq)
 
-let prove_all = ref false
-
-let () =
-  F.usage :=
-    !F.usage
-    ^ "[-ed/fd <int>] [-D <file>] [-d(entail|frame|invalid)] [-Lem <int>] -P \
-       <file> [-T] [-all | <entry_point>*]"
-
-let () =
-  let old_spec_thunk = !F.speclist in
-  F.speclist :=
-    fun () ->
-      old_spec_thunk ()
-      @ [
-          ( "-ed",
-            Arg.Set_int Rules.entl_depth,
-            ": maximum search depth for entailment sub-prover, default is "
-            ^ string_of_int !Rules.entl_depth );
-          ( "-fd",
-            Arg.Int Seplog.Abduce.set_depth,
-            ": maximum depth to unfold predicates to in frame inference, \
-             default is "
-            ^ string_of_int Seplog.Abduce.max_depth );
-          ( "-D",
-            Arg.Set_string defs_path,
-            ": read inductive definitions from <file>, default is " ^ !defs_path
-          );
-          ( "-dentail",
-            Arg.Set Rules.show_entailment_debug,
-            ": print debug messages for the entailment subprover, default is "
-            ^ string_of_bool !Rules.show_entailment_debug
-            ^ " (only activated when main debug output flag set)" );
-          ( "-dframe",
-            Arg.Set Rules.show_frame_debug,
-            ": print debug messages for frame inference, default is "
-            ^ string_of_bool !Rules.show_frame_debug
-            ^ " (only activated when main debug output flag set)" );
-          ( "-dinvalid",
-            Arg.Set Rules.show_invalidity_debug,
-            ": print debug messages for invalidity checker, default is "
-            ^ string_of_bool !Rules.show_invalidity_debug
-            ^ " (only activated when main debug output flag set)" );
-          ( "-Lem",
-            Arg.Int Seplog.Rules.set_lemma_level,
-            ": specify the permissiveness of the lemma application strategy \
-             for proving entailments" ^ "\n"
-            ^ Seplog.Rules.lemma_option_descr_str () );
-          ("-P", Arg.Set_string prog_path, ": prove safety of program in <file>");
-          ("-T", Arg.Set Program.termination, ": also prove termination");
-          ( "-all",
-            Arg.Set prove_all,
-            ": analyse all procedures in <file>, or specify procedures to be \
-             analysed (default is " ^ Program.main ^ ")" );
-        ]
-
-(* disable max search depth *)
-let () = F.maxbound := 0
-
-(* Append all proofs to the same file *)
-let () = F.open_file_for_append := true
+let default_defs_path = "examples/sl.defs"
 let proc_proofs : Proof.t option Proc.SigMap.t ref = ref Proc.SigMap.empty
-let entry_points = ref []
-let add_entry_point p = entry_points := p :: !entry_points
 
 let extract_proof prf (idx, node) =
   if Rules.is_proc_unfold_node node then
@@ -115,29 +50,29 @@ let prove_scc ps = Blist.iter prove_seq (Blist.bind Proc.get_seqs ps)
 
 module Timer = Stats.TimeStats (struct end)
 
-let () =
-  let spec_list = !F.speclist () in
-  Arg.parse spec_list add_entry_point !F.usage;
-  if String.equal !prog_path "" then
-    F.die "-P must be specified." spec_list !F.usage;
-  let fields, procs = Program.of_channel (open_in !prog_path) in
+let die msg =
+  prerr_endline ("cyclist: " ^ msg);
+  exit Cmdliner.Cmd.Exit.cli_error
+
+let run defs_path prog_path termination prove_all cl_entry_points () () =
+  if termination then Program.termination := true;
+  let fields, procs = Program.of_channel (open_in prog_path) in
   let procs = Blist.map Proc.number_cmds procs in
-  let defs = Seplog.Defs.of_channel (open_in !defs_path) in
+  let defs = Seplog.Defs.of_channel (open_in defs_path) in
   (* TODO: Check well-formedness of the program: *)
   (*   Do all the predicates in the pre/post annotations have the correct arity? *)
-  (*   If not While_program.well_formed defs prog then F.die !While_program.error_msg *)
   Program.set_program (fields, procs);
   Rules.setup (defs, procs, proc_proofs);
   let proc_names = Blist.map Proc.get_name procs in
   let entry_points =
-    if !prove_all then proc_names
-    else if Blist.is_empty !entry_points then [ Program.main ]
-    else !entry_points
+    if prove_all then proc_names
+    else if Blist.is_empty cl_entry_points then [ Program.main ]
+    else cl_entry_points
   in
   Blist.iter
     (fun p ->
       try ignore (Program.get_proc p)
-      with Not_found -> F.die (p ^ " procedure not found!") spec_list !F.usage)
+      with Not_found -> die (p ^ " procedure not found!"))
     entry_points;
   let reachable = Program.get_reachable entry_points in
   Blist.iter
@@ -165,3 +100,116 @@ let () =
       entry_points
   in
   if res then exit 0 else exit 1
+
+let cmd =
+  let open Cmdliner in
+  let defs =
+    Arg.(
+      value & opt file default_defs_path
+      & info [ "D"; "defs" ] ~docv:"FILE"
+          ~doc:"Read inductive definitions from $(docv).")
+  in
+  let prog =
+    Arg.(
+      required
+      & opt (some file) None
+      & info [ "P"; "program" ] ~docv:"FILE"
+          ~doc:"Prove safety of the program in $(docv).")
+  in
+  let termination =
+    Arg.(
+      value & flag & info [ "T"; "termination" ] ~doc:"Also prove termination.")
+  in
+  let prove_all =
+    Arg.(
+      value & flag
+      & info [ "all" ] ~doc:"Analyse every procedure in the program file.")
+  in
+  let entry_points =
+    Arg.(
+      value & pos_all string []
+      & info [] ~docv:"PROC"
+          ~doc:
+            ("The procedures to analyse. Defaults to " ^ Program.main
+           ^ "; see also $(b,--all)."))
+  in
+  let entl_depth =
+    Arg.(
+      value
+      & opt (some int) None
+      & info [ "entl-depth" ] ~docv:"INT"
+          ~doc:"Maximum search depth for the entailment sub-prover.")
+  in
+  let frame_depth =
+    Arg.(
+      value
+      & opt (some int) None
+      & info [ "frame-depth" ] ~docv:"INT"
+          ~doc:"Maximum depth to unfold predicates to during frame inference.")
+  in
+  let lemma_level =
+    Arg.(
+      value
+      & opt (some (enum [ ("0", 0); ("1", 1); ("2", 2); ("3", 3) ])) None
+      & info [ "lemma-level" ] ~docv:"INT"
+          ~doc:
+            "How permissive the lemma application strategy is when proving \
+             entailments: 0 to apply no lemmas, 1 to only apply lemmas \
+             containing predicate instances (the default), 2 to only apply \
+             lemmas with non-empty spatial components, 3 to attempt all \
+             applicable lemmas.")
+  in
+  let debug_entailment =
+    Arg.(
+      value & flag
+      & info [ "debug-entailment" ]
+          ~doc:
+            "Print debug messages for the entailment sub-prover (only when \
+             $(b,--debug) is also set).")
+  in
+  let debug_frame =
+    Arg.(
+      value & flag
+      & info [ "debug-frame" ]
+          ~doc:
+            "Print debug messages for frame inference (only when $(b,--debug) \
+             is also set).")
+  in
+  let debug_invalidity =
+    Arg.(
+      value & flag
+      & info [ "debug-invalidity" ]
+          ~doc:
+            "Print debug messages for the invalidity checker (only when \
+             $(b,--debug) is also set).")
+  in
+  (* These only mutate configuration held elsewhere, so they are applied as the
+     term is evaluated rather than passed on to [run]. *)
+  let side_effects =
+    let apply ed fd lem de df di =
+      Option.iter (fun n -> Rules.entl_depth := n) ed;
+      Option.iter Seplog.Abduce.set_depth fd;
+      Option.iter Seplog.Rules.set_lemma_level lem;
+      if de then Rules.show_entailment_debug := true;
+      if df then Rules.show_frame_debug := true;
+      if di then Rules.show_invalidity_debug := true
+    in
+    Term.(
+      const apply $ entl_depth $ frame_depth $ lemma_level $ debug_entailment
+      $ debug_frame $ debug_invalidity)
+  in
+  Cmd.v
+    (Cmd.info "prove" ~doc:"Prove safety of a while program with procedures."
+       ~exits:
+         (let open Cmd.Exit in
+          [
+            info ok ~doc:"if every entry point was proved.";
+            info 1 ~doc:"if any entry point was not proved.";
+            info cli_error ~doc:"on command line parsing errors.";
+            info internal_error ~doc:"on unexpected internal errors.";
+          ]))
+    Term.(
+      const run $ defs $ prog $ termination $ prove_all $ entry_points
+      (* max search depth disabled *)
+      $ F.common_term ~max_depth:0 ()
+      $ side_effects)

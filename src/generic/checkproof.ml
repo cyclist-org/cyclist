@@ -1,31 +1,7 @@
 open MParser
 open MParser_RE
 open Lib
-open Generic
 open Soundcheck
-
-let allow_comments = ref false
-let input_files = ref []
-
-let speclist =
-  Soundcheck.arg_opts
-  @ [
-      ("-d", Arg.Set do_debug, ": print debug messages");
-      ("-s", Arg.Set Stats.do_statistics, ": print statistics");
-      ( "--allow-comments",
-        Arg.Set allow_comments,
-        ": allow line comments in input" );
-      ( "-f",
-        Arg.String (fun f -> input_files := f :: !input_files),
-        ": take input from file" );
-    ]
-
-let usage =
-  "usage: " ^ Sys.argv.(0)
-  ^ " [-d] [-s] [-R ( node | edge | json )] [--inf-desc ( vla | sla | fwk-full \
-     | fwk-or | cyclone )] [--allow-comments | (-f <file>)*]"
-
-let () = Arg.parse speclist (fun _ -> ()) usage
 
 let do_check prf =
   begin
@@ -40,19 +16,19 @@ let do_check prf =
     end
   end
 
-let process_files parser =
+let process_files parser input_files =
   let process_file f =
     let f_in = open_in f in
     let prfs = handle_reply (parse_channel parser f_in ()) in
     let () = close_in f_in in
     List.iter do_check prfs
   in
-  List.iter process_file (List.rev !input_files)
+  List.iter process_file input_files
 
-let process_stdin parser =
+let process_stdin parser allow_comments =
   let buf = Buffer.create 2014 in
   let next_char =
-    match !allow_comments with
+    match allow_comments with
     | true ->
         let comment = ref false in
         fun () ->
@@ -83,14 +59,36 @@ let process_stdin parser =
           List.iter do_check prfs
   done
 
-let () =
+let run allow_comments input_files () () =
   let () = gc_setup () in
-  let () = Format.set_margin (Sys.command "exit $(tput cols)") in
   let parser =
     sep_end_by
       (spaces >> parse << spaces)
       (skip Tokens.semi << spaces <|> spaces)
   in
-  match !input_files with
-  | [] -> process_stdin parser
-  | _ -> process_files parser
+  match input_files with
+  | [] -> process_stdin parser allow_comments
+  | _ -> process_files parser input_files
+
+let cmd =
+  let open Cmdliner in
+  let allow_comments =
+    Arg.(
+      value & flag
+      & info [ "allow-comments" ] ~doc:"Allow line comments in the input.")
+  in
+  let input_files =
+    Arg.(
+      value & opt_all file []
+      & info [ "f"; "file" ] ~docv:"FILE"
+          ~doc:
+            "Take input from $(docv). Repeatable; without it the proofs are \
+             read from standard input.")
+  in
+  Cmd.v
+    (Cmd.info "checkproof"
+       ~doc:"Validate a serialised proof against the trace condition."
+       ~exits:Cmd.Exit.defaults)
+    Term.(
+      const run $ allow_comments $ input_files $ Frontend.debug_term
+      $ Soundcheck.term)
