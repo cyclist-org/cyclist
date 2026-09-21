@@ -22,7 +22,6 @@
 #include <spot/twa/twaproduct.hh>
 
 #include <spot/twaalgos/contains.hh>
-#include <spot/twaalgos/copy.hh>
 #include <spot/twaalgos/determinize.hh>
 #include <spot/twaalgos/dot.hh>
 #include <spot/twaalgos/dualize.hh>

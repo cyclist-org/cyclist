@@ -4,7 +4,6 @@
 #include <spot/twaalgos/determinize.hh>
 #include <spot/twaalgos/dualize.hh>
 #include <spot/twaalgos/totgba.hh>
-#include <spot/twaalgos/copy.hh>
 #include <spot/twaalgos/stutter.hh>
 #include <spot/twa/twaproduct.hh>
 #include <spot/twaalgos/gtec/gtec.hh>

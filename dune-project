@@ -25,7 +25,7 @@
  (depends
   (ocaml (>= 4.08.0))
   (stdlib-shims :build)
-  (dune-configurator :build)
+  (dune-configurator (and :build (>= 3.0)))
   (mparser-re (>= 1.3))
   (cmdliner (>= 2.0))
   dune-build-info

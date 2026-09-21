@@ -1,6 +1,13 @@
 TEST_EXE=./soundness
 
-CFLAGS:=-xc++ -std=c++17
+# The C++ standard is defined once, by the dune build; extract it from there
+# rather than duplicating it here, so the two cannot drift apart.
+CXXSTD := $(shell sed -n 's/^ *\(-std=c++[0-9a-z]*\) *$$/\1/p' ../dune)
+ifeq ($(CXXSTD),)
+$(error Could not determine the C++ standard from ../dune)
+endif
+
+CFLAGS:=-xc++ $(CXXSTD)
 
 TIMEOUT := $(if $(TIMEOUT),$(TIMEOUT),60)
 

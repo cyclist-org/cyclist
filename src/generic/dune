@@ -16,7 +16,7 @@
   (flags
    :standard
    -xc++
-   -std=c++17
+   -std=c++20
    (:include c_flags.sexp))
   (include_dirs %{ocaml_where}/caml))
  (c_library_flags

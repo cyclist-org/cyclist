@@ -32,6 +32,7 @@ tests/mutant/*
 *.top
 index.html
 _build/
+*.install
 _opam/
 _opam
 
@@ -46,6 +47,14 @@ _opam
 # Heighted graphs files
 graphs/*
 src/generic/test/graphs
+
+# C++ test build artifacts #
+############################
+src/generic/test/*.o
+src/generic/test/soundness
+src/generic/test/get_graphs_stats
+src/generic/test/run_on_graphs
+src/generic/test/test_methods
 
 # Benchmark output #
 ####################
