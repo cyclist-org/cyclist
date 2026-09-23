@@ -2,7 +2,7 @@
  (name seplog_ctl)
  (public_name cyclist.seplog.ctl)
  (libraries lib generic mparser seplog while)
- (modules form seq rules))
+ (modules form seq rules program))
 
 (executable
  (name prove)

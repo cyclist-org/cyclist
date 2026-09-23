@@ -28,7 +28,7 @@ let () =
   let spec_list = !F.speclist() in
   Arg.parse spec_list (fun _ -> raise (Arg.Bad "Stray argument found.")) !F.usage ;
   if !prog_path="" then F.die "-P must be specified." spec_list !F.usage ;
-  let (seq, prog, tfext) = While.Program.of_channel (open_in !prog_path) in
+  let (seq, prog, tfext) = Program.of_channel (open_in !prog_path) in
   let prog = While.Program.Cmd.number prog in
   Program.set_program prog ;
   Rules.setup (Seplog.Defs.of_channel (open_in !defs_path));
