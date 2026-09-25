@@ -6,4 +6,8 @@
 (env
  (dev
   (flags
-   (:standard -w -9))))
+   (:standard -w -9)))
+ (release
+  (flags
+   (:standard -w -9))
+  (ocamlopt_flags -O3)))
