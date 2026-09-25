@@ -2,16 +2,18 @@ open Lib
 open Symbols
 open MParser
 
-let anon_var_name = "_"
+include VarManager.Make (struct
+  let seed = -4
+  let anon_str = "_"
+  let alphabet = VarManager.roman_alphabet
 
-let classify_varname s =
-  let l = String.length s in
-  assert (not (String.equal s ""));
-  if String.equal s anon_var_name then VarManager.ANONYMOUS
-  else if Int.( > ) l 1 && Char.equal s.[l - 1] '\'' then VarManager.BOUND
-  else VarManager.FREE
-
-include (val VarManager.mk (-4) anon_var_name classify_varname : VarManager.S)
+  let classify_varname s =
+    let l = String.length s in
+    assert (not (String.equal s ""));
+    if String.equal s anon_str then VarManager.ANONYMOUS
+    else if Int.( > ) l 1 && Char.equal s.[l - 1] '\'' then VarManager.BOUND
+    else VarManager.FREE
+end)
 
 type term_t = Const of int | Var of Var.t | Fun of string * term_t list
 

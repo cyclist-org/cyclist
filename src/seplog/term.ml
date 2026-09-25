@@ -1,14 +1,19 @@
 open Lib
 open MParser
 
-let classify_varname s =
-  let l = String.length s in
-  assert (not (String.equal s ""));
-  if String.equal s "nil" then VarManager.ANONYMOUS
-  else if Int.( > ) l 1 && Char.equal s.[l - 1] '\'' then VarManager.BOUND
-  else VarManager.FREE
+module VM = VarManager.Make (struct
+  let seed = -4
+  let anon_str = "nil"
+  let alphabet = VarManager.roman_alphabet
 
-module VM = (val VarManager.mk (-4) "nil" classify_varname : VarManager.S)
+  let classify_varname s =
+    let l = String.length s in
+    assert (not (String.equal s ""));
+    if String.equal s "nil" then VarManager.ANONYMOUS
+    else if Int.( > ) l 1 && Char.equal s.[l - 1] '\'' then VarManager.BOUND
+    else VarManager.FREE
+end)
+
 include VM
 
 (* BasicType signature *)

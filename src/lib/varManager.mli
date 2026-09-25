@@ -135,7 +135,7 @@ module type S = sig
 
   include I with type var = Var.t and type var_container = Var.Set.t
 
-  val alphabet : alphabet ref
+  val alphabet : alphabet
   (** The alphabet that is used to generate new variables. *)
 
   val to_ints : Var.Set.t -> Int.Set.t
@@ -146,9 +146,20 @@ end
 
 type varname_class = FREE | BOUND | ANONYMOUS
 
-val mk : int -> string -> (string -> varname_class) -> (module S)
-(** [mk seed anon_str classify] creates a new variable manager module where:
-    [seed] specifies a cyclic permutation of the alphabet, which is used
-    internally to create new variable names; [anon_str] specifies how to
-    represent "anonymous" variables as a string; [classify varname] returns a
-    value of type [varname_class] classifying [varname]. *)
+(** [Make] creates a new variable manager module *)
+module type CONFIG = sig
+  val seed : int
+  (** [seed] specifies a cyclic permutation of the alphabet, which is used
+      internally to create new variable names *)
+
+  val anon_str : string
+  (** specifies how to represent "anonymous" variables as a string *)
+
+  val alphabet : alphabet
+
+  val classify_varname : string -> varname_class
+  (** [classify varname] returns a value of type [varname_class] classifying
+      [varname]. *)
+end
+
+module Make (C : CONFIG) : S

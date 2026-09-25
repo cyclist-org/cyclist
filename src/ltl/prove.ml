@@ -1,10 +1,8 @@
-open Lib
 open Generic
 module Prover = Prover.Make (Seq)
 module F = Frontend.Make (Prover)
 
 let run sequent () =
-  Tags.alphabet := VarManager.arabic_digits;
   let seq = Seq.of_string sequent in
   F.exit (F.prove_seq !Rules.axioms !Rules.rules seq)
 

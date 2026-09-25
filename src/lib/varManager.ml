@@ -119,7 +119,7 @@ module type S = sig
 
   include I with type var = Var.t and type var_container = Var.Set.t
 
-  val alphabet : alphabet ref
+  val alphabet : alphabet
   val to_ints : Var.Set.t -> Int.Set.t
 end
 
@@ -152,129 +152,130 @@ let cyclic_permute ls n =
   let snd = String.sub s 0 start in
   String.concat "" [fst; snd] *)
 
-let mk seed anon_str classify_varname =
-  (module struct
-    let termtbl = H.create 997
-    let _mk s = H.hashcons termtbl s
-    let anonymous = _mk ""
+module type CONFIG = sig
+  val seed : int
+  val anon_str : string
+  val alphabet : alphabet
+  val classify_varname : string -> varname_class
+end
 
-    let mk s =
-      if class_equal (classify_varname s) ANONYMOUS then anonymous else _mk s
+module Make (C : CONFIG) : S = struct
+  include C
 
-    let alphabet = ref roman_alphabet
+  let termtbl = H.create 997
+  let _mk s = H.hashcons termtbl s
+  let anonymous = _mk ""
 
-    module Var = struct
-      module T = struct
-        type t = Strng.t Hashcons.hash_consed
+  let mk s =
+    if class_equal (classify_varname s) ANONYMOUS then anonymous else _mk s
 
-        let equal s s' = s == s'
+  module Var = struct
+    module T = struct
+      type t = Strng.t Hashcons.hash_consed
 
-        let to_string s =
-          if equal s anonymous then anon_str else s.Hashcons.node
-
-        let pp fmt s = Strng.pp fmt (to_string s)
-        let compare s s' = Int.compare s.Hashcons.tag s'.Hashcons.tag
-        let hash s = s.Hashcons.hkey
-      end
-
-      include T
-      include Containers.Make (T)
-
-      let to_int s = s.Hashcons.tag
+      let equal s s' = s == s'
+      let to_string s = if equal s anonymous then anon_str else s.Hashcons.node
+      let pp fmt s = Strng.pp fmt (to_string s)
+      let compare s s' = Int.compare s.Hashcons.tag s'.Hashcons.tag
+      let hash s = s.Hashcons.hkey
     end
 
+    include T
+    include Containers.Make (T)
+
+    let to_int s = s.Hashcons.tag
+  end
+
+  type var = Var.t
+  type var_container = Var.Set.t
+
+  let is_anonymous v = Var.equal v anonymous
+
+  let is_exist_var n =
+    (not (is_anonymous n))
+    && class_equal (classify_varname n.Hashcons.node) BOUND
+
+  let is_free_var n =
+    (not (is_anonymous n))
+    && class_equal (classify_varname n.Hashcons.node) FREE
+
+  let rev_letters = cyclic_permute alphabet seed |> List.rev
+
+  let search_vars vs fresh n =
+    let mk_var free lvl acc n =
+      let n = match lvl with 0 -> n | _ -> n ^ "_" ^ string_of_int lvl in
+      (if free then mk n else mk (n ^ "'")) :: acc
+    in
+    let mk_seg free lvl = Blist.fold_left (mk_var free lvl) [] rev_letters in
+    let rec _search s acc vs n =
+      match (vs, n) with
+      | _, 0 -> Some (Blist.rev acc)
+      | [], _ -> None
+      | v :: vs, n ->
+          let acc', n' =
+            if Var.Set.mem v s then (acc, n) else (v :: acc, n - 1)
+          in
+          _search s acc' vs n'
+    in
+    let curr_lvl = ref 1 in
+    let _fvars, _evars = (ref (mk_seg true 0), ref (mk_seg false 0)) in
+    (* let () =  prerr_endline (Blist.to_string ", " Fun.id !_fvars) in *)
+    let rec search s free n =
+      match _search s [] (if free then !_fvars else !_evars) n with
+      | Some vs -> vs
+      | None ->
+          _fvars := !_fvars @ mk_seg true !curr_lvl;
+          _evars := !_evars @ mk_seg false !curr_lvl;
+          incr curr_lvl;
+          search s free n
+    in
+    search vs fresh n
+
+  let fresh_fvars s n = search_vars s true n
+  let fresh_evars s n = search_vars s false n
+  let fresh_fvar s = Blist.hd (fresh_fvars s 1)
+  let fresh_evar s = Blist.hd (fresh_evars s 1)
+  let to_ints vs = Var.Set.map_to Int.Set.add Int.Set.empty Var.to_int vs
+
+  module Subst = struct
+    type t = Var.t Var.Map.t
     type var = Var.t
     type var_container = Var.Set.t
 
-    let is_anonymous v = Var.equal v anonymous
+    let empty = Var.Map.empty
+    let singleton x y = Var.Map.add x y empty
+    let of_list = Var.Map.of_list
+    let pp = Var.Map.pp Var.pp
+    let to_string = Var.Map.to_string Var.to_string
 
-    let is_exist_var n =
-      (not (is_anonymous n))
-      && class_equal (classify_varname n.Hashcons.node) BOUND
+    let apply theta v =
+      if (not (is_anonymous v)) && Var.Map.mem v theta then Var.Map.find v theta
+      else v
 
-    let is_free_var n =
-      (not (is_anonymous n))
-      && class_equal (classify_varname n.Hashcons.node) FREE
-
-    let search_vars vs fresh n =
-      let mk_var free lvl acc n =
-        let n = match lvl with 0 -> n | _ -> n ^ "_" ^ string_of_int lvl in
-        (if free then mk n else mk (n ^ "'")) :: acc
+    let avoid vars subvars =
+      let allvars = Var.Set.union vars subvars in
+      let exist_vars, free_vars =
+        Pair.map Var.Set.elements (Var.Set.partition is_exist_var subvars)
       in
-      let letters = cyclic_permute !alphabet seed in
-      let mk_seg free lvl =
-        Blist.fold_left (mk_var free lvl) [] (List.rev letters)
-      in
-      let rec _search s acc vs n =
-        match (vs, n) with
-        | _, 0 -> Some (Blist.rev acc)
-        | [], _ -> None
-        | v :: vs, n ->
-            let acc', n' =
-              if Var.Set.mem v s then (acc, n) else (v :: acc, n - 1)
-            in
-            _search s acc' vs n'
-      in
-      let curr_lvl = ref 1 in
-      let _fvars, _evars = (ref (mk_seg true 0), ref (mk_seg false 0)) in
-      (* let () =  prerr_endline (Blist.to_string ", " Fun.id !_fvars) in *)
-      let rec search s free n =
-        match _search s [] (if free then !_fvars else !_evars) n with
-        | Some vs -> vs
-        | None ->
-            _fvars := !_fvars @ mk_seg true !curr_lvl;
-            _evars := !_evars @ mk_seg false !curr_lvl;
-            incr curr_lvl;
-            search s free n
-      in
-      search vs fresh n
+      let fresh_f_vars = fresh_fvars allvars (Blist.length free_vars) in
+      let fresh_e_vars = fresh_evars allvars (Blist.length exist_vars) in
+      Var.Map.of_list
+        (Blist.append
+           (Blist.combine free_vars fresh_f_vars)
+           (Blist.combine exist_vars fresh_e_vars))
 
-    let fresh_fvars s n = search_vars s true n
-    let fresh_evars s n = search_vars s false n
-    let fresh_fvar s = Blist.hd (fresh_fvars s 1)
-    let fresh_evar s = Blist.hd (fresh_evars s 1)
-    let to_ints vs = Var.Set.map_to Int.Set.add Int.Set.empty Var.to_int vs
+    let strip theta = Var.Map.filter (fun x y -> not (Var.equal x y)) theta
 
-    module Subst = struct
-      type t = Var.t Var.Map.t
-      type var = Var.t
-      type var_container = Var.Set.t
+    let mk_subst fresh_vars avoid ts =
+      let ts' = fresh_vars (Var.Set.union ts avoid) (Var.Set.cardinal ts) in
+      Var.Map.of_list (Blist.combine (Var.Set.to_list ts) ts')
 
-      let empty = Var.Map.empty
-      let singleton x y = Var.Map.add x y empty
-      let of_list = Var.Map.of_list
-      let pp = Var.Map.pp Var.pp
-      let to_string = Var.Map.to_string Var.to_string
+    let mk_free_subst = mk_subst fresh_fvars
+    let mk_ex_subst = mk_subst fresh_evars
 
-      let apply theta v =
-        if (not (is_anonymous v)) && Var.Map.mem v theta then
-          Var.Map.find v theta
-        else v
-
-      let avoid vars subvars =
-        let allvars = Var.Set.union vars subvars in
-        let exist_vars, free_vars =
-          Pair.map Var.Set.elements (Var.Set.partition is_exist_var subvars)
-        in
-        let fresh_f_vars = fresh_fvars allvars (Blist.length free_vars) in
-        let fresh_e_vars = fresh_evars allvars (Blist.length exist_vars) in
-        Var.Map.of_list
-          (Blist.append
-             (Blist.combine free_vars fresh_f_vars)
-             (Blist.combine exist_vars fresh_e_vars))
-
-      let strip theta = Var.Map.filter (fun x y -> not (Var.equal x y)) theta
-
-      let mk_subst fresh_vars avoid ts =
-        let ts' = fresh_vars (Var.Set.union ts avoid) (Var.Set.cardinal ts) in
-        Var.Map.of_list (Blist.combine (Var.Set.to_list ts) ts')
-
-      let mk_free_subst = mk_subst fresh_fvars
-      let mk_ex_subst = mk_subst fresh_evars
-
-      let partition theta =
-        Var.Map.partition
-          (fun x y -> is_free_var x && (is_anonymous y || is_free_var y))
-          theta
-    end
-  end : S)
+    let partition theta =
+      Var.Map.partition
+        (fun x y -> is_free_var x && (is_anonymous y || is_free_var y))
+        theta
+  end
+end

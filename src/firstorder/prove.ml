@@ -1,4 +1,3 @@
-open Lib
 open Generic
 module Prover = Prover.Make (Seq)
 module F = Frontend.Make (Prover)
@@ -6,7 +5,6 @@ module F = Frontend.Make (Prover)
 let default_defs_path = "examples/fo.defs"
 
 let run defs_path sequent () =
-  Tags.alphabet := VarManager.arabic_digits;
   let seq = Seq.of_string sequent in
   Rules.setup (Defs.of_channel (open_in defs_path));
   F.exit (F.prove_seq !Rules.axioms !Rules.rules seq)

@@ -2,13 +2,17 @@ open MParser
 open MParser_RE
 open Lib
 
-let classify_varname s =
-  let l = String.length s in
-  assert (Int.( > ) (String.length s) 0);
-  if Int.( > ) l 1 && Char.equal s.[l - 1] '\'' then VarManager.BOUND
-  else VarManager.FREE
+module VM = VarManager.Make (struct
+  let seed = 0
+  let anon_str = "_"
+  let alphabet = VarManager.arabic_digits
 
-module VM = (val VarManager.mk 0 "_" classify_varname : VarManager.S)
+  let classify_varname s =
+    let l = String.length s in
+    assert (Int.( > ) (String.length s) 0);
+    if Int.( > ) l 1 && Char.equal s.[l - 1] '\'' then VarManager.BOUND
+    else VarManager.FREE
+end)
 
 module Elt = struct
   include VM.Var

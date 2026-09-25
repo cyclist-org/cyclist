@@ -4,7 +4,6 @@ open Form
 module Prover = Prover.Make (Seq)
 module Frontend = Frontend.Make (Prover)
 
-let () = Tags.alphabet := Lib.VarManager.arabic_digits
 let prove = Frontend.idfs !Rules.axioms !Rules.rules
 
 let run_test seq =
