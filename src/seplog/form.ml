@@ -9,6 +9,8 @@ include Pair.Make (Ord_constraints) (Flist.Make (Heap))
 
 let empty = (Ord_constraints.empty, [Heap.empty])
 
+let of_heaps hs = (Ord_constraints.empty, hs)
+
 exception Not_symheap
 
 let is_symheap = function _, [s] -> true | _ -> false

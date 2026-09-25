@@ -1,20 +1,22 @@
 (** Symbolic heaps. *)
-
 open Lib
 open Generic
+open Seplog
+
 
 type abstract1
-
 type abstract2
 
-type symheap = private
-  { eqs: Uf.t
-  ; deqs: Deqs.t
-  ; ptos: Ptos.t
-  ; inds: Tpreds.t
-  ; mutable _terms: abstract1
-  ; mutable _vars: abstract1
-  ; mutable _tags: abstract2 }
+type symheap = private {
+	rho : Sl_rho.t;
+  eqs : Uf.t;
+  deqs : Deqs.t;
+  ptos : Ptos.t;
+  inds : Tpreds.t;
+  mutable _terms : abstract1;
+  mutable _vars : abstract1;
+  mutable _tags : abstract2
+}
 
 include BasicType with type t = symheap
 
@@ -23,7 +25,6 @@ val empty : t
 (** Accessor functions. *)
 
 val vars : t -> Term.Set.t
-
 val terms : t -> Term.Set.t
 
 val tags : t -> Tags.t
@@ -60,8 +61,7 @@ val idents : t -> Predsym.MSet.t
 (** Get multiset of predicate identifiers. *)
 
 val inconsistent : t -> bool
-(** Trivially false if heap contains t!=t for any term t, or if x=y * x!=y
-    is provable for any x,y.
+(** Trivially false if x=y * x!=y is provable for any x,y.
     NB only equalities and disequalities are used for this check.
 *)
 
@@ -81,70 +81,56 @@ val subsumed_upto_tags : ?total:bool -> t -> t -> bool
 
 val equal : t -> t -> bool
 (** Checks whether two symbolic heaps are equal. *)
-
 val equal_upto_tags : t -> t -> bool
 (** Like [equal] but ignoring tag assignment. *)
-
 val is_empty : t -> bool
 (** [is_empty h] tests whether [h] is equal to the empty heap. *)
 
 (** Constructors. *)
 
-val parse : ?allow_tags:bool -> ?augment_deqs:bool -> (t, 'a) MParser.t
+val parse : (t, 'a) MParser.t
+val of_string : string -> t
 
-val of_string : ?allow_tags:bool -> ?augment_deqs:bool -> string -> t
-
+val mk_rho : Term.t * int -> t
 val mk_pto : Pto.t -> t
-
 val mk_eq : Tpair.t -> t
-
 val mk_deq : Tpair.t -> t
-
 val mk_ind : Tpred.t -> t
 
-val mk : Uf.t -> Deqs.t -> Ptos.t -> Tpreds.t -> t
+val mk : Sl_rho.t -> Uf.t -> Deqs.t -> Ptos.t -> Tpreds.t -> t
+val dest : t -> (Sl_rho.t * Uf.t * Deqs.t * Ptos.t * Tpreds.t)
 
-val dest : t -> Uf.t * Deqs.t * Ptos.t * Tpreds.t
+val combine : t -> t -> t
 
 (** Functions [with_*] accept a heap [h] and a heap component [c] and
     return the heap that results by replacing [h]'s appropriate component
     with [c]. *)
 
+val with_rho : t -> Sl_rho.t -> t
 val with_eqs : t -> Uf.t -> t
-
 val with_deqs : t -> Deqs.t -> t
-
 val with_ptos : t -> Ptos.t -> t
-
 val with_inds : t -> Tpreds.t -> t
 
 val del_deq : t -> Tpair.t -> t
-
 val del_pto : t -> Pto.t -> t
-
 val del_ind : t -> Tpred.t -> t
 
+val add_eq : t -> Term.t -> int -> t
 val add_eq : t -> Tpair.t -> t
-
 val add_deq : t -> Tpair.t -> t
-
 val add_pto : t -> Pto.t -> t
-
 val add_ind : t -> Tpred.t -> t
 
 val proj_sp : t -> t
-
 val proj_pure : t -> t
 
-val explode_deqs : t -> t
-
-val star : ?augment_deqs:bool -> t -> t -> t
-
+val star : t -> t -> t
 val diff : t -> t -> t
 
 val fixpoint : (t -> t) -> t -> t
 
-val subst : Subst.t -> t -> t
+val subst : Term.Subst.t -> t -> t
 
 val univ : Term.Set.t -> t -> t
 (** Replace all existential variables with fresh universal variables. *)
@@ -165,30 +151,37 @@ val subst_tags : Tagpairs.t -> t -> t
     tag pairs provided. *)
 
 val unify_partial :
-     ?tagpairs:bool
-  -> ?update_check:Unify.Unidirectional.update_check
-  -> t Unify.Unidirectional.unifier
-(** Unify two heaps such that the first becomes a subformula of the second. *)
-
-val biunify_partial :
-     ?tagpairs:bool
-  -> ?update_check:Unify.Bidirectional.update_check
-  -> t Unify.Bidirectional.unifier
+      ?tagpairs:bool ->
+        ?update_check:Unify.Unidirectional.update_check ->
+          t Unify.Unidirectional.unifier
+(** Unify two heaps such that the first becomes a subformula of the second.
+- If the optional argument [~tagpairs=false] is set to [true] then in addition
+  to the substitution found, also return the set of pairs of tags of
+  predicates unified. *)
 
 val classical_unify :
-     ?inverse:bool
-  -> ?tagpairs:bool
-  -> ?update_check:Unify.Unidirectional.update_check
-  -> t Unify.Unidirectional.unifier
+      ?inverse:bool -> ?tagpairs:bool ->
+        ?update_check:Unify.Unidirectional.update_check ->
+          t Unify.Unidirectional.unifier
 (** Unify two heaps, by using [unify_partial] for the pure (classical) part whilst
     using [unify] for the spatial part.
 - If the optional argument [~inverse=false] is set to [true] then compute the
-  required substitution for the *second* argument as opposed to the first. *)
+  required substitution for the *second* argument as opposed to the first.
+- If the optional argument [~tagpairs=false] is set to [true] then in addition
+  to the substitution found, also return the set of pairs of tags of
+  predicates unified. *)
 
-val classical_biunify :
-     ?tagpairs:bool
-  -> ?update_check:Unify.Bidirectional.update_check
-  -> t Unify.Bidirectional.unifier
+val compute_frame :
+      ?freshen_existentials:bool -> ?avoid:Term.Set.t -> t -> t -> t option
+(** [compute_frame f f'] computes the portion of [f'] left over (the 'frame')
+    after subtracting all the atomic formulae in the specification [f]. Returns
+    None when there are atomic formulae in [f] which are not also in [f'] (i.e.
+    [f] is not subsumed by [f']). Any existential variables occurring in the
+    frame which also occur in the specification [f] are freshened, avoiding the
+    variables in the optional argument [~avoid=Term.Set.empty].
+- If the optional argument [~freshen_existentials=true] is set to false, then
+  None will be returned in case there are existential variables in the frame
+  which also occur in the specification. *)
 
 val norm : t -> t
 (** Replace all terms with their UF representative (the UF in the heap). *)
@@ -204,15 +197,3 @@ val all_subheaps : t -> t list
         done by using [Uf.remove] to remove subsets of variables from
         [h.eqs];
     and forming all possible combinations *)
-
-val memory_consuming : t -> bool
-(** [memory_consuming h] returns [true] iff whenever there is an inductive
-    predicate in [h] there is also a points-to. **)
-
-val constructively_valued : t -> bool
-(** [constructively_valued h] returns true if all variables in [h] are
-    c.valued.  A variable [v] in [h] is c.valued iff (recursively)
-    - it is free, or,
-    - there is a c.valued variable [v'] such that
-      - [v=v'] is in [h], or,
-      - [v' |-> ys] is in [h] and [v] appears in [ys]. **)

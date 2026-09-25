@@ -418,7 +418,11 @@ let rec _complete_tags avoid f =
     let (fs, used) = Blist.fold_left g ([], avoid) fs in
     (Blist.rev fs, used) in
   match f with
-  | Final _ | Atom _ -> (f, avoid)
+  | Final _ -> (f, avoid)
+  | Atom (h, n) ->
+    let h = Heap.complete_tags avoid h in
+    let used = Tags.union avoid (Heap.tags h) in
+    (Atom (h, n), used)
   | Circle(f, n) -> wrap _mk_circle f n avoid
   | Diamond(f, n) -> wrap _mk_diamond f n avoid
   | Box(f, n) -> wrap _mk_box f n avoid

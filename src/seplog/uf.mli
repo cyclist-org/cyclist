@@ -20,12 +20,16 @@ val fold : (Term.t -> Term.t -> 'a -> 'a) -> t -> 'a -> 'a
 
 val for_all : (Term.t -> Term.t -> bool) -> t -> bool
 
+val all_members_of : t -> t -> bool
+(** [all_members_of eqs eqs'] returns true iff all equalities in [eqs] are also
+    in [eqs'] *)
+
 val diff : t -> t -> t
 (** [diff eqs eqs'] returns the structure given by removing all equalities in
     [eqs'] from [eqs] *)
 
 val bindings : t -> Tpair.t list
-(** Return mapping as a list of pairs, where pair members are ordered by  
+(** Return mapping as a list of pairs, where pair members are ordered by
  [Term.compare].  Additional guarantees:
 - Each term appears at most once on the LHS of any pair.
 - Pairs are ordered lexicographically, based on [Term.compare].

@@ -90,6 +90,10 @@ val subst_tags : Tagpairs.t -> t -> t
 val norm : t -> t
 (** Replace all terms with their UF representatives in the respective heaps. *)
 
+val of_heaps : Heap.t list -> t
+(** [of_heaps hs] returns a formula representing a disjunction of the given
+    symbolic heaps, and the empty set of ordinal constraints. *)
+
 val with_constraints : t -> Ord_constraints.t -> t
 (** [with_constraints f cs] returns the formula that results by replacing [f]'s
     tag constraints with [cs] *)

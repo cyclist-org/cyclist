@@ -1,0 +1,11 @@
+(library
+ (name seplog_ltl)
+ (public_name cyclist.seplog.ltl)
+ (libraries lib generic mparser seplog while)
+ (modules sl_form_rho sl_heap_rho sl_rho ltl_form program rules))
+
+(executable
+ (name prove)
+ (public_name seplogltl_prove)
+ (libraries lib generic seplog while seplog_ltl)
+ (modules prove))

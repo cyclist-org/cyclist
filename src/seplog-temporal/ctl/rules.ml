@@ -59,10 +59,10 @@ let ex_falso_axiom =
 let symex_check_axiom entails =
   Rule.mk_axiom
     (fun (pre,_,tf) ->
-      let f = Seplog.Form.complete_tags Tags.empty (Form.extract_checkable_slformula tf) in
+      let check = entails pre (Form.extract_checkable_slformula tf) in
       Option.mk
-      (Form.is_checkable tf && Option.is_some (entails pre f))
-      "Check")
+        (Form.is_checkable tf && (Option.is_some check))
+        ("Check"))
 
 let symex_empty_axiom =
   Rule.mk_axiom

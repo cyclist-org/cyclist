@@ -7,5 +7,5 @@
 (executable
  (name prove)
  (public_name seplogctl_prove)
- (libraries lib generic seplog seplog_ctl)
+ (libraries lib generic seplog while seplog_ctl)
  (modules prove))
