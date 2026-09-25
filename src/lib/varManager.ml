@@ -123,14 +123,7 @@ module type S = sig
   val to_ints : Var.Set.t -> Int.Set.t
 end
 
-module H = Hashcons.Make (Strng)
-
 type varname_class = FREE | BOUND | ANONYMOUS
-
-let class_equal c c' =
-  match (c, c') with
-  | FREE, FREE | BOUND, BOUND | ANONYMOUS, ANONYMOUS -> true
-  | _ -> false
 
 let cyclic_permute ls n =
   let rec cyclic_permute ls n acc =
@@ -161,13 +154,12 @@ end
 
 module Make (C : CONFIG) : S = struct
   include C
+  module H = Hashcons.Make (Strng)
 
   let termtbl = H.create 997
   let _mk s = H.hashcons termtbl s
   let anonymous = _mk ""
-
-  let mk s =
-    if class_equal (classify_varname s) ANONYMOUS then anonymous else _mk s
+  let mk s = match classify_varname s with ANONYMOUS -> anonymous | _ -> _mk s
 
   module Var = struct
     module T = struct
@@ -193,43 +185,55 @@ module Make (C : CONFIG) : S = struct
 
   let is_exist_var n =
     (not (is_anonymous n))
-    && class_equal (classify_varname n.Hashcons.node) BOUND
+    && match classify_varname n.Hashcons.node with BOUND -> true | _ -> false
 
   let is_free_var n =
     (not (is_anonymous n))
-    && class_equal (classify_varname n.Hashcons.node) FREE
+    && match classify_varname n.Hashcons.node with FREE -> true | _ -> false
 
   let rev_letters = cyclic_permute alphabet seed |> List.rev
 
-  let search_vars vs fresh n =
-    let mk_var free lvl acc n =
-      let n = match lvl with 0 -> n | _ -> n ^ "_" ^ string_of_int lvl in
-      (if free then mk n else mk (n ^ "'")) :: acc
+  type var_pair = { free : Var.t; bound : Var.t }
+
+  let mk_var_pair lvl acc base_name =
+    let var_name =
+      match lvl with
+      | 0 -> base_name
+      | _ -> Printf.sprintf "%s_%d" base_name lvl
     in
-    let mk_seg free lvl = Blist.fold_left (mk_var free lvl) [] rev_letters in
-    let rec _search s acc vs n =
-      match (vs, n) with
-      | _, 0 -> Some (Blist.rev acc)
-      | [], _ -> None
-      | v :: vs, n ->
-          let acc', n' =
-            if Var.Set.mem v s then (acc, n) else (v :: acc, n - 1)
-          in
-          _search s acc' vs n'
+    { free = mk var_name; bound = mk (var_name ^ "'") } :: acc
+
+  let mk_seg lvl =
+    Blist.fold_left
+      (fun acc base_name -> mk_var_pair lvl acc base_name)
+      [] rev_letters
+    |> Array.of_list
+
+  let vars_so_far = ref (mk_seg 0)
+  let max_level = ref 0
+
+  let expand () =
+    incr max_level;
+    vars_so_far := Array.append !vars_so_far (mk_seg !max_level)
+
+  let search_vars vars_to_avoid free num =
+    let rec search_inner ~index ~num vars_to_avoid free acc =
+      if num <= 0 then acc
+      else if index >= Array.length !vars_so_far then begin
+        expand ();
+        search_inner ~index ~num vars_to_avoid free acc
+      end
+      else begin
+        let var_pair = Array.get !vars_so_far index in
+        let var = if free then var_pair.free else var_pair.bound in
+        if Var.Set.mem var vars_to_avoid then
+          search_inner ~index:(index + 1) ~num vars_to_avoid free acc
+        else
+          search_inner ~index:(index + 1) ~num:(num - 1) vars_to_avoid free
+            (var :: acc)
+      end
     in
-    let curr_lvl = ref 1 in
-    let _fvars, _evars = (ref (mk_seg true 0), ref (mk_seg false 0)) in
-    (* let () =  prerr_endline (Blist.to_string ", " Fun.id !_fvars) in *)
-    let rec search s free n =
-      match _search s [] (if free then !_fvars else !_evars) n with
-      | Some vs -> vs
-      | None ->
-          _fvars := !_fvars @ mk_seg true !curr_lvl;
-          _evars := !_evars @ mk_seg false !curr_lvl;
-          incr curr_lvl;
-          search s free n
-    in
-    search vs fresh n
+    search_inner ~index:0 ~num vars_to_avoid free [] |> List.rev
 
   let fresh_fvars s n = search_vars s true n
   let fresh_evars s n = search_vars s false n
@@ -270,8 +274,8 @@ module Make (C : CONFIG) : S = struct
       let ts' = fresh_vars (Var.Set.union ts avoid) (Var.Set.cardinal ts) in
       Var.Map.of_list (Blist.combine (Var.Set.to_list ts) ts')
 
-    let mk_free_subst = mk_subst fresh_fvars
-    let mk_ex_subst = mk_subst fresh_evars
+    let mk_free_subst avoid ts = mk_subst fresh_fvars avoid ts
+    let mk_ex_subst avoid ts = mk_subst fresh_evars avoid ts
 
     let partition theta =
       Var.Map.partition
