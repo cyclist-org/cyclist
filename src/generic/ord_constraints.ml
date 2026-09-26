@@ -66,7 +66,8 @@ module Constraint = struct
 end
 
 module Elt = Constraint
-include Listset.Make (Constraint)
+module T = Listset.Make (Constraint)
+include T
 
 let to_string cs = if is_empty cs then "" else to_string cs
 let pp fmt cs = if is_empty cs then Format.fprintf fmt "" else pp fmt cs
@@ -91,31 +92,54 @@ let generate ?(avoid = Tags.empty) ?(augment = true) t ts =
   in
   Tags.map_to add empty (fun t' -> Constraint.LT (t', t)) ts
 
-let infer_constraint = function
-  | Constraint.LT (t1, t2), Constraint.LT (t1', t2') ->
-      Option.mk (Tag.equal t2 t1') (Constraint.LT (t1, t2'))
-  | Constraint.LT (t1, t2), Constraint.LTE (t1', t2') ->
-      Option.mk (Tag.equal t2 t1') (Constraint.LT (t1, t2'))
-  | Constraint.LTE (t1, t2), Constraint.LT (t1', t2') ->
-      Option.mk (Tag.equal t2 t1') (Constraint.LT (t1, t2'))
-  | Constraint.LTE (t1, t2), Constraint.LTE (t1', t2') ->
-      Option.mk (Tag.equal t2 t1') (Constraint.LTE (t1, t2'))
+module WH = Ephemeron.K1.Make (T)
 
-let close cs =
-  let ts = tags cs in
-  let cs = Tags.map_to add cs (fun t -> Constraint.LTE (t, t)) ts in
-  let cs =
-    opt_map_to add cs
-      (function
-        | Constraint.LT (t, t') -> Some (Constraint.LTE (t, t')) | _ -> None)
-      cs
+let close : t -> t =
+  let cache = WH.create 128 in
+  let add_if_absent c cs acc = if mem c cs then acc else c :: acc in
+  let add_inferred_constraint cs constraint_pair acc =
+    let open Constraint in
+    match constraint_pair with
+    | LT (t1, t2), LT (t1', t2')
+    | LT (t1, t2), LTE (t1', t2')
+    | LTE (t1, t2), LT (t1', t2')
+      when Tag.equal t2 t1' ->
+        add_if_absent (LT (t1, t2')) cs acc |> add_if_absent (LTE (t1, t2')) cs
+    | LTE (t1, t2), LTE (t1', t2') when Tag.equal t2 t1' ->
+        add_if_absent (LTE (t1, t2')) cs acc
+    | _, _ -> acc
   in
-  let gen cs =
-    let cs_list = to_list cs in
-    let allpairs = Blist.cartesian_product cs_list cs_list in
-    Blist.map_to (Option.dest Fun.id add) cs infer_constraint allpairs
+  let close cs =
+    let ts = tags cs in
+    let cs = Tags.map_to add cs (fun t -> Constraint.LTE (t, t)) ts in
+    let cs =
+      opt_map_to add cs
+        (function
+          | Constraint.LT (t, t') -> Some (Constraint.LTE (t, t')) | _ -> None)
+        cs
+    in
+    let rec gen cs to_consider =
+      (* Format.eprintf "#### start %a@." pp cs; *)
+      let cs_list = to_list cs in
+      let pairs_to_consider = Blist.cartesian_product cs_list to_consider in
+      let new_constraints =
+        List.fold_left
+          (fun acc pair -> add_inferred_constraint cs pair acc)
+          [] pairs_to_consider
+      in
+      if List.is_empty new_constraints then cs
+      else
+        let cs = Blist.map_to add cs Fun.id new_constraints in
+        gen cs new_constraints
+    in
+    gen cs (to_list cs)
   in
-  fixpoint gen cs
+  fun cs ->
+    try WH.find cache cs
+    with Not_found ->
+      let result = close cs in
+      WH.add cache cs result;
+      result
 
 let remove_schema cs used =
   let tags =
