@@ -3,10 +3,8 @@ include List
 let foldl = fold_left
 let foldr = fold_right
 let empty = []
-let is_empty = function [] -> true | _ -> false
 let of_list l = l
 let to_list l = l
-let singleton x = [ x ]
 
 let rec del_first p = function
   | [] -> []
@@ -70,11 +68,6 @@ let rec drop n l =
 
 let indexes xs = range 0 xs
 
-(* This exists in OCaml's List module only from version 4.10 *)
-let rec find_map f = function
-  | [] -> None
-  | x :: xs -> ( match f x with None -> find_map f xs | y -> y)
-
 let find_index p l =
   let rec aux p n = function
     | [] -> raise Not_found
@@ -88,12 +81,6 @@ let find_indexes p xs =
     | y :: ys -> if p y then n :: aux (n + 1) ys else aux (n + 1) ys
   in
   aux 0 xs
-
-let rec equal eq xs ys =
-  match (xs, ys) with
-  | [], [] -> true
-  | x :: xs, y :: ys -> eq x y && equal eq xs ys
-  | _ -> false
 
 let cartesian_product xs ys =
   foldl (fun acc x -> foldl (fun acc' y -> (x, y) :: acc') acc ys) [] xs
@@ -142,35 +129,3 @@ let map_to oadd oempty f xs = foldl (fun ys z -> oadd (f z) ys) oempty xs
 
 let opt_map_to oadd oempty f xs =
   map_to (function None -> Fun.id | Some x -> oadd x) oempty f xs
-
-(* tail rec versions, generally slower *)
-
-(* let map f xs = rev (rev_map f xs)                                    *)
-(* let map2 f xs ys = rev (rev_map2 f xs ys)                            *)
-(* let append xs ys = rev_append (rev xs) ys                            *)
-(* let flatten xs = rev (fold_left (fun ys x -> rev_append x ys) [] xs) *)
-(* let but_last = function     *)
-(*   | [] -> []                *)
-(*   | xs -> rev (tl (rev xs)) *)
-(* let range n xs =                                             *)
-(*   rev (snd (foldl (fun (m,ys) _ -> (m+1, m::ys)) (n,[]) xs)) *)
-(* let remove_nth n xs =                                                            *)
-(*   if n<0 then invalid_arg "Blist.remove_nth" else                                *)
-(*   rev (snd (foldl (fun (m,ys) x -> (m+1, if m=n then ys else x::ys)) (0,[]) xs)) *)
-(* let replace_nth z n xs =                                                            *)
-(*   if n<0 then invalid_arg "Blist.replace_nth" else                                  *)
-(*   rev (snd (foldl (fun (m,ys) x -> (m+1, if m=n then z::ys else x::ys)) (0,[]) xs)) *)
-(* let find_indexes p xs =                                                          *)
-(*   rev (snd (foldl (fun (m,ms) x -> (m+1, if p x then m::ms else ms)) (0,[]) xs)) *)
-(* let unzip3 xs =                                                                *)
-(*   let (bs,cs,ds) =                                                             *)
-(*     foldl (fun (bs,cs,ds) (b,c,d) -> (b::bs, c::cs, d::ds)) ([], [], []) xs in *)
-(*   (rev bs, rev cs, rev ds)                                                     *)
-(* let zip3 xs' ys' zs' =                                         *)
-(*   let rec aux acc xs ys zs =                                   *)
-(*     match (xs, ys, zs) with                                    *)
-(*       | ([], [], []) -> acc                                    *)
-(*       | (b::bs, c::cs, d::ds) -> aux ((b,c,d)::acc) bs cs ds   *)
-(*       | _ -> invalid_arg "zip3" in                             *)
-(*   rev (aux [] xs' ys' zs')                                     *)
-(* let bind f xs = rev (fold_left (fun ys x -> rev_append (f x) ys) [] xs) *)
