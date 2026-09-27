@@ -67,7 +67,9 @@ module type OrderedContainer = sig
 
   val find_suchthat : (elt -> bool) -> t -> elt
   (** [find_suchthat p set] returns the first element of [set] that satisfies
-      the predicate [p], or raises [Not_found] if there is no such value. *)
+      the predicate [p], or raises [Not_found] if there is no such value. Note
+      that it differs from [Set]'s [find_first] in that [p] does not need to be
+      monotonic in the container's ordering. *)
 
   val find_suchthat_opt : (elt -> bool) -> t -> elt option
   (** [find_suchthat_opt pred set] returns [Some x] for the first [x] in [set]
