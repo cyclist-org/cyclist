@@ -4,17 +4,12 @@ module Make (T : Utilsigs.BasicType) :
   include MSet
   include Fixpoint.Make (MSet)
 
-  let rec uniq = function
-    | ([] | [ _ ]) as l -> l
-    | x :: (x' :: _ as tl) -> (
-        match T.compare x x' with
-        | 0 -> uniq tl
-        | i when Int.( < ) i 0 -> x :: uniq tl
-        | _ -> failwith "uniq")
+  let of_list l = Blist.sort_uniq T.compare l
+  let union xs ys = of_list (Blist.merge T.compare xs ys)
 
-  let of_list l = uniq (Blist.fast_sort T.compare l)
-  let union xs ys = uniq (Blist.merge T.compare xs ys)
-  let union_of_list l = uniq (Blist.fold_left union [] l)
+  let union_of_list l =
+    of_list (Blist.fold_left (fun acc x -> Blist.merge T.compare x acc) [] l)
+
   let map f xs = of_list (Blist.map f xs)
 
   let rec add x = function
