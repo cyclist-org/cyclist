@@ -32,10 +32,6 @@ module Make (T : Utilsigs.BasicType) = struct
     | [ x ] -> x
     | _ :: xs -> max_elt xs
 
-  let rec del_first p = function
-    | [] -> []
-    | y :: ys -> if p y then ys else y :: del_first p ys
-
   (* only removes first occurence *)
   let rec remove x = function
     | [] -> []
@@ -86,26 +82,22 @@ module Make (T : Utilsigs.BasicType) = struct
     let l, f, r = div [] xs in
     (Blist.rev l, f, r)
 
-  let map_to oadd oempty f xs = fold (fun z ys -> oadd (f z) ys) xs oempty
-  let opt_map_to oadd oempty f xs = map_to (Option.dest Fun.id oadd) oempty f xs
   let map_to_list f xs = Blist.map f xs
   let to_rev_seq xs = to_seq (rev xs)
-  let weave = Blist.weave
   let find_suchthat = find
+  let find_first = find
   let find_suchthat_opt = find_opt
+  let find_first_opt = find_opt
 
-  let rec find_opt x = function
-    | [] -> None
+  let rec find x = function
+    | [] -> raise Not_found
     | x' :: xs -> (
-        match T.compare x x' with 0 -> Some x' | _ -> find_opt x xs)
+        match T.compare x x' with
+        | 0 -> x'
+        | n when n > 0 -> find x xs
+        | _ -> raise Not_found)
 
-  let find x xs =
-    match find_opt x xs with None -> raise Not_found | Some x -> x
-
-  let rec find_map f = function
-    | [] -> None
-    | x :: xs -> ( match f x with None -> find_map f xs | r -> r)
-
+  let find_opt x xs = try Some (find x xs) with Not_found -> None
   let count p s = fold (fun x n -> if p x then n + 1 else n) s 0
 
   let rec subsets xs =
@@ -128,8 +120,6 @@ module Make (T : Utilsigs.BasicType) = struct
 
   let find_last_opt _ _ = failwith "Not implemented!"
   let find_last _ _ = failwith "Not implemented!"
-  let find_first_opt _ _ = failwith "Not implemented!"
-  let find_first _ _ = failwith "Not implemented!"
   let choose_opt _ = failwith "Not implemented!"
   let max_elt_opt _ = failwith "Not implemented!"
   let min_elt_opt _ = failwith "Not implemented!"
