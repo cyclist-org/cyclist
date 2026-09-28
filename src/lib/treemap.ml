@@ -14,7 +14,11 @@ module Make (T : Utilsigs.BasicType) = struct
     if equal eq x y then x else fixpoint eq f y
 
   (* NB this prioritises bindings of the first argument *)
-  let union m m' = fold add m m'
+  let union m m' =
+    merge
+      (fun _k v_opt v_opt' ->
+        match (v_opt, v_opt') with Some _, _ -> v_opt | _, _ -> v_opt')
+      m m'
 
   let find_map (type a) (f : key -> 'v -> a option) (s : 'v t) =
     let exception Found of a option in

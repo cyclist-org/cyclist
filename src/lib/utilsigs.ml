@@ -4,12 +4,7 @@
     above essential methods. *)
 module type BasicType = sig
   include Set.OrderedType
-
-  val equal : t -> t -> bool
-  (** Standard equality predicate. *)
-
-  val hash : t -> int
-  (** Standard hash function. *)
+  include Hashtbl.HashedType with type t := t
 
   val to_string : t -> string
   (** Convert to string. *)
@@ -23,9 +18,6 @@ end
 module type OrderedContainer = sig
   include BasicType
   include Set.S with type t := t
-
-  val to_list : t -> elt list
-  (** Convert to a list of unique, sorted elements. *)
 
   val map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b) -> t -> 'a
   (** [map_to add empty f set] converts every element of [set] using [f], and
@@ -94,9 +86,6 @@ module type OrderedContainer = sig
   val del_first : (elt -> bool) -> t -> t
   (** Remove first element satisfying the given predicate. *)
 
-  val disjoint : t -> t -> bool
-  (** Decide if there are no common elements. *)
-
   val mk_unifier :
     bool ->
     bool ->
@@ -140,6 +129,6 @@ module type OrderedMap = sig
       to compare *values*. *)
 
   val add_bindings : (key * 'a) list -> 'a t -> 'a t
-  (** Add all bindings in provided list to map. Bindings already in the map have
-      precedence. *)
+  (** Add all bindings in provided list to map. Bindings added last override
+      earlier ones. *)
 end
