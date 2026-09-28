@@ -3,6 +3,7 @@ include List
 let foldl = fold_left
 let foldr = fold_right
 let empty = []
+let singleton a = [ a ]
 let of_list l = l
 let to_list l = l
 
