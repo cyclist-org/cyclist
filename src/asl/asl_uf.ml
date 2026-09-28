@@ -3,10 +3,8 @@ open Symbols
 open MParser
 module F = Fopl
 
-type t = Asl_term.t Asl_term.Map.t
+type t = Asl_term.t Asl_term.Map.t [@@deriving compare, equal]
 
-let equal u u' = Asl_term.Map.equal Asl_term.equal u u'
-let compare m m' = Asl_term.Map.compare Asl_term.compare m m'
 let hash m = Asl_term.Map.hash Asl_term.hash m
 let bindings m = Asl_term.Map.bindings m
 let empty = Asl_term.Map.empty

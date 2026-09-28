@@ -5,20 +5,7 @@ module Tag = Tags.Elt
 
 module Constraint = struct
   type t = LT of (Tag.t * Tag.t) | LTE of (Tag.t * Tag.t)
-
-  let compare c c' =
-    match (c, c') with
-    | LT (t, t'), LT (t'', t''') | LTE (t, t'), LTE (t'', t''') ->
-        let fst = Tag.compare t t'' in
-        if not (Int.equal fst 0) then fst else Tag.compare t' t'''
-    | LT _, _ -> -1
-    | LTE _, _ -> 1
-
-  let equal c c' =
-    match (c, c') with
-    | LT (t, t'), LT (t'', t''') | LTE (t, t'), LTE (t'', t''') ->
-        Tag.equal t t'' && Tag.equal t' t'''
-    | _ -> false
+  [@@deriving compare, equal]
 
   let hash (c : t) = Hashtbl.hash c
 

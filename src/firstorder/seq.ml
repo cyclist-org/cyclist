@@ -3,9 +3,7 @@ open Symbols
 open Generic
 open MParser
 
-type t = Form.t * Form.t
-
-let equal (l, r) (l', r') = Form.equal l l' && Form.equal r r'
+type t = Form.t * Form.t [@@deriving equal]
 
 let equal_upto_tags (l, r) (l', r') =
   Form.equal_upto_tags l l' && Form.equal_upto_tags r r'

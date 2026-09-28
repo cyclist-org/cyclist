@@ -8,10 +8,8 @@ module SH = Heap
 let termination = ref false
 
 module Field = struct
-  type t = string
+  type t = string [@@deriving compare, equal]
 
-  let equal = String.equal
-  let compare = String.compare
   let _map = ref Strng.Map.empty
   let _pam = ref Int.Map.empty
 
@@ -44,6 +42,7 @@ let is_prog_term t = Term.is_nil t || is_prog_var t
 
 module Cond = struct
   type t = Eq of Term.t * Term.t | Deq of Term.t * Term.t | Non_det
+  [@@deriving equal]
 
   let mk_eq e1 e2 =
     assert (is_prog_term e1);
@@ -70,13 +69,6 @@ module Cond = struct
     | Deq (x, y) | Eq (x, y) -> Term.Set.add x (Term.Set.singleton y)
 
   let vars cond = Term.filter_vars (terms cond)
-
-  let equal cond cond' =
-    match (cond, cond') with
-    | Non_det, Non_det -> true
-    | Eq (x, y), Eq (x', y') | Deq (x, y), Deq (x', y') ->
-        Term.equal x x' && Term.equal y y'
-    | _ -> false
 
   let subst theta cond =
     match cond with
@@ -589,7 +581,7 @@ let program_pp fmt cmd = Format.fprintf fmt "%a@\n%a" Field.pp () (Cmd.pp 0) cmd
 let pp_cmd fmt cmd = Cmd.pp ~abbr:true 0 fmt cmd
 
 module Seq = struct
-  type t = Form.t * Cmd.t
+  type t = Form.t * Cmd.t [@@deriving equal]
 
   let tagset_one = Tags.singleton Tags.anonymous
   let tagpairs_one = Tagpairs.mk tagset_one
@@ -605,8 +597,6 @@ module Seq = struct
   let pp fmt (f, cmd) =
     Format.fprintf fmt "@[%a%s%a@]" Form.pp f symb_turnstile.sep
       (Cmd.pp ~abbr:true 0) cmd
-
-  let equal (f, cmd) (f', cmd') = Cmd.equal cmd cmd' && Form.equal f f'
 
   let equal_upto_tags (f, cmd) (f', cmd') =
     Cmd.equal cmd cmd' && Form.equal_upto_tags f f'

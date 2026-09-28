@@ -2,10 +2,8 @@ open Lib
 open Symbols
 open MParser
 
-type t = Term.t Term.Map.t
+type t = Term.t Term.Map.t [@@deriving compare, equal]
 
-let equal u u' = Term.Map.equal Term.equal u u'
-let compare m m' = Term.Map.compare Term.compare m m'
 let hash m = Term.Map.hash Term.hash m
 let bindings m = Term.Map.bindings m
 let empty = Term.Map.empty

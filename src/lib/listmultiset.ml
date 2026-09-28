@@ -127,18 +127,15 @@ module Make (T : Utilsigs.BasicType) = struct
   let to_seq_from _ _ = failwith "Not implemented!"
 
   include Fixpoint.Make (struct
-    type nonrec t = t
-
-    let equal = equal
+    type nonrec t = t [@@deriving equal]
   end)
 
   include Unification.MakeUnifier (struct
-    type t = Flist.Make(T).t
+    type t = T.t list [@@deriving equal]
     type elt = T.t
 
     let empty = empty
     let is_empty = is_empty
-    let equal = equal
     let add = add
     let choose = choose
     let remove = remove

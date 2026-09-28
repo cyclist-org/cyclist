@@ -16,22 +16,13 @@ include VarManager.Make (struct
 end)
 
 type term_t = Const of int | Var of Var.t | Fun of string * term_t list
+[@@deriving compare, equal]
 
 module rec TermT : (BasicType with type t = term_t) = struct
-  type t = term_t
+  type t = term_t [@@deriving compare, equal]
 
   module TermList = Flist.Make (TermT)
 
-  let compare t t' =
-    match (t, t') with
-    | Var n, Var n' -> Var.compare n n'
-    | Const n, Const n' -> Int.compare n n'
-    | Fun (f, l), Fun (f', l') -> (
-        match Strng.compare f f' with 0 -> TermList.compare l l' | n -> n)
-    | Fun _, _ | _, Const _ -> 1
-    | Const _, _ | _, Fun _ -> -1
-
-  let equal t t' = Int.equal (compare t t') 0
   let hash = Hashtbl.hash
 
   let to_string = function

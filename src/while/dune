@@ -2,4 +2,8 @@
  (name while)
  (public_name cyclist.while)
  (libraries lib generic seplog mparser-re cmdliner)
+ (preprocess
+  (pps ppx_compare ppx_hash))
+ (flags
+  (:standard -open Ppx_compare_lib.Builtin))
  (modules (:standard)))

@@ -111,22 +111,7 @@ struct
   module Value = struct
     module T = struct
       type t = Nil | Location of Location.t | Scalar of Scalar.t
-
-      let compare v v' =
-        match (v, v') with
-        | Nil, Nil -> 0
-        | Location _, Nil -> 1
-        | Location l, Location l' -> Sig.HeapLocation.compare l l'
-        | Scalar v, Scalar v' -> Sig.ScalarValue.compare v v'
-        | Scalar _, _ -> 1
-        | _, _ -> -1
-
-      let equal v v' =
-        match (v, v') with
-        | Nil, Nil -> true
-        | Location l, Location l' -> Sig.HeapLocation.equal l l'
-        | Scalar v, Scalar v' -> Sig.ScalarValue.equal v v'
-        | _, _ -> false
+      [@@deriving compare, equal]
 
       let hash = function
         | Nil -> 11
@@ -156,11 +141,9 @@ struct
   end
 
   module ConcreteHeap = struct
-    type t = Value.FList.t Location.Map.t
+    type t = Value.FList.t Location.Map.t [@@deriving compare, equal]
     type domain = Location.Set.t
 
-    let compare h h' = Location.Map.compare Value.FList.compare h h'
-    let equal h h' = Location.Map.equal Value.FList.equal h h'
     let hash h = Location.Map.hash Value.FList.hash h
 
     let pp fmt h =
@@ -211,10 +194,8 @@ struct
   end
 
   module Stack = struct
-    type t = Value.t Var.Map.t
+    type t = Value.t Var.Map.t [@@deriving compare, equal]
 
-    let compare s s' = Var.Map.compare Value.compare s s'
-    let equal s s' = Var.Map.equal Value.equal s s'
     let hash s = Var.Map.hash Value.hash s
 
     let pp fmt h =

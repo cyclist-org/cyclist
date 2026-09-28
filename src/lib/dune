@@ -4,4 +4,6 @@
  (libraries mparser-re unix hashset hashcons)
  (preprocess
   (pps ppx_compare ppx_hash))
+ (flags
+  (:standard -open Ppx_compare_lib.Builtin))
  (modules (:standard)))

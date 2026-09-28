@@ -3,7 +3,8 @@
 (** Most types for use in containers, maps and other stuff must provide the
     above essential methods. *)
 module type BasicType = sig
-  include Set.OrderedType
+  type t [@@deriving compare, equal]
+
   include Hashtbl.HashedType with type t := t
 
   val to_string : t -> string

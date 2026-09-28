@@ -1,4 +1,8 @@
 (library
  (name asl)
  (public_name cyclist.asl)
+ (preprocess
+  (pps ppx_compare ppx_hash))
+ (flags
+  (:standard -open Ppx_compare_lib.Builtin))
  (libraries lib generic seplog mparser-re unix))

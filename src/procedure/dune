@@ -2,4 +2,8 @@
  (name procedure)
  (public_name cyclist.procedure)
  (libraries lib generic while ocamlgraph str cmdliner)
+ (preprocess
+  (pps ppx_compare ppx_hash))
+ (flags
+  (:standard -open Ppx_compare_lib.Builtin))
  (modules (:standard)))

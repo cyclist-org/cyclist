@@ -13,45 +13,20 @@ type symheap = {
   leqs : Asl_leqs.t;
   lts : Asl_lts.t;
   arrays : Asl_arrays.t;
-  mutable _terms : Asl_term.Set.t option;
-  mutable _vars : Asl_term.Set.t option;
+  mutable _terms : Asl_term.Set.t option; [@ignore]
+  mutable _vars : Asl_term.Set.t option; [@ignore]
 }
+[@@deriving compare, equal]
 
-type t = symheap
+type t = symheap [@@deriving compare, equal]
 
 (* accessors *)
 
-let equal h h' =
-  h == h'
-  || Asl_uf.equal h.eqs h'.eqs
-     && Asl_neqs.equal h.neqs h'.neqs
-     && Asl_leqs.equal h.leqs h'.leqs
-     && Asl_lts.equal h.lts h'.lts
-     && Asl_arrays.equal h.arrays h'.arrays
-
-let equal_upto_tags h h' = equal h h'
+let equal_upto_tags = equal
 
 include Fixpoint.Make (struct
-  type t = symheap
-
-  let equal = equal
+  type t = symheap [@@deriving equal]
 end)
-
-let compare f g =
-  if f == g then 0
-  else
-    match Asl_uf.compare f.eqs g.eqs with
-    | n when n <> 0 -> n
-    | _ -> (
-        match Asl_neqs.compare f.neqs g.neqs with
-        | n when n <> 0 -> n
-        | _ -> (
-            match Asl_leqs.compare f.leqs g.leqs with
-            | n when n <> 0 -> n
-            | _ -> (
-                match Asl_lts.compare f.lts g.lts with
-                | n when n <> 0 -> n
-                | _ -> Asl_arrays.compare f.arrays g.arrays)))
 
 (* custom hash function so that memoization fields are ignored when hashing *)
 (* so that the hash invariant is preserved [a = b => hash(a) = hash(b)] *)

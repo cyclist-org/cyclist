@@ -3,36 +3,16 @@ open MParser
 open MParser_RE
 
 type t =
-  | Atom of string
-  | NegAtom of string
-  | Conj of t * t
-  | Disj of t * t
-  | Next of t
-  | Always of t
   | Eventually of t
+  | Always of t
+  | Next of t
+  | Disj of t * t
+  | Conj of t * t
+  | NegAtom of string
+  | Atom of string
+[@@deriving compare, equal]
 
 let hash = Hashtbl.hash
-
-let ord = function
-  | Atom _ -> 0
-  | NegAtom _ -> 1
-  | Conj (_, _) -> 2
-  | Disj (_, _) -> 3
-  | Next _ -> 4
-  | Always _ -> 5
-  | Eventually _ -> 6
-
-let rec compare f f' =
-  match (f, f') with
-  | Atom s, Atom s' | NegAtom s, NegAtom s' -> String.compare s s'
-  | Conj (f1, f2), Conj (f1', f2') | Disj (f1, f2), Disj (f1', f2') ->
-      let r = compare f1 f1' in
-      if Int.equal r 0 then compare f2 f2' else r
-  | Next f, Next f' | Always f, Always f' | Eventually f, Eventually f' ->
-      compare f f'
-  | _, _ -> ord f' - ord f
-
-let equal f f' = Int.equal (compare f f') 0
 
 (* The symbols are printed with an explicit width of 1, as Format counts bytes
    rather than characters before OCaml 5.4, which would break lines differently

@@ -3,32 +3,17 @@ open Symbols
 open Generic
 open MParser
 
-type eq_atom = Term.t * Term.t
-type pred_atom = string * Term.t list
-type ind_pred_atom = Tags.Elt.t * pred_atom
+type eq_atom = Term.t * Term.t [@@deriving compare, equal]
+type pred_atom = string * Term.t list [@@deriving compare, equal]
+type ind_pred_atom = Tags.Elt.t * pred_atom [@@deriving compare, equal]
 
 module AtomT = struct
   type t = Eq of eq_atom | Deq of eq_atom | IndPred of ind_pred_atom
+  [@@deriving compare, equal]
 
-  let compare ?match_tags:_ a a' =
-    match (a, a') with
-    | Eq (x, y), Eq (x', y') | Deq (x, y), Deq (x', y') -> (
-        match Term.compare x x' with 0 -> Term.compare y y' | n -> n)
-    | IndPred (tag, (id, terms)), IndPred (tag', (id', terms')) -> (
-        let match_rest (id, terms) (id', terms') =
-          match Strng.compare id id' with
-          | 0 -> Term.FList.compare terms terms'
-          | n -> n
-        in
-        match Tags.Elt.compare tag tag' with
-        | 0 -> match_rest (id, terms) (id', terms')
-        | m -> m)
-    | Eq _, _ | _, IndPred _ -> -1
-    | _, Eq _ | IndPred _, _ -> 1
+  (** NB: unimplemented *)
+  let equal_upto_tags = equal
 
-  let equal_upto_tags a a' = Int.equal (compare ~match_tags:true a a') 0
-  let compare a a' = compare a a'
-  let equal a a' = Int.equal (compare a a') 0
   let hash = Hashtbl.hash
 
   let to_string = function

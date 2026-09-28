@@ -11,20 +11,15 @@ type symheap = {
   deqs : Deqs.t;
   ptos : Ptos.t;
   inds : Tpreds.t;
-  mutable _terms : Term.Set.t option;
-  mutable _vars : Term.Set.t option;
-  mutable _tags : Tags.t option;
+  mutable _terms : Term.Set.t option; [@ignore]
+  mutable _vars : Term.Set.t option; [@ignore]
+  mutable _tags : Tags.t option; [@ignore]
 }
+[@@deriving compare, equal]
 
-type t = symheap
+type t = symheap [@@deriving compare, equal]
 
 (* accessors *)
-
-let equal h h' =
-  h == h'
-  || Uf.equal h.eqs h'.eqs && Deqs.equal h.deqs h'.deqs
-     && Ptos.equal h.ptos h'.ptos
-     && Tpreds.equal h.inds h'.inds
 
 let equal_upto_tags h h' =
   h == h'
@@ -33,23 +28,8 @@ let equal_upto_tags h h' =
      && Tpreds.equal_upto_tags h.inds h'.inds
 
 include Fixpoint.Make (struct
-  type t = symheap
-
-  let equal = equal
+  type t = symheap [@@deriving equal]
 end)
-
-let compare f g =
-  if f == g then 0
-  else
-    match Uf.compare f.eqs g.eqs with
-    | n when not (Int.equal n 0) -> n
-    | _ -> (
-        match Deqs.compare f.deqs g.deqs with
-        | n when not (Int.equal n 0) -> n
-        | _ -> (
-            match Ptos.compare f.ptos g.ptos with
-            | n when not (Int.equal n 0) -> n
-            | _ -> Tpreds.compare f.inds g.inds))
 
 (* custom hash function so that memoization fields are ignored when hashing *)
 (* so that the hash invariant is preserved [a = b => hash(a) = hash(b)] *)

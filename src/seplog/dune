@@ -2,6 +2,10 @@
  (name seplog)
  (public_name cyclist.seplog)
  (libraries lib generic mparser-re cmdliner)
+ (preprocess
+  (pps ppx_compare ppx_hash))
+ (flags
+  (:standard -open Ppx_compare_lib.Builtin))
  (modules (:standard)))
 
 (toplevel

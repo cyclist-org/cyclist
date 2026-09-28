@@ -17,10 +17,8 @@ end)
 include VM
 
 (* BasicType signature *)
-type t = Var.t
+type t = Var.t [@@deriving compare, equal]
 
-let compare = Var.compare
-let equal = Var.equal
 let hash = Var.hash
 let pp = Var.pp
 let to_string = Var.to_string

@@ -20,6 +20,7 @@ module Cond = struct
     | Lt of Asl_term.t * Asl_term.t (* < *)
     | Le of Asl_term.t * Asl_term.t (* <= *)
     | Non_det
+  [@@deriving equal]
 
   let mk_eq e1 e2 =
     assert (is_prog_term e1);
@@ -59,16 +60,6 @@ module Cond = struct
         Asl_term.Set.add x (Asl_term.Set.singleton y)
 
   let vars cond = Asl_term.filter_vars (terms cond)
-
-  let equal cond cond' =
-    match (cond, cond') with
-    | Non_det, Non_det -> true
-    | Eq (x, y), Eq (x', y')
-    | Ne (x, y), Ne (x', y')
-    | Lt (x, y), Lt (x', y')
-    | Le (x, y), Le (x', y') ->
-        Asl_term.equal x x' && Asl_term.equal y y'
-    | _ -> false
 
   let subst theta cond =
     match cond with
@@ -539,7 +530,7 @@ let program_pp fmt cmd = Format.fprintf fmt "%a" (Cmd.pp 0) cmd
 let pp_cmd fmt cmd = Cmd.pp ~abbr:true 0 fmt cmd
 
 module Seq = struct
-  type t = Asl_form.t * Cmd.t
+  type t = Asl_form.t * Cmd.t [@@deriving equal]
 
   let tagset_one = Tags.singleton Tags.anonymous
   let tagpairs_one = Tagpairs.mk tagset_one
@@ -555,8 +546,6 @@ module Seq = struct
   let pp fmt (f, cmd) =
     Format.fprintf fmt "@[%a%s%a@]" Asl_form.pp f symb_turnstile.sep
       (Cmd.pp ~abbr:true 0) cmd
-
-  let equal (f, cmd) (f', cmd') = Cmd.equal cmd cmd' && Asl_form.equal f f'
 
   let equal_upto_tags (f, cmd) (f', cmd') =
     Cmd.equal cmd cmd' && Asl_form.equal_upto_tags f f'

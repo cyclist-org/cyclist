@@ -760,11 +760,7 @@ module RelationalCheck = struct
       (* | Unknown *)
       | Stay
       | Decrease
-
-    let equal h h' =
-      match (h, h') with
-      | Decrease, Decrease | Stay, Stay (* | Unknown, Unknown  *) -> true
-      | _ -> false
+    [@@deriving compare, equal]
 
     let ( < ) h h' =
       match (h, h') with
@@ -772,9 +768,6 @@ module RelationalCheck = struct
       | Unknown, Decrease *)
       | Stay, Decrease -> true
       | _, _ -> false
-
-    let compare h h' =
-      match (h, h') with Stay, Decrease -> -1 | Decrease, Stay -> 1 | _ -> 0
 
     let max h h' =
       match (h, h') with

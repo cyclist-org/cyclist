@@ -75,26 +75,12 @@ module Make (Sig : Mc_core.ValueSig) :
       symheap : Heap.t;
       remainder : ConcreteHeap.t option ref;
     }
+    [@@deriving equal]
 
     let dest r = (r.stack, Option.get !(r.heap), r.symheap, r.remainder)
 
     let mk (s, h, sh, rem) =
       { stack = s; heap = ref (Some h); symheap = sh; remainder = ref rem }
-
-    let equal r r' =
-      Stack.equal r.stack r'.stack
-      && Heap.equal r.symheap r'.symheap
-      &&
-      match (!(r.heap), !(r'.heap)) with
-      | None, None -> true
-      | Some h, Some h' -> ConcreteHeap.equal h h'
-      | _ -> (
-          false
-          &&
-          match (!(r.remainder), !(r'.remainder)) with
-          | None, None -> true
-          | Some h, Some h' -> ConcreteHeap.equal h h'
-          | _ -> false)
 
     let equal_upto_tags = equal
     let tags _ = Tags.empty

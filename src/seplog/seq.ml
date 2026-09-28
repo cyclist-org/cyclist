@@ -4,8 +4,6 @@ open Generic
 open MParser
 include Pair.Make (Form) (Form)
 
-let equal (l, r) (l', r') = Form.equal l l' && Form.equal r r'
-
 let equal_upto_tags (l, r) (l', r') =
   Form.equal_upto_tags l l' && Form.equal_upto_tags r r'
 

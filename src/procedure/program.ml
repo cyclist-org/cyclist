@@ -18,10 +18,13 @@ let main = "main"
 
 module Proc = struct
   module K = struct
-    type t = string * Term.t Blist.t * (Form.t * Form.t) list * Cmd.t
+    type t =
+      string
+      * (Term.t list[@ignore])
+      * ((Form.t * Form.t) list[@ignore])
+      * (Cmd.t[@ignore])
+    [@@deriving compare, equal]
 
-    let compare (id, _, _, _) (id', _, _, _) = Strng.compare id id'
-    let equal (id, _, _, _) (id', _, _, _) = Strng.equal id id'
     let hash (id, _, _, _) = Strng.hash id
 
     let pp_decl fmt (id, params, _, _) =
@@ -176,7 +179,7 @@ module Proc = struct
 end
 
 module Seq = struct
-  type t = Form.t * Cmd.t * Form.t
+  type t = Form.t * Cmd.t * Form.t [@@deriving equal]
 
   let tagset_one = Tags.singleton Tags.anonymous
   let tagpairs_one = Tagpairs.mk tagset_one
@@ -219,11 +222,6 @@ module Seq = struct
   let pp fmt (pre, cmd, post) =
     Format.fprintf fmt "@[%s{%a}@ %a@ {%a}@]" symb_turnstile.sep Form.pp pre
       (Cmd.pp ~abbr:true 0) cmd Form.pp post
-
-  (* Tags.pp (tags seq) *)
-
-  let equal (pre, cmd, post) (pre', cmd', post') =
-    Cmd.equal cmd cmd' && Form.equal pre pre' && Form.equal post post'
 
   let equal_upto_tags (pre, cmd, post) (pre', cmd', post') =
     Cmd.equal cmd cmd'
