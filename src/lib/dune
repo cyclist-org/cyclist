@@ -2,4 +2,6 @@
  (name lib)
  (public_name cyclist.lib)
  (libraries mparser-re unix hashset hashcons)
+ (preprocess
+  (pps ppx_compare ppx_hash))
  (modules (:standard)))

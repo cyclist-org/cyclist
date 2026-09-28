@@ -2,6 +2,8 @@
  (name generic)
  (public_name cyclist.generic)
  (libraries lib cmdliner)
+ (preprocess
+  (pps ppx_compare ppx_hash))
  (modules (:standard))
  (modules_without_implementation sequent)
  (foreign_stubs
