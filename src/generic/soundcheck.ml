@@ -154,9 +154,12 @@ let remove_dead_nodes prf' =
   let cont = ref true in
   while !cont do
     match
-      Int.Map.find_map (fun idx n -> (not (Int.equal idx 0)) && is_leaf n) !prf
+      Int.Map.find_map
+        (fun idx n ->
+          if (not (Int.equal idx 0)) && is_leaf n then Some idx else None)
+        !prf
     with
-    | Some (idx, _n) -> remove_dead_node idx
+    | Some idx -> remove_dead_node idx
     | None -> cont := false
   done;
   !prf
@@ -190,9 +193,12 @@ let fuse_single_nodes prf' init =
   (* we would run into difficulties when updating that parent to point *)
   (* directly to the grandchild, so we avoid that altogether *)
   let p idx ((bud, _, _) as n) =
-    (not (Int.equal idx init))
-    && (not bud) && is_single_node idx n
-    && not (fathers_grandchild !prf idx n)
+    if
+      (not (Int.equal idx init))
+      && (not bud) && is_single_node idx n
+      && not (fathers_grandchild !prf idx n)
+    then Some (idx, n)
+    else None
   in
   while !cont do
     match Int.Map.find_map p !prf with

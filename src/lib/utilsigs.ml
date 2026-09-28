@@ -127,16 +127,10 @@ module type OrderedMap = sig
   val hash : ('a -> int) -> 'a t -> int
   (** Hash the map using the provided function for hashing *values*. *)
 
-  val of_list : (key * 'a) list -> 'a t
-  (** Create a map out of a list of pairs of (keys, values). *)
-
-  val to_list : 'a t -> (key * 'a) list
-  (** Create a list of pairs (keys, values) out of a map. *)
-
   val union : 'a t -> 'a t -> 'a t
   (** Union two maps. Bindings in the first map have precedence. *)
 
-  val find_map : (key -> 'a -> bool) -> 'a t -> (key * 'a) option
+  val find_map : (key -> 'a -> 'b option) -> 'a t -> 'b option
   (** Optimisation for finding and converting at the same time. [find_map f map]
       will return [f k v] for the first [k],[v] in [map] such that [f k v] is
       not [None], or [None] otherwise. *)
@@ -144,13 +138,6 @@ module type OrderedMap = sig
   val fixpoint : ('a -> 'a -> bool) -> ('a t -> 'a t) -> 'a t -> 'a t
   (** [fixpoint val_equal f map] computes the fixpoint of [f] using [val_equal]
       to compare *values*. *)
-
-  (*    val map_to : ('b -> 'c -> 'c) -> 'c -> (key -> 'v -> 'b) -> 'v t -> 'c *)
-  (*    val map_to_list : (key -> 'b -> 'a) -> 'b t -> 'a list                 *)
-
-  val submap : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
-  (** Decide if a map is included in another, using the provided value equality
-      predicate. *)
 
   val add_bindings : (key * 'a) list -> 'a t -> 'a t
   (** Add all bindings in provided list to map. Bindings already in the map have

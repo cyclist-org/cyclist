@@ -15,22 +15,15 @@ module Make (T : Utilsigs.BasicType) = struct
 
   (* NB this prioritises bindings of the first argument *)
   let union m m' = fold add m m'
-  let of_list l = Blist.fold_left (fun m (k, v) -> add k v m) empty l
-  let to_list = bindings
 
-  exception Found
-
-  let find_map f (m : 'a t) =
-    let found = ref None in
+  let find_map (type a) (f : key -> 'v -> a option) (s : 'v t) =
+    let exception Found of a option in
     try
       iter
-        (fun k v ->
-          if f k v then (
-            found := Some (k, v);
-            raise Found))
-        m;
+        (fun k v -> match f k v with None -> () | some -> raise (Found some))
+        s;
       None
-    with Found -> !found
+    with Found some -> some
 
   let pp pp_val fmt m =
     let aux fmt m =
@@ -42,6 +35,5 @@ module Make (T : Utilsigs.BasicType) = struct
     let pp_val fmt v = Format.pp_print_string fmt (val_to_string v) in
     mk_to_string (pp pp_val) m
 
-  let submap eq m m' = for_all (fun k v -> mem k m' && eq v (find k m')) m
   let add_bindings bs m = List.fold_left (fun m (k, v) -> add k v m) m bs
 end
