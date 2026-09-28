@@ -17,7 +17,7 @@ homepage: "http://www.cyclist-prover.org/"
 bug-reports: "https://github.com/cyclist-org/cyclist/issues"
 depends: [
   "dune" {>= "2.2"}
-  "ocaml" {>= "4.08.0"}
+  "ocaml" {>= "5.3"}
   "stdlib-shims" {build}
   "dune-configurator" {build & >= "3.0"}
   "mparser-re" {>= "1.3"}

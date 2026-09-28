@@ -82,3 +82,18 @@ jobs:
       # tests/cli.
       - name: Build
         run: opam exec -- dune build
+
+      # Compare the proofs of the benchmark cases with the committed baselines
+      # in benchmarks/*/proof-trace.log; see the proof-trace targets in the
+      # Makefile. Fails with the diff if they differ.
+      - name: Check proof traces
+        run: opam exec -- make check-trace
+
+      # The traces that failed the check, to inspect or, once the change is
+      # understood, to accept as the baselines.
+      - name: Upload proof traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: proof-traces-${{ matrix.os }}
+          path: benchmarks/**/proof-trace.new.log

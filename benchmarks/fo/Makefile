@@ -1,6 +1,7 @@
 TIMEOUT:=$(or $(TIMEOUT),40)
 TESTS:= $(sort $(wildcard *.tst))
-DEFS := "$(ROOT)/examples/fo.defs"
+DEFS_FILE := examples/fo.defs
+DEFS := "$(ROOT)/$(DEFS_FILE)"
 CMD := "src/cli/cyclist.exe"
 SUB := fo prove
 
@@ -17,3 +18,8 @@ $(TESTS): %.tst:
 		TST_COUNT=$$(($$TST_COUNT+1)); \
 		(cd "$(ROOT)" && dune exec $(CMD) -- $(SUB) -D $(DEFS) -t $(TIMEOUT) -S "$$SEQ" --id="$$TST_CASE" $(TST_OPTS) || echo "Not proved (timeout)"); \
 	done < "$@"
+
+CASES_FROM := lines
+CASE_NAME := first-order
+CASE_ARGS = $(SUB) -D $(DEFS_FILE) -S
+include ../cases.mk

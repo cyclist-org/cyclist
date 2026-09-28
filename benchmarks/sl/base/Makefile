@@ -14,3 +14,8 @@ $(TESTS): %.tst:
 		TST_COUNT=$$(($$TST_COUNT+1)); \
 		(cd "$(ROOT)" && dune exec $(CMD) -- $(SUB) -t $(TIMEOUT) -S "$$SEQ" --id="$$TST_CASE" $(TST_OPTS) || echo "Not proved (timeout)"); \
 	done < "$@"
+
+CASES_FROM := lines
+CASE_NAME := cyclist-sl
+CASE_ARGS = $(SUB) -S
+include ../../cases.mk

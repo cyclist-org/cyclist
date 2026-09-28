@@ -1,0 +1,2857 @@
+=== atva-2014-01.1
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'DLL(a,b,c,d) |- DLL_rev(a,b,c,d)' -p -t 60
+exit: 0
+0:
+DLL[0](a, b, c, d) |- DLL_rev[0'](a, b, c, d) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+1 <{(0, 0)}/{(0, 1)}>, 2 <{(0, 0)}/{(0, 1)}>]
+  1:
+  [1 < 0] : nil!=a * a->d, b |- DLL_rev[0'](a, b, a, d) (DLL_rev R.Unf./Simplify) [
+  3 <{(1, 1), (0, 0)}/{}>]
+    3: [1 < 0] : nil!=a * a->d, b |- a->d, b (Id)
+  2:
+  [1 < 0] : nil!=a * a->w, b * DLL[1](w, a, c, d) |- DLL_rev[0'](a, b, c, d) (Lemma.App) [
+  4 <{(1, 1), (0, 0)}/{}>, 5 <{(1, 1), (0, 0)}/{(0, 1)}>]
+    4:
+    [1 < 0] : nil!=a * DLL[1](w, a, c, d) |- DLL_rev[1'](w, a, c, d) (R.Trans.Ex) [
+    6 <{(1, 1), (0, 0)}/{}>]
+      6:
+      [1 < 0] : nil!=a * DLL[1](w, a, c, d) |- DLL_rev[0'](w, a, c, d) (Weaken) [
+      7 <{(1, 1)}/{}>]
+        7:
+        DLL[1](w, a, c, d) |- DLL_rev[0'](w, a, c, d) (Subst) [8 <{(1, 0)}/
+                                                               {}>]
+          8:
+          DLL[0](a, b, c, d) |- DLL_rev[0'](a, b, c, d) (Backl) [0] <pre=
+          {(0, 0)}>
+    5:
+    [1 < 0] : nil!=a * a->w, b * DLL_rev[1'](w, a, c, d) |-
+    DLL_rev[0'](a, b, c, d) (LHS Inst.) [9 <{(1', 2), (1, 1), (0, 0)}/{}>]
+      9:
+      [1 < 0] : nil!=a * a->w, b * DLL_rev[2](w, a, c, d) |-
+      DLL_rev[0'](a, b, c, d) (DLL_rev R.Unf.) [10 <{(2, 2), (1, 1), (0, 0)}/
+                                                {}>]
+        10:
+        [1 < 0] : nil!=a * a->w, b * DLL_rev[2](w, a, c, d) |-
+        [1' < 0'] : nil!=c * c->d, w' * DLL_rev[1'](a, b, w', c) (UBound Intro) [
+        11 <{(2, 2), (1, 1), (0, 0)}/{}>]
+          11:
+          [1 < 0] : nil!=a * a->w, b * DLL_rev[2](w, a, c, d) |-
+          nil!=c * c->d, w' * DLL_rev[1'](a, b, w', c) (DLL_rev L.Unf./LHS Inst.,LHS Inst./Simplify,Simplify) [
+          12 <{(2, 2), (1, 1), (0, 0)}/{(2, 3), (0, 1)}>,
+          13 <{(2, 2), (1, 1), (0, 0)}/{(2, 3), (0, 1)}>]
+            12:
+            [3 < 2; 1 < 0] : nil!=a * nil!=w * a!=w * a->w, b * w->d, a |-
+            w->d, w' * DLL_rev[1'](a, b, w', w) (DLL_rev R.Unf./Simplify) [
+            14 <{(3, 3), (2, 2), (1, 1), (0, 0)}/{}>]
+              14:
+              [3 < 2; 1 < 0] : nil!=a * nil!=w * a!=w * a->w, b * w->d, a |-
+              a->w, b * w->d, a (Id)
+            13:
+            [3 < 2; 1 < 0] : nil!=c * nil!=a * c!=a * c->d, x * a->w, b *
+                             DLL_rev[3](w, a, x, c) |-
+            c->d, w' * DLL_rev[1'](a, b, w', c) (Lemma.App) [15 <{(3, 3),
+                                                                 (2, 2),
+                                                                 (1, 1),
+                                                                 (0, 0)}/
+                                                             {}>,
+            16 <{(3, 3), (2, 2), (1, 1), (0, 0)}/{(2, 3), (0, 1)}>]
+              15:
+              [3 < 2; 1 < 0] : nil!=c * nil!=a * c!=a * a->w, b *
+                               DLL_rev[3](w, a, x, c) |-
+              DLL_rev[0'](a, b, x, c) (Weaken) [17 <{(3, 3), (2, 2)}/{}>]
+                17:
+                [3 < 2] : nil!=a * a->w, b * DLL_rev[3](w, a, x, c) |-
+                DLL_rev[0'](a, b, x, c) (L.Trans.Ex) [18 <{(3, 3), (3, 1'),
+                                                          (2, 2)}/{}>]
+                  18:
+                  [3 < 2] : nil!=a * a->w, b * DLL_rev[1'](w, a, x, c) |-
+                  DLL_rev[0'](a, b, x, c) (Subst) [19 <{(3, 1), (2, 0),
+                                                       (1', 1')}/{}>]
+                    19:
+                    [1 < 0] : nil!=a * a->w, b * DLL_rev[1'](w, a, c, d) |-
+                    DLL_rev[0'](a, b, c, d) (Backl) [5] <pre={(1', 1'),
+                                                             (1, 1),
+                                                             (0, 0)}>
+              16:
+              [3 < 2; 1 < 0] : nil!=c * nil!=a * c!=a * c->d, x *
+                               DLL_rev[0'](a, b, x, c) |-
+              c->d, w' * DLL_rev[1'](a, b, w', c) (Id)
+
+=== atva-2014-01.2
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'DLL[i](a,b,c,d) |- DLL_rev[i](a,b,c,d)' -p -t 60
+exit: 0
+0:
+DLL[i](a, b, c, d) |- DLL_rev[i](a, b, c, d) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+1 <{(i, i)}/{(i, 0)}>, 2 <{(i, i)}/{(i, 0)}>]
+  1:
+  [0 < i] : nil!=a * a->d, b |- DLL_rev[i](a, b, a, d) (DLL_rev R.Unf./Simplify) [
+  3 <{(0, 0), (i, i)}/{}>]
+    3: [0 < i] : nil!=a * a->d, b |- a->d, b (Id)
+  2:
+  [0 < i] : nil!=a * a->w, b * DLL[0](w, a, c, d) |- DLL_rev[i](a, b, c, d) (Lemma.App) [
+  4 <{(0, 0), (i, i)}/{}>, 5 <{(0, 0), (i, i)}/{(i, 0)}>]
+    4:
+    [0 < i] : nil!=a * DLL[0](w, a, c, d) |- DLL_rev[0](w, a, c, d) (Weaken) [
+    6 <{(0, 0)}/{}>]
+      6:
+      DLL[0](w, a, c, d) |- DLL_rev[0](w, a, c, d) (Subst) [7 <{(0, i)}/{}>]
+        7:
+        DLL[i](a, b, c, d) |- DLL_rev[i](a, b, c, d) (Backl) [0] <pre=
+        {(i, i)}>
+    5:
+    [0 < i] : nil!=a * a->w, b * DLL_rev[0](w, a, c, d) |-
+    DLL_rev[i](a, b, c, d) (DLL_rev R.Unf.) [8 <{(0, 0), (i, i)}/{}>]
+      8:
+      [0 < i] : nil!=a * a->w, b * DLL_rev[0](w, a, c, d) |-
+      [0' < i] : nil!=c * c->d, w' * DLL_rev[0'](a, b, w', c) (Inst.Tag (Match)/Simplify) [
+      9 <{(0, 0), (i, i)}/{}>]
+        9:
+        [0 < i] : nil!=a * a->w, b * DLL_rev[0](w, a, c, d) |-
+        nil!=c * c->d, w' * DLL_rev[0](a, b, w', c) (DLL_rev L.Unf./LHS Inst.,LHS Inst./Simplify,Simplify) [
+        10 <{(0, 0), (i, i)}/{(0, 1), (i, 1), (i, 0)}>,
+        11 <{(0, 0), (i, i)}/{(0, 1), (i, 1), (i, 0)}>]
+          10:
+          [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, b * w->d, a |-
+          w->d, w' * DLL_rev[0](a, b, w', w) (DLL_rev R.Unf./Simplify) [
+          12 <{(1, 1), (0, 0), (i, i)}/{}>]
+            12:
+            [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, b * w->d, a |-
+            a->w, b * w->d, a (Id)
+          11:
+          [1 < 0; 0 < i] : nil!=c * nil!=a * c!=a * c->d, x * a->w, b *
+                           DLL_rev[1](w, a, x, c) |-
+          c->d, w' * DLL_rev[0](a, b, w', c) (Lemma.App) [13 <{(1, 1),
+                                                              (0, 0),
+                                                              (i, i)}/
+                                                          {}>,
+          14 <{(1, 1), (0, 0), (i, i)}/{(0, 1), (i, 1), (i, 0)}>]
+            13:
+            [1 < 0; 0 < i] : nil!=c * nil!=a * c!=a * a->w, b *
+                             DLL_rev[1](w, a, x, c) |-
+            DLL_rev[0](a, b, x, c) (Weaken) [15 <{(1, 1), (0, 0)}/{}>]
+              15:
+              [1 < 0] : nil!=a * a->w, b * DLL_rev[1](w, a, x, c) |-
+              DLL_rev[0](a, b, x, c) (Subst) [16 <{(1, 0), (0, i)}/{}>]
+                16:
+                [0 < i] : nil!=a * a->w, b * DLL_rev[0](w, a, c, d) |-
+                DLL_rev[i](a, b, c, d) (Backl) [5] <pre={(0, 0), (i, i)}>
+            14:
+            [1 < 0; 0 < i] : nil!=c * nil!=a * c!=a * c->d, x *
+                             DLL_rev[0](a, b, x, c) |-
+            c->d, w' * DLL_rev[0](a, b, w', c) (Id)
+
+=== atva-2014-01.3
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'DLL[i](a,b,c,d) |- [i] < [j'"'"'] : DLL_rev[j'"'"'](a,b,c,d)' -p -t 60
+exit: 0
+0:
+DLL[i](a, b, c, d) |- [i < j'] : DLL_rev[j'](a, b, c, d) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+1 <{(i, i)}/{(i, 0)}>, 2 <{(i, i)}/{(i, 0)}>]
+  1:
+  [0 < i] : nil!=a * a->d, b |- [i < j'] : DLL_rev[j'](a, b, a, d) (DLL_rev R.Unf./Simplify) [
+  3 <{(0, 0), (i, i)}/{}>]
+    3:
+    [0 < i] : nil!=a * a->d, b |- [i < j'] : a->d, b (UBound Intro) [
+    4 <{(0, 0), (i, i)}/{}>]
+      4: [0 < i] : nil!=a * a->d, b |- a->d, b (Id)
+  2:
+  [0 < i] : nil!=a * a->w, b * DLL[0](w, a, c, d) |-
+  [i < j'] : DLL_rev[j'](a, b, c, d) (Lemma.App) [5 <{(0, 0), (i, i)}/{}>,
+  6 <{(0, 0), (i, i)}/{(i, 0)}>]
+    5:
+    [0 < i] : nil!=a * DLL[0](w, a, c, d) |-
+    [0 < 0'] : DLL_rev[0'](w, a, c, d) (R.Trans.Ex) [7 <{(0, 0), (i, i)}/{}>]
+      7:
+      [0 < i] : nil!=a * DLL[0](w, a, c, d) |-
+      [0 < j'] : DLL_rev[j'](w, a, c, d) (Weaken) [8 <{(0, 0)}/{}>]
+        8:
+        DLL[0](w, a, c, d) |- [0 < j'] : DLL_rev[j'](w, a, c, d) (Subst) [
+        9 <{(0, i)}/{}>]
+          9:
+          DLL[i](a, b, c, d) |- [i < j'] : DLL_rev[j'](a, b, c, d) (Backl) [0] <pre=
+          {(i, i)}>
+    6:
+    [0 < 0'; 0 < i] : nil!=a * a->w, b * DLL_rev[0'](w, a, c, d) |-
+    [i < j'] : DLL_rev[j'](a, b, c, d) (LHS Inst.) [10 <{(0', 1), (0, 0),
+                                                        (i, i)}/{}>]
+      10:
+      [0 < 1; 0 < i] : nil!=a * a->w, b * DLL_rev[1](w, a, c, d) |-
+      [i < j'] : DLL_rev[j'](a, b, c, d) (DLL_rev R.Unf.) [11 <{(1, 1),
+                                                               (0, 0),
+                                                               (i, i)}/
+                                                           {}>]
+        11:
+        [0 < 1; 0 < i] : nil!=a * a->w, b * DLL_rev[1](w, a, c, d) |-
+        [0' < j'; i < j'] : nil!=c * c->d, w' * DLL_rev[0'](a, b, w', c) (UBound Intro) [
+        12 <{(1, 1), (0, 0), (i, i)}/{}>]
+          12:
+          [0 < 1; 0 < i] : nil!=a * a->w, b * DLL_rev[1](w, a, c, d) |-
+          nil!=c * c->d, w' * DLL_rev[0'](a, b, w', c) (DLL_rev L.Unf./LHS Inst.,LHS Inst./Simplify,Simplify) [
+          13 <{(1, 1), (0, 0), (i, i)}/{(1, 2), (1, 0), (i, 0)}>,
+          14 <{(1, 1), (0, 0), (i, i)}/{(1, 2), (1, 0), (i, 0)}>]
+            13:
+            [2 < 1; 0 < 1; 0 < i] : nil!=a * nil!=w * a!=w * a->w, b *
+                                    w->d, a |-
+            w->d, w' * DLL_rev[0'](a, b, w', w) (Pto Intro/Simplify) [
+            15 <{}/{}>]
+              15:
+              [2 < 1; 0 < 1; 0 < i] : nil!=a * nil!=w * a!=w * a->w, b |-
+              DLL_rev[0'](a, b, a, w) (DLL_rev R.Unf./Simplify) [16 <
+                                                                 {(2, 2),
+                                                                 (1, 1),
+                                                                 (0, 0),
+                                                                 (i, i)}/
+                                                                 {}>]
+                16:
+                [2 < 1; 0 < 1; 0 < i] : nil!=a * nil!=w * a!=w * a->w, b |-
+                a->w, b (Id)
+            14:
+            [2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * c!=a * c->d, x *
+                                    a->w, b * DLL_rev[2](w, a, x, c) |-
+            c->d, w' * DLL_rev[0'](a, b, w', c) (DLL_rev R.Unf./Simplify) [
+            17 <{(2, 2), (1, 1), (0, 0), (i, i)}/{}>]
+              17:
+              [2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * c!=a * c->d, x *
+                                      a->w, b * DLL_rev[2](w, a, x, c) |-
+              [1' < 0'] : nil!=w' * c!=w' * c->d, w' * w'->c, y' *
+                          DLL_rev[1'](a, b, y', w') (UBound Intro) [18 <
+                                                                    {
+                                                                    (2, 2),
+                                                                    (1, 1),
+                                                                    (0, 0),
+                                                                    (i, i)}/
+                                                                    {}>]
+                18:
+                [2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * c!=a * c->d, x *
+                                        a->w, b * DLL_rev[2](w, a, x, c) |-
+                nil!=w' * c!=w' * c->d, w' * w'->c, y' *
+                DLL_rev[1'](a, b, y', w') (DLL_rev L.Unf./LHS Inst.,LHS Inst./Simplify) [
+                19 <{(2, 2), (1, 1), (0, 0), (i, i)}/{(2, 3), (1, 3),
+                                                     (1, 2), (1, 0),
+                                                     (i, 0)}>,
+                20 <{(2, 2), (1, 1), (0, 0), (i, i)}/{(2, 3), (1, 3),
+                                                     (1, 2), (1, 0),
+                                                     (i, 0)}>]
+                  19:
+                  [3 < 2; 2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * nil!=w *
+                                                 c!=a * c!=w * a!=w *
+                                                 c->d, w * a->w, b * w->c, a |-
+                  nil!=w' * c!=w' * c->d, w' * w'->c, y' *
+                  DLL_rev[1'](a, b, y', w') (DLL_rev R.Unf./Simplify) [
+                  21 <{(3, 3), (2, 2), (1, 1), (0, 0), (i, i)}/{}>]
+                    21:
+                    [3 < 2; 2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * nil!=w *
+                                                   c!=a * c!=w * a!=w *
+                                                   c->d, w * a->w, b *
+                                                   w->c, a |-
+                    nil!=w' * c!=w' * a!=w' * c->d, w' * a->w', b * w'->c, a (Id)
+                  20:
+                  [3 < 2; 2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * nil!=x *
+                                                 c!=a * c!=x * a!=x *
+                                                 c->d, x * a->w, b *
+                                                 x->c, y *
+                                                 DLL_rev[3](w, a, y, x) |-
+                  nil!=w' * c!=w' * c->d, w' * w'->c, y' *
+                  DLL_rev[1'](a, b, y', w') (Lemma.App) [22 <{(3, 3),
+                                                             (2, 2),
+                                                             (1, 1),
+                                                             (0, 0),
+                                                             (i, i)}/
+                                                         {}>,
+                  23 <{(3, 3), (2, 2), (1, 1), (0, 0), (i, i)}/{(2, 3),
+                                                               (1, 3),
+                                                               (1, 2),
+                                                               (1, 0),
+                                                               (i, 0)}>]
+                    22:
+                    [3 < 2; 2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * nil!=x *
+                                                   c!=a * c!=x * a!=x *
+                                                   a->w, b * x->c, y *
+                                                   DLL_rev[3](w, a, y, x) |-
+                    x->c, x' * DLL_rev[0'](a, b, x', x) (R.Trans.Ex) [
+                    24 <{(3, 3), (2, 2), (1, 1), (0, 0), (i, i)}/{}>]
+                      24:
+                      [3 < 2; 2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a *
+                                                     nil!=x * c!=a * c!=x *
+                                                     a!=x * a->w, b *
+                                                     x->c, y *
+                                                     DLL_rev[3](w, a, y, x) |-
+                      x->c, w' * DLL_rev[0'](a, b, w', x) (Weaken) [25 <
+                                                                    {
+                                                                    (3, 3),
+                                                                    (2, 2)}/
+                                                                    {}>]
+                        25:
+                        [3 < 2] : nil!=a * nil!=x * a!=x * a->w, b *
+                                  x->c, y * DLL_rev[3](w, a, y, x) |-
+                        x->c, w' * DLL_rev[0'](a, b, w', x) (Subst) [
+                        26 <{(3, 2), (3, 0), (2, 1), (2, i)}/{}>]
+                          26:
+                          [2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * c!=a *
+                                                  c->d, x * a->w, b *
+                                                  DLL_rev[2](w, a, x, c) |-
+                          c->d, w' * DLL_rev[0'](a, b, w', c) (Backl) [14] <pre=
+                          {(2, 2), (1, 1), (0, 0), (i, i)}>
+                    23:
+                    [3 < 2; 2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * nil!=x *
+                                                   c!=a * c!=x * a!=x *
+                                                   c->d, x * x->c, x' *
+                                                   DLL_rev[0'](a, b, x', x) |-
+                    nil!=w' * c!=w' * c->d, w' * w'->c, y' *
+                    DLL_rev[1'](a, b, y', w') (Id)
+
+=== atva-2014-01.4
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'DLL[i](a,b,c,d) |- [j'"'"'] <= [i] : DLL_rev[j'"'"'](a,b,c,d)' -p -t 60
+exit: 0
+0:
+DLL[i](a, b, c, d) |- [j' <= i] : DLL_rev[j'](a, b, c, d) (Inst.Tag (Sel.UBound)/Simplify) [
+1 <{(i, i)}/{}>]
+  1:
+  DLL[i](a, b, c, d) |- DLL_rev[i](a, b, c, d) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+  2 <{(i, i)}/{(i, 0)}>, 3 <{(i, i)}/{(i, 0)}>]
+    2:
+    [0 < i] : nil!=a * a->d, b |- DLL_rev[i](a, b, a, d) (DLL_rev R.Unf./Simplify) [
+    4 <{(0, 0), (i, i)}/{}>]
+      4: [0 < i] : nil!=a * a->d, b |- a->d, b (Id)
+    3:
+    [0 < i] : nil!=a * a->w, b * DLL[0](w, a, c, d) |- DLL_rev[i](a, b, c, d) (Lemma.App) [
+    5 <{(0, 0), (i, i)}/{}>, 6 <{(0, 0), (0, j'), (i, i)}/{(i, 0), (i, j')}>]
+      5:
+      [0 < i] : nil!=a * DLL[0](w, a, c, d) |-
+      [j' <= 0] : DLL_rev[j'](w, a, c, d) (Weaken) [7 <{(0, 0)}/{}>]
+        7:
+        DLL[0](w, a, c, d) |- [j' <= 0] : DLL_rev[j'](w, a, c, d) (Subst) [
+        8 <{(0, i)}/{}>]
+          8:
+          DLL[i](a, b, c, d) |- [j' <= i] : DLL_rev[j'](a, b, c, d) (Backl) [0] <pre=
+          {(i, i)}>
+      6:
+      [0 < i; j' <= 0] : nil!=a * a->w, b * DLL_rev[j'](w, a, c, d) |-
+      DLL_rev[i](a, b, c, d) (LHS Inst.) [9 <{(0, 0), (i, i), (j', 1)}/{}>]
+        9:
+        [0 < i; 1 <= 0] : nil!=a * a->w, b * DLL_rev[1](w, a, c, d) |-
+        DLL_rev[i](a, b, c, d) (DLL_rev L.Unf./LHS Inst.,LHS Inst./Simplify) [
+        10 <{(1, 1), (0, 1), (0, 0), (i, i)}/{(1, 2), (0, 2), (i, 2),
+                                             (i, 1), (i, 0)}>,
+        11 <{(1, 1), (0, 1), (0, 0), (i, i)}/{(1, 2), (0, 2), (i, 2),
+                                             (i, 1), (i, 0)}>]
+          10:
+          [2 < 1; 0 < i; 1 <= 0] : nil!=a * nil!=w * a!=w * a->w, b * w->d, a |-
+          DLL_rev[i](a, b, w, d) (DLL_rev R.Unf./Simplify) [12 <{(2, 2),
+                                                                (1, 1),
+                                                                (0, 0),
+                                                                (i, i)}/
+                                                            {}>]
+            12:
+            [2 < 1; 0 < i; 1 <= 0] : nil!=a * nil!=w * a!=w * a->w, b *
+                                     w->d, a |-
+            [0' < i] : w->d, w' * DLL_rev[0'](a, b, w', w) (Inst.Tag (Match)/Simplify) [
+            13 <{(2, 2), (1, 1), (0, 0), (i, i)}/{}>]
+              13:
+              [2 < 1; 0 < i; 1 <= 0] : nil!=a * nil!=w * a!=w * a->w, b *
+                                       w->d, a |-
+              w->d, w' * DLL_rev[0](a, b, w', w) (DLL_rev R.Unf./Simplify) [
+              14 <{(2, 2), (1, 1), (0, 0), (i, i)}/{}>]
+                14:
+                [2 < 1; 0 < i; 1 <= 0] : nil!=a * nil!=w * a!=w * a->w, b *
+                                         w->d, a |-
+                a->w, b * w->d, a (Id)
+          11:
+          [2 < 1; 0 < i; 1 <= 0] : nil!=c * nil!=a * c!=a * c->d, x *
+                                   a->w, b * DLL_rev[2](w, a, x, c) |-
+          DLL_rev[i](a, b, c, d) (Lemma.App) [15 <{(2, 2), (1, 1), (0, 0),
+                                                  (i, i)}/{}>,
+          16 <{(2, 2), (1, 1), (0, 1), (0, 0), (i, i)}/{(1, 2), (0, 2),
+                                                       (i, 2), (i, 1),
+                                                       (i, 0)}>]
+            15:
+            [2 < 1; 0 < i; 1 <= 0] : nil!=c * nil!=a * c!=a * a->w, b *
+                                     DLL_rev[2](w, a, x, c) |-
+            DLL_rev[1](a, b, x, c) (Weaken) [17 <{(2, 2), (1, 1)}/{}>]
+              17:
+              [2 < 1; 2 <= 2] : nil!=a * a->w, b * DLL_rev[2](w, a, x, c) |-
+              DLL_rev[1](a, b, x, c) (L.Trans.Ex) [18 <{(2, 2), (2, j'),
+                                                       (1, 1)}/{}>]
+                18:
+                [2 < 1; j' <= 2] : nil!=a * a->w, b * DLL_rev[j'](w, a, x, c) |-
+                DLL_rev[1](a, b, x, c) (Subst) [19 <{(2, 0), (1, i),
+                                                    (j', j')}/{}>]
+                  19:
+                  [0 < i; j' <= 0] : nil!=a * a->w, b *
+                                     DLL_rev[j'](w, a, c, d) |-
+                  DLL_rev[i](a, b, c, d) (Backl) [6] <pre={(0, 0), (i, i),
+                                                          (j', j')}>
+            16:
+            [2 < 1; 0 < i; 1 <= 0] : nil!=c * nil!=a * c!=a * c->d, x *
+                                     DLL_rev[1](a, b, x, c) |-
+            DLL_rev[i](a, b, c, d) (DLL_rev R.Unf./Simplify) [20 <{(2, 2),
+                                                                  (1, 1),
+                                                                  (0, 0),
+                                                                  (i, i)}/
+                                                              {}>]
+              20:
+              [2 < 1; 0 < i; 1 <= 0] : nil!=c * nil!=a * c!=a * c->d, x *
+                                       DLL_rev[1](a, b, x, c) |-
+              [0' < i] : c->d, w' * DLL_rev[0'](a, b, w', c) (Id)
+
+=== atva-2014-02.1
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'DLL_rev(a,b,c,d) |- DLL(a,b,c,d)' -p -t 60
+exit: 0
+0:
+DLL_rev[0](a, b, c, d) |- DLL[0'](a, b, c, d) (DLL_rev L.Unf./LHS Inst.,LHS Inst./Simplify) [
+1 <{(0, 0)}/{(0, 1)}>, 2 <{(0, 0)}/{(0, 1)}>]
+  1:
+  [1 < 0] : nil!=a * a->d, b |- DLL[0'](a, b, a, d) (DLL R.Unf./Simplify) [
+  3 <{(1, 1), (0, 0)}/{}>]
+    3: [1 < 0] : nil!=a * a->d, b |- a->d, b (Id)
+  2:
+  [1 < 0] : nil!=c * c->d, w * DLL_rev[1](a, b, w, c) |- DLL[0'](a, b, c, d) (Lemma.App) [
+  4 <{(1, 1), (0, 0)}/{}>, 5 <{(1, 1), (0, 0)}/{(0, 1)}>]
+    4:
+    [1 < 0] : nil!=c * DLL_rev[1](a, b, w, c) |- DLL[1'](a, b, w, c) (R.Trans.Ex) [
+    6 <{(1, 1), (0, 0)}/{}>]
+      6:
+      [1 < 0] : nil!=c * DLL_rev[1](a, b, w, c) |- DLL[0'](a, b, w, c) (Weaken) [
+      7 <{(1, 1)}/{}>]
+        7:
+        DLL_rev[1](a, b, w, c) |- DLL[0'](a, b, w, c) (Subst) [8 <{(1, 0)}/
+                                                               {}>]
+          8:
+          DLL_rev[0](a, b, c, d) |- DLL[0'](a, b, c, d) (Backl) [0] <pre=
+          {(0, 0)}>
+    5:
+    [1 < 0] : nil!=c * c->d, w * DLL[1'](a, b, w, c) |- DLL[0'](a, b, c, d) (LHS Inst.) [
+    9 <{(1', 2), (1, 1), (0, 0)}/{}>]
+      9:
+      [1 < 0] : nil!=c * c->d, w * DLL[2](a, b, w, c) |- DLL[0'](a, b, c, d) (DLL R.Unf.) [
+      10 <{(2, 2), (1, 1), (0, 0)}/{}>]
+        10:
+        [1 < 0] : nil!=c * c->d, w * DLL[2](a, b, w, c) |-
+        [1' < 0'] : nil!=a * a->w', b * DLL[1'](w', a, c, d) (UBound Intro) [
+        11 <{(2, 2), (1, 1), (0, 0)}/{}>]
+          11:
+          [1 < 0] : nil!=c * c->d, w * DLL[2](a, b, w, c) |-
+          nil!=a * a->w', b * DLL[1'](w', a, c, d) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify,Simplify) [
+          12 <{(2, 2), (1, 1), (0, 0)}/{(2, 3), (0, 1)}>,
+          13 <{(2, 2), (1, 1), (0, 0)}/{(2, 3), (0, 1)}>]
+            12:
+            [3 < 2; 1 < 0] : nil!=c * nil!=w * c!=w * c->d, w * w->c, b |-
+            w->w', b * DLL[1'](w', w, c, d) (DLL R.Unf./Simplify) [14 <
+                                                                   {(3, 3),
+                                                                   (2, 2),
+                                                                   (1, 1),
+                                                                   (0, 0)}/
+                                                                   {}>]
+              14:
+              [3 < 2; 1 < 0] : nil!=c * nil!=w * c!=w * c->d, w * w->c, b |-
+              c->d, w * w->c, b (Id)
+            13:
+            [3 < 2; 1 < 0] : nil!=c * nil!=a * c!=a * c->d, w * a->x, b *
+                             DLL[3](x, a, w, c) |-
+            a->w', b * DLL[1'](w', a, c, d) (Lemma.App) [15 <{(3, 3),
+                                                             (2, 2),
+                                                             (1, 1),
+                                                             (0, 0)}/
+                                                         {}>,
+            16 <{(3, 3), (2, 2), (1, 1), (0, 0)}/{(2, 3), (0, 1)}>]
+              15:
+              [3 < 2; 1 < 0] : nil!=c * nil!=a * c!=a * c->d, w *
+                               DLL[3](x, a, w, c) |-
+              DLL[0'](x, a, c, d) (Weaken) [17 <{(3, 3), (2, 2)}/{}>]
+                17:
+                [3 < 2] : nil!=c * c->d, w * DLL[3](x, a, w, c) |-
+                DLL[0'](x, a, c, d) (L.Trans.Ex) [18 <{(3, 3), (3, 1'),
+                                                      (2, 2)}/{}>]
+                  18:
+                  [3 < 2] : nil!=c * c->d, w * DLL[1'](x, a, w, c) |-
+                  DLL[0'](x, a, c, d) (Subst) [19 <{(3, 1), (2, 0), (1', 1')}/
+                                               {}>]
+                    19:
+                    [1 < 0] : nil!=c * c->d, w * DLL[1'](a, b, w, c) |-
+                    DLL[0'](a, b, c, d) (Backl) [5] <pre={(1', 1'), (1, 1),
+                                                         (0, 0)}>
+              16:
+              [3 < 2; 1 < 0] : nil!=c * nil!=a * c!=a * a->x, b *
+                               DLL[0'](x, a, c, d) |-
+              a->w', b * DLL[1'](w', a, c, d) (Id)
+
+=== atva-2014-02.2
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'DLL_rev[i](a,b,c,d) |- DLL[i](a,b,c,d)' -p -t 60
+exit: 0
+0:
+DLL_rev[i](a, b, c, d) |- DLL[i](a, b, c, d) (DLL_rev L.Unf./LHS Inst.,LHS Inst./Simplify) [
+1 <{(i, i)}/{(i, 0)}>, 2 <{(i, i)}/{(i, 0)}>]
+  1:
+  [0 < i] : nil!=a * a->d, b |- DLL[i](a, b, a, d) (DLL R.Unf./Simplify) [
+  3 <{(0, 0), (i, i)}/{}>]
+    3: [0 < i] : nil!=a * a->d, b |- a->d, b (Id)
+  2:
+  [0 < i] : nil!=c * c->d, w * DLL_rev[0](a, b, w, c) |- DLL[i](a, b, c, d) (Lemma.App) [
+  4 <{(0, 0), (i, i)}/{}>, 5 <{(0, 0), (i, i)}/{(i, 0)}>]
+    4:
+    [0 < i] : nil!=c * DLL_rev[0](a, b, w, c) |- DLL[0](a, b, w, c) (Weaken) [
+    6 <{(0, 0)}/{}>]
+      6:
+      DLL_rev[0](a, b, w, c) |- DLL[0](a, b, w, c) (Subst) [7 <{(0, i)}/{}>]
+        7:
+        DLL_rev[i](a, b, c, d) |- DLL[i](a, b, c, d) (Backl) [0] <pre=
+        {(i, i)}>
+    5:
+    [0 < i] : nil!=c * c->d, w * DLL[0](a, b, w, c) |- DLL[i](a, b, c, d) (DLL R.Unf.) [
+    8 <{(0, 0), (i, i)}/{}>]
+      8:
+      [0 < i] : nil!=c * c->d, w * DLL[0](a, b, w, c) |-
+      [0' < i] : nil!=a * a->w', b * DLL[0'](w', a, c, d) (Inst.Tag (Match)/Simplify) [
+      9 <{(0, 0), (i, i)}/{}>]
+        9:
+        [0 < i] : nil!=c * c->d, w * DLL[0](a, b, w, c) |-
+        nil!=a * a->w', b * DLL[0](w', a, c, d) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify,Simplify) [
+        10 <{(0, 0), (i, i)}/{(0, 1), (i, 1), (i, 0)}>,
+        11 <{(0, 0), (i, i)}/{(0, 1), (i, 1), (i, 0)}>]
+          10:
+          [1 < 0; 0 < i] : nil!=c * nil!=w * c!=w * c->d, w * w->c, b |-
+          w->w', b * DLL[0](w', w, c, d) (DLL R.Unf./Simplify) [12 <{
+                                                                    (1, 1),
+                                                                    (0, 0),
+                                                                    (i, i)}/
+                                                                {}>]
+            12:
+            [1 < 0; 0 < i] : nil!=c * nil!=w * c!=w * c->d, w * w->c, b |-
+            c->d, w * w->c, b (Id)
+          11:
+          [1 < 0; 0 < i] : nil!=c * nil!=a * c!=a * c->d, w * a->x, b *
+                           DLL[1](x, a, w, c) |-
+          a->w', b * DLL[0](w', a, c, d) (Lemma.App) [13 <{(1, 1), (0, 0),
+                                                          (i, i)}/{}>,
+          14 <{(1, 1), (0, 0), (i, i)}/{(0, 1), (i, 1), (i, 0)}>]
+            13:
+            [1 < 0; 0 < i] : nil!=c * nil!=a * c!=a * c->d, w *
+                             DLL[1](x, a, w, c) |-
+            DLL[0](x, a, c, d) (Weaken) [15 <{(1, 1), (0, 0)}/{}>]
+              15:
+              [1 < 0] : nil!=c * c->d, w * DLL[1](x, a, w, c) |-
+              DLL[0](x, a, c, d) (Subst) [16 <{(1, 0), (0, i)}/{}>]
+                16:
+                [0 < i] : nil!=c * c->d, w * DLL[0](a, b, w, c) |-
+                DLL[i](a, b, c, d) (Backl) [5] <pre={(0, 0), (i, i)}>
+            14:
+            [1 < 0; 0 < i] : nil!=c * nil!=a * c!=a * a->x, b *
+                             DLL[0](x, a, c, d) |-
+            a->w', b * DLL[0](w', a, c, d) (Id)
+
+=== atva-2014-02.3
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'DLL_rev[i](a,b,c,d) |- [i] < [j'"'"'] : DLL[j'"'"'](a,b,c,d)' -p -t 60
+exit: 0
+0:
+DLL_rev[i](a, b, c, d) |- [i < j'] : DLL[j'](a, b, c, d) (DLL_rev L.Unf./LHS Inst.,LHS Inst./Simplify) [
+1 <{(i, i)}/{(i, 0)}>, 2 <{(i, i)}/{(i, 0)}>]
+  1:
+  [0 < i] : nil!=a * a->d, b |- [i < j'] : DLL[j'](a, b, a, d) (DLL R.Unf./Simplify) [
+  3 <{(0, 0), (i, i)}/{}>]
+    3:
+    [0 < i] : nil!=a * a->d, b |- [i < j'] : a->d, b (UBound Intro) [
+    4 <{(0, 0), (i, i)}/{}>]
+      4: [0 < i] : nil!=a * a->d, b |- a->d, b (Id)
+  2:
+  [0 < i] : nil!=c * c->d, w * DLL_rev[0](a, b, w, c) |-
+  [i < j'] : DLL[j'](a, b, c, d) (Lemma.App) [5 <{(0, 0), (i, i)}/{}>,
+  6 <{(0, 0), (i, i)}/{(i, 0)}>]
+    5:
+    [0 < i] : nil!=c * DLL_rev[0](a, b, w, c) |-
+    [0 < 0'] : DLL[0'](a, b, w, c) (R.Trans.Ex) [7 <{(0, 0), (i, i)}/{}>]
+      7:
+      [0 < i] : nil!=c * DLL_rev[0](a, b, w, c) |-
+      [0 < j'] : DLL[j'](a, b, w, c) (Weaken) [8 <{(0, 0)}/{}>]
+        8:
+        DLL_rev[0](a, b, w, c) |- [0 < j'] : DLL[j'](a, b, w, c) (Subst) [
+        9 <{(0, i)}/{}>]
+          9:
+          DLL_rev[i](a, b, c, d) |- [i < j'] : DLL[j'](a, b, c, d) (Backl) [0] <pre=
+          {(i, i)}>
+    6:
+    [0 < 0'; 0 < i] : nil!=c * c->d, w * DLL[0'](a, b, w, c) |-
+    [i < j'] : DLL[j'](a, b, c, d) (LHS Inst.) [10 <{(0', 1), (0, 0), (i, i)}/
+                                                {}>]
+      10:
+      [0 < 1; 0 < i] : nil!=c * c->d, w * DLL[1](a, b, w, c) |-
+      [i < j'] : DLL[j'](a, b, c, d) (DLL R.Unf.) [11 <{(1, 1), (0, 0),
+                                                       (i, i)}/{}>]
+        11:
+        [0 < 1; 0 < i] : nil!=c * c->d, w * DLL[1](a, b, w, c) |-
+        [0' < j'; i < j'] : nil!=a * a->w', b * DLL[0'](w', a, c, d) (UBound Intro) [
+        12 <{(1, 1), (0, 0), (i, i)}/{}>]
+          12:
+          [0 < 1; 0 < i] : nil!=c * c->d, w * DLL[1](a, b, w, c) |-
+          nil!=a * a->w', b * DLL[0'](w', a, c, d) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify,Simplify) [
+          13 <{(1, 1), (0, 0), (i, i)}/{(1, 2), (1, 0), (i, 0)}>,
+          14 <{(1, 1), (0, 0), (i, i)}/{(1, 2), (1, 0), (i, 0)}>]
+            13:
+            [2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=w * c!=w * c->d, w *
+                                    w->c, b |-
+            w->w', b * DLL[0'](w', w, c, d) (Pto Intro/Simplify) [15 <{}/{}>]
+              15:
+              [2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=w * c!=w * c->d, w |-
+              DLL[0'](c, w, c, d) (DLL R.Unf./Simplify) [16 <{(2, 2),
+                                                             (1, 1),
+                                                             (0, 0),
+                                                             (i, i)}/
+                                                         {}>]
+                16:
+                [2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=w * c!=w * c->d, w |-
+                c->d, w (Id)
+            14:
+            [2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * c!=a * c->d, w *
+                                    a->x, b * DLL[2](x, a, w, c) |-
+            a->w', b * DLL[0'](w', a, c, d) (DLL R.Unf./Simplify) [17 <
+                                                                   {(2, 2),
+                                                                   (1, 1),
+                                                                   (0, 0),
+                                                                   (i, i)}/
+                                                                   {}>]
+              17:
+              [2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * c!=a * c->d, w *
+                                      a->x, b * DLL[2](x, a, w, c) |-
+              [1' < 0'] : nil!=w' * a!=w' * a->w', b * w'->y', a *
+                          DLL[1'](y', w', c, d) (UBound Intro) [18 <{
+                                                                    (2, 2),
+                                                                    (1, 1),
+                                                                    (0, 0),
+                                                                    (i, i)}/
+                                                                {}>]
+                18:
+                [2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * c!=a * c->d, w *
+                                        a->x, b * DLL[2](x, a, w, c) |-
+                nil!=w' * a!=w' * a->w', b * w'->y', a *
+                DLL[1'](y', w', c, d) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+                19 <{(2, 2), (1, 1), (0, 0), (i, i)}/{(2, 3), (1, 3),
+                                                     (1, 2), (1, 0),
+                                                     (i, 0)}>,
+                20 <{(2, 2), (1, 1), (0, 0), (i, i)}/{(2, 3), (1, 3),
+                                                     (1, 2), (1, 0),
+                                                     (i, 0)}>]
+                  19:
+                  [3 < 2; 2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * nil!=w *
+                                                 c!=a * c!=w * a!=w *
+                                                 c->d, w * a->w, b * w->c, a |-
+                  nil!=w' * a!=w' * a->w', b * w'->y', a *
+                  DLL[1'](y', w', c, d) (DLL R.Unf./Simplify) [21 <{(3, 3),
+                                                                   (2, 2),
+                                                                   (1, 1),
+                                                                   (0, 0),
+                                                                   (i, i)}/
+                                                               {}>]
+                    21:
+                    [3 < 2; 2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * nil!=w *
+                                                   c!=a * c!=w * a!=w *
+                                                   c->d, w * a->w, b *
+                                                   w->c, a |-
+                    nil!=w' * c!=w' * a!=w' * c->d, w' * a->w', b * w'->c, a (Id)
+                  20:
+                  [3 < 2; 2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * nil!=x *
+                                                 c!=a * c!=x * a!=x *
+                                                 c->d, w * a->x, b *
+                                                 x->y, a * DLL[3](y, x, w, c) |-
+                  nil!=w' * a!=w' * a->w', b * w'->y', a *
+                  DLL[1'](y', w', c, d) (Lemma.App) [22 <{(3, 3), (2, 2),
+                                                         (1, 1), (0, 0),
+                                                         (i, i)}/{}>,
+                  23 <{(3, 3), (2, 2), (1, 1), (0, 0), (i, i)}/{(2, 3),
+                                                               (1, 3),
+                                                               (1, 2),
+                                                               (1, 0),
+                                                               (i, 0)}>]
+                    22:
+                    [3 < 2; 2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * nil!=x *
+                                                   c!=a * c!=x * a!=x *
+                                                   c->d, w * x->y, a *
+                                                   DLL[3](y, x, w, c) |-
+                    x->x', a * DLL[0'](x', x, c, d) (R.Trans.Ex) [24 <
+                                                                  {(3, 3),
+                                                                  (2, 2),
+                                                                  (1, 1),
+                                                                  (0, 0),
+                                                                  (i, i)}/
+                                                                  {}>]
+                      24:
+                      [3 < 2; 2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a *
+                                                     nil!=x * c!=a * c!=x *
+                                                     a!=x * c->d, w *
+                                                     x->y, a *
+                                                     DLL[3](y, x, w, c) |-
+                      x->w', a * DLL[0'](w', x, c, d) (Weaken) [25 <{
+                                                                    (3, 3),
+                                                                    (2, 2)}/
+                                                                {}>]
+                        25:
+                        [3 < 2] : nil!=c * nil!=x * c!=x * c->d, w *
+                                  x->y, a * DLL[3](y, x, w, c) |-
+                        x->w', a * DLL[0'](w', x, c, d) (Subst) [26 <
+                                                                 {(3, 2),
+                                                                 (3, 0),
+                                                                 (2, 1),
+                                                                 (2, i)}/
+                                                                 {}>]
+                          26:
+                          [2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * c!=a *
+                                                  c->d, w * a->x, b *
+                                                  DLL[2](x, a, w, c) |-
+                          a->w', b * DLL[0'](w', a, c, d) (Backl) [14] <pre=
+                          {(2, 2), (1, 1), (0, 0), (i, i)}>
+                    23:
+                    [3 < 2; 2 < 1; 0 < 1; 0 < i] : nil!=c * nil!=a * nil!=x *
+                                                   c!=a * c!=x * a!=x *
+                                                   a->x, b * x->x', a *
+                                                   DLL[0'](x', x, c, d) |-
+                    nil!=w' * a!=w' * a->w', b * w'->y', a *
+                    DLL[1'](y', w', c, d) (Id)
+
+=== atva-2014-02.4
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'DLL_rev[i](a,b,c,d) |- [j'"'"'] <= [i] : DLL[j'"'"'](a,b,c,d)' -p -t 60
+exit: 0
+0:
+DLL_rev[i](a, b, c, d) |- [j' <= i] : DLL[j'](a, b, c, d) (Inst.Tag (Sel.UBound)/Simplify) [
+1 <{(i, i)}/{}>]
+  1:
+  DLL_rev[i](a, b, c, d) |- DLL[i](a, b, c, d) (DLL_rev L.Unf./LHS Inst.,LHS Inst./Simplify) [
+  2 <{(i, i)}/{(i, 0)}>, 3 <{(i, i)}/{(i, 0)}>]
+    2:
+    [0 < i] : nil!=a * a->d, b |- DLL[i](a, b, a, d) (DLL R.Unf./Simplify) [
+    4 <{(0, 0), (i, i)}/{}>]
+      4: [0 < i] : nil!=a * a->d, b |- a->d, b (Id)
+    3:
+    [0 < i] : nil!=c * c->d, w * DLL_rev[0](a, b, w, c) |- DLL[i](a, b, c, d) (Lemma.App) [
+    5 <{(0, 0), (i, i)}/{}>, 6 <{(0, 0), (0, j'), (i, i)}/{(i, 0), (i, j')}>]
+      5:
+      [0 < i] : nil!=c * DLL_rev[0](a, b, w, c) |-
+      [j' <= 0] : DLL[j'](a, b, w, c) (Weaken) [7 <{(0, 0)}/{}>]
+        7:
+        DLL_rev[0](a, b, w, c) |- [j' <= 0] : DLL[j'](a, b, w, c) (Subst) [
+        8 <{(0, i)}/{}>]
+          8:
+          DLL_rev[i](a, b, c, d) |- [j' <= i] : DLL[j'](a, b, c, d) (Backl) [0] <pre=
+          {(i, i)}>
+      6:
+      [0 < i; j' <= 0] : nil!=c * c->d, w * DLL[j'](a, b, w, c) |-
+      DLL[i](a, b, c, d) (LHS Inst.) [9 <{(0, 0), (i, i), (j', 1)}/{}>]
+        9:
+        [0 < i; 1 <= 0] : nil!=c * c->d, w * DLL[1](a, b, w, c) |-
+        DLL[i](a, b, c, d) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+        10 <{(1, 1), (0, 1), (0, 0), (i, i)}/{(1, 2), (0, 2), (i, 2),
+                                             (i, 1), (i, 0)}>,
+        11 <{(1, 1), (0, 1), (0, 0), (i, i)}/{(1, 2), (0, 2), (i, 2),
+                                             (i, 1), (i, 0)}>]
+          10:
+          [2 < 1; 0 < i; 1 <= 0] : nil!=c * nil!=w * c!=w * c->d, w * w->c, b |-
+          DLL[i](w, b, c, d) (DLL R.Unf./Simplify) [12 <{(2, 2), (1, 1),
+                                                        (0, 0), (i, i)}/
+                                                    {}>]
+            12:
+            [2 < 1; 0 < i; 1 <= 0] : nil!=c * nil!=w * c!=w * c->d, w *
+                                     w->c, b |-
+            [0' < i] : w->w', b * DLL[0'](w', w, c, d) (Inst.Tag (Match)/Simplify) [
+            13 <{(2, 2), (1, 1), (0, 0), (i, i)}/{}>]
+              13:
+              [2 < 1; 0 < i; 1 <= 0] : nil!=c * nil!=w * c!=w * c->d, w *
+                                       w->c, b |-
+              w->w', b * DLL[0](w', w, c, d) (DLL R.Unf./Simplify) [14 <
+                                                                    {
+                                                                    (2, 2),
+                                                                    (1, 1),
+                                                                    (0, 0),
+                                                                    (i, i)}/
+                                                                    {}>]
+                14:
+                [2 < 1; 0 < i; 1 <= 0] : nil!=c * nil!=w * c!=w * c->d, w *
+                                         w->c, b |-
+                c->d, w * w->c, b (Id)
+          11:
+          [2 < 1; 0 < i; 1 <= 0] : nil!=c * nil!=a * c!=a * c->d, w *
+                                   a->x, b * DLL[2](x, a, w, c) |-
+          DLL[i](a, b, c, d) (Lemma.App) [15 <{(2, 2), (1, 1), (0, 0),
+                                              (i, i)}/{}>,
+          16 <{(2, 2), (1, 1), (0, 1), (0, 0), (i, i)}/{(1, 2), (0, 2),
+                                                       (i, 2), (i, 1),
+                                                       (i, 0)}>]
+            15:
+            [2 < 1; 0 < i; 1 <= 0] : nil!=c * nil!=a * c!=a * c->d, w *
+                                     DLL[2](x, a, w, c) |-
+            DLL[1](x, a, c, d) (Weaken) [17 <{(2, 2), (1, 1)}/{}>]
+              17:
+              [2 < 1; 2 <= 2] : nil!=c * c->d, w * DLL[2](x, a, w, c) |-
+              DLL[1](x, a, c, d) (L.Trans.Ex) [18 <{(2, 2), (2, j'), (1, 1)}/
+                                               {}>]
+                18:
+                [2 < 1; j' <= 2] : nil!=c * c->d, w * DLL[j'](x, a, w, c) |-
+                DLL[1](x, a, c, d) (Subst) [19 <{(2, 0), (1, i), (j', j')}/
+                                            {}>]
+                  19:
+                  [0 < i; j' <= 0] : nil!=c * c->d, w * DLL[j'](a, b, w, c) |-
+                  DLL[i](a, b, c, d) (Backl) [6] <pre={(0, 0), (i, i),
+                                                      (j', j')}>
+            16:
+            [2 < 1; 0 < i; 1 <= 0] : nil!=c * nil!=a * c!=a * a->x, b *
+                                     DLL[1](x, a, c, d) |-
+            DLL[i](a, b, c, d) (DLL R.Unf./Simplify) [20 <{(2, 2), (1, 1),
+                                                          (0, 0), (i, i)}/
+                                                      {}>]
+              20:
+              [2 < 1; 0 < i; 1 <= 0] : nil!=c * nil!=a * c!=a * a->x, b *
+                                       DLL[1](x, a, c, d) |-
+              [0' < i] : a->w', b * DLL[0'](w', a, c, d) (Id)
+
+=== atva-2014-03.1
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'DLL_mid(a,nil,c,nil) |- DLL(a,nil,c,nil)' -p -t 60
+exit: 0
+0:
+DLL_mid[0](a, nil, c, nil) |- DLL[0'](a, nil, c, nil) (DLL_mid L.Unf./LHS Inst.,LHS Inst.,LHS Inst./Simplify) [
+1 <{(0, 0)}/{(0, 1)}>, 2 <{(0, 0)}/{(0, 1)}>, 3 <{(0, 0)}/{(0, 2), (0, 1)}>]
+  1:
+  [1 < 0] : nil!=a * a->nil, nil |- DLL[0'](a, nil, a, nil) (DLL R.Unf./Simplify) [
+  4 <{(1, 1), (0, 0)}/{}>]
+    4: [1 < 0] : nil!=a * a->nil, nil |- a->nil, nil (Id)
+  2:
+  [1 < 0] : nil!=c * nil!=a * c!=a * c->nil, a * a->c, nil |-
+  DLL[0'](a, nil, c, nil) (DLL R.Unf./Simplify) [5 <{(1, 1), (0, 0)}/{}>]
+    5:
+    [1 < 0] : nil!=c * nil!=a * c!=a * c->nil, a * a->c, nil |-
+    [1' < 0'] : a->w', nil * DLL[1'](w', a, c, nil) (UBound Intro) [6 <
+                                                                    {
+                                                                    (1, 1),
+                                                                    (0, 0)}/
+                                                                    {}>]
+      6:
+      [1 < 0] : nil!=c * nil!=a * c!=a * c->nil, a * a->c, nil |-
+      a->w', nil * DLL[1'](w', a, c, nil) (Pto Intro/Simplify) [7 <{}/{}>]
+        7:
+        [1 < 0] : nil!=c * nil!=a * c!=a * c->nil, a |- DLL[1'](c, a, c, nil) (DLL R.Unf./Simplify) [
+        8 <{(1, 1), (0, 0)}/{}>]
+          8: [1 < 0] : nil!=c * nil!=a * c!=a * c->nil, a |- c->nil, a (Id)
+  3:
+  [2 < 0; 1 < 0] : nil!=w * w->x, y * DLL[2](x, w, c, nil) *
+                   DLL_rev[1](a, nil, y, w) |-
+  DLL[0'](a, nil, c, nil) (DLL R.Unf.) [9 <{(2, 2), (1, 1), (0, 0)}/{}>]
+    9:
+    [2 < 0; 1 < 0] : nil!=w * w->x, y * DLL[2](x, w, c, nil) *
+                     DLL_rev[1](a, nil, y, w) |-
+    [1' < 0'] : nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (UBound Intro) [
+    10 <{(2, 2), (1, 1), (0, 0)}/{}>]
+      10:
+      [2 < 0; 1 < 0] : nil!=w * w->x, y * DLL[2](x, w, c, nil) *
+                       DLL_rev[1](a, nil, y, w) |-
+      nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (DLL_rev L.Unf./LHS Inst.,LHS Inst./Simplify) [
+      11 <{(2, 2), (1, 1), (0, 0)}/{(1, 3), (0, 3), (0, 2), (0, 1)}>,
+      12 <{(2, 2), (1, 1), (0, 0)}/{(1, 3), (0, 3), (0, 2), (0, 1)}>]
+        11:
+        [3 < 1; 2 < 0; 1 < 0] : nil!=y * nil!=w * y!=w * y->w, nil *
+                                w->x, y * DLL[2](x, w, c, nil) |-
+        y->w', nil * DLL[1'](w', y, c, nil) (Pto Intro/Simplify) [13 <
+                                                                  {(2, 2)}/
+                                                                  {}>]
+          13:
+          [3 < 1; 2 < 0; 1 < 0] : nil!=y * nil!=w * y!=w * w->x, y *
+                                  DLL[2](x, w, c, nil) |-
+          DLL[1'](w, y, c, nil) (DLL R.Unf./Simplify) [14 <{(3, 3), (2, 2),
+                                                           (1, 1), (0, 0)}/
+                                                       {}>]
+            14:
+            [3 < 1; 2 < 0; 1 < 0] : nil!=y * nil!=w * y!=w * w->x, y *
+                                    DLL[2](x, w, c, nil) |-
+            [0' < 1'] : w->w', y * DLL[0'](w', w, c, nil) (Id)
+        12:
+        [3 < 1; 2 < 0; 1 < 0] : nil!=y * nil!=w * y!=w * y->w, z * w->x, y *
+                                DLL_rev[3](a, nil, z, y) *
+                                DLL[2](x, w, c, nil) |-
+        nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (Lemma.App) [15 <
+                                                                  {(3, 3),
+                                                                  (2, 2),
+                                                                  (1, 1),
+                                                                  (0, 0)}/
+                                                                  {}>,
+        16 <{(3, 3), (2, 2), (1, 1), (0, 0)}/{(1, 3), (0, 3), (0, 2), (0, 1)}>]
+          15:
+          [3 < 1; 2 < 0; 1 < 0] : nil!=y * nil!=w * y!=w * w->x, y *
+                                  DLL[2](x, w, c, nil) |-
+          DLL[0'](w, y, c, nil) (R.Trans.Ex) [17 <{(3, 3), (2, 2), (1, 1),
+                                                  (0, 0)}/{}>]
+            17:
+            [3 < 1; 2 < 0; 1 < 0] : nil!=y * nil!=w * y!=w * w->x, y *
+                                    DLL[2](x, w, c, nil) |-
+            DLL[1'](w, y, c, nil) (Backl) [13] <pre={(3, 3), (2, 2),
+                                                    (1, 1), (0, 0)}>
+          16:
+          [3 < 1; 2 < 0; 1 < 0] : nil!=y * nil!=w * y!=w * y->w, z *
+                                  DLL_rev[3](a, nil, z, y) *
+                                  DLL[0'](w, y, c, nil) |-
+          nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (LHS Inst.) [18 <
+                                                                    {
+                                                                    (3, 3),
+                                                                    (2, 2),
+                                                                    (1, 1),
+                                                                    (0', 4),
+                                                                    (0, 0)}/
+                                                                    {}>]
+            18:
+            [3 < 1; 2 < 0; 1 < 0] : nil!=y * nil!=w * y!=w * y->w, z *
+                                    DLL[4](w, y, c, nil) *
+                                    DLL_rev[3](a, nil, z, y) |-
+            nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (DLL_rev L.Unf./LHS Inst.,LHS Inst./Simplify) [
+            19 <{(4, 4), (3, 3), (2, 2), (1, 1), (0, 0)}/{(3, 5), (1, 5),
+                                                         (1, 3), (0, 5),
+                                                         (0, 3), (0, 2),
+                                                         (0, 1)}>,
+            20 <{(4, 4), (3, 3), (2, 2), (1, 1), (0, 0)}/{(3, 5), (1, 5),
+                                                         (1, 3), (0, 5),
+                                                         (0, 3), (0, 2),
+                                                         (0, 1)}>]
+              19:
+              [5 < 3; 3 < 1; 2 < 0; 1 < 0] : nil!=z * nil!=y * nil!=w *
+                                             z!=y * y!=w * z->y, nil *
+                                             y->w, z * DLL[4](w, y, c, nil) |-
+              z->w', nil * DLL[1'](w', z, c, nil) (Pto Intro/Simplify) [
+              21 <{(4, 4)}/{}>]
+                21:
+                [5 < 3; 3 < 1; 2 < 0; 1 < 0] : nil!=z * nil!=y * nil!=w *
+                                               z!=y * y!=w * y->w, z *
+                                               DLL[4](w, y, c, nil) |-
+                DLL[1'](y, z, c, nil) (DLL R.Unf./Simplify) [22 <{(5, 5),
+                                                                 (4, 4),
+                                                                 (3, 3),
+                                                                 (2, 2),
+                                                                 (1, 1),
+                                                                 (0, 0)}/
+                                                             {}>]
+                  22:
+                  [5 < 3; 3 < 1; 2 < 0; 1 < 0] : nil!=z * nil!=y * nil!=w *
+                                                 z!=y * y!=w * y->w, z *
+                                                 DLL[4](w, y, c, nil) |-
+                  [0' < 1'] : y->w', z * DLL[0'](w', y, c, nil) (UBound Intro) [
+                  23 <{(5, 5), (4, 4), (3, 3), (2, 2), (1, 1), (0, 0)}/
+                  {}>]
+                    23:
+                    [5 < 3; 3 < 1; 2 < 0; 1 < 0] : nil!=z * nil!=y * nil!=w *
+                                                   z!=y * y!=w * y->w, z *
+                                                   DLL[4](w, y, c, nil) |-
+                    y->w', z * DLL[0'](w', y, c, nil) (Id)
+              20:
+              [5 < 3; 3 < 1; 2 < 0; 1 < 0] : nil!=z * nil!=y * nil!=w *
+                                             z!=y * y!=w * z->y, x *
+                                             y->w, z *
+                                             DLL_rev[5](a, nil, x, z) *
+                                             DLL[4](w, y, c, nil) |-
+              nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (Lemma.App) [
+              24 <{(5, 5), (4, 4), (3, 3), (2, 2), (1, 1), (0, 0)}/{}>,
+              25 <{(5, 5), (3, 3), (2, 2), (1, 1), (0, 0)}/{(3, 5), (1, 5),
+                                                           (1, 3), (0, 5),
+                                                           (0, 3), (0, 2),
+                                                           (0, 1)}>]
+                24:
+                [5 < 3; 3 < 1; 2 < 0; 1 < 0] : nil!=z * nil!=y * nil!=w *
+                                               z!=y * y!=w * y->w, z *
+                                               DLL[4](w, y, c, nil) |-
+                DLL[0'](y, z, c, nil) (R.Trans.Ex) [26 <{(5, 5), (4, 4),
+                                                        (3, 3), (2, 2),
+                                                        (1, 1), (0, 0)}/
+                                                    {}>]
+                  26:
+                  [5 < 3; 3 < 1; 2 < 0; 1 < 0] : nil!=z * nil!=y * nil!=w *
+                                                 z!=y * y!=w * y->w, z *
+                                                 DLL[4](w, y, c, nil) |-
+                  DLL[1'](y, z, c, nil) (Weaken) [27 <{(5, 5), (4, 4),
+                                                      (3, 3), (1, 1),
+                                                      (0, 0)}/{}>]
+                    27:
+                    [5 < 3; 5 < 0; 3 < 1; 1 < 0] : nil!=z * nil!=y * nil!=w *
+                                                   z!=y * y!=w * y->w, z *
+                                                   DLL[4](w, y, c, nil) |-
+                    DLL[1'](y, z, c, nil) (Subst) [28 <{(5, 5), (5, 2),
+                                                       (4, 4), (3, 3),
+                                                       (1, 1), (0, 0)}/
+                                                   {}>]
+                      28:
+                      [5 < 3; 3 < 1; 2 < 0; 1 < 0] : nil!=z * nil!=y *
+                                                     nil!=w * z!=y * y!=w *
+                                                     y->w, z *
+                                                     DLL[4](w, y, c, nil) |-
+                      DLL[1'](y, z, c, nil) (Backl) [21] <pre={(5, 5),
+                                                              (4, 4),
+                                                              (3, 3),
+                                                              (2, 2),
+                                                              (1, 1),
+                                                              (0, 0)}>
+                25:
+                [5 < 3; 3 < 1; 2 < 0; 1 < 0] : nil!=z * nil!=y * nil!=w *
+                                               z!=y * y!=w * z->y, x *
+                                               DLL_rev[5](a, nil, x, z) *
+                                               DLL[0'](y, z, c, nil) |-
+                nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (LHS Inst.) [
+                29 <{(5, 5), (3, 3), (2, 2), (1, 1), (0', 4), (0, 0)}/
+                {}>]
+                  29:
+                  [5 < 3; 3 < 1; 2 < 0; 1 < 0] : nil!=z * nil!=y * nil!=w *
+                                                 z!=y * y!=w * z->y, x *
+                                                 DLL_rev[5](a, nil, x, z) *
+                                                 DLL[4](y, z, c, nil) |-
+                  nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (Weaken) [
+                  30 <{(5, 5), (4, 4), (3, 3), (1, 1)}/{}>]
+                    30:
+                    [5 < 3; 5 < 1; 3 < 1] : nil!=z * nil!=y * z!=y *
+                                            z->y, x *
+                                            DLL_rev[5](a, nil, x, z) *
+                                            DLL[4](y, z, c, nil) |-
+                    nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (L.Trans.Ex) [
+                    31 <{(5, 5), (4, 0'), (3, 3), (1, 1)}/{}>]
+                      31:
+                      [5 < 3; 5 < 1; 3 < 1] : nil!=z * nil!=y * z!=y *
+                                              z->y, x *
+                                              DLL_rev[5](a, nil, x, z) *
+                                              DLL[0'](y, z, c, nil) |-
+                      nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (Subst) [
+                      32 <{(5, 3), (5, 2), (3, 1), (1, 0), (0', 0')}/
+                      {}>]
+                        32:
+                        [3 < 1; 2 < 0; 1 < 0] : nil!=y * nil!=w * y!=w *
+                                                y->w, z *
+                                                DLL_rev[3](a, nil, z, y) *
+                                                DLL[0'](w, y, c, nil) |-
+                        nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (Backl) [16] <pre=
+                        {(3, 3), (2, 2), (1, 1), (0', 0'), (0, 0)}>
+
+=== atva-2014-03.2
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'DLL_mid[i](a,nil,c,nil) |- DLL[i](a,nil,c,nil)' -p -t 60
+exit: 0
+0:
+DLL_mid[i](a, nil, c, nil) |- DLL[i](a, nil, c, nil) (DLL_mid L.Unf./LHS Inst.,LHS Inst.,LHS Inst./Simplify) [
+1 <{(i, i)}/{(i, 0)}>, 2 <{(i, i)}/{(i, 0)}>, 3 <{(i, i)}/{(i, 1), (i, 0)}>]
+  1:
+  [0 < i] : nil!=a * a->nil, nil |- DLL[i](a, nil, a, nil) (DLL R.Unf./Simplify) [
+  4 <{(0, 0), (i, i)}/{}>]
+    4: [0 < i] : nil!=a * a->nil, nil |- a->nil, nil (Id)
+  2:
+  [0 < i] : nil!=c * nil!=a * c!=a * c->nil, a * a->c, nil |-
+  DLL[i](a, nil, c, nil) (DLL R.Unf./Simplify) [5 <{(0, 0), (i, i)}/{}>]
+    5:
+    [0 < i] : nil!=c * nil!=a * c!=a * c->nil, a * a->c, nil |-
+    [0' < i] : a->w', nil * DLL[0'](w', a, c, nil) (Inst.Tag (Match)/Simplify) [
+    6 <{(0, 0), (i, i)}/{}>]
+      6:
+      [0 < i] : nil!=c * nil!=a * c!=a * c->nil, a * a->c, nil |-
+      a->w', nil * DLL[0](w', a, c, nil) (Pto Intro/Simplify) [7 <{}/{}>]
+        7:
+        [0 < i] : nil!=c * nil!=a * c!=a * c->nil, a |- DLL[0](c, a, c, nil) (DLL R.Unf./Simplify) [
+        8 <{(0, 0), (i, i)}/{}>]
+          8: [0 < i] : nil!=c * nil!=a * c!=a * c->nil, a |- c->nil, a (Id)
+  3:
+  [1 < i; 0 < i] : nil!=w * w->x, y * DLL[1](x, w, c, nil) *
+                   DLL_rev[0](a, nil, y, w) |-
+  DLL[i](a, nil, c, nil) (DLL R.Unf.) [9 <{(1, 1), (0, 0), (i, i)}/{}>]
+    9:
+    [1 < i; 0 < i] : nil!=w * w->x, y * DLL[1](x, w, c, nil) *
+                     DLL_rev[0](a, nil, y, w) |-
+    [0' < i] : nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (Inst.Tag (Match)/Simplify) [
+    10 <{(1, 1), (0, 0), (i, i)}/{}>]
+      10:
+      [1 < i; 0 < i] : nil!=w * w->x, y * DLL[1](x, w, c, nil) *
+                       DLL_rev[0](a, nil, y, w) |-
+      nil!=a * a->w', nil * DLL[1](w', a, c, nil) (DLL_rev L.Unf./LHS Inst.,LHS Inst./Simplify) [
+      11 <{(1, 1), (0, 0), (i, i)}/{(0, 2), (i, 2), (i, 1), (i, 0)}>,
+      12 <{(1, 1), (0, 0), (i, i)}/{(0, 2), (i, 2), (i, 1), (i, 0)}>]
+        11:
+        [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * y->w, nil *
+                                w->x, y * DLL[1](x, w, c, nil) |-
+        y->w', nil * DLL[1](w', y, c, nil) (Pto Intro/Simplify) [13 <
+                                                                 {(1, 1)}/
+                                                                 {}>]
+          13:
+          [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * w->x, y *
+                                  DLL[1](x, w, c, nil) |-
+          DLL[1](w, y, c, nil) (DLL R.Unf./Simplify) [14 <{(2, 2), (1, 1),
+                                                          (0, 0), (i, i)}/
+                                                      {}>]
+            14:
+            [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * w->x, y *
+                                    DLL[1](x, w, c, nil) |-
+            [0' < 1] : w->w', y * DLL[0'](w', w, c, nil) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+            15 <{(2, 2), (1, 1), (0, 0), (i, i)}/{(1, 3), (0, 2), (i, 3),
+                                                 (i, 2), (i, 1), (i, 0)}>,
+            16 <{(2, 2), (1, 1), (0, 0), (i, i)}/{(1, 3), (0, 2), (i, 3),
+                                                 (i, 2), (i, 1), (i, 0)}>]
+              15:
+              [3 < 1; 2 < 0; 1 < i; 0 < i] : nil!=y * nil!=x * nil!=w *
+                                             y!=w * x!=w * x->nil, w *
+                                             w->x, y |-
+              [0' < 1] : w->w', y * DLL[0'](w', w, x, nil) (Inst.Tag (Match)/Simplify) [
+              17 <{(3, 3), (2, 2), (1, 1), (0, 0), (i, i)}/{}>]
+                17:
+                [3 < 1; 2 < 0; 1 < i; 0 < i] : nil!=y * nil!=x * nil!=w *
+                                               y!=w * x!=w * x->nil, w *
+                                               w->x, y |-
+                w->w', y * DLL[3](w', w, x, nil) (DLL R.Unf./Simplify) [
+                18 <{(3, 3), (2, 2), (1, 1), (0, 0), (i, i)}/{}>]
+                  18:
+                  [3 < 1; 2 < 0; 1 < i; 0 < i] : nil!=y * nil!=x * nil!=w *
+                                                 y!=w * x!=w * x->nil, w *
+                                                 w->x, y |-
+                  x->nil, w * w->x, y (Id)
+              16:
+              [3 < 1; 2 < 0; 1 < i; 0 < i] : nil!=y * nil!=x * nil!=w *
+                                             y!=w * x!=w * x->z, w *
+                                             w->x, y * DLL[3](z, x, c, nil) |-
+              [0' < 1] : w->w', y * DLL[0'](w', w, c, nil) (Inst.Tag (Match)/Simplify) [
+              19 <{(3, 3), (2, 2), (1, 1), (0, 0), (i, i)}/{}>]
+                19:
+                [3 < 1; 2 < 0; 1 < i; 0 < i] : nil!=y * nil!=x * nil!=w *
+                                               y!=w * x!=w * x->z, w *
+                                               w->x, y * DLL[3](z, x, c, nil) |-
+                w->w', y * DLL[3](w', w, c, nil) (Lemma.App) [20 <{(3, 3),
+                                                                  (2, 2),
+                                                                  (1, 1),
+                                                                  (0, 0),
+                                                                  (i, i)}/
+                                                              {}>,
+                21 <{(3, 3), (2, 2), (1, 1), (0, 0), (i, i)}/{(1, 3),
+                                                             (0, 2),
+                                                             (i, 3),
+                                                             (i, 2),
+                                                             (i, 1),
+                                                             (i, 0)}>]
+                  20:
+                  [3 < 1; 2 < 0; 1 < i; 0 < i] : nil!=y * nil!=x * nil!=w *
+                                                 y!=w * x!=w * x->z, w *
+                                                 DLL[3](z, x, c, nil) |-
+                  DLL[3](x, w, c, nil) (Weaken) [22 <{(3, 3), (1, 1), (i, i)}/
+                                                 {}>]
+                    22:
+                    [3 < 1; 3 < i; 1 < i] : nil!=x * nil!=w * x!=w *
+                                            x->z, w * DLL[3](z, x, c, nil) |-
+                    DLL[3](x, w, c, nil) (Subst) [23 <{(3, 2), (3, 1),
+                                                      (1, 0), (i, i)}/
+                                                  {}>]
+                      23:
+                      [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w *
+                                              w->x, y * DLL[1](x, w, c, nil) |-
+                      DLL[1](w, y, c, nil) (Backl) [13] <pre={(2, 2),
+                                                             (1, 1),
+                                                             (0, 0),
+                                                             (i, i)}>
+                  21:
+                  [3 < 1; 2 < 0; 1 < i; 0 < i] : nil!=y * nil!=x * nil!=w *
+                                                 y!=w * x!=w * w->x, y *
+                                                 DLL[3](x, w, c, nil) |-
+                  w->w', y * DLL[3](w', w, c, nil) (Id)
+        12:
+        [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * y->w, z * w->x, y *
+                                DLL_rev[2](a, nil, z, y) *
+                                DLL[1](x, w, c, nil) |-
+        nil!=a * a->w', nil * DLL[1](w', a, c, nil) (Lemma.App) [24 <
+                                                                 {(2, 2),
+                                                                 (1, 1),
+                                                                 (0, 0),
+                                                                 (i, i)}/
+                                                                 {}>,
+        25 <{(2, 2), (1, 1), (0, 0), (i, i)}/{(0, 2), (i, 2), (i, 1), (i, 0)}>]
+          24:
+          [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * w->x, y *
+                                  DLL[1](x, w, c, nil) |-
+          DLL[1](w, y, c, nil) (Backl) [13] <pre={(2, 2), (1, 1), (0, 0),
+                                                 (i, i)}>
+          25:
+          [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * y->w, z *
+                                  DLL_rev[2](a, nil, z, y) *
+                                  DLL[1](w, y, c, nil) |-
+          nil!=a * a->w', nil * DLL[1](w', a, c, nil) (Weaken) [26 <{
+                                                                    (2, 2),
+                                                                    (1, 1),
+                                                                    (i, i)}/
+                                                                {}>]
+            26:
+            [2 < i; 1 < i] : nil!=y * y->w, z * DLL_rev[2](a, nil, z, y) *
+                             DLL[1](w, y, c, nil) |-
+            nil!=a * a->w', nil * DLL[1](w', a, c, nil) (Subst) [27 <
+                                                                 {(2, 0),
+                                                                 (1, 1),
+                                                                 (i, i)}/
+                                                                 {}>]
+              27:
+              [1 < i; 0 < i] : nil!=w * w->x, y * DLL[1](x, w, c, nil) *
+                               DLL_rev[0](a, nil, y, w) |-
+              nil!=a * a->w', nil * DLL[1](w', a, c, nil) (Backl) [10] <pre=
+              {(1, 1), (0, 0), (i, i)}>
+
+=== atva-2014-03.3
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'DLL_mid[i](a,nil,c,nil) |- [i] < [j'"'"'] : DLL[j'"'"'](a,nil,c,nil)' -p -t 60
+exit: 0
+0:
+DLL_mid[i](a, nil, c, nil) |- [i < j'] : DLL[j'](a, nil, c, nil) (DLL_mid L.Unf./LHS Inst.,LHS Inst.,LHS Inst./Simplify) [
+1 <{(i, i)}/{(i, 0)}>, 2 <{(i, i)}/{(i, 0)}>, 3 <{(i, i)}/{(i, 1), (i, 0)}>]
+  1:
+  [0 < i] : nil!=a * a->nil, nil |- [i < j'] : DLL[j'](a, nil, a, nil) (DLL R.Unf./Simplify) [
+  4 <{(0, 0), (i, i)}/{}>]
+    4:
+    [0 < i] : nil!=a * a->nil, nil |- [i < j'] : a->nil, nil (UBound Intro) [
+    5 <{(0, 0), (i, i)}/{}>]
+      5: [0 < i] : nil!=a * a->nil, nil |- a->nil, nil (Id)
+  2:
+  [0 < i] : nil!=c * nil!=a * c!=a * c->nil, a * a->c, nil |-
+  [i < j'] : DLL[j'](a, nil, c, nil) (DLL R.Unf./Simplify) [6 <{(0, 0),
+                                                               (i, i)}/
+                                                            {}>]
+    6:
+    [0 < i] : nil!=c * nil!=a * c!=a * c->nil, a * a->c, nil |-
+    [0' < j'; i < j'] : a->w', nil * DLL[0'](w', a, c, nil) (UBound Intro) [
+    7 <{(0, 0), (i, i)}/{}>]
+      7:
+      [0 < i] : nil!=c * nil!=a * c!=a * c->nil, a * a->c, nil |-
+      a->w', nil * DLL[0'](w', a, c, nil) (Pto Intro/Simplify) [8 <{}/{}>]
+        8:
+        [0 < i] : nil!=c * nil!=a * c!=a * c->nil, a |- DLL[0'](c, a, c, nil) (DLL R.Unf./Simplify) [
+        9 <{(0, 0), (i, i)}/{}>]
+          9: [0 < i] : nil!=c * nil!=a * c!=a * c->nil, a |- c->nil, a (Id)
+  3:
+  [1 < i; 0 < i] : nil!=w * w->x, y * DLL[1](x, w, c, nil) *
+                   DLL_rev[0](a, nil, y, w) |-
+  [i < j'] : DLL[j'](a, nil, c, nil) (DLL R.Unf.) [10 <{(1, 1), (0, 0),
+                                                       (i, i)}/{}>]
+    10:
+    [1 < i; 0 < i] : nil!=w * w->x, y * DLL[1](x, w, c, nil) *
+                     DLL_rev[0](a, nil, y, w) |-
+    [0' < j'; i < j'] : nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (UBound Intro) [
+    11 <{(1, 1), (0, 0), (i, i)}/{}>]
+      11:
+      [1 < i; 0 < i] : nil!=w * w->x, y * DLL[1](x, w, c, nil) *
+                       DLL_rev[0](a, nil, y, w) |-
+      nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (DLL_rev L.Unf./LHS Inst.,LHS Inst./Simplify) [
+      12 <{(1, 1), (0, 0), (i, i)}/{(0, 2), (i, 2), (i, 1), (i, 0)}>,
+      13 <{(1, 1), (0, 0), (i, i)}/{(0, 2), (i, 2), (i, 1), (i, 0)}>]
+        12:
+        [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * y->w, nil *
+                                w->x, y * DLL[1](x, w, c, nil) |-
+        y->w', nil * DLL[0'](w', y, c, nil) (Pto Intro/Simplify) [14 <
+                                                                  {(1, 1)}/
+                                                                  {}>]
+          14:
+          [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * w->x, y *
+                                  DLL[1](x, w, c, nil) |-
+          DLL[0'](w, y, c, nil) (DLL R.Unf./Simplify) [15 <{(2, 2), (1, 1),
+                                                           (0, 0), (i, i)}/
+                                                       {}>]
+            15:
+            [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * w->x, y *
+                                    DLL[1](x, w, c, nil) |-
+            [1' < 0'] : w->w', y * DLL[1'](w', w, c, nil) (Id)
+        13:
+        [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * y->w, z * w->x, y *
+                                DLL_rev[2](a, nil, z, y) *
+                                DLL[1](x, w, c, nil) |-
+        nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (Lemma.App) [16 <
+                                                                  {(2, 2),
+                                                                  (1, 1),
+                                                                  (0, 0),
+                                                                  (i, i)}/
+                                                                  {}>,
+        17 <{(2, 2), (1, 1), (0, 0), (i, i)}/{(0, 2), (i, 2), (i, 1), (i, 0)}>]
+          16:
+          [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * w->x, y *
+                                  DLL[1](x, w, c, nil) |-
+          DLL[1'](w, y, c, nil) (R.Trans.Ex) [18 <{(2, 2), (1, 1), (0, 0),
+                                                  (i, i)}/{}>]
+            18:
+            [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * w->x, y *
+                                    DLL[1](x, w, c, nil) |-
+            DLL[0'](w, y, c, nil) (Backl) [14] <pre={(2, 2), (1, 1),
+                                                    (0, 0), (i, i)}>
+          17:
+          [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * y->w, z *
+                                  DLL_rev[2](a, nil, z, y) *
+                                  DLL[1'](w, y, c, nil) |-
+          nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (LHS Inst.) [19 <
+                                                                    {
+                                                                    (2, 2),
+                                                                    (1', 3),
+                                                                    (1, 1),
+                                                                    (0, 0),
+                                                                    (i, i)}/
+                                                                    {}>]
+            19:
+            [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * y->w, z *
+                                    DLL[3](w, y, c, nil) *
+                                    DLL_rev[2](a, nil, z, y) |-
+            nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (DLL_rev L.Unf./LHS Inst.,LHS Inst./Simplify) [
+            20 <{(3, 3), (2, 2), (1, 1), (0, 0), (i, i)}/{(2, 4), (0, 4),
+                                                         (0, 2), (i, 4),
+                                                         (i, 2), (i, 1),
+                                                         (i, 0)}>,
+            21 <{(3, 3), (2, 2), (1, 1), (0, 0), (i, i)}/{(2, 4), (0, 4),
+                                                         (0, 2), (i, 4),
+                                                         (i, 2), (i, 1),
+                                                         (i, 0)}>]
+              20:
+              [4 < 2; 2 < 0; 1 < i; 0 < i] : nil!=z * nil!=y * nil!=w *
+                                             z!=y * y!=w * z->y, nil *
+                                             y->w, z * DLL[3](w, y, c, nil) |-
+              z->w', nil * DLL[0'](w', z, c, nil) (Pto Intro/Simplify) [
+              22 <{(3, 3)}/{}>]
+                22:
+                [4 < 2; 2 < 0; 1 < i; 0 < i] : nil!=z * nil!=y * nil!=w *
+                                               z!=y * y!=w * y->w, z *
+                                               DLL[3](w, y, c, nil) |-
+                DLL[0'](y, z, c, nil) (DLL R.Unf./Simplify) [23 <{(4, 4),
+                                                                 (3, 3),
+                                                                 (2, 2),
+                                                                 (1, 1),
+                                                                 (0, 0),
+                                                                 (i, i)}/
+                                                             {}>]
+                  23:
+                  [4 < 2; 2 < 0; 1 < i; 0 < i] : nil!=z * nil!=y * nil!=w *
+                                                 z!=y * y!=w * y->w, z *
+                                                 DLL[3](w, y, c, nil) |-
+                  [1' < 0'] : y->w', z * DLL[1'](w', y, c, nil) (UBound Intro) [
+                  24 <{(4, 4), (3, 3), (2, 2), (1, 1), (0, 0), (i, i)}/
+                  {}>]
+                    24:
+                    [4 < 2; 2 < 0; 1 < i; 0 < i] : nil!=z * nil!=y * nil!=w *
+                                                   z!=y * y!=w * y->w, z *
+                                                   DLL[3](w, y, c, nil) |-
+                    y->w', z * DLL[1'](w', y, c, nil) (Id)
+              21:
+              [4 < 2; 2 < 0; 1 < i; 0 < i] : nil!=z * nil!=y * nil!=w *
+                                             z!=y * y!=w * z->y, x *
+                                             y->w, z *
+                                             DLL_rev[4](a, nil, x, z) *
+                                             DLL[3](w, y, c, nil) |-
+              nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (Lemma.App) [
+              25 <{(4, 4), (3, 3), (2, 2), (1, 1), (0, 0), (i, i)}/{}>,
+              26 <{(4, 4), (2, 2), (1, 1), (0, 0), (i, i)}/{(2, 4), (0, 4),
+                                                           (0, 2), (i, 4),
+                                                           (i, 2), (i, 1),
+                                                           (i, 0)}>]
+                25:
+                [4 < 2; 2 < 0; 1 < i; 0 < i] : nil!=z * nil!=y * nil!=w *
+                                               z!=y * y!=w * y->w, z *
+                                               DLL[3](w, y, c, nil) |-
+                DLL[1'](y, z, c, nil) (R.Trans.Ex) [27 <{(4, 4), (3, 3),
+                                                        (2, 2), (1, 1),
+                                                        (0, 0), (i, i)}/
+                                                    {}>]
+                  27:
+                  [4 < 2; 2 < 0; 1 < i; 0 < i] : nil!=z * nil!=y * nil!=w *
+                                                 z!=y * y!=w * y->w, z *
+                                                 DLL[3](w, y, c, nil) |-
+                  DLL[0'](y, z, c, nil) (Weaken) [28 <{(4, 4), (3, 3),
+                                                      (2, 2), (0, 0),
+                                                      (i, i)}/{}>]
+                    28:
+                    [4 < 2; 4 < i; 2 < 0; 0 < i] : nil!=z * nil!=y * nil!=w *
+                                                   z!=y * y!=w * y->w, z *
+                                                   DLL[3](w, y, c, nil) |-
+                    DLL[0'](y, z, c, nil) (Subst) [29 <{(4, 4), (4, 1),
+                                                       (3, 3), (2, 2),
+                                                       (0, 0), (i, i)}/
+                                                   {}>]
+                      29:
+                      [4 < 2; 2 < 0; 1 < i; 0 < i] : nil!=z * nil!=y *
+                                                     nil!=w * z!=y * y!=w *
+                                                     y->w, z *
+                                                     DLL[3](w, y, c, nil) |-
+                      DLL[0'](y, z, c, nil) (Backl) [22] <pre={(4, 4),
+                                                              (3, 3),
+                                                              (2, 2),
+                                                              (1, 1),
+                                                              (0, 0),
+                                                              (i, i)}>
+                26:
+                [4 < 2; 2 < 0; 1 < i; 0 < i] : nil!=z * nil!=y * nil!=w *
+                                               z!=y * y!=w * z->y, x *
+                                               DLL_rev[4](a, nil, x, z) *
+                                               DLL[1'](y, z, c, nil) |-
+                nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (LHS Inst.) [
+                30 <{(4, 4), (2, 2), (1', 3), (1, 1), (0, 0), (i, i)}/
+                {}>]
+                  30:
+                  [4 < 2; 2 < 0; 1 < i; 0 < i] : nil!=z * nil!=y * nil!=w *
+                                                 z!=y * y!=w * z->y, x *
+                                                 DLL_rev[4](a, nil, x, z) *
+                                                 DLL[3](y, z, c, nil) |-
+                  nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (Weaken) [
+                  31 <{(4, 4), (3, 3), (2, 2), (0, 0)}/{}>]
+                    31:
+                    [4 < 2; 4 < 0; 2 < 0] : nil!=z * nil!=y * z!=y *
+                                            z->y, x *
+                                            DLL_rev[4](a, nil, x, z) *
+                                            DLL[3](y, z, c, nil) |-
+                    nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (L.Trans.Ex) [
+                    32 <{(4, 4), (3, 1'), (2, 2), (0, 0)}/{}>]
+                      32:
+                      [4 < 2; 4 < 0; 2 < 0] : nil!=z * nil!=y * z!=y *
+                                              z->y, x *
+                                              DLL_rev[4](a, nil, x, z) *
+                                              DLL[1'](y, z, c, nil) |-
+                      nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (Subst) [
+                      33 <{(4, 2), (4, 1), (2, 0), (1', 1'), (0, i)}/
+                      {}>]
+                        33:
+                        [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w *
+                                                y->w, z *
+                                                DLL_rev[2](a, nil, z, y) *
+                                                DLL[1'](w, y, c, nil) |-
+                        nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (Backl) [17] <pre=
+                        {(2, 2), (1', 1'), (1, 1), (0, 0), (i, i)}>
+
+=== atva-2014-03.4
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'DLL_mid[i](a,nil,c,nil) |- [j'"'"'] <= [i] : DLL[j'"'"'](a,nil,c,nil)' -p -t 60
+exit: 0
+0:
+DLL_mid[i](a, nil, c, nil) |- [j' <= i] : DLL[j'](a, nil, c, nil) (Inst.Tag (Sel.UBound)/Simplify) [
+1 <{(i, i)}/{}>]
+  1:
+  DLL_mid[i](a, nil, c, nil) |- DLL[i](a, nil, c, nil) (DLL_mid L.Unf./LHS Inst.,LHS Inst.,LHS Inst./Simplify) [
+  2 <{(i, i)}/{(i, 0)}>, 3 <{(i, i)}/{(i, 0)}>,
+  4 <{(i, i)}/{(i, 1), (i, 0)}>]
+    2:
+    [0 < i] : nil!=a * a->nil, nil |- DLL[i](a, nil, a, nil) (DLL R.Unf./Simplify) [
+    5 <{(0, 0), (i, i)}/{}>]
+      5: [0 < i] : nil!=a * a->nil, nil |- a->nil, nil (Id)
+    3:
+    [0 < i] : nil!=c * nil!=a * c!=a * c->nil, a * a->c, nil |-
+    DLL[i](a, nil, c, nil) (DLL R.Unf./Simplify) [6 <{(0, 0), (i, i)}/{}>]
+      6:
+      [0 < i] : nil!=c * nil!=a * c!=a * c->nil, a * a->c, nil |-
+      [0' < i] : a->w', nil * DLL[0'](w', a, c, nil) (Inst.Tag (Match)/Simplify) [
+      7 <{(0, 0), (i, i)}/{}>]
+        7:
+        [0 < i] : nil!=c * nil!=a * c!=a * c->nil, a * a->c, nil |-
+        a->w', nil * DLL[0](w', a, c, nil) (Pto Intro/Simplify) [8 <{}/{}>]
+          8:
+          [0 < i] : nil!=c * nil!=a * c!=a * c->nil, a |-
+          DLL[0](c, a, c, nil) (DLL R.Unf./Simplify) [9 <{(0, 0), (i, i)}/{}>]
+            9: [0 < i] : nil!=c * nil!=a * c!=a * c->nil, a |- c->nil, a (Id)
+    4:
+    [1 < i; 0 < i] : nil!=w * w->x, y * DLL[1](x, w, c, nil) *
+                     DLL_rev[0](a, nil, y, w) |-
+    DLL[i](a, nil, c, nil) (DLL R.Unf.) [10 <{(1, 1), (0, 0), (i, i)}/{}>]
+      10:
+      [1 < i; 0 < i] : nil!=w * w->x, y * DLL[1](x, w, c, nil) *
+                       DLL_rev[0](a, nil, y, w) |-
+      [0' < i] : nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (Inst.Tag (Match)/Simplify) [
+      11 <{(1, 1), (0, 0), (i, i)}/{}>]
+        11:
+        [1 < i; 0 < i] : nil!=w * w->x, y * DLL[1](x, w, c, nil) *
+                         DLL_rev[0](a, nil, y, w) |-
+        nil!=a * a->w', nil * DLL[1](w', a, c, nil) (DLL_rev L.Unf./LHS Inst.,LHS Inst./Simplify) [
+        12 <{(1, 1), (0, 0), (i, i)}/{(0, 2), (i, 2), (i, 1), (i, 0)}>,
+        13 <{(1, 1), (0, 0), (i, i)}/{(0, 2), (i, 2), (i, 1), (i, 0)}>]
+          12:
+          [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * y->w, nil *
+                                  w->x, y * DLL[1](x, w, c, nil) |-
+          y->w', nil * DLL[1](w', y, c, nil) (Pto Intro/Simplify) [14 <
+                                                                   {(1, 1)}/
+                                                                   {}>]
+            14:
+            [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * w->x, y *
+                                    DLL[1](x, w, c, nil) |-
+            DLL[1](w, y, c, nil) (DLL R.Unf./Simplify) [15 <{(2, 2),
+                                                            (1, 1), (0, 0),
+                                                            (i, i)}/{}>]
+              15:
+              [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * w->x, y *
+                                      DLL[1](x, w, c, nil) |-
+              [0' < 1] : w->w', y * DLL[0'](w', w, c, nil) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+              16 <{(2, 2), (1, 1), (0, 0), (i, i)}/{(1, 3), (0, 2), (i, 3),
+                                                   (i, 2), (i, 1), (i, 0)}>,
+              17 <{(2, 2), (1, 1), (0, 0), (i, i)}/{(1, 3), (0, 2), (i, 3),
+                                                   (i, 2), (i, 1), (i, 0)}>]
+                16:
+                [3 < 1; 2 < 0; 1 < i; 0 < i] : nil!=y * nil!=x * nil!=w *
+                                               y!=w * x!=w * x->nil, w *
+                                               w->x, y |-
+                [0' < 1] : w->w', y * DLL[0'](w', w, x, nil) (Inst.Tag (Match)/Simplify) [
+                18 <{(3, 3), (2, 2), (1, 1), (0, 0), (i, i)}/{}>]
+                  18:
+                  [3 < 1; 2 < 0; 1 < i; 0 < i] : nil!=y * nil!=x * nil!=w *
+                                                 y!=w * x!=w * x->nil, w *
+                                                 w->x, y |-
+                  w->w', y * DLL[3](w', w, x, nil) (DLL R.Unf./Simplify) [
+                  19 <{(3, 3), (2, 2), (1, 1), (0, 0), (i, i)}/{}>]
+                    19:
+                    [3 < 1; 2 < 0; 1 < i; 0 < i] : nil!=y * nil!=x * nil!=w *
+                                                   y!=w * x!=w * x->nil, w *
+                                                   w->x, y |-
+                    x->nil, w * w->x, y (Id)
+                17:
+                [3 < 1; 2 < 0; 1 < i; 0 < i] : nil!=y * nil!=x * nil!=w *
+                                               y!=w * x!=w * x->z, w *
+                                               w->x, y * DLL[3](z, x, c, nil) |-
+                [0' < 1] : w->w', y * DLL[0'](w', w, c, nil) (Inst.Tag (Match)/Simplify) [
+                20 <{(3, 3), (2, 2), (1, 1), (0, 0), (i, i)}/{}>]
+                  20:
+                  [3 < 1; 2 < 0; 1 < i; 0 < i] : nil!=y * nil!=x * nil!=w *
+                                                 y!=w * x!=w * x->z, w *
+                                                 w->x, y *
+                                                 DLL[3](z, x, c, nil) |-
+                  w->w', y * DLL[3](w', w, c, nil) (Lemma.App) [21 <{
+                                                                    (3, 3),
+                                                                    (2, 2),
+                                                                    (1, 1),
+                                                                    (0, 0),
+                                                                    (i, i)}/
+                                                                {}>,
+                  22 <{(3, 3), (2, 2), (1, 1), (0, 0), (i, i)}/{(1, 3),
+                                                               (0, 2),
+                                                               (i, 3),
+                                                               (i, 2),
+                                                               (i, 1),
+                                                               (i, 0)}>]
+                    21:
+                    [3 < 1; 2 < 0; 1 < i; 0 < i] : nil!=y * nil!=x * nil!=w *
+                                                   y!=w * x!=w * x->z, w *
+                                                   DLL[3](z, x, c, nil) |-
+                    DLL[3](x, w, c, nil) (Weaken) [23 <{(3, 3), (1, 1),
+                                                       (i, i)}/{}>]
+                      23:
+                      [3 < 1; 3 < i; 1 < i] : nil!=x * nil!=w * x!=w *
+                                              x->z, w * DLL[3](z, x, c, nil) |-
+                      DLL[3](x, w, c, nil) (Subst) [24 <{(3, 2), (3, 1),
+                                                        (1, 0), (i, i)}/
+                                                    {}>]
+                        24:
+                        [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w *
+                                                w->x, y *
+                                                DLL[1](x, w, c, nil) |-
+                        DLL[1](w, y, c, nil) (Backl) [14] <pre={(2, 2),
+                                                               (1, 1),
+                                                               (0, 0),
+                                                               (i, i)}>
+                    22:
+                    [3 < 1; 2 < 0; 1 < i; 0 < i] : nil!=y * nil!=x * nil!=w *
+                                                   y!=w * x!=w * w->x, y *
+                                                   DLL[3](x, w, c, nil) |-
+                    w->w', y * DLL[3](w', w, c, nil) (Id)
+          13:
+          [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * y->w, z *
+                                  w->x, y * DLL_rev[2](a, nil, z, y) *
+                                  DLL[1](x, w, c, nil) |-
+          nil!=a * a->w', nil * DLL[1](w', a, c, nil) (Lemma.App) [25 <
+                                                                   {(2, 2),
+                                                                   (1, 1),
+                                                                   (0, 0),
+                                                                   (i, i)}/
+                                                                   {}>,
+          26 <{(2, 2), (1, 1), (0, 0), (i, i)}/{(0, 2), (i, 2), (i, 1),
+                                               (i, 0)}>]
+            25:
+            [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * w->x, y *
+                                    DLL[1](x, w, c, nil) |-
+            DLL[1](w, y, c, nil) (Backl) [14] <pre={(2, 2), (1, 1), (0, 0),
+                                                   (i, i)}>
+            26:
+            [2 < 0; 1 < i; 0 < i] : nil!=y * nil!=w * y!=w * y->w, z *
+                                    DLL_rev[2](a, nil, z, y) *
+                                    DLL[1](w, y, c, nil) |-
+            nil!=a * a->w', nil * DLL[1](w', a, c, nil) (Weaken) [27 <
+                                                                  {(2, 2),
+                                                                  (1, 1),
+                                                                  (i, i)}/
+                                                                  {}>]
+              27:
+              [2 < i; 1 < i] : nil!=y * y->w, z * DLL_rev[2](a, nil, z, y) *
+                               DLL[1](w, y, c, nil) |-
+              nil!=a * a->w', nil * DLL[1](w', a, c, nil) (Subst) [28 <
+                                                                   {(2, 0),
+                                                                   (1, 1),
+                                                                   (i, i)}/
+                                                                   {}>]
+                28:
+                [1 < i; 0 < i] : nil!=w * w->x, y * DLL[1](x, w, c, nil) *
+                                 DLL_rev[0](a, nil, y, w) |-
+                nil!=a * a->w', nil * DLL[1](w', a, c, nil) (Backl) [11] <pre=
+                {(1, 1), (0, 0), (i, i)}>
+
+=== atva-2014-04.1
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'DLL(a,nil,c,nil) |- DLL_mid(a,nil,c,nil)' -p -t 60
+exit: 0
+0:
+DLL[0](a, nil, c, nil) |- DLL_mid[0'](a, nil, c, nil) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+1 <{(0, 0)}/{(0, 1)}>, 2 <{(0, 0)}/{(0, 1)}>]
+  1:
+  [1 < 0] : nil!=a * a->nil, nil |- DLL_mid[0'](a, nil, a, nil) (DLL_mid R.Unf./Simplify) [
+  3 <{(1, 1), (0, 0)}/{}>]
+    3: [1 < 0] : nil!=a * a->nil, nil |- a->nil, nil (Id)
+  2:
+  [1 < 0] : nil!=a * a->w, nil * DLL[1](w, a, c, nil) |-
+  DLL_mid[0'](a, nil, c, nil) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+  4 <{(1, 1), (0, 0)}/{(1, 2), (0, 2), (0, 1)}>,
+  5 <{(1, 1), (0, 0)}/{(1, 2), (0, 2), (0, 1)}>]
+    4:
+    [2 < 1; 1 < 0] : nil!=a * nil!=w * a!=w * a->w, nil * w->nil, a |-
+    DLL_mid[0'](a, nil, w, nil) (DLL_mid R.Unf./Simplify) [6 <{(2, 2),
+                                                              (1, 1),
+                                                              (0, 0)}/
+                                                           {}>]
+      6:
+      [2 < 1; 1 < 0] : nil!=a * nil!=w * a!=w * a->w, nil * w->nil, a |-
+      a->w, nil * w->nil, a (Id)
+    5:
+    [2 < 1; 1 < 0] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                     DLL[2](x, w, c, nil) |-
+    DLL_mid[0'](a, nil, c, nil) (DLL_mid R.Unf.) [7 <{(2, 2), (1, 1), (0, 0)}/
+                                                  {}>]
+      7:
+      [2 < 1; 1 < 0] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                       DLL[2](x, w, c, nil) |-
+      [2' < 0'; 1' < 0'] : nil!=b' * b'->a', w' *
+                           DLL_rev[2'](a, nil, w', b') *
+                           DLL[1'](a', b', c, nil) (UBound Intro) [8 <
+                                                                   {(2, 2),
+                                                                   (1, 1),
+                                                                   (0, 0)}/
+                                                                   {}>]
+        8:
+        [2 < 1; 1 < 0] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                         DLL[2](x, w, c, nil) |-
+        nil!=b' * b'->a', w' * DLL_rev[2'](a, nil, w', b') *
+        DLL[1'](a', b', c, nil) (DLL_rev R.Unf./Simplify) [9 <{(2, 2),
+                                                              (1, 1),
+                                                              (0, 0)}/
+                                                           {}>]
+          9:
+          [2 < 1; 1 < 0] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                           DLL[2](x, w, c, nil) |-
+          nil!=b' * b'!=a * b'->a', a * a->b', nil * DLL[1'](a', b', c, nil) (Id)
+
+=== atva-2014-04.2
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'DLL[i](a,nil,c,nil) |- DLL_mid[i](a,nil,c,nil)' -p -t 60
+exit: 0
+0:
+DLL[i](a, nil, c, nil) |- DLL_mid[i](a, nil, c, nil) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+1 <{(i, i)}/{(i, 0)}>, 2 <{(i, i)}/{(i, 0)}>]
+  1:
+  [0 < i] : nil!=a * a->nil, nil |- DLL_mid[i](a, nil, a, nil) (DLL_mid R.Unf./Simplify) [
+  3 <{(0, 0), (i, i)}/{}>]
+    3: [0 < i] : nil!=a * a->nil, nil |- a->nil, nil (Id)
+  2:
+  [0 < i] : nil!=a * a->w, nil * DLL[0](w, a, c, nil) |-
+  DLL_mid[i](a, nil, c, nil) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+  4 <{(0, 0), (i, i)}/{(0, 1), (i, 1), (i, 0)}>,
+  5 <{(0, 0), (i, i)}/{(0, 1), (i, 1), (i, 0)}>]
+    4:
+    [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->nil, a |-
+    DLL_mid[i](a, nil, w, nil) (DLL_mid R.Unf./Simplify) [6 <{(1, 1),
+                                                             (0, 0),
+                                                             (i, i)}/
+                                                          {}>]
+      6:
+      [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->nil, a |-
+      a->w, nil * w->nil, a (Id)
+    5:
+    [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                     DLL[1](x, w, c, nil) |-
+    DLL_mid[i](a, nil, c, nil) (DLL_mid R.Unf.) [7 <{(1, 1), (0, 0), (i, i)}/
+                                                 {}>]
+      7:
+      [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                       DLL[1](x, w, c, nil) |-
+      [1' < i; 0' < i] : nil!=b' * b'->a', w' * DLL_rev[1'](a, nil, w', b') *
+                         DLL[0'](a', b', c, nil) (Inst.Tag (Match)/Simplify) [
+      8 <{(1, 1), (0, 0), (i, i)}/{}>]
+        8:
+        [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                         DLL[1](x, w, c, nil) |-
+        [0' < i] : nil!=b' * b'->a', w' * DLL[0'](a', b', c, nil) *
+                   DLL_rev[0](a, nil, w', b') (Inst.Tag (Match)/Simplify) [
+        9 <{(1, 1), (0, 0), (i, i)}/{}>]
+          9:
+          [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                           DLL[1](x, w, c, nil) |-
+          nil!=b' * b'->a', w' * DLL[0](a', b', c, nil) *
+          DLL_rev[0](a, nil, w', b') (DLL_rev R.Unf./Simplify) [10 <{
+                                                                    (1, 1),
+                                                                    (0, 0),
+                                                                    (i, i)}/
+                                                                {}>]
+            10:
+            [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                             DLL[1](x, w, c, nil) |-
+            nil!=b' * b'!=a * b'->a', a * a->b', nil * DLL[0](a', b', c, nil) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+            11 <{(1, 1), (0, 0), (i, i)}/{(1, 2), (0, 2), (0, 1), (i, 2),
+                                         (i, 1), (i, 0)}>,
+            12 <{(1, 1), (0, 0), (i, i)}/{(1, 2), (0, 2), (0, 1), (i, 2),
+                                         (i, 1), (i, 0)}>]
+              11:
+              [2 < 1; 1 < 0; 0 < i] : nil!=a * nil!=x * nil!=w * a!=x *
+                                      a!=w * x!=w * a->w, nil * x->nil, w *
+                                      w->x, a |-
+              nil!=b' * b'!=a * b'->a', a * a->b', nil *
+              DLL[0](a', b', x, nil) (DLL R.Unf./Simplify) [13 <{(2, 2),
+                                                                (1, 1),
+                                                                (0, 0),
+                                                                (i, i)}/
+                                                            {}>]
+                13:
+                [2 < 1; 1 < 0; 0 < i] : nil!=a * nil!=x * nil!=w * a!=x *
+                                        a!=w * x!=w * a->w, nil * x->nil, w *
+                                        w->x, a |-
+                nil!=b' * b'!=a * b'!=x * b'->x, a * a->b', nil * x->nil, b' (Id)
+              12:
+              [2 < 1; 1 < 0; 0 < i] : nil!=a * nil!=x * nil!=w * a!=x *
+                                      a!=w * x!=w * a->w, nil * x->y, w *
+                                      w->x, a * DLL[2](y, x, c, nil) |-
+              nil!=b' * b'!=a * b'->a', a * a->b', nil *
+              DLL[0](a', b', c, nil) (DLL R.Unf./Simplify) [14 <{(2, 2),
+                                                                (1, 1),
+                                                                (0, 0),
+                                                                (i, i)}/
+                                                            {}>]
+                14:
+                [2 < 1; 1 < 0; 0 < i] : nil!=a * nil!=x * nil!=w * a!=x *
+                                        a!=w * x!=w * a->w, nil * x->y, w *
+                                        w->x, a * DLL[2](y, x, c, nil) |-
+                [0' < 0] : nil!=b' * nil!=a' * b'!=a' * b'!=a * a'!=a *
+                           b'->a', a * a'->w', b' * a->b', nil *
+                           DLL[0'](w', a', c, nil) (Id)
+
+=== atva-2014-04.3
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'DLL[i](a,nil,c,nil) |- [i] < [j'"'"'] : DLL_mid[j'"'"'](a,nil,c,nil)' -p -t 60
+exit: 0
+0:
+DLL[i](a, nil, c, nil) |- [i < j'] : DLL_mid[j'](a, nil, c, nil) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+1 <{(i, i)}/{(i, 0)}>, 2 <{(i, i)}/{(i, 0)}>]
+  1:
+  [0 < i] : nil!=a * a->nil, nil |- [i < j'] : DLL_mid[j'](a, nil, a, nil) (DLL_mid R.Unf./Simplify) [
+  3 <{(0, 0), (i, i)}/{}>]
+    3:
+    [0 < i] : nil!=a * a->nil, nil |- [i < j'] : a->nil, nil (UBound Intro) [
+    4 <{(0, 0), (i, i)}/{}>]
+      4: [0 < i] : nil!=a * a->nil, nil |- a->nil, nil (Id)
+  2:
+  [0 < i] : nil!=a * a->w, nil * DLL[0](w, a, c, nil) |-
+  [i < j'] : DLL_mid[j'](a, nil, c, nil) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+  5 <{(0, 0), (i, i)}/{(0, 1), (i, 1), (i, 0)}>,
+  6 <{(0, 0), (i, i)}/{(0, 1), (i, 1), (i, 0)}>]
+    5:
+    [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->nil, a |-
+    [i < j'] : DLL_mid[j'](a, nil, w, nil) (DLL_mid R.Unf./Simplify) [
+    7 <{(1, 1), (0, 0), (i, i)}/{}>]
+      7:
+      [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->nil, a |-
+      [i < j'] : a->w, nil * w->nil, a (UBound Intro) [8 <{(1, 1), (0, 0),
+                                                          (i, i)}/{}>]
+        8:
+        [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->nil, a |-
+        a->w, nil * w->nil, a (Id)
+    6:
+    [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                     DLL[1](x, w, c, nil) |-
+    [i < j'] : DLL_mid[j'](a, nil, c, nil) (DLL_mid R.Unf.) [9 <{(1, 1),
+                                                                (0, 0),
+                                                                (i, i)}/
+                                                             {}>]
+      9:
+      [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                       DLL[1](x, w, c, nil) |-
+      [1' < j'; 0' < j'; i < j'] : nil!=b' * b'->a', w' *
+                                   DLL_rev[1'](a, nil, w', b') *
+                                   DLL[0'](a', b', c, nil) (UBound Intro) [
+      10 <{(1, 1), (0, 0), (i, i)}/{}>]
+        10:
+        [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                         DLL[1](x, w, c, nil) |-
+        nil!=b' * b'->a', w' * DLL_rev[1'](a, nil, w', b') *
+        DLL[0'](a', b', c, nil) (DLL_rev R.Unf./Simplify) [11 <{(1, 1),
+                                                               (0, 0),
+                                                               (i, i)}/
+                                                           {}>]
+          11:
+          [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                           DLL[1](x, w, c, nil) |-
+          nil!=b' * b'!=a * b'->a', a * a->b', nil * DLL[0'](a', b', c, nil) (Id)
+
+=== atva-2014-04.4
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'DLL[i](a,nil,c,nil) |- [j'"'"'] <= [i] : DLL_mid[j'"'"'](a,nil,c,nil)' -p -t 60
+exit: 0
+0:
+DLL[i](a, nil, c, nil) |- [j' <= i] : DLL_mid[j'](a, nil, c, nil) (Inst.Tag (Sel.UBound)/Simplify) [
+1 <{(i, i)}/{}>]
+  1:
+  DLL[i](a, nil, c, nil) |- DLL_mid[i](a, nil, c, nil) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+  2 <{(i, i)}/{(i, 0)}>, 3 <{(i, i)}/{(i, 0)}>]
+    2:
+    [0 < i] : nil!=a * a->nil, nil |- DLL_mid[i](a, nil, a, nil) (DLL_mid R.Unf./Simplify) [
+    4 <{(0, 0), (i, i)}/{}>]
+      4: [0 < i] : nil!=a * a->nil, nil |- a->nil, nil (Id)
+    3:
+    [0 < i] : nil!=a * a->w, nil * DLL[0](w, a, c, nil) |-
+    DLL_mid[i](a, nil, c, nil) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+    5 <{(0, 0), (i, i)}/{(0, 1), (i, 1), (i, 0)}>,
+    6 <{(0, 0), (i, i)}/{(0, 1), (i, 1), (i, 0)}>]
+      5:
+      [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->nil, a |-
+      DLL_mid[i](a, nil, w, nil) (DLL_mid R.Unf./Simplify) [7 <{(1, 1),
+                                                               (0, 0),
+                                                               (i, i)}/
+                                                            {}>]
+        7:
+        [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->nil, a |-
+        a->w, nil * w->nil, a (Id)
+      6:
+      [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                       DLL[1](x, w, c, nil) |-
+      DLL_mid[i](a, nil, c, nil) (DLL_mid R.Unf.) [8 <{(1, 1), (0, 0),
+                                                      (i, i)}/{}>]
+        8:
+        [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                         DLL[1](x, w, c, nil) |-
+        [1' < i; 0' < i] : nil!=b' * b'->a', w' *
+                           DLL_rev[1'](a, nil, w', b') *
+                           DLL[0'](a', b', c, nil) (Inst.Tag (Match)/Simplify) [
+        9 <{(1, 1), (0, 0), (i, i)}/{}>]
+          9:
+          [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                           DLL[1](x, w, c, nil) |-
+          [0' < i] : nil!=b' * b'->a', w' * DLL[0'](a', b', c, nil) *
+                     DLL_rev[0](a, nil, w', b') (Inst.Tag (Match)/Simplify) [
+          10 <{(1, 1), (0, 0), (i, i)}/{}>]
+            10:
+            [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                             DLL[1](x, w, c, nil) |-
+            nil!=b' * b'->a', w' * DLL[0](a', b', c, nil) *
+            DLL_rev[0](a, nil, w', b') (DLL_rev R.Unf./Simplify) [11 <
+                                                                  {(1, 1),
+                                                                  (0, 0),
+                                                                  (i, i)}/
+                                                                  {}>]
+              11:
+              [1 < 0; 0 < i] : nil!=a * nil!=w * a!=w * a->w, nil * w->x, a *
+                               DLL[1](x, w, c, nil) |-
+              nil!=b' * b'!=a * b'->a', a * a->b', nil *
+              DLL[0](a', b', c, nil) (DLL L.Unf./LHS Inst.,LHS Inst./Simplify) [
+              12 <{(1, 1), (0, 0), (i, i)}/{(1, 2), (0, 2), (0, 1), (i, 2),
+                                           (i, 1), (i, 0)}>,
+              13 <{(1, 1), (0, 0), (i, i)}/{(1, 2), (0, 2), (0, 1), (i, 2),
+                                           (i, 1), (i, 0)}>]
+                12:
+                [2 < 1; 1 < 0; 0 < i] : nil!=a * nil!=x * nil!=w * a!=x *
+                                        a!=w * x!=w * a->w, nil * x->nil, w *
+                                        w->x, a |-
+                nil!=b' * b'!=a * b'->a', a * a->b', nil *
+                DLL[0](a', b', x, nil) (DLL R.Unf./Simplify) [14 <{(2, 2),
+                                                                  (1, 1),
+                                                                  (0, 0),
+                                                                  (i, i)}/
+                                                              {}>]
+                  14:
+                  [2 < 1; 1 < 0; 0 < i] : nil!=a * nil!=x * nil!=w * a!=x *
+                                          a!=w * x!=w * a->w, nil *
+                                          x->nil, w * w->x, a |-
+                  nil!=b' * b'!=a * b'!=x * b'->x, a * a->b', nil *
+                  x->nil, b' (Id)
+                13:
+                [2 < 1; 1 < 0; 0 < i] : nil!=a * nil!=x * nil!=w * a!=x *
+                                        a!=w * x!=w * a->w, nil * x->y, w *
+                                        w->x, a * DLL[2](y, x, c, nil) |-
+                nil!=b' * b'!=a * b'->a', a * a->b', nil *
+                DLL[0](a', b', c, nil) (DLL R.Unf./Simplify) [15 <{(2, 2),
+                                                                  (1, 1),
+                                                                  (0, 0),
+                                                                  (i, i)}/
+                                                              {}>]
+                  15:
+                  [2 < 1; 1 < 0; 0 < i] : nil!=a * nil!=x * nil!=w * a!=x *
+                                          a!=w * x!=w * a->w, nil * x->y, w *
+                                          w->x, a * DLL[2](y, x, c, nil) |-
+                  [0' < 0] : nil!=b' * nil!=a' * b'!=a' * b'!=a * a'!=a *
+                             b'->a', a * a'->w', b' * a->b', nil *
+                             DLL[0'](w', a', c, nil) (Id)
+
+=== atva-2014-05.1
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'x'"'"'->n'"'"',b'"'"' * DLL_rev(a,nil,b'"'"',x'"'"') * DLL(n'"'"',x'"'"',c,nil) |- DLL(a,nil,c,nil)' -p -t 60
+exit: 0
+0:
+nil!=x' * x'->n', b' * DLL[1](n', x', c, nil) * DLL_rev[0](a, nil, b', x') |-
+DLL[0'](a, nil, c, nil) (LHS Inst.) [1 <{(1, 1), (0, 0)}/{}>]
+  1:
+  nil!=y * y->w, x * DLL[1](w, y, c, nil) * DLL_rev[0](a, nil, x, y) |-
+  DLL[0'](a, nil, c, nil) (DLL R.Unf.) [2 <{(1, 1), (0, 0)}/{}>]
+    2:
+    nil!=y * y->w, x * DLL[1](w, y, c, nil) * DLL_rev[0](a, nil, x, y) |-
+    [1' < 0'] : nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (UBound Intro) [
+    3 <{(1, 1), (0, 0)}/{}>]
+      3:
+      nil!=y * y->w, x * DLL[1](w, y, c, nil) * DLL_rev[0](a, nil, x, y) |-
+      nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (DLL_rev L.Unf./LHS Inst.,LHS Inst./Simplify) [
+      4 <{(1, 1), (0, 0)}/{(0, 2)}>, 5 <{(1, 1), (0, 0)}/{(0, 2)}>]
+        4:
+        [2 < 0] : nil!=y * nil!=x * y!=x * y->w, x * x->y, nil *
+                  DLL[1](w, y, c, nil) |-
+        x->w', nil * DLL[1'](w', x, c, nil) (Pto Intro/Simplify) [6 <
+                                                                  {(1, 1)}/
+                                                                  {}>]
+          6:
+          [2 < 0] : nil!=y * nil!=x * y!=x * y->w, x * DLL[1](w, y, c, nil) |-
+          DLL[1'](y, x, c, nil) (DLL R.Unf./Simplify) [7 <{(2, 2), (1, 1),
+                                                          (0, 0)}/{}>]
+            7:
+            [2 < 0] : nil!=y * nil!=x * y!=x * y->w, x * DLL[1](w, y, c, nil) |-
+            [0' < 1'] : y->w', x * DLL[0'](w', y, c, nil) (UBound Intro) [
+            8 <{(2, 2), (1, 1), (0, 0)}/{}>]
+              8:
+              [2 < 0] : nil!=y * nil!=x * y!=x * y->w, x *
+                        DLL[1](w, y, c, nil) |-
+              y->w', x * DLL[0'](w', y, c, nil) (Id)
+        5:
+        [2 < 0] : nil!=y * nil!=x * y!=x * y->w, x * x->y, z *
+                  DLL_rev[2](a, nil, z, x) * DLL[1](w, y, c, nil) |-
+        nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (Lemma.App) [9 <
+                                                                  {(2, 2),
+                                                                  (1, 1),
+                                                                  (0, 0)}/
+                                                                  {}>,
+        10 <{(2, 2), (0, 0)}/{(0, 2)}>]
+          9:
+          [2 < 0] : nil!=y * nil!=x * y!=x * y->w, x * DLL[1](w, y, c, nil) |-
+          DLL[0'](y, x, c, nil) (R.Trans.Ex) [11 <{(2, 2), (1, 1), (0, 0)}/
+                                              {}>]
+            11:
+            [2 < 0] : nil!=y * nil!=x * y!=x * y->w, x * DLL[1](w, y, c, nil) |-
+            DLL[1'](y, x, c, nil) (Backl) [6] <pre={(2, 2), (1, 1), (0, 0)}>
+          10:
+          [2 < 0] : nil!=y * nil!=x * y!=x * x->y, z *
+                    DLL_rev[2](a, nil, z, x) * DLL[0'](y, x, c, nil) |-
+          nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (LHS Inst.) [12 <
+                                                                    {
+                                                                    (2, 2),
+                                                                    (0', 1),
+                                                                    (0, 0)}/
+                                                                    {}>]
+            12:
+            [2 < 0] : nil!=y * nil!=x * y!=x * x->y, z *
+                      DLL_rev[2](a, nil, z, x) * DLL[1](y, x, c, nil) |-
+            nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (Weaken) [13 <
+                                                                   {(2, 2),
+                                                                   (1, 1)}/
+                                                                   {}>]
+              13:
+              nil!=x * x->y, z * DLL_rev[2](a, nil, z, x) *
+              DLL[1](y, x, c, nil) |-
+              [1' < 0'] : nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (Subst) [
+              14 <{(2, 0), (1, 1)}/{}>]
+                14:
+                nil!=y * y->w, x * DLL[1](w, y, c, nil) *
+                DLL_rev[0](a, nil, x, y) |-
+                [1' < 0'] : nil!=a * a->w', nil * DLL[1'](w', a, c, nil) (Backl) [2] <pre=
+                {(1, 1), (0, 0)}>
+
+=== atva-2014-05.2
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'x'"'"'->n'"'"',b'"'"' * DLL_rev[i](a,nil,b'"'"',x'"'"') * DLL[j](n'"'"',x'"'"',c,nil) |- [i] < [k'"'"'], [j] < [k'"'"'] : DLL[k'"'"'](a,nil,c,nil)' -p -t 60
+exit: 0
+0:
+nil!=x' * x'->n', b' * DLL_rev[i](a, nil, b', x') * DLL[j](n', x', c, nil) |-
+[i < k'; j < k'] : DLL[k'](a, nil, c, nil) (LHS Inst.) [1 <{(i, i), (j, j)}/
+                                                        {}>]
+  1:
+  nil!=y * y->w, x * DLL_rev[i](a, nil, x, y) * DLL[j](w, y, c, nil) |-
+  [i < k'; j < k'] : DLL[k'](a, nil, c, nil) (DLL R.Unf.) [2 <{(i, i),
+                                                              (j, j)}/
+                                                           {}>]
+    2:
+    nil!=y * y->w, x * DLL_rev[i](a, nil, x, y) * DLL[j](w, y, c, nil) |-
+    [0' < k'; i < k'; j < k'] : nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (UBound Intro) [
+    3 <{(i, i), (j, j)}/{}>]
+      3:
+      nil!=y * y->w, x * DLL_rev[i](a, nil, x, y) * DLL[j](w, y, c, nil) |-
+      nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (DLL_rev L.Unf./LHS Inst.,LHS Inst./Simplify) [
+      4 <{(i, i), (j, j)}/{(i, 0)}>, 5 <{(i, i), (j, j)}/{(i, 0)}>]
+        4:
+        [0 < i] : nil!=y * nil!=x * y!=x * y->w, x * x->y, nil *
+                  DLL[j](w, y, c, nil) |-
+        x->w', nil * DLL[0'](w', x, c, nil) (Pto Intro/Simplify) [6 <
+                                                                  {(j, j)}/
+                                                                  {}>]
+          6:
+          [0 < i] : nil!=y * nil!=x * y!=x * y->w, x * DLL[j](w, y, c, nil) |-
+          DLL[0'](y, x, c, nil) (DLL R.Unf./Simplify) [7 <{(0, 0), (i, i),
+                                                          (j, j)}/{}>]
+            7:
+            [0 < i] : nil!=y * nil!=x * y!=x * y->w, x * DLL[j](w, y, c, nil) |-
+            [1' < 0'] : y->w', x * DLL[1'](w', y, c, nil) (UBound Intro) [
+            8 <{(0, 0), (i, i), (j, j)}/{}>]
+              8:
+              [0 < i] : nil!=y * nil!=x * y!=x * y->w, x *
+                        DLL[j](w, y, c, nil) |-
+              y->w', x * DLL[1'](w', y, c, nil) (Id)
+        5:
+        [0 < i] : nil!=y * nil!=x * y!=x * y->w, x * x->y, z *
+                  DLL_rev[0](a, nil, z, x) * DLL[j](w, y, c, nil) |-
+        nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (Lemma.App) [9 <
+                                                                  {(0, 0),
+                                                                  (i, i),
+                                                                  (j, j)}/
+                                                                  {}>,
+        10 <{(0, 0), (i, i)}/{(i, 0)}>]
+          9:
+          [0 < i] : nil!=y * nil!=x * y!=x * y->w, x * DLL[j](w, y, c, nil) |-
+          DLL[1'](y, x, c, nil) (R.Trans.Ex) [11 <{(0, 0), (i, i), (j, j)}/
+                                              {}>]
+            11:
+            [0 < i] : nil!=y * nil!=x * y!=x * y->w, x * DLL[j](w, y, c, nil) |-
+            DLL[0'](y, x, c, nil) (Backl) [6] <pre={(0, 0), (i, i), (j, j)}>
+          10:
+          [0 < i] : nil!=y * nil!=x * y!=x * x->y, z *
+                    DLL[1'](y, x, c, nil) * DLL_rev[0](a, nil, z, x) |-
+          nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (LHS Inst.) [12 <
+                                                                    {
+                                                                    (1', 1),
+                                                                    (0, 0),
+                                                                    (i, i)}/
+                                                                    {}>]
+            12:
+            [0 < i] : nil!=y * nil!=x * y!=x * x->y, z *
+                      DLL[1](y, x, c, nil) * DLL_rev[0](a, nil, z, x) |-
+            nil!=a * a->w', nil * DLL[0'](w', a, c, nil) (Weaken) [13 <
+                                                                   {(1, 1),
+                                                                   (0, 0)}/
+                                                                   {}>]
+              13:
+              nil!=x * x->y, z * DLL[1](y, x, c, nil) *
+              DLL_rev[0](a, nil, z, x) |-
+              [1 < k'; 0' < k'; 0 < k'] : nil!=a * a->w', nil *
+                                          DLL[0'](w', a, c, nil) (Subst) [
+              14 <{(1, j), (0, i)}/{}>]
+                14:
+                nil!=y * y->w, x * DLL_rev[i](a, nil, x, y) *
+                DLL[j](w, y, c, nil) |-
+                [0' < k'; i < k'; j < k'] : nil!=a * a->w', nil *
+                                            DLL[0'](w', a, c, nil) (Backl) [2] <pre=
+                {(i, i), (j, j)}>
+
+=== atva-2014-06.1
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'x->y'"'"',nil * y'"'"'->a'"'"',x * DLL(a'"'"',y'"'"',c,nil) |- DLL(x,nil,c,nil)' -p -t 60
+exit: 0
+0:
+nil!=y' * nil!=x * y'!=x * y'->a', x * x->y', nil * DLL[0](a', y', c, nil) |-
+DLL[0'](x, nil, c, nil) (LHS Inst.) [1 <{(0, 0)}/{}>]
+  1:
+  nil!=y * nil!=x * y!=x * y->w, x * x->y, nil * DLL[0](w, y, c, nil) |-
+  DLL[0'](x, nil, c, nil) (DLL R.Unf./Simplify) [2 <{(0, 0)}/{}>]
+    2:
+    nil!=y * nil!=x * y!=x * y->w, x * x->y, nil * DLL[0](w, y, c, nil) |-
+    [1' < 0'] : x->w', nil * DLL[1'](w', x, c, nil) (UBound Intro) [3 <
+                                                                    {
+                                                                    (0, 0)}/
+                                                                    {}>]
+      3:
+      nil!=y * nil!=x * y!=x * y->w, x * x->y, nil * DLL[0](w, y, c, nil) |-
+      x->w', nil * DLL[1'](w', x, c, nil) (DLL R.Unf./Simplify) [4 <{(0, 0)}/
+                                                                 {}>]
+        4:
+        nil!=y * nil!=x * y!=x * y->w, x * x->y, nil * DLL[0](w, y, c, nil) |-
+        [0' < 1'] : nil!=w' * x!=w' * x->w', nil * w'->y', x *
+                    DLL[0'](y', w', c, nil) (UBound Intro) [5 <{(0, 0)}/{}>]
+          5:
+          nil!=y * nil!=x * y!=x * y->w, x * x->y, nil * DLL[0](w, y, c, nil) |-
+          nil!=w' * x!=w' * x->w', nil * w'->y', x * DLL[0'](y', w', c, nil) (Id)
+
+=== atva-2014-06.2
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'x->y'"'"',nil * y'"'"'->a'"'"',x * DLL[i](a'"'"',y'"'"',c,nil) |- [i] < [k'"'"'] : DLL[k'"'"'](x,nil,c,nil)' -p -t 60
+exit: 0
+0:
+nil!=y' * nil!=x * y'!=x * y'->a', x * x->y', nil * DLL[i](a', y', c, nil) |-
+[i < k'] : DLL[k'](x, nil, c, nil) (LHS Inst.) [1 <{(i, i)}/{}>]
+  1:
+  nil!=y * nil!=x * y!=x * y->w, x * x->y, nil * DLL[i](w, y, c, nil) |-
+  [i < k'] : DLL[k'](x, nil, c, nil) (DLL R.Unf./Simplify) [2 <{(i, i)}/{}>]
+    2:
+    nil!=y * nil!=x * y!=x * y->w, x * x->y, nil * DLL[i](w, y, c, nil) |-
+    [0' < k'; i < k'] : x->w', nil * DLL[0'](w', x, c, nil) (UBound Intro) [
+    3 <{(i, i)}/{}>]
+      3:
+      nil!=y * nil!=x * y!=x * y->w, x * x->y, nil * DLL[i](w, y, c, nil) |-
+      x->w', nil * DLL[0'](w', x, c, nil) (DLL R.Unf./Simplify) [4 <{(i, i)}/
+                                                                 {}>]
+        4:
+        nil!=y * nil!=x * y!=x * y->w, x * x->y, nil * DLL[i](w, y, c, nil) |-
+        [1' < 0'] : nil!=w' * x!=w' * x->w', nil * w'->y', x *
+                    DLL[1'](y', w', c, nil) (UBound Intro) [5 <{(i, i)}/{}>]
+          5:
+          nil!=y * nil!=x * y!=x * y->w, x * x->y, nil * DLL[i](w, y, c, nil) |-
+          nil!=w' * x!=w' * x->w', nil * w'->y', x * DLL[1'](y', w', c, nil) (Id)
+
+=== atva-2014-08.1
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'TREEpp_rev(a,b) |- TREEpp(a,b)' -p -t 60
+exit: 0
+0:
+TREEpp_rev[0](a, b) |- TREEpp[0'](a, b) (TREEpp_rev L.Unf./LHS Inst.,LHS Inst.) [
+1 <{(0, 0)}/{(0, 1)}>, 2 <{(0, 0)}/{(0, 1)}>]
+  1:
+  [1 < 0] : nil!=a * a->nil, nil, b |- TREEpp[0'](a, b) (TREEpp R.Unf./Simplify) [
+  3 <{(1, 1), (0, 0)}/{}>]
+    3: [1 < 0] : nil!=a * a->nil, nil, b |- a->nil, nil, b (Id)
+  2:
+  [1 < 0] : nil!=x * x->nil, nil, w * TREEpp_aux[1](a, b, w, x) |-
+  TREEpp[0'](a, b) (TREEpp_aux L.Unf./LHS Inst.,LHS Inst.,LHS Inst.,LHS Inst./Simplify,Simplify) [
+  4 <{(1, 1), (0, 0)}/{(1, 2), (0, 2), (0, 1)}>,
+  5 <{(1, 1), (0, 0)}/{(1, 2), (0, 2), (0, 1)}>,
+  6 <{(1, 1), (0, 0)}/{(1, 3), (1, 2), (0, 3), (0, 2), (0, 1)}>,
+  7 <{(1, 1), (0, 0)}/{(1, 3), (1, 2), (0, 3), (0, 2), (0, 1)}>]
+    4:
+    [2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w * w->x, y, b *
+                     TREEpp[2](y, w) |-
+    TREEpp[0'](w, b) (TREEpp R.Unf./Simplify) [8 <{(2, 2), (1, 1), (0, 0)}/
+                                               {}>]
+      8:
+      [2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w * w->x, y, b *
+                       TREEpp[2](y, w) |-
+      [2' < 0'; 1' < 0'] : w->x', w', b * TREEpp[2'](w', w) *
+                           TREEpp[1'](x', w) (UBound Intro) [9 <{(2, 2),
+                                                                (1, 1),
+                                                                (0, 0)}/
+                                                             {}>]
+        9:
+        [2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w *
+                         w->x, y, b * TREEpp[2](y, w) |-
+        w->x', w', b * TREEpp[2'](w', w) * TREEpp[1'](x', w) (Pto Intro/Simplify) [
+        10 <{(2, 2)}/{}>]
+          10:
+          [2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w *
+                           TREEpp[2](y, w) |-
+          TREEpp[2'](y, w) * TREEpp[1'](x, w) (Tag.Inst+Pred.Intro) [
+          11 <{}/{}>]
+            11:
+            [2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w |-
+            TREEpp[1'](x, w) (TREEpp R.Unf./Simplify) [12 <{(2, 2), (1, 1),
+                                                           (0, 0)}/{}>]
+              12:
+              [2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w |-
+              x->nil, nil, w (Id)
+    5:
+    [2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w * w->y, x, b *
+                     TREEpp[2](y, w) |-
+    TREEpp[0'](w, b) (Lemma.App) [13 <{(2, 2), (1, 1), (0, 0)}/{}>,
+    14 <{(2, 2), (1, 1), (0, 0)}/{(1, 2), (0, 2), (0, 1)}>]
+      13:
+      [2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w *
+                       TREEpp[2](y, w) |-
+      TREEpp[2'](y, w) * TREEpp[1'](x, w) (Backl) [10] <pre={(2, 2),
+                                                            (1, 1), (0, 0)}>
+      14:
+      [2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * w->y, x, b *
+                       TREEpp[2'](y, w) * TREEpp[1'](x, w) |-
+      TREEpp[0'](w, b) (LHS Inst.) [15 <{(2', 3), (2, 2), (1', 4), (1, 1),
+                                        (0, 0)}/{}>]
+        15:
+        [2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * w->y, x, b *
+                         TREEpp[4](x, w) * TREEpp[3](y, w) |-
+        TREEpp[0'](w, b) (TREEpp R.Unf./Simplify) [16 <{(4, 4), (3, 3),
+                                                       (2, 2), (1, 1),
+                                                       (0, 0)}/{}>]
+          16:
+          [2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * w->y, x, b *
+                           TREEpp[4](x, w) * TREEpp[3](y, w) |-
+          [2' < 0'; 1' < 0'] : w->x', w', b * TREEpp[2'](w', w) *
+                               TREEpp[1'](x', w) (UBound Intro) [17 <
+                                                                 {(4, 4),
+                                                                 (3, 3),
+                                                                 (2, 2),
+                                                                 (1, 1),
+                                                                 (0, 0)}/
+                                                                 {}>]
+            17:
+            [2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * w->y, x, b *
+                             TREEpp[4](x, w) * TREEpp[3](y, w) |-
+            w->x', w', b * TREEpp[2'](w', w) * TREEpp[1'](x', w) (Id)
+    6:
+    [3 < 1; 2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w *
+                            w->x, z, y * TREEpp[3](z, w) *
+                            TREEpp_aux[2](a, b, y, w) |-
+    TREEpp[0'](a, b) (Lemma.App) [18 <{(3, 3), (2, 2), (1, 1), (0, 0)}/{}>,
+    19 <{(3, 3), (2, 2), (1, 1), (0, 0)}/{(1, 3), (1, 2), (0, 3), (0, 2),
+                                         (0, 1)}>]
+      18:
+      [3 < 1; 2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w *
+                              w->x, z, y * TREEpp[3](z, w) |-
+      TREEpp[1'](w, y) (R.Trans.Ex) [20 <{(3, 3), (2, 2), (1, 1), (0, 0)}/{}>]
+        20:
+        [3 < 1; 2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w *
+                                w->x, z, y * TREEpp[3](z, w) |-
+        TREEpp[0'](w, y) (Weaken) [21 <{(3, 3), (1, 1), (0, 0)}/{}>]
+          21:
+          [3 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w *
+                           w->x, z, y * TREEpp[3](z, w) |-
+          TREEpp[0'](w, y) (Subst) [22 <{(3, 2), (1, 1), (0, 0)}/{}>]
+            22:
+            [2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w *
+                             w->x, y, b * TREEpp[2](y, w) |-
+            TREEpp[0'](w, b) (Backl) [4] <pre={(2, 2), (1, 1), (0, 0)}>
+      19:
+      [3 < 1; 2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w *
+                              TREEpp_aux[2](a, b, y, w) * TREEpp[1'](w, y) |-
+      TREEpp[0'](a, b) (LHS Inst.) [23 <{(3, 3), (2, 2), (1', 4), (1, 1),
+                                        (0, 0)}/{}>]
+        23:
+        [3 < 1; 2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * TREEpp[4](w, y) *
+                                TREEpp_aux[2](a, b, y, w) |-
+        TREEpp[0'](a, b) (TREEpp L.Unf./LHS Inst.,LHS Inst.) [24 <{(4, 4),
+                                                                  (3, 3),
+                                                                  (2, 2),
+                                                                  (1, 1),
+                                                                  (0, 0)}/
+                                                              {(4, 5),
+                                                              (1, 3),
+                                                              (1, 2),
+                                                              (0, 3),
+                                                              (0, 2),
+                                                              (0, 1)}>,
+        25 <{(4, 4), (3, 3), (2, 2), (1, 1), (0, 0)}/{(4, 6), (4, 5),
+                                                     (1, 3), (1, 2),
+                                                     (0, 3), (0, 2),
+                                                     (0, 1)}>]
+          24:
+          [5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w *
+                                         w->nil, nil, y *
+                                         TREEpp_aux[2](a, b, y, w) |-
+          TREEpp[0'](a, b) (Weaken) [26 <{(2, 2), (1, 1)}/{}>]
+            26:
+            [2 < 1] : nil!=w * w->nil, nil, y * TREEpp_aux[2](a, b, y, w) |-
+            TREEpp[0'](a, b) (Subst) [27 <{(2, 1), (1, 0)}/{}>]
+              27:
+              [1 < 0] : nil!=x * x->nil, nil, w * TREEpp_aux[1](a, b, w, x) |-
+              TREEpp[0'](a, b) (Backl) [2] <pre={(1, 1), (0, 0)}>
+          25:
+          [6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w *
+                                                w->z, c, y *
+                                                TREEpp[6](z, w) *
+                                                TREEpp[5](c, w) *
+                                                TREEpp_aux[2](a, b, y, w) |-
+          TREEpp[0'](a, b) (TREEpp_aux L.Unf./LHS Inst.,LHS Inst.,LHS Inst.,LHS Inst./Simplify,Simplify) [
+          28 <{(6, 6), (5, 5), (4, 4), (3, 3), (2, 2), (1, 1), (0, 0)}/
+          {(4, 6), (4, 5), (2, 7), (1, 7), (1, 3), (1, 2), (0, 7), (0, 3),
+          (0, 2), (0, 1)}>,
+          29 <{(6, 6), (5, 5), (4, 4), (3, 3), (2, 2), (1, 1), (0, 0)}/
+          {(4, 6), (4, 5), (2, 7), (1, 7), (1, 3), (1, 2), (0, 7), (0, 3),
+          (0, 2), (0, 1)}>,
+          30 <{(6, 6), (5, 5), (4, 4), (3, 3), (2, 2), (1, 1), (0, 0)}/
+          {(4, 6), (4, 5), (2, 8), (2, 7), (1, 8), (1, 7), (1, 3), (1, 2),
+          (0, 8), (0, 7), (0, 3), (0, 2), (0, 1)}>,
+          31 <{(6, 6), (5, 5), (4, 4), (3, 3), (2, 2), (1, 1), (0, 0)}/
+          {(4, 6), (4, 5), (2, 8), (2, 7), (1, 8), (1, 7), (1, 3), (1, 2),
+          (0, 8), (0, 7), (0, 3), (0, 2), (0, 1)}>]
+            28:
+            [7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y * nil!=x *
+                                                         nil!=w * y!=w *
+                                                         x!=w * y->w, d, b *
+                                                         w->z, c, y *
+                                                         TREEpp[7](d, y) *
+                                                         TREEpp[6](z, w) *
+                                                         TREEpp[5](c, w) |-
+            TREEpp[0'](y, b) (TREEpp R.Unf./Simplify) [32 <{(7, 7), (6, 6),
+                                                           (5, 5), (4, 4),
+                                                           (3, 3), (2, 2),
+                                                           (1, 1), (0, 0)}/
+                                                       {}>]
+              32:
+              [7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y * nil!=x *
+                                                           nil!=w * y!=w *
+                                                           x!=w *
+                                                           y->w, d, b *
+                                                           w->z, c, y *
+                                                           TREEpp[7](d, y) *
+                                                           TREEpp[6](z, w) *
+                                                           TREEpp[5](c, w) |-
+              [2' < 0'; 1' < 0'] : y->x', w', b * TREEpp[2'](w', y) *
+                                   TREEpp[1'](x', y) (UBound Intro) [
+              33 <{(7, 7), (6, 6), (5, 5), (4, 4), (3, 3), (2, 2), (1, 1),
+                  (0, 0)}/{}>]
+                33:
+                [7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y *
+                                                             nil!=x *
+                                                             nil!=w * y!=w *
+                                                             x!=w *
+                                                             y->w, d, b *
+                                                             w->z, c, y *
+                                                             TREEpp[7](d, y) *
+                                                             TREEpp[6](z, w) *
+                                                             TREEpp[5](c, w) |-
+                y->x', w', b * TREEpp[2'](w', y) * TREEpp[1'](x', y) (TREEpp R.Unf./Simplify) [
+                34 <{(7, 7), (6, 6), (5, 5), (4, 4), (3, 3), (2, 2),
+                    (1, 1), (0, 0)}/{}>]
+                  34:
+                  [7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y *
+                                                               nil!=x *
+                                                               nil!=w *
+                                                               y!=w * x!=w *
+                                                               y->w, d, b *
+                                                               w->z, c, y *
+                                                               TREEpp[7](d, y) *
+                                                               TREEpp[6](z, w) *
+                                                               TREEpp[5](c, w) |-
+                  [3' < 1'; 0' < 1'] : nil!=x' * y!=x' * y->x', w', b *
+                                       x'->z', y', y * TREEpp[3'](y', x') *
+                                       TREEpp[2'](w', y) * TREEpp[0'](z', x') (Id)
+            29:
+            [7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y * nil!=x *
+                                                         nil!=w * y!=w *
+                                                         x!=w * y->d, w, b *
+                                                         w->z, c, y *
+                                                         TREEpp[7](d, y) *
+                                                         TREEpp[6](z, w) *
+                                                         TREEpp[5](c, w) |-
+            TREEpp[0'](y, b) (TREEpp R.Unf./Simplify) [35 <{(7, 7), (6, 6),
+                                                           (5, 5), (4, 4),
+                                                           (3, 3), (2, 2),
+                                                           (1, 1), (0, 0)}/
+                                                       {}>]
+              35:
+              [7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y * nil!=x *
+                                                           nil!=w * y!=w *
+                                                           x!=w *
+                                                           y->d, w, b *
+                                                           w->z, c, y *
+                                                           TREEpp[7](d, y) *
+                                                           TREEpp[6](z, w) *
+                                                           TREEpp[5](c, w) |-
+              [2' < 0'; 1' < 0'] : y->x', w', b * TREEpp[2'](w', y) *
+                                   TREEpp[1'](x', y) (UBound Intro) [
+              36 <{(7, 7), (6, 6), (5, 5), (4, 4), (3, 3), (2, 2), (1, 1),
+                  (0, 0)}/{}>]
+                36:
+                [7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y *
+                                                             nil!=x *
+                                                             nil!=w * y!=w *
+                                                             x!=w *
+                                                             y->d, w, b *
+                                                             w->z, c, y *
+                                                             TREEpp[7](d, y) *
+                                                             TREEpp[6](z, w) *
+                                                             TREEpp[5](c, w) |-
+                y->x', w', b * TREEpp[2'](w', y) * TREEpp[1'](x', y) (TREEpp R.Unf./Simplify) [
+                37 <{(7, 7), (6, 6), (5, 5), (4, 4), (3, 3), (2, 2),
+                    (1, 1), (0, 0)}/{}>]
+                  37:
+                  [7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y *
+                                                               nil!=x *
+                                                               nil!=w *
+                                                               y!=w * x!=w *
+                                                               y->d, w, b *
+                                                               w->z, c, y *
+                                                               TREEpp[7](d, y) *
+                                                               TREEpp[6](z, w) *
+                                                               TREEpp[5](c, w) |-
+                  [3' < 2'; 0' < 2'] : nil!=w' * y!=w' * y->x', w', b *
+                                       w'->z', y', y * TREEpp[3'](y', w') *
+                                       TREEpp[1'](x', y) * TREEpp[0'](z', w') (Id)
+            30:
+            [8 < 2; 7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y *
+                                                                nil!=x *
+                                                                nil!=w *
+                                                                y!=w * x!=w *
+                                                                y->w, e, d *
+                                                                w->z, c, y *
+                                                                TREEpp[8](e, y) *
+                                                                TREEpp_aux[7](a, b, d, y) *
+                                                                TREEpp[6](z, w) *
+                                                                TREEpp[5](c, w) |-
+            TREEpp[0'](a, b) (Lemma.App) [38 <{(8, 8), (7, 7), (6, 6),
+                                              (5, 5), (4, 4), (3, 3),
+                                              (2, 2), (1, 1), (0, 0)}/
+                                          {}>,
+            39 <{(8, 8), (7, 7), (6, 6), (5, 5), (4, 4), (3, 3), (2, 2),
+                (1, 1), (0, 0)}/{(4, 6), (4, 5), (2, 8), (2, 7), (1, 8),
+                                (1, 7), (1, 3), (1, 2), (0, 8), (0, 7),
+                                (0, 3), (0, 2), (0, 1)}>]
+              38:
+              [8 < 2; 7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y *
+                                                                  nil!=x *
+                                                                  nil!=w *
+                                                                  y!=w *
+                                                                  x!=w *
+                                                                  y->w, e, d *
+                                                                  w->z, c, y *
+                                                                  TREEpp[8](e, y) *
+                                                                  TREEpp[6](z, w) *
+                                                                  TREEpp[5](c, w) |-
+              TREEpp[1'](y, d) (R.Trans.Ex) [40 <{(8, 8), (7, 7), (6, 6),
+                                                 (5, 5), (4, 4), (3, 3),
+                                                 (2, 2), (1, 1), (0, 0)}/
+                                             {}>]
+                40:
+                [8 < 2; 7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y *
+                                                                    nil!=x *
+                                                                    nil!=w *
+                                                                    y!=w *
+                                                                    x!=w *
+                                                                    y->w, e, d *
+                                                                    w->z, c, y *
+                                                                    TREEpp[8](e, y) *
+                                                                    TREEpp[6](z, w) *
+                                                                    TREEpp[5](c, w) |-
+                TREEpp[0'](y, d) (Weaken) [41 <{(8, 8), (6, 6), (5, 5),
+                                               (4, 4), (2, 2), (1, 1),
+                                               (0, 0)}/{}>]
+                  41:
+                  [8 < 2; 8 < 1; 6 < 4; 5 < 4; 2 < 1; 1 < 0] : nil!=y *
+                                                               nil!=x *
+                                                               nil!=w *
+                                                               y!=w * x!=w *
+                                                               y->w, e, d *
+                                                               w->z, c, y *
+                                                               TREEpp[8](e, y) *
+                                                               TREEpp[6](z, w) *
+                                                               TREEpp[5](c, w) |-
+                  TREEpp[0'](y, d) (Subst) [42 <{(8, 7), (8, 3), (6, 6),
+                                                (5, 5), (4, 4), (2, 2),
+                                                (1, 1), (0, 0)}/{}>]
+                    42:
+                    [7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y *
+                                                                 nil!=x *
+                                                                 nil!=w *
+                                                                 y!=w *
+                                                                 x!=w *
+                                                                 y->w, d, b *
+                                                                 w->z, c, y *
+                                                                 TREEpp[7](d, y) *
+                                                                 TREEpp[6](z, w) *
+                                                                 TREEpp[5](c, w) |-
+                    TREEpp[0'](y, b) (Backl) [28] <pre={(7, 7), (6, 6),
+                                                       (5, 5), (4, 4),
+                                                       (3, 3), (2, 2),
+                                                       (1, 1), (0, 0)}>
+              39:
+              [8 < 2; 7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y *
+                                                                  nil!=x *
+                                                                  nil!=w *
+                                                                  y!=w *
+                                                                  x!=w *
+                                                                  TREEpp_aux[7](a, b, d, y) *
+                                                                  TREEpp[1'](y, d) |-
+              TREEpp[0'](a, b) (LHS Inst.) [43 <{(8, 8), (7, 7), (6, 6),
+                                                (5, 5), (4, 4), (3, 3),
+                                                (2, 2), (1', 9), (1, 1),
+                                                (0, 0)}/{}>]
+                43:
+                [8 < 2; 7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y *
+                                                                    nil!=x *
+                                                                    nil!=w *
+                                                                    y!=w *
+                                                                    x!=w *
+                                                                    TREEpp[9](y, d) *
+                                                                    TREEpp_aux[7](a, b, d, y) |-
+                TREEpp[0'](a, b) (Weaken) [44 <{(9, 9), (8, 8), (7, 7),
+                                               (2, 2), (1, 1)}/{}>]
+                  44:
+                  [8 < 2; 7 < 2; 2 < 1] : nil!=y * nil!=w * y!=w *
+                                          TREEpp[9](y, d) *
+                                          TREEpp_aux[7](a, b, d, y) |-
+                  TREEpp[0'](a, b) (L.Trans.Ex) [45 <{(9, 1'), (8, 8),
+                                                     (7, 7), (2, 2),
+                                                     (1, 1)}/{}>]
+                    45:
+                    [8 < 2; 7 < 2; 2 < 1] : nil!=y * nil!=w * y!=w *
+                                            TREEpp_aux[7](a, b, d, y) *
+                                            TREEpp[1'](y, d) |-
+                    TREEpp[0'](a, b) (Subst) [46 <{(8, 3), (7, 2), (2, 1),
+                                                  (1', 1'), (1, 0)}/{}>]
+                      46:
+                      [3 < 1; 2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w *
+                                              TREEpp_aux[2](a, b, y, w) *
+                                              TREEpp[1'](w, y) |-
+                      TREEpp[0'](a, b) (Backl) [19] <pre={(3, 3), (2, 2),
+                                                         (1', 1'), (1, 1),
+                                                         (0, 0)}>
+            31:
+            [8 < 2; 7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y *
+                                                                nil!=x *
+                                                                nil!=w *
+                                                                y!=w * x!=w *
+                                                                y->e, w, d *
+                                                                w->z, c, y *
+                                                                TREEpp[8](e, y) *
+                                                                TREEpp_aux[7](a, b, d, y) *
+                                                                TREEpp[6](z, w) *
+                                                                TREEpp[5](c, w) |-
+            TREEpp[0'](a, b) (Lemma.App) [47 <{(8, 8), (7, 7), (6, 6),
+                                              (5, 5), (4, 4), (3, 3),
+                                              (2, 2), (1, 1), (0, 0)}/
+                                          {}>,
+            48 <{(8, 8), (7, 7), (6, 6), (5, 5), (4, 4), (3, 3), (2, 2),
+                (1, 1), (0, 0)}/{(4, 6), (4, 5), (2, 8), (2, 7), (1, 8),
+                                (1, 7), (1, 3), (1, 2), (0, 8), (0, 7),
+                                (0, 3), (0, 2), (0, 1)}>]
+              47:
+              [8 < 2; 7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y *
+                                                                  nil!=x *
+                                                                  nil!=w *
+                                                                  y!=w *
+                                                                  x!=w *
+                                                                  y->e, w, d *
+                                                                  w->z, c, y *
+                                                                  TREEpp[8](e, y) *
+                                                                  TREEpp[6](z, w) *
+                                                                  TREEpp[5](c, w) |-
+              TREEpp[1'](y, d) (R.Trans.Ex) [49 <{(8, 8), (7, 7), (6, 6),
+                                                 (5, 5), (4, 4), (3, 3),
+                                                 (2, 2), (1, 1), (0, 0)}/
+                                             {}>]
+                49:
+                [8 < 2; 7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y *
+                                                                    nil!=x *
+                                                                    nil!=w *
+                                                                    y!=w *
+                                                                    x!=w *
+                                                                    y->e, w, d *
+                                                                    w->z, c, y *
+                                                                    TREEpp[8](e, y) *
+                                                                    TREEpp[6](z, w) *
+                                                                    TREEpp[5](c, w) |-
+                TREEpp[0'](y, d) (Weaken) [50 <{(8, 8), (6, 6), (5, 5),
+                                               (4, 4), (2, 2), (1, 1),
+                                               (0, 0)}/{}>]
+                  50:
+                  [8 < 2; 8 < 1; 6 < 4; 5 < 4; 2 < 1; 1 < 0] : nil!=y *
+                                                               nil!=x *
+                                                               nil!=w *
+                                                               y!=w * x!=w *
+                                                               y->e, w, d *
+                                                               w->z, c, y *
+                                                               TREEpp[8](e, y) *
+                                                               TREEpp[6](z, w) *
+                                                               TREEpp[5](c, w) |-
+                  TREEpp[0'](y, d) (Subst) [51 <{(8, 7), (8, 3), (6, 6),
+                                                (5, 5), (4, 4), (2, 2),
+                                                (1, 1), (0, 0)}/{}>]
+                    51:
+                    [7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y *
+                                                                 nil!=x *
+                                                                 nil!=w *
+                                                                 y!=w *
+                                                                 x!=w *
+                                                                 y->d, w, b *
+                                                                 w->z, c, y *
+                                                                 TREEpp[7](d, y) *
+                                                                 TREEpp[6](z, w) *
+                                                                 TREEpp[5](c, w) |-
+                    TREEpp[0'](y, b) (Backl) [29] <pre={(7, 7), (6, 6),
+                                                       (5, 5), (4, 4),
+                                                       (3, 3), (2, 2),
+                                                       (1, 1), (0, 0)}>
+              48:
+              [8 < 2; 7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y *
+                                                                  nil!=x *
+                                                                  nil!=w *
+                                                                  y!=w *
+                                                                  x!=w *
+                                                                  TREEpp_aux[7](a, b, d, y) *
+                                                                  TREEpp[1'](y, d) |-
+              TREEpp[0'](a, b) (LHS Inst.) [52 <{(8, 8), (7, 7), (6, 6),
+                                                (5, 5), (4, 4), (3, 3),
+                                                (2, 2), (1', 9), (1, 1),
+                                                (0, 0)}/{}>]
+                52:
+                [8 < 2; 7 < 2; 6 < 4; 5 < 4; 3 < 1; 2 < 1; 1 < 0] : nil!=y *
+                                                                    nil!=x *
+                                                                    nil!=w *
+                                                                    y!=w *
+                                                                    x!=w *
+                                                                    TREEpp[9](y, d) *
+                                                                    TREEpp_aux[7](a, b, d, y) |-
+                TREEpp[0'](a, b) (Weaken) [53 <{(9, 9), (8, 8), (7, 7),
+                                               (2, 2), (1, 1)}/{}>]
+                  53:
+                  [8 < 2; 7 < 2; 2 < 1] : nil!=y * nil!=w * y!=w *
+                                          TREEpp[9](y, d) *
+                                          TREEpp_aux[7](a, b, d, y) |-
+                  TREEpp[0'](a, b) (L.Trans.Ex) [54 <{(9, 1'), (8, 8),
+                                                     (7, 7), (2, 2),
+                                                     (1, 1)}/{}>]
+                    54:
+                    [8 < 2; 7 < 2; 2 < 1] : nil!=y * nil!=w * y!=w *
+                                            TREEpp_aux[7](a, b, d, y) *
+                                            TREEpp[1'](y, d) |-
+                    TREEpp[0'](a, b) (Subst) [55 <{(8, 3), (7, 2), (2, 1),
+                                                  (1', 1'), (1, 0)}/{}>]
+                      55:
+                      [3 < 1; 2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w *
+                                              TREEpp_aux[2](a, b, y, w) *
+                                              TREEpp[1'](w, y) |-
+                      TREEpp[0'](a, b) (Backl) [19] <pre={(3, 3), (2, 2),
+                                                         (1', 1'), (1, 1),
+                                                         (0, 0)}>
+    7:
+    [3 < 1; 2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w *
+                            w->z, x, y * TREEpp[3](z, w) *
+                            TREEpp_aux[2](a, b, y, w) |-
+    TREEpp[0'](a, b) (Lemma.App) [56 <{(3, 3), (2, 2), (1, 1), (0, 0)}/{}>,
+    57 <{(3, 3), (2, 2), (1, 1), (0, 0)}/{(1, 3), (1, 2), (0, 3), (0, 2),
+                                         (0, 1)}>]
+      56:
+      [3 < 1; 2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w *
+                              w->z, x, y * TREEpp[3](z, w) |-
+      TREEpp[1'](w, y) (R.Trans.Ex) [58 <{(3, 3), (2, 2), (1, 1), (0, 0)}/{}>]
+        58:
+        [3 < 1; 2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w *
+                                w->z, x, y * TREEpp[3](z, w) |-
+        TREEpp[0'](w, y) (Weaken) [59 <{(3, 3), (1, 1), (0, 0)}/{}>]
+          59:
+          [3 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w *
+                           w->z, x, y * TREEpp[3](z, w) |-
+          TREEpp[0'](w, y) (Subst) [60 <{(3, 2), (1, 1), (0, 0)}/{}>]
+            60:
+            [2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * x->nil, nil, w *
+                             w->y, x, b * TREEpp[2](y, w) |-
+            TREEpp[0'](w, b) (Backl) [5] <pre={(2, 2), (1, 1), (0, 0)}>
+      57:
+      [3 < 1; 2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w *
+                              TREEpp_aux[2](a, b, y, w) * TREEpp[1'](w, y) |-
+      TREEpp[0'](a, b) (LHS Inst.) [61 <{(3, 3), (2, 2), (1', 4), (1, 1),
+                                        (0, 0)}/{}>]
+        61:
+        [3 < 1; 2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w * TREEpp[4](w, y) *
+                                TREEpp_aux[2](a, b, y, w) |-
+        TREEpp[0'](a, b) (L.Trans.Ex) [62 <{(4, 1'), (3, 3), (2, 2),
+                                           (1, 1), (0, 0)}/{}>]
+          62:
+          [3 < 1; 2 < 1; 1 < 0] : nil!=x * nil!=w * x!=w *
+                                  TREEpp_aux[2](a, b, y, w) *
+                                  TREEpp[1'](w, y) |-
+          TREEpp[0'](a, b) (Backl) [19] <pre={(3, 3), (2, 2), (1', 1'),
+                                             (1, 1), (0, 0)}>
+
+=== atva-2014-12.1
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'TREEpp_aux(a,b,c,d) * TREEpp_aux(d,c,e,f) |- TREEpp_aux(a,b,e,f)' -p -t 60
+exit: 0
+0:
+TREEpp_aux[1](d, c, e, f) * TREEpp_aux[0](a, b, c, d) |-
+TREEpp_aux[0'](a, b, e, f) (TREEpp_aux L.Unf./LHS Inst.,LHS Inst.,LHS Inst.,LHS Inst./Simplify,Simplify) [
+1 <{(1, 1), (0, 0)}/{(1, 2)}>, 2 <{(1, 1), (0, 0)}/{(1, 2)}>,
+3 <{(1, 1), (0, 0)}/{(1, 3), (1, 2)}>, 4 <{(1, 1), (0, 0)}/{(1, 3), (1, 2)}>]
+  1:
+  [2 < 1] : nil!=d * d->f, w, c * TREEpp[2](w, d) * TREEpp_aux[0](a, b, c, d) |-
+  TREEpp_aux[0'](a, b, d, f) (TREEpp_aux R.Unf./Simplify) [5 <{(2, 2),
+                                                              (1, 1),
+                                                              (0, 0)}/
+                                                           {}>]
+    5:
+    [2 < 1] : nil!=d * d->f, w, c * TREEpp[2](w, d) *
+              TREEpp_aux[0](a, b, c, d) |-
+    [2' < 0'; 1' < 0'] : d->f, w', x' * TREEpp_aux[2'](a, b, x', d) *
+                         TREEpp[1'](w', d) (UBound Intro) [6 <{(2, 2),
+                                                              (1, 1),
+                                                              (0, 0)}/
+                                                           {}>]
+      6:
+      [2 < 1] : nil!=d * d->f, w, c * TREEpp[2](w, d) *
+                TREEpp_aux[0](a, b, c, d) |-
+      d->f, w', x' * TREEpp_aux[2'](a, b, x', d) * TREEpp[1'](w', d) (Id)
+  2:
+  [2 < 1] : nil!=d * d->w, f, c * TREEpp[2](w, d) * TREEpp_aux[0](a, b, c, d) |-
+  TREEpp_aux[0'](a, b, d, f) (TREEpp_aux R.Unf./Simplify) [7 <{(2, 2),
+                                                              (1, 1),
+                                                              (0, 0)}/
+                                                           {}>]
+    7:
+    [2 < 1] : nil!=d * d->w, f, c * TREEpp[2](w, d) *
+              TREEpp_aux[0](a, b, c, d) |-
+    [2' < 0'; 1' < 0'] : d->w', f, x' * TREEpp_aux[2'](a, b, x', d) *
+                         TREEpp[1'](w', d) (UBound Intro) [8 <{(2, 2),
+                                                              (1, 1),
+                                                              (0, 0)}/
+                                                           {}>]
+      8:
+      [2 < 1] : nil!=d * d->w, f, c * TREEpp[2](w, d) *
+                TREEpp_aux[0](a, b, c, d) |-
+      d->w', f, x' * TREEpp_aux[2'](a, b, x', d) * TREEpp[1'](w', d) (Id)
+  3:
+  [3 < 1; 2 < 1] : nil!=e * e->f, x, w * TREEpp[3](x, e) *
+                   TREEpp_aux[2](d, c, w, e) * TREEpp_aux[0](a, b, c, d) |-
+  TREEpp_aux[0'](a, b, e, f) (Lemma.App) [9 <{(3, 3), (2, 2), (1, 1), (0, 0)}/
+                                          {}>,
+  10 <{(3, 3), (2, 2), (1, 1)}/{(1, 3), (1, 2)}>]
+    9:
+    [3 < 1; 2 < 1] : nil!=e * TREEpp_aux[2](d, c, w, e) *
+                     TREEpp_aux[0](a, b, c, d) |-
+    TREEpp_aux[1'](a, b, w, e) (R.Trans.Ex) [11 <{(3, 3), (2, 2), (1, 1),
+                                                 (0, 0)}/{}>]
+      11:
+      [3 < 1; 2 < 1] : nil!=e * TREEpp_aux[2](d, c, w, e) *
+                       TREEpp_aux[0](a, b, c, d) |-
+      TREEpp_aux[0'](a, b, w, e) (Weaken) [12 <{(2, 2), (0, 0)}/{}>]
+        12:
+        TREEpp_aux[2](d, c, w, e) * TREEpp_aux[0](a, b, c, d) |-
+        TREEpp_aux[0'](a, b, w, e) (Subst) [13 <{(2, 1), (0, 0)}/{}>]
+          13:
+          TREEpp_aux[1](d, c, e, f) * TREEpp_aux[0](a, b, c, d) |-
+          TREEpp_aux[0'](a, b, e, f) (Backl) [0] <pre={(1, 1), (0, 0)}>
+    10:
+    [3 < 1; 2 < 1] : nil!=e * e->f, x, w * TREEpp[3](x, e) *
+                     TREEpp_aux[1'](a, b, w, e) |-
+    TREEpp_aux[0'](a, b, e, f) (LHS Inst.) [14 <{(3, 3), (2, 2), (1', 0),
+                                                (1, 1)}/{}>]
+      14:
+      [3 < 1; 2 < 1] : nil!=e * e->f, x, w * TREEpp[3](x, e) *
+                       TREEpp_aux[0](a, b, w, e) |-
+      TREEpp_aux[0'](a, b, e, f) (Weaken) [15 <{(3, 3), (1, 1), (0, 0)}/{}>]
+        15:
+        [3 < 1] : nil!=e * e->f, x, w * TREEpp[3](x, e) *
+                  TREEpp_aux[0](a, b, w, e) |-
+        TREEpp_aux[0'](a, b, e, f) (Subst) [16 <{(3, 2), (1, 1), (0, 0)}/{}>]
+          16:
+          [2 < 1] : nil!=d * d->f, w, c * TREEpp[2](w, d) *
+                    TREEpp_aux[0](a, b, c, d) |-
+          TREEpp_aux[0'](a, b, d, f) (Backl) [1] <pre={(2, 2), (1, 1),
+                                                      (0, 0)}>
+  4:
+  [3 < 1; 2 < 1] : nil!=e * e->x, f, w * TREEpp[3](x, e) *
+                   TREEpp_aux[2](d, c, w, e) * TREEpp_aux[0](a, b, c, d) |-
+  TREEpp_aux[0'](a, b, e, f) (Lemma.App) [17 <{(3, 3), (2, 2), (1, 1),
+                                              (0, 0)}/{}>,
+  18 <{(3, 3), (2, 2), (1, 1)}/{(1, 3), (1, 2)}>]
+    17:
+    [3 < 1; 2 < 1] : nil!=e * TREEpp_aux[2](d, c, w, e) *
+                     TREEpp_aux[0](a, b, c, d) |-
+    TREEpp_aux[1'](a, b, w, e) (R.Trans.Ex) [19 <{(3, 3), (2, 2), (1, 1),
+                                                 (0, 0)}/{}>]
+      19:
+      [3 < 1; 2 < 1] : nil!=e * TREEpp_aux[2](d, c, w, e) *
+                       TREEpp_aux[0](a, b, c, d) |-
+      TREEpp_aux[0'](a, b, w, e) (Weaken) [20 <{(2, 2), (0, 0)}/{}>]
+        20:
+        TREEpp_aux[2](d, c, w, e) * TREEpp_aux[0](a, b, c, d) |-
+        TREEpp_aux[0'](a, b, w, e) (Subst) [21 <{(2, 1), (0, 0)}/{}>]
+          21:
+          TREEpp_aux[1](d, c, e, f) * TREEpp_aux[0](a, b, c, d) |-
+          TREEpp_aux[0'](a, b, e, f) (Backl) [0] <pre={(1, 1), (0, 0)}>
+    18:
+    [3 < 1; 2 < 1] : nil!=e * e->x, f, w * TREEpp[3](x, e) *
+                     TREEpp_aux[1'](a, b, w, e) |-
+    TREEpp_aux[0'](a, b, e, f) (LHS Inst.) [22 <{(3, 3), (2, 2), (1', 0),
+                                                (1, 1)}/{}>]
+      22:
+      [3 < 1; 2 < 1] : nil!=e * e->x, f, w * TREEpp[3](x, e) *
+                       TREEpp_aux[0](a, b, w, e) |-
+      TREEpp_aux[0'](a, b, e, f) (Weaken) [23 <{(3, 3), (1, 1), (0, 0)}/{}>]
+        23:
+        [3 < 1] : nil!=e * e->x, f, w * TREEpp[3](x, e) *
+                  TREEpp_aux[0](a, b, w, e) |-
+        TREEpp_aux[0'](a, b, e, f) (Subst) [24 <{(3, 2), (1, 1), (0, 0)}/{}>]
+          24:
+          [2 < 1] : nil!=d * d->w, f, c * TREEpp[2](w, d) *
+                    TREEpp_aux[0](a, b, c, d) |-
+          TREEpp_aux[0'](a, b, d, f) (Backl) [2] <pre={(2, 2), (1, 1),
+                                                      (0, 0)}>
+
+=== atva-2014-12.2
+$ cyclist sl prove -D examples/IosifEtAl-ATVA2014.defs -S 'TREEpp_aux[i](a,b,c,d) * TREEpp_aux[j](d,c,e,f) |- [i] < [k'"'"'], [j] < [k'"'"'] : TREEpp_aux[k'"'"'](a,b,e,f)' -p -t 60
+exit: 0
+0:
+TREEpp_aux[i](a, b, c, d) * TREEpp_aux[j](d, c, e, f) |-
+[i < k'; j < k'] : TREEpp_aux[k'](a, b, e, f) (TREEpp_aux L.Unf./LHS Inst.,LHS Inst.,LHS Inst.,LHS Inst./Simplify,Simplify) [
+1 <{(i, i), (j, j)}/{(j, 0)}>, 2 <{(i, i), (j, j)}/{(j, 0)}>,
+3 <{(i, i), (j, j)}/{(j, 1), (j, 0)}>, 4 <{(i, i), (j, j)}/{(j, 1), (j, 0)}>]
+  1:
+  [0 < j] : nil!=d * d->f, w, c * TREEpp[0](w, d) * TREEpp_aux[i](a, b, c, d) |-
+  [i < k'; j < k'] : TREEpp_aux[k'](a, b, d, f) (TREEpp_aux R.Unf./Simplify) [
+  5 <{(0, 0), (i, i), (j, j)}/{}>]
+    5:
+    [0 < j] : nil!=d * d->f, w, c * TREEpp[0](w, d) *
+              TREEpp_aux[i](a, b, c, d) |-
+    [1' < k'; 0' < k'; i < k'; j < k'] : d->f, w', x' *
+                                         TREEpp_aux[1'](a, b, x', d) *
+                                         TREEpp[0'](w', d) (UBound Intro) [
+    6 <{(0, 0), (i, i), (j, j)}/{}>]
+      6:
+      [0 < j] : nil!=d * d->f, w, c * TREEpp[0](w, d) *
+                TREEpp_aux[i](a, b, c, d) |-
+      d->f, w', x' * TREEpp_aux[1'](a, b, x', d) * TREEpp[0'](w', d) (Id)
+  2:
+  [0 < j] : nil!=d * d->w, f, c * TREEpp[0](w, d) * TREEpp_aux[i](a, b, c, d) |-
+  [i < k'; j < k'] : TREEpp_aux[k'](a, b, d, f) (TREEpp_aux R.Unf./Simplify) [
+  7 <{(0, 0), (i, i), (j, j)}/{}>]
+    7:
+    [0 < j] : nil!=d * d->w, f, c * TREEpp[0](w, d) *
+              TREEpp_aux[i](a, b, c, d) |-
+    [1' < k'; 0' < k'; i < k'; j < k'] : d->w', f, x' *
+                                         TREEpp_aux[1'](a, b, x', d) *
+                                         TREEpp[0'](w', d) (UBound Intro) [
+    8 <{(0, 0), (i, i), (j, j)}/{}>]
+      8:
+      [0 < j] : nil!=d * d->w, f, c * TREEpp[0](w, d) *
+                TREEpp_aux[i](a, b, c, d) |-
+      d->w', f, x' * TREEpp_aux[1'](a, b, x', d) * TREEpp[0'](w', d) (Id)
+  3:
+  [1 < j; 0 < j] : nil!=e * e->f, x, w * TREEpp[1](x, e) *
+                   TREEpp_aux[0](d, c, w, e) * TREEpp_aux[i](a, b, c, d) |-
+  [i < k'; j < k'] : TREEpp_aux[k'](a, b, e, f) (TREEpp_aux R.Unf./Simplify) [
+  9 <{(1, 1), (0, 0), (i, i), (j, j)}/{}>]
+    9:
+    [1 < j; 0 < j] : nil!=e * e->f, x, w * TREEpp[1](x, e) *
+                     TREEpp_aux[0](d, c, w, e) * TREEpp_aux[i](a, b, c, d) |-
+    [1' < k'; 0' < k'; i < k'; j < k'] : e->f, w', x' *
+                                         TREEpp_aux[1'](a, b, x', e) *
+                                         TREEpp[0'](w', e) (UBound Intro) [
+    10 <{(1, 1), (0, 0), (i, i), (j, j)}/{}>]
+      10:
+      [1 < j; 0 < j] : nil!=e * e->f, x, w * TREEpp[1](x, e) *
+                       TREEpp_aux[0](d, c, w, e) * TREEpp_aux[i](a, b, c, d) |-
+      e->f, w', x' * TREEpp_aux[1'](a, b, x', e) * TREEpp[0'](w', e) (Lemma.App) [
+      11 <{(1, 1), (0, 0), (i, i), (j, j)}/{}>,
+      12 <{(1, 1), (0, 0), (i, i), (j, j)}/{(j, 1), (j, 0)}>]
+        11:
+        [1 < j; 0 < j] : nil!=e * TREEpp_aux[0](d, c, w, e) *
+                         TREEpp_aux[i](a, b, c, d) |-
+        [0 < k'; i < k'] : TREEpp_aux[k'](a, b, w, e) (Weaken) [13 <{
+                                                                    (0, 0),
+                                                                    (i, i)}/
+                                                                {}>]
+          13:
+          TREEpp_aux[0](d, c, w, e) * TREEpp_aux[i](a, b, c, d) |-
+          [0 < k'; i < k'] : TREEpp_aux[k'](a, b, w, e) (Subst) [14 <
+                                                                 {(0, j),
+                                                                 (i, i)}/
+                                                                 {}>]
+            14:
+            TREEpp_aux[i](a, b, c, d) * TREEpp_aux[j](d, c, e, f) |-
+            [i < k'; j < k'] : TREEpp_aux[k'](a, b, e, f) (Backl) [0] <pre=
+            {(i, i), (j, j)}>
+        12:
+        [1 < j; 0 < j; 0 < k'; i < k'] : nil!=e * e->f, x, w *
+                                         TREEpp[1](x, e) *
+                                         TREEpp_aux[k'](a, b, w, e) |-
+        e->f, w', x' * TREEpp_aux[1'](a, b, x', e) * TREEpp[0'](w', e) (Id)
+  4:
+  [1 < j; 0 < j] : nil!=e * e->x, f, w * TREEpp[1](x, e) *
+                   TREEpp_aux[0](d, c, w, e) * TREEpp_aux[i](a, b, c, d) |-
+  [i < k'; j < k'] : TREEpp_aux[k'](a, b, e, f) (TREEpp_aux R.Unf./Simplify) [
+  15 <{(1, 1), (0, 0), (i, i), (j, j)}/{}>]
+    15:
+    [1 < j; 0 < j] : nil!=e * e->x, f, w * TREEpp[1](x, e) *
+                     TREEpp_aux[0](d, c, w, e) * TREEpp_aux[i](a, b, c, d) |-
+    [1' < k'; 0' < k'; i < k'; j < k'] : e->w', f, x' *
+                                         TREEpp_aux[1'](a, b, x', e) *
+                                         TREEpp[0'](w', e) (UBound Intro) [
+    16 <{(1, 1), (0, 0), (i, i), (j, j)}/{}>]
+      16:
+      [1 < j; 0 < j] : nil!=e * e->x, f, w * TREEpp[1](x, e) *
+                       TREEpp_aux[0](d, c, w, e) * TREEpp_aux[i](a, b, c, d) |-
+      e->w', f, x' * TREEpp_aux[1'](a, b, x', e) * TREEpp[0'](w', e) (Lemma.App) [
+      17 <{(1, 1), (0, 0), (i, i), (j, j)}/{}>,
+      18 <{(1, 1), (0, 0), (i, i), (j, j)}/{(j, 1), (j, 0)}>]
+        17:
+        [1 < j; 0 < j] : nil!=e * TREEpp_aux[0](d, c, w, e) *
+                         TREEpp_aux[i](a, b, c, d) |-
+        [0 < k'; i < k'] : TREEpp_aux[k'](a, b, w, e) (Weaken) [19 <{
+                                                                    (0, 0),
+                                                                    (i, i)}/
+                                                                {}>]
+          19:
+          TREEpp_aux[0](d, c, w, e) * TREEpp_aux[i](a, b, c, d) |-
+          [0 < k'; i < k'] : TREEpp_aux[k'](a, b, w, e) (Subst) [20 <
+                                                                 {(0, j),
+                                                                 (i, i)}/
+                                                                 {}>]
+            20:
+            TREEpp_aux[i](a, b, c, d) * TREEpp_aux[j](d, c, e, f) |-
+            [i < k'; j < k'] : TREEpp_aux[k'](a, b, e, f) (Backl) [0] <pre=
+            {(i, i), (j, j)}>
+        18:
+        [1 < j; 0 < j; 0 < k'; i < k'] : nil!=e * e->x, f, w *
+                                         TREEpp[1](x, e) *
+                                         TREEpp_aux[k'](a, b, w, e) |-
+        e->w', f, x' * TREEpp_aux[1'](a, b, x', e) * TREEpp[0'](w', e) (Id)
+

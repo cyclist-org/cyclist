@@ -56,9 +56,13 @@ let main =
 let set_margin_from_terminal () =
   match Sys.getenv_opt "TERM" with
   | None | Some "" | Some "dumb" -> ()
-  | Some _ ->
-      let cols = Sys.command "exit $(tput cols 2>/dev/null)" in
-      if cols > 1 then Format.set_margin cols
+  | Some _ -> (
+      let ic = Unix.open_process_in "tput cols 2>/dev/null" in
+      let line = In_channel.input_line ic in
+      ignore (Unix.close_process_in ic);
+      match Option.bind line (fun l -> int_of_string_opt (String.trim l)) with
+      | Some cols when cols > 1 -> Format.set_margin cols
+      | _ -> ())
 
 let () =
   set_margin_from_terminal ();

@@ -1,0 +1,472 @@
+=== whl_abd-01-list-traversal
+$ cyclist while abduce -P benchmarks/whl_abd/01-list-traversal.wl -p -t 60
+exit: 0
+0: ls[0](x) |- while x!=nil do ... od (ls L.Unf.) [1 <{(_, _)}/{}>, 2 <{(_, _)}/{}>]
+  1: nil=x * I002[1](x) |- while x!=nil do ... od (While(det)) [3 <{}/{(_, _)}>]
+    3: nil=x * I002[1](x) |-  (Empty)
+  2: nil!=x * I001[1](x) |- while x!=nil do ... od (While(det)) [4 <{}/{(_, _)}>]
+    4: nil!=x * I001[1](x) |- x := x.next; ... (I001 L.Unf.) [5 <{(_, _)}/{}>]
+      5: nil!=x * x->x' * I003[0](x, x') |- x := x.next; ... (Load/Simplify) [6 <{}/{(_, _)}>]
+        6: nil!=w' * w'->x * I003[0](w', x) |- while x!=nil do ... od (I003 L.Unf.) [7 <{(_, _)}/{}>]
+          7: nil!=w' * w'->x * ls[2](x) * I004[1](w', x) |- while x!=nil do ... od (Frame) [8 <{(_, _)}/{}>]
+            8: ls[2](x) |- while x!=nil do ... od (Backl) [0] <pre={(_, _)}>
+
+
+=== whl_abd-02-list-insertion
+$ cyclist while abduce -P benchmarks/whl_abd/02-list-insertion.wl -p -t 60
+exit: 0
+0: nil!=z * z->z' * ls[0](x) |- if x=nil then ... fi; ... (ls L.Unf.) [1 <{(_, _)}/{}>, 2 <{(_, _)}/{}>]
+  1: nil=x * nil!=z * z->z' * I002[1](x) |- if x=nil then ... fi; ... (If(det)) [3 <{}/{(_, _)}>]
+    3: nil=x * nil!=z * z->z' * I002[1](x) |- stop; ... (Stop)
+  2: nil!=z * nil!=x * z->z' * I001[1](x) |- if x=nil then ... fi; ... (If(det)) [4 <{}/{(_, _)}>]
+    4: nil!=z * nil!=x * z->z' * I001[1](x) |- y := x.next; ... (I001 L.Unf.) [5 <{(_, _)}/{}>]
+      5: nil!=z * nil!=x * z!=x * z->z' * x->x' * I003[0](x, x') |- y := x.next; ... (Load/Simplify) [6 <{}/{(_, _)}>]
+        6: nil!=z * nil!=x * z!=x * z->z' * x->y * I003[0](x, y) |- while y!=nil do ... od (I003 L.Unf.) [7 <{(_, _)}/{}>, 8 <{(_, _)}/{}>]
+          7: nil=y * nil!=z * nil!=x * z!=x * z->z' * x->y * I005[1](x, y) |- while y!=nil do ... od (While(det)) [9 <{}/{(_, _)}>]
+            9: nil=y * nil!=z * nil!=x * z!=x * z->z' * x->y * I005[1](x, y) |-  (Empty)
+          8: nil!=z * nil!=y * nil!=x * z!=x * z->z' * x->y * I004[1](x, y) |- while y!=nil do ... od (While(det)) [10 <{}/{(_, _)}>]
+            10: nil!=z * nil!=y * nil!=x * z!=x * z->z' * x->y * I004[1](x, y) |- if * then ... else ... fi; ... (IfElse(nondet)) [11 <{}/{(_, _)}>, 12 <{}/{(_, _)}>]
+              11: nil!=z * nil!=y * nil!=x * z!=x * z->z' * x->y * I004[1](x, y) |- x.next := z; ... (Store) [13 <{}/{(_, _)}>]
+                13: nil!=z * nil!=y * nil!=x * z!=x * z->z' * x->z * I004[1](x, y) |- z.next := y; ... (Store) [14 <{}/{(_, _)}>]
+                  14: nil!=z * nil!=y * nil!=x * z!=x * z->y * x->z * I004[1](x, y) |- stop; ... (Stop)
+              12: nil!=z * nil!=y * nil!=x * z!=x * z->z' * x->y * I004[1](x, y) |- x := y; ... (Assign) [15 <{}/{(_, _)}>]
+                15: y=x * nil!=z * nil!=y * nil!=w' * z!=w' * z->z' * w'->y * I004[1](w', y) |- y := y.next; ... (I004 L.Unf.) [16 <{(_, _)}/{}>]
+                  16: y=x * nil!=z * nil!=y * nil!=w' * z!=y * z!=w' * y!=w' * z->z' * y->x' * w'->y * I028[0](w', y, x') |- y := y.next; ... (Load/Simplify) [17 <{}/{(_, _)}>]
+                    17: nil!=z * nil!=x * nil!=w' * z!=x * z!=w' * x!=w' * z->z' * x->y * w'->x * I028[0](w', x, y) |- while y!=nil do ... od (I028 L.Unf.) [18 <{(_, _)}/{}>]
+                      18: nil!=z * nil!=x * nil!=w' * z!=x * z!=w' * x!=w' * z->z' * x->y * w'->x * I003[2](x, y) * I029[1](w', x, y) |- while y!=nil do ... od (Frame) [19 <{(_, _)}/{}>]
+                        19: nil!=z * nil!=x * z!=x * z->z' * x->y * I003[2](x, y) |- while y!=nil do ... od (Backl) [6] <pre={(_, _)}>
+
+
+=== whl_abd-03-list-copy
+$ cyclist while abduce -P benchmarks/whl_abd/03-list-copy.wl -p -t 60
+exit: 0
+0: ls[0](x) |- if x=nil then ... fi; ... (ls L.Unf.) [1 <{(_, _)}/{}>, 2 <{(_, _)}/{}>]
+  1: nil=x * I002[1](x) |- if x=nil then ... fi; ... (If(det)) [3 <{}/{(_, _)}>]
+    3: nil=x * I002[1](x) |- stop; ... (Stop)
+  2: nil!=x * I001[1](x) |- if x=nil then ... fi; ... (If(det)) [4 <{}/{(_, _)}>]
+    4: nil!=x * I001[1](x) |- y := new(); ... (New) [5 <{}/{(_, _)}>]
+      5: nil!=y * nil!=x * y->x' * I001[1](x) |- x := x.next; ... (I001 L.Unf.) [6 <{(_, _)}/{}>]
+        6: nil!=y * nil!=x * y!=x * y->x' * x->y' * I003[0](x, y') |- x := x.next; ... (Load/Simplify) [7 <{}/{(_, _)}>]
+          7: nil!=y * nil!=w' * y!=w' * y->x' * w'->x * I003[0](w', x) |- while x!=nil do ... od; ... (Gen.While) [8 <{(_, _)}/{}>]
+            8: nil!=y * nil!=w' * y!=w' * y->x' * w'->y' * I003[0](w', x) |- while x!=nil do ... od; ... (I003 L.Unf.) [9 <{(_, _)}/{}>, 10 <{(_, _)}/{}>]
+              9: nil=x * nil!=y * nil!=w' * y!=w' * y->x' * w'->y' * I007[1](w', x) |- while x!=nil do ... od; ... (While(det)) [11 <{}/{(_, _)}>]
+                11: nil=x * nil!=y * nil!=w' * y!=w' * y->x' * w'->y' * I007[1](w', x) |- y.next := nil (Store) [13 <{}/{(_, _)}>]
+                  13: nil=x * nil!=y * nil!=w' * y!=w' * y->nil * w'->y' * I007[1](w', x) |-  (Empty)
+              10: nil!=y * nil!=x * nil!=w' * y!=w' * y->x' * w'->y' * I006[1](w', x) |- while x!=nil do ... od; ... (While(det)) [12 <{}/{(_, _)}>]
+                12: nil!=y * nil!=x * nil!=w' * y!=w' * y->x' * w'->y' * I006[1](w', x) |- z := new(); ... (New) [14 <{}/{(_, _)}>]
+                  14: nil!=z * nil!=y * nil!=x * nil!=w' * z!=y * z!=w' * y!=w' * z->a' * y->x' * w'->y' * I006[1](w', x) |- y.next := z; ... (Store) [15 <{}/{(_, _)}>]
+                    15: nil!=z * nil!=y * nil!=x * nil!=w' * z!=y * z!=w' * y!=w' * z->a' * y->z * w'->y' * I006[1](w', x) |- y := z; ... (Assign) [16 <{}/{(_, _)}>]
+                      16: z=y * nil!=z * nil!=x' * nil!=x * nil!=w' * z!=x' * z!=w' * x'!=w' * z->a' * x'->z * w'->y' * I006[1](w', x) |- x := x.next; ... (I006 L.Unf.) [17 <{(_, _)}/{}>]
+                        17: z=y * nil!=z * nil!=x' * nil!=x * nil!=w' * z!=x' * z!=x * z!=w' * x'!=x * x'!=w' * x!=w' * z->a' * x'->z * x->z' * w'->y' * I019[0](w', x, z') |- x := x.next; ... (Load/Simplify) [18 <{}/{(_, _)}>]
+                          18: z=y * nil!=b' * nil!=z * nil!=x' * nil!=w' * b'!=z * b'!=x' * b'!=w' * z!=x' * z!=w' * x'!=w' * b'->x * z->a' * x'->z * w'->y' * I019[0](w', b', x) |- while x!=nil do ... od; ... (I019 L.Unf.) [19 <{(_, _)}/{}>, 20 <{(_, _)}/{}>]
+                            19: nil=x * z=y * nil!=b' * nil!=z * nil!=x' * nil!=w' * b'!=z * b'!=x' * b'!=w' * z!=x' * z!=w' * x'!=w' * b'->x * z->a' * x'->z * w'->y' * I044[1](w', b', x) |- while x!=nil do ... od; ... (While(det)) [21 <{}/{(_, _)}>]
+                              21: nil=x * z=y * nil!=b' * nil!=z * nil!=x' * nil!=w' * b'!=z * b'!=x' * b'!=w' * z!=x' * z!=w' * x'!=w' * b'->x * z->a' * x'->z * w'->y' * I044[1](w', b', x) |- y.next := nil (Store) [23 <{}/{(_, _)}>]
+                                23: nil=x * z=y * nil!=b' * nil!=z * nil!=x' * nil!=w' * b'!=z * b'!=x' * b'!=w' * z!=x' * z!=w' * x'!=w' * b'->x * z->nil * x'->z * w'->y' * I044[1](w', b', x) |-  (Empty)
+                            20: z=y * nil!=b' * nil!=z * nil!=x' * nil!=x * nil!=w' * b'!=z * b'!=x' * b'!=w' * z!=x' * z!=w' * x'!=w' * b'->x * z->a' * x'->z * w'->y' * I043[1](w', b', x) |- while x!=nil do ... od; ... (While(det)) [22 <{}/{(_, _)}>]
+                              22: z=y * nil!=b' * nil!=z * nil!=x' * nil!=x * nil!=w' * b'!=z * b'!=x' * b'!=w' * z!=x' * z!=w' * x'!=w' * b'->x * z->a' * x'->z * w'->y' * I043[1](w', b', x) |- z := new(); ... (New/Simplify) [24 <{}/{(_, _)}>]
+                                24: nil!=b' * nil!=z * nil!=y * nil!=x' * nil!=x * nil!=w' * b'!=z * b'!=y * b'!=x' * b'!=w' * z!=y * z!=x' * z!=w' * y!=x' * y!=w' * x'!=w' * b'->x * z->c' * y->a' * x'->y * w'->y' * I043[1](w', b', x) |- y.next := z; ... (I043 L.Unf.) [25 <{(_, _)}/{}>]
+                                  25: nil!=b' * nil!=z * nil!=y * nil!=x' * nil!=x * nil!=w' * b'!=z * b'!=y * b'!=x' * b'!=w' * z!=y * z!=x' * z!=w' * y!=x' * y!=w' * x'!=w' * b'->x * z->c' * y->a' * x'->y * w'->y' * I006[2](w', x) * I094[0](w', b', x) |- y.next := z; ... (Frame) [26 <{(_, _)}/{}>]
+                                    26: nil!=z * nil!=y * nil!=x * nil!=w' * z!=y * z!=w' * y!=w' * z->c' * y->a' * w'->y' * I006[2](w', x) |- y.next := z; ... (Subst ) [27 <{(_, _)}/{}>]
+                                      27: nil!=z * nil!=y * nil!=x * nil!=w' * z!=y * z!=w' * y!=w' * z->a' * y->x' * w'->y' * I006[2](w', x) |- y.next := z; ... (Backl) [14] <pre={(_, _)}>
+
+
+=== whl_abd-04-list-append
+$ cyclist while abduce -P benchmarks/whl_abd/04-list-append.wl -p -t 60
+exit: 0
+0: ls[1](y) * ls[0](x) |- if x=nil then ... fi; ... (ls L.Unf.) [1 <{(_, _)}/{}>, 2 <{(_, _)}/{}>]
+  1: nil=x * I002[2](x) * ls[1](y) |- if x=nil then ... fi; ... (If(det)) [3 <{}/{(_, _)}>]
+    3: nil=x * I002[2](x) * ls[1](y) |- x := y; ... (Assign/Simplify) [5 <{}/{(_, _)}>]
+      5: y=x * I002[2](nil) * ls[1](y) |- stop; ... (Stop)
+  2: nil!=x * I001[2](x) * ls[1](y) |- if x=nil then ... fi; ... (If(det)) [4 <{}/{(_, _)}>]
+    4: nil!=x * I001[2](x) * ls[1](y) |- z := x.next; ... (I001 L.Unf.) [6 <{(_, _)}/{}>]
+      6: nil!=x * x->x' * ls[1](y) * I003[0](x, x') |- z := x.next; ... (Load/Simplify) [7 <{}/{(_, _)}>]
+        7: nil!=x * x->z * ls[1](y) * I003[0](x, z) |- while z!=nil do ... od; ... (I003 L.Unf.) [8 <{(_, _)}/{}>, 9 <{(_, _)}/{}>]
+          8: nil=z * nil!=x * x->z * I005[2](x, z) * ls[1](y) |- while z!=nil do ... od; ... (While(det)) [10 <{}/{(_, _)}>]
+            10: nil=z * nil!=x * x->z * I005[2](x, z) * ls[1](y) |- x.next := y (Store) [12 <{}/{(_, _)}>]
+              12: nil=z * nil!=x * x->y * I005[2](x, z) * ls[1](y) |-  (Empty)
+          9: nil!=z * nil!=x * x->z * I004[2](x, z) * ls[1](y) |- while z!=nil do ... od; ... (While(det)) [11 <{}/{(_, _)}>]
+            11: nil!=z * nil!=x * x->z * I004[2](x, z) * ls[1](y) |- x := z; ... (Assign) [13 <{}/{(_, _)}>]
+              13: z=x * nil!=z * nil!=w' * w'->z * I004[2](w', z) * ls[1](y) |- z := x.next; ... (I004 L.Unf.) [14 <{(_, _)}/{}>]
+                14: z=x * nil!=z * nil!=w' * z!=w' * z->x' * w'->z * ls[1](y) * I027[0](w', z, x') |- z := x.next; ... (Load/Simplify) [15 <{}/{(_, _)}>]
+                  15: nil!=x * nil!=w' * x!=w' * x->z * w'->x * ls[1](y) * I027[0](w', x, z) |- while z!=nil do ... od; ... (I027 L.Unf.) [16 <{(_, _)}/{}>]
+                    16: nil!=x * nil!=w' * x!=w' * x->z * w'->x * I003[3](x, z) * I028[2](w', x, z) * ls[1](y) |- while z!=nil do ... od; ... (Frame) [17 <{(_, _)}/{}>]
+                      17: nil!=x * x->z * I003[3](x, z) * ls[1](y) |- while z!=nil do ... od; ... (Backl) [7] <pre={(_, _)}>
+
+
+=== whl_abd-05-delete-last-from-list
+$ cyclist while abduce -P benchmarks/whl_abd/05-delete-last-from-list.wl -p -t 60
+exit: 0
+0: ls[0](x) |- if x=nil then ... fi; ... (ls L.Unf.) [1 <{(_, _)}/{}>, 2 <{(_, _)}/{}>]
+  1: nil=x * I002[1](x) |- if x=nil then ... fi; ... (If(det)) [3 <{}/{(_, _)}>]
+    3: nil=x * I002[1](x) |- stop; ... (Stop)
+  2: nil!=x * I001[1](x) |- if x=nil then ... fi; ... (If(det)) [4 <{}/{(_, _)}>]
+    4: nil!=x * I001[1](x) |- y := x.next; ... (I001 L.Unf.) [5 <{(_, _)}/{}>]
+      5: nil!=x * x->x' * I003[0](x, x') |- y := x.next; ... (Load/Simplify) [6 <{}/{(_, _)}>]
+        6: nil!=x * x->y * I003[0](x, y) |- if y=nil then ... fi; ... (I003 L.Unf.) [7 <{(_, _)}/{}>, 8 <{(_, _)}/{}>]
+          7: nil=y * nil!=x * x->y * I005[1](x, y) |- if y=nil then ... fi; ... (If(det)) [9 <{}/{(_, _)}>]
+            9: nil=y * nil!=x * x->y * I005[1](x, y) |- free(x); ... (Free) [11 <{}/{(_, _)}>]
+              11: nil=y * nil!=x * I005[1](x, y) |- stop; ... (Stop)
+          8: nil!=y * nil!=x * x->y * I004[1](x, y) |- if y=nil then ... fi; ... (If(det)) [10 <{}/{(_, _)}>]
+            10: nil!=y * nil!=x * x->y * I004[1](x, y) |- z := y.next; ... (I004 L.Unf.) [12 <{(_, _)}/{}>]
+              12: nil!=y * nil!=x * y!=x * y->x' * x->y * I006[0](x, y, x') |- z := y.next; ... (Load/Simplify) [13 <{}/{(_, _)}>]
+                13: nil!=y * nil!=x * y!=x * y->z * x->y * I006[0](x, y, z) |- while z!=nil do ... od; ... (I006 L.Unf.) [14 <{(_, _)}/{}>, 15 <{(_, _)}/{}>]
+                  14: nil=z * nil!=y * nil!=x * y!=x * y->z * x->y * I008[1](x, y, z) |- while z!=nil do ... od; ... (While(det)) [16 <{}/{(_, _)}>]
+                    16: nil=z * nil!=y * nil!=x * y!=x * y->z * x->y * I008[1](x, y, z) |- free(y); ... (Free) [18 <{}/{(_, _)}>]
+                      18: nil=z * nil!=y * nil!=x * y!=x * x->y * I008[1](x, y, z) |- x.next := nil (Store) [19 <{}/{(_, _)}>]
+                        19: nil=z * nil!=y * nil!=x * y!=x * x->nil * I008[1](x, y, z) |-  (Empty)
+                  15: nil!=z * nil!=y * nil!=x * y!=x * y->z * x->y * I007[1](x, y, z) |- while z!=nil do ... od; ... (While(det)) [17 <{}/{(_, _)}>]
+                    17: nil!=z * nil!=y * nil!=x * y!=x * y->z * x->y * I007[1](x, y, z) |- x := y; ... (Assign) [20 <{}/{(_, _)}>]
+                      20: y=x * nil!=z * nil!=y * nil!=w' * y!=w' * y->z * w'->y * I007[1](w', y, z) |- y := z; ... (Assign/Simplify) [21 <{}/{(_, _)}>]
+                        21: z=y * nil!=z * nil!=x * nil!=w' * x!=w' * x->z * w'->x * I007[1](w', x, z) |- z := z.next; ... (I007 L.Unf.) [22 <{(_, _)}/{}>]
+                          22: z=y * nil!=z * nil!=x * nil!=w' * z!=x * z!=w' * x!=w' * z->x' * x->z * w'->x * I031[0](w', x, z, x') |- z := z.next; ... (Load/Simplify) [23 <{}/{(_, _)}>]
+                            23: nil!=y * nil!=x * nil!=w' * y!=x * y!=w' * x!=w' * y->z * x->y * w'->x * I031[0](w', x, y, z) |- while z!=nil do ... od; ... (I031 L.Unf.) [24 <{(_, _)}/{}>]
+                              24: nil!=y * nil!=x * nil!=w' * y!=x * y!=w' * x!=w' * y->z * x->y * w'->x * I006[2](x, y, z) * I032[1](w', x, y, z) |- while z!=nil do ... od; ... (Frame) [25 <{(_, _)}/{}>]
+                                25: nil!=y * nil!=x * y!=x * y->z * x->y * I006[2](x, y, z) |- while z!=nil do ... od; ... (Backl) [13] <pre={(_, _)}>
+
+
+=== whl_abd-06-filter-list
+$ cyclist while abduce -P benchmarks/whl_abd/06-filter-list.wl -p -t 60
+exit: 0
+0: ls[0](x) |- if x=nil then ... fi; ... (ls L.Unf.) [1 <{(_, _)}/{}>, 2 <{(_, _)}/{}>]
+  1: nil=x * I002[1](x) |- if x=nil then ... fi; ... (If(det)) [3 <{}/{(_, _)}>]
+    3: nil=x * I002[1](x) |- stop; ... (Stop)
+  2: nil!=x * I001[1](x) |- if x=nil then ... fi; ... (If(det)) [4 <{}/{(_, _)}>]
+    4: nil!=x * I001[1](x) |- y := x.next; ... (I001 L.Unf.) [5 <{(_, _)}/{}>]
+      5: nil!=x * x->x' * I003[0](x, x') |- y := x.next; ... (Load/Simplify) [6 <{}/{(_, _)}>]
+        6: nil!=x * x->y * I003[0](x, y) |- if y=nil then ... fi; ... (I003 L.Unf.) [7 <{(_, _)}/{}>, 8 <{(_, _)}/{}>]
+          7: nil=y * nil!=x * x->y * I005[1](x, y) |- if y=nil then ... fi; ... (If(det)) [9 <{}/{(_, _)}>]
+            9: nil=y * nil!=x * x->y * I005[1](x, y) |- if * then ... fi; ... (If(nondet)) [11 <{}/{(_, _)}>, 12 <{}/{(_, _)}>]
+              11: nil=y * nil!=x * x->y * I005[1](x, y) |- free(x); ... (Free) [13 <{}/{(_, _)}>]
+                13: nil=y * nil!=x * I005[1](x, y) |- stop; ... (Stop)
+              12: nil=y * nil!=x * x->y * I005[1](x, y) |- stop; ... (Stop)
+          8: nil!=y * nil!=x * x->y * I004[1](x, y) |- if y=nil then ... fi; ... (If(det)) [10 <{}/{(_, _)}>]
+            10: nil!=y * nil!=x * x->y * I004[1](x, y) |- z := y.next; ... (I004 L.Unf.) [14 <{(_, _)}/{}>]
+              14: nil!=y * nil!=x * y!=x * y->x' * x->y * I006[0](x, y, x') |- z := y.next; ... (Load/Simplify) [15 <{}/{(_, _)}>]
+                15: nil!=y * nil!=x * y!=x * y->z * x->y * I006[0](x, y, z) |- while z!=nil do ... od (I006 L.Unf.) [16 <{(_, _)}/{}>, 17 <{(_, _)}/{}>]
+                  16: nil=z * nil!=y * nil!=x * y!=x * y->z * x->y * I008[1](x, y, z) |- while z!=nil do ... od (While(det)) [18 <{}/{(_, _)}>]
+                    18: nil=z * nil!=y * nil!=x * y!=x * y->z * x->y * I008[1](x, y, z) |-  (Empty)
+                  17: nil!=z * nil!=y * nil!=x * y!=x * y->z * x->y * I007[1](x, y, z) |- while z!=nil do ... od (While(det)) [19 <{}/{(_, _)}>]
+                    19: nil!=z * nil!=y * nil!=x * y!=x * y->z * x->y * I007[1](x, y, z) |- if * then ... else ... fi; ... (IfElse(nondet)) [20 <{}/{(_, _)}>, 21 <{}/{(_, _)}>]
+                      20: nil!=z * nil!=y * nil!=x * y!=x * y->z * x->y * I007[1](x, y, z) |- x := y; ... (Assign) [22 <{}/{(_, _)}>]
+                        22: y=x * nil!=z * nil!=y * nil!=w' * y!=w' * y->z * w'->y * I007[1](w', y, z) |- y := z; ... (Assign/Simplify) [23 <{}/{(_, _)}>]
+                          23: z=y * nil!=z * nil!=x * nil!=w' * x!=w' * x->z * w'->x * I007[1](w', x, z) |- z := z.next; ... (I007 L.Unf.) [24 <{(_, _)}/{}>]
+                            24: z=y * nil!=z * nil!=x * nil!=w' * z!=x * z!=w' * x!=w' * z->x' * x->z * w'->x * I023[0](w', x, z, x') |- z := z.next; ... (Load/Simplify) [25 <{}/{(_, _)}>]
+                              25: nil!=y * nil!=x * nil!=w' * y!=x * y!=w' * x!=w' * y->z * x->y * w'->x * I023[0](w', x, y, z) |- while z!=nil do ... od (I023 L.Unf.) [26 <{(_, _)}/{}>]
+                                26: nil!=y * nil!=x * nil!=w' * y!=x * y!=w' * x!=w' * y->z * x->y * w'->x * I006[2](x, y, z) * I024[1](w', x, y, z) |- while z!=nil do ... od (Frame) [27 <{(_, _)}/{}>]
+                                  27: nil!=y * nil!=x * y!=x * y->z * x->y * I006[2](x, y, z) |- while z!=nil do ... od (Backl) [15] <pre={(_, _)}>
+                      21: nil!=z * nil!=y * nil!=x * y!=x * y->z * x->y * I007[1](x, y, z) |- free(y); ... (Free) [28 <{}/{(_, _)}>]
+                        28: nil!=z * nil!=y * nil!=x * y!=x * x->y * I007[1](x, y, z) |- x.next := z; ... (Store) [29 <{}/{(_, _)}>]
+                          29: nil!=z * nil!=y * nil!=x * y!=x * x->z * I007[1](x, y, z) |- y := z; ... (Assign) [30 <{}/{(_, _)}>]
+                            30: z=y * nil!=z * nil!=x * nil!=w' * x!=w' * x->z * I007[1](x, w', z) |- z := z.next; ... (I007 L.Unf.) [31 <{(_, _)}/{}>]
+                              31: z=y * nil!=z * nil!=x * nil!=w' * z!=x * x!=w' * z->x' * x->z * I023[0](x, w', z, x') |- z := z.next; ... (Load/Simplify) [32 <{}/{(_, _)}>]
+                                32: nil!=y * nil!=x * nil!=w' * y!=x * x!=w' * y->z * x->y * I023[0](x, w', y, z) |- while z!=nil do ... od (I023 L.Unf.) [33 <{(_, _)}/{}>]
+                                  33: nil!=y * nil!=x * nil!=w' * y!=x * x!=w' * y->z * x->y * I006[2](w', y, z) * I024[1](x, w', y, z) |- while z!=nil do ... od (I024 L.Unf.) [34 <{(_, _)}/{}>]
+                                    34: nil!=y * nil!=x * nil!=w' * y!=x * x!=w' * y->z * x->y * I006[3](x, y, z) * I006[2](w', y, z) * I043[0](x, w', y, z) |- while z!=nil do ... od (Frame) [35 <{(_, _)}/{}>]
+                                      35: nil!=y * nil!=x * y!=x * y->z * x->y * I006[3](x, y, z) |- while z!=nil do ... od (Backl) [15] <pre={(_, _)}>
+
+
+=== whl_abd-07-dispose-list
+$ cyclist while abduce -P benchmarks/whl_abd/07-dispose-list.wl -p -t 60
+exit: 0
+0: ls[0](x) |- while x!=nil do ... od (ls L.Unf.) [1 <{(_, _)}/{}>, 2 <{(_, _)}/{}>]
+  1: nil=x * I002[1](x) |- while x!=nil do ... od (While(det)) [3 <{}/{(_, _)}>]
+    3: nil=x * I002[1](x) |-  (Empty)
+  2: nil!=x * I001[1](x) |- while x!=nil do ... od (While(det)) [4 <{}/{(_, _)}>]
+    4: nil!=x * I001[1](x) |- y := x; ... (Assign) [5 <{}/{(_, _)}>]
+      5: y=x * nil!=x * I001[1](x) |- x := x.next; ... (I001 L.Unf.) [6 <{(_, _)}/{}>]
+        6: y=x * nil!=x * x->x' * I003[0](x, x') |- x := x.next; ... (Load/Simplify) [7 <{}/{(_, _)}>]
+          7: nil!=y * y->x * I003[0](y, x) |- free(y); ... (Free) [8 <{}/{(_, _)}>]
+            8: nil!=y * I003[0](y, x) |- while x!=nil do ... od (I003 L.Unf.) [9 <{(_, _)}/{}>]
+              9: nil!=y * ls[2](x) * I004[1](y, x) |- while x!=nil do ... od (Frame) [10 <{(_, _)}/{}>]
+                10: ls[2](x) |- while x!=nil do ... od (Backl) [0] <pre={(_, _)}>
+
+
+=== whl_abd-08-reverse-list
+$ cyclist while abduce -P benchmarks/whl_abd/08-reverse-list.wl -p -t 60
+exit: 0
+0: ls[0](x) |- y := nil; ... (Assign) [1 <{}/{(_, _)}>]
+  1: nil=y * ls[0](x) |- while x!=nil do ... od (Gen.While) [2 <{(_, _)}/{}>]
+    2: ls[0](x) |- while x!=nil do ... od (ls L.Unf.) [3 <{(_, _)}/{}>, 4 <{(_, _)}/{}>]
+      3: nil=x * I004[1](x) |- while x!=nil do ... od (While(det)) [5 <{}/{(_, _)}>]
+        5: nil=x * I004[1](x) |-  (Empty)
+      4: nil!=x * I003[1](x) |- while x!=nil do ... od (While(det)) [6 <{}/{(_, _)}>]
+        6: nil!=x * I003[1](x) |- z := x; ... (Assign) [7 <{}/{(_, _)}>]
+          7: z=x * nil!=x * I003[1](x) |- x := x.next; ... (I003 L.Unf.) [8 <{(_, _)}/{}>]
+            8: z=x * nil!=x * x->x' * I008[0](x, x') |- x := x.next; ... (Load/Simplify) [9 <{}/{(_, _)}>]
+              9: nil!=z * z->x * I008[0](z, x) |- z.next := y; ... (Store) [10 <{}/{(_, _)}>]
+                10: nil!=z * z->y * I008[0](z, x) |- y := z; ... (Assign) [11 <{}/{(_, _)}>]
+                  11: z=y * nil!=z * z->w' * I008[0](z, x) |- while x!=nil do ... od (I008 L.Unf.) [12 <{(_, _)}/{}>]
+                    12: z=y * nil!=z * z->w' * ls[2](x) * I027[1](z, x) |- while x!=nil do ... od (Frame) [13 <{(_, _)}/{}>]
+                      13: ls[2](x) |- while x!=nil do ... od (Backl) [2] <pre={(_, _)}>
+
+
+=== whl_abd-09-cyclic-list
+$ cyclist while abduce -P benchmarks/whl_abd/09-cyclic-list.wl -p -t 60
+exit: 0
+0: cls[0](x) |- y := x; ... (Assign) [1 <{}/{(_, _)}>]
+  1: y=x * cls[0](x) |- x := x.next; ... (cls L.Unf.) [2 <{(_, _)}/{}>]
+    2: y=x * nil!=x * x->x' * I001[1](x, x') |- x := x.next; ... (Load/Simplify) [3 <{}/{(_, _)}>]
+      3: nil!=y * y->x * I001[1](y, x) |- while x!=y do ... od (Gen.While) [4 <{(_, _)}/{}>]
+        4: nil!=y * y->w' * I001[1](y, x) |- while x!=y do ... od (I001 L.Unf.) [5 <{(_, _)}/{}>, 6 <{(_, _)}/{}>]
+          5: y=x * nil!=y * y->w' * I005[0](y, x) |- while x!=y do ... od (While(det)) [7 <{}/{(_, _)}>]
+            7: y=x * nil!=y * y->w' * I005[0](y, x) |-  (Empty)
+          6: nil!=y * y!=x * y->w' * I004[0](y, x) |- while x!=y do ... od (While(det)) [8 <{}/{(_, _)}>]
+            8: nil!=y * y!=x * y->w' * I004[0](y, x) |- x := x.next; ... (I004 L.Unf.) [9 <{(_, _)}/{}>]
+              9: nil!=y * nil!=x * y!=x * y->w' * x->x' * I018[1](y, x, x') |- x := x.next; ... (Load/Simplify) [10 <{}/{(_, _)}>]
+                10: nil!=y' * nil!=y * y'!=y * y'->x * y->w' * I018[1](y, y', x) |- while x!=y do ... od (I018 L.Unf.) [11 <{(_, _)}/{}>]
+                  11: nil!=y' * nil!=y * y'!=y * y'->x * y->w' * I001[2](y, x) * I019[0](y, y', x) |- while x!=y do ... od (Frame) [12 <{(_, _)}/{}>]
+                    12: nil!=y * y->w' * I001[2](y, x) |- while x!=y do ... od (Backl) [4] <pre={(_, _)}>
+
+
+=== whl_abd-10-btree-traversal
+$ cyclist while abduce -P benchmarks/whl_abd/10-btree-traversal.wl -p -t 60
+exit: 0
+0: bt[0](x) |- while x!=nil do ... od (bt L.Unf.) [1 <{(_, _)}/{}>, 2 <{(_, _)}/{}>]
+  1: nil=x * I002[1](x) |- while x!=nil do ... od (While(det)) [3 <{}/{(_, _)}>]
+    3: nil=x * I002[1](x) |-  (Empty)
+  2: nil!=x * I001[1](x) |- while x!=nil do ... od (While(det)) [4 <{}/{(_, _)}>]
+    4: nil!=x * I001[1](x) |- if * then ... else ... fi; ... (IfElse(nondet)) [5 <{}/{(_, _)}>, 6 <{}/{(_, _)}>]
+      5: nil!=x * I001[1](x) |- x := x.left; ... (I001 L.Unf.) [7 <{(_, _)}/{}>]
+        7: nil!=x * x->z', y' * I003[0](x, z', y') |- x := x.left; ... (Load/Simplify) [8 <{}/{(_, _)}>]
+          8: nil!=w' * w'->x, y' * I003[0](w', x, y') |- while x!=nil do ... od (I003 L.Unf.) [9 <{(_, _)}/{}>]
+            9: nil!=w' * w'->x, y' * bt[2](x) * I004[1](w', x, y') |- while x!=nil do ... od (Frame) [10 <{(_, _)}/{}>]
+              10: bt[2](x) |- while x!=nil do ... od (Backl) [0] <pre={(_, _)}>
+      6: nil!=x * I001[1](x) |- x := x.right; ... (I001 L.Unf.) [11 <{(_, _)}/{}>]
+        11: nil!=x * x->z', y' * I003[0](x, z', y') |- x := x.right; ... (Load/Simplify) [12 <{}/{(_, _)}>]
+          12: nil!=w' * w'->z', x * I003[0](w', z', x) |- while x!=nil do ... od (I003 L.Unf.) [13 <{(_, _)}/{}>]
+            13: nil!=w' * w'->z', x * bt[2](z') * I004[1](w', z', x) |- while x!=nil do ... od (I004 L.Unf.) [14 <{(_, _)}/{}>]
+              14: nil!=w' * w'->z', x * bt[3](x) * bt[2](z') * I011[0](w', z', x) |- while x!=nil do ... od (Frame) [15 <{(_, _)}/{}>]
+                15: bt[3](x) |- while x!=nil do ... od (Backl) [0] <pre={(_, _)}>
+
+
+=== whl_abd-11-btree-insertion
+$ cyclist while abduce -P benchmarks/whl_abd/11-btree-insertion.wl -p -t 60
+exit: 1
+NOT proved: bt[0](x) |- while x!=nil do ... od
+
+=== whl_abd-12-list-of-lists
+$ cyclist while abduce -P benchmarks/whl_abd/12-list-of-lists.wl -p -t 60
+exit: 0
+0: lsls[0](x) |- while x!=nil do ... od (lsls L.Unf.) [1 <{(_, _)}/{}>, 2 <{(_, _)}/{}>]
+  1: nil=x * I002[1](x) |- while x!=nil do ... od (While(det)) [3 <{}/{(_, _)}>]
+    3: nil=x * I002[1](x) |-  (Empty)
+  2: nil!=x * I001[1](x) |- while x!=nil do ... od (While(det)) [4 <{}/{(_, _)}>]
+    4: nil!=x * I001[1](x) |- y := x.down; ... (I001 L.Unf.) [5 <{(_, _)}/{}>]
+      5: nil!=x * x->z', y' * I003[0](x, z', y') |- y := x.down; ... (Load/Simplify) [6 <{}/{(_, _)}>]
+        6: nil!=x * x->z', y * I003[0](x, z', y) |- while y!=nil do ... od; ... (Gen.While) [7 <{(_, _)}/{}>]
+          7: nil!=x * x->z', w' * I003[0](x, z', y) |- while y!=nil do ... od; ... (I003 L.Unf.) [8 <{(_, _)}/{}>, 9 <{(_, _)}/{}>]
+            8: nil=y * nil!=x * x->z', w' * I007[1](x, z', y) |- while y!=nil do ... od; ... (While(det)) [10 <{}/{(_, _)}>]
+              10: nil=y * nil!=x * x->z', w' * I007[1](x, z', y) |- x := x.next; ... (Load/Simplify) [12 <{}/{(_, _)}>]
+                12: nil=y * nil!=x' * x'->x, w' * I007[1](x', x, y) |- while x!=nil do ... od (I007 L.Unf.) [13 <{(_, _)}/{}>]
+                  13: nil=y * nil!=x' * x'->x, w' * lsls[2](x) * I019[0](x', x, y) |- while x!=nil do ... od (Frame) [14 <{(_, _)}/{}>]
+                    14: lsls[2](x) |- while x!=nil do ... od (Backl) [0] <pre={(_, _)}>
+            9: nil!=y * nil!=x * x->z', w' * I006[1](x, z', y) |- while y!=nil do ... od; ... (While(det)) [11 <{}/{(_, _)}>]
+              11: nil!=y * nil!=x * x->z', w' * I006[1](x, z', y) |- y := y.down; ... (I006 L.Unf.) [15 <{(_, _)}/{}>]
+                15: nil!=y * nil!=x * y!=x * y->a', y' * x->z', w' * I040[0](x, z', y, a', y') |- y := y.down; ... (Load/Simplify) [16 <{}/{(_, _)}>]
+                  16: nil!=x' * nil!=x * x'!=x * x'->a', y * x->z', w' * I040[0](x, z', x', a', y) |- while y!=nil do ... od; ... (I040 L.Unf.) [17 <{(_, _)}/{}>]
+                    17: nil!=x' * nil!=x * x'!=x * x'->a', y * x->z', w' * I003[2](x, z', y) * I041[1](x, z', x', a', y) |- while y!=nil do ... od; ... (Frame) [18 <{(_, _)}/{}>]
+                      18: nil!=x * x->z', w' * I003[2](x, z', y) |- while y!=nil do ... od; ... (Backl) [7] <pre={(_, _)}>
+
+
+=== whl_abd-13-even-ls
+$ cyclist while abduce -P benchmarks/whl_abd/13-even-ls.wl -p -t 60
+exit: 0
+0: ls[0](x) |- while x!=nil do ... od (ls L.Unf.) [1 <{(_, _)}/{}>, 2 <{(_, _)}/{}>]
+  1: nil=x * I002[1](x) |- while x!=nil do ... od (While(det)) [3 <{}/{(_, _)}>]
+    3: nil=x * I002[1](x) |-  (Empty)
+  2: nil!=x * I001[1](x) |- while x!=nil do ... od (While(det)) [4 <{}/{(_, _)}>]
+    4: nil!=x * I001[1](x) |- x := x.next; ... (I001 L.Unf.) [5 <{(_, _)}/{}>]
+      5: nil!=x * x->x' * I003[0](x, x') |- x := x.next; ... (Load/Simplify) [6 <{}/{(_, _)}>]
+        6: nil!=w' * w'->x * I003[0](w', x) |- x := x.next; ... (I003 L.Unf.) [7 <{(_, _)}/{}>]
+          7: nil!=x * nil!=w' * x!=w' * x->x' * w'->x * I004[1](w', x, x') |- x := x.next; ... (Load/Simplify) [8 <{}/{(_, _)}>]
+            8: nil!=y' * nil!=w' * y'!=w' * y'->x * w'->y' * I004[1](w', y', x) |- while x!=nil do ... od (I004 L.Unf.) [9 <{(_, _)}/{}>]
+              9: nil!=y' * nil!=w' * y'!=w' * y'->x * w'->y' * ls[2](x) * I005[0](w', y', x) |- while x!=nil do ... od (Frame) [10 <{(_, _)}/{}>]
+                10: ls[2](x) |- while x!=nil do ... od (Backl) [0] <pre={(_, _)}>
+
+
+=== whl_abd-14-odd-ls
+$ cyclist while abduce -P benchmarks/whl_abd/14-odd-ls.wl -p -t 60
+exit: 0
+0: ls[0](x) |- x := x.next; ... (ls L.Unf.) [1 <{(_, _)}/{}>]
+  1: nil!=x * x->x' * I001[1](x, x') |- x := x.next; ... (Load/Simplify) [2 <{}/{(_, _)}>]
+    2: nil!=w' * w'->x * I001[1](w', x) |- while x!=nil do ... od (I001 L.Unf.) [3 <{(_, _)}/{}>, 4 <{(_, _)}/{}>]
+      3: nil=x * nil!=w' * w'->x * I003[0](w', x) |- while x!=nil do ... od (While(det)) [5 <{}/{(_, _)}>]
+        5: nil=x * nil!=w' * w'->x * I003[0](w', x) |-  (Empty)
+      4: nil!=x * nil!=w' * w'->x * I002[0](w', x) |- while x!=nil do ... od (While(det)) [6 <{}/{(_, _)}>]
+        6: nil!=x * nil!=w' * w'->x * I002[0](w', x) |- x := x.next; ... (I002 L.Unf.) [7 <{(_, _)}/{}>]
+          7: nil!=x * nil!=w' * x!=w' * x->x' * w'->x * I006[1](w', x, x') |- x := x.next; ... (Load/Simplify) [8 <{}/{(_, _)}>]
+            8: nil!=y' * nil!=w' * y'!=w' * y'->x * w'->y' * I006[1](w', y', x) |- x := x.next; ... (I006 L.Unf.) [9 <{(_, _)}/{}>]
+              9: nil!=y' * nil!=w' * y'!=w' * y'->x * w'->y' * ls[2](x) * I007[0](w', y', x) |- x := x.next; ... (Frame) [10 <{(_, _)}/{}>]
+                10: ls[2](x) |- x := x.next; ... (Backl) [0] <pre={(_, _)}>
+
+
+=== whl_abd-15-ttree-traversal
+$ cyclist while abduce -P benchmarks/whl_abd/15-ttree-traversal.wl -p -t 60
+exit: 0
+0: tt[0](x) |- while x!=nil do ... od (tt L.Unf.) [1 <{(_, _)}/{}>, 2 <{(_, _)}/{}>]
+  1: nil=x * I002[1](x) |- while x!=nil do ... od (While(det)) [3 <{}/{(_, _)}>]
+    3: nil=x * I002[1](x) |-  (Empty)
+  2: nil!=x * I001[1](x) |- while x!=nil do ... od (While(det)) [4 <{}/{(_, _)}>]
+    4: nil!=x * I001[1](x) |- if * then ... else ... fi; ... (IfElse(nondet)) [5 <{}/{(_, _)}>, 6 <{}/{(_, _)}>]
+      5: nil!=x * I001[1](x) |- if * then ... else ... fi; ... (IfElse(nondet)) [7 <{}/{(_, _)}>, 8 <{}/{(_, _)}>]
+        7: nil!=x * I001[1](x) |- x := x.a; ... (I001 L.Unf.) [9 <{(_, _)}/{}>]
+          9: nil!=x * x->b', a', z' * I003[0](x, b', a', z') |- x := x.a; ... (Load/Simplify) [10 <{}/{(_, _)}>]
+            10: nil!=w' * w'->x, a', z' * I003[0](w', x, a', z') |- while x!=nil do ... od (I003 L.Unf.) [11 <{(_, _)}/{}>]
+              11: nil!=w' * w'->x, a', z' * tt[2](x) * I004[1](w', x, a', z') |- while x!=nil do ... od (Frame) [12 <{(_, _)}/{}>]
+                12: tt[2](x) |- while x!=nil do ... od (Backl) [0] <pre={(_, _)}>
+        8: nil!=x * I001[1](x) |- x := x.b; ... (I001 L.Unf.) [13 <{(_, _)}/{}>]
+          13: nil!=x * x->b', a', z' * I003[0](x, b', a', z') |- x := x.b; ... (Load/Simplify) [14 <{}/{(_, _)}>]
+            14: nil!=w' * w'->b', x, z' * I003[0](w', b', x, z') |- while x!=nil do ... od (I003 L.Unf.) [15 <{(_, _)}/{}>]
+              15: nil!=w' * w'->b', x, z' * tt[2](b') * I004[1](w', b', x, z') |- while x!=nil do ... od (I004 L.Unf.) [16 <{(_, _)}/{}>]
+                16: nil!=w' * w'->b', x, z' * tt[3](x) * tt[2](b') * I011[0](w', b', x, z') |- while x!=nil do ... od (Frame) [17 <{(_, _)}/{}>]
+                  17: tt[3](x) |- while x!=nil do ... od (Backl) [0] <pre={(_, _)}>
+      6: nil!=x * I001[1](x) |- x := x.c; ... (I001 L.Unf.) [18 <{(_, _)}/{}>]
+        18: nil!=x * x->b', a', z' * I003[0](x, b', a', z') |- x := x.c; ... (Load/Simplify) [19 <{}/{(_, _)}>]
+          19: nil!=w' * w'->b', a', x * I003[0](w', b', a', x) |- while x!=nil do ... od (I003 L.Unf.) [20 <{(_, _)}/{}>]
+            20: nil!=w' * w'->b', a', x * tt[2](b') * I004[1](w', b', a', x) |- while x!=nil do ... od (I004 L.Unf.) [21 <{(_, _)}/{}>]
+              21: nil!=w' * w'->b', a', x * tt[3](a') * tt[2](b') * I011[0](w', b', a', x) |- while x!=nil do ... od (I011 L.Unf.) [22 <{(_, _)}/{}>]
+                22: nil!=w' * w'->b', a', x * tt[4](x) * tt[3](a') * tt[2](b') * I052[1](w', b', a', x) |- while x!=nil do ... od (Frame) [23 <{(_, _)}/{}>]
+                  23: tt[4](x) |- while x!=nil do ... od (Backl) [0] <pre={(_, _)}>
+
+
+=== whl_abd-16-conditional-diverge
+$ cyclist while abduce -P benchmarks/whl_abd/16-conditional-diverge.wl -p -t 60
+exit: 0
+0: ls[0](x) |- while x!=nil do ... od (ls L.Unf.) [1 <{(_, _)}/{}>, 2 <{(_, _)}/{}>]
+  1: nil=x * I002[1](x) |- while x!=nil do ... od (While(det)) [3 <{}/{(_, _)}>]
+    3: nil=x * I002[1](x) |-  (Empty)
+  2: nil!=x * I001[1](x) |- while x!=nil do ... od (While(det)) [4 <{}/{(_, _)}>]
+    4: nil!=x * I001[1](x) |- skip; ... (Skip) [5 <{}/{(_, _)}>]
+      5: nil!=x * I001[1](x) |- while x!=nil do ... od (Backl) [2] <pre={(_, _)}>
+
+
+=== whl_abd-17-list-of-trees
+$ cyclist while abduce -P benchmarks/whl_abd/17-list-of-trees.wl -p -t 60
+exit: 0
+0: lsls[0](x) |- while x!=nil do ... od (lsls L.Unf.) [1 <{(_, _)}/{}>, 2 <{(_, _)}/{}>]
+  1: nil=x * I002[1](x) |- while x!=nil do ... od (While(det)) [3 <{}/{(_, _)}>]
+    3: nil=x * I002[1](x) |-  (Empty)
+  2: nil!=x * I001[1](x) |- while x!=nil do ... od (While(det)) [4 <{}/{(_, _)}>]
+    4: nil!=x * I001[1](x) |- y := x.left; ... (I001 L.Unf.) [5 <{(_, _)}/{}>]
+      5: nil!=x * x->b', a', z' * I003[0](x, b', a', z') |- y := x.left; ... (Load/Simplify) [6 <{}/{(_, _)}>]
+        6: nil!=x * x->y, a', z' * I003[0](x, y, a', z') |- while y!=nil do ... od; ... (Gen.While) [7 <{(_, _)}/{}>]
+          7: nil!=x * x->w', a', z' * I003[0](x, y, a', z') |- while y!=nil do ... od; ... (I003 L.Unf.) [8 <{(_, _)}/{}>, 9 <{(_, _)}/{}>]
+            8: nil=y * nil!=x * x->w', a', z' * I007[1](x, y, a', z') |- while y!=nil do ... od; ... (While(det)) [10 <{}/{(_, _)}>]
+              10: nil=y * nil!=x * x->w', a', z' * I007[1](x, y, a', z') |- x := x.next; ... (Load/Simplify) [12 <{}/{(_, _)}>]
+                12: nil=y * nil!=x' * x'->w', a', x * I007[1](x', y, a', x) |- while x!=nil do ... od (I007 L.Unf.) [13 <{(_, _)}/{}>]
+                  13: nil=y * nil!=x' * x'->w', a', x * lsls[2](x) * I019[0](x', y, a', x) |- while x!=nil do ... od (Frame) [14 <{(_, _)}/{}>]
+                    14: lsls[2](x) |- while x!=nil do ... od (Backl) [0] <pre={(_, _)}>
+            9: nil!=y * nil!=x * x->w', a', z' * I006[1](x, y, a', z') |- while y!=nil do ... od; ... (While(det)) [11 <{}/{(_, _)}>]
+              11: nil!=y * nil!=x * x->w', a', z' * I006[1](x, y, a', z') |- if * then ... else ... fi; ... (IfElse(nondet)) [15 <{}/{(_, _)}>, 16 <{}/{(_, _)}>]
+                15: nil!=y * nil!=x * x->w', a', z' * I006[1](x, y, a', z') |- y := y.left; ... (I006 L.Unf.) [17 <{(_, _)}/{}>]
+                  17: nil!=y * nil!=x * y!=x * y->d', c', b' * x->w', a', z' * I038[0](x, y, a', z', d', c', b') |- y := y.left; ... (Load/Simplify) [18 <{}/{(_, _)}>]
+                    18: nil!=x' * nil!=x * x'!=x * x'->y, c', b' * x->w', a', z' * I038[0](x, x', a', z', y, c', b') |- while y!=nil do ... od; ... (I038 L.Unf.) [19 <{(_, _)}/{}>]
+                      19: nil!=x' * nil!=x * x'!=x * x'->y, c', b' * x->w', a', z' * I003[2](x, y, a', z') * I039[1](x, x', a', z', y, c', b') |- while y!=nil do ... od; ... (Frame) [20 <{(_, _)}/{}>]
+                        20: nil!=x * x->w', a', z' * I003[2](x, y, a', z') |- while y!=nil do ... od; ... (Backl) [7] <pre={(_, _)}>
+                16: nil!=y * nil!=x * x->w', a', z' * I006[1](x, y, a', z') |- y := y.right; ... (I006 L.Unf.) [21 <{(_, _)}/{}>]
+                  21: nil!=y * nil!=x * y!=x * y->d', c', b' * x->w', a', z' * I038[0](x, y, a', z', d', c', b') |- y := y.right; ... (Load/Simplify) [22 <{}/{(_, _)}>]
+                    22: nil!=x' * nil!=x * x'!=x * x'->d', y, b' * x->w', a', z' * I038[0](x, x', a', z', d', y, b') |- while y!=nil do ... od; ... (I038 L.Unf.) [23 <{(_, _)}/{}>]
+                      23: nil!=x' * nil!=x * x'!=x * x'->d', y, b' * x->w', a', z' * I003[2](x, d', a', z') * I039[1](x, x', a', z', d', y, b') |- while y!=nil do ... od; ... (I039 L.Unf.) [24 <{(_, _)}/{}>]
+                        24: nil!=x' * nil!=x * x'!=x * x'->d', y, b' * x->w', a', z' * I003[3](x, y, a', z') * I003[2](x, d', a', z') * I075[0](x, x', a', z', d', y, b') |- while y!=nil do ... od; ... (Frame) [25 <{(_, _)}/{}>]
+                          25: nil!=x * x->w', a', z' * I003[3](x, y, a', z') |- while y!=nil do ... od; ... (Backl) [7] <pre={(_, _)}>
+
+
+=== whl_abd-18-tree-of-lists
+$ cyclist while abduce -P benchmarks/whl_abd/18-tree-of-lists.wl -p -t 60
+exit: 0
+0: tl[0](x) |- while * do ... od (If(nondet)) [1 <{}/{(_, _)}>, 2 <{}/{(_, _)}>]
+  1: tl[0](x) |- if x=nil then ... fi; ... (tl L.Unf.) [3 <{(_, _)}/{}>, 4 <{(_, _)}/{}>]
+    3: nil=x * I002[1](x) |- if x=nil then ... fi; ... (If(det)) [5 <{}/{(_, _)}>]
+      5: nil=x * I002[1](x) |- stop; ... (Stop)
+    4: nil!=x * I001[1](x) |- if x=nil then ... fi; ... (If(det)) [6 <{}/{(_, _)}>]
+      6: nil!=x * I001[1](x) |- if * then ... fi; ... (If(nondet)) [7 <{}/{(_, _)}>, 8 <{}/{(_, _)}>]
+        7: nil!=x * I001[1](x) |- x := x.next; ... (I001 L.Unf.) [9 <{(_, _)}/{}>]
+          9: nil!=x * x->b', a', z' * I003[0](x, b', a', z') |- x := x.next; ... (Load/Simplify) [10 <{}/{(_, _)}>]
+            10: nil!=w' * w'->b', a', x * I003[0](w', b', a', x) |- while x!=nil do ... od; ... (I003 L.Unf.) [11 <{(_, _)}/{}>, 12 <{(_, _)}/{}>]
+              11: nil=x * nil!=w' * w'->b', a', x * I005[1](w', b', a', x) |- while x!=nil do ... od; ... (While(det)) [13 <{}/{(_, _)}>]
+                13: nil=x * nil!=w' * w'->b', a', x * I005[1](w', b', a', x) |- stop; ... (Stop)
+              12: nil!=x * nil!=w' * w'->b', a', x * I004[1](w', b', a', x) |- while x!=nil do ... od; ... (While(det)) [14 <{}/{(_, _)}>]
+                14: nil!=x * nil!=w' * w'->b', a', x * I004[1](w', b', a', x) |- x := x.next; ... (I004 L.Unf.) [15 <{(_, _)}/{}>]
+                  15: nil!=x * nil!=w' * w'->b', a', x * I001[2](x) * I008[0](w', b', a', x) |- x := x.next; ... (Frame) [16 <{(_, _)}/{}>]
+                    16: nil!=x * I001[2](x) |- x := x.next; ... (Backl) [7] <pre={(_, _)}>
+        8: nil!=x * I001[1](x) |- if * then ... else ... fi; ... (IfElse(nondet)) [17 <{}/{(_, _)}>, 18 <{}/{(_, _)}>]
+          17: nil!=x * I001[1](x) |- x := x.left; ... (I001 L.Unf.) [19 <{(_, _)}/{}>]
+            19: nil!=x * x->b', a', z' * I003[0](x, b', a', z') |- x := x.left; ... (Load/Simplify) [20 <{}/{(_, _)}>]
+              20: nil!=w' * w'->x, a', z' * I003[0](w', x, a', z') |- while * do ... od (If(nondet)) [21 <{}/{(_, _)}>, 22 <{}/{(_, _)}>]
+                21: nil!=w' * w'->x, a', z' * I003[0](w', x, a', z') |- if x=nil then ... fi; ... (I003 L.Unf.) [23 <{(_, _)}/{}>, 24 <{(_, _)}/{}>]
+                  23: nil=z' * nil!=w' * w'->x, a', z' * I005[1](w', x, a', z') |- if x=nil then ... fi; ... (I005 L.Unf.) [25 <{(_, _)}/{}>]
+                    25: nil=z' * nil!=w' * w'->x, a', z' * tl[2](x) * I014[0](w', x, a', z') |- if x=nil then ... fi; ... (Frame) [26 <{(_, _)}/{}>]
+                      26: tl[2](x) |- if x=nil then ... fi; ... (Backl) [1] <pre={(_, _)}>
+                  24: nil!=z' * nil!=w' * w'->x, a', z' * I004[1](w', x, a', z') |- if x=nil then ... fi; ... (I004 L.Unf.) [27 <{(_, _)}/{}>]
+                    27: nil!=z' * nil!=w' * w'->x, a', z' * I001[2](z') * I008[0](w', x, a', z') |- if x=nil then ... fi; ... (I008 L.Unf.) [28 <{(_, _)}/{}>]
+                      28: nil!=z' * nil!=w' * w'->x, a', z' * tl[3](x) * I001[2](z') * I026[1](w', x, a', z') |- if x=nil then ... fi; ... (Frame) [29 <{(_, _)}/{}>]
+                        29: tl[3](x) |- if x=nil then ... fi; ... (Backl) [1] <pre={(_, _)}>
+                22: nil!=w' * w'->x, a', z' * I003[0](w', x, a', z') |-  (Empty)
+          18: nil!=x * I001[1](x) |- x := x.right; ... (I001 L.Unf.) [30 <{(_, _)}/{}>]
+            30: nil!=x * x->b', a', z' * I003[0](x, b', a', z') |- x := x.right; ... (Load/Simplify) [31 <{}/{(_, _)}>]
+              31: nil!=w' * w'->b', x, z' * I003[0](w', b', x, z') |- while * do ... od (If(nondet)) [32 <{}/{(_, _)}>, 33 <{}/{(_, _)}>]
+                32: nil!=w' * w'->b', x, z' * I003[0](w', b', x, z') |- if x=nil then ... fi; ... (I003 L.Unf.) [34 <{(_, _)}/{}>, 35 <{(_, _)}/{}>]
+                  34: nil=z' * nil!=w' * w'->b', x, z' * I005[1](w', b', x, z') |- if x=nil then ... fi; ... (I005 L.Unf.) [36 <{(_, _)}/{}>]
+                    36: nil=z' * nil!=w' * w'->b', x, z' * tl[2](b') * I014[0](w', b', x, z') |- if x=nil then ... fi; ... (I014 L.Unf.) [37 <{(_, _)}/{}>]
+                      37: nil=z' * nil!=w' * w'->b', x, z' * tl[3](x) * tl[2](b') * I044[1](w', b', x, z') |- if x=nil then ... fi; ... (Frame) [38 <{(_, _)}/{}>]
+                        38: tl[3](x) |- if x=nil then ... fi; ... (Backl) [1] <pre={(_, _)}>
+                  35: nil!=z' * nil!=w' * w'->b', x, z' * I004[1](w', b', x, z') |- if x=nil then ... fi; ... (I004 L.Unf.) [39 <{(_, _)}/{}>]
+                    39: nil!=z' * nil!=w' * w'->b', x, z' * I001[2](z') * I008[0](w', b', x, z') |- if x=nil then ... fi; ... (I008 L.Unf.) [40 <{(_, _)}/{}>]
+                      40: nil!=z' * nil!=w' * w'->b', x, z' * tl[3](b') * I001[2](z') * I026[1](w', b', x, z') |- if x=nil then ... fi; ... (I026 L.Unf.) [41 <{(_, _)}/{}>]
+                        41: nil!=z' * nil!=w' * w'->b', x, z' * tl[4](x) * tl[3](b') * I001[2](z') * I055[0](w', b', x, z') |- if x=nil then ... fi; ... (Frame) [42 <{(_, _)}/{}>]
+                          42: tl[4](x) |- if x=nil then ... fi; ... (Backl) [1] <pre={(_, _)}>
+                33: nil!=w' * w'->b', x, z' * I003[0](w', b', x, z') |-  (Empty)
+  2: tl[0](x) |-  (Empty)
+
+
+=== whl_abd-19-double-traversal
+$ cyclist while abduce -P benchmarks/whl_abd/19-double-traversal.wl -p -t 60
+exit: 0
+0: ls[0](x) |- y := x; ... (Assign) [1 <{}/{(_, _)}>]
+  1: y=x * ls[0](x) |- while y!=nil do ... od; ... (ls L.Unf.) [2 <{(_, _)}/{}>, 3 <{(_, _)}/{}>]
+    2: nil=x * y=x * I002[1](x) |- while y!=nil do ... od; ... (While(det)) [4 <{}/{(_, _)}>]
+      4: nil=x * y=x * I002[1](x) |- while x!=nil do ... od (While(det)) [6 <{}/{(_, _)}>]
+        6: nil=x * y=x * I002[1](x) |-  (Empty)
+    3: y=x * nil!=x * I001[1](x) |- while y!=nil do ... od; ... (While(det)) [5 <{}/{(_, _)}>]
+      5: y=x * nil!=x * I001[1](x) |- y := y.next; ... (I001 L.Unf.) [7 <{(_, _)}/{}>]
+        7: y=x * nil!=x * x->x' * I007[0](x, x') |- y := y.next; ... (Load/Simplify) [8 <{}/{(_, _)}>]
+          8: nil!=x * x->y * I007[0](x, y) |- while y!=nil do ... od; ... (I007 L.Unf.) [9 <{(_, _)}/{}>, 10 <{(_, _)}/{}>]
+            9: nil=y * nil!=x * x->y * I012[1](x, y) |- while y!=nil do ... od; ... (While(det)) [11 <{}/{(_, _)}>]
+              11: nil=y * nil!=x * x->y * I012[1](x, y) |- while x!=nil do ... od (While(det)) [13 <{}/{(_, _)}>]
+                13: nil=y * nil!=x * x->y * I012[1](x, y) |- x := x.next; ... (Load) [14 <{}/{(_, _)}>]
+                  14: nil=x * y=x * nil!=w' * w'->y * I012[1](w', y) |- while x!=nil do ... od (While(det)) [15 <{}/{(_, _)}>]
+                    15: nil=x * y=x * nil!=w' * w'->y * I012[1](w', y) |-  (Empty)
+            10: nil!=y * nil!=x * x->y * I011[1](x, y) |- while y!=nil do ... od; ... (While(det)) [12 <{}/{(_, _)}>]
+              12: nil!=y * nil!=x * x->y * I011[1](x, y) |- y := y.next; ... (I011 L.Unf.) [16 <{(_, _)}/{}>]
+                16: nil!=y * nil!=x * y!=x * y->x' * x->y * I328[0](x, y, x') |- y := y.next; ... (Load/Simplify) [17 <{}/{(_, _)}>]
+                  17: nil!=x * nil!=w' * x!=w' * x->w' * w'->y * I328[0](x, w', y) |- while y!=nil do ... od; ... (I328 L.Unf.) [18 <{(_, _)}/{}>, 19 <{(_, _)}/{}>]
+                    18: nil=y * nil!=x * nil!=w' * x!=w' * x->w' * w'->y * I336[1](x, w', y) |- while y!=nil do ... od; ... (While(det)) [20 <{}/{(_, _)}>]
+                      20: nil=y * nil!=x * nil!=w' * x!=w' * x->w' * w'->y * I336[1](x, w', y) |- while x!=nil do ... od (While(det)) [22 <{}/{(_, _)}>]
+                        22: nil=y * nil!=x * nil!=w' * x!=w' * x->w' * w'->y * I336[1](x, w', y) |- x := x.next; ... (Load/Simplify) [23 <{}/{(_, _)}>]
+                          23: nil=y * nil!=x' * nil!=x * x'!=x * x'->x * x->y * I336[1](x', x, y) |- while x!=nil do ... od (I336 L.Unf.) [24 <{(_, _)}/{}>]
+                            24: nil=y * nil!=x' * nil!=x * x'!=x * x'->x * x->y * I012[2](x, y) * I346[0](x', x, y) |- while x!=nil do ... od (Frame) [25 <{(_, _)}/{}>]
+                              25: nil=y * nil!=x * x->y * I012[2](x, y) |- while x!=nil do ... od (Backl) [11] <pre={(_, _)}>
+                    19: nil!=y * nil!=x * nil!=w' * x!=w' * x->w' * w'->y * I335[1](x, w', y) |- while y!=nil do ... od; ... (While(det)) [21 <{}/{(_, _)}>]
+                      21: nil!=y * nil!=x * nil!=w' * x!=w' * x->w' * w'->y * I335[1](x, w', y) |- y := y.next; ... (I335 L.Unf.) [26 <{(_, _)}/{}>]
+                        26: nil!=y * nil!=x * nil!=w' * y!=x * y!=w' * x!=w' * y->x' * x->w' * w'->y * I503[0](x, w', y, x') |- y := y.next; ... (Load/Simplify) [27 <{}/{(_, _)}>]
+                          27: nil!=y' * nil!=x * nil!=w' * y'!=x * y'!=w' * x!=w' * y'->y * x->w' * w'->y' * I503[0](x, w', y', y) |- while y!=nil do ... od; ... (Gen.While) [28 <{(_, _)}/{}>]
+                            28: nil!=y' * nil!=x * nil!=w' * y'!=x * y'!=w' * x!=w' * y'->x' * x->w' * w'->y' * I503[0](x, w', y', y) |- while y!=nil do ... od; ... (I503 L.Unf.) [29 <{(_, _)}/{}>, 30 <{(_, _)}/{}>]
+                              29: nil=y * nil!=y' * nil!=x * nil!=w' * y'!=x * y'!=w' * x!=w' * y'->x' * x->w' * w'->y' * I516[1](x, w', y', y) |- while y!=nil do ... od; ... (While(det)) [31 <{}/{(_, _)}>]
+                                31: nil=y * nil!=y' * nil!=x * nil!=w' * y'!=x * y'!=w' * x!=w' * y'->x' * x->w' * w'->y' * I516[1](x, w', y', y) |- while x!=nil do ... od (Gen.While) [33 <{(_, _)}/{}>]
+                                  33: nil=y * nil!=y' * nil!=w' * y'!=w' * z'->w' * y'->x' * w'->y' * I516[1](x, w', y', y) |- while x!=nil do ... od (I516 L.Unf.) [34 <{(_, _)}/{}>, 35 <{(_, _)}/{}>]
+                                    34: nil=x * y=x * nil!=z' * nil!=y' * nil!=w' * z'!=y' * z'!=w' * y'!=w' * z'->w' * y'->x' * w'->y' * I534[0](x, w', y', y) |- while x!=nil do ... od (While(det)) [36 <{}/{(_, _)}>]
+                                      36: nil=x * y=x * nil!=z' * nil!=y' * nil!=w' * z'!=y' * z'!=w' * y'!=w' * z'->w' * y'->x' * w'->y' * I534[0](x, w', y', y) |-  (Empty)
+                                    35: nil=y * nil!=z' * nil!=y' * nil!=w' * z'!=y' * z'!=w' * y'!=w' * y!=x * z'->w' * y'->x' * w'->y' * I533[0](x, w', y', y) |- while x!=nil do ... od (While(det)) [37 <{}/{(_, _)}>]
+                                      37: nil=y * nil!=z' * nil!=y' * nil!=w' * z'!=y' * z'!=w' * y'!=w' * y!=x * z'->w' * y'->x' * w'->y' * I533[0](x, w', y', y) |- x := x.next; ... (I533 L.Unf.) [38 <{(_, _)}/{}>]
+                                        38: nil=y * nil!=z' * nil!=y' * nil!=x * nil!=w' * z'!=y' * z'!=x * z'!=w' * y'!=x * y'!=w' * y!=x * x!=w' * z'->w' * y'->x' * x->a' * w'->y' * I875[1](x, w', y', y, a') |- x := x.next; ... (Load/Simplify) [39 <{}/{(_, _)}>]
+                                          39: nil=y * nil!=b' * nil!=z' * nil!=y' * nil!=w' * b'!=z' * b'!=y' * b'!=y * b'!=w' * z'!=y' * z'!=w' * y'!=w' * b'->x * z'->w' * y'->x' * w'->y' * I875[1](b', w', y', y, x) |- while x!=nil do ... od (I875 L.Unf.) [40 <{(_, _)}/{}>]
+                                            40: nil=y * nil!=b' * nil!=z' * nil!=y' * nil!=w' * b'!=z' * b'!=y' * b'!=y * b'!=w' * z'!=y' * z'!=w' * y'!=w' * b'->x * z'->w' * y'->x' * w'->y' * I516[2](x, w', y', y) * I882[0](b', w', y', y, x) |- while x!=nil do ... od (Frame) [41 <{(_, _)}/{}>]
+                                              41: nil=y * nil!=y' * nil!=w' * y'!=w' * z'->w' * y'->x' * w'->y' * I516[2](x, w', y', y) |- while x!=nil do ... od (Backl) [33] <pre={(_, _)}>
+                              30: nil!=y' * nil!=y * nil!=x * nil!=w' * y'!=x * y'!=w' * x!=w' * y'->x' * x->w' * w'->y' * I515[1](x, w', y', y) |- while y!=nil do ... od; ... (While(det)) [32 <{}/{(_, _)}>]
+                                32: nil!=y' * nil!=y * nil!=x * nil!=w' * y'!=x * y'!=w' * x!=w' * y'->x' * x->w' * w'->y' * I515[1](x, w', y', y) |- y := y.next; ... (I515 L.Unf.) [42 <{(_, _)}/{}>]
+                                  42: nil!=y' * nil!=y * nil!=x * nil!=w' * y'!=y * y'!=x * y'!=w' * y!=x * y!=w' * x!=w' * y'->x' * y->z' * x->w' * w'->y' * I1509[0](x, w', y', y, z') |- y := y.next; ... (Load/Simplify) [43 <{}/{(_, _)}>]
+                                    43: nil!=a' * nil!=y' * nil!=x * nil!=w' * a'!=y' * a'!=x * a'!=w' * y'!=x * y'!=w' * x!=w' * a'->y * y'->x' * x->w' * w'->y' * I1509[0](x, w', y', a', y) |- while y!=nil do ... od; ... (I1509 L.Unf.) [44 <{(_, _)}/{}>]
+                                      44: nil!=a' * nil!=y' * nil!=x * nil!=w' * a'!=y' * a'!=x * a'!=w' * y'!=x * y'!=w' * x!=w' * a'->y * y'->x' * x->w' * w'->y' * I503[2](x, w', y', y) * I1519[1](x, w', y', a', y) |- while y!=nil do ... od; ... (Frame) [45 <{(_, _)}/{}>]
+                                        45: nil!=y' * nil!=x * nil!=w' * y'!=x * y'!=w' * x!=w' * y'->x' * x->w' * w'->y' * I503[2](x, w', y', y) |- while y!=nil do ... od; ... (Backl) [28] <pre={(_, _)}>
+
+

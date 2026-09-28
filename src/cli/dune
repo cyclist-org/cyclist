@@ -2,4 +2,4 @@
  (name cyclist)
  (public_name cyclist)
  (libraries asl_while cmdliner dune-build-info fol generic ltl procedure
-   seplog while))
+   seplog unix while))

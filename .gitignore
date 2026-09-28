@@ -60,3 +60,6 @@ src/generic/test/test_methods
 ####################
 benchmarks/sl_disproof/results/
 benchmarks/slmc/stats/
+# The baselines for `make check-trace`, kept despite *.log above; their
+# counterparts proof-trace.new.log stay ignored.
+!/benchmarks/**/proof-trace.log

@@ -1,0 +1,10 @@
+=== soundness-01
+$ cyclist checkproof -R edge -f benchmarks/soundness/01.prf
+exit: 0
+NO
+
+=== soundness-02
+$ cyclist checkproof -R edge -f benchmarks/soundness/02.prf
+exit: 0
+NO
+

@@ -1,6 +1,7 @@
 TIMEOUT:=$(or $(TIMEOUT),30)
 TESTS:= $(sort $(wildcard cc/*.defs))
-CMD := "src/seplog/satcheck.exe"
+CMD := "src/cli/cyclist.exe"
+SUB := sl satcheck
 
 .PHONY: all $(TESTS)
 
@@ -14,4 +15,9 @@ all: $(TESTS)
 $(TESTS): %.defs:
 	-@TST_CASE="slsat-$(notdir $*)"; \
 	echo "test case: $$TST_CASE"; \
-	(cd "$(ROOT)" && dune exec $(CMD) -- -t $(TIMEOUT) -D "$(CURDIR)/$@" $(TST_OPTS))
+	(cd "$(ROOT)" && dune exec $(CMD) -- $(SUB) -t $(TIMEOUT) -D "$(CURDIR)/$@" $(TST_OPTS))
+
+CASES_FROM := files
+CASE_NAME := slsat
+CASE_ARGS = $(SUB) -D
+include ../cases.mk

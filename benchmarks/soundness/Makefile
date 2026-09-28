@@ -13,3 +13,8 @@ $(TESTS): %.prf:
 	-@TST_CASE="soundness-$*"; \
 	echo "test case: $$TST_CASE"; \
 	(cd "$(ROOT)" && dune exec $(CMD) -- $(SUB) -R edge $(TST_OPTS) -f "$(CURDIR)/$@")
+
+CASES_FROM := files
+CASE_NAME := soundness
+CASE_ARGS = $(SUB) -R edge -f
+include ../cases.mk

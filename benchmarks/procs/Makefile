@@ -9,3 +9,8 @@ $(TESTS): %.wl2:
 	@echo $@
 	@dune exec $(CMD) -- $(SUB) $(TST_OPTS) -D $(DEFS) --all -P $@ || true
 	@echo
+
+CASES_FROM := files
+CASE_NAME := procs
+CASE_ARGS = $(SUB) -D $(call rel,$(DEFS)) --all -P
+include ../cases.mk

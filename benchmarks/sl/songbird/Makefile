@@ -1,6 +1,7 @@
 TIMEOUT:=$(or $(TIMEOUT),30)
 TESTS:= $(sort $(wildcard *.tst))
-DEFS := "$(ROOT)/examples/songbird.defs"
+DEFS_FILE := examples/songbird.defs
+DEFS := "$(ROOT)/$(DEFS_FILE)"
 
 .PHONY: all $(TESTS)
 all: $(TESTS)
@@ -14,3 +15,8 @@ $(TESTS): %.tst:
 		TST_COUNT=$$(($$TST_COUNT+1)); \
 		(cd "$(ROOT)" && dune exec $(CMD) -- $(SUB) -D $(DEFS) -t $(TIMEOUT) -S "$$SEQ" --id="$$TST_CASE" $(TST_OPTS) || echo "Not proved (timeout)"); \
 	done < "$@"
+
+CASES_FROM := lines
+CASE_NAME := songbird
+CASE_ARGS = $(SUB) -D $(DEFS_FILE) -S
+include ../../cases.mk

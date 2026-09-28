@@ -34,14 +34,19 @@ let rec compare f f' =
 
 let equal f f' = Int.equal (compare f f') 0
 
+(* The symbols are printed with an explicit width of 1, as Format counts bytes
+   rather than characters before OCaml 5.4, which would break lines differently
+   depending on the compiler version. *)
+let pp_sym fmt s = Format.pp_print_as fmt 1 s
+
 let rec pp fmt = function
   | Atom s -> Format.fprintf fmt "%s" s
-  | NegAtom s -> Format.fprintf fmt "¬%s" s
-  | Conj (f1, f2) -> Format.fprintf fmt "(%a ∧ %a)" pp f1 pp f2
-  | Disj (f1, f2) -> Format.fprintf fmt "(%a ∨ %a)" pp f1 pp f2
-  | Next f -> Format.fprintf fmt "◯ %a" pp f
-  | Always f -> Format.fprintf fmt "□ %a" pp f
-  | Eventually f -> Format.fprintf fmt "◇ %a" pp f
+  | NegAtom s -> Format.fprintf fmt "%a%s" pp_sym "¬" s
+  | Conj (f1, f2) -> Format.fprintf fmt "(%a %a %a)" pp f1 pp_sym "∧" pp f2
+  | Disj (f1, f2) -> Format.fprintf fmt "(%a %a %a)" pp f1 pp_sym "∨" pp f2
+  | Next f -> Format.fprintf fmt "%a %a" pp_sym "◯" pp f
+  | Always f -> Format.fprintf fmt "%a %a" pp_sym "□" pp f
+  | Eventually f -> Format.fprintf fmt "%a %a" pp_sym "◇" pp f
 
 let to_string f = mk_to_string pp f
 

@@ -23,7 +23,7 @@
  (name cyclist)
  (synopsis "Cyclist is a framework for building cyclic theorem provers")
  (depends
-  (ocaml (>= 4.08.0))
+  (ocaml (>= 5.3))
   (stdlib-shims :build)
   (dune-configurator (and :build (>= 3.0)))
   (mparser-re (>= 1.3))
