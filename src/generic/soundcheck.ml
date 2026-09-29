@@ -70,9 +70,10 @@ let compose t1 t2 =
 *)
 type abstract_node =
   bool * Int.Set.t * (int * IntPair.Set.t * IntPair.Set.t) list
+[@@deriving equal, hash]
 
 (* An abstract proof is a map from node IDs to abstract nodes *)
-type t = abstract_node Int.Map.t
+type t = abstract_node Int.Map.t [@@deriving equal, hash]
 
 let get_tags (_, tags, _) = tags
 let get_subg (_, _, children) = children
@@ -1416,7 +1417,9 @@ let term =
     $ idempotent_loop_check $ unminimized_proofs $ rel_stats $ print_paut
     $ print_taut $ dump $ graph_dir $ representation)
 
-module CheckCache = Hashtbl
+module CheckCache = Hashtbl.Make (struct
+  type nonrec t = t [@@deriving equal, hash]
+end)
 
 let ccache = CheckCache.create 1000
 (* let limit = ref 1 *)

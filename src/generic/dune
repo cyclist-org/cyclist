@@ -4,6 +4,9 @@
  (libraries lib cmdliner)
  (preprocess
   (pps ppx_compare ppx_hash))
+ (flags
+  (:standard -open Ppx_compare_lib.Builtin -open
+    Ppx_hash_lib.Std.Hash.Builtin))
  (modules (:standard))
  (modules_without_implementation sequent)
  (foreign_stubs

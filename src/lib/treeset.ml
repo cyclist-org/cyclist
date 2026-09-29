@@ -6,8 +6,8 @@ module Make (T : Utilsigs.BasicType) :
   include S
   include Fixpoint.Make (S)
 
-  let equal s s' = Repr.phys_equal s s' || equal s s'
-  let compare s s' = if Repr.phys_equal s s' then 0 else compare s s'
+  let equal s s' = s == s' || equal s s'
+  let compare s s' = if s == s' then 0 else compare s s'
 
   let hash_fold_t state s =
     fold
