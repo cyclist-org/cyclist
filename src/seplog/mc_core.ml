@@ -111,12 +111,7 @@ struct
   module Value = struct
     module T = struct
       type t = Nil | Location of Location.t | Scalar of Scalar.t
-      [@@deriving compare, equal]
-
-      let hash = function
-        | Nil -> 11
-        | Location l -> max_int land ((19 * Location.hash l) + 1)
-        | Scalar v -> max_int land ((19 * Scalar.hash v) + 2)
+      [@@deriving compare, equal, hash]
 
       let pp fmt = function
         | Nil -> Sig.pp_nil fmt
@@ -141,10 +136,8 @@ struct
   end
 
   module ConcreteHeap = struct
-    type t = Value.FList.t Location.Map.t [@@deriving compare, equal]
+    type t = Value.FList.t Location.Map.t [@@deriving compare, equal, hash]
     type domain = Location.Set.t
-
-    let hash h = Location.Map.hash Value.FList.hash h
 
     let pp fmt h =
       Format.fprintf fmt "@[[@ ";
@@ -194,9 +187,7 @@ struct
   end
 
   module Stack = struct
-    type t = Value.t Var.Map.t [@@deriving compare, equal]
-
-    let hash s = Var.Map.hash Value.hash s
+    type t = Value.t Var.Map.t [@@deriving compare, equal, hash]
 
     let pp fmt h =
       Format.fprintf fmt "@[[@ ";
@@ -400,7 +391,15 @@ struct
 
   let model_of_string parse s = handle_reply (MParser.parse_string parse s ())
 
-  module SetBase = struct
+  module HeapBase : sig
+    include BasicType
+
+    val empty : t
+    val inj : ConcreteHeap.t -> ConcreteHeap.t -> t
+    val proj : ConcreteHeap.t -> t -> ConcreteHeap.t
+    val disjoint : t -> t -> bool
+    val union : t -> t -> t
+  end = struct
     include Location.Set
 
     let empty = Location.Set.empty
@@ -418,17 +417,6 @@ struct
     let union = Location.Set.union
   end
 
-  module HeapBase : sig
-    include BasicType
-
-    val empty : t
-    val inj : ConcreteHeap.t -> ConcreteHeap.t -> t
-    val proj : ConcreteHeap.t -> t -> ConcreteHeap.t
-    val disjoint : t -> t -> bool
-    val union : t -> t -> t
-  end =
-    SetBase
-
   module InterpretantBaseContainers =
     Containers.Make (Pair.Make (Value.FList) (HeapBase))
 
@@ -436,9 +424,9 @@ struct
 
   let baseSetPair_to_string (x, x') =
     "("
-    ^ InterpretantBase.to_string x
+    ^ InterpretantBase.to_string ~show_hash:false x
     ^ ", "
-    ^ InterpretantBase.to_string x'
+    ^ InterpretantBase.to_string ~show_hash:false x'
     ^ ")"
 
   module SymHeapHash = Hashtbl.Make (Heap)

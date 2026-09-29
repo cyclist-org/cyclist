@@ -216,7 +216,7 @@ let satisfiable ?(only_first = false) ?(output = false) defs =
   let cmap, pmap = gen_all_pairs ~only_first defs in
   (if output then
      let element_conv (c, s) =
-       Indrule.to_string c ^ " has base " ^ Hashset.to_string s
+       Indrule.to_string c ^ " has base " ^ Hashset.to_string ~show_hash:false s
      in
      print_endline (Blist.to_string "\n" element_conv (RuleMap.to_list cmap)));
   let retval =

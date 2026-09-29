@@ -15,9 +15,9 @@ type symheap = {
   mutable _vars : Term.Set.t option; [@ignore]
   mutable _tags : Tags.t option; [@ignore]
 }
-[@@deriving compare, equal]
+[@@deriving compare, equal, hash]
 
-type t = symheap [@@deriving compare, equal]
+type t = symheap [@@deriving compare, equal, hash]
 
 (* accessors *)
 
@@ -30,16 +30,6 @@ let equal_upto_tags h h' =
 include Fixpoint.Make (struct
   type t = symheap [@@deriving equal]
 end)
-
-(* custom hash function so that memoization fields are ignored when hashing *)
-(* so that the hash invariant is preserved [a = b => hash(a) = hash(b)] *)
-(* FIXME: memoize hash as well? *)
-let hash h =
-  genhash
-    (genhash
-       (genhash (Tpreds.hash h.inds) (Ptos.hash h.ptos))
-       (Deqs.hash h.deqs))
-    (Uf.hash h.eqs)
 
 let terms f =
   match f._terms with

@@ -6,8 +6,11 @@ module Make (T : Utilsigs.BasicType) = struct
   let equal eq m m' = m == m' || equal eq m m'
   let compare comp m m' = if m == m' then 0 else compare comp m m'
 
-  let hash h m =
-    fold (fun k v a -> genhash a (genhash (T.hash k) (h v))) m 0x9e3779b9
+  let hash_fold_t hash_fold_v state map =
+    fold
+      (fun k v st -> hash_fold_v (T.hash_fold_t st k) v)
+      map
+      (Ppx_hash_lib.Std.Hash.fold_int state (cardinal map))
 
   let rec fixpoint eq f x =
     let y = f x in

@@ -15,6 +15,7 @@ module HT = struct
   let compare s s' = Int.compare s.Hashcons.tag s'.Hashcons.tag
   let equal s s' = s == s'
   let hash s = s.Hashcons.hkey
+  let hash_fold_t state t = Ppx_hash_lib.Std.Hash.fold_int state (hash t)
 end
 
 include HT

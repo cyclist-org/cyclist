@@ -5,9 +5,7 @@ module Tag = Tags.Elt
 
 module Constraint = struct
   type t = LT of (Tag.t * Tag.t) | LTE of (Tag.t * Tag.t)
-  [@@deriving compare, equal]
-
-  let hash (c : t) = Hashtbl.hash c
+  [@@deriving compare, equal, hash]
 
   let to_string = function
     | LT (t, t') -> Tag.to_string t ^ symb_lt.sep ^ Tag.to_string t'

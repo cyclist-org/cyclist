@@ -760,7 +760,7 @@ module RelationalCheck = struct
       (* | Unknown *)
       | Stay
       | Decrease
-    [@@deriving compare, equal]
+    [@@deriving compare, equal, hash]
 
     let ( < ) h h' =
       match (h, h') with
@@ -786,8 +786,6 @@ module RelationalCheck = struct
         | Stay -> "Stay"
         | Decrease -> "Decrease"
         end
-
-    let hash s = Hashtbl.hash s
   end
 
   module SlopedRel = struct
@@ -861,6 +859,8 @@ module RelationalCheck = struct
         List.fold_left
           (fun a (k, v) -> genhash a (genhash (IntPair.hash k) (Slope.hash v)))
           0x9e3779b9 bindings
+
+      let hash_fold_t state t = Ppx_hash_lib.Std.Hash.fold_int state (hash t)
 
       include HashtablePrinter.Make (IntPair.Hashmap)
 

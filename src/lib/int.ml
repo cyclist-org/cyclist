@@ -1,7 +1,6 @@
 module IntType : Utilsigs.BasicType with type t = int = struct
-  type t = int [@@deriving compare, equal]
+  type t = int [@@deriving compare, equal, hash]
 
-  let hash (i : t) = Hashtbl.hash i
   let to_string = string_of_int
   let pp = Format.pp_print_int
 end

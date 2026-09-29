@@ -41,6 +41,7 @@ module T' = struct
       | _ -> String.compare (to_string s) (to_string s')
 
   let hash s = Hashtbl.hash (to_string s)
+  let hash_fold_t state t = Ppx_hash_lib.Std.Hash.fold_int state (hash t)
 end
 
 include T'

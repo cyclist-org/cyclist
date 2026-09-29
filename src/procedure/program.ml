@@ -23,9 +23,7 @@ module Proc = struct
       * (Term.t list[@ignore])
       * ((Form.t * Form.t) list[@ignore])
       * (Cmd.t[@ignore])
-    [@@deriving compare, equal]
-
-    let hash (id, _, _, _) = Strng.hash id
+    [@@deriving compare, equal, hash]
 
     let pp_decl fmt (id, params, _, _) =
       Format.fprintf fmt "%s(%a)" id (Blist.pp pp_commasp Term.pp) params

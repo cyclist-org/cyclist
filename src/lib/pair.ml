@@ -15,9 +15,8 @@ let either = disj
 
 module Make (T : Utilsigs.BasicType) (S : Utilsigs.BasicType) :
   Utilsigs.BasicType with type t = T.t * S.t = struct
-  type t = T.t * S.t [@@deriving compare, equal]
+  type t = T.t * S.t [@@deriving compare, equal, hash]
 
-  let hash (i : t) = genhash (T.hash (fst i)) (S.hash (snd i))
   let pp fmt (i, j) = Format.fprintf fmt "@[(%a,@ %a)@]" T.pp i S.pp j
   let to_string = mk_to_string pp
 end

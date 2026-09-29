@@ -4,9 +4,7 @@ open MParser
 open MParser_RE
 
 module Formula : BasicType with type t = Tags.Elt.t * Form.t = struct
-  type t = (Tags.Elt.t[@ignore]) * Form.t [@@deriving compare, equal]
-
-  let hash (_, f) = Form.hash f
+  type t = (Tags.Elt.t[@ignore]) * Form.t [@@deriving compare, equal, hash]
 
   let pp fmt (t, f) =
     if Tags.is_anonymous t then Form.pp fmt f

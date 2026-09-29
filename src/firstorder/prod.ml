@@ -62,7 +62,6 @@ let subsumed_wrt_tags tags p1 p2 =
   subset p1_nips p2_nips && subset p1_tips p2_tips
   && IndSubfs.subset p1_ips p2_ips
 
-let hash = Hashtbl.hash
 let tag_pairs f = Tagpairs.mk (tags f)
 
 let filter_by_kind a p =

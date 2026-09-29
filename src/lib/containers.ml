@@ -15,7 +15,7 @@ module type S = sig
     val left_union : t -> t -> t
     val is_empty : t -> bool
     val filter : (elt -> bool) -> t -> unit
-    val to_string : t -> string
+    val to_string : ?show_hash:bool -> t -> string
     val of_list : elt list -> t
     val to_list : t -> elt list
     val map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b) -> t -> 'a
@@ -73,9 +73,11 @@ module Make (T : Utilsigs.BasicType) = struct
     let exists f h = fold (fun k acc -> acc || f k) h false
     let for_all f h = fold (fun k acc -> acc && f k) h true
 
-    let to_string h =
+    let to_string ?(show_hash = true) h =
       let elt_to_str k =
-        "#" ^ string_of_int (T.hash k) ^ ": " ^ T.to_string k
+        let k_str = T.to_string k in
+        if show_hash then "#" ^ string_of_int (T.hash k) ^ ": " ^ k_str
+        else k_str
       in
       let elems = fold (fun hd tl -> hd :: tl) h [] in
       String.concat ", " (List.map elt_to_str elems)

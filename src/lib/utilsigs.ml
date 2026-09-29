@@ -3,9 +3,7 @@
 (** Most types for use in containers, maps and other stuff must provide the
     above essential methods. *)
 module type BasicType = sig
-  type t [@@deriving compare, equal]
-
-  include Hashtbl.HashedType with type t := t
+  type t [@@deriving compare, equal, hash]
 
   val to_string : t -> string
   (** Convert to string. *)
@@ -103,7 +101,9 @@ end
 
 (** An ordered map, extending the standard [Map] module. *)
 module type OrderedMap = sig
-  include Map.S
+  type +!'a t [@@deriving hash]
+
+  include Map.S with type 'a t := 'a t
 
   val pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit
   (** [pp pp_val fmt map] pretty prints [map] using [pp_val] to pretty-print the
@@ -113,9 +113,6 @@ module type OrderedMap = sig
   val to_string : ('a -> string) -> 'a t -> string
   (** [to_string val_to_string map] converts to a string, using [val_to_string]
       to convert *values* to strings. *)
-
-  val hash : ('a -> int) -> 'a t -> int
-  (** Hash the map using the provided function for hashing *values*. *)
 
   val union : 'a t -> 'a t -> 'a t
   (** Union two maps. Bindings in the first map have precedence. *)

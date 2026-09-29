@@ -10,9 +10,7 @@ type t =
   | Conj of t * t
   | NegAtom of string
   | Atom of string
-[@@deriving compare, equal]
-
-let hash = Hashtbl.hash
+[@@deriving compare, equal, hash]
 
 (* The symbols are printed with an explicit width of 1, as Format counts bytes
    rather than characters before OCaml 5.4, which would break lines differently

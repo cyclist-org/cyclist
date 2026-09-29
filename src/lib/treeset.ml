@@ -6,6 +6,16 @@ module Make (T : Utilsigs.BasicType) :
   include S
   include Fixpoint.Make (S)
 
+  let equal s s' = Repr.phys_equal s s' || equal s s'
+  let compare s s' = if Repr.phys_equal s s' then 0 else compare s s'
+
+  let hash_fold_t state s =
+    fold
+      (fun el st -> T.hash_fold_t st el)
+      s
+      (Ppx_hash_lib.Std.Hash.fold_int state (cardinal s))
+
+  let hash t = Ppx_hash_lib.Std.Hash.run hash_fold_t t
   let map_to oadd oempty f s = fold (fun el s' -> oadd (f el) s') s oempty
   let opt_map_to oadd oempty f s = map_to (Option.dest Fun.id oadd) oempty f s
   let map_to_list f s = Blist.rev (map_to Blist.cons [] f s)
@@ -32,7 +42,6 @@ module Make (T : Utilsigs.BasicType) :
     Format.fprintf fmt "@[{%a}@]" (Blist.pp pp_commasp T.pp) (to_list s)
 
   let to_string s = "{" ^ Blist.to_string ", " T.to_string (to_list s) ^ "}"
-  let hash s = fold (fun x h -> genhash (T.hash x) h) s 0x9e3779b9
 
   let rec subsets s =
     if is_empty s then [ empty ]

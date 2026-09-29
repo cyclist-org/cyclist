@@ -161,16 +161,6 @@ module Make (Sig : ValueSig) : sig
 
   val model_of_string : ('a, unit) MParser.t -> string -> 'a
 
-  module SetBase : sig
-    include
-      Lib.OrderedContainer
-        with type t = ConcreteHeap.domain
-         and type elt = Location.t
-
-    val inj : ConcreteHeap.t -> ConcreteHeap.t -> t
-    val proj : ConcreteHeap.t -> t -> ConcreteHeap.t
-  end
-
   module HeapBase : sig
     include Lib.BasicType
 

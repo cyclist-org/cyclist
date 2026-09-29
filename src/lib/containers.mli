@@ -22,7 +22,7 @@ module type S = sig
     val left_union : t -> t -> t
     val is_empty : t -> bool
     val filter : (elt -> bool) -> t -> unit
-    val to_string : t -> string
+    val to_string : ?show_hash:bool -> t -> string
     val of_list : elt list -> t
     val to_list : t -> elt list
     val map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b) -> t -> 'a

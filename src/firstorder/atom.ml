@@ -3,18 +3,16 @@ open Symbols
 open Generic
 open MParser
 
-type eq_atom = Term.t * Term.t [@@deriving compare, equal]
-type pred_atom = string * Term.t list [@@deriving compare, equal]
-type ind_pred_atom = Tags.Elt.t * pred_atom [@@deriving compare, equal]
+type eq_atom = Term.t * Term.t [@@deriving compare, equal, hash]
+type pred_atom = string * Term.t list [@@deriving compare, equal, hash]
+type ind_pred_atom = Tags.Elt.t * pred_atom [@@deriving compare, equal, hash]
 
 module AtomT = struct
   type t = Eq of eq_atom | Deq of eq_atom | IndPred of ind_pred_atom
-  [@@deriving compare, equal]
+  [@@deriving compare, equal, hash]
 
   (** NB: unimplemented *)
   let equal_upto_tags = equal
-
-  let hash = Hashtbl.hash
 
   let to_string = function
     | Eq eq ->

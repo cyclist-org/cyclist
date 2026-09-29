@@ -16,14 +16,12 @@ include VarManager.Make (struct
 end)
 
 type term_t = Const of int | Var of Var.t | Fun of string * term_t list
-[@@deriving compare, equal]
+[@@deriving compare, equal, hash]
 
 module rec TermT : (BasicType with type t = term_t) = struct
-  type t = term_t [@@deriving compare, equal]
+  type t = term_t [@@deriving compare, equal, hash]
 
   module TermList = Flist.Make (TermT)
-
-  let hash = Hashtbl.hash
 
   let to_string = function
     | Const i -> string_of_int i
