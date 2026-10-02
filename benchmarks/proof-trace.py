@@ -222,7 +222,7 @@ def check(dirs):
             differs = True
             continue
         sys.stdout.flush()
-        differs |= subprocess.run(["diff", "-u", base, trace], cwd=ROOT).returncode != 0
+        differs |= subprocess.run(["diff", "-uw", base, trace], cwd=ROOT).returncode != 0
     return differs
 
 

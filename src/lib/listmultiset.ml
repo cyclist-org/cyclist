@@ -8,6 +8,9 @@ module Make (T : Utilsigs.BasicType) = struct
   let min_elt = Blist.hd
   let elements = to_list
 
+  (* 5.5 requires this in [Set.S] *)
+  let is_singleton = function [ _ ] -> true | _ -> false
+
   let rec add x = function
     | [] -> [ x ]
     | y :: ys as zs -> (
@@ -18,8 +21,25 @@ module Make (T : Utilsigs.BasicType) = struct
   let fold f xs a = Blist.fold_left (fun y a' -> f a' y) a xs
   let cardinal = Blist.length
   let choose = min_elt
+
+  (* runtime is [O(|xs|+|ys|)]*)
   let union xs ys = Blist.merge T.compare xs ys
-  let union_of_list l = Blist.fold_left union [] l
+
+  (* Do a pair-wise union instead of [fold union]. if [n] is the number of items in all [k]
+   * lists, and each list has roughly [m=n/k] elements, then the fold has runtime [O(k^2·m)].
+   * A pair-wise union pays [O(n·log k) = O(m·k·log k)]. *)
+  let union_of_list l =
+    let rec merge_pairs = function
+      | ([] | [ _ ]) as l -> l
+      | x :: y :: rest -> union x y :: merge_pairs rest
+    in
+    let rec loop = function
+      | [] -> []
+      | [ x ] -> x
+      | l -> loop (merge_pairs l)
+    in
+    loop l
+
   let map f xs = of_list (Blist.map f xs)
 
   let rec mem x = function
@@ -106,7 +126,10 @@ module Make (T : Utilsigs.BasicType) = struct
       let x = choose xs in
       let xs = remove x xs in
       let xxs = subsets xs in
-      xxs @ Blist.map (fun y -> add x y) xxs
+      (* [x] is always <= the head of every [y] in [xxs], since [x] is the min
+         of the pre-removal set and [xxs] is built from what remains; [add]
+         would always take its x <= hd branch here, so cons directly. *)
+      xxs @ Blist.map (fun y -> x :: y) xxs
 
   let rec disjoint xs ys =
     match (xs, ys) with

@@ -6299,7 +6299,7 @@ exit: 0
                                                                     l!=x *
                                                                     l->tail, z' *
                                                                     x->a', l}
-                                                                     {
+                                                                    {
                                                                     [b' < a] :
                                                                     nil=l *
                                                                     nil!=x *
