@@ -18,6 +18,9 @@ module type OrderedContainer = sig
   include BasicType
   include Set.S with type t := t
 
+  (* compatibility with pre 5.5 *)
+  val is_singleton : t -> bool
+
   val map_to : ('b -> 'a -> 'a) -> 'a -> (elt -> 'b) -> t -> 'a
   (** [map_to add empty f set] converts every element of [set] using [f], and
       then folds over the new collection of elements using as starting value

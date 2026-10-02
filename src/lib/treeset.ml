@@ -6,6 +6,8 @@ module Make (T : Utilsigs.BasicType) :
   include S
   include Fixpoint.Make (S)
 
+  (* for compatibility with pre 5.5 *)
+  let is_singleton _ = failwith "Unimplemented"
   let equal s s' = s == s' || equal s s'
   let compare s s' = if s == s' then 0 else compare s s'
 
