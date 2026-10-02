@@ -281,8 +281,7 @@ let gen_right_rules (ident, def) =
     let rinds = Prod.filter Atom.is_ipred rp in
     let preds = Prod.filter (matches_ident ident) rinds in
     let res =
-      Option.list_get
-        (Blist.map (ruf_pred_in_prod uni case rp) (Prod.elements preds))
+      Blist.filter_map (ruf_pred_in_prod uni case rp) (Prod.elements preds)
     in
     res
   in

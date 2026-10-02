@@ -418,16 +418,15 @@ let generalise_while_rule idx prf =
       (* If previous node is a Gen.While then do not apply again *)
       if label == Stdlib.snd (Node.dest (Proof.find (idx - 1) prf)) then []
       else
-        Option.list_get
-          (Blist.map
-             begin fun m' ->
-               let f' = generalise m' f in
-               if Asl_heap.equal f f' then None
-               else
-                 let s' = ([ f' ], cmd) in
-                 Some ([ (s', tagpairs s', Tagpairs.empty) ], label)
-             end
-             subs)
+        Blist.filter_map
+          begin fun m' ->
+            let f' = generalise m' f in
+            if Asl_heap.equal f f' then None
+            else
+              let s' = ([ f' ], cmd) in
+              Some ([ (s', tagpairs s', Tagpairs.empty) ], label)
+          end
+          subs
     with Not_symheap | WrongCmd -> []
   in
   Rule.mk_infrule rl idx prf

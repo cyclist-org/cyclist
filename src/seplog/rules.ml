@@ -574,7 +574,7 @@ let luf defs =
           in
           Some (Blist.map do_case cases, Predsym.to_string ident ^ " L.Unf.")
       in
-      Option.list_get (Tpreds.map_to_list left_unfold l.SH.inds)
+      Tpreds.opt_map_to Blist.cons [] left_unfold l.SH.inds |> List.rev
     with Not_symheap -> []
   in
   wrap (Seqtactics.compose rl (Seqtactics.attempt lhs_instantiate_seq))

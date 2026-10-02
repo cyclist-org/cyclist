@@ -15,10 +15,9 @@ let to_string v = Blist.to_string symb_star.sep Tpred.to_string (elements v)
 
 let tags inds =
   Tags.of_list
-    (Option.list_get
-       (Blist.map
-          (fun p -> Option.mk (Tpred.is_tagged p) (fst p))
-          (to_list inds)))
+    (Blist.filter_map
+       (function (t, _) as p when Tpred.is_tagged p -> Some t | _ -> None)
+       (to_list inds))
 
 let strip_tags inds = map_to Pred.MSet.add Pred.MSet.empty snd inds
 

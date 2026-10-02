@@ -265,9 +265,9 @@ let lhs_disj_to_symheaps =
 (*             (if !termination then Tagpairs.mk ts else Seq.tagpairs_one),               *)
 (*             (if !termination then Tagpairs.singleton (id,id) else Tagpairs.empty)      *)
 (*           )) in                                                                        *)
-(*       let subgoals = Option.list_get (Blist.map do_case def) in                        *)
+(*       let subgoals = Blist.filter_map do_case def) in                        *)
 (*       Option.mk (not (Blist.is_empty subgoals)) (subgoals, (ident ^ " L.Unf.")) in     *)
-(*     Option.list_get (Tpreds.map_to_list left_unfold preds)                          *)
+(*     Tpreds.opt_map_to Blist.cons [] left_unfold preds                                  *)
 (*   with Not_symheap -> []                                                               *)
 
 (* let gen_left_rules (def,ident) =                                                       *)
@@ -1021,9 +1021,9 @@ let transform_seq ((pre, cmd, post) as seq) ?(match_post = true)
           post_transforms
     in
     let result =
-      Option.dest Blist.empty
+      Option.dest []
         (fun (interpolant, substs) ->
-          Option.list_get (Blist.map (mk_transform interpolant) substs))
+          Blist.filter_map (mk_transform interpolant) substs)
         pre_transforms
     in
     let () = debug (fun _ -> "Done") in
@@ -1193,14 +1193,14 @@ let use_proc_prf prf_cache idx prf =
 (*         let (_, cmd') = Cmd.dest_while cmd in                                                                                                                                                                                               *)
 (*         let m = Term.Set.inter (Cmd.modifies cmd') (Heap.vars pre) in                                                                                                                                                                 *)
 (*         let subs = Term.Set.subsets m in                                                                                                                                                                                                 *)
-(*         Option.list_get (Blist.map                                                                                                                                                                                                          *)
+(*         Blist.filter_map                                                                                                                                                                                                          *)
 (*           begin fun m' ->                                                                                                                                                                                                                   *)
 (*             let pre' = generalise m' pre in                                                                                                                                                                                                 *)
 (*             if Heap.equal pre pre' then None else                                                                                                                                                                                        *)
 (*             let s' = ([pre'], cmd, post) in                                                                                                                                                                                                 *)
 (*             Some ([ (s', tagpairs s', Tagpairs.empty) ], "Gen.While")                                                                                                                                                                       *)
 (*           end                                                                                                                                                                                                                               *)
-(*           subs)                                                                                                                                                                                                                             *)
+(*           subs                                                                                                                                                                                                                       *)
 (*     with Not_symheap | WrongCmd -> [] in                                                                                                                                                                                                    *)
 (*   Rule.mk_infrule rl                                                                                                                                                                                                                        *)
 

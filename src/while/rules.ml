@@ -402,15 +402,14 @@ let generalise_while_rule =
       let _, cmd' = Cmd.dest_while cmd in
       let m = Term.Set.inter (Cmd.modifies cmd') (Heap.vars h) in
       let subs = Term.Set.subsets m in
-      Option.list_get
-        (Blist.map
-           (fun m' ->
-             let h' = generalise m' h in
-             if Heap.equal h h' then None
-             else
-               let s' = ((cs, [ h' ]), cmd) in
-               Some ([ (s', tagpairs s', Tagpairs.empty) ], "Gen.While"))
-           subs)
+      Blist.filter_map
+        (fun m' ->
+          let h' = generalise m' h in
+          if Heap.equal h h' then None
+          else
+            let s' = ((cs, [ h' ]), cmd) in
+            Some ([ (s', tagpairs s', Tagpairs.empty) ], "Gen.While"))
+        subs
     with Not_symheap | WrongCmd -> []
   in
   Rule.mk_infrule rl

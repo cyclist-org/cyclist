@@ -406,15 +406,14 @@ let generalise_while_rule =
       let _, cmd' = Cmd.dest_while cmd in
       let m = Seplog.(Term.Set.inter (Cmd.modifies cmd') (Heap.vars f)) in
       let subs = Seplog.Term.Set.subsets m in
-      Option.list_get
-        (Blist.map
-           (fun m' ->
-             let f' = generalise m' f in
-             if Seplog.Heap.equal f f' then None
-             else
-               let s' = ((cs, [ f' ]), cmd) in
-               Some ([ (s', Rules.tagpairs s', Tagpairs.empty) ], "Gen.While"))
-           subs)
+      Blist.filter_map
+        (fun m' ->
+          let f' = generalise m' f in
+          if Seplog.Heap.equal f f' then None
+          else
+            let s' = ((cs, [ f' ]), cmd) in
+            Some ([ (s', Rules.tagpairs s', Tagpairs.empty) ], "Gen.While"))
+        subs
     with Not_symheap | WrongCmd -> []
   in
   Abdrule.lift (Rule.mk_infrule rl)
@@ -653,7 +652,7 @@ let matches = Abdrule.lift Rules.dobackl
 (* 				let () = debug (fun () -> "Heap: " ^ (Heap.to_string h')) in                      *)
 (* 				let () = debug (fun () -> "Clause: " ^ (Heap.to_string clause)) in                *)
 (*         Some ([ (([h'], cmd), Rules.symex_tagpairs, Tagpairs.empty) ], new_defs) in *)
-(*       Option.list_get (Blist.map f (Tpreds.to_list inds))                                   *)
+(*       Blist.filter_map f (Tpreds.to_list inds)                                            *)
 (*     with Not_symheap | WrongCmd -> [] in                                                  *)
 (*   mk_gen_rule rl "Abd. segment"                                                           *)
 
