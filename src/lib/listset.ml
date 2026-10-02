@@ -5,10 +5,32 @@ module Make (T : Utilsigs.BasicType) :
   include Fixpoint.Make (MSet)
 
   let of_list l = Blist.sort_uniq T.compare l
-  let union xs ys = of_list (Blist.merge T.compare xs ys)
 
+  (* linear scan instead of merge and then sort *)
+  let union xs ys =
+    let rec merge_dedup xs ys =
+      match (xs, ys) with
+      | [], zs | zs, [] -> zs
+      | x :: xs', y :: ys' -> (
+          match T.compare x y with
+          | 0 -> x :: merge_dedup xs' ys'
+          | n when n < 0 -> x :: merge_dedup xs' ys
+          | _ -> y :: merge_dedup xs ys')
+    in
+    merge_dedup xs ys
+
+  (* same logic as in Listmultiset.union_of_list *)
   let union_of_list l =
-    of_list (Blist.fold_left (fun acc x -> Blist.merge T.compare x acc) [] l)
+    let rec merge_pairs = function
+      | ([] | [ _ ]) as l -> l
+      | x :: y :: rest -> union x y :: merge_pairs rest
+    in
+    let rec loop = function
+      | [] -> []
+      | [ x ] -> x
+      | l -> loop (merge_pairs l)
+    in
+    loop l
 
   let map f xs = of_list (Blist.map f xs)
 
